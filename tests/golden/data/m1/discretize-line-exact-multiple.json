@@ -1,0 +1,26 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "hMax": 0.25,
+        "prims": [
+          {"kind": "side", "type": "line", "width": 0.2, "x1": 0, "x2": 1, "y1": 0, "y2": 0}
+        ]
+      },
+      "output": [
+        {"kind": "side", "len": 0.25, "pi": 0, "s": 0.125, "w": 0.2, "x1": 0, "x2": 0.25, "y1": 0, "y2": 0},
+        {"kind": "side", "len": 0.25, "pi": 0, "s": 0.375, "w": 0.2, "x1": 0.25, "x2": 0.5, "y1": 0, "y2": 0},
+        {"kind": "side", "len": 0.25, "pi": 0, "s": 0.625, "w": 0.2, "x1": 0.5, "x2": 0.75, "y1": 0, "y2": 0},
+        {"kind": "side", "len": 0.25, "pi": 0, "s": 0.875, "w": 0.2, "x1": 0.75, "x2": 1, "y1": 0, "y2": 0}
+      ]
+    }
+  ],
+  "case_id": "discretize-line-exact-multiple",
+  "eq_ids": ["EQ-03"],
+  "fn": "discretize",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "L / hMax is exactly 4 (ceil threshold)",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["line", "threshold"]
+}

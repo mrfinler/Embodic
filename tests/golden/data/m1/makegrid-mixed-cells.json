@@ -1,0 +1,51 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "cell": 0.5,
+        "segs": [
+          {"x1": 0, "x2": 0.4, "y1": 0, "y2": 0.2},
+          {"x1": 0.6, "x2": 1.4, "y1": 0, "y2": 0},
+          {"x1": -0.4, "x2": -0.2, "y1": -0.4, "y2": -0.6},
+          {"x1": 0.1, "x2": 0.3, "y1": 0.1, "y2": 0.3},
+          {"x1": -1.5, "x2": -1.1, "y1": -0.5, "y2": -0.9},
+          {"x1": 2, "x2": 2.2, "y1": 2, "y2": 2.4},
+          {"x1": -0.0, "x2": -0.0, "y1": 0.3, "y2": 0.5}
+        ]
+      },
+      "output": {
+        "cell": 0.5,
+        "entries": [
+          [
+            "0,0",
+            [0, 3, 6]
+          ],
+          [
+            "2,0",
+            [1]
+          ],
+          [
+            "-1,-1",
+            [2]
+          ],
+          [
+            "-3,-2",
+            [4]
+          ],
+          [
+            "4,4",
+            [5]
+          ]
+        ]
+      }
+    }
+  ],
+  "case_id": "makegrid-mixed-cells",
+  "eq_ids": ["EQ-30"],
+  "fn": "makeGrid",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "cell keys by floor of the midpoint, insertion order kept; includes cell-boundary midpoints and -0",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["grid", "signed-zero"]
+}

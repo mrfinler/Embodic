@@ -1,0 +1,29 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "pads": [
+          {"dia": 2, "viaIndex": 0, "x": 0, "y": 0},
+          {"dia": 1, "x": 5, "y": 5}
+        ],
+        "viaPad": 0.6,
+        "vias": [
+          {"x": 0, "y": 0.2},
+          {"x": 4, "y": 5}
+        ]
+      },
+      "output": {
+        "at": [5, 5],
+        "clearance": 0.2
+      }
+    }
+  ],
+  "case_id": "padsclearance-skips-own-via",
+  "eq_ids": ["EQ-30"],
+  "fn": "padsClearance",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "a pad ignores the via named by viaIndex",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["pad"]
+}

@@ -1,0 +1,18 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "prim": {"a1": 0, "a2": 1, "cx": 0, "cy": 0, "kind": "bus", "r": {"$f": "inf"}, "type": "arc", "width": 0.2}
+      },
+      "output": [{"$f": "inf"}, {"$f": "nan"}]
+    }
+  ],
+  "case_id": "primstart-arc-r-inf",
+  "eq_ids": [],
+  "fn": "primStart",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "infinite radius at a1 = 0 gives [Infinity, NaN] (Infinity * sin 0)",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["arc", "nonfinite-input"]
+}

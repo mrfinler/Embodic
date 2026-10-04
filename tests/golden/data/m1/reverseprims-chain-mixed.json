@@ -1,0 +1,57 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "prims": [
+          {"kind": "side", "type": "line", "width": 0.2, "x1": 0, "x2": 4, "y1": 0, "y2": 0},
+          {"a1": -1.5707963267948966, "a2": -5.497787143782138, "cx": 4, "cy": 2, "kind": "fillet", "r": 2, "type": "arc", "width": 0.15},
+          {"kind": "side", "type": "line", "width": 0.2, "x1": 5.414213562373095, "x2": 8, "y1": 3.414213562373095, "y2": 6}
+        ]
+      },
+      "output": [
+        {
+          "end": [5.414213562373095, 3.414213562373095],
+          "kind": "side",
+          "start": [8, 6],
+          "type": "line",
+          "width": 0.2,
+          "x1": 8,
+          "x2": 5.414213562373095,
+          "y1": 6,
+          "y2": 3.414213562373095
+        },
+        {
+          "a1": -5.497787143782138,
+          "a2": -1.5707963267948966,
+          "cx": 4,
+          "cy": 2,
+          "end": [4, 0],
+          "kind": "fillet",
+          "r": 2,
+          "start": [5.414213562373095, 3.4142135623730954],
+          "type": "arc",
+          "width": 0.15
+        },
+        {
+          "end": [0, 0],
+          "kind": "side",
+          "start": [4, 0],
+          "type": "line",
+          "width": 0.2,
+          "x1": 4,
+          "x2": 0,
+          "y1": 0,
+          "y2": 0
+        }
+      ]
+    }
+  ],
+  "case_id": "reverseprims-chain-mixed",
+  "eq_ids": [],
+  "fn": "reversePrims",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "chain order reverses and every member flips direction",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["line", "arc", "cw", "gt180"]
+}

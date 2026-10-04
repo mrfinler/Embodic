@@ -1,0 +1,22 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "prims": [
+          {"kind": "side", "type": "line", "width": 0.2, "x1": 10, "x2": 20, "y1": 0, "y2": 0},
+          {"a1": -1.5707963267948966, "a2": 0, "cx": 20, "cy": 5, "kind": "fillet", "r": 5, "type": "arc", "width": 0.2},
+          {"kind": "side", "type": "line", "width": 0.2, "x1": 25, "x2": 25, "y1": 5, "y2": 15}
+        ]
+      },
+      "output": 27.853981633974485
+    }
+  ],
+  "case_id": "primslength-chain-line-arc-line",
+  "eq_ids": ["EQ-03"],
+  "fn": "primsLength",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "left-to-right sum over a line, a quarter arc and a line",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["line", "arc", "ccw"]
+}

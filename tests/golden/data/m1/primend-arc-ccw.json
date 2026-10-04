@@ -1,0 +1,18 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "prim": {"a1": 1.0471975511965976, "a2": 4.1887902047863905, "cx": 2, "cy": -1, "kind": "endturn", "r": 3, "type": "arc", "width": 0.2}
+      },
+      "output": [0.49999999999999867, -3.5980762113533156]
+    }
+  ],
+  "case_id": "primend-arc-ccw",
+  "eq_ids": [],
+  "fn": "primEnd",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "arc end at angle a2",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["arc", "ccw"]
+}

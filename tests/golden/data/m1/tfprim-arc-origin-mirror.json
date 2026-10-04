@@ -1,0 +1,31 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "prim": {"a1": 0.1, "a2": 0.6, "cx": 0, "cy": 0, "kind": "endturn", "r": 15, "type": "arc", "width": 0.2},
+        "tf": {"mirror": true, "rot": 0},
+        "thetaG": 0.35
+      },
+      "output": {
+        "a1": 0.6,
+        "a2": 0.09999999999999998,
+        "cx": 0,
+        "cy": 0,
+        "end": [14.925062479170387, 1.4975012497024218],
+        "kind": "endturn",
+        "r": 15,
+        "start": [12.380034223645175, 8.46963710092553],
+        "type": "arc",
+        "width": 0.2
+      }
+    }
+  ],
+  "case_id": "tfprim-arc-origin-mirror",
+  "eq_ids": [],
+  "fn": "tfPrim",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "mirroring flips the sweep direction",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["arc", "ccw", "mirror"]
+}

@@ -1,0 +1,33 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "prims": [
+          {"a1": 0.2, "a2": 1.4, "cx": 0, "cy": 0, "kind": "endturn", "r": 12, "type": "arc", "width": 0.25}
+        ]
+      },
+      "output": [
+        {
+          "a1": 1.4,
+          "a2": 0.2,
+          "cx": 0,
+          "cy": 0,
+          "end": [11.7607989340949, 2.3840319695407346],
+          "kind": "endturn",
+          "r": 12,
+          "start": [2.0396057148028923, 11.825396759861523],
+          "type": "arc",
+          "width": 0.25
+        }
+      ]
+    }
+  ],
+  "case_id": "reverseprims-arc-ccw",
+  "eq_ids": [],
+  "fn": "reversePrims",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "reversed counter-clockwise arc runs clockwise",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["arc", "ccw"]
+}
