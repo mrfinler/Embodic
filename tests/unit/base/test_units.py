@@ -44,36 +44,77 @@ def test_units_conversion_matches_reference_value(convert, value, expected):
 @pytest.mark.req("REQ-N-21")
 @given(physical)
 def test_units_round_trips_stay_within_two_ulps(value):
-    """Catches a forward/inverse pair that drifts, e.g. one side using a rounded constant."""
+    """Catches a forward/inverse pair that drifts, e.g. one side using a rounded constant.
+
+    mm to m and rpm to rad/s have no inverse function in interfaces.md section 1, so the test inverts them with the
+    defining factor (1000 mm per m, 60 s per minute and 2 pi rad per revolution).
+    """
     assert within_ulps(units.rad_to_deg(units.deg_to_rad(value)), value, 2)
     assert within_ulps(units.mil2_to_mm2(units.mm2_to_mil2(value)), value, 2)
+    assert within_ulps(units.mm_to_m(value) * 1000.0, value, 2)
+    assert within_ulps(units.rpm_to_rad_per_s(value) * 60.0 / (2.0 * math.pi), value, 2)
+
+
+def is_positive_zero(value: float) -> bool:
+    """Return True only for +0.0, so a test can tell it from -0.0, which compares equal."""
+    return value == 0.0 and math.copysign(1.0, value) == 1.0
 
 
 @pytest.mark.req("REQ-N-21")
 @pytest.mark.parametrize(
-    ("value", "step", "expected"),
+    ("value", "expected"),
     [
-        (0.25, 0.5, 0.5),
-        (-0.25, 0.5, -0.5),
-        (2.5, 1.0, 3.0),
-        (-2.5, 1.0, -3.0),
-        (0.49999999999999994, 1.0, 0.0),
-        (1.23456, 0.001, 1.235),
-        (-1.23449, 0.001, -1.234),
-        (7.0, 0.5, 7.0),
+        (2.5, 3.0),
+        (-2.5, -2.0),
+        (0.5, 1.0),
+        (-0.5, 0.0),
+        (-1.5, -1.0),
+        (0.49999999999999994, 0.0),
+        (-0.49999999999999994, 0.0),
+        (2.4, 2.0),
+        (-2.6, -3.0),
+        (4503599627370495.5, 4503599627370496.0),
     ],
 )
-def test_units_round_half_away_from_zero_breaks_ties_away_from_zero(value, step, expected):
-    """Catches built-in round() (half to even turns 2.5 into 2) and the floor(x + 0.5) trick (0.4999... becomes 1)."""
-    assert within_ulps(units.round_half_away_from_zero(value, step), expected, 2)
+def test_units_js_round_matches_javascript_math_round(value, expected):
+    """Catches half away from zero (-2.5 to -3), round() (2.5 to 2) and floor(x + 0.5) (0.49999999999999994 to 1).
+
+    Expected values printed by Node v22 Math.round (interfaces.md section 1).
+    """
+    assert units.js_round(value) == expected
 
 
 @pytest.mark.req("REQ-N-21")
-def test_units_round_half_away_from_zero_never_returns_negative_zero():
+@pytest.mark.parametrize("value", [-0.5, -0.49999999999999994, -0.3, -0.0])
+def test_units_js_round_never_returns_negative_zero(value):
+    """Catches a -0.0 result (JS Math.round(-0.3) is -0), which a writer would print as '-0'."""
+    assert is_positive_zero(units.js_round(value))
+
+
+@pytest.mark.req("REQ-N-21")
+@pytest.mark.parametrize(
+    ("value", "scale", "expected"),
+    [
+        (-0.000025, 1e5, -0.00002),
+        (0.000025, 1e5, 0.00003),
+        (0.123456, 1e5, 0.12346),
+        (12.5, 1.0, 13.0),
+        (7.0, 1e5, 7.0),
+    ],
+)
+def test_units_quantise_matches_xcoil_fmt(value, scale, expected):
+    """Catches negative ties rounded away from zero and a quantiser that divides by a step instead of the scale.
+
+    Xcoil fmt(-0.000025) is -0.00002 (Node v22, interfaces.md section 1).
+    """
+    assert units.quantise(value, scale) == expected
+
+
+@pytest.mark.req("REQ-N-21")
+@pytest.mark.parametrize("value", [-1e-7, -0.000005, -0.0])
+def test_units_quantise_never_returns_negative_zero(value):
     """Catches '-0' in fixed-decimal writer output when a small negative coordinate quantises to zero."""
-    result = units.round_half_away_from_zero(-1e-7, 0.001)
-    assert result == 0.0
-    assert math.copysign(1.0, result) == 1.0
+    assert is_positive_zero(units.quantise(value, 1e5))
 
 
 @pytest.mark.req("REQ-N-21")

@@ -2,6 +2,8 @@
 
 import dataclasses
 import re
+import subprocess
+import sys
 
 import pytest
 
@@ -22,6 +24,35 @@ def test_errors_message_for_unknown_code_raises_key_error():
     """Catches a silent fallback that would show a raw code to the user instead of failing in tests."""
     with pytest.raises(KeyError):
         errors.message_for("INVALID_NO_SUCH_CODE")
+
+
+def import_errors_with_scratch_catalogue(tmp_path, source: str) -> subprocess.CompletedProcess[str]:
+    """Re-run `import embodic.errors` in a fresh interpreter with one extra catalogue module named `scratch`."""
+    (tmp_path / "scratch.py").write_text(source, encoding="utf-8")
+    probe = (
+        "import importlib, embodic.errors, embodic.errors.catalogue as catalogue; "
+        f"catalogue.__path__.append({str(tmp_path)!r}); "
+        "print(sorted(importlib.reload(embodic.errors).MESSAGES))"
+    )
+    return subprocess.run([sys.executable, "-c", probe], capture_output=True, text=True, check=False)
+
+
+@pytest.mark.req("REQ-L-01")
+def test_errors_catalogue_module_is_merged_without_a_shared_edit(tmp_path):
+    """Catches a hard-coded module list: a unit's new catalogue module must reach MESSAGES by discovery alone."""
+    result = import_errors_with_scratch_catalogue(tmp_path, 'MESSAGES = {"INFO_SCRATCH": "A scratch message."}\n')
+    assert result.returncode == 0, result.stderr
+    assert "'INFO_SCRATCH'" in result.stdout
+    assert "'INFO_MIGRATED'" in result.stdout
+
+
+@pytest.mark.req("REQ-L-01")
+def test_errors_duplicate_code_across_catalogue_modules_fails_the_import(tmp_path):
+    """Catches a merge that lets a later module silently overwrite another unit's message for the same code."""
+    result = import_errors_with_scratch_catalogue(tmp_path, 'MESSAGES = {"INFO_MIGRATED": "Another message."}\n')
+    assert result.returncode != 0
+    assert "INFO_MIGRATED" in result.stderr
+    assert "scratch" in result.stderr
 
 
 @pytest.mark.req("REQ-L-01")
