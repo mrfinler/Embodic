@@ -2,15 +2,18 @@
 // Usage: node tools/golden/dump_xcoil.mjs tools/golden/cases/<area>.json [--out <dir>]
 // Default output: tests/golden/data/<area>/ in this repository.
 // The engine is loaded read-only from $XCOIL_ENGINE (default /home/claude/serpentine/src/engine.js).
+// An area other than m1 adds the functions of tools/golden/functions/<area>.mjs ($GOLDEN_FUNCTIONS_DIR overrides
+// the folder) to the M1 kernels below.
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { canonicalJson, decodeNonFinite, primFromRecord, recordFromPrim, requireKeys } from './lib/codec.mjs';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const ENGINE_PATH = process.env.XCOIL_ENGINE || '/home/claude/serpentine/src/engine.js';
+const FUNCTIONS_DIR = resolve(process.env.GOLDEN_FUNCTIONS_DIR || join(REPO_ROOT, 'tools', 'golden', 'functions'));
 const REGISTRY_PATH = join(REPO_ROOT, 'docs', 'phase2', 'engineering', 'equation_registry.json');
 const CASES_FORMAT = 'embodic.golden-cases';
 const FIXTURE_FORMAT = 'embodic.golden-case';
@@ -18,7 +21,7 @@ const FIXTURE_FORMAT = 'embodic.golden-case';
 // ---------------------------------------------------------------- engine functions under test
 
 // Each entry names the case-input keys (required, optional) and runs one Xcoil call on decoded inputs.
-const FUNCTIONS = {
+const M1_FUNCTIONS = {
   primLength: { required: ['prim'], run: (E, x) => E.primLength(primFromRecord(x.prim)) },
   primsLength: { required: ['prims'], run: (E, x) => E.primsLength(x.prims.map(primFromRecord)) },
   primStart: { required: ['prim'], run: (E, x) => E.primStart(primFromRecord(x.prim)) },
@@ -57,6 +60,22 @@ const FUNCTIONS = {
     },
   },
 };
+
+// Returns the function table for one area: the M1 kernels, plus the area module's FUNCTIONS for any other area.
+async function loadFunctions(area) {
+  const functions = new Map(Object.entries(M1_FUNCTIONS));
+  if (area === 'm1') return functions;
+  const modulePath = join(FUNCTIONS_DIR, `${area}.mjs`);
+  if (!existsSync(modulePath)) throw new Error(`area ${area}: no function module ${modulePath}`);
+  const { FUNCTIONS } = await import(pathToFileURL(modulePath).href);
+  if (FUNCTIONS === null || typeof FUNCTIONS !== 'object') throw new Error(`${modulePath}: export FUNCTIONS as an object`);
+  for (const [name, spec] of Object.entries(FUNCTIONS)) {
+    if (functions.has(name)) throw new Error(`${modulePath}: function ${name} is already defined by dump_xcoil.mjs`);
+    requireKeys(spec, ['required', 'optional', 'run'], ['required', 'run'], `${modulePath} function ${name}`);
+    functions.set(name, spec);
+  }
+  return functions;
+}
 
 // ---------------------------------------------------------------- seeded input generators
 
@@ -163,10 +182,10 @@ function evaluate(E, spec, inputs, where) {
   return spec.run(E, structuredClone(inputs));
 }
 
-function buildFixture(E, engineSha, eqIds, entry) {
+function buildFixture(E, functions, engineSha, eqIds, entry) {
   const where = `case ${entry.id}`;
   requireKeys(entry, ['id', 'fn', 'note', 'tags', 'inputs', 'seeded'], ['id', 'fn', 'note', 'tags'], where);
-  const spec = FUNCTIONS[entry.fn];
+  const spec = functions.get(entry.fn);
   if (!spec) throw new Error(`${where}: unknown fn ${entry.fn}`);
   if ((entry.inputs === undefined) === (entry.seeded === undefined)) throw new Error(`${where}: give inputs or seeded`);
   let calls;
@@ -194,7 +213,7 @@ function buildFixture(E, engineSha, eqIds, entry) {
   });
 }
 
-function main() {
+async function main() {
   const [casesPath, outFlag, outArg] = process.argv.slice(2);
   if (!casesPath || (outFlag !== undefined && (outFlag !== '--out' || !outArg))) {
     throw new Error('usage: node tools/golden/dump_xcoil.mjs tools/golden/cases/<area>.json [--out <dir>]');
@@ -203,6 +222,7 @@ function main() {
   if (cases.format !== CASES_FORMAT || cases.format_version !== 1) throw new Error(`${casesPath}: not ${CASES_FORMAT} v1`);
   if (!/^[a-z0-9_]+$/.test(cases.area)) throw new Error(`${casesPath}: bad area ${JSON.stringify(cases.area)}`);
 
+  const functions = await loadFunctions(cases.area);
   const engineSha = createHash('sha256').update(readFileSync(ENGINE_PATH)).digest('hex');
   const E = createRequire(import.meta.url)(ENGINE_PATH);
   const eqIds = eqIdsByFunction(JSON.parse(readFileSync(REGISTRY_PATH, 'utf8')));
@@ -213,9 +233,9 @@ function main() {
   for (const entry of cases.cases) {
     if (!/^[a-z0-9][a-z0-9-]*$/.test(entry.id) || seen.has(entry.id)) throw new Error(`bad or duplicate case id ${entry.id}`);
     seen.add(entry.id);
-    writeFileSync(join(outDir, `${entry.id}.json`), `${canonicalJson(buildFixture(E, engineSha, eqIds, entry))}\n`);
+    writeFileSync(join(outDir, `${entry.id}.json`), `${canonicalJson(buildFixture(E, functions, engineSha, eqIds, entry))}\n`);
   }
   console.log(`wrote ${seen.size} fixtures for area ${cases.area} (engine sha256 ${engineSha})`);
 }
 
-main();
+await main();
