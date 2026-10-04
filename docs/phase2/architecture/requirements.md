@@ -23,6 +23,12 @@ Disposition summary: 33 functional, 26 non-functional, 16 KiCad, 14 traceability
 Phase 1. All 16 REQ-K rows are withdrawn (D-009). New rows: REQ-F-34 to REQ-F-40, REQ-N-27, REQ-N-28, REQ-T-15, REQ-T-16.
 The check script prints the exact counts.
 
+Revision 2026-10-04 (U-D1): REQ-N-21 acceptance amended. "Unit round trips exact" cannot hold in float64: 25,126 of
+200,000 random values in [-1e4, 1e4] did not survive `math.degrees(math.radians(x))` unchanged, with a worst error of
+1 ulp (`verified (run)`, CPython 3.11.15, `random.seed(1)`, 2026-10-04). The criterion is now at most 2 ulp, the bound U-M1a's
+UT-UNI-01 implements. The quantiser named in the row follows interfaces.md §1 (JS `Math.round` semantics, DEF-M1a-02).
+No ID changed.
+
 ## 1. Functional requirements (REQ-F)
 
 | ID | Disp. | Statement | Rationale | Prio | Acceptance | M | Owner module | Tests |
@@ -92,7 +98,7 @@ The check script prints the exact counts.
 | REQ-N-18 | carried | Unexpected internal errors shall be caught at the adapter, logged with a correlation ID and shown as an English message offering to save. | Robustness | must | Fault injection: message shown, project or draft saved, process alive. | M4 | embodic.ui.app | UI-12 |
 | REQ-N-19 | carried | Every dependency shall have a recorded licence compatible with the embodic licence; no code from GPL references shall be copied. | Brief rule 7; D-003 | must | Licence report matches the allow-list in package_layout.md §5; THIRD_PARTY_LICENSES complete. | M5 | pyproject.toml | PK-08 |
 | REQ-N-20 | carried | The application should write a rotating log without personal data. | Supportability; standing order 7 | should | Log holds no user name or home path; rotation 1 MB x 5 (`assumption`). | M4 | embodic.ui.app | UT-LOG-01 |
-| REQ-N-21 | amended | Geometry shall use float64 and a coincidence tolerance of 1e-6 mm; writers that emit fixed decimals shall quantise connected end points from one shared coordinate. | Xcoil GEO-01; nm conversion removed with KiCad (D-009) | must | Continuity holds after SVG and DXF quantisation; unit round trips exact. | M1 | embodic.geometry | UT-GEO-01, UT-UNI-01, UT-EXP-02 |
+| REQ-N-21 | amended | Geometry shall use float64 and a coincidence tolerance of 1e-6 mm; writers that emit fixed decimals shall quantise connected end points from one shared coordinate with `embodic.units.quantise`. | Xcoil GEO-01; nm conversion removed with KiCad (D-009); Xcoil `fmt()` engine.js l.2762 | must | Continuity holds after SVG and DXF quantisation; unit round trips within 2 ulp of the input (`math.ulp`); `js_round` equals JS `Math.round` on ties of both signs (revision 2026-10-04). | M1 | embodic.geometry | UT-GEO-01, UT-UNI-01, UT-EXP-02 |
 | REQ-N-22 | carried | Cold start to an interactive window could take less than 3 s. | Usability; `assumption` | could | PF-03. | M5 | embodic.ui.app | PF-03 |
 | REQ-N-23 | carried | The geometry view and all phase legends shall offer a greyscale and hatch mode (lightness, hatch 0/45/135 deg inside the coil eye only, labels); it is the PDF default and is used under Windows high contrast. | Agent 1 UX-AC-05; D-011 | must | Greyscale screenshot; forced-colours run; hatch never crosses copper. | M4 | embodic.ui.views | UI-27, AX-05 |
 | REQ-N-24 | carried | Every input shall show its unit and include it in its accessible description. | Agent 1 UX-AC-15; Xcoil gap A3 | must | Widget scan driven by the field table. | M4 | embodic.ui.views | AX-06, UT-MOD-03 |

@@ -7,6 +7,11 @@ stays in force with its Phase 1 ID, check and criterion. This file adds the Phas
 changed, and holds the generated requirements-to-tests matrix. No embodic test has run yet: every test below is
 `not tested`.
 
+Revision 2026-10-04 (U-D1, corrections from the W0 pilot): §3 states the D-006 band rule once, half-open
+(DEF-M1d-02), names the "kernel" class for golden functions without EQ-IDs, ratifies the U-M1d encoding and `--out`
+flag, and specifies layout dumps for GR-19 with U-M1b as owner. §5.1 amends UT-UNI-01 (2 ulp round trips, JS rounding).
+§5.4 amends LG-01 (character check from M1, word check at M4). No ID changed.
+
 ## 1. What changed and why
 
 | Change | Reason |
@@ -37,13 +42,36 @@ UT, GR, BV, PR-fast, UI, UT-EXP, LG, AX scripts, TR), `nightly` (adds PR-long), 
 ## 3. Golden regression against Xcoil v3
 
 Harness. `tools/golden/dump_xcoil.mjs` loads `/home/claude/serpentine/src/engine.js` read-only, evaluates each case and
-writes `tests/golden/data/<area>/<case>.json` with `engine_sha256`, the Node version and non-finite values encoded as
-`{"$f": "inf"}`. Geometry uses the board-dump format (REQ-F-40). Python comparators in `tests/golden/harness/` apply the
-Phase 1 tolerance map: discrete outputs exact, scalar kernels 1e-12 rel., integrated results 1e-9 rel., paths by sampled
-distance 1e-6 mm, DRC values 1e-6 mm abs., pass/fail agreement only outside Xcoil's slack band
-[rule - 0.004 mm, rule) (D-006), near-threshold decisions with margin below 1e-9 rel. logged as indeterminate.
-`tests/golden/expected_diffs/<area>.toml` (one file per owning unit) lists every intentional deviation with EQ-ID, reason and the Agent 2 and Agent 4
-sign-off.
+writes `tests/golden/data/<area>/<case>.json` with `engine_sha256` and the Node version. `--out <dir>` writes the same
+fixtures to a scratch folder instead, so a unit can compare a fresh dump with the committed one without overwriting it.
+Numbers follow the encoding in interfaces.md §9.2: `{"$f": "inf"}`, `{"$f": "-inf"}` and `{"$f": "nan"}` for
+non-finite values, `-0.0` for negative zero. Primitives use the board-dump record (REQ-F-40). Python comparators in
+`tests/golden/harness/` apply the Phase 1 tolerance map: discrete outputs exact, scalar kernels 1e-12 rel., integrated
+results 1e-9 rel., paths by sampled distance 1e-6 mm, DRC values 1e-6 mm abs., near-threshold decisions with margin
+below 1e-9 rel. logged as indeterminate. `tests/golden/expected_diffs/<area>.toml` (one file per owning unit) lists
+every intentional deviation with EQ-ID, reason and the Agent 2 and Agent 4 sign-off.
+
+D-006 band rule (the only statement of it; every other document refers here). Xcoil passes a clearance when it is at
+least rule - 0.004 mm (`engine.js` `runDrc` l.757 sets `tol = 0.004`; l.773 and l.774 report an error when the value is
+below `clearance - tol`; `verified` by reading, 2026-10-04). embodic passes it when it is at least rule - 1e-6 mm. The two verdicts can differ only for a
+measured clearance v with rule - 0.004 mm <= v < rule, the half-open band [rule - 0.004 mm, rule). Inside the band the
+golden comparison records the verdict as indeterminate. Outside it, Xcoil and embodic must agree. A symmetric band,
+|v - rule| <= 0.004 mm, is wrong: it would excuse disagreements above the rule, where both tools must pass
+(`tools/golden/README.md`, test `test_drc_band_rule_requires_agreement_above_the_rule`). DRC values themselves always
+compare within 1e-6 mm.
+
+Kernel class. Geometry kernels that the registry gives no EQ-ID (`tfPrim`, `tfPoint`, `reversePrims`, `primStart`,
+`primEnd`; `equation_registry.json` `golden_functions`, read by U-M1d on 2026-10-04) are golden "kernel" class. Their
+fixtures carry `"eq_ids": []`, they use the 1e-12 tolerance classes, and an allow-list entry for them names the
+geometry module instead of an EQ-ID. They pass no equation gate, because they compute no physics.
+
+Layout dumps (GR-19, and later GR-20 and GR-21). The dumper keeps the M1 kernel functions in `dump_xcoil.mjs` and loads
+any other area's functions from `tools/golden/functions/<area>.mjs`, one file per owning unit, so no two units edit the
+dumper. A layout function takes Xcoil's `compute()` input object, runs Xcoil's own path to the builder (serpentine:
+`normalizeParams`, `derive`, `buildLayout`; wave and sector: the builders that `computeWave` and `computeSector` call)
+and emits the raw result: every copper layer with its identifying fields and its primitives as board-dump primitive
+records, the via list and the pad list, all with Xcoil's own keys and names. It maps nothing to embodic names. The
+Python test maps the raw layout to `embodic.board-dump` v1 and feeds it to `io.read_board_dump`.
 
 Function level compares one Xcoil function with its embodic counterpart on identical inputs. Layout level compares a
 whole generated board and applies only to faithful ports (serpentine, wave). The spiral generator has no Xcoil
@@ -53,7 +81,7 @@ counterpart; it is checked against closed forms and the true-spiral reference (U
 |---|---|---|---|---|---|
 | GR-17 | function | `discretize`, `primLength` | `geometry.discretise`, `primitive_length_mm` | lines and arcs, sweeps of both signs, segment limits 0.1 to 2 mm | point lists exact in count, coordinates 1e-12 mm |
 | GR-18 | function | `segSegDist` and the arc distance helpers used by `runDrc`/`drcObjects` | `drc.min_distance_*` | 1000 seeded pairs per kind incl. touching and crossing | 1e-12 mm abs. |
-| GR-19 | format | Xcoil dumper output | `io.read_board_dump`, `io.write_board_dump` | one dump per topology | the reader parses both producers; write, read, write is byte-identical |
+| GR-19 | format | raw layouts from `tools/golden/functions/m1_layout.mjs` (serpentine `buildLayout`, wave, sector), mapped to board dumps in Python | `io.read_board_dump`, `io.write_board_dump` | one layout per Xcoil topology, from Xcoil's default parameters; owner U-M1b (amended 2026-10-04) | the reader parses both producers; write, read, write is byte-identical; primitive, via and pad counts per layer equal the raw layout's |
 | GR-20 | layout | serpentine `buildCanonical`, `buildLayout` (l.163-753) | `generators.generate_serpentine` | Xcoil serpentine presets plus a seeded set over phases 1 to 3, layers per phase 1/2/4, series/parallel, grouped/interleaved, round/sharp, `{"interconnect": false}` and `true` | equal primitive, via and pad counts and roles; sampled path distance at most 1e-6 mm; DRC values 1e-6 mm abs. with the band rule |
 | GR-21 | layout | `buildWave` (l.1639), `buildWaveOverlap` (l.2095) | `generators.generate_wave` | each style: involute, jog, chord, overlap; 2/4/6 layers; 1 to 3 phases | GR-20 criteria |
 | GR-22 | result | serpentine `analyze` (l.880-1017), wave `analyzeElements` (l.1846) | `physics.analyse` on the ported Layout | the GR-20 and GR-21 case sets | Ke, R, eddy loss: 1e-9 rel. where both integrate the same elements; any other difference goes to `expected_diffs/<area>.toml` or is a defect (open question Q-2) |
@@ -78,6 +106,7 @@ Phase 1 UT-PHY-01 to UT-PHY-21 and OR-01 to OR-12 stay. Two changes apply.
 
 | ID | Check | Criterion |
 |---|---|---|
+| UT-UNI-01 | Amended 2026-10-04: unit conversions and rounding | deg and rad, mm and m, rpm and rad/s, mil² and mm² round trips within 2 ulp of the input (`math.ulp`), not exact (requirements.md revision note); `js_round` gives 3, -2, 1, 0, -1, 0 for 2.5, -2.5, 0.5, -0.5, -1.5, 0.49999999999999994 (JS `Math.round`); `quantise(-0.000025, 1e5) == -0.00002`; neither returns -0.0 |
 | UT-GEN-01 | Generator contract for spiral, serpentine, wave and a stub | returns Layout or Unbuildable, never raises on fuzzed input; same design gives the same `layout_hash`; every circuit path and via ID exists; every winding path belongs to exactly one Member or to `interconnect_path_ids` |
 | UT-GEN-02 | Dispatch | `build_layout` routes by `design.topology`; calling `generate_wave` with a spiral design raises TypeError |
 | UT-GEN-03 | Serpentine validation | layers per phase 1 or even; copper count = phases x layers per phase, else INVALID with the pointer |
@@ -133,6 +162,7 @@ offscreen platform.
 |---|---|
 | MT-01 | Amended: import-linter contracts C1 to C4 of `package_layout.md` §3 (core layers with generators above io, outcome, physics and drc; no Qt outside the Qt adapter modules; UI-internal layers; no KiCad or other GUI toolkits) |
 | MT-07 | Scope guard for D-009: no `kipy` or `pcbnew` import, no `.kicad_pcb` writer, no KiCad option in CLI choices, and no "KiCad" in the string catalogue |
+| LG-01 | Amended 2026-10-04 (U-M1a deviation, ratified in part). From M1: every string literal in `src` holds only printable ASCII, tab, newline and the allowed unit symbols (U-M1a's character-class check). From M4: every word in the string catalogue and report templates is in an English word list plus the glossary allow-list. The word list has no source yet (no dictionary package in package_layout.md §5): `unresolved`; U-M4b proposes one through Fable before M4 exit |
 | LG-08 | No Thai characters in any shipped file (src, resources, examples, templates) |
 | AX-08 | Phase colours at least 3:1 against the canvas in both themes; the palette validator passes for both themes; greyscale ladder steps distinguishable |
 | AX-09 | Every toolstrip icon rendered in both themes reaches at least 3:1 against the toolstrip background |
