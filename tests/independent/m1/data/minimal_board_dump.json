@@ -1,0 +1,38 @@
+{
+ "format": "embodic.board-dump",
+ "format_version": 1,
+ "producer": {"name": "embodic", "version": "hand-written", "engine_sha256": null, "runtime": "none"},
+ "case_id": "agent4-minimal",
+ "params": {"clearance_mm": 0.15, "current_limit_a": {"$f": "inf"}},
+ "params_sha256": "hand-written",
+ "units": {"length": "mm", "angle": "rad"},
+ "frame": "engine: x right, y up, origin on the rotor axis",
+ "layers": [
+  {"index": 0, "name": "F.Cu", "kicad_name": "F.Cu", "z": 0.0, "copper_t": 0.035, "role": "coil", "pair": 0, "phase": 0}
+ ],
+ "primitives": [
+  {"id": 0, "type": "line", "layer": 0, "start": [5.0, 10.0], "end": [0.0, 10.0],
+   "x1": 5.0, "y1": 10.0, "x2": 0.0, "y2": 10.0, "width": 0.2, "kind": "side", "object": 0, "seq": 0,
+   "net": "U", "phase": 0, "coil": 0},
+  {"id": 1, "type": "arc", "layer": 0, "start": [6.123233995736766e-16, 10.0], "end": [-10.0, 1.2246467991473533e-15],
+   "cx": 0.0, "cy": 0.0, "r": 10.0, "a1": 1.5707963267948966, "a2": 3.141592653589793, "width": 0.2,
+   "kind": "endturn", "object": 0, "seq": 1, "net": "U", "phase": 0, "coil": 0},
+  {"id": 2, "type": "line", "layer": 0, "start": [-10.0, 0.0], "end": [-10.0, -5.0],
+   "x1": -10.0, "y1": 0.0, "x2": -10.0, "y2": -5.0, "width": 0.2, "kind": "side", "object": 0, "seq": 2,
+   "net": "U", "phase": 0, "coil": 0}
+ ],
+ "objects": [
+  {"id": 0, "kind": "coil", "layer": 0, "net": "U", "phase": 0, "coil": 0, "primitive_ids": [0, 1, 2], "touch_vias": [0]}
+ ],
+ "vias": [
+  {"id": 0, "x": -10.0, "y": -5.0, "drill": 0.3, "pad": 0.6, "layer_from": 0, "layer_to": 0, "role": "terminal",
+   "net": "U", "phase": 0, "terminal": "U", "label": "U"}
+ ],
+ "pads": [],
+ "outline": {"board": [], "cutouts": [], "holes": []},
+ "circuits": [
+  {"phase": 0, "elements": [{"members": [{"object": 0, "layer": 0, "direction": 1}], "vias": [0]}],
+   "terminals": {"plus": 0, "minus": 0}}
+ ],
+ "drc": null
+}
