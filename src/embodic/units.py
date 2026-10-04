@@ -28,6 +28,7 @@ class Unit(StrEnum):
     MM = "mm"
     MM2 = "mm2"
     M = "m"
+    UM = "um"
     RAD = "rad"
     T = "T"
     V = "V"
@@ -35,13 +36,17 @@ class Unit(StrEnum):
     N_M_PER_A = "N_m_per_A"
     RPM_PER_V = "rpm_per_V"
     OHM = "ohm"
+    OHM_M = "ohm_m"
     H = "H"
     W = "W"
+    W_PER_M2_K = "W_per_m2_K"
     A = "A"
     A_PER_MM2 = "A_per_mm2"
     K = "K"
+    PER_K = "per_K"
     DEGC = "degC"
     G = "g"
+    G_PER_CM3 = "g_per_cm3"
     N_M = "N_m"
     RPM = "rpm"
     HZ = "Hz"
@@ -58,6 +63,7 @@ _DISPLAY = MappingProxyType(
         Unit.MM: "mm",
         Unit.MM2: "mm²",
         Unit.M: "m",
+        Unit.UM: "µm",
         Unit.RAD: "rad",
         Unit.T: "T",
         Unit.V: "V",
@@ -65,13 +71,17 @@ _DISPLAY = MappingProxyType(
         Unit.N_M_PER_A: "N·m/A",
         Unit.RPM_PER_V: "rpm/V",
         Unit.OHM: "Ω",
+        Unit.OHM_M: "Ω·m",
         Unit.H: "H",
         Unit.W: "W",
+        Unit.W_PER_M2_K: "W/(m²·K)",
         Unit.A: "A",
         Unit.A_PER_MM2: "A/mm²",
         Unit.K: "K",
+        Unit.PER_K: "1/K",
         Unit.DEGC: "°C",
         Unit.G: "g",
+        Unit.G_PER_CM3: "g/cm³",
         Unit.N_M: "N·m",
         Unit.RPM: "rpm",
         Unit.HZ: "Hz",
