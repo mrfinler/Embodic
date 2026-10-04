@@ -57,7 +57,12 @@ class ValidationIssue:
 class Unbuildable:
     """Returned instead of a Layout when valid input cannot produce copper."""
 
-    issues: tuple[ValidationIssue, ...]  # at least one ERROR with category UNBUILDABLE
+    issues: tuple[ValidationIssue, ...]
+
+    def __post_init__(self) -> None:
+        """Refuse construction without the ERROR issue that explains why no copper was produced."""
+        if not any(i.severity is Severity.ERROR and i.category is IssueCategory.UNBUILDABLE for i in self.issues):
+            raise ValueError("Unbuildable needs at least one ERROR issue with category UNBUILDABLE")
 
 
 CODE_PREFIXES = ("INVALID_", "MISSING_", "RANGE_", "UNBUILDABLE_", "DRC_", "INTERNAL_", "INFO_")

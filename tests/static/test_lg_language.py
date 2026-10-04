@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 
 THAI_FIRST, THAI_LAST = 0x0E00, 0x0E7F
-# Unit and engineering symbols allowed next to printable ASCII; every other non-ASCII character fails LG-01.
 ALLOWED_SYMBOLS = frozenset("°µΩ²³·−×±≤≥")
 
 

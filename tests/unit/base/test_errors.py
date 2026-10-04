@@ -57,3 +57,21 @@ def test_errors_issue_is_immutable_and_keyword_only():
     with pytest.raises(TypeError):
         Suggestion("/coil/turns", 6, "positional")  # type: ignore[misc]
     assert hash(issue) == hash(dataclasses.replace(issue))
+
+
+@pytest.mark.req("REQ-F-19")
+def test_errors_unbuildable_requires_an_unbuildable_error():
+    """Catches an Unbuildable that carries only warnings, which would leave the user with no reason for the failure."""
+    reason = ValidationIssue(
+        code="UNBUILDABLE_NO_ROOM",
+        category=IssueCategory.UNBUILDABLE,
+        severity=Severity.ERROR,
+        message="No turn fits between the inner and outer radius.",
+        pointers=("/coil",),
+    )
+    warning = dataclasses.replace(reason, severity=Severity.WARNING)
+    assert errors.Unbuildable(issues=(warning, reason)).issues[1] is reason
+    with pytest.raises(ValueError, match="UNBUILDABLE"):
+        errors.Unbuildable(issues=(warning,))
+    with pytest.raises(ValueError, match="UNBUILDABLE"):
+        errors.Unbuildable(issues=())
