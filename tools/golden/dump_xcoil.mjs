@@ -237,10 +237,11 @@ function eqIdsByFunction(registry) {
   return byFn;
 }
 
+// The engine gets a clone, so the inputs written to the fixture are the ones passed even if a function mutates them.
 function evaluate(E, spec, inputs, where) {
   const allowed = [...spec.required, ...(spec.optional || [])];
   requireKeys(inputs, allowed, spec.required, where);
-  return spec.run(E, inputs);
+  return spec.run(E, structuredClone(inputs));
 }
 
 function buildFixture(E, engineSha, eqIds, entry) {
