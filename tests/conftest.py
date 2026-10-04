@@ -46,8 +46,9 @@ class ReqReport:
         self.path = path
         self.records: dict[str, dict[str, object]] = {}
 
+    @pytest.hookimpl(tryfirst=True)
     def pytest_collection_modifyitems(self, items: list[pytest.Item]) -> None:
-        """Record the markers of every collected test."""
+        """Record the markers of every collected test, before -m deselects any, so TR-02 sees them all."""
         for item in items:
             self.records[item.nodeid] = {
                 "nodeid": item.nodeid,
@@ -57,14 +58,10 @@ class ReqReport:
             }
 
     def pytest_runtest_logreport(self, report: pytest.TestReport) -> None:
-        """Keep the worst phase outcome: a failing setup or teardown fails the test."""
+        """Take the call outcome; a skipped or failing setup or teardown overrides it."""
         record = self.records.get(report.nodeid)
-        if record is None:
-            return
-        if report.when == "call" or report.outcome != "passed":
+        if record is not None and (report.when == "call" or report.outcome != "passed"):
             record["outcome"] = report.outcome
-        elif record["outcome"] == "not run" and report.when == "setup":
-            record["outcome"] = "setup passed"
 
     def pytest_sessionfinish(self) -> None:
         """Write the records, sorted by node id."""
