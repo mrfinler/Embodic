@@ -2,7 +2,7 @@ Prepared by: Agent 6 — Software Architecture Specialist — model: claude-opus
 
 # ADR-0005: Application type — hybrid: PySide6 desktop front-end + UI-less KiCad IPC plugin + file export
 
-**Status:** Proposed — **pending user approval** (BRIEF §1 requires approval before Phase 2)
+**Status:** Proposed — pending user approval (UD-01); amended 2026-10-04 with Agent 1 reconciliation
 **Date:** 2026-10-04
 **Deciders:** User (approval), Fable 5.1 — consulted: Agent 1 (UX), Agent 3 (software)
 
@@ -74,3 +74,14 @@ cost of rewriting only `embodic.ui` (`inferred` from ADR-0001).
 2. [ ] Agent 3: 2-day rendering spike (default layout in QGraphicsView; frame time, memory).
 3. [ ] Agent 1: map the screen design to Qt widgets and theme tokens; confirm keyboard model of the geometry view.
 4. [ ] Fable: record the user's decision in decision_log.md and set this ADR to Accepted or Superseded.
+
+## Amendment 1 — reconciliation round 1 (2026-10-04)
+
+- Agent 1's six screens/steps are mapped to Qt views (architecture_draft.md §10.1); mockups are HTML but specify
+  behaviour and tokens that map to Qt widgets and QSS.
+- With C-A, **phone layouts are out of scope** (Agent 1 mockup 06, UX-AC-11 "no horizontal scroll at 360 px", 44 px coarse
+  targets). What remains: a minimum window of **960 × 540** device-independent px (1920 × 1080 at 200 %), three panes
+  ≥ 1280 px, two panes with a collapsible results panel at 960–1279 px (Agent 1's tablet pattern), no horizontal scrolling
+  of form panels (REQ-N-15). If the user values phone/tablet use, that is an argument for C-B1.
+- Agent 1's web-phrased acceptance tests (DOM, axe-core) translate to the Qt widget tree with `objectName` = Agent 1's
+  element ids (architecture_draft.md §19) and the token-based contrast script.

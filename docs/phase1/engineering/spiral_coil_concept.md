@@ -14,7 +14,7 @@ schematic. No dimension, field, EMF, resistance or other electrical value may be
 
 | Panel | Content | Basis | Status |
 |---|---|---|---|
-| A — coil plan | 12 concentrated spiral coils on one layer pair, 30° coil pitch, labelled A1+ … C4+ in the order A C B A C B …; all coils positive with the same circulation (CW arrows for positive current); a centre via in each coil eye; two outer terminals per coil; dashed phase rings outside r_o; U, V, W and star point N on the outer rim; inner reference ring of 16 rotor poles (N black, S white) | Star-of-slots pattern for 12/16 from `checks/kw.py` ("ACBACBACBACB", k_w1 = 0.866); 16 poles from the repository rotor (README); terminals on the outer rim as in Xcoil v3 and the repository (EV-R2) | pattern `verified (reproduced)`; layout `assumption` |
+| A — coil plan | 12 concentrated spiral coils on one layer pair, 30° coil pitch, numbered counter-clockwise (+θ, viewed from the F.Cu side = rotor 1) and labelled A1+ … C4+ in the order A C B A C B …; small +θ arrow in the bore; all coils positive with the same circulation (CW arrows for positive current); a centre via in each coil eye; two outer terminals per coil; dashed phase rings outside r_o; U, V, W and star point N on the outer rim; inner reference ring of 16 rotor poles (N black, S white) | Star-of-slots pattern for 12/16 from `checks/kw.py` ("ACBACBACBACB", k_w1 = 0.866); 16 poles from the repository rotor (README); terminals on the outer rim as in Xcoil v3 and the repository (EV-R2) | pattern `verified (reproduced)`; layout `assumption` |
 | B — layer stack | Six layers as three X/Y pairs P1–P3 connected in series (option M2): L1 spirals in → centre via Vc1 → L2 spirals out (mirrored artwork, same circulation) → outer transfer via Vt1 → L3 in → Vc2 → L4 out → Vt2 → L5 in → Vc3 → L6 out. Through vias drawn over the full height (grey) with black dots on the two layers they join. Hatched P2 = option M3 (pair rotated by half a coil pitch, 15° for Q = 12) | D02 p.1 EV-01 (complementary spirals, vias); D14 p.4 EV-40 (outer → inner, via, inner → outer); series layers per D11 p.4; through-via-only constraint from the repository drill report (EV-R2) | path logic `inferred`; via arrangement `assumption` |
 | C — connection | U → A1 → A2 → A3 → A4 → N, same for V/B and W/C (series coils, star) | `topology_analysis.md` §3.4 | `assumption` (star default) |
 | D — polarity example | 12/10 pattern "AabBCcaABbcC": uppercase = positive coil (CW), lowercase = reversed (CCW); reversal realised by entering the coil at its other outer terminal | D08 p.36 Fig. 3.7 (reproduced by `checks/kw.py`); entry-terminal polarity as in Xcoil v3 `buildSector` | pattern `verified (reproduced)` |
@@ -22,8 +22,12 @@ schematic. No dimension, field, EMF, resistance or other electrical value may be
 Notes:
 - For 12/16 no coil is reversed; panel D is included only to show how CW/CCW polarity appears in combinations that need it
   (12/10, 12/14, 18/16).
-- The A–C–B order around the stator follows the 60° phase-belt convention of `checks/kw.py`; swapping the B and C labels
-  corresponds to the opposite rotation direction (`inferred`).
+- Conventions (revised 2026-10-04 in the reconciliation round, `answers_to_agents.md` §1.4): coil k sits at θ_k = θ₀ + k·2π/Q
+  counter-clockwise viewed from the F.Cu (L1) side, which faces rotor 1; a positive coil carries positive phase current
+  clockwise seen from that side; phases A/B/C end at terminals U/V/W. With the rotor turning in +θ, coil EMFs lag by
+  p·θ_k, so the A C B order around the stator gives the electrical sequence A→B→C (`inferred`, phasor arithmetic of
+  `checks/kw.py`). Swapping the B and C labels corresponds to the opposite rotation direction. (The first version of this
+  drawing numbered the coils clockwise; corrected.)
 - Option M3 (hatched pair) is drawn as an option only; for 12/16 a half-pitch rotation equals 120° el. and merely permutes
   phases between pairs (k_w unchanged), while for 12/10 and 12/14 it lowers k_w11/k_w13 (`topology_analysis.md` §4.2).
 

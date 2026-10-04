@@ -189,6 +189,13 @@ measurements `verified (run)` there, tolerances `assumption` pending Agent 4):
   Xcoil's own golden check passes only with that override (Agent 3 `feature_inventory.md` §0, `verified (run)`).
 - An **expected-differences allow-list** records each intentional deviation with EQ-ID and reason (e.g. EQ-08 integer star
   of slots: 12/14 now balanced; EQ-04 α_p(r)).
+- **Constants**: embodic adopts ρ₂₀ = 1.7241e-8 Ω·m (EV-53) and copper density 8.89 g/cm³, Xcoil uses 1.724e-8 and 8.96
+  (Agent 2 `answers_to_agents.md` §2.1) → golden cases inject Xcoil's constants explicitly; the embodic values are tested
+  by UT-PHY/OR tests. Known Xcoil defects are not reproduced (expected-differences list).
+- **Spiral generator closed forms** (no Xcoil counterpart): Agent 2's cases G1 (D08: 1 trapezoidal + 2 triangular loops,
+  177.233 mm per coil-layer), G2 (default 12/16: 9 + 2 loops; N = 8 → 379.578 mm), G3 (18/16: 5 + 3 loops; N = 4 →
+  195.199 mm) from `docs/phase1/engineering/checks/eq02_eq03_reference.py`; tolerances: loop counts exact in concentric
+  test mode / ±1 for the true spiral, lengths 1e-3 mm vs the closed form, generated spiral within −6 … 0 % (Agent 2 §2.2).
 
 ## 4. Oracle cases (OR)
 
@@ -280,6 +287,8 @@ Technology-neutral definitions; implemented with pytest-qt offscreen (C-A) or Pl
 | UI-18 | Last valid figure | invalid input keeps the previous drawing marked "outdated" | F-27 |
 | UI-19 | Feasibility hints | hints match `turns_per_coil` and `Feasibility` after each recompute | F-28 |
 | UI-20 | Rotor-angle overlay (if implemented) | magnets rotate, no recompute | F-30 |
+| UI-21 | Autosave/recovery | process killed after an edit → next start offers recovery with identical design hash | F-31 |
+| UX-AC-01…22 | Agent 1's acceptance criteria (`design_handoff_for_agent3.md` §4), run on the Qt widget tree via `objectName` ids (architecture_draft.md §19) | as defined by Agent 1; mapping to REQ-IDs in requirements_draft.md §9 | see §9 there |
 
 ## 8. KiCad export validation (KX) and smoke tests (KS)
 
@@ -293,8 +302,8 @@ Technology-neutral definitions; implemented with pytest-qt offscreen (C-A) or Pl
 | KX-04 | Arc start/mid/end lie on the circle within 1 nm; consecutive primitive end points coincide in nm | K-08 |
 | KX-05 | Metadata (generator "embodic", versions, design hash) present in all files | T-07, L-03 |
 | KX-06 | Widths and layer names match the layout; inner layers named per mapping rule | K-01 |
-| KX-07 | Plugin mapping `Layout → item specs` (pure function, no KiCad): counts, mm→nm, y flip, start/mid/end order | K-02, K-08 |
-| KX-08 | Plugin commit protocol with a fake kipy board (test double): `begin_commit`/`push_commit` on success, `drop_commit` on exception, removes only tracked embodic items | K-02, K-04 |
+| KX-07 | `embodic.io.kicad_items.layout_to_item_specs` (pure, no KiCad): counts, mm→nm, y flip, start/mid/end order; identical specs feed the `.kicad_pcb` writer and the plugin | K-02, K-08 |
+| KX-08 | `apply_item_specs` against `FakeBoardApi`: begin/commit on success, rollback on exception, removes only tracked embodic items; a 4-layer fake board with a 6-layer design creates nothing and reports `KICAD_LAYERS_MISSING` | K-02, K-04, K-14 |
 | KX-09 | SVG parses as XML; layer groups per copper layer; viewBox covers the outline | F-16 |
 | KX-10 | PDF opens with pypdf; ≥ 1 page; contains "Key results" and status labels | F-16, T-07 |
 | KX-11 | ZIP bundle (if implemented): contains every selected export + summary text; Xcoil v3 JSON import maps existing fields and lists dropped ones | F-29 |
@@ -419,6 +428,9 @@ Generated automatically in Phase 2 from pytest markers (TR-01); this skeleton de
 | REQ-F-28 | ui.views, winding, geometry | UI-19 |
 | REQ-F-29 | io | KX-11 |
 | REQ-F-30 | ui.views.geometry_view | UI-20 |
+| REQ-F-31 | ui.app | UI-21 |
+| REQ-F-32 | ui.viewmodels.step_vm | UX-AC-12 |
+| REQ-F-33 | ui.dialogs, cli | UX-AC-16; UT-CLI-01 |
 | REQ-N-01…03 | api, drc, physics | PF-01, PF-02, PF-04 |
 | REQ-N-02 | ui.workers | UI-02, UI-05 |
 | REQ-N-04 | api, io.canonical | PR-09, PK-04, UT-IO-02, MT-06 |
@@ -431,6 +443,10 @@ Generated automatically in Phase 2 from pytest markers (TR-01); this skeleton de
 | REQ-N-20 | adapters | UT-LOG-01 |
 | REQ-N-21 | units, geometry | UT-UNI-01, 02; PR-04 |
 | REQ-N-22 | ui | PF-03 |
+| REQ-N-23 | ui.theme, ui.views.geometry_view | UX-AC-05; AX-05 |
+| REQ-N-24 | ui.views | UX-AC-15; AX-06 |
+| REQ-N-25 | ui.views.charts | UX-AC-18 |
+| REQ-N-26 | ui | UX-AC-20 |
 | REQ-K-01 | io.kicad_pcb_writer | KX-01, 02, 04, 05, 06; KS-01 |
 | REQ-K-02 | embodic_kicad_plugin | KX-07, KX-08; KS-02 |
 | REQ-K-03 | embodic_kicad_plugin.stackup_import | KS-03 |
@@ -438,11 +454,13 @@ Generated automatically in Phase 2 from pytest markers (TR-01); this skeleton de
 | REQ-K-05, K-11 | all | MT-01 |
 | REQ-K-06 | embodic_kicad_plugin.connection | KS-05 |
 | REQ-K-07 | plugin packaging | KS-06; PK-09 |
-| REQ-K-08 | plugin.board_items, io.kicad_pcb_writer | UT-UNI-02; PR-04; KX-04, KX-07 |
+| REQ-K-08 | io.kicad_items, io.kicad_pcb_writer, plugin.apply | UT-UNI-02; PR-04; KX-04, KX-07 |
 | REQ-K-09 | plugin, writer | KX-02 |
 | REQ-K-10 | plugin.launcher | KS-07 |
 | REQ-K-12 | — | KS-08 |
 | REQ-K-13 | packaging | PK-09 |
+| REQ-K-14 | plugin.apply, ui.export_view | KX-08; KS-02 |
+| REQ-K-15 | ui.views.kicad_compact | KS-07; UX-AC-21 |
 | REQ-T-01 | ui.results_view | UI-06, AX-02 |
 | REQ-T-02 | results | UT-RES-01 |
 | REQ-T-03 | results.status | UT-RES-02; PR-12 |
@@ -454,12 +472,16 @@ Generated automatically in Phase 2 from pytest markers (TR-01); this skeleton de
 | REQ-T-09 | tests infrastructure | TR-01, TR-02 |
 | REQ-T-10, T-11 | ui.strings, io.report | LG-03, LG-04 |
 | REQ-T-12 | ui, io.report | UI-13 |
+| REQ-T-13 | ui.results_view | UX-AC-02; UI-06 |
+| REQ-T-14 | ui.views.geometry_view, io.* | UX-AC-17; KX-05 |
 | REQ-L-01, L-02 | ui.strings, plugin | LG-01, LG-02 |
 | REQ-L-03 | ui, io | LG-05, KX-05 |
 | REQ-L-04 | ui.theme | AX-01 |
 | REQ-L-05 | assets | LG-06 |
 | REQ-L-06 | ui.strings | LG-07 |
 | REQ-L-07 | results.formatting | UT-UNI-03 |
+| REQ-L-08 | results.formatting, ui | UX-AC-19 |
+| REQ-L-09 | ui.strings | LG-07 |
 
 ## 15. Expected independent coverage by Agent 4
 

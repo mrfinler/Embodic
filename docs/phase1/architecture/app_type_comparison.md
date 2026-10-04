@@ -149,10 +149,12 @@ A4 Dear PyGui (accessibility), B3 Streamlit (execution model unsuited to an inte
 | L6 | The full UI cannot run inside KiCad without installing Qt into KiCad's venv | UI-less plugin; launcher action via T3; file-based exchange as fallback | unresolved (T2/T3) |
 | L7 | Users without Python need the bundle; bundle signing/SmartScreen behaviour on Windows not investigated | Phase 2 packaging task; document "pip" route first | unresolved |
 | L8 | No prototype was built in Phase 1 | Phase 2 starts with a 2-day spike: render the default layout (≈ 10⁴ primitives) in QGraphicsView and measure frame time and memory | not tested |
-| L9 | No phone/tablet use: Agent 1 analysed Xcoil's tablet and phone layouts (`docs/phase1/design/ux_analysis.md` §5); a desktop app targets windows ≥ 1280 × 720 only | If mobile viewing matters to the user, that is an argument for C-B1 | inferred |
+| L9 | No phone/tablet use: Agent 1 analysed Xcoil's tablet and phone layouts (`docs/phase1/design/ux_analysis.md` §5); a desktop app targets windows ≥ 960 × 540 device-independent px only (REQ-N-15; three panes from 1280 px) | If mobile viewing matters to the user, that is an argument for C-B1 | inferred |
 | L10 | Agent 3 measured a ≈ 45× CPython slowdown on the DRC kernel vs V8 (`docs/phase1/software/calculation_flow_and_port_notes.md` §4) — applies to every option because the engine is Python | NumPy kernels, staged recompute, worker thread (architecture_draft.md §11) | verified (measurement by Agent 3) / inferred (mitigation) |
 
 ## 8. Decisions requested from the user
+
+Consolidated with all other agents' questions in `user_decisions_needed.md` (UD-01 … UD-26); the items below are UD-01 … UD-04.
 
 1. Approve C-A (PySide6 desktop + UI-less IPC plugin + `.kicad_pcb` writer), or choose C-B1 / another option.
 2. Intended licence of embodic (proprietary, MIT/BSD/Apache, GPL-3)? It affects PCM distribution (REQ-K-13) and the

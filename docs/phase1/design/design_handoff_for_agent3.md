@@ -28,7 +28,7 @@ Tier 1 → tier 2 names as used in the mockups (`:root` in every mockup file). C
 | `--phase-a` | `#5c4383` | `#73599e` | phase A (data only) |
 | `--phase-b` | `#87660c` | `#9b7928` | phase B (data only) |
 | `--phase-c` | `#438ebf` | `#539dcf` | phase C (data only) |
-| `--phase-a/b/c-grey` | `#262626` / `#5e5e5e` / `#8a8a8a` | — | greyscale mode, + hatch none / 45° / 135° |
+| `--phase-a/b/c-grey` | `#262626` / `#5e5e5e` / `#8a8a8a` | `#7a7a7a` / `#a8a8a8` / `#e0e0e0` | greyscale mode, + coil-eye fill none / 45° / 135° hatch (full list: `tokens.json`) |
 | `--status-pass` | `#2f6a47` (6.42:1) | `#6fb38a` | ✓ Pass glyph + word |
 | `--status-fail` | `#a6332c` (6.71:1) | `#e2776d` | ✕ Fail glyph + word, DRC marker, fail count |
 | `--font-ui` | `"Segoe UI", "Noto Sans", "Liberation Sans", system-ui, sans-serif` | | 14 px base, 16 px on touch/phone |
@@ -66,7 +66,9 @@ check LICENSE files before bundling. No runtime CDN font requests.
 
 ## 3. Element ids per screen
 
-Ids are stable contracts for tests (Agent 4) and for porting. In mockups 03 (frame B) and 05 the repeated shell is
+Ids are stable contracts for tests (Agent 4) and for porting. Reconciliation round: the canonical ids proposed in
+`architecture/architecture_draft.md` §19 (derived from model field names) are **accepted** and used below and in the
+re-rendered mockups; the old→new list and the engine bindings are in `screen_to_view_map.md`. In mockups 03 (frame B) and 05 the repeated shell is
 prefixed (`fb-` in 03 frame B); in the app each id is unique.
 
 **Shell (all desktop screens):** `#app-topbar`, `#doc-name`, `#doc-state`, `#btn-undo`, `#btn-redo`, `#btn-open`,
@@ -76,14 +78,14 @@ prefixed (`fb-` in 03 frame B); in the app each id is unique.
 `#st-counts`, `#st-units`, `#st-cursor`. Figure tools: `#btn-labels`, `#btn-fit`, `#btn-zoom-in`, `#btn-zoom-out`;
 `#btn-drc-locate`.
 
-**01 Overview / 02 Coil:** `#param-coil-count` (Q), `#param-pole-count` (2p), `#hint-combination`, `#param-coil-sides`
-(radial | parallel), `#param-coil-ends` (arc | straight | stadium), `#param-fillet-radius`, `#param-turns`,
-`#param-turns-notice`, `#param-trace-width`, `#param-trace-spacing` (+ `-error`), `#param-spiral-sense` (cw | ccw),
-`#param-r-inner`, `#param-r-outer`, `#param-coil-gap`, `#param-start-angle`; rail key results `#res-r-phase`, `#res-ke`,
+**01 Overview / 02 Coil:** `#param-coil-count` (Q), `#param-poles` (2p), `#hint-combination`, `#param-side-style`
+(radial | parallel), `#param-end-style` (arc | straight | stadium), `#param-corner-radius`, `#param-turns`,
+`#param-turns-notice`, `#param-trace-width`, `#param-clearance` (+ `-error`), `#param-x-inward-sense` (cw | ccw),
+`#param-r-inner`, `#param-r-outer`, `#param-coil-gap`, `#param-first-coil-angle`; rail key results `#res-r-phase`, `#res-ke`,
 `#res-kt`, `#res-ls`, `#res-dt` each with `-value`, `-unit`, `-eq`; `#toast-demo`.
 
 **03 Phases:** `#param-connection` (star | delta | open), `#param-phase-assign-mode` (auto | manual),
-`#param-phase-sequence` (abc | acb), `#phase-pattern-string`, `#phase-balance-status`, `#param-terminal-side`,
+`#param-phase-sequence` (abc | acb), `#phase-pattern-string`, `#phase-balance-status`, `#param-terminal-location`,
 `#param-terminal-u|v|w|n`, `#phase-ring`, `#phase-table` (row per coil; manual mode adds `#coil-<n>-phase`,
 `#coil-<n>-polarity`, `#coil-<n>-direction`).
 
@@ -103,8 +105,8 @@ prefixed (`fb-` in 03 frame B); in the app each id is unique.
 
 **06 Phone:** same parameter ids; `#app-topbar`, `#fig-canvas`, `#rail-drc`, `#panel-step`, `#step-nav` (bottom bar).
 
-Naming rule: `#param-<kebab-name>` for every engine parameter (1:1 with the Python parameter name in snake_case,
-e.g. `param-trace-width` ↔ `trace_width`), `#res-<key>` for results, `#btn-<action>` for commands.
+Naming rule (architecture §19, accepted): `#param-` + kebab-case of the model field name without its unit suffix
+(`trace_width_mm` → `#param-trace-width`), `#res-<quantity>` for results, `#btn-<action>` for commands.
 
 ## 4. UX acceptance criteria (for Agent 6 → requirement ids, Agent 4 → tests)
 

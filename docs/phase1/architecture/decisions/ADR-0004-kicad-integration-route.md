@@ -2,7 +2,7 @@ Prepared by: Agent 6 — Software Architecture Specialist — model: claude-opus
 
 # ADR-0004: KiCad integration — `.kicad_pcb` writer as baseline, IPC API plugin as the plugin route, no SWIG
 
-**Status:** Proposed (plugin details depend on smoke tests T1–T5)
+**Status:** Proposed — amended 2026-10-04 (plugin window, two-layer adapter, no silent remap, Python floor); details still depend on T1–T6
 **Date:** 2026-10-04
 **Deciders:** User (plugin expectations), Fable 5.1 — consulted: Agent 5 (evidence), Agent 3
 
@@ -100,8 +100,21 @@ experience if T3 succeeds.
 1. [ ] User (Phase 2 start): run T1–T5 smoke tests (A5-KI §4), Agent 3's T0 (= KS-01: open a generated `.kicad_pcb`,
        save, report the format version KiCad writes) and T6 (PCM install from file).
 2. [ ] Fable: decide the core's Python floor after T1 (architecture_draft.md §17 R10).
-3. [ ] Agent 3: port the `.kicad_pcb` writer; implement `board_items.py` as a pure mapping `Layout → item specs` testable
+3. [ ] Agent 3: port the `.kicad_pcb` writer; implement `embodic.io.kicad_items` as a pure mapping `Layout → ItemSpec` (shared by writer and plugin) testable
        without KiCad.
 4. [ ] Agent 4: KX-01…KX-08 parser and adapter tests; KS-02…KS-06 manual checklist.
 5. [ ] Fable: decide core distribution into the plugin venv (published wheel vs vendored core — Agent 3 prefers vendoring)
        after T2.
+
+## Amendment 1 — reconciliation round 1 (2026-10-04)
+
+- **Two-layer adapter adopted** (Agent 3): pure `embodic.io.kicad_items.layout_to_item_specs` (core; also used by the
+  `.kicad_pcb` writer, so file and live placement are identical on the 1 nm grid) + thin `embodic_kicad_plugin.apply`
+  behind a `BoardApi` protocol (`KipyBoardApi`, `FakeBoardApi` for KX-08).
+- **Agent 1's plugin dialog** (880 × 600, tabs, UX-AC-21) is realised as a compact window of the standalone app started by
+  the plugin's launcher action (R3, needs T3). The plugin venv still contains no GUI toolkit. Without T3 the plugin only
+  applies the project file and reports through its log.
+- **No silent layer remap** (REQ-K-14): every placement path blocks when the board has fewer copper layers than the
+  design.
+- **Python floor**: core in 3.11 syntax, no 3.12-only features; if KiCad bundles ≤ 3.9 the core is not vendored and the
+  plugin uses R3 or R1 only; 3.10 allows a small downgrade (architecture_draft.md §18.1 item 1).

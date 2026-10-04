@@ -2,7 +2,7 @@ Prepared by: Agent 6 — Software Architecture Specialist — model: claude-opus
 
 # ADR-0006: Testing approach — unit + function-level golden regression vs the JS engine + oracle cases + property/fuzz tests, linked to requirements
 
-**Status:** Proposed
+**Status:** Proposed — amended 2026-10-04 (Agent 2/3 refinements)
 **Date:** 2026-10-04
 **Deciders:** Fable 5.1 — consulted: Agent 4 (independent verification), Agent 2 (tolerances), Agent 3
 
@@ -89,3 +89,13 @@ different geometry.
 2. [ ] Agent 2/4: tolerance table for OR-01…OR-06; decide G10 handling for O1.
 3. [ ] Agent 4: independent checkers (DRC, star of slots, field point values).
 4. [ ] Fable: CI gate = unit + golden + oracle + property (fast profile) + MT + TR checks on every commit.
+
+## Amendment 1 — reconciliation round 1 (2026-10-04)
+
+- Golden comparisons inject Xcoil-compatible constants (ρ₂₀ 1.724e-8 Ω·m, copper density 8.96 g/cm³) or compare at
+  function level, because embodic adopts ρ₂₀ = 1.7241e-8 (EV-53) and 8.89 g/cm³ (Agent 2 `answers_to_agents.md` §2.1);
+  known Xcoil defects are not ported bug-for-bug and appear in the expected-differences list.
+- Two gates per function where both apply (Agent 2/3): port equivalence (golden) and engineering validity (EQ gate +
+  oracles); `replace` and new items (spiral generator, EQ-04, EQ-21) have engineering tests only, using Agent 2's
+  closed-form cases G1–G3 (`checks/eq02_eq03_reference.py`).
+- Agent 1's UX-AC-01…22 become UI/AX test cases (requirements_draft.md §9).

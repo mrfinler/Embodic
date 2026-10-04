@@ -13,7 +13,7 @@ they are computed values, not measurements.
 
 | Function (src line) | Computes | Units | Verdict | Notes |
 |---|---|---|---|---|
-| constants l.11–16 | µ0; ρ₂₀ = 1.724e-8 Ω·m; α = 0.00393 /K; 1 oz = 0.0348 mm; via plating 0.025 mm; odd harmonics 1…13 | SI / mm | reuse with change | ρ₂₀, α, oz: standard values but no corpus source (G6) → cite a standard; make harmonic set configurable |
+| constants l.11–16 | µ0; ρ₂₀ = 1.724e-8 Ω·m; α = 0.00393 /K; 1 oz = 0.0348 mm; via plating 0.025 mm; odd harmonics 1…13 | SI / mm | reuse with change | ρ₂₀ = 1.724e-8 and α = 0.00393 now sourced (IACS/IEC 28 via NBS Handbook 100, EV-53; IACS value 1.7241e-8); oz → µm conversion still a convention; make harmonic set configurable |
 | `copperResistivity` l.80, `traceResistance` l.102, `primsResistance` l.97 | ρ(T) = ρ₂₀(1+α(T−20)); R = ρL/(wt) per primitive width | Ω, mm in | reuse | Matches D08 eq. 3.37–3.38 (EV-08). Check C3 |
 | `skinDepthMm` l.81 | δ = √(ρ/(π f µ0)) | mm | reuse | D01 eq. 4 (EV-21); test ELE-02 |
 | `ipc2221Current` l.86 | I = k ΔT^0.44 A^0.725, A in mil², k = 0.048 ext / 0.024 int | A | cannot verify yet | Standard not in corpus (G5); label every result `assumption` |
@@ -34,7 +34,7 @@ they are computed values, not measurements.
 | `emfWaveform` l.1020, `lineWaveform` l.1441 | harmonic synthesis of phase/line EMF | V | reuse | — |
 | `windingInductance` l.2617 | current-sheet harmonic model of radial conductors between irons, inter-layer e^{−ν Δz/r}, sinc² width factor; L_s = L_self − M | H | cannot verify yet | End-turns dropped (significant for spiral coils); no measured multi-layer spiral oracle (G1). Indicative only (C9) |
 | `torqueSpeed` l.2688, `inverterVoltage` l.2679, `driveAnalysis` l.2725 | dq steady state with V and I limits; SVPWM V_LL,rms = V_dc/√2, SPWM √3V_dc/(2√2), six-step √6V_dc/π | rpm, N·m | cannot verify yet | Standard relations (textbook source needed), but rely on L (G1) |
-| `massThermal` l.1378 | copper/laminate mass (8.96 / 1.85 g/cm³); ΔT = P/(h·2A_board), h default 30 W/m²K | g, K | reuse with change | Densities need a source; h = 30 conflicts with D01's "widely used" 10 W/m²K (EV-22); no conduction path (D01 eq. 6–8, D08 §7) |
+| `massThermal` l.1378 | copper/laminate mass (8.96 / 1.85 g/cm³); ΔT = P/(h·2A_board), h default 30 W/m²K | g, K | reuse with change | Copper density: IACS 8.89 g/cm³ (EV-53) vs engine 8.96; laminate density needs a source; h = 30 conflicts with D01's "widely used" 10 W/m²K (EV-22); no conduction path (D01 eq. 6–8, D08 §7) |
 | `rotorInertiaEstimate` l.2671 | magnets + yoke disc (yoke thickness = magnet thickness) | kg·m² | reuse with change | 'singleOpen' → no yoke (inconsistent with field model) |
 | `interconnectResistance` l.1361 | stub/link/ring resistances of star/delta interconnect | Ω | reuse | — |
 

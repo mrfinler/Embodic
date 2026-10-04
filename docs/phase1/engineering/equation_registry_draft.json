@@ -1,0 +1,1502 @@
+{"prepared_by": "Prepared by: Agent 2 — Motor Design Expert — model: claude-opus-5-5",
+ "schema": "embodic equation registry draft v0 (Phase 1, 2026-10-04) - source: equation_specification_draft.md",
+ "status_vocabulary": [
+  "verified",
+  "inferred",
+  "assumption",
+  "unresolved",
+  "not tested"
+ ],
+ "status_order_weakest_first": [
+  "unresolved",
+  "not tested",
+  "assumption",
+  "inferred",
+  "verified"
+ ],
+ "gate_vocabulary": [
+  "reuse",
+  "reuse with change",
+  "cannot verify yet",
+  "replace"
+ ],
+ "notes": [
+  "status = Phase 1 evidence status of the equation; implementation status starts as 'not tested' until its tests pass in CI (ADR-0003 item 5)",
+  "gate_verdict 'replace' for EQ-04 and EQ-21 means: no Xcoil implementation exists, implement new from the specification",
+  "result status = weakest of equation status, implementation status, status of every used input (defaults = assumption), validity cap (violation = unresolved)",
+  "reference values are computed by Agent 2 (scripts in checks/); none is a measurement"
+ ],
+ "equations": [
+  {
+   "id": "EQ-01",
+   "name": "Pole pitch, coil pitch, electrical angle",
+   "formula": "tau_p(r) = pi*r/p; theta_p = pi/p; theta_cp = 2*pi/Q; theta_e = p*theta",
+   "variables": [
+    {
+     "symbol": "p",
+     "unit": "1",
+     "meaning": "pole pairs"
+    },
+    {
+     "symbol": "Q",
+     "unit": "1",
+     "meaning": "coils per layer"
+    },
+    {
+     "symbol": "r",
+     "unit": "mm",
+     "meaning": "radius"
+    },
+    {
+     "symbol": "tau_p",
+     "unit": "mm",
+     "meaning": "pole pitch at r"
+    },
+    {
+     "symbol": "theta_cp",
+     "unit": "rad",
+     "meaning": "coil pitch"
+    }
+   ],
+   "sources": [
+    "EV-03"
+   ],
+   "source_notes": "D08 eq. 3.2 p.31; coil pitch by geometry (D08 eq. 3.27 prints pi/p, valid only for Q = 2p)",
+   "gate_verdict": "reuse",
+   "status": "verified",
+   "tolerance": {
+    "value": "exact",
+    "basis": "geometric identity"
+   },
+   "dominant_assumptions": [],
+   "reference_case": {
+    "source": "arithmetic",
+    "inputs": {
+     "poles": 16,
+     "Q": 12
+    },
+    "expected": {
+     "theta_p_deg": 22.5,
+     "theta_cp_deg": 30.0,
+     "theta_cp_elec_deg": 240.0
+    },
+    "tolerance": "exact"
+   }
+  },
+  {
+   "id": "EQ-02",
+   "name": "Turn-count limits of a trapezoidal spiral coil (radial bound + constructive loop criterion)",
+   "formula": "w_d = w + s; N_c < 0.5*((r_o - r_i)/w_d + 1) (D08 3.24); loop i (d_i = (i+1/2)*w_d) is trapezoidal iff d_i < (r_i + i*w_d)*sin(theta_cp/2), triangular iff not trapezoidal and d_i/sin(theta_cp/2) < r_o - i*w_d; printed D08 3.25-3.26 kept as cross-check",
+   "variables": [
+    {
+     "symbol": "r_o",
+     "unit": "mm",
+     "meaning": "centre-line radius of the outer end-turn of loop 0"
+    },
+    {
+     "symbol": "r_i",
+     "unit": "mm",
+     "meaning": "centre-line radius of the inner end-turn of loop 0"
+    },
+    {
+     "symbol": "w",
+     "unit": "mm",
+     "meaning": "trace width"
+    },
+    {
+     "symbol": "s",
+     "unit": "mm",
+     "meaning": "clearance"
+    },
+    {
+     "symbol": "w_d",
+     "unit": "mm",
+     "meaning": "lateral pitch"
+    },
+    {
+     "symbol": "theta_cp",
+     "unit": "rad",
+     "meaning": "coil pitch 2*pi/Q"
+    },
+    {
+     "symbol": "N",
+     "unit": "1",
+     "meaning": "loops (turns) per coil per layer"
+    }
+   ],
+   "sources": [
+    "EV-02",
+    "EV-06"
+   ],
+   "source_notes": "D08 p.33 eq. 3.5, p.43 eq. 3.24-3.26; loop criterion derived from D08 eq. 3.28-3.29 (Agent 2); printed 3.25-3.26 mis-split trapezoidal/triangular loops",
+   "gate_verdict": "replace",
+   "status": "inferred",
+   "tolerance": {
+    "value": "exact integer (loop criterion); printed 3.25-3.26 may differ by 1; generator +/-1 turn",
+    "basis": "centre-via eye and fillets not in the closed form"
+   },
+   "dominant_assumptions": [
+    "trace width w and clearance s (fabricator capability)",
+    "coil gap",
+    "centre-via pad and clearance (eye)",
+    "concentric-loop model"
+   ],
+   "reference_case": {
+    "source": "D08 Table 4.5 p.54 / Table 4.6 p.57 (3 loops); checks/eq02_eq03_reference.py",
+    "inputs": {
+     "r_o_mm": 44.0,
+     "r_i_mm": 12.5,
+     "w_mm": 2.06,
+     "s_mm": 0.8,
+     "Q": 12
+    },
+    "expected": {
+     "radial_bound_Nc_lt": 6.007,
+     "trapezoidal": 1,
+     "triangular": 2,
+     "total": 3,
+     "printed_3_25_3_26": "2 + 1 = 3"
+    },
+    "tolerance": "exact",
+    "additional_cases": [
+     {
+      "inputs": {
+       "r_o_mm": 37.75,
+       "r_i_mm": 18.25,
+       "w_mm": 0.5,
+       "s_mm": 0.2,
+       "Q": 12
+      },
+      "expected": {
+       "radial_bound_Nc_lt": 14.429,
+       "trapezoidal": 9,
+       "triangular": 2,
+       "total": 11,
+       "printed_3_25_3_26": "10 + 1 = 11"
+      }
+     },
+     {
+      "inputs": {
+       "r_o_mm": 37.75,
+       "r_i_mm": 18.25,
+       "w_mm": 0.5,
+       "s_mm": 0.2,
+       "Q": 18
+      },
+      "expected": {
+       "radial_bound_Nc_lt": 14.429,
+       "trapezoidal": 5,
+       "triangular": 3,
+       "total": 8,
+       "printed_3_25_3_26": "6 + 1 = 7"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "EQ-03",
+   "name": "Loop geometry and track length (closed-form cross-check)",
+   "formula": "phi_in,i = asin(d_i/(r_i + i*w_d)); phi_out,i = asin(d_i/(r_o - i*w_d)); beta = theta_cp/2 - phi; L_out,i = 2*(r_o - i*w_d)*beta_out,i; L_in,i = 2*(r_i + i*w_d)*beta_in,i (0 if beta_in,i <= 0); L_s,i = d_i/tan(phi_out,i) - d_i/tan(phi_in,i) (phi_in -> theta_cp/2 if triangular); L_i = L_out,i + L_in,i + 2*L_s,i; L = sum L_i",
+   "variables": [
+    {
+     "symbol": "d_i",
+     "unit": "mm",
+     "meaning": "side offset of loop i"
+    },
+    {
+     "symbol": "L_out,i",
+     "unit": "mm",
+     "meaning": "outer arc length"
+    },
+    {
+     "symbol": "L_in,i",
+     "unit": "mm",
+     "meaning": "inner arc length"
+    },
+    {
+     "symbol": "L_s,i",
+     "unit": "mm",
+     "meaning": "one straight side"
+    },
+    {
+     "symbol": "L",
+     "unit": "mm",
+     "meaning": "track length per coil-layer"
+    }
+   ],
+   "sources": [
+    "EV-07"
+   ],
+   "source_notes": "D08 p.44-45 eq. 3.27-3.36 with corrections: theta_cs -> 2*pi/Q; one pair of sides per loop (printed 3.34 x 3.36 doubles them)",
+   "gate_verdict": "reuse",
+   "status": "inferred",
+   "tolerance": {
+    "value": "1e-3 mm vs closed form; +/-6 % closed form vs generated spiral",
+    "basis": "spiral steps one pitch per turn and ends at a centre via (C4: -3.7 % / -5.5 %)"
+   },
+   "dominant_assumptions": [
+    "trace width and clearance",
+    "corner radius (closed form uses sharp corners)"
+   ],
+   "reference_case": {
+    "source": "checks/eq02_eq03_reference.py (D08 geometry)",
+    "inputs": {
+     "r_o_mm": 44.0,
+     "r_i_mm": 12.5,
+     "w_mm": 2.06,
+     "s_mm": 0.8,
+     "Q": 12,
+     "N": 3
+    },
+    "expected": {
+     "L_loop_mm": [
+      86.974,
+      62.756,
+      27.503
+     ],
+     "L_coil_layer_mm": 177.233,
+     "L_phase_8_coil_layers_mm": 1417.9
+    },
+    "tolerance": "1e-3 mm",
+    "additional_cases": [
+     {
+      "inputs": {
+       "r_o_mm": 37.75,
+       "r_i_mm": 18.25,
+       "w_mm": 0.5,
+       "s_mm": 0.2,
+       "Q": 12,
+       "N": 8
+      },
+      "expected": {
+       "L_coil_layer_mm": 379.578
+      }
+     },
+     {
+      "inputs": {
+       "r_o_mm": 37.75,
+       "r_i_mm": 18.25,
+       "w_mm": 0.5,
+       "s_mm": 0.2,
+       "Q": 18,
+       "N": 4
+      },
+      "expected": {
+       "L_coil_layer_mm": 195.199
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "EQ-04",
+   "name": "Pole-arc ratio of rectangular block magnets",
+   "formula": "tau_M(r) = 2*asin(w_PM/(2r))*r; alpha_p(r) = 2*p*asin(w_PM/(2r))/pi",
+   "variables": [
+    {
+     "symbol": "w_PM",
+     "unit": "mm",
+     "meaning": "tangential block width"
+    },
+    {
+     "symbol": "r",
+     "unit": "mm",
+     "meaning": "radius"
+    },
+    {
+     "symbol": "alpha_p",
+     "unit": "1",
+     "meaning": "pole-arc ratio"
+    }
+   ],
+   "sources": [
+    "EV-03"
+   ],
+   "source_notes": "D08 p.31 eq. 3.3; no Xcoil implementation (constant alpha_p only) -> new implementation",
+   "gate_verdict": "replace",
+   "status": "verified",
+   "tolerance": {
+    "value": "exact",
+    "basis": "geometry"
+   },
+   "dominant_assumptions": [
+    "block width",
+    "block orientation (long side radial)"
+   ],
+   "reference_case": {
+    "source": "checks/c1_field.js C1e",
+    "inputs": {
+     "w_PM_mm": 6.0,
+     "poles": 16,
+     "r_mm": [
+      18,
+      28,
+      38
+     ]
+    },
+    "expected": {
+     "alpha_p": [
+      0.853,
+      0.547,
+      0.402
+     ]
+    },
+    "tolerance": "5e-4 (rounding)"
+   }
+  },
+  {
+   "id": "EQ-05",
+   "name": "Air-gap field, 2-D harmonic model at each radius",
+   "formula": "K_n = (4*B_r/(n*pi))*sin(n*pi*alpha_p/2); u = n*p/r; B_z,n = K_n*cosh(u*(G - z))/(cosh(u*G) + mu_r*coth(u*l_m)*sinh(u*G)); B_t,n = K_n*sinh(u*(G - z))/(same); G = (t_s + 2g)/2 double rotor, t_s + 2g single + yoke, infinity single open; odd n only",
+   "variables": [
+    {
+     "symbol": "B_r",
+     "unit": "T",
+     "meaning": "remanence"
+    },
+    {
+     "symbol": "mu_r",
+     "unit": "1",
+     "meaning": "recoil permeability"
+    },
+    {
+     "symbol": "l_m",
+     "unit": "mm",
+     "meaning": "magnet thickness"
+    },
+    {
+     "symbol": "alpha_p",
+     "unit": "1",
+     "meaning": "pole-arc ratio"
+    },
+    {
+     "symbol": "g",
+     "unit": "mm",
+     "meaning": "air gap per side"
+    },
+    {
+     "symbol": "t_s",
+     "unit": "mm",
+     "meaning": "stator thickness"
+    },
+    {
+     "symbol": "z",
+     "unit": "mm",
+     "meaning": "distance from magnet face"
+    },
+    {
+     "symbol": "G",
+     "unit": "mm",
+     "meaning": "distance to symmetry/iron plane"
+    },
+    {
+     "symbol": "B_z,n",
+     "unit": "T",
+     "meaning": "axial harmonic amplitude"
+    },
+    {
+     "symbol": "B_t,n",
+     "unit": "T",
+     "meaning": "tangential harmonic amplitude"
+    }
+   ],
+   "sources": [
+    "EV-03",
+    "EV-13",
+    "EV-54",
+    "EV-55",
+    "EV-63"
+   ],
+   "source_notes": "D08 eq. 3.1 p.31 (identical for mu_r = 1); D09 eq. 1 p.4 (form); magnet data Arnold (EV-54/55); mu_r not found (G23); Bumby & Martin not accessed (EV-63/G8); closed form derived by Agent 2",
+   "gate_verdict": "reuse with change",
+   "status": "inferred",
+   "tolerance": {
+    "value": "+/-5 % on B1 at mid-radius vs 3-D FEA; not valid within ~1 gap of the radial magnet ends",
+    "basis": "D09 p.4 reports <1 % for a comparable model at mean radius; add mu_r/B_r(T) uncertainty and saturation (D08 p.112); D09 Fig. 7 edge drop ~40 %"
+   },
+   "dominant_assumptions": [
+    "B_r (grade, temperature)",
+    "mu_r (no datasheet value, G23)",
+    "magnet thickness l_m",
+    "air gap g",
+    "unsaturated back iron",
+    "alpha_p (magnet shape)"
+   ],
+   "reference_case": {
+    "source": "checks/c1_field.js C1a (1-D magnetic circuit limit)",
+    "inputs": {
+     "B_r_T": 1.3,
+     "mu_r": 1.05,
+     "l_m_mm": 3.0,
+     "alpha_p": 0.85,
+     "G_mm": 2.0,
+     "p": 8,
+     "r_mm": 10000000.0
+    },
+    "expected": {
+     "B1_T": 0.946752
+    },
+    "tolerance": "1e-9 relative",
+    "additional_cases": [
+     {
+      "source": "D09 Table 3 p.4 rotor vs Fig. 7 FEA (figure reading)",
+      "inputs": {
+       "B_r_T": 1.33,
+       "mu_r": 1.05,
+       "l_m_mm": 2,
+       "alpha_p": 0.8,
+       "G_mm": 1.5,
+       "p": 8,
+       "r_mm": 35.5,
+       "z_mm": 1.5
+      },
+      "expected": {
+       "B_pole_centre_T": 0.738,
+       "D09_FEA_T": "approx. 0.72"
+      },
+      "tolerance": "+/-5 %"
+     }
+    ]
+   }
+  },
+  {
+   "id": "EQ-06",
+   "name": "Back-EMF and flux linkage of a copper path",
+   "formula": "e(t) = omega_m * sum_seg r_m*B_z(r_m, theta_m - theta_r, z_L)*dr; Ke_n = |sum_seg B_z,n(r_m, z_L)*r_m*dr*exp(-j*n*p*theta_m)| (T*mm^2 x 1e-6 = V*s/rad); loop form psi = integral B_z dA, E = -(dpsi/dtheta_m)*omega_m",
+   "variables": [
+    {
+     "symbol": "omega_m",
+     "unit": "rad/s",
+     "meaning": "mechanical speed"
+    },
+    {
+     "symbol": "dr",
+     "unit": "mm",
+     "meaning": "signed radial extent of a segment"
+    },
+    {
+     "symbol": "r_m",
+     "unit": "mm",
+     "meaning": "segment mid radius"
+    },
+    {
+     "symbol": "theta_m",
+     "unit": "rad",
+     "meaning": "segment mid angle"
+    },
+    {
+     "symbol": "Ke_n",
+     "unit": "V*s/rad",
+     "meaning": "peak EMF constant of harmonic n per mechanical rad/s"
+    }
+   ],
+   "sources": [
+    "EV-02",
+    "EV-04",
+    "EV-14",
+    "EV-17",
+    "EV-43",
+    "EV-46"
+   ],
+   "source_notes": "D08 eq. 3.6-3.14; D09 eq. 5-11; D07 p.3; exactness for in-plane conductors derived by Agent 2",
+   "gate_verdict": "reuse",
+   "status": "verified",
+   "tolerance": {
+    "value": "1e-4 relative vs closed form; +/-8 % vs D08 measured Ke (O1); +/-5 % vs D09 calc/FEA (O2, once turns known)",
+    "basis": "numerical integration; D08 p.98 reports max 8 % model deviation"
+   },
+   "dominant_assumptions": [
+    "as EQ-05",
+    "copper-layer z from the stack-up"
+   ],
+   "reference_case": {
+    "source": "checks/e1.js (C2)",
+    "inputs": {
+     "topology": "sector",
+     "Q": 12,
+     "poles": 10,
+     "turns": 1,
+     "sides": "radial",
+     "layers": 2,
+     "r_in_mm": 20,
+     "r_out_mm": 40,
+     "w_mm": 0.4,
+     "s_mm": 0.2,
+     "B_r_T": 1.3,
+     "mu_r": 1.05,
+     "l_m_mm": 3,
+     "alpha_p": 0.8,
+     "g_mm": 1.0,
+     "rotor": "double",
+     "copper_oz": 2,
+     "board_mm": 1.6
+    },
+    "expected": {
+     "Ke1_V_s_per_rad": 0.005410812
+    },
+    "tolerance": "1e-4 relative (achieved 5e-6)"
+   }
+  },
+  {
+   "id": "EQ-07",
+   "name": "Phase assembly, per-layer EMF, parallel paths and circulating loss",
+   "formula": "E_ph = sum_groups E_grp; E_grp = sum_i(E_i/R_i)/sum_i(1/R_i); R_grp = 1/sum_i(1/R_i); P_c = sum_i |E_i - E_grp|^2/(2*R_i) (peak phasors)",
+   "variables": [
+    {
+     "symbol": "E_i",
+     "unit": "V",
+     "meaning": "member EMF phasor (peak)"
+    },
+    {
+     "symbol": "R_i",
+     "unit": "ohm",
+     "meaning": "member resistance"
+    },
+    {
+     "symbol": "P_c",
+     "unit": "W",
+     "meaning": "circulating loss"
+    }
+   ],
+   "sources": [
+    "EV-20",
+    "EV-35",
+    "EV-42",
+    "EV-43"
+   ],
+   "source_notes": "reduces to D01 eq. 2 for two members (R_c = 0); conflict with D15 equal-flux assumption (G3)",
+   "gate_verdict": "reuse with change",
+   "status": "inferred",
+   "tolerance": {
+    "value": "exact identity",
+    "basis": "algebra; physical accuracy depends on per-layer field (G3)"
+   },
+   "dominant_assumptions": [
+    "per-layer z (dielectric thicknesses)",
+    "member resistances (copper thickness)"
+   ],
+   "reference_case": {
+    "source": "identity with D01 eq. 2",
+    "inputs": {
+     "E1_V_peak": 1.0,
+     "E2_V_peak": 0.98,
+     "R1_ohm": 1.0,
+     "R2_ohm": 1.0
+    },
+    "expected": {
+     "E_grp_V": 0.99,
+     "P_c_W": 0.0001
+    },
+    "tolerance": "1e-12 relative"
+   }
+  },
+  {
+   "id": "EQ-08",
+   "name": "Winding factor of concentrated (spiral) coils and phase assignment",
+   "formula": "alpha_k = p*theta_k; 60-degree belts A+, -C, B+, -A, C+, -B; k_d,n = |sum_{k in A} s_k*exp(j*n*alpha_k)|/N_A; k_p,n = |sin(n*p*sigma/2)|; k_w,n = k_d,n*k_p,n; feasibility Q/(m*t) integer, t = gcd(Q,p); spiral average k_p,avg,n = (1/N)*sum_t |sin(n*p*sigma_t/2)|",
+   "variables": [
+    {
+     "symbol": "theta_k",
+     "unit": "rad",
+     "meaning": "coil centre angle"
+    },
+    {
+     "symbol": "s_k",
+     "unit": "1",
+     "meaning": "polarity +1/-1"
+    },
+    {
+     "symbol": "sigma",
+     "unit": "rad",
+     "meaning": "coil (turn) span"
+    },
+    {
+     "symbol": "t",
+     "unit": "1",
+     "meaning": "periodicity gcd(Q,p)"
+    },
+    {
+     "symbol": "k_w,n",
+     "unit": "1",
+     "meaning": "winding factor of harmonic n"
+    }
+   ],
+   "sources": [
+    "EV-26",
+    "EV-46",
+    "EV-56",
+    "EV-58",
+    "EV-59",
+    "EV-60",
+    "EV-61"
+   ],
+   "source_notes": "D04 eq. 1; D11 eq. 14; D12 eq. 1 (N_c/N_pm = m/(m+1)); D07 p.3; D15 eq. 6 (per-turn average); feasibility rule textbook not accessed (G24); integer phasor arithmetic required (Xcoil belt-edge bug)",
+   "gate_verdict": "replace",
+   "status": "inferred",
+   "tolerance": {
+    "value": "1e-9 (exact arithmetic); pattern identical to published table",
+    "basis": "exact computation"
+   },
+   "dominant_assumptions": [],
+   "reference_case": {
+    "source": "D08 Fig. 3.7 p.36; checks/kw.py",
+    "inputs": {
+     "Q": 12,
+     "poles": 10
+    },
+    "expected": {
+     "pattern": "AabBCcaABbcC",
+     "k_w1": 0.9330127
+    },
+    "tolerance": "exact",
+    "additional_cases": [
+     {
+      "inputs": {
+       "Q": 12,
+       "poles": 16
+      },
+      "expected": {
+       "pattern": "ACBACBACBACB",
+       "k_w1": 0.8660254,
+       "k_w3": 0.0,
+       "k_w5": 0.8660254
+      }
+     },
+     {
+      "inputs": {
+       "Q": 12,
+       "poles": 14
+      },
+      "expected": {
+       "balanced": true,
+       "k_w1": 0.9330127
+      }
+     },
+     {
+      "inputs": {
+       "Q": 18,
+       "poles": 16
+      },
+      "expected": {
+       "k_w1": 0.9452,
+       "k_w5": 0.1398
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "EQ-09",
+   "name": "EMF/torque constants and star/delta conversion",
+   "formula": "Ke_ph = |E1|/omega_m; star: Ke_LL = sqrt(3)*Ke_ph, I_ph = I_line; delta: Ke_LL = Ke_ph, I_ph = I_line/sqrt(3); T = (m/2)*Ke_ph*I_ph_peak = (m/sqrt(2))*Ke_ph*I_ph_rms; Kt_line = (m/sqrt(2))*Ke_ph (star), /sqrt(3) (delta); K_v = 1/Ke_LL; R_LL = 2*R_ph (star), 2*R_ph/3 (delta)",
+   "variables": [
+    {
+     "symbol": "Ke_ph",
+     "unit": "V*s/rad",
+     "meaning": "peak phase EMF per mech rad/s"
+    },
+    {
+     "symbol": "Ke_LL",
+     "unit": "V*s/rad",
+     "meaning": "peak line EMF constant"
+    },
+    {
+     "symbol": "T",
+     "unit": "N*m",
+     "meaning": "torque"
+    },
+    {
+     "symbol": "Kt_line",
+     "unit": "N*m/A",
+     "meaning": "torque per line A rms"
+    },
+    {
+     "symbol": "K_v",
+     "unit": "rad/(V*s)",
+     "meaning": "speed constant"
+    }
+   ],
+   "sources": [
+    "EV-04",
+    "EV-24"
+   ],
+   "source_notes": "D08 eq. 3.14 p.36, Table 9.1 p.98; D06 eq. 2 p.3; fundamental only",
+   "gate_verdict": "reuse",
+   "status": "verified",
+   "tolerance": {
+    "value": "exact identities",
+    "basis": "definitions; compare synthesised waveform peak with measured peak voltages"
+   },
+   "dominant_assumptions": [
+    "as EQ-06 (Ke)",
+    "operating current"
+   ],
+   "reference_case": {
+    "source": "D08 Table 9.1 p.98",
+    "inputs": {
+     "speed_rpm": 454,
+     "V_LL_peak": 1.47
+    },
+    "expected": {
+     "Ke_LL_V_s_per_rad": 0.0309,
+     "K_v_from_paper": 32.32,
+     "one_over_K_v": 0.03094
+    },
+    "tolerance": "rounding of printed values"
+   }
+  },
+  {
+   "id": "EQ-10",
+   "name": "DC resistance with temperature",
+   "formula": "rho_T = rho_20*(1 + alpha_20*(T - 20)); R_ph = sum rho_T*L_i/(w_i*t_i) + sum R_via + R_links (+ parallel combination per EQ-07)",
+   "variables": [
+    {
+     "symbol": "rho_20",
+     "unit": "ohm*m",
+     "meaning": "1.7241e-8 (IACS)"
+    },
+    {
+     "symbol": "alpha_20",
+     "unit": "1/K",
+     "meaning": "0.00393 (IACS)"
+    },
+    {
+     "symbol": "T",
+     "unit": "degC",
+     "meaning": "winding temperature"
+    },
+    {
+     "symbol": "L_i",
+     "unit": "mm",
+     "meaning": "primitive length"
+    },
+    {
+     "symbol": "w_i",
+     "unit": "mm",
+     "meaning": "width"
+    },
+    {
+     "symbol": "t_i",
+     "unit": "mm",
+     "meaning": "copper thickness"
+    },
+    {
+     "symbol": "R_ph",
+     "unit": "ohm",
+     "meaning": "phase resistance"
+    }
+   ],
+   "sources": [
+    "EV-08",
+    "EV-29",
+    "EV-44",
+    "EV-53"
+   ],
+   "source_notes": "D08 eq. 3.37-3.38 p.45; D10 eq. 8; D15 eq. 10; constants IACS / IEC 28 via NBS Handbook 100 p.2-4 (EV-53, page re-check pending); PCB copper = IACS is an assumption (G6)",
+   "gate_verdict": "reuse",
+   "status": "verified",
+   "tolerance": {
+    "value": "+/-8 % vs measured DC resistance at known temperature",
+    "basis": "D10 measured +7.5 % over its simulation (p.8); D09 measured +2.9 % over calc (Tables 1/6)"
+   },
+   "dominant_assumptions": [
+    "finished copper thickness t",
+    "winding temperature T",
+    "PCB copper resistivity = IACS (G6)"
+   ],
+   "reference_case": {
+    "source": "hand calculation (C3) and D08 Table 4.6 p.57",
+    "inputs": {
+     "L_mm": 1000,
+     "w_mm": 0.5,
+     "t_mm": 0.0348,
+     "T_degC": 20
+    },
+    "expected": {
+     "R_ohm_rho_1.7241e-8": 0.990862,
+     "R_ohm_rho_1.724e-8_engine": 0.9908
+    },
+    "tolerance": "1e-6 relative",
+    "additional_cases": [
+     {
+      "source": "D08 Table 4.5 p.54 (50 degC), Table 4.6 p.57",
+      "inputs": {
+       "geometry": "EQ-03 D08 case",
+       "coil_layers_in_series": 8,
+       "T_degC": 50
+      },
+      "expected": {
+       "R_ph_ohm_computed": 0.381,
+       "R_ph_ohm_D08": 0.39
+      },
+      "tolerance": "+/-5 % (D08 rho_20/alpha not stated)"
+     }
+    ]
+   }
+  },
+  {
+   "id": "EQ-11",
+   "name": "Via barrel resistance",
+   "formula": "A = pi*(2*r*t_p - t_p^2), r = drill/2; R_via = rho_T*l/A; n vias in parallel -> R/n",
+   "variables": [
+    {
+     "symbol": "drill",
+     "unit": "mm",
+     "meaning": "drill diameter"
+    },
+    {
+     "symbol": "t_p",
+     "unit": "mm",
+     "meaning": "plating thickness"
+    },
+    {
+     "symbol": "l",
+     "unit": "mm",
+     "meaning": "barrel length between joined layers"
+    },
+    {
+     "symbol": "A",
+     "unit": "mm^2",
+     "meaning": "barrel cross-section"
+    },
+    {
+     "symbol": "R_via",
+     "unit": "ohm",
+     "meaning": "via resistance"
+    }
+   ],
+   "sources": [
+    "EV-37",
+    "EV-38"
+   ],
+   "source_notes": "D05 eq. 3-6 p.6-8; barrel only, no pad spreading or crowding (G7)",
+   "gate_verdict": "reuse with change",
+   "status": "inferred",
+   "tolerance": {
+    "value": "not claimed",
+    "basis": "no measured oracle (G7)"
+   },
+   "dominant_assumptions": [
+    "plating thickness t_p",
+    "barrel length",
+    "vias per transition"
+   ],
+   "reference_case": {
+    "source": "engine test ELE-04; checks/c9_reference_values.js",
+    "inputs": {
+     "drill_mm": 0.3,
+     "t_p_mm": 0.025,
+     "l_mm": 0.2,
+     "T_degC": 20,
+     "rho_20": 1.724e-08
+    },
+    "expected": {
+     "A_mm2": 0.021598,
+     "R_via_mOhm": 0.1596
+    },
+    "tolerance": "1e-4 relative"
+   }
+  },
+  {
+   "id": "EQ-12",
+   "name": "Eddy-current loss in traces",
+   "formula": "P = (sigma/24)*sum_n (n*omega_e)^2 * sum_seg L_seg*(Bz_n^2*w^3*t + Bt_n^2*w*t^3), B peak amplitudes",
+   "variables": [
+    {
+     "symbol": "sigma",
+     "unit": "S/m",
+     "meaning": "1/rho_T"
+    },
+    {
+     "symbol": "omega_e",
+     "unit": "rad/s",
+     "meaning": "electrical angular frequency"
+    },
+    {
+     "symbol": "L_seg",
+     "unit": "m",
+     "meaning": "segment length"
+    },
+    {
+     "symbol": "w",
+     "unit": "m",
+     "meaning": "trace width"
+    },
+    {
+     "symbol": "t",
+     "unit": "m",
+     "meaning": "copper thickness"
+    },
+    {
+     "symbol": "Bz_n",
+     "unit": "T",
+     "meaning": "axial peak amplitude"
+    },
+    {
+     "symbol": "Bt_n",
+     "unit": "T",
+     "meaning": "tangential peak amplitude"
+    },
+    {
+     "symbol": "P",
+     "unit": "W",
+     "meaning": "eddy loss"
+    }
+   ],
+   "sources": [
+    "EV-36",
+    "EV-39",
+    "EV-27",
+    "EV-30",
+    "EV-21"
+   ],
+   "source_notes": "D03 eq. 2 / D14 eq. 3 adopted; D04 eq. 9 / D10 eq. 10 are 2x larger with peak B (valid only with RMS B) - G4 resolved by derivation (classical lamination formula)",
+   "gate_verdict": "reuse",
+   "status": "inferred",
+   "tolerance": {
+    "value": "+/-20 % vs 2-D FEM of one trace",
+    "basis": "assumption until Agent 4 runs the FEM (uniform-field and end effects)"
+   },
+   "dominant_assumptions": [
+    "B peak (via EQ-05)",
+    "copper thickness",
+    "electrical frequency",
+    "coefficient 1/24 (by derivation)"
+   ],
+   "reference_case": {
+    "source": "checks/c9_reference_values.js",
+    "inputs": {
+     "L_mm": 20,
+     "w_mm": 0.5,
+     "t_um": 34.8,
+     "Bz_peak_T": 0.7,
+     "Bt_T": 0,
+     "poles": 16,
+     "speed_rpm": 1000,
+     "T_degC": 20
+    },
+    "expected": {
+     "f_e_Hz": 133.33,
+     "P_W": 7.2311e-05,
+     "P_W_if_1_over_12": 0.00014462
+    },
+    "tolerance": "1e-4 relative"
+   }
+  },
+  {
+   "id": "EQ-13",
+   "name": "Skin depth",
+   "formula": "delta = 1/sqrt(pi*f*mu0*sigma)",
+   "variables": [
+    {
+     "symbol": "f",
+     "unit": "Hz",
+     "meaning": "frequency"
+    },
+    {
+     "symbol": "sigma",
+     "unit": "S/m",
+     "meaning": "conductivity"
+    },
+    {
+     "symbol": "delta",
+     "unit": "mm",
+     "meaning": "skin depth"
+    }
+   ],
+   "sources": [
+    "EV-21",
+    "EV-33"
+   ],
+   "source_notes": "D01 eq. 4; D03 strand rule delta/3 as warning threshold (assumption)",
+   "gate_verdict": "reuse",
+   "status": "verified",
+   "tolerance": {
+    "value": "exact",
+    "basis": "standard formula"
+   },
+   "dominant_assumptions": [
+    "winding temperature (rho_T)"
+   ],
+   "reference_case": {
+    "source": "checks/c9_reference_values.js",
+    "inputs": {
+     "f_Hz": 133.33,
+     "T_degC": 20
+    },
+    "expected": {
+     "delta_mm": 5.72
+    },
+    "tolerance": "5e-3 mm (rounding)"
+   }
+  },
+  {
+   "id": "EQ-14",
+   "name": "Inductance - first estimate only",
+   "formula": "L_m = (3*mu0/(4*pi))*(N*k_w1)^2*(D_o^2 - D_i^2)/(p^2*delta'), delta' = 2*l_m + 2*g + t_s; alternative: Xcoil current-sheet model (radial conductors only)",
+   "variables": [
+    {
+     "symbol": "N",
+     "unit": "1",
+     "meaning": "series turns per phase"
+    },
+    {
+     "symbol": "k_w1",
+     "unit": "1",
+     "meaning": "winding factor"
+    },
+    {
+     "symbol": "D_o",
+     "unit": "m",
+     "meaning": "outer active diameter"
+    },
+    {
+     "symbol": "D_i",
+     "unit": "m",
+     "meaning": "inner active diameter"
+    },
+    {
+     "symbol": "delta'",
+     "unit": "m",
+     "meaning": "iron-to-iron gap"
+    },
+    {
+     "symbol": "L_m",
+     "unit": "H",
+     "meaning": "magnetising (synchronous) inductance"
+    }
+   ],
+   "sources": [
+    "EV-31",
+    "EV-44",
+    "EV-19"
+   ],
+   "source_notes": "D10 eq. 14 p.5 as printed (confirmed by two derivations; error in eq. 12 of D10/D15; D15 eq. 14 pi/2 too large); G1 stays unresolved (no end-turn/leakage/sub-harmonic terms, no multi-layer spiral oracle)",
+   "gate_verdict": "cannot verify yet",
+   "status": "unresolved",
+   "tolerance": {
+    "value": "none claimed; target +/-20 % vs LCR measurement after validation",
+    "basis": "assumption"
+   },
+   "dominant_assumptions": [
+    "effective gap delta'",
+    "k_w1",
+    "omission of end-turn and leakage terms"
+   ],
+   "reference_case": {
+    "source": "checks/c9_reference_values.js (example) and D09 Table 6 p.7 (oracle, turns unknown)",
+    "inputs": {
+     "N": 64,
+     "k_w1": 0.866,
+     "D_o_mm": 76,
+     "D_i_mm": 36,
+     "delta_prime_mm": 6.62,
+     "p": 8
+    },
+    "expected": {
+     "L_m_uH": 9.74,
+     "engine_current_sheet_uH": 17.96,
+     "D09_measured_uH_other_geometry": 14.8
+    },
+    "tolerance": "none (estimate)"
+   }
+  },
+  {
+   "id": "EQ-15",
+   "name": "IPC-2221 current capacity (guideline)",
+   "formula": "I = k*dT^0.44*A^0.725, A in mil^2, k = 0.048 external / 0.024 internal",
+   "variables": [
+    {
+     "symbol": "dT",
+     "unit": "K",
+     "meaning": "allowed temperature rise"
+    },
+    {
+     "symbol": "A",
+     "unit": "mil^2",
+     "meaning": "conductor cross-section"
+    },
+    {
+     "symbol": "I",
+     "unit": "A",
+     "meaning": "current"
+    }
+   ],
+   "sources": [
+    "EV-32",
+    "EV-50"
+   ],
+   "source_notes": "IPC-2221 itself not in the corpus (G5); corpus cites it only for spacing",
+   "gate_verdict": "cannot verify yet",
+   "status": "unresolved",
+   "tolerance": {
+    "value": "n/a",
+    "basis": "design guideline; single isolated trace"
+   },
+   "dominant_assumptions": [
+    "allowed temperature rise",
+    "external/internal classification",
+    "standard source missing"
+   ],
+   "reference_case": {
+    "source": "checks/c9_reference_values.js",
+    "inputs": {
+     "w_mm": 0.5,
+     "t_mm": 0.0348,
+     "dT_K": 20
+    },
+    "expected": {
+     "I_external_A": 1.955,
+     "I_internal_A": 0.977
+    },
+    "tolerance": "1e-3 A"
+   }
+  },
+  {
+   "id": "EQ-16",
+   "name": "Mass",
+   "formula": "m_Cu = rho_Cu*sum_L A_Cu,L*t_L; m_lam = rho_lam*(A_board*t_board - V_Cu)",
+   "variables": [
+    {
+     "symbol": "rho_Cu",
+     "unit": "g/cm^3",
+     "meaning": "8.89 (IACS)"
+    },
+    {
+     "symbol": "rho_lam",
+     "unit": "g/cm^3",
+     "meaning": "1.85 FR-4 (unsourced)"
+    },
+    {
+     "symbol": "A_board",
+     "unit": "mm^2",
+     "meaning": "board area"
+    },
+    {
+     "symbol": "V_Cu",
+     "unit": "mm^3",
+     "meaning": "copper volume"
+    }
+   ],
+   "sources": [
+    "EV-53"
+   ],
+   "source_notes": "copper density IACS (NBS Handbook 100 p.4); laminate density needs a datasheet source",
+   "gate_verdict": "reuse with change",
+   "status": "assumption",
+   "tolerance": {
+    "value": "+/-10 % vs weighed board",
+    "basis": "assumption (resin content, mask, plating)"
+   },
+   "dominant_assumptions": [
+    "laminate density",
+    "copper fill and thickness"
+   ],
+   "reference_case": {
+    "source": "hand arithmetic (example)",
+    "inputs": {
+     "outline": "12-gon 93 mm flats minus 25 mm bore",
+     "t_board_mm": 0.62,
+     "copper": "6 layers x 50 % of r 18-38 mm annulus x 34.8 um"
+    },
+    "expected": {
+     "m_lam_g": 7.4,
+     "m_Cu_g": 3.3
+    },
+    "tolerance": "rounding"
+   }
+  },
+  {
+   "id": "EQ-17",
+   "name": "First-order thermal estimate",
+   "formula": "dT = P_loss/(h*2*A_board) (engine); lumped alternative D01 eq. 6-8: theta = L/(K*A_c), dT_cond = P*theta, dT_conv = P/(h_t*A_PCB)",
+   "variables": [
+    {
+     "symbol": "P_loss",
+     "unit": "W",
+     "meaning": "total loss"
+    },
+    {
+     "symbol": "h",
+     "unit": "W/(m^2*K)",
+     "meaning": "film coefficient"
+    },
+    {
+     "symbol": "A_board",
+     "unit": "m^2",
+     "meaning": "board area per face"
+    },
+    {
+     "symbol": "dT",
+     "unit": "K",
+     "meaning": "temperature rise"
+    }
+   ],
+   "sources": [
+    "EV-11",
+    "EV-22"
+   ],
+   "source_notes": "D01 h_t = 10 W/m2K 'widely used'; engine default 30 unsourced; D08 network eq. 7.1-7.5",
+   "gate_verdict": "reuse with change",
+   "status": "assumption",
+   "tolerance": {
+    "value": "+/-30 % on dT",
+    "basis": "assumption; h uncertain by x3 between sources"
+   },
+   "dominant_assumptions": [
+    "film coefficient h",
+    "cooling area / enclosure"
+   ],
+   "reference_case": {
+    "source": "D08 p.83-84",
+    "inputs": {
+     "Q_W_per_side": 4,
+     "R_total_K_per_W": 5.11,
+     "T_ambient_degC": 20
+    },
+    "expected": {
+     "T_in_degC": 40.44
+    },
+    "tolerance": "rounding"
+   }
+  },
+  {
+   "id": "EQ-18",
+   "name": "EMF waveform and THD",
+   "formula": "E(theta_e) = sum_n |E_n|*cos(n*theta_e + arg E_n); THD_ph = sqrt(sum_{n>1} Ke_n^2)/Ke_1; line EMF = difference of phase waveforms",
+   "variables": [
+    {
+     "symbol": "E_n",
+     "unit": "V",
+     "meaning": "harmonic phasor"
+    },
+    {
+     "symbol": "THD_ph",
+     "unit": "1",
+     "meaning": "phase THD"
+    }
+   ],
+   "sources": [],
+   "source_notes": "Xcoil emfWaveform/lineWaveform; oracle D09 Table 7 p.8 (5.7 %, basis unresolved)",
+   "gate_verdict": "reuse",
+   "status": "inferred",
+   "tolerance": {
+    "value": "n/a",
+    "basis": "oracle basis (phase/line) unresolved"
+   },
+   "dominant_assumptions": [
+    "magnet shape alpha_p(r)",
+    "mu_r"
+   ],
+   "reference_case": {
+    "source": "identity",
+    "inputs": {
+     "Ke": [
+      1.0,
+      0.1,
+      0.05
+     ]
+    },
+    "expected": {
+     "THD_ph": 0.111803
+    },
+    "tolerance": "1e-6"
+   }
+  },
+  {
+   "id": "EQ-19",
+   "name": "Delta circulating current (triplen EMF)",
+   "formula": "I_circ,n = |sum_ph E_n|/R_loop; P = sum_n I_circ,n^2*R_loop/2 (peak)",
+   "variables": [
+    {
+     "symbol": "E_n",
+     "unit": "V",
+     "meaning": "phase EMF phasor of harmonic n (peak)"
+    },
+    {
+     "symbol": "R_loop",
+     "unit": "ohm",
+     "meaning": "mesh resistance"
+    },
+    {
+     "symbol": "P",
+     "unit": "W",
+     "meaning": "circulating loss"
+    }
+   ],
+   "sources": [],
+   "source_notes": "Xcoil applyConnection; resistance-limited upper bound (zero-sequence inductance ignored)",
+   "gate_verdict": "reuse with change",
+   "status": "inferred",
+   "tolerance": {
+    "value": "upper bound",
+    "basis": "inductance of the mesh neglected"
+   },
+   "dominant_assumptions": [
+    "loop resistance",
+    "triplen EMF (magnet shape)"
+   ],
+   "reference_case": {
+    "source": "arithmetic",
+    "inputs": {
+     "E3_per_phase_V_peak_in_phase": 0.1,
+     "R_loop_ohm": 3.0
+    },
+    "expected": {
+     "I_circ_A_peak": 0.1,
+     "P_W": 0.015
+    },
+    "tolerance": "exact"
+   }
+  },
+  {
+   "id": "EQ-20",
+   "name": "Torque-speed envelope (drive)",
+   "formula": "steady-state dq model with R_ph, L_s, Ke, inverter limit (SVPWM V_LL,rms = V_dc/sqrt(2); SPWM sqrt(3)*V_dc/(2*sqrt(2)); six-step sqrt(6)*V_dc/pi) and current limit",
+   "variables": [
+    {
+     "symbol": "V_dc",
+     "unit": "V",
+     "meaning": "DC link"
+    },
+    {
+     "symbol": "L_s",
+     "unit": "H",
+     "meaning": "synchronous inductance"
+    },
+    {
+     "symbol": "I_max",
+     "unit": "A",
+     "meaning": "current limit"
+    }
+   ],
+   "sources": [],
+   "source_notes": "standard PMSM/inverter theory - textbook source needed; depends on EQ-14",
+   "gate_verdict": "cannot verify yet",
+   "status": "unresolved",
+   "tolerance": {
+    "value": "n/a",
+    "basis": "depends on unvalidated L_s"
+   },
+   "dominant_assumptions": [
+    "L_s (EQ-14)",
+    "DC-link voltage",
+    "modulation"
+   ],
+   "reference_case": {
+    "source": "none",
+    "inputs": {},
+    "expected": {},
+    "tolerance": "n/a"
+   }
+  },
+  {
+   "id": "EQ-21",
+   "name": "Copper-loss-budget current (design aid)",
+   "formula": "I_ph = sqrt((P_Cu/m)/R_ph)",
+   "variables": [
+    {
+     "symbol": "P_Cu",
+     "unit": "W",
+     "meaning": "copper-loss budget"
+    },
+    {
+     "symbol": "R_ph",
+     "unit": "ohm",
+     "meaning": "phase resistance"
+    },
+    {
+     "symbol": "I_ph",
+     "unit": "A",
+     "meaning": "phase current rms"
+    }
+   ],
+   "sources": [
+    "EV-09"
+   ],
+   "source_notes": "D08 eq. 4.3 p.53; no Xcoil implementation -> new",
+   "gate_verdict": "replace",
+   "status": "verified",
+   "tolerance": {
+    "value": "exact",
+    "basis": "Ohm's law"
+   },
+   "dominant_assumptions": [
+    "copper-loss budget (user target)"
+   ],
+   "reference_case": {
+    "source": "D08 Table 4.6 p.57",
+    "inputs": {
+     "P_Cu_W": 4,
+     "m": 3,
+     "R_ph_ohm": 0.39
+    },
+    "expected": {
+     "I_ph_A": 1.849,
+     "D08_printed_A": 1.84
+    },
+    "tolerance": "rounding (0.5 %)"
+   }
+  },
+  {
+   "id": "EQ-22",
+   "name": "Current density",
+   "formula": "J = I_ph/(a*w*t)",
+   "variables": [
+    {
+     "symbol": "I_ph",
+     "unit": "A",
+     "meaning": "phase current rms"
+    },
+    {
+     "symbol": "a",
+     "unit": "1",
+     "meaning": "parallel paths"
+    },
+    {
+     "symbol": "w",
+     "unit": "mm",
+     "meaning": "width"
+    },
+    {
+     "symbol": "t",
+     "unit": "mm",
+     "meaning": "thickness"
+    },
+    {
+     "symbol": "J",
+     "unit": "A/mm^2",
+     "meaning": "current density"
+    }
+   ],
+   "sources": [
+    "EV-49"
+   ],
+   "source_notes": "definition; limits only as context (D16 30 A/mm2 FEA, D10 12 A/mm2 -> 110 degC)",
+   "gate_verdict": "reuse",
+   "status": "verified",
+   "tolerance": {
+    "value": "exact",
+    "basis": "definition (limits unresolved)"
+   },
+   "dominant_assumptions": [
+    "operating current",
+    "copper thickness"
+   ],
+   "reference_case": {
+    "source": "arithmetic",
+    "inputs": {
+     "I_A": 1.0,
+     "a": 1,
+     "w_mm": 0.5,
+     "t_mm": 0.0348
+    },
+    "expected": {
+     "J_A_per_mm2": 57.47
+    },
+    "tolerance": "rounding"
+   }
+  }
+ ]
+}

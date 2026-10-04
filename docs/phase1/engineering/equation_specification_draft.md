@@ -16,6 +16,12 @@ Status labels per PROJECT_BRIEF §3. "Reference calculation" numbers were comput
 `existing_logic_review.md` §3, scripts in `checks/`); none is a measurement. Units: SI unless stated; geometry in mm
 inside formulas where marked.
 
+**Revision 2026-10-04 (reconciliation round):** sources updated from Agent 5's follow-up (EV-53…EV-71, gaps §7):
+copper constants now sourced (EQ-10, EQ-16); G1 resolved in favour of D10 eq. 14 (EQ-14); D12/D15/D07 support for
+EQ-08; magnet data (EQ-05); D09 oracle details (EQ-06, EQ-10, EQ-14); EQ-02 loop criterion and closed-form test values;
+new sections "Status rule" and "Dominant assumed inputs" at the end. Machine-readable copy:
+`equation_registry_draft.json`. Answers to other agents: `answers_to_agents.md`.
+
 Common symbols: p pole pairs (2p poles); Q coils per layer; m = 3 phases; r radius; z axial distance from the magnet face;
 θ mechanical angle; θ_e = pθ; ω_m mechanical speed [rad/s]; ω_e = pω_m; f_e = ω_e/2π; B_r remanence [T]; µ_r recoil
 permeability; l_m magnet thickness [mm]; α_p pole-arc ratio; g air gap per side [mm]; t_s stator (board) thickness [mm];
@@ -45,7 +51,14 @@ w trace width, t copper thickness, s clearance, w_d = w + s [mm]; N turns per co
   gives a −w_d/2 term in the numerator of 3.25 (`inferred`, may be a reference-line difference).
 - Reference: D08 geometry (r_i 12.5, r_o 44, w_d 2.86 mm, θ_cs 30°): N_c < 6.01; N_c1 < 2.53 → 2; N_c2 < 1.06 → 1; total
   **3 turns = D08 Table 4.6 p.57** (3 loops) (`verified (reproduced)`, same total with θ_cs = 36°).
-- Tolerance: exact integer agreement with the rule; ±1 turn against the constructive generator (via/fillet rules).
+- Internal inconsistency found (`inferred`, `checks/eq02_eq03_reference.py`): D08's own loop geometry (eq. 3.28–3.29)
+  makes loop i trapezoidal iff d_i < (r_i + i w_d) sin(θ_cs/2), i.e. i < (r_i sin(θ_cs/2) − w_d/2)/(w_d(1 − sin(θ_cs/2))),
+  and triangular iff its apex radius d_i/sin(θ_cs/2) < r_o − i w_d. This **constructive loop criterion** splits D08's 3 turns
+  as 1 trapezoidal + 2 triangular (printed eq. 3.25–3.26: 2 + 1); for the default annulus 12/16 (0.5/0.2 mm) both give 11
+  (9 + 2 vs 10 + 1), but for 18/16 the loop criterion gives 8 while eq. 3.25–3.26 give 7. → The generator and its tests
+  use the loop criterion; eq. 3.24–3.26 stay as documented cross-checks. Test values: `answers_to_agents.md` §2.2.
+- Tolerance: exact integer agreement with the loop criterion; printed eq. 3.25–3.26 may differ by ±1; ±1 turn against the
+  constructive generator because of the centre-via eye and fillets.
 - Gate: `replace` — the engine's constructive limit (`sectorFeasible`) has no triangular turns and returns 0 turns for this
   geometry (C5). Port a constructive generator with moving inner end-turns; keep EQ-02 as a cross-check.
 
@@ -93,6 +106,9 @@ w trace width, t copper thickness, s clearance, w_d = w + s [mm]; N turns per co
   magnet, H_t = 0 at z = G) and is algebraically identical to the engine's exponential form (`inferred`, hand algebra;
   numerically confirmed by C1a/C1b).
 - Variables: z from the magnet face [mm]; l_m, g, t_s [mm]; B_r [T]; µ_r [–].
+- Magnet data (EV-54, EV-55, Arnold catalog/N42 sheet, extract — Agent 5 to re-check): N42 B_r typical 1.315 T, min
+  1.28 T; temperature coefficient of B_r −0.12 %/°C. µ_r: **no datasheet value found** (G23); apparent recoil slope
+  B_r/(µ₀H_cB) ≈ 1.10 for N42 (`inferred`, EV-55) → µ_r = 1.05 stays `assumption`, sensitivity range 1.03–1.10.
 - Assumptions/validity: linear magnets (constant µ_r, B_r at operating temperature); infinitely permeable, unsaturated back
   iron — D08 p.112 §11.3 reports back-plate saturation in its prototype (validity limit); 2-D solution per radius (no radial
   edge leakage); double rotor = identical, aligned rotors with N facing S; parallel magnetisation (no Halbach — D11 eq. 8–9
@@ -124,6 +140,11 @@ w trace width, t copper thickness, s clearance, w_d = w + s [mm]; N turns per co
   O1) — needs EQ-04 for its T-arrangement magnets and the gap ambiguity G10 resolved.
 - Tolerance: 1e-4 relative vs closed forms for idealised geometry (numerical integration); ±8 % vs D08 measurement (D08's
   own analytical model deviated by max. 8 %, p.98); ±5 % vs D09 calc/FEA 6.21/6.20 V (Tables 4–5 p.6) once turn data are known.
+- O2 details now available (EV-62, Agent 5): D09 concentric board = 12 non-overlapping trapezoidal spiral coils per layer,
+  each with a via at its inner end, 2 layers, 6 terminals (open phases), air gap 1 mm per side (Table 2 p.3; consistent with
+  Table 3 p.4: 7 mm between rotor cores − 2 × 2 mm magnets = 3 mm = 1 mm PCB + 2 × 1 mm), 16 poles; turns per coil per layer
+  ≈ 6–8 (`unresolved`). Until the turn count is fixed, O2 can test EQ-06 only as a ratio (Ke per turn) or as a sweep over
+  N = 6, 7, 8.
 - Gate: `reuse`.
 
 ## EQ-07 Phase assembly, per-layer EMF, parallel paths and circulating loss
@@ -146,6 +167,12 @@ w trace width, t copper thickness, s clearance, w_d = w + s [mm]; N turns per co
 - Formula: α_k = p θ_k (coil phasor, el.); 60° belts A+, −C, B+, −A, C+, −B; k_d,n = |Σ_{k∈A} s_k e^{j n α_k}|/N_A;
   k_p,n = |sin(n p σ/2)|; k_w,n = k_d,n k_p,n. Feasibility: Q/(m·t) integer, t = gcd(Q, p). Spiral average:
   k_p,avg,n = (1/N) Σ_t |sin(n p σ_t/2)|, σ_t(r) = θ_cp − 2 asin(d_t/r) (parallel sides).
+- Additional sources (reconciliation): D12 eq. 1 p.3 N_c/N_pm = m/(m+1) for coreless concentrated-coil generators (EV-56;
+  12 coils/16 poles satisfies it; it is one design rule, not a general feasibility test); D07 p.3 §2.2 (EV-58); **D15 eq. 6
+  p.7: PCB pitch factor as the average of per-turn pitch factors** K_pν = (1/N) Σ sin(((β − 2α_i)/β)(π/2)ν) (EV-59) — the
+  spiral-average term below is therefore now sourced (`verified` as printed). Dai Pré & Bianchi 2006 (EV-60) and Pyrhönen
+  et al. (EV-61): bibliographic only, content not accessed (G24) → the Q/(m·t) feasibility rule remains
+  `assumption: standard result`, and every chosen combination is checked by explicit phasor computation.
 - Sources: D04 eq. 1 p.5 (EV-26, integral-slot special case); D07 p.3 ("slot" → "coil side", star of slots); D09 p.5; D11
   eq. 14 p.4 (overall coefficient as average over turns, EV-46). Feasibility rule and FSCW star of slots: textbook,
   `assumption: standard result, source needed` (proposed Pyrhönen et al.; Bianchi & Dai Prè 2006).
@@ -174,9 +201,11 @@ w trace width, t copper thickness, s clearance, w_d = w + s [mm]; N turns per co
 
 - Formula: ρ_T = ρ₂₀ (1 + α (T − 20 °C)); R_ph = Σ_prims ρ_T L_i/(w_i t_i) + Σ R_via + R_links (+ parallel combination per
   EQ-07).
-- Constants: ρ₂₀ = 1.724e-8 Ω·m, α = 0.00393 /K — `assumption: standard value, source needed` (not in corpus, G6; proposed
-  source IEC 60028 annealed-copper standard — Agent 5 to confirm; electrodeposited PCB copper may differ → manufacturer data
-  or 4-wire coupon). 1 oz → 34.8 µm `assumption` (engine and D08 p.54 use 34.8 µm; repository record 35.0–35.6 µm);
+- Constants: ρ₂₀ = 1.7241e-8 Ω·m (1/58 Ω·mm²/m), α₂₀ = 0.00393 /K — **sourced**: International Annealed Copper Standard,
+  IEC Publication 28 (1925) as reproduced in NBS Handbook 100 *Copper Wire Tables* (1966) p.2–4, App. 5 (EV-53; read by
+  Agent 5 via an extract, page numbers to be re-checked) → `verified` for annealed copper. Remaining `assumption`:
+  electrodeposited/rolled PCB copper behaves like IACS copper (G6 partly open) → manufacturer data or 4-wire coupon. The
+  engine constant 1.724e-8 differs from 1.7241e-8 by 0.006 % (negligible). 1 oz → 34.8 µm `assumption` (engine and D08 p.54 use 34.8 µm; repository record 35.0–35.6 µm);
   finished thickness is supplier-dependent (`unresolved`).
 - Sources: D08 eq. 3.37–3.38 p.45 (EV-08); D10 eq. 8 p.4 (EV-28/29); D15 eq. 10 p.7 (EV-44).
 - Reference: 1000 × 0.5 mm × 34.8 µm → 0.99080 Ω (20 °C), 1.14656 Ω (60 °C) (C3); D08 phase: 0.381 Ω (EQ-03 lengths, 50 °C per
@@ -184,7 +213,9 @@ w trace width, t copper thickness, s clearance, w_d = w + s [mm]; N turns per co
 - Tolerance: ±8 % vs measured DC resistance at known temperature. Reasoning: D10 measured 2.15 Ω vs its simulation 2.00 Ω
   (+7.5 %, p.8); D09 measured 1.07 Ω vs calculated 1.04 Ω (+2.9 %, Tables 1/6 p.3/7); copper thickness and via/joint
   resistances are not known a priori. Tighten after a coupon measurement.
-- Gate: `reuse` (constants need a cited source before release).
+- O2 detail (EV-62): D09's 3244 mm phase length over 8 coil-layers ≈ 405 mm per coil-layer; with EQ-03 this is the route to
+  fix the turn count (Agent 4 task T-D).
+- Gate: `reuse` (constants now sourced, EV-53; keep the PCB-copper caveat as a labelled assumption).
 
 ## EQ-11 Via barrel resistance
 
@@ -229,8 +260,10 @@ w trace width, t copper thickness, s clearance, w_d = w + s [mm]; N turns per co
 - (b) engine current-sheet model (`windingInductance`): all space orders ν of the radial-conductor distribution between the
   irons, inter-layer coupling e^{−νΔz/r}, sinc² width factor; L_s = L_self − M; end turns excluded.
 - Sources: D10 eq. 11–14 p.4–5 (EV-31); D15 eq. 14 p.8 (EV-44); gap G1. My derivation **agrees with D10 eq. 14 as printed**;
-  D15 eq. 14 is π/2 larger; D10's intermediate eq. 11–12 are mutually inconsistent. Agent 5 (G1) reached the opposite
-  conclusion from D10 eq. 12–13 → `unresolved`, Agent 4 to arbitrate.
+  D15 eq. 14 is π/2 larger. **G1 revised by Agent 5 (evidence_gaps.md G1, 2026-10-04):** with F̂₁ = (m√2/π)(N₁k_w1/p)I₁
+  both derivations give L₁ = mµ₀(N₁k_w1)²(D_mo² − D_mi²)/(4πδ′p²) = D10 eq. 14 for m = 3; the error is in eq. 12 of D10 and
+  D15 (√2m/2 instead of √2m/π), and eq. 11 of both omits 1/p. Conflict resolved in favour of D10 eq. 14 (`inferred`, two
+  independent derivations; Agent 4 to confirm). G1 itself stays `unresolved`: magnetising term only.
 - Validity: (a) sinusoidal MMF, no leakage/end-turn/sub-harmonic terms (FSCW sub-harmonics are large: fundamental share only
   0.37 in the engine example); (b) radial conductors only.
 - Reference (C9, 12/16, 8 turns, 2 layers, default assumptions): engine L_s = 17.96 µH; (a) 4.67 µH (k_w 0.600 numeric) /
@@ -250,8 +283,9 @@ w trace width, t copper thickness, s clearance, w_d = w + s [mm]; N turns per co
 
 ## EQ-16 Mass
 
-- Formula: m_Cu = ρ_Cu Σ_L A_Cu,L t_L; m_lam = ρ_lam (A_board t_board − V_Cu) (+ mask, optional); ρ_Cu 8.96 g/cm³,
-  ρ_FR-4 1.85 g/cm³ — `assumption: typical values, source needed` (handbook/laminate datasheet).
+- Formula: m_Cu = ρ_Cu Σ_L A_Cu,L t_L; m_lam = ρ_lam (A_board t_board − V_Cu) (+ mask, optional); ρ_Cu = 8.89 g/cm³
+  (IACS standard density, NBS Handbook 100 p.4, EV-53 — `verified` for annealed copper; the engine's 8.96 g/cm³ is
+  unsourced, +0.8 %); ρ_FR-4 1.85 g/cm³ — `assumption: typical value, source needed` (laminate datasheet).
 - Reference (example, `assumption`): 12-gon 93 mm flats minus Ø25 bore ≈ 6461 mm² × 0.62 mm × 1.85 g/cm³ ≈ 7.4 g laminate;
   copper 6 layers × 50 % of the 18–38 mm annulus × 34.8 µm ≈ 367 mm³ ≈ 3.3 g (hand arithmetic).
 - Tolerance: ±10 % vs weighed board (resin content, mask, plating) — `assumption`.
@@ -311,13 +345,70 @@ w trace width, t copper thickness, s clearance, w_d = w + s [mm]; N turns per co
 
 | EQ | Verdict | Blocking item before port |
 |---|---|---|
-| 01, 06, 09, 10, 12, 13, 18, 22 | reuse | constants of EQ-10 need a cited source |
+| 01, 06, 09, 10, 12, 13, 18, 22 | reuse | none (EQ-10 constants sourced, EV-53; PCB-copper caveat stays a labelled assumption) |
 | 05, 07, 11, 16, 17, 19 | reuse with change | α_p(r), series pairs, via counts, material densities, h source |
-| 03, 04, 21 | add (not in engine) | — |
+| 03, 04, 21 | add (not in engine) | EQ-03: engine path-length sum reused, closed form added as check (registry gate `reuse`); EQ-04, EQ-21: new implementation (registry gate `replace` = implement from this spec) |
 | 02, 08 | replace | constructive turn generator; integer star of slots |
 | 14, 15, 20 | cannot verify yet | inductance oracle (G1/G2), IPC source (G5) |
 
 Validation tasks proposed for Agent 4 (`not tested`): T-A 3-D FEA (or FEMM 2-D at mean radius) of the D09 rotor for EQ-05
 and per-layer B_z (G3); T-B 2-D FEM of one trace for EQ-12; T-C re-create O1 (D08) with EQ-04 magnets for EQ-06 (±8 %);
 T-D recover D09 concentric turn count (Fig. 1a/2, image measurement) and check EQ-10 (±8 %), EQ-14 vs 14.8 µH; T-E arbitrate
-EQ-14 (D10 vs D15 form) by independent derivation; T-F re-run C1–C9 against the Python port.
+EQ-14 (D10 vs D15 form) by independent derivation (Agent 5 now agrees with D10 eq. 14 — confirmation only); T-F re-run
+C1–C9 against the Python port; T-G check the generator against the EQ-02 loop criterion and EQ-03 values in
+`answers_to_agents.md` §2.2.
+
+## Equation status (Phase 1 evidence status, per equation)
+
+This is the status of the *equation and its evidence* as of this draft; the status of a computed *result* follows the rule
+below. Implementation status starts as `not tested` for every port and becomes irrelevant once its tests pass in CI
+(ADR-0003 item 5).
+
+| EQ | Status | Why |
+|---|---|---|
+| 01, 04, 09, 13, 21, 22 | verified | geometric/definitional identities or reproduced published numbers (D08 eq. 3.2/3.3, Table 9.1, eq. 4.3) |
+| 06 | verified | kernel exact for in-plane conductors; closed form reproduced to 5e-6 (C2); accuracy of results inherits EQ-05 |
+| 10 | verified | D08 eq. 3.37–3.38; constants EV-53; PCB copper = IACS remains an assumption input |
+| 02, 03 | inferred | derived from D08's own loop geometry; printed eq. 3.25–3.26 and 3.34/3.36 corrected |
+| 05, 07, 08, 11, 12, 18, 19 | inferred | derivations/identities checked; no 3-D FEA or measurement oracle yet |
+| 16, 17 | assumption | laminate density and film coefficient h unsourced or disputed |
+| 14, 15, 20 | unresolved | gate `cannot verify yet` → outputs labelled "estimate" / "guideline" |
+
+## Status rule for computed results (answer to Agents 1 and 6; details `answers_to_agents.md` §1.1)
+
+result status = weakest of { equation status (table above); implementation status (`not tested` until its tests pass);
+status of every input the kernel actually uses (user-entered or KiCad-imported = neutral; default or unsourced = `assumption`;
+sourced constant = its EV status); validity cap (any violated validity limit → `unresolved`) }, with the order
+`unresolved` < `not tested` < `assumption` < `inferred` < `verified` (ADR-0003 order, agreed). `verified` for a result of a
+new design is reached only by exact identities/counts (pole pitch, coil pitch, k_w by exact arithmetic, turn count,
+generated track length) or when every input is neutral/verified and every equation in the chain is `verified`; it is
+never called "measured".
+
+## Dominant assumed inputs per equation
+
+"Dominant" = the inputs that, when left at a default or unsourced value, dominate the uncertainty of the result; the UI lists
+them first under "n assumptions". Every other used default still caps the status at `assumption`.
+
+| EQ | Dominant assumed inputs |
+|---|---|
+| 01 | none (exact) |
+| 02, 03 | trace width w, clearance s, coil gap (fabricator capability); centre-via pad/clearance (eye); loop model (concentric loops vs spiral) |
+| 04 | magnet block width and orientation (repository: 20 mm side radial — unresolved) |
+| 05 | B_r (grade, temperature), µ_r (G23), magnet thickness l_m, air gap g, unsaturated back iron, α_p |
+| 06 | as EQ-05 + copper-layer z from the stack-up |
+| 07 | per-layer z (dielectric thicknesses), member resistances (copper thickness) |
+| 08 | none for k_d/k_p (exact); turn spans from the generated geometry |
+| 09 | as EQ-06 (Ke); operating current |
+| 10 | finished copper thickness t, winding temperature T, PCB copper = IACS (G6) |
+| 11 | plating thickness t_p, barrel length, vias per transition |
+| 12 | B̂ (via EQ-05), copper thickness, electrical frequency; /24 coefficient (G4 by derivation) |
+| 13 | winding temperature (ρ_T) |
+| 14 | effective gap δ′, k_w1, omission of end-turn/leakage terms |
+| 15 | allowed temperature rise ΔT; external/internal classification; standard not in corpus (G5) |
+| 16 | laminate density, copper fill/thickness |
+| 17 | film coefficient h (10 vs 30 W/m²K), cooling area/enclosure |
+| 18 | magnet shape (α_p(r)), µ_r |
+| 19 | loop resistance, triplen EMF (magnet shape) |
+| 20 | L_s (EQ-14), DC-link voltage, modulation |
+| 21 | copper-loss budget P_Cu (user target) |
+| 22 | operating current, copper thickness |

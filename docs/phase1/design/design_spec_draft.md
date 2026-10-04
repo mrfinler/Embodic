@@ -135,11 +135,16 @@ colour convention exists for mains conductors but was not checked in this sessio
 
 Activated by the view toggle “Greyscale”, automatically in print/PDF and in Windows high-contrast (forced-colors) mode.
 
-| Phase | Stroke | Coil-footprint fill | Chart line | Label |
+| Phase | Stroke | Coil-eye fill (inside the innermost loop only) | Chart line | Label |
 |---|---|---|---|---|
-| A | `#262626` (15.1:1) | 8 % ink, no hatch | solid 2 px | `A1+` … |
-| B | `#5e5e5e` (6.48:1) | 45° hatch, 2.6 mm pitch | dashed 6/3 | `B1+` … |
-| C | `#8a8a8a` (3.45:1) | 135° hatch | dotted 1.5/3 | `C1+` … |
+| A | `#262626` (15.1:1) | 10 % ink, no hatch | solid 2 px | `A1+` … |
+| B | `#5e5e5e` (6.48:1) | 45° hatch, 1.8 mm pitch, 0.45 mm stroke | dashed 6/3 | `B1+` … |
+| C | `#8a8a8a` (3.45:1) | 135° hatch, same pitch | dotted 1.5/3 | `C1+` … |
+
+Hatch is drawn only inside the coil eye, never across copper, so hatch lines cannot be mistaken for traces (revised in
+the reconciliation round after reviewing mockup 07; full-footprint hatch looked like crossing copper). Mockup
+`07_overview_pure_greyscale.html` shows the whole overview in this mode next to the colour variant; tokens in
+`tokens.json`.
 
 Copper traces stay **solid** in every mode: dashed copper would read as an open circuit (`assumption`, domain
 reasoning). The ladder validates as an ordinal ramp (monotone L, ΔL ≥ 0.06, light end 3.45:1) — `verified` (validator
@@ -245,7 +250,8 @@ container).
 | Tables | `<table>` with caption, `th scope`, sticky header, numeric columns right-aligned, row header sticky on scroll | wide tables scroll inside `.table-wrap`; on phone they stack (modern-web-guidance “responsive-table”) |
 | Charts | §9 | |
 | Tabs | WAI-ARIA tabs: roving `tabindex`, ←/→/Home/End, `aria-controls`, panels `aria-labelledby` | used for result density, plugin steps |
-| Dialog | native `<dialog>` with `showModal()`; title, body, footer (secondary left of primary) | initial focus on the safe action (“Review failures”); Esc closes; no custom focus trap needed (modern-web-guidance “accessibility” §11) |
+| Dialog | native `<dialog>` with `showModal()` (Qt: modal `QDialog`); title, body, footer Cancel · secondary · primary | initial focus on **Cancel** (REQ-F-33); Esc closes; no custom focus trap needed (modern-web-guidance “accessibility” §11) |
+| Default marker (input) | dashed ◇ “default” chip after the label of every field still at its default value; hint carries the source note | removed on edit; “Reset to default” in the field context menu; required by REQ-T-06 / REQ-F-21 (added in reconciliation round) |
 | Toast | `popover="manual"` container, `role="status"`, ink background, optional action | transient **echo** only — the inline notice or Checks list carries the information; 6 s, pauses on hover/focus |
 | Menu | overflow menu (`aria-haspopup="menu"`), popover, arrow keys | |
 | Status bar | compute state + engine version · DRC · counts · units · cursor (mono) | polite live region announces “Results updated, DRC: 1 failure” at most once per second |
@@ -347,7 +353,7 @@ content.
 
 ### 10.1 Spiral coil setup (step 1) — `mockups/02_spiral_setup.html`
 
-Sections: **Winding combination** (Q `#param-coil-count`, 2p `#param-pole-count`; inline balance result: “Balanced” /
+Sections: **Winding combination** (Q `#param-coil-count`, 2p `#param-poles`; inline balance result: “Balanced” /
 “Not balanced — choose 12, 18 or 24”, coils per phase, Q/2p; clickable list of balanced coil counts); **Coil shape**
 (sides: radial / parallel to sector edge; ends: arc / straight / stadium — Agent 2 options S1–S3; corner fillet);
 **Turns and copper** (turns per coil per layer N, trace width w, spacing s, spiral sense of layer X); **Annulus and
@@ -362,7 +368,7 @@ checks (fail/warn/pass) with “Go to field”. Shows notice + Undo, focus, erro
 
 Panel: connection (star / delta / open, with the k_w3 warning rule from Agent 2 §3.4), method (automatic star of slots /
 manual), phase sequence (A→B→C / A→C→B; note that swapping B and C reverses rotation), derived pattern string, balance,
-k_w1, k_w3; terminals (outer/inner rim, names U V W N, pad options in Advanced).
+k_w1, k_w3; terminals: location shown read-only “Outer rim” (inner rim not supported in P2 — architecture `ConnectionSpec.terminal_location`); net names live in Export, pad sizes in Board & rotor.
 
 Figure: ring of Q coils labelled `A1+` (phase, index within phase, polarity), a circulation arrow per coil (+ = clockwise
 for positive current — **convention to be confirmed**, Q3), phase highlight filter, colour/greyscale. Rail: phasor star,
@@ -401,7 +407,7 @@ Status of a computed result (proposal — needs confirmation by Agents 2, 4, 6; 
    film coefficient h for ΔT). Ordinary assumed inputs appear as “n assumptions” tags and in the inputs table.
 4. `unresolved` — equation gate “cannot verify yet” (EQ-14, EQ-15, EQ-20) or conflicting sources.
 5. `not tested` — implementation or validation step not run.
-The badge shows the weakest applicable status. Efficiency is not shown in the summary rail (P1); it appears only in
+The badge shows the weakest applicable status. **Superseded in the reconciliation round** by the merged rule of architecture §13 / ADR-0003 / REQ-T-03: every used default or unsourced input counts as `assumption`; `dominant_assumptions` only orders the “n assumptions” tag. The mockup statuses remain examples. Efficiency is not shown in the summary rail (P1); it appears only in
 Losses with its status.
 
 ### 10.5 Board & rotor (step 4) — no mockup in Phase 1

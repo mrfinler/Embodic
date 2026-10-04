@@ -10,12 +10,16 @@ Scope: Phase 1 questions 1–6 (sub-items a–e of the task). Status labels per 
 and the commands are listed in `existing_logic_review.md` §3. No result in this file is measured; computed results
 come from analytical formulas or from the unvalidated Xcoil v3 engine and are labelled so.
 
+**Revision 2026-10-04 (reconciliation round):** updated with Agent 5's follow-up evidence EV-53…EV-71 and gaps G23–G26
+(D09 board details, D12 coil/pole rule, D15 per-turn pitch factor, repository end-turn parse, magnet data, copper
+constants, ECM patent notes); conventions fixed in §3.4; new §7 "Decisions the user must make".
+
 ## 0. Key findings
 
 | # | Finding | Status |
 |---|---|---|
-| K1 | Repository board = radial-conductor **wave** winding (144 radial conductors/layer, 16 magnets); it is not a concentrated spiral coil design. | verified (README l.1–12; Gerber parse, `repo_survey.md` §1.4) |
-| K2 | The render's look can be read as "8 + 8 concentrated spiral coils offset by half a pitch" (Fable), but at 676 px the end-turn groups (≈3–4 nested loops) and the uniform radial conductor field are **also compatible with a wave winding with nested end connections** like the repository board. The image cannot decide which it is. | unresolved (inferred from image) |
+| K1 | Repository board = radial-conductor **wave** winding (144 radial conductors/layer, 16 magnets); it is not a concentrated spiral coil design. Agent 5's end-turn parse (EV-71): nested outer caps of 6 radii centred on 12 axes at r = 26 mm plus short inner steps offset from the coil axes → a series wave-like path. | verified (README l.1–12; Gerber parse, `repo_survey.md` §1.4; EV-71 parse verified, interpretation inferred) |
+| K2 | The render's look can be read as "8 + 8 concentrated spiral coils offset by half a pitch" (Fable), but at 676 px the end-turn groups (≈3–4 nested loops) and the uniform radial conductor field are **also compatible with a wave winding with nested end connections** like the repository board. EV-71 shows that the same project's Gerber board produces a "spiral-looking" pattern with a wave path; Agent 5 also reads the render as undecidable (`ecm_pcb_stator_evidence.md` §1). | unresolved (inferred from image) |
 | K3 | 16 coils sharing one layer cannot form a balanced symmetric 3-phase winding (Q must be a multiple of m = 3). 16-coil artwork is 3-phase-capable only as **one phase per layer pair** (16 full-pitch coils per phase, phases rotated by 2π/(3p) = 15° mech. for 2p = 16). | inferred (FSCW rules §2.2; script `checks/kw.py`) |
 | K4 | Recommended default (design choice): fractional-slot concentrated spiral winding **12 coils / 16 poles**, all three phases on every layer, keeping the repository's 16-pole rotor; alternatives **18/16**, phase-per-layer-pair **16/16**, and the oracle configurations **12/10** (D08) and **12/16** (D09, coil count inferred from figure). | assumption (reasons §2.4) |
 | K5 | Spiral coils favour Q/2p < 1 (coil pitch > pole pitch): the turn spans then straddle the pole pitch, so inner turns keep a high pitch factor. The engine sweep ranks 12/16 first in Ke/√R for the repository annulus, followed by 15/16 and 18/20 (all Q/2p < 1). | inferred (pitch-factor reasoning) + indicative engine numbers (not validated) |
@@ -105,6 +109,13 @@ For Q coils (non-overlapping, one coil per "tooth position"), 2p poles, m = 3 ph
 5. t ≥ 2 gives rotational symmetry (no net radial pull from the winding); t = 1 combinations (12/10, 12/14, 15/16) are
    asymmetric (`inferred`; D11 p.4–5 Fig. 7 shows connection-dependent pull forces for 12/14, EV-46).
 
+Corpus support added in the reconciliation round (Agent 5, EV-56…EV-61): D12 p.3 eq. 1 gives the coil/pole relation
+N_c/N_pm = m/(m+1) for coreless concentrated-coil machines (EV-56) — satisfied by 12/16 (and 6/8, 9/12, 18/24), but it
+is one design rule, not a general feasibility test; D07 p.3 §2.2 (EV-58) as above; D15 p.7 eq. 6 averages the pitch factor
+over the turns of a PCB coil (EV-59), which supports the spiral-average pitch factor of §3.3. Dai Pré & Bianchi 2006 (EV-60)
+and Pyrhönen et al. (EV-61) were not accessed (G24), so rule 2 stays `assumption: standard result`, and each combination is
+also checked by explicit phasor computation (below).
+
 Check of the method (`verified (reproduced)`): `checks/kw.py` reproduces D08's 12-slot/10-pole connection
 "AabBCcaABbcC" from the Bavaria tool (D08 p.36 [31] Fig. 3.7) letter for letter (uppercase = +, lowercase = reversed).
 
@@ -114,7 +125,7 @@ Winding factors (outermost-turn span σ = 2π/Q; `checks/kw.py`, formulas above)
 |---|---|---|---|---|---|---|---|---|
 | 12/10 | 0.400 | 1 | yes | 0.933 | 0.067 | 0.067 | AabBCcaABbcC | D08 (O1) |
 | 12/14 | 0.286 | 1 | yes | 0.933 | 0.067 | 0.067 | ACcbBAacCBba | D11 (O9) |
-| 12/16 | 0.250 | 4 | yes | 0.866 | 0.866 | 0.866 | ACB ACB ACB ACB (all +) | D09 concentric board: 12 coils, 16 poles (coil count `inferred from image`, D09 p.2 Fig. 1a) |
+| 12/16 | 0.250 | 4 | yes | 0.866 | 0.866 | 0.866 | ACB ACB ACB ACB (all +) | D09 concentric board: 12 coils/layer, 2 layers, 16 poles (coil count `verified`, EV-62; turns ≈ 6–8 `unresolved`) |
 | 15/16 | 0.313 | 1 | yes | 0.951 | 0.173 | 0.111 | AaACcCcCBbBbBAa | — |
 | 18/16 | 0.375 | 2 | yes | 0.945 | 0.140 | 0.061 | AabBbcCcaAabBbcCca | — |
 | 24/16 | 0.500 | 8 | yes | 0.866 | 0.866 | 0.866 | ABC × 8 | — |
@@ -163,8 +174,10 @@ the textbook k_w.
 Recommendation (`assumption`, to be confirmed by the user and by Phase 2 computation):
 1. **Default: 12/16 FSCW, all phases on every layer.** Reasons: keeps the 16-pole rotor of the repository; t = 4 (symmetric,
    up to 4 parallel paths possible); coil pitch 1.33 τ_p so spiral turns straddle τ_p (K5); all coils have the same
-   polarity (simplest series chain); larger coils → more turns and room for centre vias; the D09 concentric board appears to
-   be the same combination (oracle O2 with measured R, L, EMF, torque, `evidence_register.md` §C). Drawback: k_w5 = k_w7 =
+   polarity (simplest series chain); larger coils → more turns and room for centre vias; satisfies D12's N_c/N_pm = m/(m+1)
+   (EV-56); the D09 concentric board is the same combination — 12 non-overlapping spiral coils per layer, 2 layers, 6
+   terminals, 1 mm gap, 16 poles (EV-62, `verified`; turns per coil ≈ 6–8 `unresolved`) — giving oracle O2 with measured R,
+   L, EMF, torque (`evidence_register.md` §C). Drawback: k_w5 = k_w7 =
    0.866 → EMF harmonics follow the magnet-field harmonics (magnet shape must be chosen accordingly).
 2. **Alternative A: 18/16** (k_w1 0.945, strong 5th/7th suppression, t = 2) — fewer turns (narrower coils), mixed polarity.
 3. **Alternative B: phase-per-layer-pair 16/16** (render-like 16-coil artwork) — for evaluation against 12/16.
@@ -217,9 +230,15 @@ width (S5) later.
 
 ### 3.4 Phase belts, winding direction, connections, terminals
 
+- **Conventions (fixed in the reconciliation round, `answers_to_agents.md` §1.4; `assumption` = design convention):**
+  view from the F.Cu (L1) side, which faces rotor 1; world axes x right, y up, θ counter-clockwise; coil k (k = 0…Q−1,
+  displayed as coil k+1) is centred at θ_k = θ₀ + k·2π/Q; a **positive coil carries positive phase current clockwise**
+  seen from that side (layer X spirals inward clockwise); phases A, B, C end at line terminals U, V, W; with the rotor turning
+  in +θ, the EMF of coil k lags by p·θ_k, so the star-of-slots belts (B at +120°) give the electrical sequence A→B→C
+  (`inferred`, phasor arithmetic). The KiCad exporter flips y (KiCad y points down) without changing these definitions.
 - Phase assignment: star of slots with 60° belts (§2.2), table in §2.2. For 12/16 phase A = coils 1, 4, 7, 10 (0°, 90°, 180°,
-  270°), C = 2, 5, 8, 11, B = 3, 6, 9, 12, all positive (`verified (reproduced)` script output; B/C naming depends on the
-  chosen phase sequence).
+  270°), C = 2, 5, 8, 11, B = 3, 6, 9, 12, all positive (`verified (reproduced)` script output; swapping B and C reverses
+  the rotation direction for the same terminal sequence).
 - Winding direction: positive coils circulate one way (CW in the concept drawing), reversed ("lowercase") coils the other.
   With identical artwork the polarity is set by which outer terminal is the entry (Xcoil v3 `buildSector`, `verified` code
   reading; engine tests SEC-03/04 pass). Layer Y = mirror image of layer X traversed in reverse, giving the same
@@ -263,7 +282,12 @@ Rules (`inferred`): a group rotation must keep the via grid common to all layers
   current crowding at the inner via of a spiral is the likely hot spot (G7, `inferred`) → allow several vias per transition
   (D05 multi-via, EV-38, FEA only).
 - Each coil needs ≥ 1 centre via per series pair and ≥ 1 transfer via per series step; via pads displace turns from the
-  coil eye, reducing N (`inferred`).
+  coil eye, reducing N (`inferred`). Winding-via count for any series/parallel grouping: `answers_to_agents.md` §3.1.
+- Patent attention (G25, `ecm_pcb_stator_evidence.md` R5; `inferred — legal review needed`, not a legal opinion): ECM
+  US 11,336,130 claims layers joined in series with all inter-layer vias on one radial side outside the active region, with a
+  dependent claim to spiral windings (EV-65). The M2 plan above keeps centre vias inside each coil eye, i.e. inside the
+  active annulus; a variant with all vias moved outside the annulus should stay a switchable option, not a default, until
+  reviewed by a patent attorney.
 
 ### 4.4 Per-layer flux linkage (G3) and how the engine evaluates it
 
@@ -299,26 +323,38 @@ Rules (`inferred`): a group rotation must keep the via grid common to all layers
 | Parameter | Default | Basis |
 |---|---|---|
 | Topology | FSCW spiral coils 12/16, all phases on every layer, star | §2.4 |
-| Rotor | double-sided, N facing S (through flux), 16 NdFeB blocks 20 × 6 × 2 mm, 20 mm radial over r = 18–38 mm, Br 1.30 T, µ_r 1.05, steel back iron ≥ 3 mm (unsaturated) | repository README + typical values (source needed for Br, µ_r) |
+| Rotor | double-sided, N facing S (through flux), 16 NdFeB blocks 20 × 6 × 2 mm, 20 mm radial over r = 18–38 mm, grade N42: B_r 1.315 T typical (1.28 T min), α(B_r) −0.12 %/°C; µ_r 1.05; steel back iron ≥ 3 mm (unsaturated) | repository README; B_r and α from the Arnold N42 sheet (EV-55, extract); grade itself `assumption`; µ_r not found in any datasheet (G23; apparent slope ≈ 1.10, `inferred`) → `assumption`, sensitivity 1.03–1.10 |
 | Gap | 1.0 mm per side | assumption |
 | Stator | 6 layers, 1 oz (34.8 µm), 0.62 mm (record) — treat as parameter | repo_survey §1.5 |
 | Coil | S2 sides, arc ends, w 0.5 mm, s 0.2 mm, coil gap 0.2 mm, through vias 0.3/0.5 mm | repository + assumption |
 | Layer connection | 3 pairs; series (M2) preferred, parallel (M1) as fallback; rotation M3 optional | §4 |
 | Outline | Ø25 mm bore, 12-gon 93 mm flats, 12 × Ø3.1 mm at r = 45 mm | repository |
 | Temperature | 20 °C reference, 60 °C operating for R | assumption |
+| Copper constants | ρ₂₀ = 1.7241e-8 Ω·m, α₂₀ = 0.00393 /K, density 8.89 g/cm³ | IACS / IEC 28 via NBS Handbook 100 (EV-53, `verified` for annealed copper); PCB copper = IACS is an `assumption` (G6) |
 
 ## 6. Separation of statements
 
-- **Verified facts**: repository contents (K1); render provenance; definitions and statements cited in §1.3; D08 eq. 3.24,
-  3.3, 3.27 as printed; D07 p.3 slot → coil-side rule; D15 p.5 layer-group phase offset; reproduction of D08's 12/10
+- **Verified facts**: repository contents (K1, EV-71 parse); render provenance; definitions and statements cited in §1.3;
+  D08 eq. 3.24, 3.3, 3.27 as printed; D07 p.3 slot → coil-side rule; D12 eq. 1; D15 p.5 layer-group phase offset and p.7
+  eq. 6; D09 board = 12 coils/layer, 2 layers, 6 terminals (EV-62); copper constants (EV-53); reproduction of D08's 12/10
   pattern; engine behaviours K6, K7 (reproduced).
 - **Inferred conclusions**: 16-coil analysis (§2.3); 15° = 120° el. phase permutation in the repository; Q/2p < 1 rule;
   M3 via compatibility; delta risk for k_w3 ≠ 0; render ambiguity (K2).
 - **Design assumptions**: default design §5.2; candidate ranking §2.4; star default; outer-rim terminals.
-- **Unresolved**: render topology (Q1); rotor data; FSCW textbook citation; per-layer z-profile accuracy vs 3-D FEA; via
-  crowding; inductance (G1); D08 air gap 1.4 vs 2.8 mm (G10; my field check in `existing_logic_review.md` C1b favours
-  1.4 mm per side for D08 Fig. 3.3 — inferred from figure reading).
+- **Unresolved**: render topology (D5 below); rotor data (D1, D2); FSCW textbook content (G24); magnet µ_r (G23); D09
+  turns per coil (6–8); per-layer z-profile accuracy vs 3-D FEA; via crowding; inductance (G1 — D10-vs-D15 conflict
+  resolved, closed form still unvalidated); D08 air gap 1.4 vs 2.8 mm (G10; my field check in `existing_logic_review.md`
+  C1b favours 1.4 mm per side for D08 Fig. 3.3 — inferred from figure reading); patent overlap (G25, legal review).
 
-Open questions for the user (via Fable): **Q1** Is the render's exact board (possibly a wave winding) wanted, or is it a
-style reference for concentrated spiral coils? **Q2** Keep the 16-magnet rotor? Single or double rotor? **Q3** Are
-blind/buried vias acceptable (cost) for series layer pairs? **Q4** Target supply voltage, speed and torque.
+## 7. Decisions the user must make
+
+Each line: decision → consequence of each choice (all consequences `inferred` from §2–§5 unless marked).
+
+| # | Decision | Consequence |
+|---|---|---|
+| D1 | Keep the 16-magnet rotor (20 × 6 × 2 mm blocks)? | **Yes** → default 12/16 (or 18/16, 16/16 per pair); block magnets need the α_p(r) model (EQ-04), α_p falls from 0.85 to 0.40 across the annulus. **No** → free choice of 2p and magnet shape (e.g. arc segments, 18/20, 12/10 for direct comparison with D08); rotor design becomes part of the task. |
+| D2 | Single or double rotor? | **Double** → symmetric field, smallest per-layer EMF spread (0.34 % in the default stack, C1d), no axial pull on the stator, two rotor parts. **Single + opposite yoke** → simpler rotor, strong axial pull on the stator/yoke. **Single, no yoke** → weakest field, e^(−uz) decay → larger layer-to-layer EMF differences (parallel layers then circulate current, EQ-07). |
+| D3 | Blind/buried vias acceptable? | **Yes** → series layer pairs (M2) without stacking several through-vias in each coil eye → more turns per coil; higher PCB cost (supplier quote needed, D09 p.3 notes cost steps for >6 layers). **No (through vias only)** → M2 needs n_pairs centre vias per eye (fewer turns) or parallel pairs (M1) with circulating-current risk; the M3 half-pitch rotation can place vias in the other group's coil gaps. |
+| D4 | Target supply voltage, speed, torque (and cooling) | Sets turns per coil, series/parallel grouping and star/delta (Ke·ω must stay below the inverter voltage, EQ-09/EQ-20); without them the tool can only report per-turn constants. Thermal limits (EQ-17) need the cooling condition. |
+| D5 | Render = exact target or style reference? | **Exact target** → may require a wave/serpentine option (the render and EV-71 are compatible with a wave path), outside the decided spiral-coil scope; patent attention to ECM serpentine claims (G25). **Style reference** → concentrated spiral coils as decided, with fanned sides / stadium ends / optional rotated layer groups as visual options. |
+| D6 | Star or delta? (default star) | **Star** → triplen EMF does not circulate; 3 terminals + optional neutral. **Delta** → √3 lower Ke per line for the same winding, but combinations with k_w3 ≠ 0 (12/14, 18/16) drive circulating current (EQ-19). |

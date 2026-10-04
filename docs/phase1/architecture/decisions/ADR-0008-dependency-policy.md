@@ -2,7 +2,7 @@ Prepared by: Agent 6 — Software Architecture Specialist — model: claude-opus
 
 # ADR-0008: Dependency policy — minimal, licence-checked, pinned per Python version
 
-**Status:** Proposed
+**Status:** Proposed — amended 2026-10-04 (Python floor rule; import-linter confirmed)
 **Date:** 2026-10-04
 **Deciders:** Fable 5.1, user (embodic licence) — consulted: Agent 3, Agent 4
 
@@ -109,3 +109,11 @@ performance margin for array kernels.
 1. [ ] User: state the intended embodic licence.
 2. [ ] Agent 3: `pyproject.toml` with extras and markers; lock files; licence and audit CI jobs.
 3. [ ] Agent 4: PK-08 licence report check.
+
+## Amendment 1 — reconciliation round 1 (2026-10-04)
+
+- **Python floor rule**: the core targets Python 3.11 syntax and stdlib with no 3.12-only features; CI covers 3.11–3.13
+  plus KiCad's bundled version once T1/T2 report it; consequences per version in architecture_draft.md §18.1 item 1.
+- import-linter is the chosen import-rule tool (dev-only), replacing the `ast`-test alternative.
+- Fonts proposed by Agent 1 (Noto, Liberation, Cascadia Mono, JetBrains Mono; SIL OFL 1.1 `inferred` by Agent 1) must be
+  licence-checked from their LICENSE files before bundling; the Qt front-end may also use system fonts only.

@@ -2,7 +2,7 @@ Prepared by: Agent 6 — Software Architecture Specialist — model: claude-opus
 
 # ADR-0007: Project file format — versioned JSON with published schema, migrations, canonical hash and provenance
 
-**Status:** Proposed
+**Status:** Proposed — amended 2026-10-04 (fields added after reconciliation)
 **Date:** 2026-10-04
 **Deciders:** Fable 5.1 — consulted: Agent 3, Agent 1 (what UI state is persisted)
 
@@ -73,3 +73,10 @@ and the published schema.
 1. [ ] Agent 3: `canonical.py`, `project.py`, `migrations.py`, schema v1, UT-IO-01…06.
 2. [ ] Agent 1: list UI state to persist under `ui` (not hashed).
 3. [ ] Agent 4: property test PR-08 (hash changes iff design changes).
+
+## Amendment 1 — reconciliation round 1 (2026-10-04)
+
+- Added fields: `winding.phase_sequence` ("abc"/"acb"); spiral generator fields from Agent 2 (`first_coil_angle_deg`,
+  `x_inward_sense`, `lead_style`, `terminal_offset_mm`, `min_side_length_mm`); `kicad.placement` and `kicad.layer_map`.
+- `kicad` (placement, layer map, placed item ids), `provenance` and `ui` stay outside the design hash.
+- A `strands` field (Xcoil serpentine concept) is rejected on load with `UNSUPPORTED_STRANDS` (Agent 2 §1.3).

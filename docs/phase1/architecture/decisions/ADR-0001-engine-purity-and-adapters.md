@@ -2,7 +2,7 @@ Prepared by: Agent 6 — Software Architecture Specialist — model: claude-opus
 
 # ADR-0001: Pure Python engine core with thin adapters (ports and adapters)
 
-**Status:** Proposed
+**Status:** Proposed — amended 2026-10-04 (reconciliation round 1: enforcement tool fixed)
 **Date:** 2026-10-04
 **Deciders:** Fable 5.1 (coordinator) — consulted: Agent 3 (software), Agent 4 (verification)
 
@@ -89,3 +89,11 @@ translation layer in each adapter, which is small compared with duplicated physi
 1. [ ] Agent 3: create the package skeleton and import-linter contracts (P2 start).
 2. [ ] Agent 4: add MT-01 (contract check) to the CI gate.
 3. [ ] Keep `embodic.api` signatures stable; changes require a note in CHANGELOG.
+
+## Amendment 1 — reconciliation round 1 (2026-10-04)
+
+- Enforcement tool decided: **import-linter** (BSD, dev-only) with layer and forbidden-import contracts; Agent 3's
+  alternative `ast`-based test is not adopted (architecture_draft.md §18.1 item 2).
+- The pure KiCad mapping `layout_to_item_specs` lives in the core (`embodic.io.kicad_items`) so that the `.kicad_pcb`
+  writer and the plugin share it without an upward import; only `embodic_kicad_plugin` imports `kipy`.
+- Headless entry points confirmed: `embodic.api.compute(design)`, `compute_project(path)`, `embodic-cli` (Agent 3 N-13).

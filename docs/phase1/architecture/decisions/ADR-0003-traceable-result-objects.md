@@ -2,7 +2,7 @@ Prepared by: Agent 6 — Software Architecture Specialist — model: claude-opus
 
 # ADR-0003: Traceable result objects, equation/evidence registries and status combination
 
-**Status:** Proposed
+**Status:** Proposed — amended 2026-10-04 (status order confirmed by Agent 2; rule amended; Agent 4 review pending)
 **Date:** 2026-10-04
 **Deciders:** Fable 5.1 — consulted: Agent 2 (EQ statuses), Agent 4 (verification), Agent 5 (EV registry)
 
@@ -80,3 +80,20 @@ validity limits were exceeded) to each value. Keeping kernels plain avoids payin
 2. [ ] Agent 5: export the EV register to `evidence.v1.json` (ID, claim, document, location, status).
 3. [ ] Fable/Agent 4: confirm or amend the status order.
 4. [ ] Agent 3: implement `results/` with UT-RES-01…04 before physics.
+
+## Amendment 1 — reconciliation round 1 (2026-10-04)
+
+- **Order confirmed** by Agent 2 (`docs/phase1/engineering/answers_to_agents.md` §1.1): `unresolved` < `not tested` <
+  `assumption` < `inferred` < `verified`; also encoded in `equation_registry_draft.json` → `status_order_weakest_first`.
+- **Rule amended** (replaces item 4 where different): result status = weakest of (a) the evidence status of every EQ in
+  the chain, (b) the implementation status (`not tested` until the EQ's linked tests pass — an oracle that has not been run
+  does **not** produce `not tested`), (c) the status of every input the kernel **actually uses** (user/KiCad-imported
+  neutral; default or unsourced `assumption`; sourced constant = its EV status, e.g. ρ₂₀ from EV-53; the equation's own
+  stated assumptions = `assumption` unless replaced by measured data), (d) validity cap → `unresolved`.
+- `dominant_assumptions` (registry) only orders and explains the "n assumptions" tag; no run-time judgement of dominance
+  (Agent 2), which resolves Agent 1's §10.4 item 3.
+- Registry source format: Agent 2's `equation_registry_draft.json`, plus Phase 2 fields `tests`, `validity_checks`,
+  `implementation`, `constants`, `label`, `registry_version` (architecture_draft.md §13). Evidence-register JSON export
+  format defined in the same section (Agent 5, Phase 2).
+- UI: every number shows a shape-coded badge and an EQ link or an `input`/`derived`/`count` tag (Agent 1 UX-AC-01/02;
+  REQ-T-01, T-13).

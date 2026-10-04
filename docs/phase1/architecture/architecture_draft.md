@@ -8,7 +8,7 @@ agents keep their original status label and reference. No code has been written 
 is interface sketch only (Python 3.11 syntax — no PEP 695 generics, because the user's minimum is 3.11).
 
 Related documents: `requirements_draft.md` (REQ-IDs), `app_type_comparison.md` (front-end proposal),
-`test_plan_draft.md` (test IDs), `decisions/ADR-0001 … ADR-0009`.
+`test_plan_draft.md` (test IDs), `decisions/ADR-0001 … ADR-0009`, `user_decisions_needed.md` (UD-01 … UD-26).
 
 ## 1. Goals, constraints, quality attributes
 
@@ -109,11 +109,11 @@ where drawn. `physics` and `drc` are independent of each other; `io` must not im
 | `embodic.geometry` | Primitives (Line/Arc with width, layer, net, role), transforms, paths; `WindingGenerator` registry (`spiral` in P2; `serpentine`, `wave` reserved); spiral coil artwork (X/Y), placement on layer pairs with rotation, via planning, interconnect (rings, terminals), outline; `Layout` incl. electrical `Circuit`; NumPy array view | `DesignParameters`, `WindingPlan` → `Layout` | REQ-F-01, F-03…06, F-09, F-19 |
 | `embodic.drc` | Clearance checks on `Layout`: broad phase (uniform grid), exact narrow phase (line/arc distances), connectivity-aware exemptions, symmetric shortcut with full-check equivalence test | `Layout`, `DrcRules` → `DrcReport` | REQ-F-10 |
 | `embodic.physics` | EQ-01…EQ-22 implementations as pure functions; `analyse()` orchestration; per-layer field at z; circuit solution (EQ-07); every output wrapped in `Traceable` via the registry | `DesignParameters`, `WindingPlan`, `Layout` → `AnalysisResult` | REQ-F-07, F-11, F-12, F-20 |
-| `embodic.io` | Project file load/save (typed loader + published JSON Schema, migrations, canonical JSON, design hash); writers: SVG, DXF R12, `.kicad_pcb` (own s-expression writer), results JSON/CSV, PDF report | `ComputeOutcome` → files; files → `DesignParameters` | REQ-F-15, F-16, K-01, T-07 |
+| `embodic.io` | Project file load/save (typed loader + published JSON Schema, migrations, canonical JSON, design hash); writers: SVG, DXF R12, `.kicad_pcb` (own s-expression writer), results JSON/CSV, PDF report; `kicad_items` = pure Layout → KiCad item mapping shared with the plugin | `ComputeOutcome` → files; files → `DesignParameters` | REQ-F-15, F-16, K-01, T-07 |
 | `embodic.api` | `compute()` facade: validate → winding → geometry → DRC → physics; stage cache; cancellation; version info; never raises for user input | `DesignParameters` → `ComputeOutcome` | REQ-F-14, N-01, N-04 |
 | `embodic.cli` | Headless `compute`, `validate`, `export`, `registry`, `golden-compare` commands; exit codes | project file → JSON/exports | REQ-F-18 |
 | `embodic.ui` | Standalone front-end (proposal: PySide6, ADR-0005); MVVM view-models, worker thread, geometry view, phase/layer/results/issues views, export dialogs, string catalogue, theme tokens | user events ↔ `api`, `io` | REQ-F-13, N-02, N-11…16, L-01…07 |
-| `embodic_kicad_plugin` | KiCad 9 IPC adapter: version check, stack-up import, placing/replacing embodic items in one commit, mm→nm, layer and net mapping, item tracking; optional launcher | `Layout` → kipy items; kipy stack-up → `Stackup` | REQ-K-02…11 |
+| `embodic_kicad_plugin` | KiCad 9 IPC adapter (thin): version check, stack-up import, applying `ItemSpec`s from `embodic.io.kicad_items` in one commit behind a `BoardApi` protocol, item tracking, no-silent-remap check; optional launcher | `Layout` → kipy items; kipy stack-up → `Stackup` | REQ-K-02…11 |
 
 ## 4. Layering rules (enforced)
 
@@ -234,22 +234,48 @@ class InnerTurnMode(StrEnum):
     FIXED = "fixed"                # Xcoil behaviour (A2-REV C5)
     MOVING = "moving"              # trapezoidal + triangular turns (D08 eq. 3.25-3.26, A2-EQ EQ-02)
 
+class Sense(StrEnum):
+    CW = "cw"; CCW = "ccw"
+
+class LeadStyle(StrEnum):
+    RADIAL_THEN_ARC = "radial_then_arc"; STRAIGHT = "straight"   # lead from innermost turn to the centre via
+
+class EyeArrangement(StrEnum):
+    RADIAL = "radial"; TANGENTIAL = "tangential"   # how n centre vias sit in the coil eye
+
 @dataclass(frozen=True, slots=True, kw_only=True)
-class SpiralCoilSpec:
-    coil_count: int                # Q per layer
-    r_inner_mm: float
-    r_outer_mm: float
-    trace_width_mm: float
+class EyeRequirement:              # derived by the planner, not a user input: count from LayerConfig, sizes from ViaSpec/DrcRules
+    centre_via_count: int
+    via_pad_mm: float
     clearance_mm: float
-    coil_gap_mm: float             # between neighbouring coils
-    turns: int | None = None       # None = maximum feasible
+    arrangement: EyeArrangement = EyeArrangement.RADIAL
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class SpiralCoilSpec:              # fields and conventions per Agent 2 answers_to_agents.md §3.2 and §1.4
+    coil_count: int                # Q per layer (3...96 proposal; = 2p for M4)
+    r_inner_mm: float              # COPPER-EDGE radius of the coil body; centre-line R_i0 = r_inner + w_in/2
+    r_outer_mm: float              # copper-edge radius; centre-line R_o0 = r_outer - w_out/2
+    trace_width_mm: float          # w
+    clearance_mm: float            # s (UI id param-trace-spacing, see §19)
+    coil_gap_mm: float             # copper-to-copper between neighbouring coils; first side offset = gap/2 + w/2
+    turns: int | None = None       # N per coil per layer; None = maximum feasible
     side_style: SideStyle = SideStyle.PARALLEL
     end_style: EndStyle = EndStyle.ARC
-    inner_turn_mode: InnerTurnMode = InnerTurnMode.MOVING
-    corner_radius_mm: float = 0.0
+    inner_turn_mode: InnerTurnMode = InnerTurnMode.MOVING   # EQ-02 loop criterion (trapezoidal/triangular)
+    corner_radius_mm: float = 0.0  # reduced automatically if nested fillets do not fit -> reported as an issue, never silent
     end_width_outer_mm: float | None = None   # None = trace width
     end_width_inner_mm: float | None = None
     width_profile: Literal["constant"] = "constant"   # reserved: "radius_proportional" (S5, D10)
+    first_coil_angle_rad: float = math.pi / 2         # theta_0: coil 1 centred at the top (Agent 2 §1.4)
+    x_inward_sense: Sense = Sense.CW                   # layer X spirals inward clockwise = "positive coil"
+    lead_style: LeadStyle = LeadStyle.RADIAL_THEN_ARC
+    terminal_offset_mm: float | None = None            # None = clearance + pad/2 beyond r_outer
+    min_side_length_mm: float | None = None            # None = 2*w; rejects degenerate triangular loops
+    # 'strands' (parallel traces per turn) is deliberately absent: not recommended for spirals (circulating current,
+    # Agent 2 answers §1.3). A project file containing it is rejected with UNSUPPORTED_STRANDS.
+
+class PhaseSequence(StrEnum):
+    ABC = "abc"; ACB = "acb"       # swapping B and C reverses rotation for the same terminal order (Agent 2 §1.4)
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class SpiralWindingSpec:
@@ -257,6 +283,7 @@ class SpiralWindingSpec:
     coil: SpiralCoilSpec
     layers: LayerConfig
     assignment: PhaseAssignmentInput | None = None    # None = star of slots (automatic)
+    phase_sequence: PhaseSequence = PhaseSequence.ABC  # Agent 1 #param-phase-sequence
     parallel_paths: int = 1        # a <= t, only between identical-phasor, identical-z groups (A2-TOP §3.4)
 
 # Reserved, not implemented in P2 (REQ-F-19): loader accepts the kind, validator reports UNSUPPORTED_TOPOLOGY.
@@ -492,12 +519,16 @@ class ViaPlan:
     vias_per_transition: int
 ```
 
-Expected winding-via count (`assumption` — planner design to be confirmed by Agent 2; used by UT-GEO-13):
-- all pairs in series (M2), n pairs, v vias per transition: N = Q · (n + (n − 1)) · v (one centre via per pair and coil,
-  one outer transfer via per series step and coil — A2-TOP §4.2 M2). Default design (Q = 12, n = 3, v = 1): 60.
-- all pairs in parallel (M1): N = Q · (1 + 2) · v (one shared through centre via, one stitch via at each of the two outer
-  coil ends joining the parallel layers). Default design: 36.
-- mixed groups: computed by the planner per group; interconnect vias (rings, terminals) are counted separately.
+Expected winding-via count — **confirmed by Agent 2** (`docs/phase1/engineering/answers_to_agents.md` §3.1, `inferred`
+counting argument; through vias, v vias per transition, interconnect vias excluded; used by UT-GEO-13):
+- general, k series groups, group g with n_g parallel pairs: **N = Q · v · (2k − 1 + [n_1 > 1] + [n_k > 1])** — one shared
+  centre via per group, one through via per series node (joins the Y layers of group g and the X layers of group g + 1),
+  and an entry/exit stitch via only when an end group has more than one pair;
+- M2 (all series, k = n): N = Q · v · (2n − 1) → default (Q = 12, n = 3, v = 1): **60**;
+- M1 (all parallel, k = 1, n > 1): N = 3 · Q · v → default: **36**;
+- D10 style ((0, 1), (2, 3)): 5 per coil; M4 (one phase per pair): Σ over pairs of Q_pair · v (e.g. 16/16 × 3 pairs → 48);
+- M3 rotation does not change counts; blind/buried vias change positions, not counts; all centre vias of an M2 coil must fit
+  in its eye (`EyeRequirement`, EQ-02 eye term).
 
 ### 7.4 Electrical circuit (output of geometry, input of physics)
 
@@ -598,6 +629,42 @@ class Layout:
 `LayoutArrays` (per layer): `lines: ndarray (N, 5)` [x1, y1, x2, y2, w], `arcs: ndarray (M, 6)` [cx, cy, r, start, sweep, w],
 `path_index`, `prim_index` (to map violations back), `vias: ndarray (K, 4)` [x, y, pad, drill] + span mask per layer.
 
+Spiral generator output (fields from Agent 2 `answers_to_agents.md` §3.2; feeds hints REQ-F-28 and the EQ-02/EQ-03
+cross-checks shown next to the constructive result):
+
+```python
+class TurnLimitReason(StrEnum):
+    RADIAL = "radial"; LATERAL = "lateral"; EYE = "eye"; USER = "user"
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class TurnLimit:
+    radial_bound: float            # EQ-02 radial bound (strict "<")
+    loops_trapezoidal: int; loops_triangular: int   # loop criterion used by the generator
+    printed_3_25: float; printed_3_26: float        # D08 printed formulas, reported as cross-check only
+    eye_limit: int | None
+    limiting_reason: TurnLimitReason
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class TurnRecord:
+    index: int; kind: Literal["trapezoid", "triangle"]
+    side_offset_mm: float; r_out_mm: float; r_in_or_apex_mm: float
+    span_mean_rad: float           # sigma_t at mean radius (EQ-08 per-turn pitch factor)
+    length_mm: float
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class SpiralArtwork:
+    x_prims: tuple[Primitive, ...]; y_prims: tuple[Primitive, ...]   # canonical coil, layer X (in) and Y (out, mirrored)
+    turns_achieved: int
+    turn_limit: TurnLimit
+    turn_table: tuple[TurnRecord, ...]
+    track_length_mm: dict[str, float]          # per layer role "X"/"Y"; EQ-03 closed form reported alongside
+    eye_vias_mm: tuple[tuple[float, float], ...]
+    terminals: dict[str, tuple[float, float, str]]   # entry/exit point and layer role
+    envelope: tuple[float, float, float]       # r_min_cu, r_max_cu, angular half-width (rad)
+    copper_area_mm2: dict[str, float]          # EQ-16
+    min_spacing_mm: float                      # DRC pre-check
+```
+
 ### 7.6 DRC report (`embodic.drc`)
 
 ```python
@@ -647,7 +714,7 @@ class Status(StrEnum):
     UNRESOLVED = "unresolved"; NOT_TESTED = "not tested"
 
 STATUS_STRENGTH = {Status.UNRESOLVED: 0, Status.NOT_TESTED: 1, Status.ASSUMPTION: 2,
-                   Status.INFERRED: 3, Status.VERIFIED: 4}   # weakest-link order: proposal, ADR-0003
+                   Status.INFERRED: 3, Status.VERIFIED: 4}   # weakest-link order: ADR-0003, confirmed by Agent 2
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Assumption:
@@ -759,6 +826,13 @@ class ValidationIssue:
     limit: float | int | str | None = None
     hint: str = ""
     eq_ids: tuple[str, ...] = ()
+    suggestion: Suggestion | None = None   # the engine proposes, never applies (REQ-F-23)
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Suggestion:
+    pointer: str                   # JSON pointer of the input to change
+    proposed_value: float | int | str
+    reason: str                    # English, e.g. "maximum feasible turns for this annulus"
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class VersionInfo:
@@ -788,8 +862,33 @@ stated; all raise only on programming errors (wrong types), never on user input.
 ```python
 def compute(design: DesignParameters, *, options: ComputeOptions | None = None,
             cache: StageCache | None = None, cancel: CancelToken | None = None) -> ComputeOutcome: ...
+def compute_project(path: Path, *, options: ComputeOptions | None = None) -> ComputeOutcome: ...
+    # headless entry point requested by Agent 3 (N-13): load_project + compute; used by embodic-cli, the KiCad
+    # plugin's "Apply embodic project" action, the golden/oracle tests and CI. Never raises for user input.
+def outcome_to_json(outcome: ComputeOutcome) -> dict[str, object]: ...   # JSON-serialisable result, non-finite encoded
 def default_design() -> tuple[DesignParameters, ProvenanceMap]: ...
 def version_info() -> VersionInfo: ...
+```
+
+Stage cache and partial recompute (Agent 3 request; `assumption` design):
+
+| Stage | Cache key = SHA-256 of | Re-runs when the user changes … | Skipped when the user changes … |
+|---|---|---|---|
+| validate | whole design | anything | — |
+| winding | poles, coil count, phases, layer config, assignment, phase sequence | winding combination, pairs, manual assignment | geometry sizes, rotor, operating point |
+| geometry | winding key + coil spec + stack-up + vias + connection + outline | any geometry input | rotor material/field inputs, operating point, materials, analysis options |
+| drc | layout hash + DRC rules | geometry or rules | rotor, operating point |
+| physics | layout hash + rotor + operating point + materials + analysis options | rotor, speed, current, temperature | — |
+
+```python
+class StageCache:                  # in-process LRU per stage (size 8, assumption), lock-protected
+    def get(self, stage: str, key: str) -> object | None: ...
+    def put(self, stage: str, key: str, value: object) -> None: ...
+
+class CancelToken:                 # cooperative; checked between stages and inside DRC/EMF chunk loops
+    def cancel(self) -> None: ...
+    @property
+    def cancelled(self) -> bool: ...
 ```
 
 ### 8.2 `embodic.model` and `embodic.winding`
@@ -936,7 +1035,7 @@ embodic_kicad_plugin/                 # PCM archive content: plugins/ (A5-KI §1
   main.py                             # entry: parse action id, configure logging, call adapter
   embodic_kicad_plugin/
     connection.py                     # KiCad(), check_version(), get_board(); error mapping
-    board_items.py                    # Layout -> kipy Track/ArcTrack/Via/shapes; mm->nm; y-axis flip; layer map
+    apply.py                          # ItemSpec (from embodic.io.kicad_items) -> kipy Track/ArcTrack/Via/shapes; BoardApi
     stackup_import.py                 # Board.get_stackup()/get_copper_layer_count() -> embodic Stackup
     tracking.py                       # identify previously placed embodic items (UUID list in project file + net prefix)
     apply_project.py                  # action "Apply embodic project"
@@ -944,12 +1043,41 @@ embodic_kicad_plugin/                 # PCM archive content: plugins/ (A5-KI §1
   resources/icon.png                  # 64x64 (A5-REG EV-K3)
 ```
 
-Apply sequence (one undo step, REQ-K-02/04): connect → `check_version` → read stack-up → load project file
-(convention: `<board-stem>.embodic.json` beside the board, or the path recorded by the standalone app) →
-`embodic.api.compute()` → refuse if errors (unless the user chose override in the standalone app) → `begin_commit()` →
+Apply sequence (one undo step, REQ-K-02/04/14): connect → `check_version` → read stack-up and copper layer count →
+load project file (convention: `<board-stem>.embodic.json` beside the board, or the path recorded by the standalone app)
+→ `embodic.api.compute_project()` → refuse if errors (unless the user confirmed DRC failures in the standalone app,
+REQ-F-33) → refuse if the board has fewer copper layers than the design (no silent remap, REQ-K-14) → `begin_commit()` →
 `remove_items(previous embodic items)` → `create_items(new items)` → `push_commit()`; on any exception `drop_commit()`.
 Method names are those of kipy 0.8.0 `board.py` l.609–912 (A5-KI §3, `verified` source reading); their presence in the
 kipy version matching the user's 9.0.x is `unresolved` (T2/T4).
+
+**Two-layer adapter (Agent 3 request, `kicad_plugin_feasibility.md` §4 item 1 — adopted):**
+
+```python
+# layer 1 — pure, no kipy import, lives in the CORE as embodic.io.kicad_items (so the .kicad_pcb writer can use it
+#           without importing the plugin); fully unit-tested (KX-07)
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ItemSpec:
+    kind: Literal["track", "arc", "via", "edge_line", "edge_arc", "edge_circle", "pad"]
+    layer: str                     # KiCad layer name, e.g. "F.Cu", "In1.Cu", "Edge.Cuts"
+    points_nm: tuple[tuple[int, int], ...]   # start[, mid], end — integers, y already flipped, origin applied
+    width_nm: int
+    net: str
+    extra: dict[str, int | str]    # via drill/pad and span, pad shape/size …
+def layout_to_item_specs(layout: Layout, mapping: LayerMapping, placement: Placement) -> tuple[ItemSpec, ...]: ...
+
+# layer 2 — thin, in embodic_kicad_plugin; the ONLY code importing kipy (connection.py + apply.py)
+class BoardApi(Protocol):          # implemented by KipyBoardApi (real) and FakeBoardApi (tests, KX-08)
+    def copper_layer_count(self) -> int: ...
+    def read_stackup(self) -> Stackup: ...
+    def begin(self) -> None: ...; def commit(self, message: str) -> None: ...; def rollback(self) -> None: ...
+    def remove(self, item_ids: Sequence[str]) -> None: ...
+    def create(self, specs: Sequence[ItemSpec]) -> tuple[str, ...]: ...   # returns created item ids for tracking
+def apply_item_specs(api: BoardApi, specs: Sequence[ItemSpec], previous_ids: Sequence[str]) -> ApplyReport: ...
+```
+
+The same `layout_to_item_specs` output also drives the `.kicad_pcb` writer's coordinates (R1), so the file route and the
+live route place identical geometry on the 1 nm grid (Agent 3 stage 2b exit criterion).
 
 Core distribution into KiCad's venv — two options, decided after T2 (`unresolved`): (a) publish `embodic` core as a
 wheel and list it in `requirements.txt`; (b) vendor the pure-Python core package into the plugin archive and list only
@@ -969,34 +1097,71 @@ wheel and list it in `requirements.txt`; (b) vendor the pure-Python core package
 
 ## 10. Standalone UI architecture (proposal: PySide6, ADR-0005)
 
+Structure follows Agent 1's information architecture (`docs/phase1/design/design_spec_draft.md` §2, §10; handoff
+`design_handoff_for_agent3.md`): a shell with top bar, six-step navigation, step panel, figure, results rail and status
+bar.
+
 ```
 embodic/ui/
-  app.py                 # QApplication setup, theme, logging, crash handler (REQ-N-18)
-  strings.py             # English string catalogue (REQ-L-01/02)
-  theme.py               # palette tokens from Agent 1 (white/grey/black), contrast-checked (AX-01)
-  workers.py             # ComputeWorker (QRunnable), debounce 150 ms, latest-wins, CancelToken
+  app.py                 # QApplication setup, theme, logging, crash handler (REQ-N-18), autosave/recovery (REQ-F-31)
+  strings.py             # English string catalogue (REQ-L-01/02); spelling variant per UD-17
+  theme.py               # Agent 1 tokens (light; dark prepared, UD-06), greyscale phase set, QSS generation; AX-01 reads it
+  ids.py                 # element-id contract: objectName for every widget = Agent 1 id (§19)
+  workers.py             # ComputeWorker (QThreadPool/QRunnable); debounce 300 ms, immediate on Enter/blur/selection;
+                         # latest-wins with CancelToken; "Updating…" after 300 ms; progress line after 1 s (REQ-N-02)
   viewmodels/
-    design_vm.py         # current DesignParameters + ProvenanceMap; edit -> dataclasses.replace -> undo stack
-    outcome_vm.py        # latest ComputeOutcome; derived display rows (value, unit, status, EQ links)
+    design_vm.py         # DesignParameters + ProvenanceMap; edit -> dataclasses.replace -> undo stack (REQ-F-22);
+                         # applies engine Suggestions only with inline notice + Undo (REQ-F-23)
+    outcome_vm.py        # latest ComputeOutcome + last valid layout (stale stamp, REQ-F-27); display rows from Traceable
+    step_vm.py           # current step, step states (done / n fail), field applicability (REQ-F-32)
   views/
-    main_window.py       # layout per Agent 1 (input panel, geometry view, results, issues)
-    geometry_view.py     # QGraphicsView; items per (layer, phase, width run); keyboard zoom/pan/fit
-    phase_view.py        # coil -> phase/polarity table + diagram (text alternative to the drawing)
-    layer_view.py        # stack-up table, pairs, series/parallel groups, vias
-    results_view.py      # Traceable table + details pane (EQ, EV, assumptions, inputs, validity, tolerance)
-    issues_view.py       # ValidationIssue list; click/Enter focuses the offending field
-    export_dialog.py
+    main_window.py       # shell: #app-topbar, #step-nav, #panel-step, #figure, #rail-results, #statusbar; F6 regions
+    coil_panel.py        # step 1 Coil
+    phase_panel.py       # step 2 Phases (pattern string, balance, coil table, phase ring data)
+    layer_panel.py       # step 3 Layers (stack list, pair connection cards, rotation, vias, path diagram)
+    board_rotor_panel.py # step 4 Board & rotor (outline, fasteners, stack-up + manufacturing limits, rotor, operating point)
+    results_view.py      # step 5 Results (section nav, status filter, result cards, "How was this computed", charts)
+    export_view.py       # step 6 Export (targets, KiCad connection card, layer map, checklist, place/save)
+    geometry_view.py     # figure: QGraphicsView; items per (layer, phase, width run); keyboard pan/zoom/fit; colour/greyscale
+    results_rail.py      # DRC card + key results (value, unit, badge, EQ link) or step-specific checks
+    checks_view.py       # ValidationIssue + DRC list with Locate; Enter focuses the offending field
+    status_badge.py      # five shape-coded badges (✓ ≈ ◇ ? ○) with accessible "Status: …" names
+    charts.py            # one unit per axis, data-table alternative, keyboard read-out (REQ-N-25)
+    dialogs.py           # place/export confirmation listing DRC failures, focus on Cancel (REQ-F-33)
+    kicad_compact.py     # compact 880 × 600 window used when launched from the KiCad plugin (REQ-K-15, needs T3)
 ```
 
 Pattern: MVVM — views never call the engine; view-models call `embodic.api.compute` through `workers.py` and expose
-immutable outcomes. The engine is thread-safe by construction (pure functions, frozen dataclasses); the stage cache is
-guarded by a lock (`assumption`). All widget texts and accessible names come from `strings.py`.
+immutable outcomes. The engine is thread-safe by construction (pure functions, frozen dataclasses); the stage cache
+(§8.1) is lock-protected (`assumption`). Partial recompute comes from the stage cache: e.g. editing speed re-runs only the
+physics stage. All widget texts and accessible names come from `strings.py`.
 
-UI behaviours carried over from Agent 1's analysis (`docs/phase1/design/ux_analysis.md`): `outcome_vm` keeps the last
-valid layout and shows it marked "outdated" while the current input is invalid (Xcoil strength W1, REQ-F-27); the
-view-model never rewrites a user value — feasibility suggestions are separate hint objects applied only by an explicit
-command (Xcoil defect C2, REQ-F-23); exports with DRC errors go through a pre-flight confirmation (Xcoil defect C14,
-§12); phases are encoded by label + line pattern + grey level, colour only if the user approves (REQ-L-04, N-14).
+### 10.1 Screen-to-view mapping (Agent 1's screens ↔ views)
+
+| Agent 1 screen / step (mockup) | View module(s) | View-model(s) | Notes |
+|---|---|---|---|
+| Shell — 01 Overview (`01_overview_desktop.html`) | `main_window`, `geometry_view`, `results_rail`, status bar in `main_window` | `step_vm`, `outcome_vm` | top bar, step nav (Alt+1…6), F6 region cycling |
+| Step 1 Coil (`02_spiral_setup.html`, §10.1) | `coil_panel`; figure "coil detail ↔ ring" in `geometry_view` | `design_vm` | feasibility rail: EQ-02 bound vs constructive limit from `SpiralArtwork.turn_limit`, EQ-01, EQ-08, EQ-03 |
+| Step 2 Phases (`03_phase_and_layers.html` frame A, §10.2) | `phase_panel`; phase ring in `geometry_view` | `design_vm`, `outcome_vm` (`WindingPlan`) | manual mode edits `PhaseAssignmentInput`; live balance from `check_feasibility` |
+| Step 3 Layers (`03_phase_and_layers.html` frame B, §10.3) | `layer_panel` | `design_vm` (`LayerConfig`, `ViaSpec`, `Stackup`) | path diagram from `Circuit`; rotation overlay from `LayerPair.rotation_rad` |
+| Step 4 Board & rotor (no mockup, §10.5) | `board_rotor_panel` | `design_vm` | manufacturing limits → `DrcRules` |
+| Step 5 Results (`04_results_traceability.html`, §10.4) | `results_view`, `charts`, `status_badge`, `checks_view` | `outcome_vm` | every number from a `Traceable`; disclosure per REQ-T-13 |
+| Step 6 Export (`05_export_kicad.html`, §10.6) | `export_view`, `dialogs` | `outcome_vm`, `design_vm` (`kicad` section) | KiCad connection card = R3 IPC client (needs T3); "Save .kicad_pcb file" = R1 always |
+| KiCad plugin dialog (`05_export_kicad.html`, §11 of the spec) | `kicad_compact` (standalone app in compact mode, launched by the plugin) | same | not a dialog inside KiCad's venv (ADR-0004 amendment); without T3 the plugin applies the project file |
+| Phone (`06_phone.html`) | — | — | **out of scope** with the desktop option; applies only if the user chooses C-B1 (UD-01) |
+
+### 10.2 Window sizes with the desktop option
+
+Minimum window **960 × 540** device-independent px (= 1920 × 1080 at 200 % scaling, `inferred` arithmetic): ≥ 1280 px →
+three panes (Agent 1 grid 340 | fluid | 360 px); 960–1279 px → two panes, results rail as a collapsible bottom panel with
+a two-row key-result strip (Agent 1's tablet pattern); vertical scrolling inside panels; the drawing and wide tables
+scroll in their own containers; no horizontal scrolling of form panels (REQ-N-15). Phone single-column layout and 44 px
+coarse-pointer targets are not implemented unless C-B1 is chosen.
+
+UI behaviours carried over from Agent 1: last valid layout kept with stamp (W1, REQ-F-27); no silent value rewrite —
+the engine only suggests, the view-model applies with inline notice + Undo (C2, UX-AC-13, REQ-F-23); export/place
+pre-flight with confirmation on DRC failures (C14, REQ-F-33); phases by label + hatch + grey level, colour only if the user
+approves (REQ-L-04, N-14, N-23); hidden inapplicable fields (C1, REQ-F-32).
 
 ## 11. Performance design (REQ-N-01…03)
 
@@ -1055,23 +1220,64 @@ Worked example (illustrative, values not computed): `resistance_phase_operating`
 constants ρ₂₀, α (`assumption: standard value, source needed`, A2-EQ EQ-10) → status = weakest = `assumption`, reasons
 listed; tolerance ±8 % vs measured DC resistance (A2-EQ EQ-10) shown next to the value.
 
-Registry files (packaged data, versioned with the app): `embodic/results/data/equations.v1.json`,
-`evidence.v1.json`. Proposed entry format (statuses are **placeholders** — Agent 2/4 own the values):
+Registry files (packaged data, versioned with the app): `embodic/results/data/equations.v1.json` and
+`embodic/results/data/evidence.v1.json`.
+
+**Equation registry — source format adopted from Agent 2.** The source of truth is Agent 2's
+`docs/phase1/engineering/equation_registry_draft.json` (22 entries EQ-01…EQ-22; top-level `prepared_by`, `schema`,
+`status_vocabulary`, `status_order_weakest_first` = [unresolved, not tested, assumption, inferred, verified],
+`gate_vocabulary`, `notes`, `equations`). Each entry has `id`, `name`, `formula`, `variables` [{`symbol`, `unit`,
+`meaning`}], `sources` [EV-IDs], `source_notes`, `gate_verdict`, `status` (Phase 1 *evidence* status of the equation),
+`tolerance` {`value`, `basis`}, `dominant_assumptions`, `reference_case` {`source`, `inputs`, `expected`, `tolerance`} and
+optional `additional_cases` (Agent 2 `answers_to_agents.md` §3.3; file read 2026-10-04). The packaged runtime file keeps
+these fields unchanged and adds Phase 2 fields owned as stated:
+
+| Added field | Type | Owner | Purpose |
+|---|---|---|---|
+| `registry_version` (top level) | string, e.g. "1.0.0" | Fable | shown in `VersionInfo`, exports (REQ-T-07) |
+| `tests` | list of test IDs | Agent 3 (writes), Agent 4 (reviews) | TR-03: an EQ is shown `verified` only if ≥ 1 linked test passed in this build |
+| `validity_checks` | list of {`code`, `expression`, `cap`} | Agent 2 | machine-checkable limits → `ValidityFlag`, cap `unresolved` (e.g. `RANGE_SKIN_DEPTH`) |
+| `implementation` | dotted path, e.g. `embodic.physics.resistance.path_resistance_ohm` | Agent 3 | code ↔ EQ link for reviews and TR-04 |
+| `constants` | list of {`name`, `value`, `unit`, `source` (EV-ID or null), `status`} | Agent 2 / Agent 5 | e.g. ρ₂₀ = 1.7241e-8 Ω·m from EV-53 (Agent 2 §2.1) |
+| `label` | "estimate" / "guideline (unverified)" / null | Agent 2 | wording for `cannot verify yet` outputs (REQ-T-05) |
+
+Result status at run time = weakest of (a) `status` of every EQ in the chain, (b) implementation status (`not tested`
+until the EQ's linked tests pass), (c) status of every input the kernel **actually uses** (user/KiCad-imported neutral,
+default or unsourced = `assumption`, sourced constant = its EV status, the equation's own stated assumptions =
+`assumption`), (d) validity cap → `unresolved` — rule as amended by Agent 2 (`answers_to_agents.md` §1.1) and ADR-0003.
+`dominant_assumptions` only orders and explains the "n assumptions" tag (Agent 1 badge spec); it does not change the
+status.
+
+**Evidence register — JSON export format (Agent 5 produces it in Phase 2 from `evidence_register.md`):**
 
 ```json
 {
-  "id": "EQ-10",
-  "title": "DC resistance with temperature",
-  "gate": "reuse",
-  "status": "<set by Agent 2/4>",
-  "evidence": ["EV-08", "EV-28", "EV-29", "EV-44"],
-  "references": [{"doc": "D08", "location": "p.45 eq. 3.37-3.38"}, {"doc": "D10", "location": "p.4 eq. 8"}],
-  "validity": ["w and t much smaller than skin depth (EQ-13)"],
-  "tolerance": {"relative": 0.08, "against": "measured DC resistance at known temperature", "source": "A2-EQ EQ-10"},
-  "constants": [{"name": "rho20", "value": 1.724e-8, "unit": "ohm_m", "status": "assumption", "note": "source needed (G6)"}],
-  "tests": ["UT-PHY-10", "GR-02", "OR-02", "OR-03"]
+  "prepared_by": "Prepared by: Agent 5 — Research & Evidence Specialist — model: <id>",
+  "schema": "embodic evidence register",
+  "schema_version": 1,
+  "generated_from": "docs/phase1/evidence/evidence_register.md@<git commit>",
+  "status_vocabulary": ["verified", "inferred", "assumption", "unresolved", "not tested"],
+  "documents": [
+    {"id": "D08", "title": "...", "authors": "...", "year": "<int>", "venue": "...", "kind": "thesis",
+     "path": "B2/799354017-Pcb-stator-thesis.pdf", "url": null, "doi": null, "licence_note": null}
+  ],
+  "evidence": [
+    {"id": "EV-08", "claim": "...", "document": "D08",
+     "location": {"page_pdf": "<int, 1-based>", "page_printed": "<string or null>", "section": "<string or null>",
+                  "equation": "<string or null>", "table": null, "figure": null},
+     "read_method": "text | img | webfetch_extract | parse",
+     "applies": {"judgement": "yes | partly | no", "note": "...", "status": "inferred"},
+     "status": "verified",
+     "related_equations": ["EQ-10"], "related_gaps": ["G6"], "accessed": "2026-10-04", "notes": ""}
+  ]
 }
 ```
+
+Field rules: `status` = whether Agent 5 read the claim in the source (as in the Markdown register preamble), never
+physical correctness; `applies.status` is always `inferred`; page numbers are 1-based PDF indices with the printed page
+as a string; repository and web evidence use `document` IDs such as `REPO-magnetless_motor`, `WEB-K4` with `url` filled;
+values in the example are placeholders. CI check TR-04 extends to EV-IDs: every EV-ID referenced by `equations.v1.json`
+exists in `evidence.v1.json`.
 
 CI checks (TR-01…TR-04): every EQ-ID used in code exists in the registry; every registry EQ with status `verified` links ≥ 1
 passing test; every test carries ≥ 1 REQ marker; every must-REQ has ≥ 1 test.
@@ -1101,7 +1307,7 @@ passing test; every test carries ≥ 1 REQ marker; every must-REQ has ≥ 1 test
                                      {"index": 1, "layer_in": "L3", "layer_out": "L4", "rotation_deg": 0.0},
                                      {"index": 2, "layer_in": "L5", "layer_out": "L6", "rotation_deg": 0.0}],
                            "series_groups": [[0], [1], [2]]},
-                "assignment": null},
+                "assignment": null, "phase_sequence": "abc"},
     "stackup": {"source": "user", "layers": [{"kind": "copper", "name": "L1", "thickness_mm": 0.0348},
                                              {"kind": "dielectric", "name": "D1", "thickness_mm": 0.071, "material": "FR-4"}]},
     "vias": {"drill_mm": 0.3, "pad_mm": 0.5, "plating_um": 25.0, "vias_per_transition": 1, "allowed_spans": ["through"]},
@@ -1114,7 +1320,9 @@ passing test; every test carries ≥ 1 REQ marker; every must-REQ has ≥ 1 test
     "drc_rules": {"trace_clearance_mm": 0.2, "…": "…"}
   },
   "provenance": {"/rotor/remanence_t": {"source": "default", "note": "typical NdFeB value, source needed (A2-TOP §5.2)"}},
-  "kicad": {"placed_item_ids": [], "board_file_hint": null},
+  "kicad": {"placed_item_ids": [], "board_file_hint": null,
+            "placement": {"origin_x_mm": 150.0, "origin_y_mm": 100.0, "rotation_deg": 0.0},
+            "layer_map": {"L1": "F.Cu", "L2": "In1.Cu", "…": "…", "L6": "B.Cu"}},
   "ui": {"view": {"zoom": 1.0}}
 }
 ```
@@ -1123,8 +1331,8 @@ All numbers above are illustrative examples (`assumption`, mostly Agent 2 §5.2 
 
 - Angles are stored in degrees in the file (`_deg` fields) for human readability and converted once by the loader (§6 U2).
 - **Hash**: SHA-256 over the canonical form of `design` only (keys sorted, no insignificant whitespace, floats in Python's
-  shortest round-trip `repr`, UTF-8). `provenance`, `kicad` and `ui` are excluded so that view changes do not alter the
-  design identity.
+  shortest round-trip `repr`, UTF-8). `provenance`, `kicad` (placement, layer map, placed item ids) and `ui` are excluded so that
+  view or placement changes do not alter the design identity; export metadata records the placement separately.
 - **Versioning**: integer `schema_version`; loader applies `migrate_v<n>_to_v<n+1>` functions in sequence and reports
   `INFO_MIGRATED`; a newer-than-supported version is refused (`INVALID_SCHEMA_VERSION_NEWER`). Files are never rewritten
   without an explicit save.
@@ -1156,7 +1364,7 @@ embodic/                                   repository root (Fable: mirrored to C
 │  │  ├─ results/    status.py traceable.py registry.py analysis_result.py formatting.py
 │  │  │              data/equations.v1.json data/evidence.v1.json
 │  │  ├─ io/         project.py canonical.py migrations.py schema/project.v1.schema.json
-│  │  │              svg_writer.py dxf_writer.py sexpr.py kicad_pcb_writer.py pdf_writer.py report.py results_export.py
+│  │  │              svg_writer.py dxf_writer.py sexpr.py kicad_items.py kicad_pcb_writer.py pdf_writer.py report.py results_export.py
 │  │  ├─ cli/        __main__.py commands.py
 │  │  └─ ui/         (extra "desktop"; see §10)
 │  └─ embodic_kicad_plugin/                (see §9.2)
@@ -1263,6 +1471,14 @@ Source: `docs/phase1/software/calculation_flow_and_port_notes.md` §2 (measureme
 | Material constants with sources (EQ-10, EQ-16; G6) | `MaterialConstant(source_ref, status)` in `MaterialSet` | designed |
 | Re-run checks C1–C9 as regression tests with the same tolerances (A2-REV §4 note) | test_plan_draft.md GR-xx / OR-xx / UT-PHY-xx | planned |
 | Single-rotor model consistency (field vs inductance vs inertia, A2-REV Q-3) | One `RotorType` drives all models; UT-PHY-14 checks consistency | planned |
+| Spiral generator inputs: copper-edge radii, coil-gap semantics, θ₀, inward sense, eye requirement, lead style, terminal offset, minimum side length (A2 `answers_to_agents.md` §3.2) | `SpiralCoilSpec` new fields + `EyeRequirement` (§7.1) | designed (reconciliation round 1) |
+| Spiral generator outputs: turn limit with limiting reason, turn table, track lengths, eye vias, envelope, copper area, minimum spacing (A2 §3.2) | `SpiralArtwork`, `TurnLimit`, `TurnRecord` (§7.5) | designed |
+| No `strands` for spiral coils (A2 §1.3) | field absent; `UNSUPPORTED_STRANDS` on load | designed |
+| Phase naming A/B/C ↔ terminals U/V/W, positive coil = clockwise seen from the F.Cu side, sequence ABC/ACB (A2 §1.4) | `Phase`, `PhaseSequence`, `x_inward_sense`, `first_coil_angle_rad`; KiCad export flips y only | designed; user confirmation UD-19 |
+| General via-count formula (A2 §3.1) | §7.3 (replaces the earlier M1/M2-only formula) | confirmed by Agent 2 |
+| Equation registry format (A2 `equation_registry_draft.json`) | §13: adopted as source format + Phase 2 fields | adopted |
+| Status rule amendment: only inputs the kernel uses; sourced constants carry EV status; dominant assumptions only order tags (A2 §1.1) | §13, ADR-0003 | adopted |
+| Golden runs with Xcoil-compatible constants (ρ₂₀ 1.724e-8 vs 1.7241e-8, Cu density 8.96 vs 8.89) or at function level (A2 §2.1) | test plan §3 | adopted |
 
 ## 17. Risks and open architectural items
 
@@ -1277,13 +1493,88 @@ Source: `docs/phase1/software/calculation_flow_and_port_notes.md` §2 (measureme
 | R7 | Spiral generator details (moving inner end-turn, eye/via room, stadium ends) are Agent 2's domain | REQ-F-06 | Agent 2 specification before coding | unresolved |
 | R8 | Golden comparison is only meaningful at equation/function level, because the Python spiral generator intentionally differs from Xcoil's sector generator (EQ-02 `replace`) | ADR-0006 | function-level golden harness (test plan §4) | inferred |
 | R9 | kiutils (GPL-3.0, last release 1.4.8 on 2024-02-02 per PyPI, `verified`) may not parse KiCad 9 files | KX tests | add an independent minimal s-expression parser in tests; KiCad itself in KS-01 | inferred |
-| R10 | Python floor: the sketches use 3.10/3.11 features (`StrEnum`, dataclass `slots`/`kw_only`, `X or Y` union types at runtime). KiCad 9's bundled Python version is `unresolved` (A5-KI T1); if it is older than 3.11 the core cannot be vendored into the plugin venv unchanged | REQ-K-02, K-07 | decide after T1/T2: lower the floor (replace `StrEnum` by `str, Enum`, drop `slots`/`kw_only`) or route the plugin through the user's Python (R3) | unresolved |
+| R10 | Python floor of the core vs KiCad 9's bundled Python (A5-KI T1) | REQ-K-02, K-07 | **resolved as a rule** in §18.1 item 1; final check after T1/T2 | rule decided, outcome unresolved |
 | R11 | Phase encoding without colour in a white/grey/black UI | REQ-L-04, N-14 | Agent 1 design + user decision on a muted phase palette | unresolved |
 
-## 18. Reconciliation with Agents 1 and 3 (status at the end of this draft)
+## 18. Reconciliation with Agents 1, 2 and 3 (reconciliation round 1, 2026-10-04)
 
-Agent 3 explicitly marked its package names as placeholders for Agent 6 (`migration_mapping.md` preamble;
-`calculation_flow_and_port_notes.md` §6.1). Mapping to this architecture (coordinator-specified names):
+Inputs read: Agent 1 `design_spec_draft.md`, `design_handoff_for_agent3.md`, mockups 01–06; Agent 2
+`answers_to_agents.md`, `equation_registry_draft.json`; Agent 3 `feature_inventory.md`, `migration_mapping.md`,
+`calculation_flow_and_port_notes.md`, `kicad_plugin_feasibility.md`, `dependency_and_tooling_draft.md`.
+
+### 18.1 Resolved items
+
+1. **Python floor.** The core is written to **Python 3.11 syntax and standard library, with no 3.12-only features**
+   (no PEP 695 `type`/generic syntax, no `itertools.batched`, no `typing.override`; CI runs 3.11, 3.12, 3.13). Version
+   facts used: `enum.StrEnum`, `typing.Self`, `tomllib` are 3.11+; dataclass `slots`/`kw_only` and runtime `X | Y` unions
+   are 3.10+ (`inferred` from the Python docs' "new in version" notes, not re-fetched). Consequence by T1/T2 outcome:
+   - KiCad bundles **3.11** → core vendored unchanged; NumPy marker `<2.5`.
+   - KiCad bundles **≥ 3.12** → core runs unchanged (forward compatible; 3.12/3.13 in CI); NumPy ≥ 2.5 allowed by marker;
+     the `sum()` change in 3.12 is already neutralised (§15.4, MT-06); add KiCad's exact version to the CI matrix.
+   - KiCad bundles **3.10** → small downgrade possible (replace `StrEnum` by `class X(str, Enum)`, avoid `typing.Self` and
+     `tomllib` in the core) — Fable decides between this and route R3.
+   - KiCad bundles **≤ 3.9** → the core is not vendored; the plugin uses route R3 (standalone app in the user's Python as
+     IPC client, needs T3) or only the file route R1.
+2. **Import-rule enforcement: import-linter** (BSD, dev-only, not shipped). Reason: declarative layer and forbidden-import
+   contracts that also cover indirect imports (`inferred` from its documentation, not re-read), one config block in
+   `pyproject.toml`, no hand-written graph code. Agent 3's `ast` test is not needed in addition.
+3. **Package naming** — mapping table §18.3; coordinator-specified `embodic.*` names win; Agent 3's names were placeholders.
+4. **Two-layer KiCad adapter** — adopted (§9.2): pure `embodic.io.kicad_items.layout_to_item_specs` (core, shared with the
+   `.kicad_pcb` writer) + thin `embodic_kicad_plugin.apply` behind a `BoardApi` protocol with a fake for tests.
+5. **Background worker and partial recompute** — adopted (§8.1 stage-cache table, §10 `workers.py`): debounce 300 ms (Agent
+   1), latest-wins cancellation, physics-only recompute for operating-point edits.
+6. **Headless entry point** — adopted: `embodic.api.compute(design)` and `compute_project(path)` + `embodic-cli` (§8.1, §8.7).
+7. **Agent 1's plugin dialog** — adapted: realised as the standalone app's compact window launched by the plugin (R3,
+   REQ-K-15); KiCad's venv stays free of GUI toolkits (ADR-0004). The "no silent layer remap" rule applies to every
+   placement path (REQ-K-14).
+8. **Phone layouts** — out of scope with the desktop option; minimum window 960 × 540 (§10.2, REQ-N-15).
+9. **Status rule** — Agent 1's §10.4 proposal, ADR-0003 and Agent 2's amendment merged (§13): same order on all sides.
+
+### 18.2 Requests and decisions
+
+| From | Request | Decision | Where |
+|---|---|---|---|
+| A3 | Topology as plug-in (generator → model + element list), serpentine/wave deferred | adopted | §8.3 `WindingGenerator`, REQ-F-19, UD-08 |
+| A3 | Package split `embodic_core/io/app/kicad` (placeholders) | adapted (coordinator names) | §18.3 |
+| A3 | `ast`-based import test | rejected in favour of import-linter | §18.1 item 2 |
+| A3 | Two-layer adapter `board_to_items` + `apply` with fake API | adopted (layer 1 moved into the core) | §9.2 |
+| A3 | Worker thread, cancellation, staged recompute | adopted | §8.1, §10 |
+| A3 | Headless `compute(project) → Result` (N-13) | adopted | §8.1 |
+| A3 | Keep core free of newer syntax until T2 | adapted: 3.11 floor, no 3.12-only features, consequences stated | §18.1 item 1 |
+| A3 | NumPy `>=1.26,<2.5` provisional | adopted | ADR-0008 |
+| A3 | Reference port + production kernels; tolerance map; near-threshold rule; non-finite encoding; `interconnect:false` | adopted | test plan §3 |
+| A3 | Expected-differences allow-list | adopted | test plan §3 |
+| A3 | Vendor core into the plugin package | adopted as preferred, final after T2 | §9.2, ADR-0004 |
+| A3 | Write stack-up section in `.kicad_pcb`; per-phase nets where possible | adopted (stack-up: should; nets per electrical node) | REQ-K-01, K-09 |
+| A3 | PDF report: reportlab or port own writer (D-3) | adopted: port own writer | ADR-0008 |
+| A3 | Reference tab generated from the registry | adopted | REQ-F-26 |
+| A3 | Entry points `embodic` / `embodic-cli` | adopted | §8.7 |
+| A3 | Smoke tests T0, T6 | adopted | test plan KS-01, KS-02 |
+| A3 | Autosave (F-04) | adopted | REQ-F-31 |
+| A3 | Xcoil v3 JSON import (N-10) | adopted as could | REQ-F-29 |
+| A3 | Rounding, summation, `math.inf`, `fmod` conventions | adopted | §15.4 |
+| A3 | Guide tab content (F-61) | deferred (content review first) | — |
+| A1 | Status label from data, not hard-coded | adopted | REQ-T-02 |
+| A1 | Status-derivation rule §10.4 (Q5) | adapted (Agent 2 amendment: every used default counts) | §13, ADR-0003 |
+| A1 | Element-id contract `#param-*`, `#res-*`, `#btn-*` | adapted: Qt `objectName` = id; ids derived from model field names | §19 |
+| A1 | Inline notice + Undo when a value is changed (UX-AC-13) | adapted: engine only suggests; UI applies with notice + Undo | REQ-F-23, §7.8 `Suggestion` |
+| A1 | Plugin dialog 880 × 600 (UX-AC-21) | adapted: compact window of the standalone app via launcher | REQ-K-14, K-15 |
+| A1 | Tablet/phone layouts, 360 px, 44 px coarse targets (UX-AC-10/11) | adapted: tablet pattern reused for narrow desktop windows; phone rejected unless C-B1 | REQ-N-13, N-15, §10.2 |
+| A1 | Greyscale/hatch phase mode (UX-AC-05) | adopted | REQ-N-23 |
+| A1 | Keyboard map: F6 regions, Alt+1…6, canvas keys (UX-AC-07/09) | adopted | REQ-N-12 |
+| A1 | Debounce 300 ms, "Updating…", progress after 1 s (UX-AC-22) | adopted | REQ-N-02 |
+| A1 | Hidden inapplicable fields (UX-AC-12) | adopted | REQ-F-32 |
+| A1 | Confirmation on DRC failures (UX-AC-16) | adopted | REQ-F-33 |
+| A1 | Illustrative/computed stamps (UX-AC-17) | adopted | REQ-T-14 |
+| A1 | Chart rules (UX-AC-18), integers and deltas (UX-AC-19), reduced motion (UX-AC-20) | adopted | REQ-N-25, L-08, N-26 |
+| A1 | Phase sequence ABC/ACB parameter | adopted | §7.1 `PhaseSequence` |
+| A1 | Terminal side outer/inner | adapted: outer only in P2 (hub terminals conflict with the bore, A2-TOP §3.4), enum kept extensible | §7.1 `ConnectionSpec` |
+| A1 | 3-D view (Q6) | adopted: 2-D only in P2 | app_type_comparison §4 |
+| A1 | Parameters stored with the board (§11) | adapted: project file + `kicad.placed_item_ids`; storing inside the board `unresolved` (T2) | §14 |
+| A1 | Dark mode, density, product name, spelling, polarity convention (Q1–Q4, Q7) | forwarded to the user | `user_decisions_needed.md` |
+| A2 | Data-model rules (magnet shape, per-pair phase/rotation/connection, via plan, side/end style, stack-up z, EQ-ID + status) and new generator fields | adopted | §7, §16 |
+
+### 18.3 Package naming mapping (Agent 3 placeholders → this architecture)
 
 | Agent 3 placeholder | This architecture | Note |
 |---|---|---|
@@ -1296,35 +1587,46 @@ Agent 3 explicitly marked its package names as placeholders for Agent 6 (`migrat
 | `core.equations` | `embodic.results.registry` | |
 | `embodic_io`, `io.export`, `io.project` | `embodic.io` | |
 | `embodic_app`, `app.*` | `embodic.ui` | |
-| `embodic_kicad`, `kicad.*` | `embodic_kicad_plugin` | |
-| `Board` (geometry model) | `Layout` | renamed to avoid confusion with kipy's `Board` class |
+| `embodic_kicad`, `kicad.*` | `embodic_kicad_plugin` (thin) + `embodic.io.kicad_items` (pure mapping) | |
+| `Board` (geometry model) | `Layout` | avoids confusion with kipy's `Board` class |
 | `CopperObject`, `touch_vias` | `CopperPath` + connectivity in `Circuit`/`ViaPlan` | |
-| `board_to_items()` + `apply()` | `board_items.py` (pure mapping) + `apply_project.py` | same two-layer split |
+| `board_to_items()` + `apply()` | `embodic.io.kicad_items.layout_to_item_specs` (pure, core) + `embodic_kicad_plugin.apply.apply_item_specs` (thin, kipy) | same two-layer split; layer 1 moved into the core so the file writer shares it |
 | electrical element list (`phase → series → parallel members`) | `Circuit` → `PhaseCircuit` → `ParallelGroup` → `Member` (§7.4) | same shape as Xcoil `analyzeElements` |
 
-Agreements (no change needed): stdlib + NumPy core; own writers; IPC as plugin route, SWIG not planned, file writer first;
-core vendored into the plugin package as preferred option; staged recompute and NumPy kernels; serpentine/wave deferred
-behind a generator interface ("D" in `migration_mapping.md` §3); KiCad DRC cannot see same-net clearance → embodic DRC is
-the authority; pytest replaces the in-app test runner; reference view generated from the EQ registry.
+### 18.4 Still open
 
-Adopted from Agent 3 into this draft: entry points `embodic` / `embodic-cli`; rounding, summation and non-finite
-conventions (§15.4); measured performance evidence (§11); `KICAD_API_SOCKET`/`KICAD_API_TOKEN` and `kicad-cli` DRC (§9.1);
-smoke tests T0/T6 (test plan KS-01/KS-02); a plain-Python reference port as an intermediate golden tier (test plan §3).
+1. Outcome of T1/T2 for the Python floor (rule fixed above).
+2. Phase colours (UD-05), dark mode (UD-06), spelling (UD-17) — user.
+3. Whether KiCad's IPC API allows grouping or storing parameters in the board (T2) — affects item tracking.
 
-Adopted from Agent 1: last-valid-figure, no silent rewrite, export pre-flight, non-colour phase encoding, keyboard-operable
-figure, offline fonts (§10; REQ-F-23, F-27, F-28, N-12, N-17).
+## 19. UI element-id contract (Agent 1) ↔ data model
 
-Open reconciliation items:
-1. **Python floor** (R10): Agent 3 suggests keeping the core free of newer syntax until T2; this draft proposes 3.11 —
-   decide after T1/T2.
-2. **NumPy lower bound**: Agent 3 proposes `numpy>=1.26,<2.5` provisionally; ADR-0008 adopts it until T1/T2.
-3. **Import-rule enforcement**: Agent 3 proposes an `ast`-based test (no dependency); this draft proposes import-linter
-   contracts (layers + forbidden imports). Either satisfies MT-01; Agent 3 to choose in P2.
-4. **Phase colours** (R11): Agents 1 and 3 propose a muted, CVD-checked phase palette with greyscale fallback; needs the
-   user's approval (REQ-L-04).
-5. **Responsive targets**: Agent 1 analysed phone/tablet layouts; with the desktop proposal (ADR-0005) these are out of
-   scope unless the user chooses C-B1.
-6. **Agent 1's `design_spec_draft.md`** (referenced in `ux_analysis.md` §6) was not available yet; screen-to-view mapping
-   in §10 must be checked against it.
-7. **Xcoil v3 parameter import** (Agent 3 N-10) and **autosave** (F-04) are `could`/open in the requirements — confirm
-   scope with Fable.
+Rule (adapted from Agent 1's handoff §3): every widget's Qt `objectName` equals Agent 1's id; parameter ids are
+`param-` + kebab-case of the model field name **without** its unit suffix (`trace_width_mm` → `param-trace-width`);
+results are `res-<quantity>` with `-value`, `-unit`, `-eq` children. Where Agent 1's mockup id differs from the model
+name, the proposed canonical id is given — Agent 1 to confirm (open item for the next round).
+
+| Agent 1 id | Model field (JSON pointer) | Proposed canonical id |
+|---|---|---|
+| `param-coil-count` | `/winding/coil/coil_count` | same |
+| `param-pole-count` | `/rotor/poles` | `param-poles` |
+| `param-coil-sides` | `/winding/coil/side_style` | `param-side-style` |
+| `param-coil-ends` | `/winding/coil/end_style` | `param-end-style` |
+| `param-fillet-radius` | `/winding/coil/corner_radius_mm` | `param-corner-radius` |
+| `param-turns` | `/winding/coil/turns` | same |
+| `param-trace-width` | `/winding/coil/trace_width_mm` | same |
+| `param-trace-spacing` | `/winding/coil/clearance_mm` | `param-clearance` |
+| `param-spiral-sense` | `/winding/coil/x_inward_sense` | `param-x-inward-sense` |
+| `param-r-inner`, `param-r-outer` | `/winding/coil/r_inner_mm`, `r_outer_mm` | same |
+| `param-coil-gap` | `/winding/coil/coil_gap_mm` | same |
+| `param-start-angle` | `/winding/coil/first_coil_angle_rad` (file: `first_coil_angle_deg`) | `param-first-coil-angle` |
+| `param-connection` | `/connection/topology` | same (UI label "Connection") |
+| `param-phase-assign-mode` | `/winding/assignment` (null = auto) | same (derived control) |
+| `param-phase-sequence` | `/winding/phase_sequence` | same |
+| `param-terminal-side` | `/connection/terminal_location` | `param-terminal-location` |
+| `param-layer-count` | number of copper layers in `/stackup/layers` (derived) | same (derived control that regenerates pairs) |
+| `param-pair-connection` | `/winding/layers/series_groups` (series = all singletons, parallel = one group) | same (derived control; custom groups in Advanced) |
+| `param-rotation-mode`, `param-pair-rotation` | `/winding/layers/pairs/*/rotation_rad` | same (derived controls) |
+| `param-via-drill`, `param-via-pad`, `param-vias-per-transition` | `/vias/drill_mm`, `pad_mm`, `vias_per_transition` | same |
+| `param-kicad-origin-x/y`, `param-kicad-rotation` | project file `kicad.placement` (not part of the design hash) | same |
+| `res-r-phase`, `res-ke`, `res-kt`, `res-ls`, `res-dt`, `res-j` | `AnalysisResult.resistance_phase_operating`, `ke_phase`, `kt_per_line_a_rms`, `inductance_estimate`, `temperature_rise`, `current_density` | same |
