@@ -137,21 +137,21 @@ unit's module, even when the dependency graph orders the two units. Codes are `U
 `CODE_PREFIXES` and are unique across all modules. A unit without a module below that needs an issue code reports a
 deviation to Fable. UI text is not an issue message and goes to `embodic/ui/strings/`.
 
-| Unit | Catalogue module |
+| Catalogue module | Unit |
 |---|---|
-| U-M1a | `base.py`: the codes interfaces.md names in §1, §2.4 and §9.1 (already in U-M1a's `errors.py`) |
-| U-M1b | `geometry.py` |
-| U-M1c | `drc.py` |
-| U-M2a | `model.py` |
-| U-M2b | `results.py` |
-| U-M2c | `winding.py` |
-| U-M2d | `generators.py` |
-| U-M2e | `physics.py` |
-| U-M2f | `project.py` |
-| U-M3a | `serpentine.py` |
-| U-M3b | `wave.py` |
-| U-M4a | `exporters.py` |
-| U-M5a | `cli.py` |
+| `base.py`: the codes interfaces.md names in §1, §2.4 and §9.1 (already in U-M1a's `errors.py`) | U-M1a |
+| `geometry.py` | U-M1b |
+| `drc.py` | U-M1c |
+| `model.py` | U-M2a |
+| `results.py` | U-M2b |
+| `winding.py` | U-M2c |
+| `generators.py` | U-M2d |
+| `physics.py` | U-M2e |
+| `project.py` | U-M2f |
+| `serpentine.py` | U-M3a |
+| `wave.py` | U-M3b |
+| `exporters.py` | U-M4a |
+| `cli.py` | U-M5a |
 
 Why every unit and not only the parallel ones. The U-D1 brief proposed that sequential units append to `errors.py` and
 only parallel units get their own module. That would make U-M1a, U-M1b and U-M1c share one file inside M1, and U-M2a to
@@ -168,10 +168,10 @@ collects them (for example `collect_submodules`). `inferred` from how `pkgutil.i
 The W0 pilot units are merged. Each needs one fix round before U-M1b starts, run by a fresh worker under the same unit
 ID and the same write paths (the paths in §1 already show the result).
 
-| Unit | Fix-round deliverable | Done when |
+| Fix round | Deliverable | Done when |
 |---|---|---|
-| U-M1a | `errors.py` becomes `errors/__init__.py` plus `errors/catalogue/__init__.py` and `catalogue/base.py` with the existing codes, merged by discovery with a duplicate-code check; `round_half_away_from_zero` replaced by `js_round` and `quantise` (interfaces.md §1), the MT-06 message updated to name them; hatchling `>=1.27,<2` added to the `dev` extra | commit gates green; UT-UNI-01 as amended in test_plan.md §5.1 passes; a scratch catalogue module with a duplicate code makes `import embodic.errors` raise (shown once, then deleted); `pip wheel --no-build-isolation --no-deps .` succeeds offline |
-| U-M1d | the dumper loads `tools/golden/functions/<area>.mjs` for any area other than `m1` and rejects a function name defined twice; the helpers a function module needs (primitive record conversion, non-finite decoding) are importable from a module that does not run `main()` | `m1.json` fixtures stay byte-identical; a scratch area module is loaded and a duplicate function name stops the run (shown once, then deleted) |
+| U-M1a fix round | `errors.py` becomes `errors/__init__.py` plus `errors/catalogue/__init__.py` and `catalogue/base.py` with the existing codes, merged by discovery with a duplicate-code check; `round_half_away_from_zero` replaced by `js_round` and `quantise` (interfaces.md §1), the MT-06 message updated to name them; hatchling `>=1.27,<2` added to the `dev` extra | commit gates green; UT-UNI-01 as amended in test_plan.md §5.1 passes; a scratch catalogue module with a duplicate code makes `import embodic.errors` raise (shown once, then deleted); `pip wheel --no-build-isolation --no-deps .` succeeds offline |
+| U-M1d fix round | the dumper loads `tools/golden/functions/<area>.mjs` for any area other than `m1` and rejects a function name defined twice; the helpers a function module needs (primitive record conversion, non-finite decoding) are importable from a module that does not run `main()` | `m1.json` fixtures stay byte-identical; a scratch area module is loaded and a duplicate function name stops the run (shown once, then deleted) |
 
 ## 6. Hand-offs that are not code units
 
