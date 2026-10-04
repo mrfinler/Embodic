@@ -1,0 +1,141 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "embodic"
+dynamic = ["version"]
+description = "Design and analysis of PCB stator coils for axial-flux machines."
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+]
+dependencies = ["numpy>=2.2,<2.5"]
+
+[project.optional-dependencies]
+desktop = ["PySide6-Essentials>=6.11,<6.12"]
+dev = [
+    "pytest>=9,<10",
+    "pytest-cov>=7,<8",
+    "hypothesis>=6.168,<7",
+    "ruff==0.16.10",
+    "import-linter>=2.15,<3",
+    "mypy>=2.4,<3",
+    "ezdxf>=1.4,<2",
+    "pypdf>=6,<7",
+    "jsonschema>=4.23,<5",
+]
+desktop-dev = ["embodic[desktop,dev]", "pytest-qt>=4.5,<5"]
+
+[tool.hatch.version]
+path = "src/embodic/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/embodic"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"resources" = "embodic/_resources"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+src = ["src", "tests", "tools"]
+extend-exclude = ["docs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C90", "D", "RUF"]
+# REQ-L-07 formats negative numbers with U+2212; the multiplication sign appears in dimensions such as 20×6×2 mm.
+allowed-confusables = ["−", "×"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["src/embodic"]
+
+[[tool.mypy.overrides]]
+module = ["embodic.ui.views", "embodic.ui.views.*", "embodic.ui.app", "embodic.ui.workers"]
+disallow_untyped_calls = false
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_subclassing_any = false
+disallow_untyped_decorators = false
+disallow_any_generics = false
+warn_return_any = false
+
+[tool.pytest.ini_options]
+minversion = "9.0"
+testpaths = ["tests"]
+addopts = ["--import-mode=importlib", "--strict-markers", "--strict-config"]
+
+[tool.coverage.run]
+source = ["embodic"]
+branch = true
+omit = ["*/embodic/ui/views/*", "*/embodic/ui/app.py", "*/embodic/ui/workers.py"]
+
+[tool.importlinter]
+root_packages = ["embodic"]
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+id = "C1"
+name = "Core layers"
+type = "layers"
+layers = [
+    "(embodic.ui) | (embodic.cli)",
+    "(embodic.api)",
+    "(embodic.generators)",
+    "(embodic.io)",
+    "(embodic.outcome)",
+    "(embodic.physics) | (embodic.drc)",
+    "(embodic.geometry)",
+    "(embodic.winding)",
+    "(embodic.results)",
+    "(embodic.model)",
+    "embodic.units | embodic.errors | embodic.paths",
+]
+
+[[tool.importlinter.contracts]]
+id = "C2"
+name = "Qt only in the Qt adapter modules"
+type = "forbidden"
+source_modules = ["embodic"]
+forbidden_modules = ["PySide6", "shiboken6"]
+# External packages are collapsed to their top-level name in the graph, so the target is "PySide6", not "PySide6.**".
+ignore_imports = [
+    "embodic.ui.views -> PySide6",
+    "embodic.ui.views.** -> PySide6",
+    "embodic.ui.views.** -> shiboken6",
+    "embodic.ui.workers -> PySide6",
+    "embodic.ui.app -> PySide6",
+]
+unmatched_ignore_imports_alerting = "none"
+
+[[tool.importlinter.contracts]]
+id = "C3"
+name = "UI layers: view-models know no widgets"
+type = "layers"
+layers = [
+    "(embodic.ui.app)",
+    "(embodic.ui.views) | (embodic.ui.workers)",
+    "(embodic.ui.viewmodels)",
+    "(embodic.ui.theme) | (embodic.ui.toolstrip) | (embodic.ui.strings)",
+]
+
+[[tool.importlinter.contracts]]
+id = "C4"
+name = "No KiCad and no other GUI toolkits"
+type = "forbidden"
+source_modules = ["embodic"]
+forbidden_modules = ["kipy", "pcbnew", "wx", "tkinter"]
