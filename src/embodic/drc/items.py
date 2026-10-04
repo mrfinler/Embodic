@@ -192,7 +192,7 @@ def exempt_pairs(layout: Layout, items: Items, first_item: dict[int, int]) -> In
     centre lies inside it. Primitives adjacent in one path are exempted in the engine from ``path`` and ``main``.
     """
     ends = list(_path_ends(layout, first_item))
-    via_base = sum(len(path.primitives) for path in layout.paths)
+    via_base = int(np.count_nonzero(items.item_class == ItemClass.TRACE))
     pad_base = via_base + len(layout.vias)
     pairs: set[tuple[int, int]] = set()
     nodes: list[tuple[int | None, list[_PathEnd]]] = []
