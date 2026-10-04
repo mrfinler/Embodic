@@ -132,3 +132,51 @@ Blockers: **none**. Open: 7 (1 major, 6 minor) — all are document corrections 
 6. **Mockups.** They now pass my overflow, language, contrast and result-format checks at all stated widths, including
    the 880 × 600 KiCad window. They remain static, so behaviour (latency, screen reader, high contrast) can only be
    checked after implementation.
+
+## Final re-verification 2026-10-04 (commit 1425e23)
+
+**Final recommendation: present the Phase 1 draft to the user for approval.** All 22 defects from the earlier rounds are
+closed (verified). They include the reopened DEF-05 and DEF-09 and the former major DEF-18. DEF-18 is now the graded
+edge check EC-05. I reproduced it independently: my own digitisation of D09 Fig. 7 gives e_edge of 5.33 % (default
+design), 4.21 % (D08) and 5.79 % (D09), the same as Agent 2's values.
+
+One new minor defect is open:
+
+- **DEF-23 — EC-05 labelling and basis.**
+  - The calibration uses the magnitude of B from one FEA figure. That probably under-states the B_z edge deficit.
+  - Transferring the fit to other rotors is an assumption.
+  - The 10 % cap is defensible only as a labelled `assumption`; its stated reason is internally inconsistent.
+  - D09 is both the calibration source and an oracle, so only D08 can test the edge rule independently.
+
+**Open defects: 1 (minor), major 0, blockers 0.**
+
+### Residual limitations to state to the user (final list)
+
+1. **Topology of the render unresolved.** It is used as a style reference only (UD-13).
+2. **KiCad not tested.** None of T0–T6 has been run: file format, bundled Python, kicad-python version, IPC
+   capabilities, offline installation.
+3. **No measured oracle for the target machine.** No case has a 3-phase stator with more than 2 layers. For the cases
+   used:
+   - O1 depends on D08's air-gap reading.
+   - O2 assumes 8 turns per coil per layer, inferred from D09's published length; 7 turns is kept as variant B.
+   - Inductance, the IPC guideline and torque–speed are unvalidated estimates.
+4. **Radial edge leakage.**
+   - The 2-D field model over-estimates EMF near the magnet ends. EC-05 estimates the over-estimate at about 5 % for the
+     default design, from one FEA case.
+   - Ke and torque therefore carry a one-sided "model may be high by up to e_edge" tolerance, and the calibration
+     transfer is an assumption.
+   - Designs with short magnets (under about 12 mm radially for D09-like rotors) get Ke `unresolved`.
+5. **Status display (D-007).**
+   - The badge shows calculation trust; the "n assumptions" list shows what each number rests on.
+   - No equation is validated yet, so physics results will show `inferred` at best.
+6. **DRC (D-006).** The check is strict with no slack, so Xcoil's default design would fail it. The generator must keep
+   a margin.
+7. **Lengths of spiral coils.** The concentric-loop formula over-estimates a true spiral by about 4–8 % for many turns
+   and about 23 % for D08's 3-turn coil. D08's 0.39 Ω is a model value, not a target.
+8. **Unchanged from the first round:**
+   - meaning of "verified";
+   - patent review needed;
+   - unsourced dominant inputs: µ_r, PCB copper = IACS, h, IPC-2152;
+   - Python performance not measured;
+   - mockups are static;
+   - embodic licence open.

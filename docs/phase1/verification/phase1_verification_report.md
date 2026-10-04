@@ -473,3 +473,11 @@ Results and evidence: `defect_list.md` § "Re-verification" — 15 closed (verif
 true-spiral inversion (D09: N = 8 favoured). `oracle_cases_draft.json` and `equation_registry_draft.json` parse; O1/O2
 entries are internally consistent except the O2 primary geometry (DEF-19). Gate: recommendation stands
 (`phase1_gate_recommendation.md` § "Re-verification").
+
+## Final re-verification 2026-10-04 (commit 1425e23, pointer)
+
+All 22 earlier defects closed (verified); EC-05 reproduced independently with my own digitisation of D09 Fig. 7
+(`checks/v12_ec05_independent.py`: e_edge 5.33 / 4.21 / 5.79 %); D09 8-turn primary geometry reproduces 3244 mm and 171 mm²
+(3242 mm, 171.0 mm²); UT-GEO-07's new criterion matches v10 exactly; mockup 03 count 168 correct; v7/v11 clean on all
+mockups. One new minor defect (DEF-23, EC-05 labelling/basis). Details: `defect_list.md` § "Final re-verification";
+gate: `phase1_gate_recommendation.md` § "Final re-verification".
