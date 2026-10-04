@@ -112,12 +112,13 @@ name = "Qt only in the Qt adapter modules"
 type = "forbidden"
 source_modules = ["embodic"]
 forbidden_modules = ["PySide6", "shiboken6"]
+# External packages are collapsed to their top-level name in the graph, so the target is "PySide6", not "PySide6.**".
 ignore_imports = [
-    "embodic.ui.views -> PySide6.**",
-    "embodic.ui.views.** -> PySide6.**",
-    "embodic.ui.views.** -> shiboken6.**",
-    "embodic.ui.workers -> PySide6.**",
-    "embodic.ui.app -> PySide6.**",
+    "embodic.ui.views -> PySide6",
+    "embodic.ui.views.** -> PySide6",
+    "embodic.ui.views.** -> shiboken6",
+    "embodic.ui.workers -> PySide6",
+    "embodic.ui.app -> PySide6",
 ]
 unmatched_ignore_imports_alerting = "none"
 
