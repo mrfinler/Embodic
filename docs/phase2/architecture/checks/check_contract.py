@@ -223,6 +223,31 @@ def check_work(errors: list[str]) -> list[dict[str, object]]:
     return units
 
 
+TEST_LEVELS = ("unit", "golden", "ui")
+NON_PACKAGE_FOLDERS = {"data", "expected_diffs"}
+
+
+def check_test_packages(units: list[dict[str, object]], errors: list[str]) -> int:
+    """package_layout.md section 1 naming rule on planned write paths: the folder right under tests/<level>/ becomes a
+    top-level module name (MT-08), so it must be unique across levels and must not be a standard-library name."""
+    levels_by_name: dict[str, set[str]] = {}
+    for u in units:
+        for path in u["paths"]:  # type: ignore[attr-defined]
+            parts = path.split("/")
+            if len(parts) < 3 or parts[0] != "tests" or parts[1] not in TEST_LEVELS:
+                continue
+            name = parts[2]
+            if name in NON_PACKAGE_FOLDERS or "." in name or name == "**":
+                continue
+            levels_by_name.setdefault(name, set()).add(parts[1])
+    for name, levels in sorted(levels_by_name.items()):
+        if len(levels) > 1:
+            errors.append(f"test package name {name!r} is planned under {sorted(levels)}; top-level names must be unique")
+        if name in sys.stdlib_module_names:
+            errors.append(f"test package name {name!r} shadows the standard-library module {name!r}")
+    return len(levels_by_name)
+
+
 def check_files(errors: list[str]) -> list[Path]:
     files = sorted(p for p in ARCH.rglob("*") if p.is_file() and p.suffix in {".md", ".py", ".toml", ".json"})
     for p in files:
@@ -254,12 +279,14 @@ def main() -> int:
         check_matrix(reqs, args.write, errors)
     blocks = check_interfaces(errors) if INTERFACES.exists() else 0
     units = check_work(errors) if WORK.exists() else []
+    test_packages = check_test_packages(units, errors)
     live = [r for r in reqs if r["disposition"] != "withdrawn"]
     print(f"files checked: {len(files)}")
     print(f"requirements: {len(reqs)} total, {len(live)} live, {len(reqs) - len(live)} withdrawn; "
           f"by disposition: { {d: sum(r['disposition'] == d for r in reqs) for d in sorted(DISPOSITIONS)} }")
     print(f"interfaces.md python blocks: {blocks} (ast.parse each, then exec in order)")
     print(f"work units: {len(units)}; milestones: {sorted({str(u['milestone']) for u in units})}")
+    print(f"planned top-level test packages: {test_packages}")
     if errors:
         print(f"FAIL: {len(errors)} problem(s)")
         for e in errors:
@@ -267,7 +294,7 @@ def main() -> int:
         return 1
     print("PASS: REQ IDs unique; every REQ has >= 1 defined test ID; Phase 1 REQs all dispositioned; "
           "matrix current; interfaces parse and execute; concurrent and same-milestone write paths disjoint; "
-          "model line first; no Thai; no long dashes")
+          "planned test package names unique and not stdlib; model line first; no Thai; no long dashes")
     return 0
 
 
