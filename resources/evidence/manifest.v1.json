@@ -1,0 +1,13 @@
+{
+ "schema": "embodic registry manifest v1",
+ "files": {
+  "equations.v1.json": {
+   "source": "docs/phase2/engineering/equation_registry.json",
+   "sha256": "39719be2b1a4782304c25001d8e9db1cc99d5f28370498dac51ae17639ca1960"
+  },
+  "evidence.v1.json": {
+   "source": "docs/phase2/evidence/evidence_register.json",
+   "sha256": "25e9899ad95cb29b83717d585dcff2055238e1a79a691b0de663ad297db484f6"
+  }
+ }
+}
