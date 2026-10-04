@@ -1,5 +1,6 @@
 // Dumps Xcoil v3 engine results to golden fixtures for embodic's Python comparators.
-// Usage: node tools/golden/dump_xcoil.mjs tools/golden/cases/<area>.json
+// Usage: node tools/golden/dump_xcoil.mjs tools/golden/cases/<area>.json [--out <dir>]
+// Default output: tests/golden/data/<area>/ in this repository.
 // The engine is loaded read-only from $XCOIL_ENGINE (default /home/claude/serpentine/src/engine.js).
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -276,8 +277,10 @@ function buildFixture(E, engineSha, eqIds, entry) {
 }
 
 function main() {
-  const casesPath = process.argv[2];
-  if (!casesPath) throw new Error('usage: node tools/golden/dump_xcoil.mjs tools/golden/cases/<area>.json');
+  const [casesPath, outFlag, outArg] = process.argv.slice(2);
+  if (!casesPath || (outFlag !== undefined && (outFlag !== '--out' || !outArg))) {
+    throw new Error('usage: node tools/golden/dump_xcoil.mjs tools/golden/cases/<area>.json [--out <dir>]');
+  }
   const cases = JSON.parse(readFileSync(casesPath, 'utf8'));
   if (cases.format !== CASES_FORMAT || cases.format_version !== 1) throw new Error(`${casesPath}: not ${CASES_FORMAT} v1`);
   if (!/^[a-z0-9_]+$/.test(cases.area)) throw new Error(`${casesPath}: bad area ${JSON.stringify(cases.area)}`);
@@ -285,7 +288,7 @@ function main() {
   const engineSha = createHash('sha256').update(readFileSync(ENGINE_PATH)).digest('hex');
   const E = createRequire(import.meta.url)(ENGINE_PATH);
   const eqIds = eqIdsByFunction(JSON.parse(readFileSync(REGISTRY_PATH, 'utf8')));
-  const outDir = join(REPO_ROOT, 'tests', 'golden', 'data', cases.area);
+  const outDir = outArg ? resolve(outArg) : join(REPO_ROOT, 'tests', 'golden', 'data', cases.area);
   mkdirSync(outDir, { recursive: true });
 
   const seen = new Set();
@@ -294,7 +297,7 @@ function main() {
     seen.add(entry.id);
     writeFileSync(join(outDir, `${entry.id}.json`), `${canonicalJson(buildFixture(E, engineSha, eqIds, entry))}\n`);
   }
-  console.log(`wrote ${seen.size} fixtures to ${join('tests', 'golden', 'data', cases.area)} (engine sha256 ${engineSha})`);
+  console.log(`wrote ${seen.size} fixtures for area ${cases.area} (engine sha256 ${engineSha})`);
 }
 
 main();
