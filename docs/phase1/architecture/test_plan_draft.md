@@ -41,7 +41,7 @@ test carries `@pytest.mark.req("REQ-…")` and, for physics, `@pytest.mark.eq("E
 | UT-GEO-04 | Centre via terminates X and Y | distance ≤ 1e-9 mm |
 | UT-GEO-05 | X and Y have equal circulation (signed area sign) | same sign; magnitudes within 1e-9 rel. for identical artwork |
 | UT-GEO-06 | Coil k = coil 0 rotated by 2πk/Q (+ pair rotation) | all primitive points coincide within 1e-9 mm |
-| UT-GEO-07 | Generated coil length vs EQ-03 closed form | within −6 … 0 % for the trapezoid-only C4 cases (12 and 18 coils, r 18–38 mm, 0.5/0.2 mm; Agent 2 basis); closed form itself vs Agent 2 G2/G3 values to 1e-3 mm; triangular-loop cases: tolerance basis `unresolved` (Agent 2) |
+| UT-GEO-07 | Generated coil length vs the independent true-spiral reference (DEF-09) | (i) reference test mode (sharp corners, no eye, no lead): generated = reference within 1e-6 mm — D08 N = 3 → 143.941 mm, 12/16 N = 8 → 364.353 mm, 18/16 N = 4 → 182.711 mm (Agent 2 `checks/eq03_spiral_vs_loops.py`, reproduced exactly by Agent 4 `checks/v10_true_spiral_length.py`); (ii) production mode (lead, eye, fillets): within ±1 % of the reference; (iii) EQ-03 loop formula only as upper bound: generated < closed form and (closed − generated)/generated within the case band ±2 pp (+5.6 / +4.2 / +5.0 % for 12/16 N = 4 / 8 / 11, +6.8 / +8.0 % for 18/16 N = 4 / 8, +21.1 / +23.1 % for D08 N = 2 / 3); closed form itself vs Agent 2 G1–G3 values to 1e-3 mm |
 | UT-GEO-08 | Moving inner end-turn (triangular turns) | D08 geometry: no turn self-intersection; inner end-turn radius increases monotonically once sides converge |
 | UT-GEO-09 | Turn limit | returned max N is buildable and N + 1 is not (boundary) |
 | UT-GEO-10 | Series (M2) and parallel (M1) pair configurations build for the default design | circuit groups match `series_groups`; via counts per §7.3 formula |
@@ -97,6 +97,7 @@ test carries `@pytest.mark.req("REQ-…")` and, for physics, `@pytest.mark.eq("E
 | UT-PHY-18 | EQ-14 | Estimate labelling | status `unresolved`, quantity labelled "estimate"; value equals the documented formula (C9: 4.67 / 9.74 µH for the stated inputs) |
 | UT-PHY-19 | EQ-18 | THD of a pure fundamental = 0; line waveform cancels triplens in star | ≤ 1e-12 |
 | UT-PHY-20 | EQ-05 | Per-layer spread (C1d) | B₁ 0.6828 / 0.6813 / 0.6805 T, rel. 1e-4 |
+| UT-PHY-21 | EQ-05 EC-05 | Graded radial-edge check (Agent 2 DEF-18, registry `validity_checks`) | e_edge = 5.3 % (default 12/16), 4.2 % (O1 D08), 5.8 % (O2 D09, N = 8) within ±0.1 pp of Agent 2's `checks/edge_zone_d09.js`; e_edge ≤ 10 % → no cap, add-on + limitation; a D09-like rotor with 10 mm radial magnets (12.4 %) → badge `unresolved` |
 
 ### 2.4 DRC (`embodic.drc`) — REQ-F-10
 
@@ -201,8 +202,10 @@ measurements `verified (run)` there, tolerances `assumption` pending Agent 4):
   by UT-PHY/OR tests. Known Xcoil defects are not reproduced (expected-differences list).
 - **Spiral generator closed forms** (no Xcoil counterpart): Agent 2's cases G1 (D08: 1 trapezoidal + 2 triangular loops,
   177.233 mm per coil-layer), G2 (default 12/16: 9 + 2 loops; N = 8 → 379.578 mm), G3 (18/16: 5 + 3 loops; N = 4 →
-  195.199 mm) from `docs/phase1/engineering/checks/eq02_eq03_reference.py`; tolerances: loop counts exact in concentric
-  test mode / ±1 for the true spiral, lengths 1e-3 mm vs the closed form, generated spiral within −6 … 0 % (Agent 2 §2.2).
+  195.199 mm) from `docs/phase1/engineering/checks/eq02_eq03_reference.py`; loop counts per Agent 2's three-mode turn
+  criterion (OR-04); closed-form lengths to 1e-3 mm; the generated length is checked against the independent true-spiral
+  reference (UT-GEO-07: 1e-6 mm in reference test mode, ±1 % in production mode) — the loop formula is only an upper bound
+  (DEF-09).
 
 ## 4. Oracle cases (OR)
 
@@ -212,13 +215,13 @@ Prerequisites must be met before an oracle can pass; until then the test is mark
 
 | ID | Oracle (A5-REG §C) | Quantity | Published value | Tolerance (source) | Prerequisites / blocking gaps |
 |---|---|---|---|---|---|
-| OR-01 | O1 D08 thesis | Line-line peak back-EMF constant | 0.031 V·s/rad, meas. (Table 9.1 p.98) | ±8 % (A2-EQ EQ-06: D08's own model within max 8 %) | EQ-04 T-arrangement magnets; air gap 1.4 vs 2.8 mm (G10); compare synthesised waveform peak, not fundamental (EQ-09) |
+| OR-01 | O1 D08 thesis | Line-line peak back-EMF constant | 0.031 V·s/rad, meas. (Table 9.1 p.98) | ±8 % (A2-EQ EQ-06: D08's own model within max 8 %), asymmetric band [−8 %, +8 % + e_edge] with e_edge = 4.2 % (EC-05, Agent 2 DEF-18) | EQ-04 T-arrangement magnets; air gap 1.4 vs 2.8 mm (G10); compare synthesised waveform peak, not fundamental (EQ-09) |
 | OR-02 | O2 D09 Tokgöz | Phase DC resistance | 1.07 Ω, meas. (Table 6 p.7) | ±8 % (A2-EQ EQ-10); basis must note that D09 does not state the measurement temperature in the pages read — R₂₀ from the published 3244 mm is 0.999 Ω and 1.07 Ω corresponds to ≈ 38 °C if only temperature differed (Agent 4 report §b.5, `inferred`) | **turn count only** (coil count 12 is `verified`, EV-62); Agent 4's inversion gives N = 7 or 8, not decidable (UD-25) |
 | OR-03 | O3 D10 Wang 2019 | Phase DC resistance | 2.15 Ω, meas. (p.8) | ±8 % (A2-EQ EQ-10) | unequal-width concentric geometry (S5, reserved) → Later |
 | OR-04 | O1 D08 | Turns per coil | 3 (Table 4.6 p.57) | exactly 3 loops (1 trapezoidal + 2 triangular) in concentric test mode; constructive generator 3, or 2 only with a reported eye limit (Agent 4 DEF-09) | moving inner end-turn (REQ-F-06) |
 | OR-05 | O1 D08 | Phase resistance (calc. in paper) | 0.39 Ω (Table 4.6 p.57); A2 reproduction 0.381 Ω (C7) | to be set by Agent 2/4 (A2 residual −2.3 %, ρ₂₀/α of D08 unknown) | EQ-03 one pair of sides per loop |
 | OR-06 | O1 D08 | Copper-loss-budget current | 1.84 A (Table 4.6); A2 1.849 A | to be set (A2: reproduced) | — |
-| OR-07 | O2 D09 | Phase EMF | calc. 6.21 V / FEA 6.20 V RMS (Tables 4–5 p.6) | ±5 % (A2-EQ EQ-06) | turn data (G2) |
+| OR-07 | O2 D09 | Phase EMF | calc. 6.21 V / FEA 6.20 V RMS (Tables 4–5 p.6) | ±5 % (A2-EQ EQ-06), asymmetric band [−5 %, +5 % + e_edge] with e_edge = 5.8 % (EC-05, N = 8 geometry) | turn data (G2) |
 | OR-08 | O2 D09 | Field at mid-radius | ≈ 0.72–0.75 T (figure readings, `inferred`) | ±5 % (A2-EQ EQ-05) | µ_r assumption |
 | OR-09 | O2 / O5 | Inductance | 14.8 µH (D09 Table 6), 22.3 µH (D07 Table 4), meas. | **none** — characterisation only (EQ-14 `cannot verify yet`) | G1 |
 | OR-10 | O3 D10 | Temperature at 12 A/mm² | 110.2 °C at 27 °C ambient, meas. (p.10) | ±30 % on ΔT (A2-EQ EQ-17, `assumption`) | conduction path model → Later |
@@ -240,7 +243,7 @@ Prerequisites must be met before an oracle can pass; until then the test is mark
 | PR-09 | Determinism: same input → byte-identical result JSON (same platform) | N-04 |
 | PR-10 | Mirror property (UT-GEO-03) for random coil specs | F-01 |
 | PR-11 | Containment: all copper inside the envelope and ≥ edge clearance from outline, bore and holes | F-09, F-10 |
-| PR-12 | Re-entry invariance (D-007): re-typing any input with its current or default value changes no badge, no "n assumed inputs" tag and no design hash; badges never depend on input provenance | T-03, F-21 |
+| PR-12 | Re-entry invariance (D-007, DEF-21): re-entering the **current** value of any input changes no badge, no "n assumed inputs" tag and no design hash; setting a changed input back to its default is a design change — the hash changes and the input joins the tag (ADR-0003 decisions 3–4) while the badge stays unchanged; badges never depend on input provenance | T-03, F-21 |
 
 Profiles: `fast` (CI, ≤ 2 min total, `assumption`), `long` (nightly, 10× examples). Seeds printed on failure; shrunk examples
 added as regression cases.
@@ -478,7 +481,7 @@ Generated automatically in Phase 2 from pytest markers (TR-01); this skeleton de
 | REQ-T-05 | results, physics | UT-RES-02; UT-PHY-15, 18; TR-03; UI-07 |
 | REQ-T-06 | model.provenance, io.project, ui | UT-IO-05; UT-RES-06; UI-08 |
 | REQ-T-07 | io.* | UT-IO-06; KX-05, KX-10 |
-| REQ-T-08 | physics, results | UT-PHY-13; BV-10…14 |
+| REQ-T-08 | physics, results | UT-PHY-13, UT-PHY-21; BV-10…14 |
 | REQ-T-09 | tests infrastructure | TR-01, TR-02 |
 | REQ-T-10, T-11 | ui.strings, io.report | LG-03, LG-04 |
 | REQ-T-12 | ui, io.report | UI-13 |
@@ -526,3 +529,10 @@ Agent 4 should cover, **without reading the embodic implementation** where possi
   measurement temperature.
 - DEF-13: AX-04 measures the clickable label area; KX-08 covers the plugin report (REQ-K-16).
 - DEF-17: PR-06 rotation-by-one-coil-pitch property; new UT-WND-11 turn-averaged pitch factor (D15 eq. 6, EV-59).
+
+## Revision 2026-10-04 (final fix round)
+
+- DEF-09 (reopened): UT-GEO-07 compares with the independent true-spiral reference (1e-6 mm reference mode, ±1 %
+  production mode); the EQ-03 loop formula is only an upper bound with Agent 2's case bands.
+- DEF-21: PR-12 wording corrected (current value vs setting back to default).
+- DEF-18 (Agent 2's graded EC-05 rule, reflected): new UT-PHY-21; OR-01/OR-07 use the asymmetric band [−tol, +tol + e_edge].

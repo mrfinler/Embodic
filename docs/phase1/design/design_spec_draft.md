@@ -530,3 +530,5 @@ DEF-06); component rows for badge and assumptions tag; §5 two-pane layout from 
 measured overflow 0 px at 1920–768 px (DEF-07) and the 880 × 600 KiCad window mockup 05b; §8.3 confirmed and mockups
 aligned (DEF-16). Mockup 04 now cites ρ₂₀ and α to EV-53 (IACS, NBS Handbook 100); the remaining assumption is “PCB
 copper behaves like IACS copper” (DEF-05).
+
+Revision 2026-10-04 (final fix, DEF-20): mockup 03 Layers rail “Series turns per phase” corrected from 84 to 168 (4 coils × 7 turns per coil per layer × 6 layers, three pairs in series, M2) and the arithmetic is shown in the label; PNG re-rendered; v7 overflow 0 px at 1920–768 px, v11 audit 4/4 result containers complete.

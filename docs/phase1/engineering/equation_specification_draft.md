@@ -139,8 +139,35 @@ w trace width, t copper thickness, s clearance, w_d = w + s [mm]; N turns per co
   pole-centre 0.738 T (µ_r 1.05, `assumption`) vs D09 Fig. 7 FEA ≈0.72 T and Fig. 5 ≈0.75 T (figure readings, `inferred`).
 - Tolerance: ±5 % on B₁ at mid-radius vs 3-D FEA. Reasoning: D09 reports < 1 % fundamental difference for its comparable
   scalar-potential model at mean radius (p.4); add µ_r and B_r(T) uncertainty (both unsourced) and back-iron saturation.
-  Not valid within about one magnetic gap of the magnet's radial ends, where D09 Fig. 7 shows up to ≈40 % drop → apply a
-  radial correction factor (D09 used an FEA-fitted B_r(r), p.5) — Phase 2 item.
+  Radial edges: handled by the graded check EC-05 below (replaces the earlier binary "not valid within one gap of the
+  magnet ends" statement, DEF-18).
+- **Validity check EC-05 — radial edge leakage, graded (DEF-18).**
+  - Basis: D09 p.4 §3.1 states that its scalar-potential model takes circumferential leakage into account but "does not
+    calculate the leakage flux at the inner and outer edges of the magnets", so the radial variation cannot be computed and
+    D09 combines the analytical model with FEA, curve-fitting a normalised B_r(r) from its Fig. 7 into eq. 7 (p.5) (EV-13).
+    EQ-05 has the same limitation (2-D solution per radius, field set to zero outside the magnet span).
+  - Calibration (`inferred`, one FEA case, figure reading; `checks/edge_zone_d09.js`): D09 Fig. 7 (3-D FEA, |B| at mid-gap vs
+    radius) digitised from a 300-dpi render and divided by the EQ-05 profile of the same rotor (plateau 30–41 mm: FEA 0.733 T,
+    EQ-05 0.737 T). Edge factor k(d) = B_FEA/B_EQ-05 at distance d from a magnet end: 0.53 (d = 0), 0.77 (1 mm), 0.85 (1.5 mm),
+    0.91 (2 mm), 0.97 (3 mm), 0.99 (4.5 mm). Fit: **k(d) = 1 − D_e·exp(−d/(c_e·G))** with D_e = 0.47, c_e = 0.9 (G = magnet
+    face to symmetry/iron plane, 1.5 mm for D09); fit residual ≤ 0.02 in k. Over the D09 magnet span, ∫B r dr from the FEA
+    profile is 5.7 % below the EQ-05 profile.
+  - Check (run per phase on the EQ-06 kernel): e_edge = Σ_seg w·D_e·exp(−d/(c_e·G)) / Σ_seg w, with w = |B_z,1(r_m, z_L)·r_m·Δr|
+    over the EMF-producing segments inside the magnet span and d = min(r_m − r_A, r_B − r_m). G as in EQ-05 for the double
+    rotor and the single rotor with yoke; for the single rotor without yoke use the distance from the magnet face to the
+    farthest copper layer (`assumption`, no calibration).
+  - Graded consequence: **e_edge ≤ 10 % → no status cap**; the result (Ke, EMF, torque, and the EMF-derived parts of EQ-07/09)
+    keeps its badge and gets a one-sided tolerance add-on "model may be high by up to e_edge" plus the listed limitation
+    "radial edge leakage not modelled (EC-05)". **e_edge > 10 % → badge capped at `unresolved`**. Threshold basis
+    (`assumption`): above 10 % the uncorrected error exceeds the largest oracle tolerance (±8 %, O1) and the single-case
+    calibration would be extrapolated beyond its range. For D09-like rotors (G = 1.5 mm) the cap is reached for radial magnet
+    lengths below ≈12 mm (10 mm → 12.4 %, 12 mm → 10.5 %, 15 mm → 8.4 %, 20 mm → 6.3 %, 30 mm → 4.2 %).
+  - Optional (off by default): apply k(d) as an "edge-corrected field (D09 fit)" — then the add-on is replaced by a residual of
+    ±e_edge/3 (`assumption`), and the correction is listed as an inferred, single-calibration model.
+  - Consequences (computed with the rule, `checks/edge_zone_d09.js`): **default 12/16 design e_edge = 5.3 %**; **O1 D08 4.2 %**
+    (G 1.4 mm assumed, α_p 0.72 constant — the T-arrangement edges are approximated); **O2 D09 5.8 %** (N = 8 geometry) —
+    none is capped; Ke/torque keep their badge (`inferred` once implemented and tested) with the add-on. Oracle comparisons
+    use the asymmetric band [−tol, +tol + e_edge] on model/measured (pre-registered in `oracle_cases_draft.json`).
 - Gate: `reuse with change` (add α_p(r) EQ-04, Halbach option, edge correction, temperature-dependent B_r; keep odd
   harmonics, make the set configurable).
 
@@ -162,8 +189,10 @@ w trace width, t copper thickness, s clearance, w_d = w + s [mm]; N turns per co
 - O2 details now available (EV-62, Agent 5): D09 concentric board = 12 non-overlapping trapezoidal spiral coils per layer,
   each with a via at its inner end, 2 layers, 6 terminals (open phases), air gap 1 mm per side (Table 2 p.3; consistent with
   Table 3 p.4: 7 mm between rotor cores − 2 × 2 mm magnets = 3 mm = 1 mm PCB + 2 × 1 mm), 16 poles; turns per coil per layer
-  ≈ 6–8 (`unresolved`). Until the turn count is fixed, O2 can test EQ-06 only as a ratio (Ke per turn) or as a sweep over
-  N = 6, 7, 8.
+  ≈ 6–8 (`unresolved`). Pre-registered (DEF-19, `oracle_cases_draft.json` v2): primary N = 8 with centre-lines 25.2/47.6 mm —
+  the true-spiral length 405.2 mm per coil-layer × 8 = 3242 mm reproduces the published 3244 mm (and Agent 4's inversion the
+  171 mm² mid-loop area) within 0.1 %; alternative B N = 7 (20.2/43.8 mm) only if ≈326 mm of inter-coil links per phase are
+  inside the 3244 mm. Both are run; EMF band [−5 %, +5 % + e_edge] with e_edge = 5.8 % (EC-05).
 - Gate: `reuse`.
 
 ## EQ-07 Phase assembly, per-layer EMF, parallel paths and circulating loss
@@ -427,17 +456,21 @@ Two separate indicators are shown on every result:
    `unresolved`) }. Badge values: `verified`, `inferred`, `unresolved`, `not tested` — and `assumption` only when an
    **equation itself** is an engineering assumption (currently EQ-16, EQ-17). Order (weakest first): `unresolved` <
    `not tested` < `assumption` < `inferred` < `verified`. Inputs do **not** enter the badge.
-2. **Assumptions tag** = count and expandable list of the assumed inputs the number depends on (only inputs the kernel
-   actually uses), ordered by the "dominant assumed inputs" table below. Each input carries a provenance class:
-   `default` (tool default, unsourced → `assumption`), `default (sourced)` (tool default with an EV source, shown with the
-   source and its applicability, e.g. IACS ρ₂₀ for PCB copper), `user` (entered by the user, unsourced — listed as the
-   user's responsibility), `measured` (only when the user marks the value as measured **and** names the source/record —
-   datasheet, coupon, LCR record), `imported` (from KiCad). Equation-level assumptions (e.g. "PCB copper = IACS copper" in
-   EQ-10, µ_r in EQ-05) appear in this list as built-in assumed inputs and leave it when the user supplies a `measured`
-   replacement.
+2. **Assumptions tag** ("n assumed inputs", expandable list; aligned with ADR-0003 decision 3, DEF-22) = every assumed or
+   default input the calculation actually uses plus the equation-level assumptions of its chain, ordered by the "dominant
+   assumed inputs" table below. Membership, for the inputs the kernel actually uses:
+   - every input whose **value equals its tool default** (provenance `default`; design and physical-property inputs alike);
+   - every **physical-property input not marked `measured`** (B_r, µ_r, finished copper thickness, plating, h, densities …),
+     labelled `assumption`, or for a sourced constant min(EV read status, applicability) — typically `inferred` (e.g. IACS ρ₂₀
+     applied to PCB copper);
+   - every **equation-level assumption** of the chain (e.g. "PCB copper = IACS copper" in EQ-10, unsaturated back iron and
+     µ_r in EQ-05) unless a `measured` input replaces it.
+   Design inputs (geometry, layer configuration, operating point) whose value differs from the default are the user's
+   design and are **not** listed. Provenance classes: `default`, `user`, `imported` (KiCad), `measured` (only when the user
+   marks the value as measured **and** names the source/record — datasheet, coupon, LCR record), `migrated`.
 
-Rules: typing a value equal to the default changes nothing (provenance stays `default` until the user marks it `measured`
-with a source); an EV status `verified` means "read in the source", so a sourced constant is listed with its applicability
+Rules: membership depends on values and the `measured` mark only, never on keystrokes — re-typing the current value changes
+neither badge nor tag; setting an input back to its default value is a design change and lists it again (ADR-0003 decision 4); an EV status `verified` means "read in the source", so a sourced constant is listed with its applicability
 judgement, not promoted; a computed result is never called "measured" (brief rule 5). Where a single label is unavoidable
 (export summaries), print the badge **and** the assumption count together, never the badge alone. Exact identities and
 counts (pole/coil pitch, k_w by exact arithmetic, turn count, generated track length) reach `verified` once their tests pass.
@@ -477,3 +510,7 @@ list feeds the **assumptions tag** (order and wording), not the badge; every oth
 tag), DEF-08 (EQ-14 inductance quantity and D09 Table 6 readings I1–I3), DEF-09 (EQ-02 three-mode turn criterion; EQ-03
 tolerance basis from a true-spiral construction incl. triangular turns), DEF-11 (EQ-10 O2 temperature note: R₂₀ 0.999 Ω vs
 1.07 Ω ⇔ ≈38 °C). Oracle parameter sets frozen in `oracle_cases_draft.json`.
+
+**Revision 2026-10-04 (final fix round):** DEF-18 (EQ-05 radial-edge validity made graded and quantitative: EC-05 with D09
+Fig. 7 calibration, 10 % cap threshold, consequences for default/O1/O2), DEF-22 (assumptions-tag membership aligned with
+ADR-0003). DEF-19 handled in `oracle_cases_draft.json`.

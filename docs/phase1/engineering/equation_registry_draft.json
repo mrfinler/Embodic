@@ -16,13 +16,13 @@
   "verified"
  ],
  "result_badge_rule": "badge = weakest of {evidence status of every EQ in the chain, implementation test state, validity cap (violation -> unresolved)}; inputs do not enter the badge",
- "assumptions_tag_rule": "separate count + list of assumed inputs actually used, ordered by dominant_assumptions; provenance classes below; re-typing a default changes nothing",
+ "assumptions_tag_rule": "aligned with ADR-0003 decision 3 (DEF-22): the tag counts every assumed/default input the calculation actually uses plus the equation-level assumptions of its chain, list expandable, ordered by dominant_assumptions: (1) inputs whose value equals the tool default; (2) physical-property inputs not marked measured; (3) equation-level assumptions unless replaced by a measured input. Design inputs differing from the default are not listed. Membership depends on values and the measured mark only (re-typing the current value changes nothing)",
  "input_provenance_vocabulary": [
   "default",
-  "default (sourced)",
   "user",
+  "imported",
   "measured",
-  "imported"
+  "migrated"
  ],
  "input_provenance_note": "'measured' only when the user marks the value as measured and names the source/record; equation-level assumptions (e.g. PCB copper = IACS, mu_r) are listed as built-in assumed inputs until replaced by a 'measured' value",
  "gate_vocabulary": [
@@ -36,6 +36,7 @@
   "gate_verdict 'replace' for EQ-04 and EQ-21 means: no Xcoil implementation exists, implement new from the specification",
   "result status rule superseded by D-007 (DEF-02): see result_badge_rule and assumptions_tag_rule; dominant_assumptions feed the assumptions tag, not the badge",
   "Revision 2026-10-04 (defect fixes): DEF-02 (status fields), DEF-08 (EQ-14 quantity_note), DEF-09 (EQ-02 modes, EQ-03 tolerance basis), DEF-11 (EQ-10 D09 temperature case)",
+  "Revision 2026-10-04 (final fix round): DEF-18 (EQ-05 validity_checks EC-05, graded), DEF-22 (assumptions_tag_rule and provenance vocabulary aligned with ADR-0003)",
   "reference values are computed by Agent 2 (scripts in checks/); none is a measurement"
  ],
  "equations": [
@@ -467,9 +468,31 @@
    "gate_verdict": "reuse with change",
    "status": "inferred",
    "tolerance": {
-    "value": "+/-5 % on B1 at mid-radius vs 3-D FEA; not valid within ~1 gap of the radial magnet ends",
-    "basis": "D09 p.4 reports <1 % for a comparable model at mean radius; add mu_r/B_r(T) uncertainty and saturation (D08 p.112); D09 Fig. 7 edge drop ~40 %"
+    "value": "+/-5 % on B1 at mid-radius vs 3-D FEA; radial edges via graded check EC-05 (one-sided add-on e_edge, cap only above 10 %)",
+    "basis": "D09 p.4 reports <1 % for a comparable model at mean radius; add mu_r/B_r(T) uncertainty and saturation (D08 p.112); edge leakage calibrated on D09 Fig. 7 (checks/edge_zone_d09.js)"
    },
+   "validity_checks": [
+    {
+     "id": "EC-05",
+     "name": "radial edge leakage (graded)",
+     "metric": "e_edge = sum_seg w*D_e*exp(-d/(c_e*G)) / sum_seg w; w = |B_z,1(r_m,z_L)*r_m*dr| over EMF-producing segments inside the magnet span; d = min(r_m - r_A, r_B - r_m)",
+     "parameters": {
+      "D_e": 0.47,
+      "c_e": 0.9,
+      "G": "magnet face to symmetry/iron plane (EQ-05); single rotor without yoke: magnet face to farthest copper layer (assumption)"
+     },
+     "basis": "D09 p.4 sec. 3.1 (scalar-potential model misses radial edge leakage; B_r(r) curve-fitted from FEA, eq. 7 p.5); calibration = digitised D09 Fig. 7 (3-D FEA) / EQ-05 profile, fit residual <= 0.02 in k; ONE calibration case -> inferred",
+     "rule": "e_edge <= 0.10: no badge cap; one-sided tolerance add-on +e_edge (model high) on Ke, EMF, torque and EMF-derived results, limitation listed; e_edge > 0.10: badge capped at unresolved",
+     "threshold_basis": "assumption: above 10 % the uncorrected error exceeds the largest oracle tolerance (+/-8 %, O1) and the calibration would be extrapolated",
+     "optional_correction": "edge-corrected field k(d) = 1 - D_e*exp(-d/(c_e*G)), off by default; residual +/-e_edge/3 (assumption)",
+     "consequences": {
+      "default_12_16": 0.053,
+      "O1_D08": 0.042,
+      "O2_D09_N8": 0.058
+     },
+     "geometry_threshold_example": "D09-like rotor (G 1.5 mm): cap for radial magnet length below ~12 mm (10 mm -> 12.4 %, 15 mm -> 8.4 %, 20 mm -> 6.3 %)"
+    }
+   ],
    "dominant_assumptions": [
     "B_r (grade, temperature)",
     "mu_r (no datasheet value, G23)",

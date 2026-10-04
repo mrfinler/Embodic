@@ -2,8 +2,8 @@ Prepared by: Agent 6 — Software Architecture Specialist — model: claude-opus
 
 # ADR-0003: Traceable result objects — calculation-trust badge plus separate assumed-input tag
 
-**Status:** Accepted — status rule decided by Fable as decision_log **D-007** (2026-10-04); this version supersedes the
-earlier "weakest of equations, inputs and assumptions" rule and its Amendment 1 (Agent 4 DEF-02).
+**Status:** Accepted — status rule decided by Fable as decision_log **D-007** (2026-10-04); revised in the final fix round
+(DEF-18, DEF-21, DEF-22); this version supersedes the earlier "weakest of equations, inputs and assumptions" rule and its Amendment 1 (Agent 4 DEF-02).
 **Date:** 2026-10-04
 **Deciders:** Fable 5.1 (D-007) — consulted: Agent 2 (EQ statuses, dominant assumptions), Agent 4 (DEF-02), Agent 1 (badge
 design), Agent 5 (EV registry)
@@ -38,10 +38,12 @@ design), Agent 5 (EV registry)
      status is `assumption`, e.g. EQ-16 mass, EQ-17 thermal, makes the badge `assumption`);
    - the implementation **test state**: `not tested` until all tests linked to those EQs pass in the current build (an
      oracle that has not been run does not produce `not tested`; it only prevents raising the EQ's evidence status);
-   - the **validity cap**: any violated validity limit of an EQ in the chain ⇒ `unresolved`.
+   - the **validity cap**: a violated validity limit of an EQ in the chain ⇒ `unresolved` (graded checks cap only above
+     their threshold, see below).
    Order: `unresolved` < `not tested` < `assumption` < `inferred` < `verified`. **Inputs never enter the badge.**
-3. **Assumed-input tag** ("n assumed inputs", expandable, dominant ones first using the registry's
-   `dominant_assumptions`): for the inputs the kernel actually uses, list
+3. **Assumed-input tag** ("n assumed inputs") — agreed text with Agent 2's equation spec (DEF-22): the tag counts **every
+   assumed or default input the calculation actually uses plus the equation-level assumptions of its chain**; the list is
+   expandable and ordered by the registry's `dominant_assumptions`. Membership, for the inputs the kernel actually uses:
    - every input whose **value equals its default** (provenance "default"; design and property inputs alike);
    - every **physical-property input not marked `measured`** (B_r, µ_r, finished copper thickness, plating, h, densities …)
      with its label: `assumption`, or for a sourced constant min(EV read status, applicability) — typically `inferred`;
@@ -50,8 +52,9 @@ design), Agent 5 (EV registry)
    Design inputs (geometry, layer configuration, operating point) whose value differs from the default are the user's design
    and are not listed.
 4. **Provenance** per input: `default`, `user`, `imported_kicad`, `measured` (+ `source_ref`, mandatory), `migrated`.
-   Membership in the tag depends on **values and the `measured` mark only**, never on keystrokes: re-typing a default or the
-   current value changes neither the badge nor the tag (PR-12).
+   Membership in the tag depends on **values and the `measured` mark only**, never on keystrokes: re-entering the current
+   value changes neither the badge nor the tag; setting a changed input back to its default value is a design change — the
+   design hash changes and the input is listed again — while the badge stays unchanged (PR-12, DEF-21).
 5. **Gate enforcement**: an EQ may carry evidence status `verified` only if the registry links ≥ 1 validation test that
    passed in the current CI run (TR-03); `cannot verify yet` outputs carry the label "estimate" / "guideline (unverified)".
 6. **Display**: badge (shape-coded, Agent 1) + EQ link + "n assumed inputs" tag on every number; the disclosure lists
@@ -66,20 +69,20 @@ blocks 20 × 6 × 2 mm centred at r = 28 mm, gap 1.0 mm, operating point 1000 rp
 | Result | EQ chain (evidence status) | Validity check | Badge | Assumed-input tag (dominant first) |
 |---|---|---|---|---|
 | Phase resistance at operating temperature | EQ-10 (`verified`), EQ-11 (`inferred`), EQ-07 (`inferred`); track length = exact sum of generated primitives | EQ-13: δ ≈ 5.72 mm at 133.3 Hz (A2 C9) ≫ w = 0.5 mm, t = 0.035 mm → no cap | **`inferred`** (`not tested` before the tests pass) | finished copper thickness (default), winding temperature (default), PCB copper = IACS (equation-level), ρ₂₀ and α (sourced EV-53 → `inferred`), via plating (default), trace width, annulus, clearance, coil gap (defaults) |
-| Phase Ke, line Ke, torque at the operating point | EQ-04 (`verified`), EQ-05 (`inferred`), EQ-06 (`verified`), EQ-07 (`inferred`), EQ-09 (`verified`) | EQ-05 is not valid within about one magnetic gap of the magnet's radial ends (A2-EQ EQ-05; here G = (0.62 + 2·1.0)/2 = 1.31 mm). The default coil annulus 18–38 mm coincides with the block span 18–38 mm → conductors lie in the edge zone → cap | **`unresolved`** on the default design; **`inferred`** for a design whose EMF-producing conductors stay ≥ G inside the magnet span, or once Agent 2's radial edge correction (EQ-05 change) is implemented and validated | B_r, µ_r (defaults; µ_r unsourced, G23), magnet thickness, air gap, magnet shape (defaults), unsaturated back iron and linear magnets (equation-level); torque adds the line current (default) |
+| Phase Ke, line Ke, torque at the operating point | EQ-04 (`verified`), EQ-05 (`inferred`), EQ-06 (`verified`), EQ-07 (`inferred`), EQ-09 (`verified`) | Graded radial-edge check EC-05 (Agent 2, DEF-18; registry `validity_checks`): default design e_edge = 5.3 % ≤ 10 % → no cap; one-sided tolerance add-on "model may be high by up to 5.3 %" and limitation "radial edge leakage not modelled (EC-05)" listed. A design with e_edge > 10 % (e.g. D09-like rotor with radial magnets < ≈ 12 mm) would be capped | **`inferred`** (`not tested` before the tests pass), with the EC-05 add-on | B_r, µ_r (defaults; µ_r unsourced, G23), magnet thickness, air gap, magnet shape (defaults), unsaturated back iron and linear magnets (equation-level); torque adds the line current (default) |
 | Copper mass | EQ-16 (`assumption`) | — | **`assumption`** (equation itself an assumption) | laminate density, copper density (sourced → `inferred`) |
 | Inductance estimate | EQ-14 (`unresolved`, cannot verify yet) | — | **`unresolved`**, label "estimate" | δ′, k_w1, missing end-turn terms (equation-level) |
 
 Reaching `verified`: R needs EQ-07 and EQ-11 raised to `verified` by validation (e.g. OR-02/OR-03 or a via-chain coupon);
-Ke/torque need EQ-05 and EQ-07 validated (OR-01, OR-11) and, on this geometry, the edge correction. The badge then rises
+Ke/torque need EQ-05 and EQ-07 validated (OR-01 and OR-07 in the asymmetric band [−tol, +tol + e_edge], OR-11). The badge then rises
 without any change to the inputs, and the tag still shows every default and assumed property — which is the intended
 separation. Marking the copper thickness as `measured` (with a coupon record) removes it from R's tag but does not change
 R's badge.
 
-Observation for Agent 2 (not a defect of the rule): with a strict validity cap, every design whose coil annulus equals the
-magnet span shows `unresolved` for Ke and torque. Agent 2 should define the EQ-05 `validity_checks` entry precisely (e.g.
-cap only if the share of EMF-producing radial length inside the edge zone exceeds a stated fraction, otherwise a listed
-limitation) — `assumption` until specified.
+Validity checks may be **graded** (registry `validity_checks`): a check can either cap the badge at `unresolved` or, below
+its threshold, only add a one-sided tolerance and a listed limitation. EQ-05's EC-05 (Agent 2, resolving DEF-18) is the
+first such check; its 10 % threshold is an `assumption` (basis: the largest oracle tolerance, ±8 % for O1, and the
+single-case D09 calibration range).
 
 ## Options Considered
 
@@ -132,3 +135,10 @@ from "what does this number rest on" keeps both visible without letting one mask
 ## Revision 2026-10-04 (defect fixes)
 
 Rewritten per decision_log D-007 — addresses DEF-02 (and the ADR-0003 part of DEF-05: constants now cited to EV-53).
+
+## Revision 2026-10-04 (final fix round)
+
+- DEF-22: decision 3 now uses the tag text agreed with Agent 2's equation spec.
+- DEF-21: decision 4 distinguishes re-entering the current value from setting a changed input back to its default.
+- DEF-18 (Agent 2's graded EC-05 rule, reflected): worked example — Ke/torque on the default design `inferred` with a
+  +5.3 % one-sided add-on instead of `unresolved`; graded validity checks described; the earlier observation removed.

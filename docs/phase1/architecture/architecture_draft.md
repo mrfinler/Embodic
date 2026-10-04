@@ -470,7 +470,8 @@ class FieldProvenance:             # per input field, keyed by JSON pointer ("/r
     kind: InputKind
     source_ref: str | None = None  # mandatory for MEASURED (datasheet, coupon, LCR record); EV-ID for sourced defaults
     note: str = ""                 # e.g. "typical NdFeB grade value; mu_r unsourced (G23)"
-# "default" is decided by value equality with the default, so re-typing a default changes nothing (D-007, PR-12).
+# "default" is decided by value equality with the default: re-entering the current value changes nothing; setting a
+# changed input back to its default is a design change (hash changes, input listed again) — D-007, PR-12, DEF-21.
 
 ProvenanceMap = dict[str, FieldProvenance]
 ```
@@ -759,9 +760,12 @@ class AssumedInput:                # one entry of the "n assumed inputs" tag (AD
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ValidityFlag:
-    code: str                      # "RANGE_SKIN_DEPTH"
+    code: str                      # "RANGE_SKIN_DEPTH", "EC-05"
     message: str
     eq_id: str
+    effect: Literal["cap", "limitation"] = "cap"   # graded checks (e.g. EC-05 at e_edge <= 10 %) only add a limitation
+    metric: float | None = None    # e.g. e_edge = 0.053 for the default design (Agent 2, DEF-18)
+    one_sided_addon: float | None = None   # relative add-on on the "model high" side of the tolerance
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Tolerance:
@@ -1295,7 +1299,7 @@ these fields unchanged and adds Phase 2 fields owned as stated:
 |---|---|---|---|
 | `registry_version` (top level) | string, e.g. "1.0.0" | Fable | shown in `VersionInfo`, exports (REQ-T-07) |
 | `tests` | list of test IDs | Agent 3 (writes), Agent 4 (reviews) | TR-03: an EQ is shown `verified` only if ≥ 1 linked test passed in this build |
-| `validity_checks` | list of {`code`, `expression`, `cap`} | Agent 2 | machine-checkable limits → `ValidityFlag`, cap `unresolved` (e.g. `RANGE_SKIN_DEPTH`) |
+| `validity_checks` | list of {`id`, `name`, `metric`, `parameters`, `basis`, `rule`, `threshold_basis`} (format of Agent 2's EC-05 entry, already in `equation_registry_draft.json`) | Agent 2 | machine-checkable limits → `ValidityFlag` with `effect` cap or limitation (graded, DEF-18) |
 | `implementation` | dotted path, e.g. `embodic.physics.resistance.path_resistance_ohm` | Agent 3 | code ↔ EQ link for reviews and TR-04 |
 | `constants` | list of {`name`, `value`, `unit`, `source` (EV-ID or null), `status`} | Agent 2 / Agent 5 | e.g. ρ₂₀ = 1.7241e-8 Ω·m from EV-53 (Agent 2 §2.1) |
 | `label` | "estimate" / "guideline (unverified)" / null | Agent 2 | wording for `cannot verify yet` outputs (REQ-T-05) |
@@ -1303,7 +1307,8 @@ these fields unchanged and adds Phase 2 fields owned as stated:
 Result badge at run time (decision_log **D-007**, ADR-0003) = **calculation trust** = weakest of (a) the evidence `status`
 of every EQ in the chain (`cannot verify yet` ⇒ `unresolved`; an EQ whose status is `assumption` gives `assumption`),
 (b) the test state (`not tested` until the EQ's linked tests pass in this build), (c) the validity cap (violated limit ⇒
-`unresolved`). Inputs never enter the badge. Separately, the **"n assumed inputs" tag** lists, for the inputs the kernel
+`unresolved`; graded checks such as EQ-05's EC-05 cap only above their threshold — e_edge > 10 % — and otherwise add a
+one-sided tolerance and a listed limitation, Agent 2 DEF-18). Inputs never enter the badge. Separately, the **"n assumed inputs" tag** lists, for the inputs the kernel
 used, every input equal to its default, every physical-property input not marked `measured` (label `assumption`, or
 min(EV, applicability) — typically `inferred` — for sourced constants) and every equation-level assumption not retired by a
 measured input; `dominant_assumptions` orders the list. This replaces the earlier input-weighted rule (Agent 4 DEF-02).
@@ -1702,3 +1707,9 @@ report §f.2) — the third column is now the contract.
 - DEF-05 (my part): stale "source needed" notes for ρ₂₀/α/copper density replaced by EV-53 citations.
 - DEF-13: `TorqueSpeedEstimate` (badge `unresolved`, label "estimate") and `GeometryDerived` (feasibility-rail values,
   `Layout.derived`) added; §19 ids recorded as accepted by Agent 1.
+
+## Revision 2026-10-04 (final fix round)
+
+- DEF-18 (Agent 2's graded EC-05 rule, reflected): `ValidityFlag` gains `effect`, `metric`, `one_sided_addon`; §13 badge
+  rule and the registry `validity_checks` field follow the graded rule.
+- DEF-21: provenance comment distinguishes re-entering the current value from setting a changed input back to its default.

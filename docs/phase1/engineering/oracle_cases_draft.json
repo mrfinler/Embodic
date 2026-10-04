@@ -175,7 +175,7 @@
      "kind": "measured",
      "source": "D08 Table 9.1 p.98",
      "comparison": "synthesised line-line waveform peak / omega_m from EQ-05/06/09 (not the fundamental alone)",
-     "tolerance": "+/-8 % (D08's own model deviation, p.98)"
+     "tolerance": "model/measured in [-8 %, +8 % + e_edge] (D08's own model deviation, p.98; EC-05 edge add-on e_edge = 4.2 %)"
     },
     {
      "quantity": "V_LL_peak at 454/1009/1559/2045/2514/2877 rpm",
@@ -216,7 +216,7 @@
   },
   {
    "case_id": "O2-D09",
-   "version": 1,
+   "version": 2,
    "title": "Tokgöz, Çakal, Keysan (IET EPA 2020): concentric (spiral) PCB winding, 12 coils/16 poles, 2 layers, double rotor",
    "document": "D09 B2/EPA-2020-0622-FINAL.pdf",
    "topology": "FSCW spiral, all phases on each layer, open phases (6 terminals)",
@@ -338,28 +338,25 @@
      "value": null,
      "unit": "1",
      "status": "unresolved",
-     "source": "Fig. 1a raster ~6-7; inversion from 3244 mm and 171 mm2: 7 or 8 (Agent 4 checks/v8_d09_turn_count.py)",
-     "assumed": 7,
-     "sweep": [
-      7,
-      8
-     ]
+     "source": "Fig. 1a raster ~6-7 (low resolution); true-spiral inversion of Table 1 (3244 mm, 171 mm2): N = 8 fits both within 0.1 % (Agent 4 v8 last block; Agent 2 eq03_spiral_vs_loops.py: 405.2 mm/coil-layer x 8 = 3242 mm); N = 7 fits only if ~326 mm of inter-coil links per phase are included in the 3244 mm (DEF-19)",
+     "assumed": 8,
+     "alternative_B": 7
     },
-    "coil_r_inner_mm": {
+    "coil_centre_line_R_i0_mm": {
      "value": null,
      "unit": "mm",
      "status": "unresolved",
-     "source": "coil radii not tabulated ('PCB inner/outer diameters equal for all windings')",
-     "assumed": 25.0,
-     "note": "Agent 4 inversion: centre-lines R_i0 ~20.2 / R_o0 ~43.8 mm (N = 7) or 25.6 / 47.8 mm (N = 8)",
-     "sweep": "Agent 4 inversion pairs"
+     "source": "coil radii not tabulated ('PCB inner/outer diameters equal for all windings'); from the true-spiral inversion",
+     "assumed": 25.2,
+     "alternative_B": 20.2
     },
-    "coil_r_outer_mm": {
+    "coil_centre_line_R_o0_mm": {
      "value": null,
      "unit": "mm",
      "status": "unresolved",
-     "source": "see coil_r_inner_mm",
-     "assumed": 46.0
+     "source": "as above; primary outer end-turn lies 1.6 mm outside the magnet span (r_PM 46 mm)",
+     "assumed": 47.6,
+     "alternative_B": 43.8
     },
     "phase_trace_length_mm": {
      "value": 3244,
@@ -423,7 +420,7 @@
      "kind": "measured",
      "source": "D09 Table 7 p.8 (calc. 6.21 V Table 4, FEA 6.20 V Table 5 p.6)",
      "comparison": "EQ-06/09 fundamental RMS at 2000 rpm",
-     "tolerance": "+/-5 % vs D09 calc/FEA once N fixed; report both N"
+     "tolerance": "model/measured in [-5 %, +5 % + e_edge] (EC-05: e_edge = 5.8 % for the primary geometry); report variant B as well"
     },
     {
      "quantity": "torque at 2 A",
@@ -453,7 +450,8 @@
      "tolerance": "information only"
     }
    ],
-   "pre_registration": "primary case: N = 7, coil copper edge 25-46 mm, mu_r 1.05, 20 degC, reading I1 with rotor; then the declared sweeps; no tuning to the measured values"
+   "pre_registration": "primary case A (DEF-19): N = 8, centre-lines R_i0 25.2 / R_o0 47.6 mm (reproduces 3244 mm and 171 mm2 within 0.1 %, links excluded), mu_r 1.05, 20 degC, inductance reading I1 with rotor; pre-registered alternative B: N = 7, centre-lines 20.2 / 43.8 mm (requires ~326 mm of links per phase); both are run and reported; sweeps are sensitivity runs; no tuning to measured values. EMF/torque bands are asymmetric by the EC-05 edge add-on (+5.8 % for A)",
+   "version_note": "version 2: v1 primary geometry (N = 7, copper edge 25-46 mm) contradicted the published 3244 mm (true spiral 2758 mm, -15 %) - DEF-19"
   },
   {
    "case_id": "O3-D10",
@@ -620,6 +618,7 @@
  "notes": [
   "values are taken from the cited pages; 'status' per PROJECT_BRIEF section 3; 'assumed' = value Phase 2 will use for an unresolved input",
   "kinds: measured / calculated / FEA as stated by the paper; embodic results are never called measured",
-  "Revision 2026-10-04 (defect fixes): created in the defect-fix round (coordinator request; DEF-08, DEF-11 caveats included)"
+  "Revision 2026-10-04 (defect fixes): created in the defect-fix round (coordinator request; DEF-08, DEF-11 caveats included)",
+  "Revision 2026-10-04 (final fix round): DEF-19 (O2 primary geometry N = 8 / 25.2-47.6 mm, alternative B N = 7, version 2); DEF-18 (EMF/torque bands widened one-sided by the EC-05 edge add-on)"
  ]
 }

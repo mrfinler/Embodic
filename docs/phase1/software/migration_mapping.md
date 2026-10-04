@@ -70,14 +70,14 @@ architecture.
 |---|---|---|---|---|---|
 | F-27 | Field model | port with change | Add α_p(r) for block magnets (EQ-04), Halbach option, radial edge correction, B_r(T); keep odd harmonics configurable | `core.analysis.field` | EQ-05 `reuse with change`, EQ-04 `replace/add` — blocked until approval |
 | F-28 | Back-EMF / flux linkage, phase assembly, kw1, THD | port with change | Path integral `reuse` (EQ-06); assembly needs series layer pairs (EQ-07); numeric "kw1" renamed utilisation factor, textbook k_w reported separately; `kdAnalytic` **replace** (EQ-08) | `core.analysis.emf` | EQ-06 `reuse`, EQ-07 `reuse with change`, EQ-08 `replace`, EQ-18 `reuse` — blocked until approval |
-| F-29 | DC resistance, via barrel, links | port as-is (formulas) / with change (vias) | EQ-10 `reuse` (ρ₂₀, α need cited source, G6); EQ-11 `reuse with change`: plating and via count as inputs, every via in the current path counted (Q-10) | `core.analysis.resistance` | EQ-10, EQ-11 — blocked until approval |
+| F-29 | DC resistance, via barrel, links | port as-is (formulas) / with change (vias) | EQ-10 `reuse`; constants sourced: ρ₂₀ = 1.7241e-8 Ω·m and α = 0.00393 /K (EV-53, IACS / NBS Handbook 100 p.2–4; note Xcoil uses 1.724e-8, `engine.js` l.12); remaining `assumption`: PCB (electrodeposited) copper behaves like IACS annealed copper (G6); EQ-11 `reuse with change`: plating and via count as inputs, every via in the current path counted (Q-10) | `core.analysis.resistance` | EQ-10, EQ-11 — blocked until approval |
 | F-30 | Losses, efficiency, Km | port with change | Copper EQ-10, eddy EQ-12 `reuse` (later drop B_t on circumferential segments, Q-6), circulating EQ-07, delta EQ-19; label efficiency "electromagnetic, estimate" (no mechanical/iron losses) | `core.analysis.losses` | EQ-07/10/12/19 — blocked until approval |
 | F-31 | Star/delta/open line quantities | port as-is | EQ-09 `reuse` (fundamental only) | `core.analysis.connection` | EQ-09 — blocked until approval |
 | F-32 | EMF waveforms, harmonic table | port as-is | EQ-18 `reuse`; show phase **and** line THD | `core.analysis.emf`, `app.charts` | EQ-18 — blocked until approval |
 | F-33 | IPC-2221 limit, current density, skin depth | IPC: port with change as labelled guideline; J and δ: port as-is | EQ-15 **cannot verify yet** (standard not in corpus, G5) → **BLOCKED (cannot verify yet)**, display "guideline (unverified)"; EQ-22 and EQ-13 `reuse` | `core.analysis.thermal_limits` | EQ-13, EQ-15, EQ-22 |
 | F-34 | Inductance (current-sheet model) | port with change, labelled estimate | EQ-14 **cannot verify yet**: end turns ignored (significant for spirals, Q-8), no oracle (G1) → **BLOCKED (cannot verify yet)**; Phase 2 proposal by Agent 2: Neumann filament model + FEMM/3-D check | `core.analysis.inductance` | EQ-14 |
 | F-35 | Torque–speed, inverter, inertia | port with change, labelled estimate | EQ-20 **cannot verify yet** (needs EQ-14) → **BLOCKED (cannot verify yet)**; inertia "reuse with change" (singleOpen inconsistency Q-3) | `core.analysis.drive` | EQ-20, EQ-14 |
-| F-36 | Mass and first-order thermal | port with change | EQ-16/EQ-17 `reuse with change`: densities and h need sources (h = 30 vs D01's 10 W/m²K), conduction path | `core.analysis.mass_thermal` | EQ-16, EQ-17 — blocked until approval |
+| F-36 | Mass and first-order thermal | port with change | EQ-16/EQ-17 `reuse with change`: copper density sourced as 8.89 g/cm³ (EV-53, NBS Handbook 100 p.4; Xcoil uses 8.96, `engine.js` l.1377), same IACS-equivalence assumption as F-29; laminate densities and h still need sources (h = 30 vs D01's 10 W/m²K); conduction path | `core.analysis.mass_thermal` | EQ-16, EQ-17 — blocked until approval |
 
 ### 1.5 Presentation, figure, exports, tests
 
@@ -160,3 +160,4 @@ touching `core.analysis`, `core.drc` or the exporters.
 ## Revision 2026-10-04 (defect fixes)
 
 - DEF-01 / D-006: F-24 now states the embodic DRC acceptance rule (no 0.004 mm slack), consistent with the port notes §3.1.
+- DEF-05 (reopened): F-29 no longer says the copper constants need a source — ρ₂₀ = 1.7241e-8 Ω·m and α = 0.00393 /K are sourced (EV-53, IACS / NBS Handbook 100 p.2–4); the remaining assumption is "PCB copper behaves like IACS copper". F-36 likewise cites the IACS copper density 8.89 g/cm³ (EV-53 p.4); only laminate densities and h remain unsourced.
