@@ -4,13 +4,24 @@ Prepared by: Agent 6 - Software Architecture Specialist - model: claude-opus-5-5
 
 This plan updates `docs/phase1/architecture/test_plan_draft.md`. Every Phase 1 test not listed under "Withdrawn tests"
 stays in force with its Phase 1 ID, check and criterion. This file adds the Phase 2 tests, amends the ones whose subject
-changed, and holds the generated requirements-to-tests matrix. No embodic test has run yet: every test below is
-`not tested`.
+changed, and holds the generated requirements-to-tests matrix. It records no results: unit reports and Fable's
+ledger hold those.
+
+This file and the Phase 1 plan it extends are the only sources of test IDs and their meanings. A brief, docstring or
+report that gives an ID another meaning is wrong, and this plan wins. A unit that needs a new test asks for a new ID
+here instead of reusing one.
 
 Revision 2026-10-04 (U-D1, corrections from the W0 pilot): §3 states the D-006 band rule once, half-open
 (DEF-M1d-02), names the "kernel" class for golden functions without EQ-IDs, ratifies the U-M1d encoding and `--out`
 flag, and specifies layout dumps for GR-19 with U-M1b as owner. §5.1 amends UT-UNI-01 (2 ulp round trips, JS rounding).
 §5.4 amends LG-01 (character check from M1, word check at M4). No ID changed.
+
+Revision 2026-10-05 (U-D2, corrections from the W1 and W2 reports): the paragraph above makes this plan the single
+source of test IDs (DEF-M1b-01). The U-M1b brief used UT-GEO-12 for transform exactness and UT-GEO-15 for discretise
+bounds; Phase 1 gives them stack-up z and determinism, and those meanings stay. §5.1 adds UT-GEO-22 and UT-GEO-23 for
+the two tests the brief meant. §5.2 restates PR-01 and PR-02 here, so M1's DRC properties no longer point at the
+Phase 1 file only (DEF-V1-01). §5.4 adds MT-08. §2 renames the export test folder to `tests/unit/embodic_io/`
+(U-M1y). §3 ratifies the GR-19 label for Xcoil's sector topology. §7 adds the new IDs to the M1 exit.
 
 ## 1. What changed and why
 
@@ -31,7 +42,7 @@ flag, and specifies layout dumps for GR-19 with U-M1b as owner. §5.1 amends UT-
 | Oracle (OR) | pytest, `xfail` until prerequisites exist | `tests/unit/physics/oracles/` | every commit |
 | Property (PR), boundary (BV) | hypothesis 6.168.3 (MPL-2.0, dev only), pytest | `tests/unit/property/`, `tests/unit/boundary/` | fast profile per commit, long profile nightly |
 | UI | pytest-qt 4.5.0 (MIT), `QT_QPA_PLATFORM=offscreen` | `tests/ui/` | every commit |
-| Exports (UT-EXP) | ezdxf 1.4.4 (MIT), pypdf 6.19.0 (BSD-3-Clause), stdlib xml and zipfile; all test-only | `tests/unit/io/exporters/` | every commit |
+| Exports (UT-EXP) | ezdxf 1.4.4 (MIT), pypdf 6.19.0 (BSD-3-Clause), stdlib xml and zipfile; all test-only | `tests/unit/embodic_io/exporters/` | every commit |
 | Static and gates (MT, TR, LG, AX scripts) | ruff 0.16.10 (MIT), mypy 2.4.0 (MIT), import-linter 2.15 (BSD 2-Clause), own scripts | `tools/`, `tests/static/` | every commit |
 | Independent (IT) | Agent 4's own scripts and expected values | `tests/independent/` | every commit after U-V1 |
 | Performance (PF), packaging (PK) | `time.perf_counter`, build, PyInstaller 6.22.3 (stretch) | `tests/performance/`, `tests/packaging/` | release profile |
@@ -73,6 +84,11 @@ and emits the raw result: every copper layer with its identifying fields and its
 records, the via list and the pad list, all with Xcoil's own keys and names. It maps nothing to embodic names. The
 Python test maps the raw layout to `embodic.board-dump` v1 and feeds it to `io.read_board_dump`.
 
+The GR-19 mapper (`tests/golden/m1_layout/xcoil_map.py`) labels Xcoil's `sector` layouts `TopologyKind.SPIRAL`
+(ratified 2026-10-05, U-D2). A `Layout` needs a topology, both are concentrated-coil boards, and GR-19 tests the
+format only. The label claims no geometric equivalence: the spiral generator is not a port of `sector`. A board dump
+has no topology key, so the label never reaches a fixture. No other code may use the mapping.
+
 Function level compares one Xcoil function with its embodic counterpart on identical inputs. Layout level compares a
 whole generated board and applies only to faithful ports (serpentine, wave). The spiral generator has no Xcoil
 counterpart; it is checked against closed forms and the true-spiral reference (UT-GEO-07, OR-04).
@@ -106,6 +122,8 @@ Phase 1 UT-PHY-01 to UT-PHY-21 and OR-01 to OR-12 stay. Two changes apply.
 
 | ID | Check | Criterion |
 |---|---|---|
+| UT-GEO-22 | New 2026-10-05: transform exactness | rotating (2, 0) by 60 degrees gives (1, sqrt 3) within 1e-12 mm; a mirror about 45 degrees swaps x and y and negates an arc's sweep; `transform` mirrors before it rotates; rotating forward and back, and `reverse_path`, return or swap every end point within 1e-9 mm (`tests/unit/geometry/test_transforms.py`, labelled UT-GEO-12 there until relabelled) |
+| UT-GEO-23 | New 2026-10-05: discretise bounds | every chord of `discretise_path` respects `max_segment_mm`, `max_angle_rad` and `max_sagitta_mm`; piece lengths sum to the path length and `s_mm` increases; a 90 degree arc of r = 10 mm with a 5 degree step gives 18 chords; K chords give K + 1 points from start to end (`tests/unit/geometry/test_discretise.py`, labelled UT-GEO-15 there until relabelled) |
 | UT-UNI-01 | Amended 2026-10-04: unit conversions and rounding | deg and rad, mm and m, rpm and rad/s, mil² and mm² round trips within 2 ulp of the input (`math.ulp`), not exact (requirements.md revision note); `js_round` gives 3, -2, 1, 0, -1, 0 for 2.5, -2.5, 0.5, -0.5, -1.5, 0.49999999999999994 (JS `Math.round`); `quantise(-0.000025, 1e5) == -0.00002`; neither returns -0.0 |
 | UT-GEN-01 | Generator contract for spiral, serpentine, wave and a stub | returns Layout or Unbuildable, never raises on fuzzed input; same design gives the same `layout_hash`; every circuit path and via ID exists; every winding path belongs to exactly one Member or to `interconnect_path_ids` |
 | UT-GEN-02 | Dispatch | `build_layout` routes by `design.topology`; calling `generate_wave` with a spiral design raises TypeError |
@@ -132,6 +150,8 @@ Phase 1 UT-PHY-01 to UT-PHY-21 and OR-01 to OR-12 stay. Two changes apply.
 
 | ID | Property |
 |---|---|
+| PR-01 | Amended 2026-10-05 (restated from Phase 1, DEF-V1-01): DRC soundness under D-006. Whenever `drc.passed`, an independent dense check finds no non-exempt pair below rule - 1e-6 mm; every pair it finds below that is reported by `run_drc`; and every pair `run_drc` reports is below rule - 1e-6 mm by the dense check (no false positives). The last clause excludes pad to pad and pad to via pairs with a non-round pad, which the circumscribed-radius rule may over-report (interfaces.md §7). Exemptions follow interfaces.md §7 |
+| PR-02 | Restated from Phase 1 (DEF-V1-01): the symmetry shortcut equals the full check. With `use_symmetry` True and False, the same violation set and the same `measured_min_mm` per kind within 1e-9 mm; an asymmetric layout falls back to `grid+exact` |
 | PR-13 | DRC never under-reports, for every generator: whenever `drc.passed`, Agent 4's brute-force checker finds no non-exempt pair below rule - 1e-6 mm, and every pair it finds below that is reported (PR-01 extended to serpentine and wave) |
 | PR-14 | Rotation symmetry for serpentine and wave: rotating the start angle by one electrical period shifts every phase phasor by the expected angle (1e-9 rad) and leaves abs(Ke), R and all DRC values unchanged (1e-9 rel., 1e-9 mm) |
 
@@ -162,6 +182,7 @@ offscreen platform.
 |---|---|
 | MT-01 | Amended: import-linter contracts C1 to C4 of `package_layout.md` §3 (core layers with generators above io, outcome, physics and drc; no Qt outside the Qt adapter modules; UI-internal layers; no KiCad or other GUI toolkits) |
 | MT-07 | Scope guard for D-009: no `kipy` or `pcbnew` import, no `.kicad_pcb` writer, no KiCad option in CLI choices, and no "KiCad" in the string catalogue |
+| MT-08 | New 2026-10-05 (U-M1y): no package folder under `tests/` or `src/` whose name becomes a top-level module name shadows a standard-library or installed module (`sys.stdlib_module_names`, `importlib.metadata.packages_distributions()`), and no two such folders share a name (`tests/static/test_mt08_no_stdlib_shadowing.py`; naming rule in package_layout.md §1) |
 | LG-01 | Amended 2026-10-04 (U-M1a deviation, ratified in part). From M1: every string literal in `src` holds only printable ASCII, tab, newline and the allowed unit symbols (U-M1a's character-class check). From M4: every word in the string catalogue and report templates is in an English word list plus the glossary allow-list. The word list has no source yet (no dictionary package in package_layout.md §5): `unresolved`; U-M4b proposes one through Fable before M4 exit |
 | LG-08 | No Thai characters in any shipped file (src, resources, examples, templates) |
 | AX-08 | Phase colours at least 3:1 against the canvas in both themes; the palette validator passes for both themes; greyscale ladder steps distinguishable |
@@ -182,7 +203,7 @@ default design at start (D-014). AX-07 tested the web option (D-010).
 
 | Milestone | Must pass |
 |---|---|
-| M1 | MT-01 to MT-03, MT-06, MT-07, UT-GEO-01, UT-DRC-01 to UT-DRC-08 on hand-built layouts, GR-17 to GR-19, PR-01 on random primitive sets, TR-02 |
+| M1 | MT-01 to MT-03, MT-06 to MT-08, UT-GEO-01, UT-GEO-15, UT-GEO-22, UT-GEO-23, UT-DRC-01 to UT-DRC-08 on hand-built layouts, GR-17 to GR-19, PR-01 and PR-02 on random primitive sets, TR-02 |
 | M2 | all UT-GEO, UT-WND, UT-PHY, UT-RES, UT-MOD, UT-IO, UT-GEN-01/02, GR-01 to GR-16, OR tests (pass or documented `xfail`), PR-01 to PR-12, BV, TR-01 to TR-04 |
 | M3 | GR-20 to GR-23, UT-GEN-03/04, PR-13, PR-14, and every M2 gate still green |
 | M4 | UI, AX, LG, UT-EXP, UT-SES tests; Agent 4 U-V4 independent export parsing |
@@ -282,7 +303,7 @@ the owner packages of `interfaces.md`.
 | REQ-N-18 | carried | must | M4 | embodic.ui.app | UI-12 |
 | REQ-N-19 | carried | must | M5 | pyproject.toml | PK-08 |
 | REQ-N-20 | carried | should | M4 | embodic.ui.app | UT-LOG-01 |
-| REQ-N-21 | amended | must | M1 | embodic.geometry | UT-GEO-01, UT-UNI-01, UT-EXP-02 |
+| REQ-N-21 | amended | must | M1 | embodic.geometry | UT-GEO-01, UT-GEO-22, UT-GEO-23, UT-UNI-01, UT-EXP-02 |
 | REQ-N-22 | carried | could | M5 | embodic.ui.app | PF-03 |
 | REQ-N-23 | carried | must | M4 | embodic.ui.views | UI-27, AX-05 |
 | REQ-N-24 | carried | must | M4 | embodic.ui.views | AX-06, UT-MOD-03 |

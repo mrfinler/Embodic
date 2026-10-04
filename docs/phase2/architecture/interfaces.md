@@ -12,6 +12,14 @@ Revision 2026-10-04 (U-D1, corrections from the W0 pilot): §1 replaces `round_h
 issue catalogue per owning unit. §2.4 adds `default` provenance (D-019). §9.1 states how a blank-origin file stores
 it. §9.2 ratifies the U-M1d number encoding and says what the Node dumper emits for GR-19.
 
+Revision 2026-10-05 (U-D2, corrections from the W1 and W2 reports; the merged code on main a138975 was read for every
+item): §1 adds the five units of DEF-M2a-01. §2.1 adds `validate_drc_rules`. §2.3 restates `FieldSpec` as merged and
+names the constants that are not fields. §5 restates `Layout` with its derived hash, adds `Segment`, `discretise_path`,
+`Transform`, the Xcoil distance and grid ports, and fixes the continuity tolerance at 1e-6 mm. §7 rewrites the
+exemptions, fixes the clearance rule per check kind, ratifies the pad-to-pad rule and states what `measured_min_mm`
+covers. §9.1 decides that the project file stores degrees. §9.2 removes the PCB-tool layer key, names the circuit phase
+key and states the interim `write_board_dump` signature. §13 records D-016 and the board dump v2 needs.
+
 ## 0. Rules for every public boundary
 
 - Lengths are millimetres (`_mm`), angles radians (`_rad`) inside the core, temperature °C (`_degc`), current A (`_a`),
@@ -65,6 +73,7 @@ class Unit(StrEnum):
     MM = "mm"
     MM2 = "mm2"
     M = "m"
+    UM = "um"  # display "µm"; via plating (DEF-M2a-01)
     RAD = "rad"
     T = "T"
     V = "V"
@@ -72,13 +81,17 @@ class Unit(StrEnum):
     N_M_PER_A = "N_m_per_A"
     RPM_PER_V = "rpm_per_V"
     OHM = "ohm"
+    OHM_M = "ohm_m"  # display "Ω·m"; resistivity
     H = "H"
     W = "W"
+    W_PER_M2_K = "W_per_m2_K"  # display "W/(m²·K)"; convection coefficient
     A = "A"
     A_PER_MM2 = "A_per_mm2"
     K = "K"
+    PER_K = "per_K"  # display "1/K"; temperature coefficient
     DEGC = "degC"
     G = "g"
+    G_PER_CM3 = "g_per_cm3"  # display "g/cm³"; density
     N_M = "N_m"
     RPM = "rpm"
     HZ = "Hz"
@@ -188,6 +201,12 @@ Issue catalogue. `MESSAGES` is the merge of one module per owning unit under `em
 (`work_breakdown.md` §4). Each module exports `MESSAGES: Mapping[str, str]`. `embodic/errors/__init__.py` finds the
 modules with `pkgutil.iter_modules`, so a new module needs no edit to a shared file. A code defined twice raises at
 import, which fails every test run.
+
+Revision 2026-10-05 (U-D2). DEF-M2a-01: `Unit` had no member for via plating, convection coefficient, resistivity,
+temperature coefficient or density, so U-M2a left those fields without a unit. The five members above are the names
+U-M1z implements (commit `eb7a2f1` on branch `unit/U-M1z`, read on 2026-10-05, not yet merged). The field table gives
+`/vias/plating_um`, `/operating/convection_h_w_m2k` and the material override values these units in the U-M2a fix round
+(`work_breakdown.md` §5).
 
 ## 2. `embodic.model`: design inputs, draft, provenance
 
@@ -397,6 +416,12 @@ class DrcRules:
     min_trace_width_mm: float
     min_drill_mm: float
     min_annular_ring_mm: float
+
+
+def validate_drc_rules(rules: DrcRules, pointer: str = "/drc_rules") -> tuple[ValidationIssue, ...]:
+    """One INVALID issue per rule that is not a finite number >= 0 (INVALID_DRC_RULE_NOT_FINITE or _NEGATIVE).
+
+    A NaN or negative rule would make every comparison pass, so callers run this before run_drc (U-M1c addition)."""
 ```
 
 ### 2.2 Winding specs, one per topology
@@ -604,6 +629,52 @@ class FieldKind(StrEnum):
 
 
 JsonValue: TypeAlias = "None | bool | int | float | str | list[JsonValue] | dict[str, JsonValue]"
+Choice: TypeAlias = str | int
+
+
+class ValueType(StrEnum):  # embodic.model.schema; GROUP and LIST leaves exist while their container is None or []
+    INT = "int"
+    FLOAT = "float"
+    BOOL = "bool"
+    TEXT = "text"
+    CHOICE = "choice"
+    INT_LIST = "int_list"
+    INT_GROUPS = "int_groups"
+    CHOICE_LIST = "choice_list"
+    GROUP = "group"
+    LIST = "list"
+
+
+class FieldGroup(StrEnum):  # form group, in form order (screens.md sections 1 to 5)
+    DESIGN = "design"
+    COIL = "coil"
+    PHASES = "phases"
+    LAYERS = "layers"
+    OUTLINE = "outline"
+    FASTENERS = "fasteners"
+    STACKUP = "stackup"
+    ROTOR = "rotor"
+    OPERATING = "operating"
+    DRIVE = "drive"
+    COOLING = "cooling"
+    MATERIALS = "materials"
+    ANALYSIS = "analysis"
+    MANUFACTURING = "manufacturing"
+
+
+class Sign(StrEnum):  # physical validity; breaking it is INVALID
+    ANY = "any"
+    POSITIVE = "positive"
+    NON_NEGATIVE = "non_negative"
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Limits:
+    """`sign` is validity (INVALID); `low` to `high` is the supported range (UNSUPPORTED_RANGE, Xcoil clamps to it)."""
+
+    sign: Sign = Sign.ANY
+    low: float | None = None
+    high: float | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -611,12 +682,25 @@ class FieldSpec:
     pointer: str  # JSON pointer into the "design" object, list items as "/stackup/layers/*/thickness_mm"
     kind: FieldKind
     unit: Unit | None  # None for enums, names and booleans
-    required: bool  # required fields start empty in a blank design
+    required: bool  # required while its container exists; a blank draft leaves it empty
     topologies: frozenset[TopologyKind]  # where the field applies
     neutral_value: JsonValue = None  # optional fields only; written into a blank design (ADR-0010 decision 2)
+    value_type: ValueType
+    choices: tuple[Choice, ...] = ()
+    nullable: bool = False
+    variant: Choice | None = None  # tagged-union member owning the field ("circle", "arc", ...); None if all have it
+    group: FieldGroup
+    widget_id: str | None  # objectName in screens.md; the join key between form and model
+    limits: Limits = Limits()
+    step: float | None = None  # Up and Down increment in the form
+
+
+FIELDS: tuple[FieldSpec, ...]  # every field of every topology; built at import from the type hints plus one row each
 
 
 def field_specs(topology: TopologyKind) -> tuple[FieldSpec, ...]: ...
+def field_for(pointer: str, values: Mapping[str, JsonValue]) -> FieldSpec:
+    """The field of a concrete pointer; the sibling `kind` or `shape` value in `values` picks the union member."""
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -642,6 +726,23 @@ def parse_draft(draft: DesignDraft) -> DesignParameters | DraftIncomplete: ...
 
 def draft_from_design(design: DesignParameters) -> DesignDraft: ...
 ```
+
+Revision 2026-10-05 (U-D2, U-M2a report). The names `field_specs`, `parse_draft` and `validate_design` stay as written.
+U-M2a's additions are ratified and restated above.
+
+- `FieldSpec` gains `value_type`, `choices`, `nullable`, `variant`, `group`, `widget_id`, `limits` and `step`. The
+  type hints decide `required`, `neutral_value`, `value_type`, `choices` and `topologies`; one row per field adds the
+  rest (`src/embodic/model/fields.py` `_ROWS`). The import fails when a leaf has no row or a row has no leaf, so the
+  table cannot drift from the dataclasses.
+- `widget_id` is the only join between a form widget and a field. The UI binds through it, never through the binding
+  keys written in screens.md (`screen_model_reconciliation.md`).
+- `embodic.model.schema` is a new module: one walk over the dataclass annotations gives the leaves, JSON conversion
+  (`to_json`, `from_json`, `design_from_json`) and pointer helpers (`flatten`, `unflatten`, `field_key`, `pattern_of`).
+- A field of one tagged-union member is keyed `<pointer>#<tag>` (for example `/outline/board/radius_mm#circle`).
+
+Constants are not fields. `/schema_version` (`Literal[1]`), `/winding/kind` (the topology tag) and
+`/analysis/edge_correction` (`Literal["off"]`) are one-value literals. They appear in the project file and in
+`design_hash`, but not in `FIELDS`, a draft or the provenance map. `DesignDraft.topology` sets `/winding/kind`.
 
 ### 2.4 Provenance (D-007, D-014, D-019)
 
@@ -1027,6 +1128,9 @@ above `io`, `outcome`, `physics` and `drc`. The generator-specific records live 
 `Layout.detail` is typed without an upward import.
 
 ```python
+from dataclasses import field
+
+
 class PrimitiveRole(StrEnum):
     SIDE = "side"
     END_TURN = "end_turn"
@@ -1049,6 +1153,9 @@ class Line:
     y2_mm: float
     width_mm: float  # 0 for outline geometry
     role: PrimitiveRole
+
+    def start_point(self) -> tuple[float, float]: ...
+    def end_point(self) -> tuple[float, float]: ...
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1241,21 +1348,106 @@ class Layout:
     detail: TopologyDetail  # generator-specific record; consumers other than the UI ignore it
     derived: tuple[Traceable[float], ...]  # feasibility-rail values shared by all topologies (track length, turns, ...)
     envelope_mm: tuple[float, float]  # r_min_cu, r_max_cu
-    layout_hash: str  # "sha256:<hex>" over the canonical primitive list
+    layout_hash: str = field(init=False)  # "sha256:<hex>"; never passed in
+
+    def __post_init__(self) -> None:
+        """Sets layout_hash = compute_layout_hash(paths, vias, pads, outline), so no Layout carries a foreign hash."""
 
     def arrays(self) -> LayoutArrays: ...
 
 
+COINCIDENCE_MM: float = 1e-6  # embodic.geometry.paths; the one continuity tolerance (REQ-N-21, UT-GEO-01, IT-21)
+
+
+def joint_gaps_mm(prims: Sequence[Primitive]) -> tuple[float, ...]: ...
+def is_continuous(prims: Sequence[Primitive], tolerance_mm: float = COINCIDENCE_MM) -> bool: ...
+def hypot_mm(dx: float, dy: float) -> float:
+    """Xcoil's own hypot, sqrt(dx*dx + dy*dy) (engine.js l.77). Faithful ports use it, not math.hypot."""
 def primitive_length_mm(p: Primitive) -> float: ...
-def discretise(p: Primitive, max_segment_mm: float) -> FloatArray:
-    """Polyline points (K, 2) of a primitive; port of Xcoil discretize with the same segment rule (GR-17)."""
+def path_length_mm(prims: Sequence[Primitive]) -> float:
+    """Xcoil primsLength: a left-to-right sum, so the last bit matches Xcoil."""
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Segment:
+    """One chord of a discretised chain (Xcoil keys x1, y1, x2, y2, s, len, w, kind, pi)."""
+
+    x1_mm: float
+    y1_mm: float
+    x2_mm: float
+    y2_mm: float
+    s_mm: float  # path position of the chord midpoint
+    length_mm: float  # primitive length / piece count, not the chord length
+    width_mm: float
+    role: PrimitiveRole
+    prim_index: int
+
+
+def discretise_path(prims: Sequence[Primitive], max_segment_mm: float = 0.5,
+                    max_angle_rad: float = 5 * math.pi / 180, max_sagitta_mm: float = 0.001) -> tuple[Segment, ...]:
+    """Chords of a chain with their path positions; port of Xcoil discretize with its three limits (GR-17)."""
+def discretise(p: Primitive, max_segment_mm: float, max_angle_rad: float = 5 * math.pi / 180,
+               max_sagitta_mm: float = 0.001) -> FloatArray:
+    """Polyline points (K, 2) of one primitive: the chord end points of discretise_path."""
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Transform:
+    """Mirror about the line through the origin at mirror_axis_rad (when set), then rotate (Xcoil tf and thetaG)."""
+
+    rotation_rad: float = 0.0
+    mirror_axis_rad: float | None = None
+
+
+def transform(prims: Sequence[Primitive], tf: Transform) -> tuple[Primitive, ...]:
+    """Xcoil tfPrim on every primitive, in polar form as Xcoil computes it."""
 def reverse_path(prims: Sequence[Primitive]) -> tuple[Primitive, ...]: ...
 def rotate(prims: Sequence[Primitive], angle_rad: float) -> tuple[Primitive, ...]: ...
 def mirror(prims: Sequence[Primitive], axis_angle_rad: float) -> tuple[Primitive, ...]: ...
 def build_outline(spec: OutlineSpec, envelope_mm: tuple[float, float]) -> BoardOutline: ...
 def compute_layout_hash(paths: Sequence[CopperPath], vias: Sequence[Via], pads: Sequence[Pad],
                         outline: BoardOutline) -> str: ...
+
+
+# embodic.geometry.distance and embodic.geometry.grid: Xcoil ptSegDist, segSegDist, makeGrid, gridQuery (l.563-596)
+class Chord(Protocol):
+    x1_mm: float
+    y1_mm: float
+    x2_mm: float
+    y2_mm: float
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ChordGrid:
+    cell_mm: float
+    cells: Mapping[tuple[int, int], tuple[int, ...]]  # chords binned by midpoint, in Xcoil's first-use order
+
+
+def point_segment_distance_mm(px_mm: float, py_mm: float, s: Chord) -> float: ...
+def segment_segment_distance_mm(a: Chord, b: Chord) -> float: ...
+def make_grid(chords: Sequence[Chord], cell_mm: float) -> ChordGrid: ...
+def grid_query(grid: ChordGrid, x_mm: float, y_mm: float, radius_mm: float) -> tuple[int, ...]: ...
 ```
+
+Revision 2026-10-05 (U-D2, U-M1b and U-V1 reports).
+
+- `Layout` computes `layout_hash` in `__post_init__` from its own copper (`src/embodic/geometry/layout.py`). A caller
+  cannot pass a hash, so a Layout cannot carry the hash of other copper. `derived` and `detail` arrive with U-M2d, as
+  planned.
+- `Segment`, `discretise_path`, `Transform`, `transform`, `hypot_mm` and `path_length_mm` are U-M1b additions. Physics
+  (U-M2e) integrates over `discretise_path` chords, and the serpentine and wave ports (U-M3a, U-M3b) need `Transform`
+  and `hypot_mm` to reproduce Xcoil bit for bit.
+- The Xcoil distance and grid ports live in `embodic.geometry.distance` and `embodic.geometry.grid`, not in `drc`.
+  The DRC uses its own exact kernels (§7) and imports neither. Generators that port Xcoil code which calls
+  `segSegDist` or `gridQuery` import them from `geometry`.
+- Continuity tolerance. `COINCIDENCE_MM = 1e-6` mm is the only continuity tolerance: UT-GEO-01, REQ-F-01, REQ-N-21,
+  the DRC node rule in §7 and Agent 4's IT-21 use it. Xcoil's own GEO-01 test uses the same bound
+  (`/home/claude/serpentine/TEST_PLAN.md` l.41, `src/tests.js` l.36; `verified` by reading, 2026-10-05). The 1e-9 mm
+  in Phase 1 port notes §6 and in `tests/independent/m1/continuity.py` (`CONTINUITY_TOL_MM`) is stricter than the
+  requirement, so a gap between 1e-9 mm and 1e-6 mm would be reported there and accepted here. Agent 4 aligns the
+  instrument to 1e-6 mm and may log the largest gap as information (request through Fable). The mirror and centre-via
+  criteria of REQ-F-01 (1e-9 mm) are separate checks and stay.
+
 
 ## 6. `embodic.generators`: plug-in interface (ADR-0012)
 
@@ -1294,7 +1486,23 @@ def build_layout(design: DesignParameters, registry: Registry) -> Layout | Unbui
 ## 7. `embodic.drc`
 
 Rule D-006: violation when measured clearance < rule - `DRC_EPSILON_MM`. Turns of one spiral share a net and still keep
-clearance; only primitives adjacent in a path and the via or pad that terminates a path end are exempt.
+clearance. Connectivity exempts exactly the pairs below (revision 2026-10-05, U-M1c report; implemented in
+`src/embodic/drc/items.py` `exempt_pairs` and `src/embodic/drc/engine.py` `_check`). Every other pair is checked,
+including same-net pairs.
+
+1. Neighbours in one path. Each primitive that is not a fillet or a taper starts a new main index; a fillet or taper
+   takes the main index of the primitive before it (Xcoil `mi`, `engine.js` `drcObjects` l.1697). Two primitives of one
+   path are exempt when their main indices differ by at most 1. A corner's fillets and tapers are therefore exempt
+   from both primitives the corner joins. Xcoil's wider exemption of pairs closer than `1.6 * (wMax + s)` along the
+   path is not adopted (`tests/independent/README.md`, known limits).
+2. A path end on a land. A via and the end group of a path whose end point lies within `pad_mm / 2` of the via
+   centre. A pad and the end group of a path whose end point lies inside the pad outline, when the pad is on the
+   path's layer or on all layers. The end group is the terminating main primitive with its fillets and tapers.
+3. Path ends meeting at a node. The end groups of two different paths on one layer whose end points lie on one via,
+   on one pad, or within `COINCIDENCE_MM` of each other.
+4. A pad and a via whose centre lies inside the pad.
+
+Rules 2 to 4 apply only when both objects carry the same net. Rule 1 needs no net test, because a path has one net.
 
 ```python
 DRC_EPSILON_MM: float = 1e-6
@@ -1311,6 +1519,10 @@ class DrcCheckKind(StrEnum):
     MIN_WIDTH = "min_width"
     MIN_DRILL = "min_drill"
     ANNULAR_RING = "annular_ring"
+
+    @property
+    def issue_code(self) -> str:
+        """Catalogue code of the kind, f"DRC_{name}" (DRC_TRACE_TRACE ...); U-M1c addition."""
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1359,6 +1571,39 @@ def min_distance_line_line(a: FloatArray, b: FloatArray) -> FloatArray: ...
 def min_distance_line_arc(a: FloatArray, b: FloatArray) -> FloatArray: ...
 def min_distance_arc_arc(a: FloatArray, b: FloatArray) -> FloatArray: ...
 ```
+
+Clearance rule per check kind (decided 2026-10-05, U-D2; `REQUIRED_MM` in `src/embodic/drc/report.py`). A pair that
+contains a via uses `via_clearance_mm`, and so does a pair of two pads. Trace to trace and pad to trace use
+`trace_clearance_mm`.
+
+| Kind | Pair | Rule field |
+|---|---|---|
+| TRACE_TRACE | trace and trace | `trace_clearance_mm` |
+| PAD_TRACE | pad and trace | `trace_clearance_mm` |
+| TRACE_VIA | trace and via | `via_clearance_mm` |
+| VIA_VIA | via and via | `via_clearance_mm` |
+| PAD_PAD | pad and pad, pad and via | `via_clearance_mm` |
+| COPPER_EDGE | trace, via or pad and a board edge or cutout | `edge_clearance_mm` |
+| COPPER_HOLE | trace, via or pad and a screw hole | `hole_clearance_mm` |
+| MIN_WIDTH, MIN_DRILL, ANNULAR_RING | one object | `min_trace_width_mm`, `min_drill_mm`, `min_annular_ring_mm` |
+
+The split is an `assumption`. Xcoil compares every pair with one clearance `p.clearance` (`engine.js` `runDrc`
+l.756-775; `verified` by reading, 2026-10-05), and no fabrication source for separate values is cited yet. Golden runs
+set both clearances to Xcoil's value, so the split cannot change a golden verdict. The comment above `REQUIRED_MM` does
+not mention TRACE_VIA; the table is the authority.
+
+Pad to pad and pad to via (ratified). The clearance is the centre distance minus the circumscribed radius of each land
+(Xcoil `padRadius` and `padsClearance`, `engine.js` l.1818). The result is exact for round lands and smaller than the
+true clearance for square, rectangular and oblong pads, so it never under-reports. It can report a pair whose true
+clearance passes. PR-01's no-false-positive clause excludes these pairs (test_plan.md §5.2).
+
+What `DrcCheckSummary` covers. `measured_min_mm` is the least clearance over the pairs the narrow phase measured.
+The broad phase keeps every pair that can lie closer than the largest pair rule plus `DRC_EPSILON_MM` (`verified` by
+reading `candidate_pairs` in `src/embodic/drc/engine.py`; UT-DRC-08 compares it with an exhaustive check), so below that
+bound the value is the true minimum of that kind. Above it, the value is an upper bound of the true minimum and the true
+minimum still exceeds the bound, so no verdict depends on it. `None` means no pair of that kind came within the bound.
+`pairs_checked` counts measured pairs and depends on `use_symmetry`. Golden comparisons of summary values apply only
+below the bound. For MIN_WIDTH, MIN_DRILL and ANNULAR_RING the summary covers every object.
 
 ## 8. `embodic.physics`
 
@@ -1490,6 +1735,25 @@ Rules:
 - The published JSON Schema `src/embodic/io/schema/project.v1.schema.json` (Draft 2020-12) is validated against every
   example and fixture in tests (UT-IO-03); the runtime loader is hand-written and typed.
 
+Angles (decided 2026-10-05, U-D2, U-M2a report). The file stores degrees under `_deg` names, as §0 says and as the
+example above shows. The model stores radians under `_rad` names (`src/embodic/model/fields.py`). `embodic.io` converts
+value and name together at the boundary: every field whose `unit` is `Unit.RAD` maps `<stem>_rad` to `<stem>_deg`, and
+the file's provenance map uses the file names. The map comes from `FIELDS`, not from a hand list. U-M2f owns the
+converter with `embodic.units.deg_to_rad` and `rad_to_deg`. `canonical_json` writes the file form, so `design_hash`
+hashes the degrees the file stores.
+
+The reasons for degrees are readability (`15.0`, not `0.2617993877991494`) and Xcoil, whose parameters are degrees
+(`startAngleDeg`, `outlineRotationDeg`, `engine.js` l.31 and l.57). `checks/angle_round_trip.py` measured the cost on
+the 72,001 values from -360 to 360 in steps of 0.01 and on 200,000 random values (`verified (run)`, CPython 3.11.15,
+2026-10-05):
+
+- Save, load, save changed no saved value in either set, so REQ-F-15's byte-identical round trip and the hash hold.
+- The first save of a typed value prints a longer decimal for 8,496 of the 72,001 grid values. For example, -359.7
+  typed in the UI is saved as -359.70000000000005. That is cosmetic, and the next round trip keeps it unchanged.
+- `math.radians(d)` differs from Xcoil's `d * Math.PI / 180` (`engine.js` l.171, l.1507) by 1 ulp for 20,170 of the
+  grid values. The units module keeps `math.radians`: the difference is far inside the 1e-6 mm path tolerance of
+  GR-20 and GR-21, and Xcoil's expressions would print a longer decimal on first save twice as often (17,734 values).
+
 ```python
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ProjectFile:
@@ -1531,7 +1795,23 @@ def load_example(example_id: str) -> tuple[ExampleRef, DesignParameters]: ...
 ### 9.2 Board dump (Agent 3 format, frozen here as v1)
 
 The format of `docs/phase1/software/calculation_flow_and_port_notes.md` §7.5 is adopted as `embodic.board-dump` v1
-without field changes. Agent 4's independent checks and the golden harness read it.
+with the two changes below. Agent 4's independent checks and the golden harness read it. `BOARD_DUMP_SCHEMA` in
+`src/embodic/io/board_dump.py` lists every key with its meaning, so a second reader needs nothing else.
+
+Revision 2026-10-05 (U-D2, U-M1b and U-V1 reports):
+
+- `layers[]` has no PCB-tool layer-name key. Phase 1 §7.5 listed one; MT-07 forbids the tool's name in shipped files
+  (D-009), and U-M1b's writer omits the key (DEF-M1b-02). A layer record is `{index, name, z, copper_t, role, pair,
+  phase}`.
+- Each `circuits[]` record names its phase in the key `phase`, an integer with the encoding of `primitives[].phase`
+  (0 = A, 1 = B, 2 = C). Phase 1 §7.5 said "per phase" without naming the key (DEF-V1-02).
+- Interim content, as U-M1b wrote it: embodic writes `params`, `params_sha256` and `drc` as null, layer `copper_t`,
+  `role`, `pair` and `phase` as null, object `kind` as null, via `phase` as null and `label` as "", and circuit
+  `terminals` as `{plus: null, minus: null}`. A Layout does not carry these values yet. A reader treats null as
+  "not provided", never as zero.
+- `write_board_dump(layout, path, *, case_id)` is U-M1b's interim signature. U-M2f adds the keyword `design`
+  to fill `params` and `params_sha256` (`work_breakdown.md` §1). `drc` stays null until §13 point 4 fixes its shape for
+  per-kind rules.
 
 Number encoding, shared by board dumps and golden fixtures (revision 2026-10-04, U-M1d deviations ratified):
 
@@ -1547,8 +1827,16 @@ that Xcoil's builder returns (see test_plan.md §3, "Layout dumps"). The mapping
 `embodic.board-dump` v1 is Python code owned by U-M1b, so the mapping is tested where the reader lives.
 
 ```python
-def write_board_dump(layout: Layout, design: DesignParameters, drc: DrcReport | None, path: Path,
-                     *, case_id: str) -> None: ...
+BOARD_DUMP_SCHEMA: Mapping[str, str]  # key -> meaning, for writers and second readers
+
+
+def dump_layout(layout: Layout, *, case_id: str, design: DesignParameters | None = None) -> dict[str, JsonValue]:
+    """Board dump as plain JSON data. `design` arrives with U-M2f; without it params and params_sha256 are null."""
+def encode_board_dump(dump: Mapping[str, JsonValue]) -> str:
+    """Canonical text: sorted keys, one-space indent, tagged non-finite numbers, trailing newline."""
+def decode_board_dump(text: str) -> dict[str, JsonValue]:
+    """Parses and decodes non-finite tags; a bare NaN or Infinity token or another format raises ValueError."""
+def write_board_dump(layout: Layout, path: Path, *, case_id: str, design: DesignParameters | None = None) -> None: ...
 def read_board_dump(path: Path) -> Mapping[str, JsonValue]:
     """Returns the parsed JSON with non-finite numbers decoded ({"$f": "inf"} -> math.inf)."""
 ```
@@ -1889,9 +2177,16 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 ## 13. Open interface points
 
-1. `SerpentineWindingSpec` omits Xcoil `stackMode = perPhase` and `boardGap` (multi-board stacks). Fable or the user
-   decides whether multi-board serpentine stacks enter Phase 2 (requirements.md Q-3).
+1. `SerpentineWindingSpec` omits Xcoil `stackMode = perPhase` and `boardGap` (multi-board stacks). Decided since: D-016
+   ports the multi-board option (revision 2026-10-05). The contract change is still open: the two fields, and how a
+   Layout represents one board per phase. Agent 6 writes it before U-M3a starts; screens.md already has
+   `param-stack-mode` and `param-board-gap` for it (`screen_model_reconciliation.md`).
 2. Physics kernel argument lists for EQ-12, EQ-14, EQ-16, EQ-17, EQ-20 follow the Phase 1 registry variables. Agent 2's
    v1 specification (U-S2) may change them before M2; the change goes through Fable and updates this file.
 3. Whether Xcoil's serpentine analysis path (`engine.js` `analyze`, l.880-1017) and the generic element path
    (`analyzeElements`, l.1846) give the same EMF for the same copper is `unresolved`; GR-22 measures it (test_plan.md).
+4. Board dump v2 (added 2026-10-05, U-M1b report). v1 cannot say three things: a Member with several paths (v1 writes
+   one `members[]` entry per path, so the grouping of paths into one route is lost), the polarity of a path (the
+   GR-19 mapper writes `polarity=0` because Xcoil does not return it), and the DRC record for per-kind rules (v1 `drc`
+   has one `rule.clearance`). Agent 4's readers and the golden harness need all three before M3 compares ported
+   boards. Agent 6 specifies v2 with Agent 4 before U-V3; until then embodic writes v1.

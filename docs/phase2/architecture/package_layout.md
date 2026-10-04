@@ -16,6 +16,13 @@ Revision 2026-10-04 (U-D1, corrections from the W0 pilot):
 - §5. The numpy pin is 2.4.6 (DEF-M1a-03). hatchling joins the `dev` extra. The extras `desktop` and `desktop-dev` are
   ratified (U-M1a deviation).
 
+Revision 2026-10-05 (U-D2, corrections from the W1 and W2 reports):
+
+- §1. `geometry/` and `drc/` list the merged modules. The Xcoil distance and grid ports (`geometry/distance.py`,
+  `geometry/grid.py`) live in `geometry`, not in `drc` (U-M1b report). `model/schema.py` is added (U-M2a report).
+- §1. Test folders follow a naming rule that keeps every top-level test package name unique and untaken (U-M1y, MT-08).
+  The planned golden and Qt test folders are renamed to fit it, and `tests/unit/io` became `tests/unit/embodic_io`.
+
 ## 1. Repository tree
 
 ```
@@ -37,17 +44,22 @@ embodic/
                                  serpentine.py wave.py exporters.py cli.py (work_breakdown.md §4)
     paths.py                     resource_root() via importlib.resources
     model/                       vocabulary.py (TopologyKind, Phase, ViaSpan, ConnectionTopology; U-M1b) design.py rotor.py stackup.py layers.py vias.py connection.py outline.py
-                                 operating.py materials.py analysis_options.py drc_rules.py
-                                 winding_specs.py fields.py draft.py provenance.py validate.py
+                                 operating.py materials.py analysis_options.py drc_rules.py (DrcRules, validate_drc_rules)
+                                 winding_specs.py schema.py (type-hint walk: leaves, JSON conversion, pointers)
+                                 fields.py draft.py provenance.py validate.py
     results/                     status.py traceable.py registry.py analysis_result.py formatting.py
     winding/                     feasibility.py star_of_slots.py winding_factors.py plan.py
-    geometry/                    primitives.py transforms.py discretise.py paths.py circuit.py layout.py
-                                 arrays.py outline.py fasteners.py hashing.py details.py (TopologyDetail records)
+    geometry/                    merged (U-M1b): primitives.py transforms.py discretise.py paths.py (CopperPath,
+                                 COINCIDENCE_MM) circuit.py layout.py arrays.py hashing.py distance.py grid.py
+                                 (Xcoil ptSegDist, segSegDist, makeGrid, gridQuery ports)
+                                 planned (U-M2d): outline.py fasteners.py details.py (TopologyDetail records)
     generators/                  __init__.py (GENERATORS, build_layout)  base.py (Generator protocol, details)
       spiral/                    artwork.py turns.py placement.py vias.py interconnect.py generate.py
       serpentine/                port of Xcoil serpentine (module split mirrors engine.js sections)
       wave/                      port of Xcoil wave: involute.py jog.py chord.py overlap.py generate.py
-    drc/                         rules.py distance.py broad_phase.py symmetry.py check.py
+    drc/                         merged (U-M1c): report.py (vocabulary, REQUIRED_MM, CancelToken) items.py (item table,
+                                 exemptions) kernels.py (exact line and arc kernels, pad kernels) engine.py (run_drc,
+                                 grid broad phase) symmetry.py
     physics/                     magnets.py field.py edge.py emf.py circuit_solution.py constants.py
                                  resistance.py losses.py inductance.py thermal.py mass.py drive.py analyse.py
     outcome.py                   ComputeOutcome, VersionInfo (shared by api, io, ui, cli)
@@ -75,13 +87,14 @@ embodic/
     evidence/                    equations.v1.json, evidence.v1.json, synced copies (tools/sync_registry.py)
   tests/
     conftest.py                  markers: req, eq, slow, manual; offscreen Qt for tests/ui
-    unit/<package>/              Agent 3 units
+    unit/<package>/              Agent 3 units; embodic_io/ for embodic.io (io is a stdlib name)
+    unit/ui/<area>/              view-model tests; unit/ui/ holds an __init__.py (U-M4b)
     golden/harness/              comparators, tolerance map, non-finite decoding
-    golden/data/<area>/          committed Xcoil dumps
-    golden/<area>/               comparison tests per area (m1_geometry, m1_drc, m1_layout, physics, serpentine, wave)
+    golden/data/<area>/          committed Xcoil dumps (no __init__.py)
+    golden/<milestone>_<area>/   comparison tests (m1_geometry, m1_drc, m1_layout, m2_physics, m3_serpentine, m3_wave)
     golden/expected_diffs/<area>.toml   one allow-list per owning unit
-    ui/<area>/                   pytest-qt tests
-    static/                      AST lints: MT-04 to MT-07, LG-01 to LG-08
+    ui/qt_<area>/                pytest-qt tests (qt_shell, qt_design, qt_results, qt_e2e)
+    static/                      AST lints: MT-04 to MT-08, LG-01 to LG-08
     independent/                 Agent 4 only
     performance/  packaging/
   tools/
@@ -96,6 +109,20 @@ embodic/
     build_bundle.py              PyInstaller one-folder attempt (stretch)
   docs/                          role folders; docs/install/INSTALL.md (English) and INSTALL_TH.md (Fable)
 ```
+
+Test package names (revision 2026-10-05, U-M1y). pytest registers a test folder that holds an `__init__.py`, and
+whose parent holds none, in `sys.modules` under the folder's bare name. W1's `tests/unit/io` replaced the stdlib `io`
+that way and broke numpy (decision log, U-M1y). The rule:
+
+1. A folder directly under `tests/unit/`, `tests/golden/` or `tests/ui/` is a top-level package. Its name is unique
+   across `tests/` and `src/` and is not a standard-library or installed module name. MT-08 enforces both on the real
+   tree, and `checks/check_contract.py` enforces them on the write paths in `work_breakdown.md`.
+2. A deeper test folder is a subpackage: its parent holds an `__init__.py`, written by the unit that owns the parent
+   (for example U-M2d for `tests/unit/generators/`, U-M2f for `tests/unit/property/`, U-M4b for `tests/unit/ui/`).
+3. Names that satisfy rule 1: `tests/unit/<package>` uses the embodic package name, prefixed `embodic_` when the name is
+   taken (`embodic_io`); golden comparison folders are `<milestone>_<area>`; Qt test folders are `qt_<area>`. Data
+   folders (`golden/data`, `golden/expected_diffs`) and the level folders (`tests/static`, `tests/packaging`,
+   `tests/performance`, `tests/bundle`, `tests/independent`) hold no `__init__.py`.
 
 Resource packaging risk (`unresolved`): hatchling `force-include` maps `resources/` into the wheel; whether an editable
 install (`pip install -e .`) exposes the same path is not tested. U-M1a's verify step checks
