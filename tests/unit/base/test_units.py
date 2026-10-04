@@ -127,3 +127,22 @@ def test_units_every_unit_has_a_display_form():
     assert displayed[Unit.DEGC] == "°C"
     assert displayed[Unit.ONE] == ""
     assert all(isinstance(text, str) for text in displayed.values())
+
+
+@pytest.mark.req("REQ-N-21")
+@pytest.mark.parametrize(
+    ("code", "display"),
+    [
+        ("um", "µm"),
+        ("W_per_m2_K", "W/(m²·K)"),
+        ("ohm_m", "Ω·m"),
+        ("per_K", "1/K"),
+        ("g_per_cm3", "g/cm³"),
+    ],
+)
+def test_units_property_input_units_exist(code, display):
+    """Catches DEF-M2a-01: plating (µm), convection (W/(m²·K)) and material overrides (Ω·m, 1/K, g/cm³) unitless.
+
+    The code is what a project file stores in a PropertyValue, so it is pinned; the display is the SI symbol.
+    """
+    assert Unit(code).display() == display

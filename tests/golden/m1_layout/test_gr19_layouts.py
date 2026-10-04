@@ -1,11 +1,13 @@
 """GR-19: Xcoil's raw layout of each topology, mapped to a Layout and an embodic board dump (REQ-F-40)."""
 
+import math
 from collections import Counter
 from typing import Any
 
 import pytest
 from harness import INTEGRATED, KERNEL_MM, GoldenCase, compare_prims, compare_scalar, compare_sequence, load_area
 
+from embodic.geometry.layout import Layout
 from embodic.geometry.primitives import path_length_mm
 from embodic.io.board_dump import decode_board_dump, dump_layout, encode_board_dump
 
@@ -76,3 +78,33 @@ def test_gr19_write_read_write_is_byte_identical(case: GoldenCase) -> None:
     """Catches number text that does not survive a read (-0.0, integers, long mantissas) or unsorted keys."""
     text = encode_board_dump(dump_layout(layout_from_xcoil(_raw(case)), case_id=case.case_id))
     assert encode_board_dump(decode_board_dump(text)) == text
+
+
+def _phase_paths_ending_on_vias(layout: Layout) -> list[tuple[str, str]]:
+    """(via net, path net) for every phase-copper path end inside a via land, the DRC exemption's geometry."""
+    interconnect = set(layout.circuit.interconnect_path_ids)
+    return [
+        (via.net, path.net)
+        for via in layout.vias
+        for path in layout.paths
+        if path.id not in interconnect
+        for point in (path.primitives[0].start_point(), path.primitives[-1].end_point())
+        if math.dist(point, (via.x_mm, via.y_mm)) <= via.pad_mm / 2
+    ]
+
+
+@pytest.mark.parametrize("case", CASES, ids=lambda c: c.case_id)
+def test_gr19_every_via_has_the_net_of_the_phase_paths_ending_on_it(case: GoldenCase) -> None:
+    """Catches DEF-M1c-01: vias named "A" while their paths are "PHASE_A", so DRC flags connected copper as overlap."""
+    ends = _phase_paths_ending_on_vias(layout_from_xcoil(_raw(case)))
+    assert ends, "no path ends on a via, so the check below would pass vacuously"
+    assert Counter((via_net, path_net) for via_net, path_net in ends if via_net != path_net) == Counter()
+
+
+@pytest.mark.parametrize("case", CASES, ids=lambda c: c.case_id)
+def test_gr19_interconnect_keeps_xcoil_net_names(case: GoldenCase) -> None:
+    """Catches a net fix that renames the star or delta interconnect (N, U, V, W, D0...) to a phase net."""
+    raw = _raw(case)
+    layout = layout_from_xcoil(raw)
+    xcoil_ic_nets = [o["net"] for layer in raw["layers"] for o in layer["objs"] if o["kind"] == "ic"]
+    assert [layout.paths[i].net for i in layout.circuit.interconnect_path_ids] == xcoil_ic_nets

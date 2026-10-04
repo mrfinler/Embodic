@@ -6,6 +6,8 @@ Usage, inside the project's virtual environment::
 
 Rules come from each layout's Xcoil parameters (one ``clearance`` for every clearance rule, as Xcoil applies it).
 The mapper sets ``symmetry=None``, so the shortcut cannot apply; the script prints the method to show it.
+``trace_via_net_mismatch`` counts overlapping (negative-clearance) TRACE_VIA hits by (path net, via net) where the
+two nets differ: copper that touches a via but is not exempt because its net name differs (DEF-M1c-01).
 """
 
 import argparse
@@ -23,7 +25,8 @@ sys.path.insert(0, str(GOLDEN))
 from harness import load_area  # noqa: E402
 from m1_layout.xcoil_map import layout_from_xcoil  # noqa: E402
 
-from embodic.drc import run_drc  # noqa: E402
+from embodic.drc import DrcCheckKind, DrcReport, run_drc  # noqa: E402
+from embodic.geometry.layout import Layout  # noqa: E402
 from embodic.model.drc_rules import DrcRules  # noqa: E402
 
 
@@ -32,6 +35,17 @@ def _cpu_model() -> str:
         if text.startswith("model name"):
             return text.split(":", 1)[1].strip()
     return platform.processor()
+
+
+def _trace_via_net_mismatch(layout: Layout, report: DrcReport) -> dict[tuple[str, str], int]:
+    hits: Counter[tuple[str, str]] = Counter()
+    for violation in report.violations:
+        if violation.kind is DrcCheckKind.TRACE_VIA and violation.measured_mm < 0:
+            ids = dict(obj.split("/")[0].split(":") for obj in violation.objects)
+            path_net, via_net = layout.paths[int(ids["path"])].net, layout.vias[int(ids["via"])].net
+            if path_net != via_net:
+                hits[(path_net, via_net)] += 1
+    return dict(hits)
 
 
 def main() -> int:
@@ -68,7 +82,8 @@ def main() -> int:
             f"{case.case_id}: layers={len(layout.copper_layers)} prims={prims} vias={len(layout.vias)} "
             f"pads={len(layout.pads)} method={report.method} symmetry_claim={layout.symmetry is not None} "
             f"median={statistics.median(seconds):.3f}s range={min(seconds):.3f}-{max(seconds):.3f}s runs={args.runs} "
-            f"checked={pairs} violations={report.violation_count} by_kind={kinds}"
+            f"checked={pairs} violations={report.violation_count} by_kind={kinds} "
+            f"trace_via_net_mismatch={_trace_via_net_mismatch(layout, report)}"
         )
     return 0
 

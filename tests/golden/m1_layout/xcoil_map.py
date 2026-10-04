@@ -67,6 +67,10 @@ def _phase(index: int | None) -> Phase | None:
     return PHASES[index] if index is not None and 0 <= index < len(PHASES) else None
 
 
+def _phase_net(phase: Phase | None) -> str:
+    return f"PHASE_{phase.value}" if phase else ""
+
+
 def _paths(raw: Mapping[str, Any]) -> tuple[CopperPath, ...]:
     paths: list[CopperPath] = []
     for layer in raw["layers"]:
@@ -77,7 +81,7 @@ def _paths(raw: Mapping[str, Any]) -> tuple[CopperPath, ...]:
                 CopperPath(
                     id=len(paths),
                     layer=layer["name"],
-                    net=obj.get("net") or (f"PHASE_{phase.value}" if phase else ""),
+                    net=obj["net"] if obj["kind"] == "ic" else _phase_net(phase),
                     primitives=tuple(prim_from_record(r) for r in obj["prims"]),
                     phase=phase,
                     element=element,
@@ -89,6 +93,9 @@ def _paths(raw: Mapping[str, Any]) -> tuple[CopperPath, ...]:
 
 def layout_from_xcoil(raw: Mapping[str, Any]) -> Layout:
     """Map ``xcoilRawLayout`` output to a Layout: one CopperPath per Xcoil object, in Xcoil's order.
+
+    Nets follow Xcoil's board export (engine.js l.2888-2907): phase copper, its links included, and every via are
+    ``PHASE_<name>`` of their phase index; interconnect objects keep Xcoil's net (N, U, V, W, D0...).
 
     Not mapped (Xcoil does not return them): the circuit's phase element lists, path polarity (0), via roles other
     than terminal (``TRANSFER``) and via layer spans (through, first to last layer).
@@ -107,7 +114,7 @@ def layout_from_xcoil(raw: Mapping[str, Any]) -> Layout:
             span=ViaSpan.THROUGH,
             layer_from=names[0],
             layer_to=names[-1],
-            net=_phase(v["phase"]).value if _phase(v["phase"]) else "",
+            net=_phase_net(_phase(v["phase"])),
         )
         for i, v in enumerate(raw["vias"])
     )
