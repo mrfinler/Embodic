@@ -80,3 +80,55 @@ balance, torque or efficiency drawn from geometry alone. **No blocker.** There a
 
 I additionally recommend asking for FEMM (free, Windows) on the user's machine, or accepting that field validation (IT-27)
 waits until Phase 3.
+
+## Re-verification 2026-10-04 (after the defect-fix round, commit 63716fc; decisions D-006 and D-007)
+
+**The recommendation stands: the Phase 1 draft is fit to present to the user for approval.** Both conditions of the first
+round are met:
+
+- **DEF-01** is closed by D-006. The DRC rule is now one rule across REQ-F-10, the port tolerances and PR-01/UT-DRC-03:
+  violation if the measured clearance is below rule − ε, with ε ≤ 1e-6 mm, and no slack.
+- **DEF-02** is closed by D-007. The badge now shows calculation trust; assumptions appear in a separate tag;
+  provenance is `measured` only when a source is named; re-typing a value changes nothing.
+
+Of the 17 first-round defects, 15 are verified as closed. Two minor ones are reopened:
+
+- **DEF-05**: one stale "source needed" remains, in `migration_mapping.md` F-29.
+- **DEF-09**: REQ-F-06(b) and UT-GEO-07 still use the old −6 … 0 % band. With the now-verified true-spiral reference,
+  that band would reject a correct generator for 18/16, N = 4 (−6.4 %).
+
+The fixes exposed five new defects:
+
+- **DEF-18 (major):** the EQ-05 edge-validity cap is binary.
+  - Effect: Ke and torque are `unresolved` on the default design. The two oracle designs (D08, D09) are capped too,
+    because their coils also span the magnet edges, so validation could never raise Ke.
+  - My estimate: the edge-zone error is about 1–3 % of Ke, small next to the ±8 % oracle tolerance.
+  - Verdict: the behaviour is correct under the rule as written. It is a defect neither of D-007 nor of the default
+    design; it is an under-specified validity check.
+  - Required before the results display and validity code are built: Agent 2 defines a quantified check (or an
+    edge-corrected field with the residual listed as a limitation), and the mockups are aligned to it.
+- **Minor:** DEF-19 (the O2 pre-registered geometry contradicts D09's published length; my true-spiral inversion favours
+  N = 8), DEF-20 (an example count in mockup 03), DEF-21 (PR-12 wording), DEF-22 (tag-membership wording differs
+  between the equation spec and ADR-0003).
+
+Blockers: **none**. Open: 7 (1 major, 6 minor) — all are document corrections or Phase-2-start specifications.
+
+### Residual limitations to state to the user (updates the list above)
+
+1. Limitations 1–4, 5 (meaning of "verified"), 7, 9 and 10 above are unchanged.
+2. **Status badges (replaces limitation 6).**
+   - The badge rule is decided (D-007): the badge shows how trustworthy the calculation is, and an "n assumptions"
+     list shows what the number rests on.
+   - Today most physics results would still show `inferred` at best (no validation has been run).
+   - Until DEF-18 is specified, Ke and torque of the default design show `unresolved`, because the coils reach the
+     magnet edges, where the 2-D field model is not valid.
+3. **DRC (D-006).** Embodic's check will be strict, with no 4 µm slack. Xcoil's own default design would fail it
+   (0.19901 mm against a 0.20 mm rule). The new generator must therefore place copper with a margin.
+4. **Oracle O2 turn count.** With the true-spiral length, the published D09 numbers favour 8 turns per coil per layer.
+   7 turns remain possible if the published length includes about 330 mm of inter-coil links per phase. This is still
+   `unresolved` until the D09 authors are contacted (UD-25).
+5. **D08 phase resistance.** A true spiral of D08's geometry is about 19 % shorter than the concentric-loop model D08
+   used (I confirmed this with my own construction). D08's 0.39 Ω is therefore a model value, not a target.
+6. **Mockups.** They now pass my overflow, language, contrast and result-format checks at all stated widths, including
+   the 880 × 600 KiCad window. They remain static, so behaviour (latency, screen reader, high contrast) can only be
+   checked after implementation.

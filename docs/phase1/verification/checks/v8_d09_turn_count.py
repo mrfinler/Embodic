@@ -37,3 +37,30 @@ for b in best[:8]: print('  ', b)
 for N in range(5, 10):
     c = [b for b in best if b[1] == N][:1]
     print(f'  best for N={N}:', c[0] if c else None)
+
+# --- Re-verification round (2026-10-04): same inversion, but the published 3244 mm is a real track length, so compare it
+# with the TRUE-spiral length (v10_true_spiral_length.py, verified equal to Agent 2's eq03_spiral_vs_loops.py) instead of
+# the concentric-loop closed form; the 171 mm^2 "covered area of the middle loop" keeps the loop-area definition.
+import importlib.util, io, contextlib
+_spec = importlib.util.spec_from_file_location('v10', __file__.replace('v8_d09_turn_count.py', 'v10_true_spiral_length.py'))
+_v10 = importlib.util.module_from_spec(_spec)
+with contextlib.redirect_stdout(io.StringIO()): _spec.loader.exec_module(_v10)
+best2 = []
+for N in range(5, 11):
+    for Ri10 in range(200, 300, 2):
+        for Ro10 in range(420, 500, 2):
+            Ri, Ro = Ri10 / 10, Ro10 / 10; As = []
+            ok = True
+            for i in range(N):
+                r = loop(Ro, Ri, i)
+                if r is None: ok = False; break
+                As.append(r[1])
+            if not ok: continue
+            Lsp = _v10.spiral(Ro, Ri, wd, Q, N)[0]
+            Amid = As[N // 2] if N % 2 else 0.5 * (As[N // 2 - 1] + As[N // 2])
+            best2.append((abs(Lsp - 405.5) / 405.5 + abs(Amid - 171) / 171, N, Ri, Ro, round(Lsp, 1), round(Amid, 1)))
+best2.sort()
+print('TRUE-SPIRAL inversion, best per N (err, N, R_i0, R_o0, spiral length mm/coil-layer, mid-loop area mm^2):')
+for N in range(5, 11):
+    c = [b for b in best2 if b[1] == N][:1]
+    print(f'  N={N}:', c[0] if c else None)

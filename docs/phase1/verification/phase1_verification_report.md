@@ -459,3 +459,17 @@ python3 docs/phase1/verification/checks/v8_d09_turn_count.py       # indicative 
 pdftotext -layout -f N -l N <pdf> - ; pdftoppm/pdfimages + Read (equation renders) ; WebFetch (KiCad, PyPI, NBS) ;
 curl https://pypi.org/pypi/<pkg>/json ; pip download --no-deps kicad-python==0.8.0
 ```
+
+---
+
+## Re-verification round 2026-10-04 (pointer)
+
+After the owners' fixes (commit 63716fc, decisions D-006 and D-007) I re-checked every defect against the current files.
+Results and evidence: `defect_list.md` § "Re-verification" — 15 closed (verified), 2 reopened (DEF-05, DEF-09; minor),
+5 new (DEF-18 major: binary EQ-05 edge-validity cap; DEF-19…22 minor). New scripts: `checks/v9_edge_zone_share.js`,
+`checks/v10_true_spiral_length.py` (independently reproduces Agent 2's true-spiral lengths to 0.001 mm),
+`checks/v11_result_audit_all_mockups.py` (value + unit + one badge + EQ link/tag + "n assumptions" on every result in all
+8 mockups: 40/40 complete); v7 re-run (0 px overflow at all stated widths; 05b at 880 × 600 fits); v8 extended with a
+true-spiral inversion (D09: N = 8 favoured). `oracle_cases_draft.json` and `equation_registry_draft.json` parse; O1/O2
+entries are internally consistent except the O2 primary geometry (DEF-19). Gate: recommendation stands
+(`phase1_gate_recommendation.md` § "Re-verification").
