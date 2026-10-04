@@ -1,0 +1,8 @@
+{"format": "embodic.golden-cases", "format_version": 1, "area": "m1_layout", "cases": [
+  {"id": "layout-serpentine-default", "fn": "xcoilRawLayout", "note": "Xcoil serpentine with its default parameters",
+   "tags": ["layout", "serpentine", "default-params"], "inputs": {"params": {"topology": "serpentine"}}},
+  {"id": "layout-sector-default", "fn": "xcoilRawLayout", "note": "Xcoil sector coils with their default parameters",
+   "tags": ["layout", "sector", "default-params"], "inputs": {"params": {"topology": "sector"}}},
+  {"id": "layout-wave-turns-2", "fn": "xcoilRawLayout", "note": "Xcoil wave with default parameters and turns 2",
+   "tags": ["layout", "wave", "default-params"], "inputs": {"params": {"topology": "wave", "turns": 2}}}
+]}
