@@ -93,9 +93,9 @@ def test_registry_lookups_by_eq_ev_and_topology(packaged):
 def test_registry_is_frozen_after_load(packaged):
     """Catches a registry that callers can mutate, which would let one result change another's badge."""
     with pytest.raises(TypeError):
-        packaged.equations["EQ-01"] = packaged.equations["EQ-02"]  # type: ignore[index]
+        packaged.equations["EQ-01"] = packaged.equations["EQ-02"]
     with pytest.raises(dataclasses.FrozenInstanceError):
-        packaged.passed_tests = frozenset({"x"})  # type: ignore[misc]
+        packaged.passed_tests = frozenset({"x"})
 
 
 @pytest.mark.req("REQ-T-16")

@@ -193,4 +193,4 @@ def test_traceable_is_frozen(packaged):
     """Catches a mutable result whose badge a view could overwrite."""
     result = traced("q", 1.0, Unit.ONE, eq_ids=["EQ-01"], inputs=[], registry=packaged)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        result.status = Status.VERIFIED  # type: ignore[misc]
+        result.status = Status.VERIFIED
