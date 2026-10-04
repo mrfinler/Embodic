@@ -50,6 +50,8 @@ extend-exclude = ["docs"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "C90", "D", "RUF"]
+# REQ-L-07 formats negative numbers with U+2212; the multiplication sign appears in dimensions such as 20×6×2 mm.
+allowed-confusables = ["−", "×"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10
