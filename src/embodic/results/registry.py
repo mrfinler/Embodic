@@ -161,7 +161,7 @@ def load_registry(root: Path | None = None) -> Registry:
         json.loads((folder / name).read_text(encoding="utf-8"))
         for name in (EQUATIONS_FILE, EVIDENCE_FILE, MANIFEST_FILE)
     )
-    hashes = [manifest["files"][name]["sha256"][:12] for name in (EQUATIONS_FILE, EVIDENCE_FILE)]
+    hashes = [manifest["files"][name]["copy_sha256"][:12] for name in (EQUATIONS_FILE, EVIDENCE_FILE)]
     return parse_registry(equations, evidence, version=f"v1+{hashes[0]}.{hashes[1]}")
 
 

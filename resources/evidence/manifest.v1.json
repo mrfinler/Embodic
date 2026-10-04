@@ -3,11 +3,15 @@
  "files": {
   "equations.v1.json": {
    "source": "docs/phase2/engineering/equation_registry.json",
-   "sha256": "39719be2b1a4782304c25001d8e9db1cc99d5f28370498dac51ae17639ca1960"
+   "filter": "verbatim",
+   "source_sha256": "39719be2b1a4782304c25001d8e9db1cc99d5f28370498dac51ae17639ca1960",
+   "copy_sha256": "39719be2b1a4782304c25001d8e9db1cc99d5f28370498dac51ae17639ca1960"
   },
   "evidence.v1.json": {
    "source": "docs/phase2/evidence/evidence_register.json",
-   "sha256": "25e9899ad95cb29b83717d585dcff2055238e1a79a691b0de663ad297db484f6"
+   "filter": "phase2_scope",
+   "source_sha256": "25e9899ad95cb29b83717d585dcff2055238e1a79a691b0de663ad297db484f6",
+   "copy_sha256": "449673959dd1e5acad325035716acd1731613a56c291040f1deee25a9ff448d2"
   }
  }
 }

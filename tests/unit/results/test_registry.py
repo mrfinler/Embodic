@@ -30,7 +30,7 @@ EC05_UNTYPED_IN_V1 = [
 def test_registry_packaged_counts_and_versions(packaged):
     """Catches a loader that drops entries or a version not tied to the synced files."""
     assert len(packaged.equations) == 30
-    assert len(packaged.evidence) == 94
+    assert len(packaged.evidence) == 86  # the phase2_scope entries of the 94 in the source register
     assert re.fullmatch(r"v1\+[0-9a-f]{12}\.[0-9a-f]{12}", packaged.version)
     assert packaged.passed_tests == frozenset()
 
