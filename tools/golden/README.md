@@ -140,10 +140,16 @@ Comparators return a `Comparison`. Its verdict is computed from its diffs. It is
 - The `golden_report` fixture provides `check(case_id, comparison)`. It raises on a mismatch, and logs expected and
   indeterminate results in a terminal summary section.
 
-A typical golden test (U-M1b's, shown as an example):
+A typical golden test (U-M1b's, shown as an example). Every test needs a REQ marker or the trace matrix gate fails
+(TR-02); a module-level `pytestmark` covers a file whose tests serve one requirement:
 
 ```python
+import pytest
+
 from harness import KERNEL_MM, apply_allow_list, compare_scalar, load_allow_list, load_area, EXPECTED_DIFFS_DIR
+
+pytestmark = pytest.mark.req("REQ-…")
+
 
 def test_primitive_length_matches_xcoil(golden_report):
     allow = load_allow_list(EXPECTED_DIFFS_DIR / "m1.toml")

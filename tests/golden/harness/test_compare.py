@@ -26,6 +26,8 @@ from harness import (
     near_threshold,
 )
 
+pytestmark = pytest.mark.req("REQ-F-10")
+
 
 @dataclass(frozen=True)
 class _Line:

@@ -10,6 +10,8 @@ import pytest
 
 from harness import DATA_DIR, EXACT, Verdict, compare_sequence, decode_nonfinite, load_area
 
+pytestmark = pytest.mark.req("REQ-F-10")
+
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DUMPER = REPO_ROOT / "tools" / "golden" / "dump_xcoil.mjs"
 M1_CASES = REPO_ROOT / "tools" / "golden" / "cases" / "m1.json"

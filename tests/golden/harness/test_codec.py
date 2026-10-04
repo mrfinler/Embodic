@@ -9,6 +9,8 @@ import pytest
 
 from harness import DATA_DIR, dumps, load_case, loads
 
+pytestmark = pytest.mark.req("REQ-F-40")
+
 
 def _same(a: object, b: object) -> bool:
     """Structural equality that treats NaN as equal to NaN and tells -0.0 from 0.0."""

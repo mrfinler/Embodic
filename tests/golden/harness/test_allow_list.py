@@ -17,6 +17,8 @@ from harness import (
     load_allow_list,
 )
 
+pytestmark = pytest.mark.req("REQ-F-10")
+
 ENTRY = """
 schema_version = 1
 
