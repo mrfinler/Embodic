@@ -141,7 +141,12 @@ s 0.8, 12/10: maxTurns = 0 (parallel and radial sides); r_i 16 → 1 (parallel);
 p.57). `verified (reproduced)`.
 
 **C6 — star-of-slots belt-edge bug.** Same command. `12/14 ok=false … counts 5,4,3`; `24/14 9,8,7`; `24/22 9,6,9`;
-`24/26 7,9,8`; 12/10 and 18/14 ok. `balancedSectorList(14 poles) = 3, 6, 9, 15, 18, 21, 27, 30` (12 and 24 missing). My
+`24/26 7,9,8`; 12/10 and 18/14 ok. **Caveat (DEF-14, Agent 4 `v2_engine_star_of_slots.js`):** 12/10 — the O1 (D08)
+configuration — also has **six phasors exactly on belt edges** (raw belt-index values 1.0000000000000011, 2.0000000000000000,
+3.0000000000000000, 4.0000000000000036 …); it passes in Xcoil only because these happen to round consistently. A port that
+mimics the floating-point expression could flip 12/10 on another platform or libm. **The Python port must use exact
+arithmetic for every Q/2p**: phasor index (p·k) mod Q as an integer and belt membership decided with integers/`Fraction`
+and one fixed tie rule (half-open belts [c − 30°, c + 30°)), never with floating-point angles. `balancedSectorList(14 poles) = 3, 6, 9, 15, 18, 21, 27, 30` (12 and 24 missing). My
 independent script `python3 checks/kw.py` finds all of these balanced and reproduces D08's 12/10 pattern "AabBCcaABbcC"
 (D08 p.36 Fig. 3.7). `verified (reproduced)`.
 
@@ -179,3 +184,8 @@ unvalidated; used only to rank.
 
 Note for Agent 3/6: "reuse" means the *equation and its implementation logic* passed this check; the Python port must
 re-run C1–C9 as regression tests with the same tolerances (EQ tables) before Phase 2 sign-off.
+
+---
+
+**Revision 2026-10-04 (defect fixes):** DEF-14 (C6: 12/10 has six phasors on belt edges and passes only by consistent float
+rounding; exact integer/rational belt arithmetic required for all Q/2p in the port).

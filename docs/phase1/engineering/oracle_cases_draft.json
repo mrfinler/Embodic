@@ -1,0 +1,625 @@
+{"prepared_by": "Prepared by: Agent 2 — Motor Design Expert — model: claude-opus-5-5",
+ "schema": "embodic oracle cases draft v0 (Phase 1, 2026-10-04) - pre-registration of Phase 2 validation runs",
+ "cases": [
+  {
+   "case_id": "O1-D08",
+   "version": 1,
+   "title": "Collijs & Vereecken (UGent thesis 2020-21): 12-coil/10-pole concentrated spiral PCB stator, double rotor",
+   "document": "D08 B2/799354017-Pcb-stator-thesis.pdf",
+   "topology": "FSCW spiral, all phases on each layer",
+   "inputs": {
+    "coil_count": {
+     "value": 12,
+     "unit": "1",
+     "status": "verified",
+     "source": "D08 p.36 Fig. 3.7"
+    },
+    "poles": {
+     "value": 10,
+     "unit": "1",
+     "status": "verified",
+     "source": "D08 p.36"
+    },
+    "pattern": {
+     "value": "AabBCcaABbcC",
+     "unit": "-",
+     "status": "verified",
+     "source": "D08 p.36 Fig. 3.7 (reproduced by checks/kw.py)"
+    },
+    "copper_layers": {
+     "value": 2,
+     "unit": "1",
+     "status": "verified",
+     "source": "D08 p.53 (two PCB sides in series)"
+    },
+    "layer_connection": {
+     "value": "series (X in, Y out)",
+     "unit": "-",
+     "status": "verified",
+     "source": "D08 p.53"
+    },
+    "connection": {
+     "value": "star",
+     "unit": "-",
+     "status": "verified",
+     "source": "D08 p.55 ('make the star connection')"
+    },
+    "coil_r_inner_mm": {
+     "value": 12.5,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D08 p.55; centre-line convention of eq. 3.28-3.36 (inferred)"
+    },
+    "coil_r_outer_mm": {
+     "value": 44.0,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D08 p.55"
+    },
+    "trace_width_mm": {
+     "value": 2.06,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D08 Table 4.6 p.57"
+    },
+    "clearance_mm": {
+     "value": 0.8,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D08 Table 4.5 p.54"
+    },
+    "turns_per_coil_per_layer": {
+     "value": 3,
+     "unit": "1",
+     "status": "verified",
+     "source": "D08 Table 4.6 p.57"
+    },
+    "side_style": {
+     "value": "parallel",
+     "unit": "-",
+     "status": "verified",
+     "source": "D08 Fig. 3.4 p.33"
+    },
+    "copper_thickness_mm": {
+     "value": 0.0348,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D08 Table 4.5 p.54"
+    },
+    "board_thickness_mm": {
+     "value": 0.6,
+     "unit": "mm",
+     "status": "inferred",
+     "source": "D08 Table 7.1 p.81 (column mapping inferred by Agent 5)"
+    },
+    "magnet_remanence_T": {
+     "value": 1.38,
+     "unit": "T",
+     "status": "verified",
+     "source": "D08 Table 3.2 p.35 (N45SH)"
+    },
+    "magnet_recoil_permeability": {
+     "value": null,
+     "unit": "1",
+     "status": "unresolved",
+     "source": "not stated in D08",
+     "assumed": 1.05,
+     "sweep": [
+      1.03,
+      1.1
+     ]
+    },
+    "magnet_thickness_mm": {
+     "value": 5.0,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D08 Table 3.2 p.35"
+    },
+    "magnet_shape": {
+     "value": "two blocks per pole, T-arrangement: inner block 18 mm radial x 10 mm tangential (r 15.4-33.4 mm), outer block 10 mm radial x 18 mm tangential (r 33.4-43.4 mm)",
+     "unit": "-",
+     "status": "inferred",
+     "source": "D08 Fig. 3.1 p.30, Table 3.2 p.35 (r 15.4-43.4 mm = 18 + 10 mm), configuration b Fig. 4.1 p.49"
+    },
+    "magnet_r_inner_mm": {
+     "value": 15.4,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D08 Table 3.2 p.35"
+    },
+    "magnet_r_outer_mm": {
+     "value": 43.4,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D08 Table 3.2 p.35"
+    },
+    "rotor_type": {
+     "value": "double",
+     "unit": "-",
+     "status": "verified",
+     "source": "D08 Fig. 3.1 p.30"
+    },
+    "magnet_face_to_midplane_G_mm": {
+     "value": null,
+     "unit": "mm",
+     "status": "unresolved",
+     "source": "air gap 2.8 mm (Table 3.2 p.35) vs 1.4 mm (Table 4.5 p.54), G10",
+     "assumed": 1.4,
+     "note": "2.8 mm read as magnet-face-to-magnet-face distance incl. 0.6 mm PCB -> 1.1 mm mechanical gap per side; consistent with D08 Fig. 3.3 peak ~1.03 T (C1b, inferred)",
+     "sweep": [
+      1.1,
+      1.4,
+      2.8
+     ]
+    },
+    "back_iron": {
+     "value": "steel, assumed unsaturated",
+     "unit": "-",
+     "status": "unresolved",
+     "source": "D08 p.112 reports back-plate saturation; prototype plate thickness not taken from the text",
+     "assumed": "infinitely permeable"
+    },
+    "temperature_degC": {
+     "value": null,
+     "unit": "degC",
+     "status": "unresolved",
+     "source": "EMF test temperature not stated",
+     "assumed": 20
+    }
+   },
+   "expected": [
+    {
+     "quantity": "Ke_LL_peak (ratio of peak line-line voltage to speed)",
+     "value": 0.031,
+     "unit": "V*s/rad",
+     "kind": "measured",
+     "source": "D08 Table 9.1 p.98",
+     "comparison": "synthesised line-line waveform peak / omega_m from EQ-05/06/09 (not the fundamental alone)",
+     "tolerance": "+/-8 % (D08's own model deviation, p.98)"
+    },
+    {
+     "quantity": "V_LL_peak at 454/1009/1559/2045/2514/2877 rpm",
+     "value": [
+      1.47,
+      3.26,
+      5.08,
+      6.56,
+      8.18,
+      9.35
+     ],
+     "unit": "V",
+     "kind": "measured",
+     "source": "D08 Table 9.1 p.98",
+     "comparison": "same model, per speed",
+     "tolerance": "+/-8 %"
+    },
+    {
+     "quantity": "phase resistance",
+     "value": 0.39,
+     "unit": "ohm",
+     "kind": "calculated (D08 loop model, 50 degC)",
+     "source": "D08 Table 4.6 p.57",
+     "comparison": "EQ-03 closed form reproduces 0.381 ohm; a true spiral gives ~0.31 ohm -> not a validation target (no measured R)",
+     "tolerance": "information only"
+    },
+    {
+     "quantity": "turns that fit",
+     "value": 3,
+     "unit": "1",
+     "kind": "built prototype",
+     "source": "D08 Table 4.6 p.57",
+     "comparison": "EQ-02 three-mode criterion: concentric 3, spiral without eye 3, with eye 2 (limiting_reason 'eye')",
+     "tolerance": "exact per mode"
+    }
+   ],
+   "pre_registration": "run the primary case with the 'assumed' values first and report it; sweeps are sensitivity runs, not tuning; any change of a frozen value creates version 2"
+  },
+  {
+   "case_id": "O2-D09",
+   "version": 1,
+   "title": "Tokgöz, Çakal, Keysan (IET EPA 2020): concentric (spiral) PCB winding, 12 coils/16 poles, 2 layers, double rotor",
+   "document": "D09 B2/EPA-2020-0622-FINAL.pdf",
+   "topology": "FSCW spiral, all phases on each layer, open phases (6 terminals)",
+   "inputs": {
+    "coil_count": {
+     "value": 12,
+     "unit": "1",
+     "status": "verified",
+     "source": "D09 p.2 Fig. 1a (EV-62; counted by Agents 2, 4, 5)"
+    },
+    "poles": {
+     "value": 16,
+     "unit": "1",
+     "status": "verified",
+     "source": "D09 Table 2 p.3"
+    },
+    "copper_layers": {
+     "value": 2,
+     "unit": "1",
+     "status": "verified",
+     "source": "D09 Table 2 p.3"
+    },
+    "terminals": {
+     "value": 6,
+     "unit": "1",
+     "status": "verified",
+     "source": "D09 p.2 Fig. 1a (EV-62)"
+    },
+    "speed_rpm": {
+     "value": 2000,
+     "unit": "rpm",
+     "status": "verified",
+     "source": "D09 Table 2 p.3 (266.67 Hz)"
+    },
+    "trace_width_mm": {
+     "value": 0.8,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D09 Table 2 p.3"
+    },
+    "clearance_mm": {
+     "value": 0.2,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D09 Table 2 p.3"
+    },
+    "copper_thickness_mm": {
+     "value": 0.07,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D09 Table 2 p.3"
+    },
+    "board_thickness_mm": {
+     "value": 1.0,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D09 Table 2 p.3"
+    },
+    "air_gap_per_side_mm": {
+     "value": 1.0,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D09 Table 2 p.3; consistent with Table 3 p.4 (7 mm between rotor cores - 2 x 2 mm magnets = 1 + 2 x 1 mm)"
+    },
+    "magnet_remanence_T": {
+     "value": 1.33,
+     "unit": "T",
+     "status": "verified",
+     "source": "D09 Table 2 p.3, Table 3 p.4"
+    },
+    "magnet_recoil_permeability": {
+     "value": null,
+     "unit": "1",
+     "status": "unresolved",
+     "source": "not stated",
+     "assumed": 1.05,
+     "sweep": [
+      1.03,
+      1.1
+     ]
+    },
+    "magnet_thickness_mm": {
+     "value": 2.0,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D09 Table 2/3"
+    },
+    "magnet_pole_arc_ratio": {
+     "value": 0.8,
+     "unit": "1",
+     "status": "verified",
+     "source": "D09 Table 3 p.4 (magnet/pole-pitch ratio; constant arc assumed - inferred from Fig. 4/6)"
+    },
+    "magnet_r_inner_mm": {
+     "value": 25.0,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D09 Table 2/3 rotor ID 50 mm"
+    },
+    "magnet_r_outer_mm": {
+     "value": 46.0,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D09 Table 2/3 rotor OD 92 mm"
+    },
+    "rotor_core_thickness_mm": {
+     "value": 5.0,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D09 Table 2 p.3"
+    },
+    "rotor_type": {
+     "value": "double",
+     "unit": "-",
+     "status": "verified",
+     "source": "D09 Fig. 4 p.3"
+    },
+    "turns_per_coil_per_layer": {
+     "value": null,
+     "unit": "1",
+     "status": "unresolved",
+     "source": "Fig. 1a raster ~6-7; inversion from 3244 mm and 171 mm2: 7 or 8 (Agent 4 checks/v8_d09_turn_count.py)",
+     "assumed": 7,
+     "sweep": [
+      7,
+      8
+     ]
+    },
+    "coil_r_inner_mm": {
+     "value": null,
+     "unit": "mm",
+     "status": "unresolved",
+     "source": "coil radii not tabulated ('PCB inner/outer diameters equal for all windings')",
+     "assumed": 25.0,
+     "note": "Agent 4 inversion: centre-lines R_i0 ~20.2 / R_o0 ~43.8 mm (N = 7) or 25.6 / 47.8 mm (N = 8)",
+     "sweep": "Agent 4 inversion pairs"
+    },
+    "coil_r_outer_mm": {
+     "value": null,
+     "unit": "mm",
+     "status": "unresolved",
+     "source": "see coil_r_inner_mm",
+     "assumed": 46.0
+    },
+    "phase_trace_length_mm": {
+     "value": 3244,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D09 Table 1 p.3 (calculated by D09)"
+    },
+    "mid_turn_loop_area_mm2": {
+     "value": 171,
+     "unit": "mm^2",
+     "status": "verified",
+     "source": "D09 Table 1 p.3"
+    },
+    "measurement_temperature_degC": {
+     "value": null,
+     "unit": "degC",
+     "status": "unresolved",
+     "source": "not stated (DEF-11)",
+     "assumed": 20,
+     "sweep": [
+      20,
+      40
+     ]
+    },
+    "inductance_measurement_method": {
+     "value": null,
+     "unit": "-",
+     "status": "unresolved",
+     "source": "Table 6 p.7 gives no method, frequency or rotor condition (DEF-08)",
+     "assumed": "I1: single-phase LCR, other phases open, rotor in place",
+     "sweep": [
+      "I1 rotor in",
+      "I1 rotor out",
+      "I2/I3 L_s"
+     ]
+    }
+   },
+   "expected": [
+    {
+     "quantity": "phase resistance",
+     "value": 1.07,
+     "unit": "ohm",
+     "kind": "measured",
+     "source": "D09 Table 6 p.7",
+     "comparison": "EQ-10 on the generated path; R20 from the published 3244 mm = 0.999 ohm (1.07 ohm <=> ~38 degC if only temperature differed)",
+     "tolerance": "consistency: R20 <= 1.07 <= R40 x 1.08"
+    },
+    {
+     "quantity": "phase inductance",
+     "value": 14.8,
+     "unit": "uH",
+     "kind": "measured",
+     "source": "D09 Table 6 p.7",
+     "comparison": "model quantity per reading I1 (L_self) / I2-I3 (L_s), with and without rotor iron (EQ-14 DEF-08)",
+     "tolerance": "consistency band only (EQ-14 cannot verify yet)"
+    },
+    {
+     "quantity": "phase EMF (RMS, inferred) at full load 2 A",
+     "value": 6.22,
+     "unit": "V",
+     "kind": "measured",
+     "source": "D09 Table 7 p.8 (calc. 6.21 V Table 4, FEA 6.20 V Table 5 p.6)",
+     "comparison": "EQ-06/09 fundamental RMS at 2000 rpm",
+     "tolerance": "+/-5 % vs D09 calc/FEA once N fixed; report both N"
+    },
+    {
+     "quantity": "torque at 2 A",
+     "value": 0.175,
+     "unit": "N*m",
+     "kind": "measured",
+     "source": "D09 Table 7 p.8 (calc. 0.182, FEA 0.178)",
+     "comparison": "T = (m/sqrt(2)) Ke_ph I_rms (EQ-09)",
+     "tolerance": "+/-5 % vs calc/FEA; measured includes mechanical losses (unresolved)"
+    },
+    {
+     "quantity": "copper loss at 2 A",
+     "value": 12.8,
+     "unit": "W",
+     "kind": "measured",
+     "source": "D09 Table 7 p.8",
+     "comparison": "3 I^2 R: 3 x 4 x 1.07 = 12.84 W (consistency check of 1.07 ohm, inferred)",
+     "tolerance": "arithmetic"
+    },
+    {
+     "quantity": "EMF THD",
+     "value": 0.057,
+     "unit": "1",
+     "kind": "measured",
+     "source": "D09 Table 7 p.8",
+     "comparison": "EQ-18 (phase vs line basis unresolved)",
+     "tolerance": "information only"
+    }
+   ],
+   "pre_registration": "primary case: N = 7, coil copper edge 25-46 mm, mu_r 1.05, 20 degC, reading I1 with rotor; then the declared sweeps; no tuning to the measured values"
+  },
+  {
+   "case_id": "O3-D10",
+   "version": 1,
+   "title": "Wang, Pang, Gao, Zhao (IEEE Access 2019): AFPM generator, unequal-width concentric spiral PCB winding, 32 poles, 12 layers",
+   "document": "D10 B2/Electromagnetic_Design_and_Analysis_of_...Unequal-Width_PCB_Winding.pdf",
+   "topology": "concentric spiral (UEW), 48 virtual slots, 12 layers = 2 series groups x 6 parallel layers",
+   "inputs": {
+    "poles": {
+     "value": 32,
+     "unit": "1",
+     "status": "verified",
+     "source": "D10 Table 1 p.3"
+    },
+    "virtual_slots": {
+     "value": 48,
+     "unit": "1",
+     "status": "verified",
+     "source": "D10 Table 1 p.3 (one coil side = one virtual slot)"
+    },
+    "copper_layers": {
+     "value": 12,
+     "unit": "1",
+     "status": "verified",
+     "source": "D10 Table 1 p.3"
+    },
+    "layer_connection": {
+     "value": "2 series groups x 6 parallel layers",
+     "unit": "-",
+     "status": "verified",
+     "source": "D10 p.3"
+    },
+    "pcb_outer_diameter_mm": {
+     "value": 222,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D10 Table 1 p.3"
+    },
+    "air_gap_mm": {
+     "value": 0.9,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D10 Table 1 p.3"
+    },
+    "magnet_thickness_mm": {
+     "value": 7.0,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D10 Table 1 p.3"
+    },
+    "copper_thickness_mm": {
+     "value": 0.14,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D10 Table 1 p.3 (4 oz, 1 oz = 0.035 mm, p.3)"
+    },
+    "insulation_spacing_mm": {
+     "value": 0.3,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D10 Table 1 p.3"
+    },
+    "winding_thickness_mm": {
+     "value": 3.2,
+     "unit": "mm",
+     "status": "verified",
+     "source": "D10 Table 1 p.3"
+    },
+    "rated_speed_rpm": {
+     "value": 300,
+     "unit": "rpm",
+     "status": "verified",
+     "source": "D10 Table 1 p.3"
+    },
+    "D_mi_mm": {
+     "value": null,
+     "unit": "mm",
+     "status": "unresolved",
+     "source": "computed from N in D10 eq. 1, value not printed",
+     "assumed": null
+    },
+    "D_mo_mm": {
+     "value": null,
+     "unit": "mm",
+     "status": "unresolved",
+     "source": "D10 eq. 2, value not printed",
+     "assumed": null
+    },
+    "turns_per_phase_per_pole_N": {
+     "value": null,
+     "unit": "1",
+     "status": "unresolved",
+     "source": "not printed",
+     "assumed": null
+    },
+    "line_widths_w_ie_w_oe_mm": {
+     "value": null,
+     "unit": "mm",
+     "status": "unresolved",
+     "source": "eq. 3 given, values not printed",
+     "assumed": null
+    },
+    "magnet_remanence_T": {
+     "value": null,
+     "unit": "T",
+     "status": "unresolved",
+     "source": "not printed",
+     "assumed": 1.2
+    },
+    "magnet_pole_arc": {
+     "value": null,
+     "unit": "1",
+     "status": "unresolved",
+     "source": "not printed",
+     "assumed": null
+    },
+    "rotor_type": {
+     "value": "double",
+     "unit": "-",
+     "status": "verified",
+     "source": "D10 p.2 (double rotor)"
+    },
+    "measurement_temperature_degC": {
+     "value": null,
+     "unit": "degC",
+     "status": "unresolved",
+     "source": "not stated",
+     "assumed": 20
+    }
+   },
+   "expected": [
+    {
+     "quantity": "phase resistance",
+     "value": 2.15,
+     "unit": "ohm",
+     "kind": "measured (DC double-arm bridge)",
+     "source": "D10 p.8 (simulation 2.00 ohm)",
+     "comparison": "EQ-10 on a reconstructed geometry",
+     "tolerance": "+/-8 % once geometry is recovered"
+    },
+    {
+     "quantity": "air-gap fundamental flux density",
+     "value": 0.9,
+     "unit": "T",
+     "kind": "calculated/FEA",
+     "source": "D10 p.5-6 (THD 13.6 %)",
+     "comparison": "EQ-05 mid-radius",
+     "tolerance": "+/-5 %"
+    },
+    {
+     "quantity": "winding temperature at 12 A/mm2, 27 degC ambient, natural cooling",
+     "value": 110.2,
+     "unit": "degC",
+     "kind": "measured",
+     "source": "D10 p.10",
+     "comparison": "EQ-17 with D10 losses",
+     "tolerance": "+/-30 % on temperature rise"
+    }
+   ],
+   "runnable": false,
+   "pre_registration": "NOT runnable until D_mi, D_mo, N, line widths and magnet data are recovered (D10 Fig. 2/3 or the authors); listed so the missing inputs are explicit"
+  }
+ ],
+ "notes": [
+  "values are taken from the cited pages; 'status' per PROJECT_BRIEF section 3; 'assumed' = value Phase 2 will use for an unresolved input",
+  "kinds: measured / calculated / FEA as stated by the paper; embodic results are never called measured",
+  "Revision 2026-10-04 (defect fixes): created in the defect-fix round (coordinator request; DEF-08, DEF-11 caveats included)"
+ ]
+}

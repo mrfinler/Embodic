@@ -103,16 +103,16 @@ Package split (placeholders for Agent 6): `embodic_core`, `embodic_io`, `embodic
 
 ## 5. Installation on the user's Windows machine (draft walkthrough — not tested)
 
-Destination folder from the brief: `C:\Users\Sayoomphu\Desktop\embodic`.
+Destination folder: `%USERPROFILE%\Desktop\embodic` (placeholder; the actual account name is not written into project documents, code, UI, logs or exports).
 
 1. Check Python: open *Command Prompt* → `py -3.11 --version` (or the installed 3.11+ version).
-2. Create a virtual environment inside the project folder: `cd C:\Users\Sayoomphu\Desktop\embodic` → `py -3.11 -m venv .venv`
+2. Create a virtual environment inside the project folder: `cd %USERPROFILE%\Desktop\embodic` → `py -3.11 -m venv .venv`
    → `.venv\Scripts\activate`.
 3. Install: `python -m pip install --upgrade pip` → `pip install -e .[ui]` (adds `[dev]` for tests).
 4. Run: `embodic` (standalone UI) or `embodic-cli compute project.json --out results.json`.
 5. Self-check: `pytest` (with `[dev]`).
 6. KiCad (Phase 2b): enable the API server in KiCad ▸ Preferences ▸ Plugins (Agent 5 [K6]); install the PCM zip (T6) or copy
-   the plugin folder into `C:\Users\Sayoomphu\Documents\KiCad\9.0\plugins\<id>` (path `inferred`); first start creates the
+   the plugin folder into `%USERPROFILE%\Documents\KiCad\9.0\plugins\<id>` (i.e. `C:\Users\<user>\Documents\…`) (path `inferred`); first start creates the
    plugin venv and installs the requirements (needs internet — `unresolved` behind a proxy).
 7. Optional KiCad CLI DRC: `kicad-cli pcb drc --format json --exit-code-violations board.kicad_pcb` (documented for 9.0,
    not tested); `kicad-cli` location on Windows not verified.
@@ -126,3 +126,8 @@ Destination folder from the brief: `C:\Users\Sayoomphu\Desktop\embodic`.
 | D-3 | PDF report: reportlab or port of Xcoil's own writer | Agent 6 |
 | D-4 | Licence of embodic (affects PCM official repository eligibility and LGPL/GPL considerations of bundled UI libraries) | user |
 | D-5 | Offline installation need (wheel cache for the plugin venv and the desktop install) | user |
+
+## Revision 2026-10-04 (defect fixes)
+
+- Observation O-d (Agent 4): the Windows account name from the brief was removed from the install walkthrough (§5) and
+  replaced by `%USERPROFILE%` / `C:\Users\<user>` placeholders.

@@ -58,7 +58,8 @@ forms (EQ-02, EQ-03) apply.
 ### 2.3 Threshold branches that can amplify 1-ulp differences
 
 Each of these is a discrete decision on a continuous value; a 1-ulp difference near the threshold changes counts or flags.
-The cross-check must treat them as "near-threshold → indeterminate", not as failures (§6.3). All `verified (code)`:
+The cross-check must treat them as "near-threshold → indeterminate", not as failures (§7.2). All `verified (code)`
+except where a run is cited:
 
 | Location | Decision |
 |---|---|
@@ -68,7 +69,20 @@ The cross-check must treat them as "near-threshold → indeterminate", not as fa
 | `fitStatus` l.389, `maxFillet` l.332–340 (60 bisections), `maxTracesFit` l.394–404 | fits / does not fit; maximum fillet radius |
 | `sectorFeasible` l.2274–2277, `deriveWave` gap checks l.1534–1557 (`- 1e-9`) | turn limits |
 | `chainCoils` l.2331–2366 (EPS 1e-9) | coil chain order and ring levels |
-| DRC tolerance 0.004 mm (`runDrc` l.757, l.1929, l.2147, l.2429) and path-distance exemptions (`drcLayer` l.611–633, `drcObjects` l.1700–1708) | pass/fail and which pair is reported |
+| `starOfSlots` l.1904 (belt index `floor(((a + π/(2m)) mod 2π) / (π/m))`) and its balance check l.1915–1916 (`1e-6`) | phase and sign of every coil; "balanced" flag. Phasors that lie exactly on a 60° belt edge are float ties: Agent 2's C6 shows 12/14, 24/14, 24/22, 24/26 wrongly rejected; **12/10 (the O1 configuration, D08) has 6 of its 12 phasors within 1e-9 rad of a belt edge (30°, 90°, 150°, 210°, 270°, 330°) and passes in Xcoil only because the rounding happens to be consistent** — `verified (run)`: `node -e` on `E.starOfSlots(12, 5, 3)` → `ok true`, 6 ties. A port that mimics the float expression could flip 12/10 on another platform/libm (`inferred`, §2.1) |
+| DRC tolerance 0.004 mm (`runDrc` l.757, l.774, l.1929, l.1988, l.2147, l.2429) and path-distance exemptions (`drcLayer` l.611–633, `drcObjects` l.1700–1708) | Xcoil pass/fail and which pair is reported. **Not ported**: embodic uses the D-006 rule (§3.1) |
+
+**Phase assignment in the Python port (DEF-14):** `starOfSlots`/`balancedSectorList` are replaced (EQ-08) by exact
+integer/rational arithmetic for **all** Q/2p: the electrical position of coil k is the integer `r = (k·p) mod Q` in units
+of 2π/Q, and the belt index is the exact integer `b = ((4·m·r + Q) // (2·Q)) mod 2m` (the float expression
+`floor(2m·r/Q + 1/2)` evaluated without rounding; an edge phasor goes deterministically to the upper belt, i.e. half-open
+belts `[edge, edge + 60°)` for m = 3). Phase and sign then follow Xcoil's belt order (m = 3: phase `[A, C, B][b mod 3]`,
+positive for even b). No floating-point comparison decides a phase or the balance flag (balance: equal integer counts per
+phase plus Agent 2's phasor-sum check in exact or tolerance-free form). Floats are used only afterwards for k_d/k_w
+magnitudes. Check of this formula (`verified (run)`, `node -e` against `E.starOfSlots`): 12/10 → "AabBCcaABbcC" (12/12
+coils identical to Xcoil, = D08 Fig. 3.7), 12/16 → "ACBACBACBACB", 18/16 identical; for 12/14, 24/14, 24/22, 24/26 it
+gives equal counts per phase (4/4/4 resp. 8/8/8) where Xcoil reports "unbalanced". Final tie convention to be confirmed by
+Agent 2 (EQ-08). 12/10 must be a regression case. `assumption` (design rule), consistent with Agent 2's EQ-08 verdict.
 | `spreadPadAngles` l.1716–1721 (80 iterations, `- 1e-9`) | pad positions |
 | `windingInductance` l.2628–2629 | radial bin index `floor`, angle quantised to 1/2e4 rad with `Math.round` |
 | `filletPath` l.1755–1758 | corner skipped when gap > 1e-6 mm or turn < 0.03 rad |
@@ -82,8 +96,26 @@ The cross-check must treat them as "near-threshold → indeterminate", not as fa
 | Integrated scalar results (Ke per harmonic, R, torque, losses, kw1, THD, L_s) | rel 1e-9 | Xcoil's own golden tolerance (`golden-check.js` l.26) |
 | P_eddy when conductors lie on the magnet edge | rel 3e-2 (as Xcoil) or construct the case so that no edge coincidence exists | documented edge case (golden-check l.24–25) |
 | Geometry | sampled distance between Python and JS copper paths ≤ 1e-6 mm (sample every 0.05 mm, both directions); primitive counts compared only where no adaptive threshold applies | biarc/fillet counts can differ legitimately |
-| DRC clearances (values) | abs 1e-6 mm; pass/fail exact unless the value is within 1e-6 mm of `clearance − 0.004` | threshold amplification |
+| DRC clearances (values: `traceClearance`, `padClearance`, `linkClearance`, `padPadClearance`, `interconnectClearance`, `viaGap`) | abs 1e-6 mm between Python and JS values (same discretisation); with exact line/arc distances in embodic, Python ≥ JS − 1e-6 mm (discretised chords can only over- or under-estimate by the bounded sagitta, which must be documented) | values are what is compared (D-006) |
+| DRC pass/fail | **derived in Python from the value with the D-006 rule** (§3.1); agreement with Xcoil's flag required only outside Xcoil's slack band | D-006, DEF-01 |
 | Exported text | parsed-number comparison at the 1e-5 mm grid of `fmt()`; byte-identity optional | §2.1 formatting |
+
+### 3.1 DRC acceptance rule (decision D-006, `docs/decision_log.md`)
+
+- embodic reports a violation whenever `measured clearance < rule − ε`, with **ε ≤ 1e-6 mm** (proposed ε = 1e-6 mm).
+  There is **no 0.004 mm slack**. Xcoil accepts down to `clearance − 0.004 mm` (`engine.js` l.757 `tol = 0.004`, l.774
+  `minTrace < p.clearance - tol`, l.1988) — `verified (code)`; a literal port would under-report intrusions up to 4 µm.
+- The measured clearance must be exact or provably conservative (Agent 4 IT-12: analytic line/arc distances); if the
+  discretised Xcoil method is kept for speed, its worst-case error (chord sagitta ≤ `sagTol`, `discretize` l.537, l.550)
+  must be subtracted from the measured value, not hidden in a slack (`assumption`, implementation detail for Phase 2).
+- Cross-check classification per DRC quantity with set clearance s, Xcoil value v_JS, Python value v_PY:
+  - values: |v_PY − v_JS| ≤ 1e-6 mm (or the documented exact-vs-discretised bound);
+  - pass/fail agreement is **required** when v_JS ≥ s (both pass) or v_JS < s − 0.004 mm (both fail);
+  - when **s − 0.004 ≤ v_JS < s** (Xcoil's slack band: Xcoil passes, embodic fails by design) the case is marked
+    **"indeterminate for pass/fail agreement"** and listed in the report with its value; it is not a failure.
+- Example from the baseline: Xcoil's default design has `traceClearance = 0.19901 mm` for s = 0.20 mm (`golden-v1.json`
+  c0; the v3 engine gives the same value with `ok: true` — `verified (run)`) — inside the slack band, so embodic would report a violation there (consequence `inferred`); the
+  spiral generator must therefore place copper with margin ≥ ε, not rely on a tolerance.
 
 ## 4. Performance measurements and consequences
 
@@ -166,7 +198,7 @@ Rules:
 | Component | Runs on | Function |
 |---|---|---|
 | `tools/xcheck/cases/*.json` | — | case lists: golden configs (23, with `{"interconnect": false}`), the 15 presets, seeded fuzz sets (ranges as VAL-12 / WAV-13 / SEC-06, e.g. 200 configs), unit vectors for kernels (`fieldHarmonic`, `makeCorner`, `segSegDist`, `discretize`, `stackupFor`, `starOfSlots` …) |
-| `tools/xcheck/dump_xcoil.js` | Node (dev machine only) | `require('/home/claude/serpentine/src/engine.js')` read-only; for each case call `E.compute` or the named kernel (all exported, l.2968–2985); write canonical JSON: non-finite numbers as `{"$f": "inf"}` (or `"-inf"`, `"nan"`), `-0` preserved, plus `{node_version, engine_sha256, case_id}` |
+| `tools/xcheck/dump_xcoil.js` | Node (dev machine only) | `require('/home/claude/serpentine/src/engine.js')` read-only; for each case call `E.compute` or the named kernel (all exported, l.2968–2985); write canonical JSON: non-finite numbers as `{"$f": "inf"}` (or `"-inf"`, `"nan"`), `-0` preserved, plus `{node_version, engine_sha256, case_id}`; geometry in the **board dump format** of §7.5 (the Python side writes the same format) |
 | `tests/data/xcoil_v3/*.json` | — | committed snapshots, so CI and the user's machine need no Node; regenerated only when the case list changes |
 | `tests/xcheck/test_equivalence.py` | pytest | runs the Python reference port and the production kernels on the same inputs; compares with the §3 tolerance map |
 | `tests/xcheck/expected_diffs.toml` | — | allow-list of intentional deviations, each with EQ-ID and reason (e.g. EQ-08 integer star of slots: 12/14 now balanced; EQ-04 α_p(r)) |
@@ -175,11 +207,16 @@ Rules:
 ### 7.2 Comparison rules
 
 1. Structure first: errors/issue codes, layer count, via count, element count exact.
-2. Scalars with the class tolerance (§3); paths by sampled distance; DRC values abs 1e-6 mm.
-3. Near-threshold detection: the Python side reports the margin of each decision listed in §2.3 (e.g. distance of a
-   segment end from the magnet edge, DRC clearance minus limit); a mismatch with margin < 1e-9 (relative) is
-   "indeterminate", logged, not failed.
-4. Output files: parse `.kicad_pcb`/DXF/SVG back to numbers and compare on the `fmt()` grid; byte-identity is optional.
+2. Scalars with the class tolerance (§3); paths by sampled distance; DRC **values** (`traceClearance`, `padClearance`,
+   `linkClearance`, `padPadClearance`, `interconnectClearance`, `viaGap`) abs 1e-6 mm.
+3. DRC pass/fail is not copied from Xcoil's `ok`/issue list: the harness derives it from each value with the D-006 rule
+   (`value < s − ε`, ε ≤ 1e-6 mm) for both sides, and requires agreement with Xcoil's own flag only outside Xcoil's slack
+   band; cases with `s − 0.004 ≤ v_JS < s` are reported as **"indeterminate for pass/fail agreement"** (§3.1).
+4. Near-threshold detection: the Python side reports the margin of each decision listed in §2.3 (e.g. distance of a
+   segment end from the magnet edge, distance of a star-of-slots phasor from a belt edge, DRC clearance minus limit); a
+   mismatch with margin < 1e-9 (relative) is "indeterminate", logged, not failed. Phase assignment itself is exact in
+   the port (§2.3), so a phase mismatch on a tie is listed in `expected_diffs` (EQ-08), not as indeterminate.
+5. Output files: parse `.kicad_pcb`/DXF/SVG back to numbers and compare on the `fmt()` grid; byte-identity is optional.
 
 ### 7.3 Order of porting with the harness (proposal)
 
@@ -192,3 +229,40 @@ Agent 2's C2 closed form instead of Xcoil.
 
 Xcoil v3 is the team's own prior work (brief §2); running it read-only under Node for snapshots raises no licence issue
 (`inferred`). No GPL reference code (magnetless_motor, kimotor) enters the harness.
+
+### 7.5 Board dump format (JSON) for independent checks and the cross-check
+
+One documented format, written by the JS dumper (from an Xcoil result) and by embodic (from its `Board`), serves the
+JS↔Python cross-check and Agent 4's independent checks IT-06, IT-07 (resistance by own summation), IT-12 (brute-force DRC)
+and IT-21 (continuity) (`independent_test_strategy.md` l.149). Draft v1 (`assumption`, to be frozen in Phase 2):
+
+| Key | Content |
+|---|---|
+| `format`, `format_version` | `"embodic.board-dump"`, `1` |
+| `producer` | `{name: "xcoil-v3" \| "embodic", version, engine_sha256, runtime}` (runtime e.g. Node or CPython version) |
+| `case_id`, `params`, `params_sha256` | the input parameters as used and the SHA-256 of their canonical JSON |
+| `units`, `frame` | `{length: "mm", angle: "rad"}`; engine frame (x right, y up, origin on the rotor axis; no KiCad y-flip/offset) |
+| `layers[]` | `{index, name, kicad_name, z, copper_t, role, pair, phase}` (`phase` null when a layer carries all phases) |
+| `primitives[]` | one record per copper primitive: `id`; `type` `"line"` or `"arc"`; `layer` (index); `start` `[x, y]`, `end` `[x, y]` (always present, in current direction); line: `x1, y1, x2, y2`; arc: `cx, cy, r, a1, a2` (signed sweep `a2 − a1`, start at angle `a1`, as Xcoil); `width`; `kind` (side, endturn, fillet, taper, lead, stub, ring, leg, bus, link …); `object` (id); `seq` (position along the object path); `net`; `phase` (0/1/2 or null); `coil` (coil/track/strand id or null) |
+| `objects[]` | `{id, kind (coil, strand, track, ring, leg, ic, link, vbus, tbus), layer, net, phase, coil, primitive_ids[], touch_vias[]}` |
+| `vias[]` | `{id, x, y, drill, pad, layer_from, layer_to, role (centre, transfer, terminal, ring, stitch), net, phase, terminal, label}` |
+| `pads[]` | `{id, x, y, shape, w, h, rot, drill, smd, layer, net, label}` |
+| `outline` | `{board: [primitives with width 0], cutouts: [[…]], holes: [{x, y, dia}]}` |
+| `circuits[]` | per phase: ordered series `elements[]`, each `{members: [{object, layer, direction ±1}], vias: [via ids in the current path]}`; terminals `{plus, minus}` (pad/via ids) |
+| `drc` | `{rule: {clearance, epsilon}, values: {traceClearance, padClearance, …}, pass_d006, producer_flag}` (`producer_flag` = Xcoil's `ok`, informational only) |
+
+Rules: numbers are JSON doubles written in shortest round-trip form (both `JSON.stringify` and Python `repr` do this);
+non-finite values encoded as above; ids are stable within one dump; every primitive belongs to exactly one object.
+For Xcoil dumps, `net` follows `exportKicad` (l.2886–2892), `phase` = `o.phase` or the layer phase (`objColor` logic
+l.2793), and `circuits` must be reconstructed by the dumper, because Xcoil keeps its element lists local (`computeSector`
+`phases` l.2471, `computeWaveOverlap` l.2210) and does not return them (`verified (code)`); embodic emits `circuits`
+natively.
+
+## Revision 2026-10-04 (defect fixes)
+
+- DEF-01 / D-006: §2.3 DRC row, new §3 rows and §3.1 (acceptance rule `value < rule − ε`, ε ≤ 1e-6 mm, no 0.004 mm slack;
+  values compared; Xcoil slack band = "indeterminate for pass/fail agreement"); §7.2 rules 2–3 updated.
+- DEF-14: `starOfSlots` belt-edge ties added to §2.3 (12/10 has 6 ties, verified run); exact integer phase-assignment rule
+  for all Q/2p with a run check against Xcoil.
+- Agent 4 request: board dump JSON format §7.5; §7.1 dumper row references it.
+- Fixed a stale cross-reference in §2.3 (§6.3 → §7.2).

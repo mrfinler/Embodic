@@ -39,7 +39,7 @@ draft as read on 2026-10-04; items marked **gap** have no matching model field y
 | `#res-kt` | `analysis.kt_per_line_a_rms` |
 | `#res-ls` | `analysis.inductance_estimate` (EQ-14 → `unresolved`, label “estimate”) |
 | `#res-dt` | `analysis.temperature_rise` |
-| each `#res-*` child | `-value` = `value` formatted per REQ-L-07, `-unit` = `unit`, badge = `status`, `-eq` = `eq_ids`, tag “n assumptions” = `len(assumptions)` |
+| each `#res-*` child | `-value` = `value` formatted per REQ-L-07, `-unit` = `unit`, badge = `status` (trust level of the calculation per D-007 — not lowered by defaults), `-eq` = `eq_ids`, `-asm` tag “n assumptions” = `assumptions` plus `inputs` whose `source` is `default`, listed in the expandable tag |
 
 Variant B (07) uses the same bindings; only the theme differs (`tokens.json` → `light_pure_greyscale_variant`).
 
@@ -138,7 +138,14 @@ Window 880 × 600, **2-D only, no 3-D, no animation**. What survives:
 | Place | connection card, layer map, origin X/Y (`#plg-origin-x/y`), checklist, `#plg-btn-place`, Save file | — |
 | (all tabs) | 2-D preview, `#res-r-phase`, `#res-kt`, DRC summary with badges | Results step, charts, compare, PDF report → link “Open in the embodic app” |
 
+Minimum-size mockup of this window: `05b_kicad_window.html` (880 × 600 px, 0 px overflow, Place button visible).
+
 ## 9. Phone — mockup 06
 
 Out of scope with the desktop option (REQ-N-15, UD-01 = C-A). Kept only as the reference if C-B1 is chosen; ids equal
 the desktop ids.
+
+---
+
+Revision 2026-10-04 (defect fixes): badge/assumptions binding updated for decision D-007 (badge = calculation trust
+level; defaults and assumed inputs feed the separate “n assumptions” tag); KiCad window mockup 05b referenced.

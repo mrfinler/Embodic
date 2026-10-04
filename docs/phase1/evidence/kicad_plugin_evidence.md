@@ -19,7 +19,7 @@ long single-page PCB Editor manual (docs.kicad.org/9.0/en/pcbnew/pcbnew.html) co
 | Stability | "a raw binding layer rather than a true API, it is unstable and will generally change between KiCad major versions" | `kicad-python` classified "5 - Production/Stable" on PyPI; per-method version notes tie features to KiCad 9.0.3/9.0.5/9.0.8/10.0.x | verified [K1][K6][K7] |
 | Editors | PCB editor (action plugins) | "KiCad 9 and 10 only support IPC API plugins in the PCB Editor" | verified [K1][K4] |
 | Process model | In-process, KiCad's embedded Python | Plugin "launched in standalone processes"; socket path passed in environment variables; needs a running KiCad GUI ("not possible to use kicad-python … without KiCad running") | verified [K3][K4][K6] |
-| Enable step | none documented | API server must be enabled in **Preferences > Plugins** | verified [K6] |
+| Enable step | none documented | API server must be enabled in **Preferences ▸ Plugins** — source: kicad-python PyPI page [K6] only; the dev-docs "For Add-on Developers" page read on 2026-10-04 does **not** state this step | verified [K6] (not in dev-docs) |
 | Tracks / arcs / vias | yes (used by kimotor: `PCB_TRACK`, `PCB_ARC`, `PCB_VIA`) | `Track`, `ArcTrack`, `Via` classes; `Board.create_items`, `update_items`, `remove_items`, `begin_commit`/`push_commit`/`drop_commit` | A: inferred from kimotor (KiCad 6–8); B: verified in kipy 0.8.0 source [K7] |
 | Zones | yes (kimotor `ZONE`, `ZONE_FILLER`) | `Zone` class, `get_zones()`, `refill_zones()` | A inferred; B verified [K7] |
 | Footprints / pads | yes (kimotor `FootprintLoad`) | `FootprintInstance`, `Pad`, `get_footprints()`, `get_pads()`; creating new footprints/pads from scratch in 9.x | A inferred; B creation `unresolved` |
@@ -27,7 +27,7 @@ long single-page PCB Editor manual (docs.kicad.org/9.0/en/pcbnew/pcbnew.html) co
 | Run DRC | not verified (kimotor commit "improved DRC" is not evidence of an API) | no DRC-run method found in `kipy/board.py` 0.8.0 (only DRC severity settings in `board_rules.py`) | `unresolved` for both |
 | Plot/export | via SWIG plotters (not verified for 9.x) | 9.0 "has no support for plotting or exporting files" | A `unresolved`; B verified [K4] |
 | Python interpreter (Windows) | KiCad's bundled Python (version for 9.x not found in official pages) | "On macOS and Windows, KiCad will continue to ship with its own Python interpreter, which will be used by the IPC system by default"; per-plugin virtual environment | A `unresolved` (version); B verified [K4] |
-| Dependencies (numpy) | must be installed into KiCad's bundled Python (kimotor README shows the macOS route; Windows route not documented in sources read) | "a Python virtual environment will be created … and any declared dependencies will be installed"; venv at `${KICAD_CACHE_HOME}/python-environments/<plugin_identifier>`; kipy's validator: "missing requirements.txt, KiCad will not install any Python packages for your plugin" | A `unresolved`; B verified [K4][K8] |
+| Dependencies (numpy) | must be installed into KiCad's bundled Python (kimotor README shows the macOS route; Windows route not documented in sources read) | dev-docs [K4]: "a Python virtual environment will be created … and any declared dependencies will be installed", venv at `${KICAD_CACHE_HOME}/python-environments/<plugin_identifier>` (the page does **not** name `requirements.txt`); the `requirements.txt` rule comes from kicad-python 0.8.0 `kipy/packaging/validate.py` l.138–164 [K8]: "missing requirements.txt, KiCad will not install any Python packages for your plugin" | A `unresolved`; B verified [K4] (venv) + [K8] (requirements.txt) |
 | Packaging | PCM package, `plugins/` folder + `metadata.json` (`runtime: "swig"`) | `plugin.json` per schema `go.kicad.org/api/schemas/v1`; PCM `metadata.json` `runtime: "ipc"` (KiCad 9.0.1+) | verified [K4][K5] |
 | Licence of the binding | `pcbnew` module is part of KiCad (GPL-3.0-or-later) | `kicad-python`: **MIT** | verified [K6][K9] |
 
@@ -70,8 +70,9 @@ long single-page PCB Editor manual (docs.kicad.org/9.0/en/pcbnew/pcbnew.html) co
   (combination `inferred`). Plugins must provide `plugin.json` following `go.kicad.org/api/schemas/v1` — `verified`.
 - **Interpreter and dependencies**: KiCad's own Python on Windows by default; per-plugin venv under
   `${KICAD_CACHE_HOME}/python-environments/<plugin_identifier>`; declared dependencies installed when the plugin
-  is first loaded — `verified`. That `requirements.txt` is the declaration file is `verified` indirectly from
-  kipy's packaging validator (`kipy/packaging/validate.py` lines 138–162 in the 0.8.0 wheel) which also warns if
+  is first loaded — `verified` (dev-docs). The dev-docs page does not name the declaration file; that it is
+  `requirements.txt` comes only from kipy's packaging validator (`kipy/packaging/validate.py` lines 138–164 in the
+  kicad-python 0.8.0 wheel, [K8]) — `verified` for that source, `inferred` for KiCad 9.x behaviour (T2); the validator also warns if
   `kicad-python` is missing from it. A preference to select a different interpreter is mentioned but its name
   was not found — `unresolved`.
 - **External interpreter**: because the API is a socket protocol, a script run from the user's own Python 3.11+
@@ -127,6 +128,26 @@ long single-page PCB Editor manual (docs.kicad.org/9.0/en/pcbnew/pcbnew.html) co
 - [K5] KiCad dev-docs, "KiCad Addons" (PCM packaging) — https://dev-docs.kicad.org/en/addons/
 - [K6] PyPI, kicad-python — https://pypi.org/project/kicad-python/
 - [K7] kicad-python 0.8.0 wheel (PyPI), `kipy/board.py`, `kipy/board_types.py`, `kipy/kicad.py`, `kipy/kicad_api_version.py`; online docs https://docs.kicad.org/kicad-python/board.html (the online page extract did not show the commit/create methods; the wheel source does)
-- [K8] kicad-python 0.8.0 wheel, `kipy/packaging/validate.py` lines 138–162
+- [K8] kicad-python 0.8.0 wheel, `kipy/packaging/validate.py` lines 138–164
 - [K9] KiCad licences — https://www.kicad.org/about/licenses/
 - Not useful: https://gitlab.com/kicad/packaging/kicad-win-builder/-/work_items/139 (refers to KiCad 6.0 / Python 3.9 only)
+
+## Revision 2026-10-04 (defect fixes)
+
+- DEF-12: attributions made precise. The `requirements.txt` rule is cited only to kicad-python 0.8.0
+  `kipy/packaging/validate.py` l.138–164 [K8]; the Preferences ▸ Plugins enable step only to the kicad-python PyPI page
+  [K6]. The dev-docs "For Add-on Developers" page [K4] is cited only for what it states (9.x scope, plugin directory,
+  per-plugin venv in `${KICAD_CACHE_HOME}/python-environments/<id>`, "declared dependencies will be installed",
+  bundled Python on Windows by default).
+- PCM packaging re-checked on dev-docs "KiCad Addons" (https://dev-docs.kicad.org/en/addons/, section "Python plugins"):
+  archive root = `plugins/` (files directly inside, no second-level folder; 24 × 24 px toolbar icon there),
+  `resources/icon.png` (64 × 64 px, optional), `metadata.json`; `runtime` field optional, values "ipc" or "swig"
+  (default swig), since KiCad 9.0.1; metadata schema **v1 = KiCad 6.0+, v2 = KiCad 10.0+** → a KiCad 9.x package must use
+  v1. The page does not mention `plugin.json` or `requirements.txt` placement for IPC packages → `unresolved` (T2).
+- Board-file copper-layer numbering: the official file-format pages (https://dev-docs.kicad.org/en/file-formats/sexpr-pcb/,
+  "Layers Section"; https://dev-docs.kicad.org/en/file-formats/sexpr-intro/) define `(layers (ORDINAL "CANONICAL_NAME"
+  TYPE ["USER_NAME"]))` and canonical names F.Cu, In1.Cu…In30.Cu, B.Cu, but give **no ordinal values and no statement
+  about a change in KiCad 9** → `not found`. Baseline (verified): a KiCad 8 file (`kimotor-project.kicad_pcb`, version
+  20240108, generator 8.0) writes `(0 "F.Cu")`, `(1 "In1.Cu")` … `(6 "In6.Cu")`, `(31 "B.Cu")`. Whether KiCad 9 files use
+  different ordinals is `unresolved` — test: save an empty 4-layer board in the user's 9.x and read its `(layers …)`
+  block; embodic should map layers by canonical name, never by ordinal (inferred).

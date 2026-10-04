@@ -57,8 +57,17 @@ w trace width, t copper thickness, s clearance, w_d = w + s [mm]; N turns per co
   as 1 trapezoidal + 2 triangular (printed eq. 3.25–3.26: 2 + 1); for the default annulus 12/16 (0.5/0.2 mm) both give 11
   (9 + 2 vs 10 + 1), but for 18/16 the loop criterion gives 8 while eq. 3.25–3.26 give 7. → The generator and its tests
   use the loop criterion; eq. 3.24–3.26 stay as documented cross-checks. Test values: `answers_to_agents.md` §2.2.
-- Tolerance: exact integer agreement with the loop criterion; printed eq. 3.25–3.26 may differ by ±1; ±1 turn against the
-  constructive generator because of the centre-via eye and fillets.
+- Turn criterion (revised for DEF-09, unambiguous; `checks/eq03_spiral_vs_loops.py`):
+  1. **Concentric test mode** (closed loops, no eye): exactly the loop-criterion count — D08 **3** (1 trapezoidal + 2
+     triangular), default 12/16 annulus **11**, 18/16 **8**. No tolerance.
+  2. **Spiral generator without eye check** (true spiral: turn t joins right side d_t to left side d_{t+1}; turn exists iff
+     that intersection or inner arc lies inside its outer arc): D08 **3**, 12/16 **11**, 18/16 **8** — exact.
+  3. **Spiral generator with the centre-via eye** (via on the final lead at the eye-centre radius, Xcoil convention): the
+     largest N whose via clears the last right side and outer arc by the clearance. D08 with pad 0.6 or 1.2 mm and 0.8 mm
+     clearance → **2, reported with limiting_reason = "eye"** (D08's built board has 3; its via placement is not documented →
+     `unresolved`); 12/16 with pad 0.5 / clearance 0.2 → **10**; 18/16 → **7**. Any other result is a failure; a
+     reduction is acceptable only if `turn_limit.limiting_reason` names the binding constraint.
+  Printed eq. 3.24–3.26 are reported for information only (they may differ by ±1 from mode 1).
 - Gate: `replace` — the engine's constructive limit (`sectorFeasible`) has no triangular turns and returns 0 turns for this
   geometry (C5). Port a constructive generator with moving inner end-turns; keep EQ-02 as a cross-check.
 
@@ -76,8 +85,18 @@ w trace width, t copper thickness, s clearance, w_d = w + s [mm]; N turns per co
 - Reference: D08 geometry → 177.2 mm per coil-layer, 1417.9 mm per phase (8 coil-layers) (`checks/d08_resistance.py`).
   Against the engine's generated spiral (r 18–38 mm, 0.5/0.2 mm): closed form exceeds the spiral path by 3.7 % (8 turns) and
   5.5 % (4 turns) (C4, `verified (reproduced)`).
-- Tolerance: ±6 % between closed form and generated spiral (C4 range), because the spiral steps one pitch per turn and ends
-  at a centre via. The authoritative length for resistance is the sum over the generated copper primitives (exact).
+- Tolerance (revised for DEF-09). Basis = an independent true-spiral construction with trapezoidal **and** triangular turns
+  (`checks/eq03_spiral_vs_loops.py`; it agrees with the Xcoil spiral within 0.4 % (12/16, N = 8: 364.35 vs 365.68 mm) and
+  0.9 % (18/16, N = 4: 182.71 vs 184.44 mm), the difference being Xcoil's arc-shaped lead). Closed form minus spiral, in % of
+  the spiral: 12/16 N = 4 / 8 / 11 (2–3 triangular turns): +5.6 / +4.2 / +5.0 %; 18/16 N = 4 / 8 (3 triangular): +6.8 / +8.0 %;
+  **D08 N = 2 / 3 (1–2 triangular): +21.1 / +23.1 %** — few turns with triangular inner turns make the concentric-loop model
+  strongly over-estimate (the spiral's last turn has no full left side, and each turn's inner end moves one pitch inward).
+  Acceptance therefore uses two checks: (i) generator path (sides + ends + lead) vs the true-spiral reference **within ±1 %**
+  (lead/stub shape conventions); (ii) generator path < closed form, with (closed − generated)/generated inside the tabulated
+  band of the matching case ±2 percentage points. The closed form is never the acceptance oracle on its own. The
+  authoritative length for resistance remains the sum over the generated copper primitives.
+- Consequence for D08 (`inferred`): D08's 0.39 Ω (Table 4.6, calculated, not measured) used the loop model; a true spiral of
+  the same geometry would be ≈19 % shorter (0.31 Ω at 50 °C). D08 gives no measured R, so this cannot be checked.
 - Gate: engine path-length sum `primsLength` → `reuse`; closed form not in the engine → add as a check.
 
 ## EQ-04 Pole-arc ratio of rectangular block magnets
@@ -214,7 +233,12 @@ w trace width, t copper thickness, s clearance, w_d = w + s [mm]; N turns per co
   (+7.5 %, p.8); D09 measured 1.07 Ω vs calculated 1.04 Ω (+2.9 %, Tables 1/6 p.3/7); copper thickness and via/joint
   resistances are not known a priori. Tighten after a coupon measurement.
 - O2 detail (EV-62): D09's 3244 mm phase length over 8 coil-layers ≈ 405 mm per coil-layer; with EQ-03 this is the route to
-  fix the turn count (Agent 4 task T-D).
+  fix the turn count (Agent 4 task T-D; Agent 4's inversion gives N = 7 or 8, not decidable).
+- O2 temperature (DEF-11): R₂₀ from the published 3244 mm, 0.8 mm × 70 µm = **0.999 Ω**; D09's measured 1.07 Ω is +7.1 %, which
+  equals ≈38 °C if only temperature differed (1.0713 = 1 + 0.00393·18.1 K); D09's calculated 1.04 Ω ⇔ ≈30.5 °C. D09 does not
+  state the measurement temperature (`unresolved`). Tolerance basis for O2: the ±8 % band must absorb both the unknown
+  temperature (20 → 40 °C = +7.9 %) and copper-thickness/via contributions, so O2 can only show *consistency*
+  (R₂₀ ≤ 1.07 Ω ≤ R₄₀ + 8 %), not validate EQ-10; a coupon or prototype measured at a recorded temperature is required.
 - Gate: `reuse` (constants now sourced, EV-53; keep the PCB-copper caveat as a labelled assumption).
 
 ## EQ-11 Via barrel resistance
@@ -269,7 +293,27 @@ w trace width, t copper thickness, s clearance, w_d = w + s [mm]; N turns per co
 - Reference (C9, 12/16, 8 turns, 2 layers, default assumptions): engine L_s = 17.96 µH; (a) 4.67 µH (k_w 0.600 numeric) /
   9.74 µH (k_w 0.866); D15 form 7.34 / 15.31 µH. Oracles: D09 measured 14.8 µH concentric 2 layers (Table 6 p.7, turn count
   unknown, G2); D07 measured L_s 22.3 µH, M −8.55 µH (Table 4 p.8, wave).
-- Tolerance: none claimed; target ±20 % vs LCR measurement after validation (`assumption`).
+- **Which inductance (DEF-08).** (a) EQ-14(a) is the **synchronous magnetising inductance** of a balanced 3-phase rotating
+  field, i.e. it already contains the mutual coupling of the other two phases: for a sinusoidally distributed winding
+  L_sync = L_aa − M_ab = (3/2)·L_aa,m, so the single-phase magnetising self-inductance is L_aa,m = (2/3)·L_m(a) (fundamental
+  only; leakage, end-turn and FSCW space-harmonic terms are not included). (b) The Xcoil current-sheet model reports all three:
+  L_self, M (mean mutual) and L_s = L_self − M, all space orders included, end-turns excluded.
+- What D09 Table 6 p.7 "phase inductance" is: **not stated** — the page gives no instrument, frequency, rotor condition or
+  connection (`unresolved`; Agent 4 read p.7). Plausible readings and the comparison each implies:
+  I1 (most plausible, `inferred`: the board has 6 terminals, i.e. open phases, and R is reported per phase): LCR meter across
+  one phase, other phases open → **single-phase self-inductance L_self**; frequency unknown (typical LCR 100 Hz–10 kHz →
+  rotor-iron eddy effects possible); rotor present or removed unknown.
+  I2: line-to-line measurement ÷ 2 on a star-connected winding → L_self − M = **L_s** (synchronous, no zero sequence).
+  I3: synchronous inductance from a load/dq test → **L_s** (+ saturation-free, coreless).
+  For each reading compute the model value **with rotor (double back iron)** and **without rotor (no iron)**; the measurement is
+  "consistent" only if it lies inside the band of its reading. Indicative engine numbers for a D09-like geometry (r 25–46 mm
+  assumed from the rotor radii, w/s 0.8/0.2, 70 µm, 1 mm PCB, 1 mm gap, 12/16, N = 7, unvalidated): with rotor L_self 11.30 µH,
+  L_s 14.80 µH; without rotor L_self 6.09 µH, L_s 7.33 µH (N = 6: 10.08 / 13.29 / 5.41 / 6.56 µH). 14.8 µH is matched by L_s
+  at N = 7 **and** approximately by L_self at N ≈ 8 (N² scaling) → the oracle cannot discriminate until the reading and the
+  turn count are known (`inferred`, indicative only).
+- Tolerance: none claimed. After validation the target is ±20 % (`assumption`) **between like quantities**: L_self vs a
+  single-phase LCR measurement with the other phases open, rotor in place, at a recorded frequency (proposed protocol:
+  1 kHz, 20 °C), or L_s vs a line-line/2 measurement.
 - Gate: `cannot verify yet` — port only as a labelled estimate; Phase 2: Neumann filament model + FEMM/3-D check (G1 proposal).
 
 ## EQ-15 IPC-2221 current capacity
@@ -374,20 +418,34 @@ below. Implementation status starts as `not tested` for every port and becomes i
 | 16, 17 | assumption | laminate density and film coefficient h unsourced or disputed |
 | 14, 15, 20 | unresolved | gate `cannot verify yet` → outputs labelled "estimate" / "guideline" |
 
-## Status rule for computed results (answer to Agents 1 and 6; details `answers_to_agents.md` §1.1)
+## Status rule for computed results (revised per decision D-007, DEF-02; ADR-0003 is updated in parallel by Agent 6)
 
-result status = weakest of { equation status (table above); implementation status (`not tested` until its tests pass);
-status of every input the kernel actually uses (user-entered or KiCad-imported = neutral; default or unsourced = `assumption`;
-sourced constant = its EV status); validity cap (any violated validity limit → `unresolved`) }, with the order
-`unresolved` < `not tested` < `assumption` < `inferred` < `verified` (ADR-0003 order, agreed). `verified` for a result of a
-new design is reached only by exact identities/counts (pole pitch, coil pitch, k_w by exact arithmetic, turn count,
-generated track length) or when every input is neutral/verified and every equation in the chain is `verified`; it is
-never called "measured".
+Two separate indicators are shown on every result:
+
+1. **Badge = calculation trust** = weakest of { evidence status of every equation in the chain (table above), implementation
+   test state (`not tested` until the kernel's tests pass in the current build), validity cap (a violated validity limit →
+   `unresolved`) }. Badge values: `verified`, `inferred`, `unresolved`, `not tested` — and `assumption` only when an
+   **equation itself** is an engineering assumption (currently EQ-16, EQ-17). Order (weakest first): `unresolved` <
+   `not tested` < `assumption` < `inferred` < `verified`. Inputs do **not** enter the badge.
+2. **Assumptions tag** = count and expandable list of the assumed inputs the number depends on (only inputs the kernel
+   actually uses), ordered by the "dominant assumed inputs" table below. Each input carries a provenance class:
+   `default` (tool default, unsourced → `assumption`), `default (sourced)` (tool default with an EV source, shown with the
+   source and its applicability, e.g. IACS ρ₂₀ for PCB copper), `user` (entered by the user, unsourced — listed as the
+   user's responsibility), `measured` (only when the user marks the value as measured **and** names the source/record —
+   datasheet, coupon, LCR record), `imported` (from KiCad). Equation-level assumptions (e.g. "PCB copper = IACS copper" in
+   EQ-10, µ_r in EQ-05) appear in this list as built-in assumed inputs and leave it when the user supplies a `measured`
+   replacement.
+
+Rules: typing a value equal to the default changes nothing (provenance stays `default` until the user marks it `measured`
+with a source); an EV status `verified` means "read in the source", so a sourced constant is listed with its applicability
+judgement, not promoted; a computed result is never called "measured" (brief rule 5). Where a single label is unavoidable
+(export summaries), print the badge **and** the assumption count together, never the badge alone. Exact identities and
+counts (pole/coil pitch, k_w by exact arithmetic, turn count, generated track length) reach `verified` once their tests pass.
 
 ## Dominant assumed inputs per equation
 
-"Dominant" = the inputs that, when left at a default or unsourced value, dominate the uncertainty of the result; the UI lists
-them first under "n assumptions". Every other used default still caps the status at `assumption`.
+"Dominant" = the inputs that, when left at a default or unsourced value, dominate the uncertainty of the result. Per D-007 this
+list feeds the **assumptions tag** (order and wording), not the badge; every other used assumed input is still counted.
 
 | EQ | Dominant assumed inputs |
 |---|---|
@@ -412,3 +470,10 @@ them first under "n assumptions". Every other used default still caps the status
 | 20 | L_s (EQ-14), DC-link voltage, modulation |
 | 21 | copper-loss budget P_Cu (user target) |
 | 22 | operating current, copper thickness |
+
+---
+
+**Revision 2026-10-04 (defect fixes):** DEF-02 (status rule rewritten per D-007; dominant inputs now feed the assumptions
+tag), DEF-08 (EQ-14 inductance quantity and D09 Table 6 readings I1–I3), DEF-09 (EQ-02 three-mode turn criterion; EQ-03
+tolerance basis from a true-spiral construction incl. triangular turns), DEF-11 (EQ-10 O2 temperature note: R₂₀ 0.999 Ω vs
+1.07 Ω ⇔ ≈38 °C). Oracle parameter sets frozen in `oracle_cases_draft.json`.

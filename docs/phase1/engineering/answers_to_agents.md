@@ -10,6 +10,12 @@ Numbers were computed by me with the scripts in `checks/`; none is a measurement
 
 ### 1.1 Status of a computed result — confirmed with amendments
 
+> **Superseded by decision D-007 (defect DEF-02).** The rule below made almost every physics result `assumption` and let
+> re-typing a default change a status. Current rule: badge = calculation trust (equation evidence × test state × validity),
+> assumptions shown as a separate count/list, `measured` provenance only with a named source — see
+> `equation_specification_draft.md` "Status rule for computed results" and the registry fields `result_badge_rule`,
+> `assumptions_tag_rule`, `input_provenance_vocabulary`. The text below is kept for the record.
+
 Rule (agreed with ADR-0003 item 4, amended):
 **result status = weakest of**
 1. the **equation status** of every EQ in the chain (Phase 1 evidence status: table "Equation status" in the spec);
@@ -217,3 +223,16 @@ Outputs (`SpiralArtwork` + reports):
 dominant inputs), `topology_analysis.md` (EV-56…71, conventions §3.4, patent note §4.3, defaults §5.2, §7 decisions),
 `existing_logic_review.md` (constants rows), `spiral_coil_concept.svg/.md` (counter-clockwise numbering, +θ arrow,
 conventions), new `answers_to_agents.md`, `equation_registry_draft.json`, `checks/eq02_eq03_reference.py`.
+
+---
+
+**Revision 2026-10-04 (defect fixes):** DEF-02 (§1.1 marked superseded by D-007); DEF-09 (see EQ-02/EQ-03 in the spec for the
+three-mode turn criterion and the true-spiral tolerance basis that replace the "±1 turn" and "−6 … 0 %" statements of §2.2);
+oracle inputs frozen in `oracle_cases_draft.json` (§5 below).
+
+## 5. Frozen oracle parameter sets (for pre-registered Phase 2 runs)
+
+`oracle_cases_draft.json` lists O1 (D08), O2 (D09) and O3 (Wang 2019, D10) as explicit parameter sets: every input with
+value, unit, source (document/page) and status; inputs the paper does not give are marked `unresolved` together with the
+value Phase 2 will assume (and, where it matters, a sweep range); expected published values with their kind (measured /
+calculated / FEA) and the comparison rule. Changing a frozen value after a Phase 2 run requires a new case version.

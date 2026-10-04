@@ -55,8 +55,9 @@ check LICENSE files before bundling. No runtime CDN font requests.
 | View toolbar | `role="toolbar"`, Colour/Greyscale (also automatic in print and forced colours), labels toggle (`aria-pressed`), fit/zoom |
 | Geometry canvas | focusable, `role="img"` + title/description; keys: arrows pan, + − 0 zoom/fit, L, G, [ ], A/B/C, Esc (only while focused); stamp “Illustrative, not computed” → “Computed · engine vX.Y” |
 | Layer chips | checkbox chips; unchecked = dashed + strike-through (not colour/opacity only) |
-| Status badge | five values: verified (ink fill ✓), inferred (outline ≈), assumption (dashed ◇), unresolved (dotted, grey fill ?), not tested (hairline ○); hidden “Status:” prefix |
-| Result card / key result row | value + unit + status badge + EQ link(s) + tags; disclosure “How was this computed” (equation, inputs with units/origin/status, assumptions, limitations, validation, sources, Copy trace) |
+| Status badge | five values: verified (ink fill ✓), inferred (outline ≈), assumption (dashed ◇), unresolved (dotted, grey fill ?), not tested (hairline ○); hidden “Status:” prefix. On results = trust level of the calculation (D-007); `assumption` only for inputs and assumption-equations (EQ-17) |
+| Assumptions tag | dashed “◇ n assumptions ›” tag (`details.asm[data-role=assumptions] > summary.tag`, id `<result-id>-asm`) next to the badge on every numeric result; expands to the list of defaults/assumed inputs; “0 assumptions” as plain dashed tag |
+| Result card / key result row | value + unit + trust badge + EQ link(s) + assumptions tag + other tags; disclosure “How was this computed” (equation, inputs with units/origin/status, assumptions, limitations, validation, sources, Copy trace) |
 | DRC list item | glyph, rule code, message, measured vs required with units, layer, Locate (zooms canvas, dims copper to 35 %) |
 | Tabs | roving tabindex, ←/→/Home/End, `aria-controls`, panels `aria-labelledby` (Xcoil lacked all of these) |
 | Dialog | native `<dialog>.showModal()`; initial focus on the safe action; Esc closes |
@@ -71,11 +72,11 @@ Ids are stable contracts for tests (Agent 4) and for porting. Reconciliation rou
 re-rendered mockups; the old→new list and the engine bindings are in `screen_to_view_map.md`. In mockups 03 (frame B) and 05 the repeated shell is
 prefixed (`fb-` in 03 frame B); in the app each id is unique.
 
-**Shell (all desktop screens):** `#app-topbar`, `#doc-name`, `#doc-state`, `#btn-undo`, `#btn-redo`, `#btn-open`,
+**Shell (all desktop screens):** skip link, `#app-topbar`, `#doc-name` (rename button, focusable), `#doc-state`, `#btn-undo`, `#btn-redo`, `#btn-open`,
 `#btn-save`, `#btn-more`, `#btn-export`, `#step-nav`, `#step-coil`, `#step-phases`, `#step-layers`, `#step-board`,
 `#step-results`, `#step-export`, `#engine-state`, `#panel-step`, `#panel-title`, `#figure`, `#fig-title`, `#fig-toolbar`,
 `#fig-canvas`, `#fig-layer-chips`, `#fig-legend`, `#rail-results`, `#rail-drc`, `#statusbar`, `#st-compute`, `#st-drc`,
-`#st-counts`, `#st-units`, `#st-cursor`. Figure tools: `#btn-labels`, `#btn-fit`, `#btn-zoom-in`, `#btn-zoom-out`;
+`#st-counts`, `#st-units`, `#st-cursor`; `#st-drc` is a link to `#rail-drc` (focus order §8.3). Figure tools: `#btn-labels`, `#btn-fit`, `#btn-zoom-in`, `#btn-zoom-out`;
 `#btn-drc-locate`.
 
 **01 Overview / 02 Coil:** `#param-coil-count` (Q), `#param-poles` (2p), `#hint-combination`, `#param-side-style`
@@ -97,7 +98,7 @@ prefixed (`fb-` in 03 frame B); in the app each id is unique.
 `#res-<key>-value`, `#res-<key>-unit`, `#<key>-how` (disclosure); keys used: `r-phase`, `ke`, `ls`, `j`;
 `#chart-backemf`, `#chart-backemf-table`.
 
-**05 Export:** `#export-targets`, `#btn-export-zip`, `#kicad-connection-status`, `#btn-kicad-connect`,
+**05 Export:** (KiCad window at its minimum size: `05b_kicad_window.html`) `#export-targets`, `#btn-export-zip`, `#kicad-connection-status`, `#btn-kicad-connect`,
 `#kicad-layer-map`, `#kicad-map-L1 … L6`, `#param-kicad-origin-x`, `#param-kicad-origin-y`, `#param-kicad-rotation`,
 `#kicad-net-names`, `#export-checklist`, `#btn-kicad-place`, `#btn-save-kicad-file`, `#kicad-preview-counts`,
 `#dlg-place-confirm`. Plugin dialog: `#kicad-plugin-dialog`, `#plg-tab-coil|phases|layers|board|place`,
@@ -112,7 +113,7 @@ Naming rule (architecture §19, accepted): `#param-` + kebab-case of the model f
 
 | Id | Criterion | How to test |
 |---|---|---|
-| UX-AC-01 | Every numeric result shows value, unit and exactly one of the five status labels. | DOM: each `[id^=res-][id$=-value]` has sibling unit + badge |
+| UX-AC-01 | Every numeric result shows value, unit (or “–” dimensionless), exactly one status badge expressing the calculation’s trust level (D-007) and a separate “n assumptions” tag. | DOM: each `[id^=res-][id$=-value]` has sibling unit, one `.badge`, one `[data-role=assumptions]` or `.asm-none` tag |
 | UX-AC-02 | Every computed result links to an EQ-ID (or is tagged `input` / `derived` / `count`) and has a “How was this computed” disclosure listing formula, inputs with units, assumptions, limitations, validation and sources. | DOM + content check per result |
 | UX-AC-03 | No visible string “Xcoil”, no Thai characters, no personal names; embodic logo present in top bar and exports. | text scan (like Xcoil UI-12/UI-14) |
 | UX-AC-04 | UI chrome uses only neutral tokens; functional colours appear only on phase marks/legends/charts and pass/fail elements. | computed-style scan for non-grey colours outside allowed selectors |
@@ -122,7 +123,7 @@ Naming rule (architecture §19, accepted): `#param-` + kebab-case of the model f
 | UX-AC-08 | Visible focus indicator on every focusable element. | screenshot per focus stop |
 | UX-AC-09 | The geometry canvas is focusable and can be panned and zoomed by keyboard; single-key shortcuts act only while it has focus. | keyboard test |
 | UX-AC-10 | Hit targets ≥ 24×24 px on desktop and ≥ 44×44 px on coarse pointer / phone. | bounding-box scan |
-| UX-AC-11 | No horizontal page scroll at 360 px width; wide tables and the drawing scroll inside their own containers. | `scrollWidth == clientWidth` at 360 px |
+| UX-AC-11 | No horizontal page scroll from the 960 px minimum window up (desktop option, REQ-N-15); phone 360 px only if C-B1; wide tables and the drawing scroll inside their own containers. | `scrollWidth == clientWidth` at 1920/1440/1280/1024/960 px (mockups: 0 px, also 0 px at 768) |
 | UX-AC-12 | Fields that do not apply to the current configuration are hidden; a temporarily inapplicable field shows its reason. | config matrix test |
 | UX-AC-13 | When the engine changes a user value, an inline notice with old → new value and Undo appears next to the field and is announced politely; Undo restores the value. | scripted clamp case |
 | UX-AC-14 | Invalid input: field gets `aria-invalid` and an inline message; Checks lists it; the last valid geometry stays visible, dimmed, with a “Last valid layout” stamp. | scripted invalid case |
@@ -144,3 +145,9 @@ Naming rule (architecture §19, accepted): `#param-` + kebab-case of the model f
   the UI (`assumption`, needs the register format from Agents 2/6).
 - Mockup generator scripts live in my scratchpad only; the HTML files are self-contained (inline CSS + SVG sprite),
   reference only `brand/*.png`, and load no external resources.
+
+---
+
+Revision 2026-10-04 (defect fixes): status badge and new assumptions-tag rows for decision D-007 (DEF-06); UX-AC-01 and
+UX-AC-11 restated (D-007; 960 px minimum per REQ-N-15, measured 0 px overflow at 1920–768 px, DEF-07); shell ids: rename
+button and status-bar DRC link (DEF-16); KiCad window mockup 05b.

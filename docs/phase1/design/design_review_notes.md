@@ -27,3 +27,7 @@ and gaps below. “Fixed” = changed in my files this round.
 
 No mismatch: REQ-N-02 (debounce/“Updating…”), N-11, N-12 (F6, Alt+1…6, 2 px + 2 px focus), N-14, N-16, N-24, N-25, N-26,
 T-01, T-02, T-04, T-05 (“estimate”), T-07, T-10, T-13, T-14, L-07, L-08; §10 view list and MVVM split.
+
+Revision 2026-10-04 (defect fixes): item 1 is superseded by decision D-007 (badge = trust level of the calculation,
+assumptions as a separate “n assumptions” tag) — implemented in the spec §10.4 and mockups 01–07; my request for a
+second status line is no longer needed.

@@ -46,7 +46,7 @@ CIEEC paper is by **Li, Wang, Lv**; Moon et al. is `actuators-15-00327.pdf`.
 | EV-04 | Back-EMF per coil E = −(dψ/dθ_m)·ω (3.14); phase EMF = signed sum of coils per winding table (12-slot/10-pole, Bavaria tool) | D08 | p.36 (printed 31) §3.1.3 | yes | verified |
 | EV-05 | Torque per wire section T = I·B·L·cos α·r (3.19–3.21), summed over sections/loops/coils (3.22–3.23); only straight (radial) sections produce torque | D08 | p.38–40 (printed 33–35) §3.2 | yes | verified |
 | EV-06 | Max turns per trapezoidal spiral coil: N_c < ½((r_o−r_i)/w_d + 1) (3.24) and trapezoid/triangle split (3.25–3.26), after Noh et al. AIM 2019 | D08 | p.43 (printed 38) §3.3 | yes (single-layer geometry rule) | verified |
-| EV-07 | Spiral coil track length = Σ over loops of outer arc + inner arc + 2 straight segments, coil span θ_cs = π/p (3.27–3.36) | D08 | p.44–45 (printed 39–40) §3.4 | yes (ignores vias, corner rounding). Re-check 2026-10-04: θ_cs = π/p is the pole pitch; it equals the geometric coil pitch 2π/Q only when Q = 2p. For D08's own 12 coils/10 poles, 12 × 36° > 360°, so non-overlapping coils must use 2π/Q = 30° (inferred; agrees with Agent 2 EQ-01/C7, who also finds that the printed π/p variant reproduces D08's 0.39 Ω at 20 °C, suggesting the thesis model itself used π/p) | verified (as printed); correction inferred |
+| EV-07 | Spiral coil track length = Σ over loops of outer arc + inner arc + 2 straight segments, coil span θ_cs = π/p (3.27–3.36) | D08 | p.44–45 (printed 39–40) §3.4 | yes (ignores vias, corner rounding). Re-check 2026-10-04: θ_cs = π/p is the pole pitch; it equals the geometric coil pitch 2π/Q only when Q = 2p. For D08's own 12 coils/10 poles, 12 × 36° > 360°, so non-overlapping coils must use 2π/Q = 30° (inferred; agrees with Agent 2 EQ-01/C7). Residual check (DEF-15, re-run of `verification/checks/v3_geometry_resistance.py` on 2026-10-04): D08 Table 4.5 p.54 states a **50 °C** track temperature; at 50 °C the π/p variant gives 0.439 Ω (+12.7 %) and 2π/Q gives 0.381 Ω (−2.3 %) against D08 Table 4.6's 0.39 Ω (π/p reaches 0.393 Ω only at 20 °C, which contradicts the stated 50 °C). The residual therefore favours 2π/Q; which span the thesis model actually used is undetermined | verified (as printed); correction inferred |
 | EV-08 | ρ_T = ρ_20(1 + α_c(T − 20 °C)) (3.37); R_phase = ρ_T L_tot /(w_tr t_tr) (3.38); no numeric α_c or ρ_20 given | D08 | p.45 (printed 40) | yes (DC only) | verified |
 | EV-09 | Copper-loss budget method: 4 W total copper loss per PCB, phase current from Ohm's law with the two PCB sides in series (4.3, extracted text reads "√(4 (3 W)/R_tot,series)", i.e. probably (4 W/3)/R per phase — reading inferred); design sweep w_tr 0.16–3.5 mm and r_i, r_o | D08 | p.53–54 (printed 48–49) §4.2, Table 4.5 | yes (method) | verified (text); formula reading inferred |
 | EV-10 | Area-utilisation coefficient (w_tr·l_total)/(π(r_si + r_so)) (2.1), attributed to Tokgöz et al. | D08 | p.23 (printed 18) §2.2.2 | doubtful — dimension is length, not a ratio (see gaps G9) | verified (as printed) |
@@ -117,6 +117,19 @@ CIEEC paper is by **Li, Wang, Lv**; Moon et al. is `actuators-15-00327.pdf`.
 | EV-70 | User images: Instagram render shows dense radial conductors with nested outer/inner end-turn groups (8 + 8 positions), via rows, 8 rim holes; ECM board shows fine radial traces and 9 terminal pads (3 × 3) | user screenshots | `reference_images/` (see `ecm_pcb_stator_evidence.md` §1) | illustrative only | inferred from image |
 | EV-71 | magnetless_motor end turns: outer nested caps of 6 radii (13.5–16.4 mm) centred at r = 26 mm on 12 axes per layer (G1 0° + k·30°, G3 15° + k·30°); inner arcs concentric with the board, radii 14.3–17.2 mm, 4–6° spans at ≈20°/25° mod 30° → wave-like series path, not concentrated spiral coils | gouldpa00/magnetless_motor | `…/gerbers/mini_wave-bb.G1`, `.G3` (Agent 5 parse) | partly | verified (parse); interpretation inferred |
 
+### Rows added 2026-10-04 (defect-fix round: fonts, colours, fasteners, KiCad format)
+
+| EV-ID | Claim | Source | Location | Applies? | Status |
+|---|---|---|---|---|---|
+| EV-72 | Noto Sans (latin-greek-cyrillic): SIL Open Font License 1.1, "Copyright 2022 The Noto Project Authors"; no reserved font name listed. (The notofonts.github.io site repo itself is Apache-2.0 — code, not the fonts) | notofonts (official) | https://github.com/notofonts/latin-greek-cyrillic/blob/main/OFL.txt ; https://github.com/notofonts/notofonts.github.io/blob/main/LICENSE | yes (UI font licence) | verified (extract) |
+| EV-73 | Liberation fonts: SIL OFL 1.1, "Digitized data copyright (c) 2010 Google Corporation", "Copyright (c) 2012 Red Hat, Inc.", **with Reserved Font Name Liberation** | liberationfonts (official) | https://github.com/liberationfonts/liberation-fonts/blob/main/LICENSE | yes — a modified/subsetted copy may not keep the name "Liberation" (OFL RFN rule; inferred) | verified (extract) |
+| EV-74 | Cascadia Code: SIL OFL 1.1, "Copyright (c) 2019 - Present, Microsoft Corporation, **with Reserved Font Name Cascadia Code**" | microsoft/cascadia-code | https://github.com/microsoft/cascadia-code/blob/main/LICENSE | yes — RFN applies to modified versions (inferred) | verified (extract) |
+| EV-75 | JetBrains Mono: SIL OFL 1.1, "Copyright 2020 The JetBrains Mono Project Authors"; no reserved name listed | JetBrains/JetBrainsMono | https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt | yes | verified (extract) |
+| EV-76 | Manrope: SIL OFL 1.1, "Copyright 2018 The Manrope Project Authors (https://github.com/sharanda/manrope)"; no reserved name listed (upstream repo path `OFL.txt` returned 404; copy read from the Google Fonts repository) | google/fonts (ofl/manrope) | https://github.com/google/fonts/blob/main/ofl/manrope/OFL.txt | yes | verified (extract, mirror of upstream) |
+| EV-77 | Harmonised conductor colours: L1 brown, L2 black, L3 grey, N blue, PE green-and-yellow (citing BS EN 60446:2000, BS EN 60445:2000, HD 308 S2, BS 7671:2001 Amd 2:2004). IEC 60445 itself (webstore.iec.ch/en/publication/66712, 2021 ed.) and IEC 60757 (colour code designations) were **not accessed** (paywalled) | IET *Wiring Matters*, Spring 2004 | https://electrical.theiet.org/media/1720/harmonised-colours-and-alphanumeric-marketing.pdf | partly — an installation-wiring convention, not a rule for plot/UI phase colours; other regional practices (e.g. North American) `not found` | verified (extract, secondary IET source) |
+| EV-78 | ISO 273:1979 "Fasteners — Clearance holes for bolts and screws", edition 1, 2 pages, ISO/TC 2/SC 7, status published, confirmed 2024-07-10; scope: hole diameters for fine, medium and coarse series for threads 1–150 mm; preview on ISO OBP. **Table values not accessed** | ISO | https://www.iso.org/standard/4183.html | yes (mounting-hole presets) | bibliographic/scope verified; values not accessed |
+| EV-79 | KiCad board file `(layers (ORDINAL "CANONICAL_NAME" TYPE ["USER_NAME"]))`; ordinal "used to associate the layer stack ordering"; canonical names F.Cu, In1.Cu…In30.Cu, B.Cu; **no ordinal values or KiCad 9 change documented**. KiCad 8 baseline file writes 0 = F.Cu, 1…6 = In1…In6.Cu, 31 = B.Cu | dev-docs file formats; kimotor example board | https://dev-docs.kicad.org/en/file-formats/sexpr-pcb/ (Layers Section); `/home/claude/embodic-ref/kimotor/kimotor-project/kimotor-project.kicad_pcb` `(layers …)` | yes | docs verified (extract); KiCad 9 ordinals `unresolved` |
+
 ### Repositories and KiCad documentation
 
 | EV-ID | Claim | Source | Location | Applies? | Status |
@@ -128,7 +141,7 @@ CIEEC paper is by **Li, Wang, Lv**; Moon et al. is `actuators-15-00327.pdf`.
 | EV-R5 | kimotor `stats_rlc` temperature coefficient 3.99e-2 /°C (≈10× typical copper value) | same | `kimotor_action.py` `stats_rlc` ≈ l.1520–1530 | do not reuse | verified value; judgement inferred |
 | EV-K1 | SWIG bindings deprecated as of KiCad 9.0, removal planned 11.0; unstable between major versions | KiCad dev-docs "PCB Python Bindings" | https://dev-docs.kicad.org/en/apis-and-binding/pcbnew/ §Deprecation notice, §Introduction | yes (plugin route) | verified |
 | EV-K2 | IPC API in 9.0: PCB editor only (9 and 10), running GUI required, no plotting/export, standalone plugin processes, plugins in `${KICAD_DOCUMENTS_HOME}/<version>/plugins`, per-plugin venv in `${KICAD_CACHE_HOME}/python-environments/<id>`, bundled Python on Windows by default | KiCad dev-docs "For Add-on Developers" | https://dev-docs.kicad.org/en/apis-and-binding/ipc-api/for-addon-developers/ | yes | verified |
-| EV-K3 | PCM metadata.json required fields; code packages must use a GPL-compatible open-source licence; `runtime` "ipc"/"swig" (9.0.1+); archive layout `plugins/`, `resources/icon.png` 64×64 | KiCad dev-docs "KiCad Addons" | https://dev-docs.kicad.org/en/addons/ | yes | verified |
+| EV-K3 | PCM metadata.json required fields; code packages must use a GPL-compatible open-source licence; `runtime` "ipc"/"swig" (9.0.1+, default swig); archive layout `plugins/` (files directly inside; 24×24 toolbar icon), `resources/icon.png` 64×64; schema v1 = KiCad 6.0+, v2 = KiCad 10.0+ (so v1 for KiCad 9) | KiCad dev-docs "KiCad Addons" | https://dev-docs.kicad.org/en/addons/ | yes | verified |
 | EV-K4 | kicad-python: MIT, Python ≥ 3.9, protobuf/pynng/jsonschema; requires running KiCad with API enabled (Preferences > Plugins); 0.4–0.6 ↔ KiCad 9.0.3–9.0.8 | PyPI + wheel 0.8.0 | https://pypi.org/project/kicad-python/; `kipy/board.py` version notes | yes | verified |
 | EV-K5 | kipy Board: commit API, create/update/remove items, Track/ArcTrack/Via/Zone/FootprintInstance/Pad, get_stackup, refill_zones, save; no DRC-run method | kicad-python 0.8.0 wheel | `kipy/board.py` l.584–1417; `kipy/board_types.py` | yes | verified (source read) |
 | EV-K6 | KiCad source licensed GPL v3 or later | kicad.org | https://www.kicad.org/about/licenses/ | yes (licensing) | verified |
@@ -162,6 +175,9 @@ loss 12.8 W, output 24.5 W, THD 5.7 % (Table 7 p.8); stator ≈ 44 °C after 5 m
 cross-checks. Concentric board (EV-62): **12** non-overlapping trapezoidal spiral coils per layer, 2 layers, 6 terminals,
 via at each coil's inner end (Fig. 1a p.2, read from the rendered figure) — 12 coils/16 poles; turns per coil ≈ 6–7 per layer
 from the low-resolution figure, ≈ 7–8 from the 3244 mm phase length → exact turn count still `unresolved`.
+Table 6 p.7 reports "phase inductance" (and resistance) as "measured" without stating the method (LCR meter, frequency,
+single-phase vs line-line/2, rotor present or removed) → the quantity is `unresolved` (DEF-08); compare it only with a
+model quantity once the definition is known, not directly with a synchronous (magnetising + mutual) inductance.
 
 **O3 — D10 Wang 2019 (concentric spiral UEW, 3-phase, 32 poles, 48 virtual slots, 12 layers).**
 Table 1 p.3: 240 W, 300 r/min, PCB OD 222 mm, air gap 0.9 mm, PM 7.0 mm, copper 0.14 mm/layer, spacing 0.3 mm, PCB
@@ -201,3 +217,12 @@ sim. 0.53 (p.13).
 amplitude (p.5); measured waveform shown (Fig. 11) but value not legible → `unresolved`.
 
 Not oracles (FEA only or not PCB): D05, D12, D13 (prototype torque/temperature only, yoke stator), D14, D16, D17.
+
+## Revision 2026-10-04 (defect fixes)
+
+- DEF-15: EV-07 remark reworded — at D08's stated 50 °C (Table 4.5 p.54) π/p gives 0.439 Ω (+12.7 %) and 2π/Q 0.381 Ω
+  (−2.3 %) vs 0.39 Ω (re-run of Agent 4's `v3_geometry_resistance.py`); residual favours 2π/Q, thesis choice undetermined.
+- DEF-08: O2 now records that D09 Table 6 p.7 gives "phase inductance" without method, frequency or rotor condition
+  (`unresolved`).
+- EV-K3 corrected: PCM metadata schema v2 is KiCad 10.0+; KiCad 9 packages use v1.
+- Added EV-72…EV-79 (font licences, conductor colours, ISO 273, KiCad layer ordinals) for Agents 1 and 3.

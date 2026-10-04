@@ -2,7 +2,7 @@ Prepared by: Agent 6 — Software Architecture Specialist — model: claude-opus
 
 # ADR-0006: Testing approach — unit + function-level golden regression vs the JS engine + oracle cases + property/fuzz tests, linked to requirements
 
-**Status:** Proposed — amended 2026-10-04 (Agent 2/3 refinements)
+**Status:** Proposed — amended 2026-10-04 (Agent 2/3 refinements; DRC rule per D-006)
 **Date:** 2026-10-04
 **Deciders:** Fable 5.1 — consulted: Agent 4 (independent verification), Agent 2 (tolerances), Agent 3
 
@@ -99,3 +99,12 @@ different geometry.
   oracles); `replace` and new items (spiral generator, EQ-04, EQ-21) have engineering tests only, using Agent 2's
   closed-form cases G1–G3 (`checks/eq02_eq03_reference.py`).
 - Agent 1's UX-AC-01…22 become UI/AX test cases (requirements_draft.md §9).
+
+## Revision 2026-10-04 (defect fixes)
+
+- DEF-01 / decision_log D-006: embodic reports a DRC violation when measured clearance < rule − ε (ε ≤ 1e-6 mm, no slack);
+  golden tests compare Xcoil DRC values within abs. 1e-6 mm and require pass/fail agreement only outside Xcoil's
+  [rule − 0.004 mm, rule) band (test plan §3, PR-01, UT-DRC-01/03).
+- DEF-03: UT-PHY-10 uses the adopted ρ₂₀ = 1.7241e-8 Ω·m (0.990862 Ω); GR-02 injects Xcoil's 1.724e-8 (0.99080 Ω).
+- DEF-10: validation against FEA/FEM (OR-11, OR-12) and measured oracles is `xfail` until the references exist.
+- DEF-17: rotation-by-one-coil-pitch property (PR-06) and turn-averaged pitch-factor test (UT-WND-11) added.

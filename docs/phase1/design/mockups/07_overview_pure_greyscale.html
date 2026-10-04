@@ -293,7 +293,57 @@
   .wrap { flex-wrap: wrap; }
   .between { justify-content: space-between; }
   .stack { display: grid; gap: 8px; }
+  .callout-placeholder { display: none; }
   .callout { position: absolute; display: grid; place-items: center; inline-size: 26px; block-size: 26px; border-radius: 50%; background: var(--surface-inverse); color: var(--text-inverse); font-size: var(--fs-xs); font-weight: 700; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--n-900); z-index: 5; }
+
+  /* reconciliation + defect fixes */
+  .doc-name { border: 0; background: none; padding: 2px 4px; border-radius: var(--radius-s); cursor: text; font: inherit; font-weight: 600; color: inherit; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-inline-size: 0; max-inline-size: 360px; }
+  .doc-name:hover { background: var(--surface-sunken); }
+  .statusbar a { color: inherit; }
+  .asm { display: inline-block; justify-self: start; }
+  li > .badge { justify-self: start; }
+  .asm > summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; min-block-size: 24px; padding: 0 8px 0 6px; border: 1.5px dashed var(--border-strong); border-radius: var(--radius-s); font-size: var(--fs-xs); color: var(--text-1); background: var(--surface); white-space: nowrap; }
+  .asm > summary::-webkit-details-marker { display: none; }
+  .asm > summary svg { inline-size: 12px; block-size: 12px; fill: none; stroke: currentColor; stroke-width: 2; }
+  .asm > summary::after { content: ""; inline-size: 6px; block-size: 6px; border-inline-end: 1.5px solid currentColor; border-block-end: 1.5px solid currentColor; rotate: -45deg; margin-inline-start: 2px; }
+  .asm[open] { flex-basis: 100%; }
+  .asm[open] > summary::after { rotate: 45deg; }
+  .asm ul { margin: 6px 0 2px; padding: 6px 10px 6px 24px; border: 1px dashed var(--border-control); border-radius: var(--radius-s); font-size: var(--fs-s); color: var(--text-2); display: grid; gap: 2px; background: var(--surface); }
+  .tag.asm-none { border-style: dashed; color: var(--text-3); }
+  .mini { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; padding: 6px 0; border-block-end: 1px solid var(--divider); font-size: var(--fs-s); }
+  .mini:last-child { border-block-end: 0; }
+  .mini .v { text-align: end; font-family: var(--font-mono); color: var(--text-1); white-space: nowrap; }
+  .mini .v .u { font-family: var(--font-ui); color: var(--text-2); margin-inline-start: 3px; }
+  .mini .m { grid-column: 1 / -1; display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+  .minis { margin-block-start: 8px; background: var(--n-50); border: 1px solid var(--divider); border-radius: var(--radius-s); padding: 2px 10px; }
+  .callout-key { display: block; }
+}
+
+@layer utilities {
+  /* Two-pane layout for windows 960-1279 px (REQ-N-15); also degrades without horizontal scroll down to 768 px. */
+  @media (width < 1280px) {
+    .app, .app.wide-main { grid-template-columns: 300px minmax(0, 1fr); grid-template-rows: 52px 48px minmax(0, 1fr) 232px 28px;
+      grid-template-areas: "top top" "steps steps" "panel fig" "rail rail" "status status"; }
+    .app.wide-main { grid-template-columns: 260px minmax(0, 1fr); }
+    .rail { border-inline-start: 0; border-block-start: 1px solid var(--border-strong); display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); grid-auto-rows: auto; align-content: start; align-items: start; }
+    .rail > .rail-head { grid-column: 1 / -1; padding-block: 8px; }
+    .rail > .kr { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); column-gap: 16px; align-content: start; }
+    .rail > .drc-card { margin-block: 8px; }
+    .steps-right, .callout { display: none; }
+    .doc-name { max-inline-size: 240px; }
+  }
+  @media (width < 1100px) {
+    .lbl-txt { position: absolute; clip-path: inset(50%); inline-size: 1px; block-size: 1px; overflow: hidden; white-space: nowrap; }
+    .doc-state, .st-units, .st-cursor { display: none; }
+    .steps a { padding: 0 10px; }
+  }
+  @media (width < 960px) {
+    .app, .app.wide-main { grid-template-columns: 260px minmax(0, 1fr); }
+    .steps a:not([aria-current="step"]) .step-lbl { position: absolute; clip-path: inset(50%); inline-size: 1px; block-size: 1px; overflow: hidden; white-space: nowrap; }
+    .step-state, .st-counts { display: none; }
+    .rail { grid-template-columns: minmax(0, 1fr); }
+    .doc-name { max-inline-size: 160px; }
+  }
 }
 
 
@@ -315,23 +365,23 @@
 <div class="mock-note" role="note"><span><span class="variant-tag variant-b">VARIANT B · PURE GREYSCALE</span></span>
   <span><b>Design mockup</b> · 07 Overview with the pure-greyscale phase mode active — no colour anywhere. Compare with <b>01 = VARIANT A</b> (muted phase colours + pass/fail colours).</span>
   <span>All numbers are <b>examples</b> · geometry is <b>illustrative, not computed</b></span></div>
-<a class="skip-link visually-hidden" href="#panel-step">Skip to parameters</a>
 <div class="app" id="app">
   <header class="topbar" id="app-topbar">
+  <a class="skip-link visually-hidden" href="#panel-step">Skip to parameters</a>
   <span class="logo"><img src="brand/embodic_logo.png" alt="embodic" width="1983" height="793"></span>
-  <div class="doc"><span class="doc-name" id="doc-name">12-coil / 16-pole stator (example)</span><span class="chip" id="doc-state">Unsaved changes</span></div>
+  <div class="doc"><button class="doc-name" id="doc-name" type="button" aria-label="Rename design: 12-coil / 16-pole stator (example)">12-coil / 16-pole stator (example)</button><span class="chip doc-state" id="doc-state">Unsaved changes</span></div>
   <div class="spacer"></div>
   <div class="btn-group" role="toolbar" aria-label="Document">
     <button class="btn btn-ghost icon-btn" id="btn-undo" type="button" aria-label="Undo" title="Undo (Ctrl+Z)"><svg class="i" aria-hidden="true"><use href="#i-undo"/></svg></button>
     <button class="btn btn-ghost icon-btn" id="btn-redo" type="button" aria-label="Redo" title="Redo (Ctrl+Shift+Z)"><svg class="i" aria-hidden="true"><use href="#i-redo"/></svg></button>
-    <button class="btn btn-ghost" id="btn-open" type="button"><svg class="i" aria-hidden="true"><use href="#i-open"/></svg>Open</button>
-    <button class="btn btn-ghost" id="btn-save" type="button"><svg class="i" aria-hidden="true"><use href="#i-save"/></svg>Save</button>
+    <button class="btn btn-ghost" id="btn-open" type="button"><svg class="i" aria-hidden="true"><use href="#i-open"/></svg><span class="lbl-txt">Open</span></button>
+    <button class="btn btn-ghost" id="btn-save" type="button"><svg class="i" aria-hidden="true"><use href="#i-save"/></svg><span class="lbl-txt">Save</span></button>
     <button class="btn btn-ghost icon-btn" id="btn-more" type="button" aria-label="More: presets, reference design, tests, guide" aria-haspopup="menu"><svg class="i" aria-hidden="true"><use href="#i-more"/></svg></button>
     <a class="btn btn-primary" id="btn-export" href="#step-export"><svg class="i" aria-hidden="true"><use href="#i-export"/></svg>Export</a>
   </div>
 </header>
   <nav class="stepnav" id="step-nav" aria-label="Design steps">
-  <ol class="steps" role="list"><li><a id="step-coil" href="#step-coil" aria-current="step"><span class="step-no" aria-hidden="true">1</span>Coil</a></li><li><a id="step-phases" href="#step-phases"><span class="step-no" aria-hidden="true">2</span>Phases</a></li><li><a id="step-layers" href="#step-layers"><span class="step-no" aria-hidden="true">3</span>Layers</a></li><li><a id="step-board" href="#step-board"><span class="step-no" aria-hidden="true">4</span>Board & rotor</a></li><li><a id="step-results" href="#step-results"><span class="step-no" aria-hidden="true">5</span>Results</a></li><li><a id="step-export" href="#step-export"><span class="step-no" aria-hidden="true">6</span>Export</a></li></ol>
+  <ol class="steps" role="list"><li><a id="step-coil" href="#step-coil" aria-current="step"><span class="step-no" aria-hidden="true">1</span><span class="step-lbl">Coil</span></a></li><li><a id="step-phases" href="#step-phases"><span class="step-no" aria-hidden="true">2</span><span class="step-lbl">Phases</span></a></li><li><a id="step-layers" href="#step-layers"><span class="step-no" aria-hidden="true">3</span><span class="step-lbl">Layers</span></a></li><li><a id="step-board" href="#step-board"><span class="step-no" aria-hidden="true">4</span><span class="step-lbl">Board & rotor</span></a></li><li><a id="step-results" href="#step-results"><span class="step-no" aria-hidden="true">5</span><span class="step-lbl">Results</span></a></li><li><a id="step-export" href="#step-export"><span class="step-no" aria-hidden="true">6</span><span class="step-lbl">Export</span></a></li></ol>
   <div class="steps-right"><span class="xs muted">Engine</span><span class="chip" id="engine-state">not computed · mockup</span></div>
 </nav>
   <aside class="panel" id="panel-step" aria-labelledby="panel-title">
@@ -340,7 +390,8 @@
     <h2 id="sec-comb">Winding combination</h2>
     <div class="field"><label for="param-coil-count">Coils per layer<span class="sym">Q</span></label><div class="input-unit"><input id="param-coil-count" name="coil-count" inputmode="decimal" value="12" aria-describedby="param-coil-count-unit"><span class="unit" id="param-coil-count-unit"></span></div></div>
     <div class="field"><label for="param-poles">Magnet poles<span class="sym">2p</span></label><div class="input-unit"><input id="param-poles" name="poles" inputmode="decimal" value="16" aria-describedby="param-poles-unit"><span class="unit" id="param-poles-unit"></span></div></div>
-    <div class="derived" id="hint-combination"><dt>Combination 12 / 16</dt><dd><span class="pf pass"><svg aria-hidden="true"><use href="#i-pass"/></svg>Balanced phasors</span></dd><dt>Coils per phase</dt><dd>4</dd><dt>Winding factor k<sub>w1</sub> · EQ-08</dt><dd>0.866</dd></div>
+    <div id="hint-combination"><div class="row" style="margin-top:8px"><span class="pf pass"><svg aria-hidden="true"><use href="#i-pass"/></svg>Balanced phasors</span><span class="xs muted">combination 12 / 16</span></div>
+    <div class="minis"><div class="mini"><span class="k">Coils per phase</span><span class="v"><span class="num">4</span><span class="u">coils</span></span><span class="m"><span class="badge" data-status="verified"><svg aria-hidden="true"><use href="#i-st-verified"/></svg><span class="visually-hidden">Status: </span>verified</span><span class="tag">derived</span><span class="tag asm-none">0 assumptions</span></span></div><div class="mini"><span class="k">Winding factor k<sub>w1</sub></span><span class="v"><span class="num">0.866</span><span class="u">–<span class="visually-hidden"> dimensionless</span></span></span><span class="m"><span class="badge" data-status="inferred"><svg aria-hidden="true"><use href="#i-st-inferred"/></svg><span class="visually-hidden">Status: </span>inferred</span><a class="eq" href="#">EQ-08</a><span class="tag asm-none">0 assumptions</span></span></div></div></div>
   </section>
   <section class="sec" aria-labelledby="sec-shape">
     <h2 id="sec-shape">Coil shape</h2>
@@ -401,20 +452,20 @@
     <div class="row" style="justify-content:flex-start"><span class="meta row" style="gap:6px"><svg class="i i-s" aria-hidden="true"><use href="#i-warn"/></svg>1 warning · 2,412 pairs checked</span></div>
     <div class="row" style="justify-content:flex-start;gap:6px"><button class="btn btn-s" type="button" id="btn-drc-locate"><svg class="i i-s" aria-hidden="true"><use href="#i-locate"/></svg>Locate</button><a class="btn btn-s btn-ghost" href="#step-results">Open checks</a></div>
   </section>
-  <ul class="kr" role="list"><li id="res-r-phase"><span class="k">Phase resistance at 60 °C <span class="muted mono xs">R<sub>ph</sub></span></span><span class="v"><span class="num" id="res-r-phase-value">1.9</span><span class="u" id="res-r-phase-unit">Ω</span></span><span class="meta"><span class="badge" data-status="inferred"><svg aria-hidden="true"><use href="#i-st-inferred"/></svg><span class="visually-hidden">Status: </span>inferred</span><a class="eq" href="#res-r-phase-how" id="res-r-phase-eq" aria-label="Equation EQ-10">EQ-10</a><span class="xs muted" style="margin-inline-start:auto">example</span></span></li><li id="res-ke"><span class="k">Back-EMF constant, phase peak <span class="muted mono xs">K<sub>e</sub></span></span><span class="v"><span class="num" id="res-ke-value">12.4</span><span class="u" id="res-ke-unit">mV·s/rad</span></span><span class="meta"><span class="badge" data-status="inferred"><svg aria-hidden="true"><use href="#i-st-inferred"/></svg><span class="visually-hidden">Status: </span>inferred</span><a class="eq" href="#res-ke-how" id="res-ke-eq" aria-label="Equation EQ-06">EQ-06</a><span class="xs muted" style="margin-inline-start:auto">example</span></span></li><li id="res-kt"><span class="k">Torque constant per line A rms <span class="muted mono xs">K<sub>t</sub></span></span><span class="v"><span class="num" id="res-kt-value">18.6</span><span class="u" id="res-kt-unit">mN·m/A</span></span><span class="meta"><span class="badge" data-status="inferred"><svg aria-hidden="true"><use href="#i-st-inferred"/></svg><span class="visually-hidden">Status: </span>inferred</span><a class="eq" href="#res-kt-how" id="res-kt-eq" aria-label="Equation EQ-09">EQ-09</a><span class="xs muted" style="margin-inline-start:auto">example</span></span></li><li id="res-ls"><span class="k">Synchronous inductance (first estimate) <span class="muted mono xs">L<sub>s</sub></span></span><span class="v"><span class="num" id="res-ls-value">21</span><span class="u" id="res-ls-unit">µH</span></span><span class="meta"><span class="badge" data-status="unresolved"><svg aria-hidden="true"><use href="#i-st-unresolved"/></svg><span class="visually-hidden">Status: </span>unresolved</span><a class="eq" href="#res-ls-how" id="res-ls-eq" aria-label="Equation EQ-14">EQ-14</a><span class="xs muted" style="margin-inline-start:auto">example</span></span></li><li id="res-dt"><span class="k">Temperature rise at 2.0 A rms <span class="muted mono xs">ΔT</span></span><span class="v"><span class="num" id="res-dt-value">28</span><span class="u" id="res-dt-unit">K</span></span><span class="meta"><span class="badge" data-status="assumption"><svg aria-hidden="true"><use href="#i-st-assumption"/></svg><span class="visually-hidden">Status: </span>assumption</span><a class="eq" href="#res-dt-how" id="res-dt-eq" aria-label="Equation EQ-17">EQ-17</a><span class="xs muted" style="margin-inline-start:auto">example</span></span></li></ul>
+  <ul class="kr" role="list"><li id="res-r-phase"><span class="k">Phase resistance at 60 °C <span class="muted mono xs">R<sub>ph</sub></span></span><span class="v"><span class="num" id="res-r-phase-value">1.9</span><span class="u" id="res-r-phase-unit">Ω</span></span><span class="meta"><span class="badge" data-status="inferred"><svg aria-hidden="true"><use href="#i-st-inferred"/></svg><span class="visually-hidden">Status: </span>inferred</span><a class="eq" href="#res-r-phase-how" id="res-r-phase-eq" aria-label="Equation EQ-10">EQ-10</a><details class="asm" data-role="assumptions" id="res-r-phase-asm"><summary class="tag"><svg aria-hidden="true"><use href="#i-st-assumption"/></svg>3 assumptions</summary><ul><li>Copper thickness 34.8 µm (1 oz nominal, default)</li><li>PCB copper behaves like IACS annealed copper (G6)</li><li>Winding temperature 60 °C (default)</li></ul></details><span class="xs muted" style="margin-inline-start:auto">example</span></span></li><li id="res-ke"><span class="k">Back-EMF constant, phase peak <span class="muted mono xs">K<sub>e</sub></span></span><span class="v"><span class="num" id="res-ke-value">12.4</span><span class="u" id="res-ke-unit">mV·s/rad</span></span><span class="meta"><span class="badge" data-status="inferred"><svg aria-hidden="true"><use href="#i-st-inferred"/></svg><span class="visually-hidden">Status: </span>inferred</span><a class="eq" href="#res-ke-how" id="res-ke-eq" aria-label="Equation EQ-06">EQ-06</a><details class="asm" data-role="assumptions" id="res-ke-asm"><summary class="tag"><svg aria-hidden="true"><use href="#i-st-assumption"/></svg>3 assumptions</summary><ul><li>Magnet remanence B<sub>r</sub> = 1.30 T (default, typical NdFeB)</li><li>Recoil permeability µ<sub>r</sub> = 1.05 (no datasheet value)</li><li>Air gap 1.0 mm per side (default)</li></ul></details><span class="xs muted" style="margin-inline-start:auto">example</span></span></li><li id="res-kt"><span class="k">Torque constant per line A rms <span class="muted mono xs">K<sub>t</sub></span></span><span class="v"><span class="num" id="res-kt-value">18.6</span><span class="u" id="res-kt-unit">mN·m/A</span></span><span class="meta"><span class="badge" data-status="inferred"><svg aria-hidden="true"><use href="#i-st-inferred"/></svg><span class="visually-hidden">Status: </span>inferred</span><a class="eq" href="#res-kt-how" id="res-kt-eq" aria-label="Equation EQ-09">EQ-09</a><details class="asm" data-role="assumptions" id="res-kt-asm"><summary class="tag"><svg aria-hidden="true"><use href="#i-st-assumption"/></svg>3 assumptions</summary><ul><li>Magnet remanence B<sub>r</sub> = 1.30 T (default, typical NdFeB)</li><li>Recoil permeability µ<sub>r</sub> = 1.05 (no datasheet value)</li><li>Air gap 1.0 mm per side (default)</li></ul></details><span class="xs muted" style="margin-inline-start:auto">example</span></span></li><li id="res-ls"><span class="k">Synchronous inductance (estimate) <span class="muted mono xs">L<sub>s</sub></span></span><span class="v"><span class="num" id="res-ls-value">21</span><span class="u" id="res-ls-unit">µH</span></span><span class="meta"><span class="badge" data-status="unresolved"><svg aria-hidden="true"><use href="#i-st-unresolved"/></svg><span class="visually-hidden">Status: </span>unresolved</span><a class="eq" href="#res-ls-how" id="res-ls-eq" aria-label="Equation EQ-14">EQ-14</a><details class="asm" data-role="assumptions" id="res-ls-asm"><summary class="tag"><svg aria-hidden="true"><use href="#i-st-assumption"/></svg>3 assumptions</summary><ul><li>Effective gap δ′ from magnet and air-gap defaults</li><li>k<sub>w1</sub> from the textbook phasor sum</li><li>End-turn and leakage terms omitted</li></ul></details><span class="xs muted" style="margin-inline-start:auto">example</span></span></li><li id="res-dt"><span class="k">Temperature rise at 2.0 A rms <span class="muted mono xs">ΔT</span></span><span class="v"><span class="num" id="res-dt-value">28</span><span class="u" id="res-dt-unit">K</span></span><span class="meta"><span class="badge" data-status="assumption"><svg aria-hidden="true"><use href="#i-st-assumption"/></svg><span class="visually-hidden">Status: </span>assumption</span><a class="eq" href="#res-dt-how" id="res-dt-eq" aria-label="Equation EQ-17">EQ-17</a><details class="asm" data-role="assumptions" id="res-dt-asm"><summary class="tag"><svg aria-hidden="true"><use href="#i-st-assumption"/></svg>2 assumptions</summary><ul><li>Film coefficient h = 25 W/m²K (default; sources give 10–30)</li><li>Cooling area = both board faces, no enclosure</li></ul></details><span class="xs muted" style="margin-inline-start:auto">example</span></span></li></ul>
   <div style="padding:4px 16px 16px" class="stack">
-    <p class="xs muted">Every number shows its unit, its equation (EQ-ID) and a validation status. Select a value for “how was this computed”.</p>
+    <p class="xs muted">Every number shows its unit, its equation (EQ-ID), the trust level of the calculation (badge) and the assumptions it depends on (dashed tag). ΔT reads “assumption” because its thermal model itself is an engineering assumption (EQ-17).</p>
     <a class="btn" href="#step-results" style="justify-self:start"><svg class="i" aria-hidden="true"><use href="#i-results"/></svg>All results</a>
   </div>
 </aside>
   <footer class="statusbar" id="statusbar">
   <span id="st-compute">Mockup · no engine</span>
-  <span id="st-drc">DRC: 1 fail, 1 warning (example)</span>
-  <span id="st-counts">6 layers · 12 coils · 84 vias (example)</span>
+  <a id="st-drc" href="#rail-drc">DRC: 1 fail, 1 warning (example)</a>
+  <span class="st-counts" id="st-counts">6 layers · 12 coils · 84 vias (example)</span>
   
   <span class="grow"></span>
-  <span id="st-units">Units: mm, °, A, V</span>
-  <span id="st-cursor" class="mono">x 21.40 y −8.15 r 22.90 mm θ −20.8°</span>
+  <span class="st-units" id="st-units">Units: mm, °, A, V</span>
+  <span id="st-cursor" class="mono st-cursor">x 21.40 y −8.15 r 22.90 mm θ −20.8°</span>
 </footer>
 </div>
 <section class="frame-caption" aria-labelledby="cmp-title">

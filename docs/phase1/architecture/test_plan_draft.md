@@ -41,7 +41,7 @@ test carries `@pytest.mark.req("REQ-…")` and, for physics, `@pytest.mark.eq("E
 | UT-GEO-04 | Centre via terminates X and Y | distance ≤ 1e-9 mm |
 | UT-GEO-05 | X and Y have equal circulation (signed area sign) | same sign; magnitudes within 1e-9 rel. for identical artwork |
 | UT-GEO-06 | Coil k = coil 0 rotated by 2πk/Q (+ pair rotation) | all primitive points coincide within 1e-9 mm |
-| UT-GEO-07 | Generated coil length vs EQ-03 closed form | within ±6 % (A2-EQ EQ-03 tolerance) for the C4 cases (12 and 18 coils, r 18–38 mm, 0.5/0.2 mm) |
+| UT-GEO-07 | Generated coil length vs EQ-03 closed form | within −6 … 0 % for the trapezoid-only C4 cases (12 and 18 coils, r 18–38 mm, 0.5/0.2 mm; Agent 2 basis); closed form itself vs Agent 2 G2/G3 values to 1e-3 mm; triangular-loop cases: tolerance basis `unresolved` (Agent 2) |
 | UT-GEO-08 | Moving inner end-turn (triangular turns) | D08 geometry: no turn self-intersection; inner end-turn radius increases monotonically once sides converge |
 | UT-GEO-09 | Turn limit | returned max N is buildable and N + 1 is not (boundary) |
 | UT-GEO-10 | Series (M2) and parallel (M1) pair configurations build for the default design | circuit groups match `series_groups`; via counts per §7.3 formula |
@@ -53,7 +53,7 @@ test carries `@pytest.mark.req("REQ-…")` and, for physics, `@pytest.mark.eq("E
 | UT-GEO-16 | Polarity −1 coils reverse current direction, not artwork | signed Δr of radial sides inverted; geometry identical |
 | UT-GEO-17 | Side styles | radial: side line passes through origin within 1e-9 mm; parallel: constant offset d_t |
 | UT-GEO-18 | End styles arc / straight / stadium | end primitives of the expected type; continuity holds |
-| UT-GEO-19 | Phase-per-pair (M4) | each pair contains coils of exactly one phase; pairs rotated by 2π/(3p) |
+| UT-GEO-19 | Phase-per-pair (M4), incl. 16/16 (Agent 2 alternative B) | each pair contains coils of exactly one phase; pairs rotated by 2π/(3p) (15°/30° mech. for 2p = 16) within 1e-9 rad |
 | UT-GEO-20 | Generator interface | a stub test generator registered at runtime passes through DRC, physics and all writers unchanged (REQ-F-19) |
 | UT-GEO-21 | Fastener holes | holes at specified radius/count; edge, pitch and copper keep-out violations reported (REQ-F-24) |
 
@@ -64,13 +64,14 @@ test carries `@pytest.mark.req("REQ-…")` and, for physics, `@pytest.mark.eq("E
 | UT-WND-01 | 12/10 pattern | "AabBCcaABbcC" (D08 p.36 Fig. 3.7; reproduced by A2 `checks/kw.py`, `verified (reproduced)`) |
 | UT-WND-02 | **Star-of-slots belt-edge regression** | 12/14, 24/14, 24/22, 24/26 reported balanced with 4/4/4, 8/8/8 … coils per phase (Xcoil bug A2-REV C6 must not recur) |
 | UT-WND-03 | 12/16 pattern | "ACBACBACBACB", all positive (A2-TOP §2.2) |
-| UT-WND-04 | 16/16 three-phase | rejected `UNBUILDABLE_UNBALANCED_WINDING` |
+| UT-WND-04 | 16/16 three-phase | all phases sharing the layers (FSCW mode) → `UNBUILDABLE_UNBALANCED_WINDING`; one phase per layer pair (M4) → accepted, phases 120° el. apart by pair rotation (DEF-04) |
 | UT-WND-05 | k_w1/k_w5/k_w7 table | A2-TOP §2.2 values (12/10 0.933 …) to 1e-3 as printed; recomputed exact values to 1e-9 vs an independent implementation (Agent 4) |
 | UT-WND-06 | q and t | exact `Fraction` q; t = gcd(Q, p) for all Q ≤ 48, 2p ≤ 48 |
 | UT-WND-07 | Delta with k_w3 ≠ 0 | 12/14 delta → `RANGE_DELTA_TRIPLEN`; 12/16 delta → no warning (k_w3 = 0, A2-TOP §3.4) |
 | UT-WND-08 | Parallel paths a ≤ t | a = t accepted, a = t + 1 → `UNBUILDABLE_PARALLEL_PATHS_EXCEED_T` |
 | UT-WND-09 | Manual assignment override | unbalanced manual assignment accepted with warning and balance metric shown |
-| UT-WND-10 | Balanced-list helper | for 14 poles includes 12 and 24 (A2-REV C6 regression of `balancedSectorList`) |
+| UT-WND-10 | Balanced-list helper `balanced_coil_counts(poles)` | for 14 poles includes 12 and 24 (A2-REV C6 regression of `balancedSectorList`) |
+| UT-WND-11 | Turn-averaged pitch factor k_p,avg,n = (1/N) Σ_t abs(sin(n p σ_t/2)), σ_t(r) = θ_cp − 2 asin(d_t/r) (D15 eq. 6, EV-59; A2-EQ EQ-08) | (a) limit d_t → 0, N = 1 gives the pitch factor of span θ_cp: 12/16 n = 1 → sin 120° = 0.8660254, 12/10 → sin 75° = 0.9659258 (1e-9); (b) equals the mean of independently computed per-turn values to 1e-12 for the default 12/16, N = 8 at mean radius; (c) harmonic n = 5, 7 evaluated with the same rule (1e-12 vs independent implementation, Agent 4) |
 
 ### 2.3 Physics (`embodic.physics`) — REQ-F-07, F-11, F-12, T-08 (re-run of A2 checks C1–C9)
 
@@ -85,7 +86,7 @@ test carries `@pytest.mark.req("REQ-…")` and, for physics, `@pytest.mark.eq("E
 | UT-PHY-07 | EQ-07 | Series chain = phasor sum of pair EMFs at own z | rel. 1e-9 |
 | UT-PHY-08 | EQ-07 | Two-member identity | P_c = abs(E₁ − E₂)² / (2(R₁ + R₂)) to 1e-12 |
 | UT-PHY-09 | EQ-09 | Star/delta identities | Ke,LL = √3 Ke,ph (star), = Ke,ph (delta); T ω = m E_rms I_rms to 1e-9 |
-| UT-PHY-10 | EQ-10 | 1000 mm × 0.5 mm × 34.8 µm (C3) | 0.99080 Ω (20 °C), 1.14656 Ω (60 °C), rel. 1e-5 |
+| UT-PHY-10 | EQ-10 | 1000 mm × 0.5 mm × 34.8 µm with the **adopted** constants ρ₂₀ = 1.7241e-8 Ω·m, α = 0.00393 /K (EV-53; registry EQ-10 `expected` 0.990862 Ω) | 0.990862 Ω (20 °C), 1.146626 Ω (60 °C), rel. 1e-6 (DEF-03; Xcoil's 1.724e-8 value 0.99080 Ω is tested only in GR-02 with the Xcoil constant injected) |
 | UT-PHY-11 | EQ-11 | Via barrel drill 0.3, plating 25 µm | A = 0.021598 mm²; l 0.2 mm, 20 °C → 0.160 mΩ (C9) |
 | UT-PHY-12 | EQ-12 | One radial trace example (C9) | 7.23e-5 W (adopted /24 form), rel. 1e-3 |
 | UT-PHY-13 | EQ-13 | Skin depth 133.3 Hz, 20 °C → 5.72 mm; w > δ/3 → `RANGE_SKIN_DEPTH` flag on R and eddy results | ±0.01 mm; flag present |
@@ -101,9 +102,9 @@ test carries `@pytest.mark.req("REQ-…")` and, for physics, `@pytest.mark.eq("E
 
 | ID | Check | Criterion |
 |---|---|---|
-| UT-DRC-01 | Default design measured min trace–trace clearance | within 0.005 mm of the set clearance (Xcoil DRC-01 criterion) |
+| UT-DRC-01 | Default design measured min trace–trace clearance | no violation: ≥ rule − 1e-6 mm (D-006, no slack band); tight packing: ≤ rule + 0.005 mm |
 | UT-DRC-02 | Exact distance kernels | line–line, line–arc, arc–arc vs dense brute-force sampling: exact ≤ sampled + chord bound, ≥ sampled − 1e-9 |
-| UT-DRC-03 | Fault injection | moving one turn 1 µm inward produces exactly one new violation with correct location |
+| UT-DRC-03 | Fault injection | moving one turn 1 µm inward (measured = rule − 1 µm < rule − ε, ε ≤ 1e-6 mm) produces exactly one new violation with correct location |
 | UT-DRC-04 | Connectivity exemption | adjacent primitives and terminating vias exempt; non-adjacent turns of the same spiral (same net) **checked** |
 | UT-DRC-05 | Through-via vs other layers | via of pair 1 against copper of pairs 2–3 checked on all spanned layers |
 | UT-DRC-06 | Copper–edge and copper–hole | violation when within edge clearance |
@@ -115,9 +116,11 @@ test carries `@pytest.mark.req("REQ-…")` and, for physics, `@pytest.mark.eq("E
 | ID | Check | REQ |
 |---|---|---|
 | UT-RES-01 | No bare floats in `AnalysisResult`; every field Traceable with ≥ 1 EQ-ID; all IDs resolve | T-02, T-04 |
-| UT-RES-02 | `combine_status` truth table (all 5 statuses, validity cap, defaults as assumption, `cannot verify yet` → unresolved) | T-03, T-05 |
+| UT-RES-02 | Badge truth table (D-007): equation evidence status × test state × validity cap; `cannot verify yet` → unresolved; inputs never change the badge | T-03, T-05 |
 | UT-RES-03 | Registry integrity (no dangling EQ/EV IDs; every entry has a source) | T-04 |
 | UT-RES-04 | Unit vocabulary and display forms ("V·s/rad", "Ω", "A/mm²") | N-21, L-07 |
+| UT-RES-05 | "n assumed inputs" tag lists exactly, for the inputs the kernel used: inputs equal to their default, physical-property inputs not marked measured, and equation-level assumptions not retired by a measured input — dominant ones first (ADR-0003 decision 3) | T-03 |
+| UT-RES-06 | `measured` provenance: accepted only with a named source; removes the input (or the equation-level assumption it replaces, e.g. finished copper thickness) from the tag; refused without a source | T-06 |
 | UT-IO-01 | Save → load → save byte-identical | F-15 |
 | UT-IO-02 | Canonical JSON and hash stable across runs/platforms | F-15, N-04 |
 | UT-IO-03 | Example files validate against the published JSON Schema; loader and schema agree on 50 mutated files | F-15 |
@@ -153,7 +156,7 @@ the same copper.
 | ID | EQ (gate) | JS function(s) (engine.js line, A2-REV §1) | Inputs | Tolerance |
 |---|---|---|---|---|
 | GR-01 | EQ-01 (reuse) | `derive` / `deriveSector` pole and coil pitch | 2p ∈ {10, 14, 16, 20}, Q ∈ {9, 12, 15, 18, 24} | exact |
-| GR-02 | EQ-10 (reuse) | `copperResistivity` l.80, `traceResistance` l.102, `primsResistance` l.97 | T ∈ {−20, 20, 60, 120} °C; fixed primitive lists | 1e-9 |
+| GR-02 | EQ-10 (reuse) | `copperResistivity` l.80, `traceResistance` l.102, `primsResistance` l.97 | T ∈ {−20, 20, 60, 120} °C; fixed primitive lists; **Xcoil constant ρ₂₀ = 1.724e-8 injected** (1000 × 0.5 mm × 34.8 µm → 0.99080 Ω) | 1e-9 |
 | GR-03 | EQ-05 (reuse with change; unchanged part = constant α_p) | `fieldHarmonic` l.856, `fieldSetup` l.868 | n ∈ odd 1…13, r ∈ {12, 18, 28, 38, 44} mm, z grid, 3 rotor types | 1e-9 |
 | GR-04 | EQ-06 (reuse) | `analyzeElements` l.1846 — λ_n per element | Xcoil sector elements: 12/10 1-turn (C2), 12/16 8-turn, 18/16 | 1e-9 |
 | GR-05 | EQ-07 (reuse with change; unchanged = parallel members) | `analyzeElements` parallel members, circulating loss | 2 and 3 parallel layer members at different z | 1e-9 |
@@ -181,6 +184,10 @@ measurements `verified (run)` there, tolerances `assumption` pending Agent 4):
 - **Tolerance map**: discrete outputs (codes, counts, structure) exact; scalar kernels rel. 1e-12 (Agent 3 measured max
   1.6e-15 for `fieldHarmonic`); integrated results rel. 1e-9; geometry by sampled path distance ≤ 1e-6 mm; DRC values
   abs. 1e-6 mm; exported text compared as parsed numbers on the writer's grid (1e-5 mm in Xcoil's `fmt()`).
+- **DRC pass/fail (decision_log D-006)**: embodic reports a violation when measured < rule − ε (ε ≤ 1e-6 mm); Xcoil passes
+  down to rule − 0.004 mm (`engine.js` l.757, l.774). Golden tests therefore compare DRC *values* (abs. 1e-6 mm) and require
+  pass/fail agreement only when the measured clearance lies outside Xcoil's slack band [rule − 0.004 mm, rule); inside the
+  band embodic must report the violation and the case is logged as an expected difference.
 - **Near-threshold rule**: a mismatch in a discrete decision whose margin is < 1e-9 relative (discretisation counts,
   magnet-span membership, turn limits, DRC pass/fail; Agent 3 §2.3 list) is logged as "indeterminate", not failed.
 - **Non-finite values** are encoded explicitly in the JSON fixtures (`{"$f": "inf"}` etc.); Xcoil results contain 1–6
@@ -206,32 +213,34 @@ Prerequisites must be met before an oracle can pass; until then the test is mark
 | ID | Oracle (A5-REG §C) | Quantity | Published value | Tolerance (source) | Prerequisites / blocking gaps |
 |---|---|---|---|---|---|
 | OR-01 | O1 D08 thesis | Line-line peak back-EMF constant | 0.031 V·s/rad, meas. (Table 9.1 p.98) | ±8 % (A2-EQ EQ-06: D08's own model within max 8 %) | EQ-04 T-arrangement magnets; air gap 1.4 vs 2.8 mm (G10); compare synthesised waveform peak, not fundamental (EQ-09) |
-| OR-02 | O2 D09 Tokgöz | Phase DC resistance | 1.07 Ω, meas. (Table 6 p.7) | ±8 % (A2-EQ EQ-10) | turns per coil and coil count (G2, task T-D) |
+| OR-02 | O2 D09 Tokgöz | Phase DC resistance | 1.07 Ω, meas. (Table 6 p.7) | ±8 % (A2-EQ EQ-10); basis must note that D09 does not state the measurement temperature in the pages read — R₂₀ from the published 3244 mm is 0.999 Ω and 1.07 Ω corresponds to ≈ 38 °C if only temperature differed (Agent 4 report §b.5, `inferred`) | **turn count only** (coil count 12 is `verified`, EV-62); Agent 4's inversion gives N = 7 or 8, not decidable (UD-25) |
 | OR-03 | O3 D10 Wang 2019 | Phase DC resistance | 2.15 Ω, meas. (p.8) | ±8 % (A2-EQ EQ-10) | unequal-width concentric geometry (S5, reserved) → Later |
-| OR-04 | O1 D08 | Turns per coil | 3 (Table 4.6 p.57) | exact vs EQ-02 rule; ±1 vs constructive generator (A2-EQ EQ-02) | moving inner end-turn (REQ-F-06) |
+| OR-04 | O1 D08 | Turns per coil | 3 (Table 4.6 p.57) | exactly 3 loops (1 trapezoidal + 2 triangular) in concentric test mode; constructive generator 3, or 2 only with a reported eye limit (Agent 4 DEF-09) | moving inner end-turn (REQ-F-06) |
 | OR-05 | O1 D08 | Phase resistance (calc. in paper) | 0.39 Ω (Table 4.6 p.57); A2 reproduction 0.381 Ω (C7) | to be set by Agent 2/4 (A2 residual −2.3 %, ρ₂₀/α of D08 unknown) | EQ-03 one pair of sides per loop |
 | OR-06 | O1 D08 | Copper-loss-budget current | 1.84 A (Table 4.6); A2 1.849 A | to be set (A2: reproduced) | — |
 | OR-07 | O2 D09 | Phase EMF | calc. 6.21 V / FEA 6.20 V RMS (Tables 4–5 p.6) | ±5 % (A2-EQ EQ-06) | turn data (G2) |
 | OR-08 | O2 D09 | Field at mid-radius | ≈ 0.72–0.75 T (figure readings, `inferred`) | ±5 % (A2-EQ EQ-05) | µ_r assumption |
 | OR-09 | O2 / O5 | Inductance | 14.8 µH (D09 Table 6), 22.3 µH (D07 Table 4), meas. | **none** — characterisation only (EQ-14 `cannot verify yet`) | G1 |
 | OR-10 | O3 D10 | Temperature at 12 A/mm² | 110.2 °C at 27 °C ambient, meas. (p.10) | ±30 % on ΔT (A2-EQ EQ-17, `assumption`) | conduction path model → Later |
+| OR-11 | FEA (Agent 4 T-A) | EQ-05 B₁ at mid-radius and per-layer B_z | from 3-D FEA or FEMM 2-D at mean radius | ±5 % (A2-EQ EQ-05) | FEA case not available → `xfail` (REQ-F-11 (ii); UD-27 FEMM) |
+| OR-12 | 2-D FEM (Agent 4 T-B) | EQ-12 eddy loss of one trace | from 2-D FEM of a single trace | ±20 % (A2-EQ EQ-12) | FEM case not available → `xfail` (REQ-F-11 (ii)) |
 
 ## 5. Property and fuzz tests (PR) — Hypothesis
 
 | ID | Property | REQ |
 |---|---|---|
-| PR-01 | **DRC soundness**: whenever a layout is produced and `drc.passed`, an independent brute-force checker (Agent 4) finds no non-exempt pair closer than the rule − 1e-6 mm; conversely every violation found by the checker is reported by `run_drc` | F-10 |
+| PR-01 | **DRC soundness** (rule D-006, ε ≤ 1e-6 mm, no slack band): whenever a layout is produced and `drc.passed`, an independent brute-force checker (Agent 4) finds no non-exempt pair closer than the rule − 1e-6 mm; conversely every violation found by the checker is reported by `run_drc` | F-10 |
 | PR-02 | Symmetric DRC shortcut = full DRC (same min clearances within 1e-9 mm, same violation set) | F-10, N-01 |
 | PR-03 | Continuity (UT-GEO-01) and tangent continuity hold for every built layout | F-01 |
 | PR-04 | After mm→nm rounding every connected end-point pair is identical in nm; no two distinct primitives collapse | K-08, N-21 |
 | PR-05 | 1 000 random parameter sets per profile: no uncaught exception, no NaN/∞ in any result; invalid inputs return issues | F-14 |
-| PR-06 | Scaling laws: R ∝ 1/t_cu; R(T) linear per EQ-10; Ke ∝ B_r (linear model); eddy ∝ f²; Ke independent of speed; rotating the design rotates geometry and leaves abs(Ke) unchanged | ADR-0009, F-11 |
+| PR-06 | Scaling laws: R ∝ 1/t_cu; R(T) linear per EQ-10; Ke ∝ B_r (linear model); eddy ∝ f²; Ke independent of speed. **Rotation by one coil pitch** (θ₀ → θ₀ + 2π/Q): every phase phasor shifts by p·2π/Q electrical (1e-9 rad), abs(Ke) per phase, R per phase and all DRC values are unchanged (1e-9 rel. / 1e-9 mm), and the coil → phase assignment relabels consistently (coil k takes the phase/polarity of coil k−1, up to the electrical shift) (DEF-17) | ADR-0009, F-02, F-11 |
 | PR-07 | Balanced combinations → abs(Ke_A) = abs(Ke_B) = abs(Ke_C) within 1e-9 rel. and 120° el. spacing within 1e-9 rad | F-02 |
 | PR-08 | Design hash changes iff a design field changes; provenance/ui changes do not change it | F-15 |
 | PR-09 | Determinism: same input → byte-identical result JSON (same platform) | N-04 |
 | PR-10 | Mirror property (UT-GEO-03) for random coil specs | F-01 |
 | PR-11 | Containment: all copper inside the envelope and ≥ edge clearance from outline, bore and holes | F-09, F-10 |
-| PR-12 | Status monotonicity: replacing a user input by a default never raises a result's status | T-03 |
+| PR-12 | Re-entry invariance (D-007): re-typing any input with its current or default value changes no badge, no "n assumed inputs" tag and no design hash; badges never depend on input provenance | T-03, F-21 |
 
 Profiles: `fast` (CI, ≤ 2 min total, `assumption`), `long` (nightly, 10× examples). Seeds printed on failure; shrunk examples
 added as regression cases.
@@ -243,7 +252,7 @@ added as regression cases.
 | BV-01 | trace width ≤ 0, NaN, ∞ | `INVALID_NON_POSITIVE` / `INVALID_TYPE` |
 | BV-02 | r_outer ≤ r_inner | `INVALID_ORDER` |
 | BV-03 | odd pole count | `INVALID_POLE_COUNT_ODD` |
-| BV-04 | Q not multiple of 3 (e.g. 16) | `UNBUILDABLE_UNBALANCED_WINDING` |
+| BV-04 | Q not multiple of 3 (e.g. 16) with all phases on every layer | `UNBUILDABLE_UNBALANCED_WINDING`; the same Q in M4 (one phase per pair) builds (see UT-WND-04) |
 | BV-05 | turns = max / max + 1 | builds / `UNBUILDABLE_ZERO_TURNS` or `…_TURNS_EXCEED_MAX` |
 | BV-06 | pair references unknown copper layer | `INVALID_PAIR_LAYER_UNKNOWN` |
 | BV-07 | odd number of copper layers for pairs | `UNBUILDABLE_ODD_PAIR_LAYERS` |
@@ -303,7 +312,7 @@ Technology-neutral definitions; implemented with pytest-qt offscreen (C-A) or Pl
 | KX-05 | Metadata (generator "embodic", versions, design hash) present in all files | T-07, L-03 |
 | KX-06 | Widths and layer names match the layout; inner layers named per mapping rule | K-01 |
 | KX-07 | `embodic.io.kicad_items.layout_to_item_specs` (pure, no KiCad): counts, mm→nm, y flip, start/mid/end order; identical specs feed the `.kicad_pcb` writer and the plugin | K-02, K-08 |
-| KX-08 | `apply_item_specs` against `FakeBoardApi`: begin/commit on success, rollback on exception, removes only tracked embodic items; a 4-layer fake board with a 6-layer design creates nothing and reports `KICAD_LAYERS_MISSING` | K-02, K-04, K-14 |
+| KX-08 | `apply_item_specs` against `FakeBoardApi`: begin/commit on success, rollback on exception, removes only tracked embodic items; a 4-layer fake board with a 6-layer design creates nothing and reports `KICAD_LAYERS_MISSING`; the plain-text report beside the board lists counts, blocking messages and the "run KiCad DRC" note | K-02, K-04, K-14, K-16 |
 | KX-09 | SVG parses as XML; layer groups per copper layer; viewBox covers the outline | F-16 |
 | KX-10 | PDF opens with pypdf; ≥ 1 page; contains "Key results" and status labels | F-16, T-07 |
 | KX-11 | ZIP bundle (if implemented): contains every selected export + summary text; Xcoil v3 JSON import maps existing fields and lists dropped ones | F-29 |
@@ -341,7 +350,7 @@ Technology-neutral definitions; implemented with pytest-qt offscreen (C-A) or Pl
 | AX-01 | Contrast of every theme colour pair used for text (≥ 4.5:1; large ≥ 3:1) and for UI components/graphics (≥ 3:1) | script computes WCAG relative-luminance ratios from `theme.py` tokens (WCAG 2.2 SC 1.4.3, 1.4.11) | N-11, L-04 |
 | AX-02 | Keyboard-only scenario (open, edit 3 inputs, recompute, open EQ details, export SVG) | scripted key events, no pointer | N-12, T-01 |
 | AX-03 | Visible, unobscured focus indicator on every focusable control | screenshot diff focused vs unfocused | N-12 |
-| AX-04 | Interactive targets ≥ 24 × 24 px (SC 2.5.8) | enumerate widgets/DOM nodes and check geometry | N-13 |
+| AX-04 | Interactive targets ≥ 24 × 24 px (SC 2.5.8) | enumerate widgets and measure the **clickable area** (for checkboxes/radios the label hit area, ≥ 32 px per Agent 1, not the 18 px glyph — review item 13) | N-13 |
 | AX-05 | Colour not sole cue: greyscale + deuteranopia simulation, reviewer identifies phase and polarity of 12 coils | manual, 100 % accuracy | N-14 |
 | AX-06 | Screen reader (Windows Narrator) announces label, value, unit (inputs) and value, unit, status (results) | manual checklist | N-16 |
 | AX-07 | If web front-end (C-B1): axe-core (MPL-2.0) automated audit, 0 serious/critical violations | Playwright + axe-core | N-11…16 |
@@ -399,7 +408,7 @@ Generated automatically in Phase 2 from pytest markers (TR-01); this skeleton de
 | REQ-ID | Module(s) | Test IDs |
 |---|---|---|
 | REQ-F-01 | geometry.generators.spiral | UT-GEO-01, 03, 04, 05, 06, 16; PR-03, PR-10 |
-| REQ-F-02 | winding.feasibility, winding.star_of_slots, winding.winding_factors | UT-WND-01…06, 10; PR-07 |
+| REQ-F-02 | winding.feasibility, winding.star_of_slots, winding.winding_factors | UT-WND-01…06, 10, 11; PR-06, PR-07 |
 | REQ-F-03 | model.layers, geometry.placement, physics.circuit_solution | UT-GEO-10, 11, 19; UT-PHY-07 |
 | REQ-F-04 | model.stackup | UT-GEO-12; GR-07 |
 | REQ-F-05 | geometry.vias, physics.resistance | UT-GEO-13; UT-DRC-05; UT-PHY-11; GR-08 |
@@ -408,7 +417,7 @@ Generated automatically in Phase 2 from pytest markers (TR-01); this skeleton de
 | REQ-F-08 | winding.circuit_topology, geometry.interconnect, physics | UT-WND-07; UT-PHY-09; GR-06, GR-14, GR-15 |
 | REQ-F-09 | geometry.outline | UT-GEO-14; KX-03; PR-11 |
 | REQ-F-10 | drc | UT-DRC-01…08; PR-01, PR-02, PR-11 |
-| REQ-F-11 | physics.* | UT-PHY-05…19; GR-02, 04, 09…13, 16; OR-01…10 |
+| REQ-F-11 | physics.* | (i) UT-PHY-05…19; GR-02, 04, 09…13, 16; (ii) OR-01…12 (`xfail` until references exist) |
 | REQ-F-12 | physics.field, physics.circuit_solution | UT-PHY-08, 20; GR-05 |
 | REQ-F-13 | ui.views | UI-01…04 |
 | REQ-F-14 | model.validate, api, errors | BV-01…20; PR-05; UI-14 |
@@ -459,14 +468,15 @@ Generated automatically in Phase 2 from pytest markers (TR-01); this skeleton de
 | REQ-K-10 | plugin.launcher | KS-07 |
 | REQ-K-12 | — | KS-08 |
 | REQ-K-13 | packaging | PK-09 |
+| REQ-K-16 | plugin.apply (report) | KX-08; KS-02 |
 | REQ-K-14 | plugin.apply, ui.export_view | KX-08; KS-02 |
 | REQ-K-15 | ui.views.kicad_compact | KS-07; UX-AC-21 |
 | REQ-T-01 | ui.results_view | UI-06, AX-02 |
 | REQ-T-02 | results | UT-RES-01 |
-| REQ-T-03 | results.status | UT-RES-02; PR-12 |
+| REQ-T-03 | results.status | UT-RES-02, UT-RES-05; PR-12 |
 | REQ-T-04 | results.registry | UT-RES-03; TR-04 |
 | REQ-T-05 | results, physics | UT-RES-02; UT-PHY-15, 18; TR-03; UI-07 |
-| REQ-T-06 | model.provenance, io.project, ui | UT-IO-05; UI-08 |
+| REQ-T-06 | model.provenance, io.project, ui | UT-IO-05; UT-RES-06; UI-08 |
 | REQ-T-07 | io.* | UT-IO-06; KX-05, KX-10 |
 | REQ-T-08 | physics, results | UT-PHY-13; BV-10…14 |
 | REQ-T-09 | tests infrastructure | TR-01, TR-02 |
@@ -501,3 +511,18 @@ Agent 4 should cover, **without reading the embodic implementation** where possi
 7. **Accessibility audit** (AX-05, AX-06) and **language audit** (LG-01, LG-03, LG-04) as an independent reviewer.
 8. **Licence/code-provenance review**: plugin code vs kimotor (GPL-2.0) similarity check (REQ-N-19).
 9. **KiCad smoke-test coordination** with the user (KS-01…08, T1–T5) and recording of results as evidence.
+
+## Revision 2026-10-04 (defect fixes)
+
+- DEF-01: UT-DRC-01, UT-DRC-03, PR-01 and the golden rules (§3) follow D-006.
+- DEF-02: UT-RES-02 (badge truth table), new UT-RES-05 (assumed-input tag), UT-RES-06 (`measured` provenance), PR-12
+  (re-entry invariance).
+- DEF-03: UT-PHY-10 uses the adopted ρ₂₀ = 1.7241e-8 Ω·m → 0.990862 Ω (20 °C), 1.146626 Ω (60 °C); GR-02 injects Xcoil's
+  1.724e-8 explicitly.
+- DEF-04: UT-WND-04, BV-04, UT-GEO-19 distinguish FSCW 16/16 (rejected) from M4 16/16 (accepted).
+- DEF-09 (criteria part): UT-GEO-07 and OR-04 criteria.
+- DEF-10: OR-11 (EQ-05 vs FEA) and OR-12 (EQ-12 vs 2-D FEM) added as `xfail` validation cases; matrix row REQ-F-11 split.
+- DEF-11: OR-02 prerequisite = turn count only (coil count 12 `verified`, EV-62); tolerance basis notes the unknown
+  measurement temperature.
+- DEF-13: AX-04 measures the clickable label area; KX-08 covers the plugin report (REQ-K-16).
+- DEF-17: PR-06 rotation-by-one-coil-pitch property; new UT-WND-11 turn-averaged pitch factor (D15 eq. 6, EV-59).

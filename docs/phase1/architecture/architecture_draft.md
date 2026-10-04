@@ -316,7 +316,7 @@ class DielectricLayer:
     thickness_mm: float
     material: str                  # e.g. "FR-4"
     relative_permittivity: float | None = None
-    density_g_per_cm3: float | None = None   # EQ-16; source needed (A2-EQ EQ-16)
+    density_g_per_cm3: float | None = None   # EQ-16; laminate density unsourced (assumption); copper 8.89 g/cm3 from EV-53
 
 class StackupSource(StrEnum):
     USER = "user"; GENERATED_EVEN = "generated_even"; IMPORTED_KICAD = "imported_kicad"
@@ -457,11 +457,20 @@ class DesignParameters:
 
 class InputSource(StrEnum):
     USER = "user"; DEFAULT = "default"; IMPORTED_KICAD = "imported_kicad"; MIGRATED = "migrated"
+    MEASURED = "measured"          # only via an explicit "mark as measured" action with a named source (D-007)
+
+class InputKind(StrEnum):
+    DESIGN = "design"              # geometry, layer configuration, operating point: the user's design choices
+    PROPERTY = "property"          # material/physical/manufacturing-outcome values: B_r, mu_r, finished copper thickness,
+                                   # plating, h, densities, resistivity — assumptions unless measured (ADR-0003)
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class FieldProvenance:             # per input field, keyed by JSON pointer ("/rotor/remanence_t")
     source: InputSource
-    note: str = ""                 # e.g. "typical NdFeB value, source needed (A2-TOP §5.2)"
+    kind: InputKind
+    source_ref: str | None = None  # mandatory for MEASURED (datasheet, coupon, LCR record); EV-ID for sourced defaults
+    note: str = ""                 # e.g. "typical NdFeB grade value; mu_r unsourced (G23)"
+# "default" is decided by value equality with the default, so re-typing a default changes nothing (D-007, PR-12).
 
 ProvenanceMap = dict[str, FieldProvenance]
 ```
@@ -621,6 +630,7 @@ class Layout:
     outline: BoardOutline
     circuit: Circuit
     turns_per_coil: Traceable[int]
+    derived: GeometryDerived       # feasibility-rail values (§7.7), Agent 1 review item 10
     envelope_mm: tuple[float, float]   # r_min_cu, r_max_cu
     layout_hash: str               # SHA-256 of the canonical primitive list (cache key, export metadata)
     def arrays(self) -> LayoutArrays: ...   # cached NumPy view for DRC/physics (§11)
@@ -696,8 +706,13 @@ class DrcReport:
     violations: tuple[DrcViolation, ...]     # capped list (first 1 000) + total count
     violation_count: int
     method: str                    # "grid+exact" or "symmetric+grid+exact"
-    tolerance_mm: float = 1e-6
+    tolerance_mm: float = 1e-6     # epsilon of the acceptance rule below
 ```
+
+**Acceptance rule (decision_log D-006):** a violation is reported whenever the measured clearance — exact, or a provably
+conservative bound if any discretisation is used — is < rule − ε with ε = `tolerance_mm` ≤ 1e-6 mm. There is no slack band
+(Xcoil passes down to rule − 0.004 mm, `engine.js` l.757, l.774). Golden comparisons with Xcoil check DRC values and require
+pass/fail agreement only outside that 0.004 mm band (test plan §3).
 
 Connectivity-aware exemption (`inferred` from the spiral topology): turns of one spiral belong to the **same net but must
 keep clearance**; only primitives adjacent in a path (sharing a joint) and a via/pad with the path ends it terminates
@@ -724,12 +739,23 @@ class Assumption:
     source_ref: str | None = None  # EV-ID, document reference, "A2-TOP §5.2", or None
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class InputRef:
+class InputRef:                    # an input the kernel actually used; does NOT influence the badge (D-007)
     pointer: str                   # JSON pointer into DesignParameters ("/winding/coil/trace_width_mm") or "result:<quantity>"
     value: float | int | str
     unit: str
-    source: InputSource | None     # user / default / imported (provenance)
-    status: Status                 # DEFAULT -> assumption; USER/IMPORTED -> neutral (verified strength)
+    source: InputSource | None     # default / user / imported_kicad / measured / migrated
+    kind: InputKind
+    is_default: bool               # value == default value (value-based, keystroke-independent)
+    label: Status | None           # input label: ASSUMPTION for unmeasured property inputs; min(EV, applicability)
+                                   # (typically INFERRED) for sourced constants; None for non-default design inputs
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class AssumedInput:                # one entry of the "n assumed inputs" tag (ADR-0003 decision 3)
+    item: str                      # JSON pointer, or "EQ-10: PCB copper = IACS copper" for an equation-level assumption
+    value_text: str                # value + unit, or "" for equation-level assumptions
+    reason: Literal["default", "unmeasured_property", "equation_assumption"]
+    label: Status                  # ASSUMPTION or INFERRED (sourced constant)
+    dominant: bool                 # listed first (registry dominant_assumptions)
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ValidityFlag:
@@ -751,17 +777,22 @@ class Traceable(Generic[T]):
     unit: Unit
     eq_ids: tuple[str, ...]
     evidence_ids: tuple[str, ...]  # filled from the registry for the eq_ids
-    assumptions: tuple[Assumption, ...]
+    kind_tag: Literal["computed", "input", "derived", "count"] = "computed"
+    assumptions: tuple[Assumption, ...]          # equation-level assumptions of the chain (from the registry)
     inputs: tuple[InputRef, ...]
+    assumed_inputs: tuple[AssumedInput, ...]     # the "n assumed inputs" tag, dominant first
     validity: tuple[ValidityFlag, ...]
     tolerance: Tolerance | None
-    status: Status                 # = combine_status(...), never set by hand
-    status_reasons: tuple[str, ...]   # human-readable contributors to the status
+    status: Status                 # badge = calculation trust = weakest(EQ evidence status, test state, validity cap);
+                                   # never derived from inputs, never set by hand (ADR-0003, D-007)
+    status_reasons: tuple[str, ...]   # e.g. ("EQ-07 inferred", "tests passed", "no validity limit exceeded")
+    label: str | None = None       # "estimate" / "guideline (unverified)" for cannot-verify-yet equations
 
 def traced(quantity: str, value: T, unit: Unit, *, eq_ids: Sequence[str],
            inputs: Sequence[InputRef], assumptions: Sequence[Assumption] = (),
            validity: Sequence[ValidityFlag] = (), registry: Registry) -> Traceable[T]:
-    """Build a Traceable: pulls evidence IDs, base status and tolerance from the registry, combines statuses."""
+    """Build a Traceable: evidence IDs, EQ evidence status, test state, tolerance and equation-level assumptions come from
+    the registry; the badge combines only EQ status, test state and validity cap; the tag is built from `inputs`."""
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class LayerResult:
@@ -802,7 +833,30 @@ class AnalysisResult:
     layers: tuple[LayerResult, ...]
     phases: tuple[PhaseResult, ...]
     emf_waveform: Traceable[tuple[float, ...]]   # EQ-18 samples over one electrical period
+    torque_speed: TorqueSpeedEstimate | None     # EQ-20 (cannot verify yet): badge unresolved, label "estimate";
+                                                 # None when no DC link voltage is given (Agent 1 review item 9)
     registry_version: str
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class TorqueSpeedEstimate:         # every curve point inherits EQ-20's badge `unresolved` and label "estimate"
+    speed_rpm: Traceable[tuple[float, ...]]
+    torque_n_m: Traceable[tuple[float, ...]]
+    power_w: Traceable[tuple[float, ...]]
+    no_load_speed_rpm: Traceable[float]
+    base_speed_rpm: Traceable[float]
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class GeometryDerived:             # feasibility-rail values (Agent 1 review item 10); attached as Layout.derived
+    pole_pitch_mid_mm: Traceable[float]          # EQ-01
+    coil_pitch_rad: Traceable[float]             # EQ-01
+    turn_limit_radial_bound: Traceable[float]    # EQ-02 (cross-check)
+    turns_achieved: Traceable[int]               # constructive generator, kind_tag "count"
+    track_length_per_coil_layer_mm: Traceable[float]          # exact sum of generated primitives, kind_tag "derived"
+    track_length_closed_form_mm: Traceable[float]             # EQ-03 (cross-check)
+    series_turns_per_phase: Traceable[int]       # kind_tag "count"
+    winding_factor_1: Traceable[float]           # EQ-08
+    balanced_coil_counts: tuple[int, ...]        # for the current pole count (helper below)
+    vias_per_coil: Traceable[int]                # §7.3 formula, kind_tag "count"
 ```
 
 ### 7.8 Outcome and issues (`embodic.api`, `embodic.errors`)
@@ -898,7 +952,10 @@ def validate_design(design: DesignParameters) -> tuple[ValidationIssue, ...]: ..
 def generate_even_stackup(copper_count: int, copper_thickness_mm: float,
                           board_thickness_mm: float, material: str = "FR-4") -> Stackup: ...
 
-def check_feasibility(coil_count: int, poles: int, phases: int = 3) -> Feasibility: ...
+def check_feasibility(coil_count: int, poles: int, phases: int = 3, *, phase_per_pair: bool = False) -> Feasibility: ...
+    # phase_per_pair=True (option M4): Q = 2p full-pitch coils per pair are accepted (e.g. 16/16), balance comes from
+    # rotating the three pairs by 2*pi/(3p); with all phases sharing the layers 16/16 is UNBUILDABLE_UNBALANCED_WINDING
+def balanced_coil_counts(poles: int, phases: int = 3, max_coils: int = 96) -> tuple[int, ...]: ...   # exact arithmetic
 def assign_phases(coil_count: int, poles: int, phases: int = 3) -> tuple[CoilAssignment, ...]: ...
 def compute_winding_factors(assignment: Sequence[CoilAssignment], poles: int, coil_count: int,
                             spans_rad: Sequence[float], harmonics: Sequence[int],
@@ -1216,9 +1273,11 @@ flowchart LR
 
 Worked example (illustrative, values not computed): `resistance_phase_operating` → inputs `/winding/coil/trace_width_mm`
 (user), `/stackup/layers/0/thickness_mm` (default → `assumption`), `/operating/winding_temperature_degc` (default) and
-`result:path_length_sum` → EQ-10, EQ-11 → EV-08, EV-28, EV-29, EV-44, EV-37 → D08 p.45 eq. 3.37–3.38, D05 p.6–8 →
-constants ρ₂₀, α (`assumption: standard value, source needed`, A2-EQ EQ-10) → status = weakest = `assumption`, reasons
-listed; tolerance ±8 % vs measured DC resistance (A2-EQ EQ-10) shown next to the value.
+`result:path_length_sum` → EQ-10, EQ-11, EQ-07 → EV-08, EV-28, EV-29, EV-44, EV-37 → D08 p.45 eq. 3.37–3.38, D05 p.6–8 →
+constants ρ₂₀ = 1.7241e-8 Ω·m, α = 0.00393 /K (EV-53, IACS; "PCB copper = IACS" remains an equation-level assumption, G6) →
+badge = weakest(EQ-10 `verified`, EQ-11 `inferred`, EQ-07 `inferred`, tests passed, no validity cap) = `inferred`; tag lists
+copper thickness, temperature, PCB copper = IACS, ρ₂₀/α (`inferred`) and the other defaults used (ADR-0003 worked example);
+tolerance ±8 % vs measured DC resistance (A2-EQ EQ-10) shown next to the value.
 
 Registry files (packaged data, versioned with the app): `embodic/results/data/equations.v1.json` and
 `embodic/results/data/evidence.v1.json`.
@@ -1241,12 +1300,13 @@ these fields unchanged and adds Phase 2 fields owned as stated:
 | `constants` | list of {`name`, `value`, `unit`, `source` (EV-ID or null), `status`} | Agent 2 / Agent 5 | e.g. ρ₂₀ = 1.7241e-8 Ω·m from EV-53 (Agent 2 §2.1) |
 | `label` | "estimate" / "guideline (unverified)" / null | Agent 2 | wording for `cannot verify yet` outputs (REQ-T-05) |
 
-Result status at run time = weakest of (a) `status` of every EQ in the chain, (b) implementation status (`not tested`
-until the EQ's linked tests pass), (c) status of every input the kernel **actually uses** (user/KiCad-imported neutral,
-default or unsourced = `assumption`, sourced constant = its EV status, the equation's own stated assumptions =
-`assumption`), (d) validity cap → `unresolved` — rule as amended by Agent 2 (`answers_to_agents.md` §1.1) and ADR-0003.
-`dominant_assumptions` only orders and explains the "n assumptions" tag (Agent 1 badge spec); it does not change the
-status.
+Result badge at run time (decision_log **D-007**, ADR-0003) = **calculation trust** = weakest of (a) the evidence `status`
+of every EQ in the chain (`cannot verify yet` ⇒ `unresolved`; an EQ whose status is `assumption` gives `assumption`),
+(b) the test state (`not tested` until the EQ's linked tests pass in this build), (c) the validity cap (violated limit ⇒
+`unresolved`). Inputs never enter the badge. Separately, the **"n assumed inputs" tag** lists, for the inputs the kernel
+used, every input equal to its default, every physical-property input not marked `measured` (label `assumption`, or
+min(EV, applicability) — typically `inferred` — for sourced constants) and every equation-level assumption not retired by a
+measured input; `dominant_assumptions` orders the list. This replaces the earlier input-weighted rule (Agent 4 DEF-02).
 
 **Evidence register — JSON export format (Agent 5 produces it in Phase 2 from `evidence_register.md`):**
 
@@ -1319,7 +1379,7 @@ passing test; every test carries ≥ 1 REQ marker; every must-REQ has ≥ 1 test
     "analysis": {"harmonics": [1, 3, 5, 7, 9, 11, 13], "max_segment_mm": 0.5},
     "drc_rules": {"trace_clearance_mm": 0.2, "…": "…"}
   },
-  "provenance": {"/rotor/remanence_t": {"source": "default", "note": "typical NdFeB value, source needed (A2-TOP §5.2)"}},
+  "provenance": {"/rotor/remanence_t": {"source": "default", "kind": "property", "note": "typical NdFeB grade value (EV-54 ranges); mu_r unsourced (G23)"}},
   "kicad": {"placed_item_ids": [], "board_file_hint": null,
             "placement": {"origin_x_mm": 150.0, "origin_y_mm": 100.0, "rotation_deg": 0.0},
             "layer_map": {"L1": "F.Cu", "L2": "In1.Cu", "…": "…", "L6": "B.Cu"}},
@@ -1417,7 +1477,7 @@ def copper_resistivity(temperature_degc: float, materials: MaterialSet) -> float
 
     Assumptions
     -----------
-    Linear temperature law; constants are 'assumption: standard value, source needed' (A5 gap G6).
+    Linear temperature law; rho20 and alpha from IACS (EV-53); "PCB copper = IACS copper" is an assumption (gap G6).
 
     Validity
     --------
@@ -1477,7 +1537,7 @@ Source: `docs/phase1/software/calculation_flow_and_port_notes.md` §2 (measureme
 | Phase naming A/B/C ↔ terminals U/V/W, positive coil = clockwise seen from the F.Cu side, sequence ABC/ACB (A2 §1.4) | `Phase`, `PhaseSequence`, `x_inward_sense`, `first_coil_angle_rad`; KiCad export flips y only | designed; user confirmation UD-19 |
 | General via-count formula (A2 §3.1) | §7.3 (replaces the earlier M1/M2-only formula) | confirmed by Agent 2 |
 | Equation registry format (A2 `equation_registry_draft.json`) | §13: adopted as source format + Phase 2 fields | adopted |
-| Status rule amendment: only inputs the kernel uses; sourced constants carry EV status; dominant assumptions only order tags (A2 §1.1) | §13, ADR-0003 | adopted |
+| Status rule amendment (A2 §1.1) | superseded by decision_log D-007: badge = calculation trust, inputs only in the "n assumed inputs" tag; A2's `dominant_assumptions` still order the tag | superseded (DEF-02) |
 | Golden runs with Xcoil-compatible constants (ρ₂₀ 1.724e-8 vs 1.7241e-8, Cu density 8.96 vs 8.89) or at function level (A2 §2.1) | test plan §3 | adopted |
 
 ## 17. Risks and open architectural items
@@ -1528,7 +1588,7 @@ Inputs read: Agent 1 `design_spec_draft.md`, `design_handoff_for_agent3.md`, moc
    REQ-K-15); KiCad's venv stays free of GUI toolkits (ADR-0004). The "no silent layer remap" rule applies to every
    placement path (REQ-K-14).
 8. **Phone layouts** — out of scope with the desktop option; minimum window 960 × 540 (§10.2, REQ-N-15).
-9. **Status rule** — Agent 1's §10.4 proposal, ADR-0003 and Agent 2's amendment merged (§13): same order on all sides.
+9. **Status rule** — superseded by Fable's decision D-007 (DEF-02): badge = calculation trust, assumed inputs as a separate tag (§13, ADR-0003 Accepted).
 
 ### 18.2 Requests and decisions
 
@@ -1555,7 +1615,7 @@ Inputs read: Agent 1 `design_spec_draft.md`, `design_handoff_for_agent3.md`, moc
 | A3 | Rounding, summation, `math.inf`, `fmod` conventions | adopted | §15.4 |
 | A3 | Guide tab content (F-61) | deferred (content review first) | — |
 | A1 | Status label from data, not hard-coded | adopted | REQ-T-02 |
-| A1 | Status-derivation rule §10.4 (Q5) | adapted (Agent 2 amendment: every used default counts) | §13, ADR-0003 |
+| A1 | Status-derivation rule §10.4 (Q5) | superseded by D-007, which is close to Agent 1's original idea (assumed inputs as tags, not in the badge) | §13, ADR-0003 |
 | A1 | Element-id contract `#param-*`, `#res-*`, `#btn-*` | adapted: Qt `objectName` = id; ids derived from model field names | §19 |
 | A1 | Inline notice + Undo when a value is changed (UX-AC-13) | adapted: engine only suggests; UI applies with notice + Undo | REQ-F-23, §7.8 `Suggestion` |
 | A1 | Plugin dialog 880 × 600 (UX-AC-21) | adapted: compact window of the standalone app via launcher | REQ-K-14, K-15 |
@@ -1603,10 +1663,11 @@ Inputs read: Agent 1 `design_spec_draft.md`, `design_handoff_for_agent3.md`, moc
 
 Rule (adapted from Agent 1's handoff §3): every widget's Qt `objectName` equals Agent 1's id; parameter ids are
 `param-` + kebab-case of the model field name **without** its unit suffix (`trace_width_mm` → `param-trace-width`);
-results are `res-<quantity>` with `-value`, `-unit`, `-eq` children. Where Agent 1's mockup id differs from the model
-name, the proposed canonical id is given — Agent 1 to confirm (open item for the next round).
+results are `res-<quantity>` with `-value`, `-unit`, `-eq` children. **Agent 1 accepted all canonical ids** and updated
+mockups and handoff (`design/design_review_notes.md` item 8, `design/screen_to_view_map.md` §0; confirmed by Agent 4,
+report §f.2) — the third column is now the contract.
 
-| Agent 1 id | Model field (JSON pointer) | Proposed canonical id |
+| Agent 1 mockup id (old) | Model field (JSON pointer) | Canonical id (accepted by Agent 1) |
 |---|---|---|
 | `param-coil-count` | `/winding/coil/coil_count` | same |
 | `param-pole-count` | `/rotor/poles` | `param-poles` |
@@ -1630,3 +1691,14 @@ name, the proposed canonical id is given — Agent 1 to confirm (open item for t
 | `param-via-drill`, `param-via-pad`, `param-vias-per-transition` | `/vias/drill_mm`, `pad_mm`, `vias_per_transition` | same |
 | `param-kicad-origin-x/y`, `param-kicad-rotation` | project file `kicad.placement` (not part of the design hash) | same |
 | `res-r-phase`, `res-ke`, `res-kt`, `res-ls`, `res-dt`, `res-j` | `AnalysisResult.resistance_phase_operating`, `ke_phase`, `kt_per_line_a_rms`, `inductance_estimate`, `temperature_rise`, `current_density` | same |
+
+## Revision 2026-10-04 (defect fixes)
+
+- DEF-01: §7.6 states the D-006 DRC acceptance rule and the golden band rule.
+- DEF-02: §7.1 (`InputSource.MEASURED`, `InputKind`, `FieldProvenance.source_ref`), §7.7 (`InputRef` without status
+  influence, `AssumedInput`, `Traceable.assumed_inputs`, badge = calculation trust) and §13 (run-time rule) rewritten per
+  D-007; worked example in §13 updated.
+- DEF-04: §8.2 `check_feasibility(..., phase_per_pair=...)` and `balanced_coil_counts()`.
+- DEF-05 (my part): stale "source needed" notes for ρ₂₀/α/copper density replaced by EV-53 citations.
+- DEF-13: `TorqueSpeedEstimate` (badge `unresolved`, label "estimate") and `GeometryDerived` (feasibility-rail values,
+  `Layout.derived`) added; §19 ids recorded as accepted by Agent 1.

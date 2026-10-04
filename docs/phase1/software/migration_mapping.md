@@ -60,7 +60,7 @@ architecture.
 | F | Feature | Decision | Reason | embodic target | Gate |
 |---|---|---|---|---|---|
 | F-23 | Serpentine canonical-frame DRC | drop with F-09 | Only needed by serpentine | — | — |
-| F-24 | Generic object DRC | port with change | Vectorised kernel (NumPy) for speed; add checks for series pairs (several centre vias per coil eye, transfer vias, through vias crossing other layers); label as "embodic pre-check" — KiCad DRC cannot see turn-to-turn clearance inside one net (`kicad_plugin_feasibility.md` §3) | `core.drc` | none |
+| F-24 | Generic object DRC | port with change | Acceptance rule changes to D-006: violation whenever clearance < rule − ε (ε ≤ 1e-6 mm), no 0.004 mm slack (`calculation_flow_and_port_notes.md` §3.1); vectorised kernel (NumPy) for speed; add checks for series pairs (several centre vias per coil eye, transfer vias, through vias crossing other layers); label as "embodic pre-check" — KiCad DRC cannot see turn-to-turn clearance inside one net (`kicad_plugin_feasibility.md` §3) | `core.drc` | none |
 | F-25 | Mechanical rule issues | port as-is | Topology-independent | `core.mech` | — |
 | F-26 | Design and fabrication warnings | port with change | Each warning gets a threshold source or an `assumption` label (FAB limits "typical pooled-prototype capability", `engine.js` l.2502, have no source); IPC warning depends on EQ-15; IMBALANCE/CIRC rewritten for spiral multi-layer (G3) | `core.checks` | EQ-13 `reuse`, EQ-15 `cannot verify yet`, EQ-07 |
 
@@ -156,3 +156,7 @@ touching `core.analysis`, `core.drc` or the exporters.
 | X-3 | Golden regression of Xcoil passes only with `interconnect:false` | Use that override in the cross-check harness | verified (run) |
 | X-4 | Intentional deviations from Xcoil (star of slots, α_p(r), turn limit, series pairs) will make cross-check results differ by design | The harness keeps an allow-list of expected differences, each with EQ-ID and reason (notes §7.1, `expected_diffs`) | assumption |
 | X-5 | Speed: a literal Python port of the hot loops is ≈45× slower than V8 (measured kernel) | NumPy kernels + staged recompute + reference scalar implementation for testing (notes §4) | inferred from measurement |
+
+## Revision 2026-10-04 (defect fixes)
+
+- DEF-01 / D-006: F-24 now states the embodic DRC acceptance rule (no 0.004 mm slack), consistent with the port notes §3.1.

@@ -21,7 +21,7 @@ constants, ECM patent notes); conventions fixed in §3.4; new §7 "Decisions the
 | K1 | Repository board = radial-conductor **wave** winding (144 radial conductors/layer, 16 magnets); it is not a concentrated spiral coil design. Agent 5's end-turn parse (EV-71): nested outer caps of 6 radii centred on 12 axes at r = 26 mm plus short inner steps offset from the coil axes → a series wave-like path. | verified (README l.1–12; Gerber parse, `repo_survey.md` §1.4; EV-71 parse verified, interpretation inferred) |
 | K2 | The render's look can be read as "8 + 8 concentrated spiral coils offset by half a pitch" (Fable), but at 676 px the end-turn groups (≈3–4 nested loops) and the uniform radial conductor field are **also compatible with a wave winding with nested end connections** like the repository board. EV-71 shows that the same project's Gerber board produces a "spiral-looking" pattern with a wave path; Agent 5 also reads the render as undecidable (`ecm_pcb_stator_evidence.md` §1). | unresolved (inferred from image) |
 | K3 | 16 coils sharing one layer cannot form a balanced symmetric 3-phase winding (Q must be a multiple of m = 3). 16-coil artwork is 3-phase-capable only as **one phase per layer pair** (16 full-pitch coils per phase, phases rotated by 2π/(3p) = 15° mech. for 2p = 16). | inferred (FSCW rules §2.2; script `checks/kw.py`) |
-| K4 | Recommended default (design choice): fractional-slot concentrated spiral winding **12 coils / 16 poles**, all three phases on every layer, keeping the repository's 16-pole rotor; alternatives **18/16**, phase-per-layer-pair **16/16**, and the oracle configurations **12/10** (D08) and **12/16** (D09, coil count inferred from figure). | assumption (reasons §2.4) |
+| K4 | Recommended default (design choice): fractional-slot concentrated spiral winding **12 coils / 16 poles**, all three phases on every layer, keeping the repository's 16-pole rotor; alternatives **18/16**, phase-per-layer-pair **16/16**, and the oracle configurations **12/10** (D08) and **12/16** (D09: 12 coils per layer `verified`, EV-62 — Agent 4 also counted 12 coil eyes in Fig. 1a; turns per coil 7 or 8 `unresolved`). | assumption (reasons §2.4) |
 | K5 | Spiral coils favour Q/2p < 1 (coil pitch > pole pitch): the turn spans then straddle the pole pitch, so inner turns keep a high pitch factor. The engine sweep ranks 12/16 first in Ke/√R for the repository annulus, followed by 15/16 and 18/20 (all Q/2p < 1). | inferred (pitch-factor reasoning) + indicative engine numbers (not validated) |
 | K6 | Xcoil v3 `starOfSlots` wrongly rejects balanced combinations whose EMF phasors fall exactly on a 60° belt edge (12/14, 24/14, 24/22, 24/26 …); 12/14 is D11's design. Must be fixed before reuse. | verified (reproduced, `existing_logic_review.md` §3 C6) |
 | K7 | Xcoil v3 sector generator supports neither "triangular" inner turns (inner end-turn moving outward) nor series connection of layer pairs nor rotated layer groups; with D08's own geometry it fits **0** turns where D08 built 3. | verified (reproduced, C5) |
@@ -177,7 +177,9 @@ Recommendation (`assumption`, to be confirmed by the user and by Phase 2 computa
    polarity (simplest series chain); larger coils → more turns and room for centre vias; satisfies D12's N_c/N_pm = m/(m+1)
    (EV-56); the D09 concentric board is the same combination — 12 non-overlapping spiral coils per layer, 2 layers, 6
    terminals, 1 mm gap, 16 poles (EV-62, `verified`; turns per coil ≈ 6–8 `unresolved`) — giving oracle O2 with measured R,
-   L, EMF, torque (`evidence_register.md` §C). Drawback: k_w5 = k_w7 =
+   L, EMF, torque (`evidence_register.md` §C). Caveats (DEF-08, DEF-11): D09 does not state the measurement temperature —
+   R₂₀ from the published 3244 mm is 0.999 Ω, so the measured 1.07 Ω equals ≈38 °C if only temperature differed — nor the
+   inductance measurement method; O2 therefore tests consistency, not accuracy (EQ-10, EQ-14). Drawback: k_w5 = k_w7 =
    0.866 → EMF harmonics follow the magnet-field harmonics (magnet shape must be chosen accordingly).
 2. **Alternative A: 18/16** (k_w1 0.945, strong 5th/7th suppression, t = 2) — fewer turns (narrower coils), mixed polarity.
 3. **Alternative B: phase-per-layer-pair 16/16** (render-like 16-coil artwork) — for evaluation against 12/16.
@@ -358,3 +360,8 @@ Each line: decision → consequence of each choice (all consequences `inferred` 
 | D4 | Target supply voltage, speed, torque (and cooling) | Sets turns per coil, series/parallel grouping and star/delta (Ke·ω must stay below the inverter voltage, EQ-09/EQ-20); without them the tool can only report per-turn constants. Thermal limits (EQ-17) need the cooling condition. |
 | D5 | Render = exact target or style reference? | **Exact target** → may require a wave/serpentine option (the render and EV-71 are compatible with a wave path), outside the decided spiral-coil scope; patent attention to ECM serpentine claims (G25). **Style reference** → concentrated spiral coils as decided, with fanned sides / stadium ends / optional rotated layer groups as visual options. |
 | D6 | Star or delta? (default star) | **Star** → triplen EMF does not circulate; 3 terminals + optional neutral. **Delta** → √3 lower Ke per line for the same winding, but combinations with k_w3 ≠ 0 (12/14, 18/16) drive circulating current (EQ-19). |
+
+---
+
+**Revision 2026-10-04 (defect fixes):** DEF-11 (K4 now states the D09 coil count as `verified` (EV-62, Agent 4's own count);
+O2 temperature and inductance-method caveats added in §2.4). Oracle parameter sets: `oracle_cases_draft.json`.

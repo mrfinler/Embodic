@@ -124,7 +124,7 @@ group `G:<id>`, tab `T:<name>`, summary strip, status bar). All rows `verified (
 | F-33 | Current capacity (IPC-2221, weakest layer × parallel paths), current density, skin depth | `ipc2221Current` l.86–90, `skinDepthMm` l.81–84, l.998–1001, l.1012–1014 | tempRise, widths, copper t | iMaxIpc, currentDensity, skinDepth | T:Results, warnings IPC/SKIN | — |
 | F-34 | Synchronous inductance, current-sheet harmonic model of the radial conductors (orders ν up to 240, 36 radial bins, layer coupling, sinc² width factor, L_s = L_self − M) | conductor lists l.2560–2610, `windingInductance` l.2617–2668 | geometry, rotorType, airgap, magnetThickness | Ls, Lself, M, fundamentalShare, dominant orders | T:Torque–speed, T:Results | — |
 | F-35 | Torque–speed envelope on a voltage/current-limited inverter (SVPWM / sine / six-step), field weakening, pull-out and pull-in estimate, rated point, rotor inertia estimate | `rotorInertiaEstimate` l.2671–2676, `inverterVoltage` l.2679–2684, `torqueSpeed` l.2688–2722, `driveAnalysis` l.2725–2731; tab `ui-panels.js` l.237–289 | vDc, modulation, iMax, rotorInertia | 121-point curve, rpmNoLoad, rpmBase, torqueMax, pMax, tauElec | T:Torque–speed (torque / power views) | inline SVG charts |
-| F-36 | Mass (copper by primitive area × thickness; laminate by stack-up density) and first-order thermal estimate ΔT = P/(h·2A) | `massThermal` l.1377–1394 | hConv, ambientC, tempRise, stack-up | massCopper, massLaminate, massTotal, copperFill, tempRiseEst, lossAllowable | T:Mechanical, summary, warning THERMAL | — |
+| F-36 | Mass (copper by primitive area × thickness; laminate by stack-up density) and first-order thermal estimate ΔT = P/(h·2A) | density constants `RHO_CU_G`, `RHO_FR4_G` l.1377; `massThermal` l.1378–1394 | hConv, ambientC, tempRise, stack-up | massCopper, massLaminate, massTotal, copperFill, tempRiseEst, lossAllowable | T:Mechanical, summary, warning THERMAL | — |
 
 ### 3.5 Results presentation and comparison
 
@@ -191,7 +191,7 @@ compute(input)
 │   │   ├─ drcLayerObjects ×2 → drcObjects → discretize, makeGrid, gridQuery, segSegDist ; padSegClearance ; padsClearance
 │   │   ├─ analyzeElements → fieldSetup, fieldHarmonic, discretize, primsResistance, ipc2221Current, skinDepthMm   l.1846
 │   │   ├─ applyConnection → (delta) harmonic mesh sum                                     l.1398
-│   │   ├─ massThermal                                                                      l.1377
+│   │   ├─ massThermal                                                                      l.1378
 │   │   ├─ driveAnalysis(conductorsFromElements) → windingInductance ; torqueSpeed → inverterVoltage, rotorInertiaEstimate
 │   │   └─ commonWarnings                                                                   l.2495
 │   ├─ buildWave(W) → waveTrack(→ involutePrims → biarc → arcFromTangent ; filletPath ; taperJunctions),
@@ -249,3 +249,8 @@ l.1940, l.2192, l.2453).
 | O-4 | Golden regression passes only with `interconnect:false` (§0). | verified (run) |
 | O-5 | Agent 2's gate (`equation_specification_draft.md`) marks `starOfSlots`, `balancedSectorList`, `kdAnalytic`, the sector turn limit as `replace`, and inductance, IPC-2221, torque–speed as `cannot verify yet`. These sit in F-12, F-28, F-33, F-34, F-35. | verified (cross-reference) |
 | O-6 | Phase identification on canvas, layer chips, charts, PDF and 3-D relies on red/blue/green (`style.css` l.6, `report.js` l.7) — conflicts with the white/grey/black primary palette. | verified (code) |
+
+## Revision 2026-10-04 (defect fixes)
+
+- Observation O-e (Agent 4): F-36 and the call graph cited `engine.js` l.1377 (the density-constant line) for
+  `massThermal`; corrected to constants l.1377, function l.1378–1394.

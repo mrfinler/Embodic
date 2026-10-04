@@ -2,19 +2,24 @@ Prepared by: Agent 6 — Software Architecture Specialist — model: claude-opus
 
 # ADR-0004: KiCad integration — `.kicad_pcb` writer as baseline, IPC API plugin as the plugin route, no SWIG
 
-**Status:** Proposed — amended 2026-10-04 (plugin window, two-layer adapter, no silent remap, Python floor); details still depend on T1–T6
+**Status:** Proposed — amended 2026-10-04 (plugin window, two-layer adapter, no silent remap, Python floor; citations corrected); details still depend on T1–T6
 **Date:** 2026-10-04
 **Deciders:** User (plugin expectations), Fable 5.1 — consulted: Agent 5 (evidence), Agent 3
 
 ## Context
 
-Evidence (A5-KI, official KiCad pages and kicad-python 0.8.0 source, all `verified` as stated there):
+Evidence (A5-KI; official KiCad pages, the kicad-python PyPI page and the kicad-python 0.8.0 wheel source — each item
+cited to the page or file that actually contains it, per Agent 4 DEF-12):
 - SWIG `pcbnew` bindings: "deprecated as of KiCad 9.0", removal planned "in KiCad 11.0"; "unstable … will generally change
   between KiCad major versions" (A5-KI §1–§2, [K1]).
-- IPC API: first released in 9.0; PCB editor only in 9 and 10; requires a running KiCad GUI; plugin runs as a standalone
-  process; API server must be enabled in Preferences ▸ Plugins; per-plugin venv with KiCad's bundled Python on Windows;
-  dependencies from `requirements.txt` installed on first load; "no support for plotting or exporting files"
-  (A5-KI §3, [K4], [K6], [K8]).
+- IPC API (KiCad dev-docs "IPC API" / "For Add-on Developers", [K4]): first released in 9.0; PCB editor only in 9 and 10;
+  requires a running KiCad GUI; plugins run as standalone processes; per-plugin virtual environment with KiCad's bundled
+  Python on Windows, declared dependencies installed on first load; "no support for plotting or exporting files".
+- Enable step — the API server must be enabled in **Preferences ▸ Plugins**: stated on the kicad-python **PyPI page**
+  ([K6], https://pypi.org/project/kicad-python/), not on the dev-docs page.
+- `requirements.txt` as the dependency declaration file: from the kicad-python 0.8.0 wheel,
+  `kipy/packaging/validate.py` l.138–164 ([K8]; warns when `requirements.txt` or `kicad-python` in it is missing), not
+  from the dev-docs page.
 - kipy 0.8.0 offers commits (`begin_commit`/`push_commit`/`drop_commit`), `create_items`, `update_items`, `remove_items`,
   `Track`, `ArcTrack`, `Via`, `Zone`, `get_stackup`, `get_copper_layer_count` (0.5.0 ↔ 9.0.5); no DRC-run method
   (A5-KI §3).
@@ -118,3 +123,8 @@ experience if T3 succeeds.
   design.
 - **Python floor**: core in 3.11 syntax, no 3.12-only features; if KiCad bundles ≤ 3.9 the core is not vendored and the
   plugin uses R3 or R1 only; 3.10 allows a small downgrade (architecture_draft.md §18.1 item 1).
+
+## Revision 2026-10-04 (defect fixes)
+
+- DEF-12: Context now cites `requirements.txt` to kicad-python 0.8.0 `kipy/packaging/validate.py` l.138–164 and the
+  "Preferences ▸ Plugins" enable step to the kicad-python PyPI page, not to the KiCad dev-docs page.

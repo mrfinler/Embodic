@@ -7,6 +7,7 @@
   "unresolved",
   "not tested"
  ],
+ "status_vocabulary_note": "per decision D-007: 'status' of an equation = evidence status; the result badge (calculation trust) uses verified / inferred / unresolved / not tested, and 'assumption' only when the equation itself is an engineering assumption",
  "status_order_weakest_first": [
   "unresolved",
   "not tested",
@@ -14,6 +15,16 @@
   "inferred",
   "verified"
  ],
+ "result_badge_rule": "badge = weakest of {evidence status of every EQ in the chain, implementation test state, validity cap (violation -> unresolved)}; inputs do not enter the badge",
+ "assumptions_tag_rule": "separate count + list of assumed inputs actually used, ordered by dominant_assumptions; provenance classes below; re-typing a default changes nothing",
+ "input_provenance_vocabulary": [
+  "default",
+  "default (sourced)",
+  "user",
+  "measured",
+  "imported"
+ ],
+ "input_provenance_note": "'measured' only when the user marks the value as measured and names the source/record; equation-level assumptions (e.g. PCB copper = IACS, mu_r) are listed as built-in assumed inputs until replaced by a 'measured' value",
  "gate_vocabulary": [
   "reuse",
   "reuse with change",
@@ -23,7 +34,8 @@
  "notes": [
   "status = Phase 1 evidence status of the equation; implementation status starts as 'not tested' until its tests pass in CI (ADR-0003 item 5)",
   "gate_verdict 'replace' for EQ-04 and EQ-21 means: no Xcoil implementation exists, implement new from the specification",
-  "result status = weakest of equation status, implementation status, status of every used input (defaults = assumption), validity cap (violation = unresolved)",
+  "result status rule superseded by D-007 (DEF-02): see result_badge_rule and assumptions_tag_rule; dominant_assumptions feed the assumptions tag, not the badge",
+  "Revision 2026-10-04 (defect fixes): DEF-02 (status fields), DEF-08 (EQ-14 quantity_note), DEF-09 (EQ-02 modes, EQ-03 tolerance basis), DEF-11 (EQ-10 D09 temperature case)",
   "reference values are computed by Agent 2 (scripts in checks/); none is a measurement"
  ],
  "equations": [
@@ -132,8 +144,8 @@
    "gate_verdict": "replace",
    "status": "inferred",
    "tolerance": {
-    "value": "exact integer (loop criterion); printed 3.25-3.26 may differ by 1; generator +/-1 turn",
-    "basis": "centre-via eye and fillets not in the closed form"
+    "value": "exact in each mode: concentric test mode = loop criterion; spiral generator without eye = spiral count; with eye = eye-limited count reported with limiting_reason 'eye'",
+    "basis": "DEF-09: three-mode criterion (checks/eq03_spiral_vs_loops.py); printed 3.25-3.26 informational only"
    },
    "dominant_assumptions": [
     "trace width w and clearance s (fabricator capability)",
@@ -154,7 +166,10 @@
      "radial_bound_Nc_lt": 6.007,
      "trapezoidal": 1,
      "triangular": 2,
-     "total": 3,
+     "concentric_mode_total": 3,
+     "spiral_mode_no_eye": 3,
+     "spiral_mode_with_eye_pad0.6_clr0.8": 2,
+     "limiting_reason_with_eye": "eye",
      "printed_3_25_3_26": "2 + 1 = 3"
     },
     "tolerance": "exact",
@@ -171,7 +186,9 @@
        "radial_bound_Nc_lt": 14.429,
        "trapezoidal": 9,
        "triangular": 2,
-       "total": 11,
+       "concentric_mode_total": 11,
+       "spiral_mode_no_eye": 11,
+       "spiral_mode_with_eye_pad0.5_clr0.2": 10,
        "printed_3_25_3_26": "10 + 1 = 11"
       }
      },
@@ -187,7 +204,9 @@
        "radial_bound_Nc_lt": 14.429,
        "trapezoidal": 5,
        "triangular": 3,
-       "total": 8,
+       "concentric_mode_total": 8,
+       "spiral_mode_no_eye": 8,
+       "spiral_mode_with_eye_pad0.5_clr0.2": 7,
        "printed_3_25_3_26": "6 + 1 = 7"
       }
      }
@@ -232,8 +251,8 @@
    "gate_verdict": "reuse",
    "status": "inferred",
    "tolerance": {
-    "value": "1e-3 mm vs closed form; +/-6 % closed form vs generated spiral",
-    "basis": "spiral steps one pitch per turn and ends at a centre via (C4: -3.7 % / -5.5 %)"
+    "value": "closed form reproduced to 1e-3 mm; generator vs true-spiral reference within +/-1 %; (closed - generated)/generated within the case band +/-2 percentage points",
+    "basis": "DEF-09: independent true-spiral construction incl. triangular turns (checks/eq03_spiral_vs_loops.py): closed form exceeds the spiral by +4.2...+8.0 % for N >= 4 and by +21...+23 % for D08 N = 2-3; spiral reference agrees with the Xcoil spiral within 0.4-0.9 %"
    },
    "dominant_assumptions": [
     "trace width and clearance",
@@ -256,9 +275,11 @@
       27.503
      ],
      "L_coil_layer_mm": 177.233,
-     "L_phase_8_coil_layers_mm": 1417.9
+     "L_phase_8_coil_layers_mm": 1417.9,
+     "true_spiral_mm": 143.941,
+     "closed_minus_spiral_pct": 23.13
     },
-    "tolerance": "1e-3 mm",
+    "tolerance": "1e-3 mm (closed form); +/-1 % generator vs true spiral",
     "additional_cases": [
      {
       "inputs": {
@@ -270,7 +291,24 @@
        "N": 8
       },
       "expected": {
-       "L_coil_layer_mm": 379.578
+       "L_coil_layer_mm": 379.578,
+       "true_spiral_mm": 364.353,
+       "closed_minus_spiral_pct": 4.18
+      }
+     },
+     {
+      "inputs": {
+       "r_o_mm": 37.75,
+       "r_i_mm": 18.25,
+       "w_mm": 0.5,
+       "s_mm": 0.2,
+       "Q": 12,
+       "N": 11
+      },
+      "expected": {
+       "L_coil_layer_mm": 422.922,
+       "true_spiral_mm": 402.979,
+       "closed_minus_spiral_pct": 4.95
       }
      },
      {
@@ -283,7 +321,24 @@
        "N": 4
       },
       "expected": {
-       "L_coil_layer_mm": 195.199
+       "L_coil_layer_mm": 195.199,
+       "true_spiral_mm": 182.711,
+       "closed_minus_spiral_pct": 6.83
+      }
+     },
+     {
+      "inputs": {
+       "r_o_mm": 37.75,
+       "r_i_mm": 18.25,
+       "w_mm": 0.5,
+       "s_mm": 0.2,
+       "Q": 18,
+       "N": 8
+      },
+      "expected": {
+       "L_coil_layer_mm": 282.423,
+       "true_spiral_mm": 261.613,
+       "closed_minus_spiral_pct": 7.95
       }
      }
     ]
@@ -831,6 +886,21 @@
        "R_ph_ohm_D08": 0.39
       },
       "tolerance": "+/-5 % (D08 rho_20/alpha not stated)"
+     },
+     {
+      "source": "D09 Table 1 p.3 (3244 mm), Table 6 p.7 (1.07 ohm measured) - DEF-11",
+      "inputs": {
+       "L_phase_mm": 3244,
+       "w_mm": 0.8,
+       "t_mm": 0.07,
+       "T_degC": 20
+      },
+      "expected": {
+       "R20_ohm": 0.999,
+       "temperature_equivalent_of_1.07_ohm_degC": 38.1,
+       "measured_ohm": 1.07
+      },
+      "tolerance": "consistency only: measurement temperature unresolved (20 to 40 degC = +7.9 %)"
      }
     ]
    }
@@ -1099,7 +1169,34 @@
      "engine_current_sheet_uH": 17.96,
      "D09_measured_uH_other_geometry": 14.8
     },
-    "tolerance": "none (estimate)"
+    "tolerance": "none (estimate)",
+    "quantity_note": "DEF-08: EQ-14(a) = synchronous magnetising inductance incl. mutual coupling (L_sync = (3/2) L_aa,m for a sinusoidal winding); Xcoil model reports L_self, M, L_s = L_self - M. D09 Table 6 'phase inductance' method, frequency and rotor condition are not stated (unresolved). Readings: I1 single-phase LCR, other phases open -> compare L_self (most plausible, 6 open terminals); I2 line-line/2 -> L_s; I3 load test -> L_s. Compute each with rotor (double iron) and without rotor (no iron). Indicative D09-like engine values N=7: with rotor L_self 11.30 / L_s 14.80 uH, without rotor 6.09 / 7.33 uH -> 14.8 uH fits L_s at N=7 and L_self at N~8: not discriminating until reading and N are known.",
+    "additional_cases": [
+     {
+      "source": "engine current-sheet model, D09-like geometry (assumed r 25-46 mm, w/s 0.8/0.2, 70 um, PCB 1 mm, gap 1 mm, Br 1.33 T, alpha_p 0.8), 12/16, 2 layers",
+      "inputs": {
+       "N": 7,
+       "rotor": "double"
+      },
+      "expected": {
+       "L_self_uH": 11.3,
+       "L_s_uH": 14.8,
+       "M_uH": -3.5
+      },
+      "tolerance": "indicative only"
+     },
+     {
+      "inputs": {
+       "N": 7,
+       "rotor": "none"
+      },
+      "expected": {
+       "L_self_uH": 6.09,
+       "L_s_uH": 7.33
+      },
+      "tolerance": "indicative only"
+     }
+    ]
    }
   },
   {

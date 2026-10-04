@@ -209,9 +209,9 @@ Mockup rendering note: this container has no Segoe UI/Cascadia; the PNGs show Li
 | Layout | Breakpoint (container width) | Grid | Notes |
 |---|---|---|---|
 | Desktop | ≥ 1280 px | `340px | minmax(0,1fr) | 360px`; rows 52 / 48 / 1fr / 28 px | Results step uses 280 px navigation + content + 360 px traceability rail (mockup 04) |
-| Tablet | 768–1279 px | `300px | minmax(0,1fr)`; rail becomes a collapsible bottom sheet (“Key results”, 2-row summary strip always visible above the status bar) | step labels may shorten to numbers + icons below 900 px; no horizontal scroll |
+| Two-pane (narrow desktop window) | 960–1279 px (minimum window 960 × 540, REQ-N-15) | `300px | minmax(0,1fr)` (Results: 260 px); rail becomes a 232 px bottom panel (DRC card + key results in columns, scrolls) | below 1100 px button captions Open/Save collapse to icons (accessible names kept), the save-state chip, units and cursor read-out leave the status bar; mockups also stay free of horizontal scroll down to 768 px (step labels except the current one collapse to numbers) — verified with Agent 4’s `v7_mockups_playwright.py`: overflow 0 px at 1920/1440/1280/1024/960/768 for 01–05 and 07 |
 | Phone | < 768 px | single column: top bar 56 px → figure (aspect 1:1, max 60 svh) → DRC banner → key-result tiles (2 columns) → current step fields (label above input) → sticky bottom step bar (6 × ≥ 60 px) | mockup 06; verified no horizontal scroll at 420 and 360 px (scrollWidth = viewport) |
-| KiCad plugin dialog | fixed min 880 × 600 px, resizable | tabs for steps; `380px | 1fr` (form | 2-D preview); footer with Cancel / Back / primary | §11 |
+| KiCad plugin dialog | fixed min 880 × 600 px, resizable (mockup `05b_kicad_window.html`: 0 px overflow at 880 × 600, Place button visible) | tabs for steps; `380px | 1fr` (form | 2-D preview); footer with Cancel / Back / primary | §11 |
 
 Use container queries for components that live in different panes (result cards, tables), media queries only for the
 app shell (modern-web-guidance “css-layout” §4). At 200 % browser zoom on a 1440 px screen the tablet layout applies; at
@@ -243,7 +243,8 @@ container).
 | Legend | swatch + text per phase; via, terminal symbols | always present for phases (≥ 2 series) |
 | Key result row (rail) | label + symbol · value + unit · status badge · EQ link · “example” marker while mocked | click → opens Results at that card with the expander open |
 | Result card | title + symbol · hero value + unit · meta row (status badge, EQ links, tags “n assumptions”, “n limitations”, “input”, “derived”, “count”) · optional one-line limitation · disclosure “How was this computed” | §10.4 |
-| Status badge | glyph + word, pill; monochrome **line-continuity code**: verified = solid ink fill (✓), inferred = solid outline (≈), assumption = dashed outline (◇), unresolved = dotted outline on grey (?), not tested = hairline grey outline (○) | non-interactive; “Status:” prefix in visually-hidden text |
+| Status badge | glyph + word, pill; monochrome **line-continuity code**: verified = solid ink fill (✓), inferred = solid outline (≈), assumption = dashed outline (◇), unresolved = dotted outline on grey (?), not tested = hairline grey outline (○) | non-interactive; “Status:” prefix in visually-hidden text. On results it shows the calculation’s trust level (D-007); `assumption` only for inputs and assumption-equations |
+| Assumptions tag | dashed tag “◇ n assumptions ›” (`details`/`summary`, `data-role="assumptions"`), opens a dashed list of the defaults/assumed inputs | on every numeric result next to the badge (D-007); keyboard: Enter/Space toggles; list text from the result’s assumption and default-input records |
 | EQ link | mono chip “EQ-10”, 24 px high | opens the equation register entry (Agent 2 ids) |
 | DRC card | title · pass/fail summary · top issue (measured vs required, units) · warning count · Locate · Open checks | |
 | DRC list item | severity glyph · rule code (mono) · message · measured / required · layer · Locate | fail rows get a 4 px fail-red start border |
@@ -317,7 +318,10 @@ tooltips (no `title` attribute as the only carrier; use a popover hint).
 Skip link “Skip to parameters” → top bar (rename, Undo, Redo, Open, Save, More, Export) → step links 1–6 → step panel
 fields in visual order → panel footer (Back, Next) → view toolbar → canvas → layer chips → rail (DRC actions, result
 links) → status bar links. DOM order equals visual order; no positive `tabindex`; no CSS reordering of interactive
-content.
+content. The mockups were changed to match (DEF-16): the design name is a rename button (`#doc-name`) and the status-bar
+DRC summary is a link to the DRC card (`#st-drc`); every screen starts with the skip link. Tab walk of mockup 01:
+skip link → rename → Undo … Export → steps 1–6 → panel fields → Next → view toolbar → canvas → layer chips → rail →
+status-bar link.
 
 ### 8.4 Other requirements
 
@@ -399,16 +403,24 @@ assumptions, limitations, validation (tolerance, oracle, run state), sources (re
 Agent 2), actions (Copy trace, Open EQ). Right rail: status definitions, assumed inputs of this design, oracle table
 (O1–O3 from the evidence register, “not tested”).
 
-Status of a computed result (proposal — needs confirmation by Agents 2, 4, 6; Q5):
-1. `verified` — equation gate passed **and** the result matched a validation oracle within its stated tolerance; also
-   exact identities/counts (pole pitch, series turns).
-2. `inferred` — equation gate “reuse” / “reuse with change” implemented and unit-tested; no oracle match yet.
-3. `assumption` — the result is dominated by an input/coefficient chosen without evidence (flagged by Engineering, e.g.
-   film coefficient h for ΔT). Ordinary assumed inputs appear as “n assumptions” tags and in the inputs table.
-4. `unresolved` — equation gate “cannot verify yet” (EQ-14, EQ-15, EQ-20) or conflicting sources.
-5. `not tested` — implementation or validation step not run.
-The badge shows the weakest applicable status. **Superseded in the reconciliation round** by the merged rule of architecture §13 / ADR-0003 / REQ-T-03: every used default or unsourced input counts as `assumption`; `dominant_assumptions` only orders the “n assumptions” tag. The mockup statuses remain examples. Efficiency is not shown in the summary rail (P1); it appears only in
-Losses with its status.
+Status display of a computed result — **decision D-007** (`docs/decision_log.md`, Fable, 2026-10-04), replacing my
+earlier proposal and the reconciliation-round “weakest of inputs” rule:
+1. **Badge = trust level of the calculation** (equation gate × evidence × test state): `verified` (equation checked,
+   evidence verified, linked tests passed in this build; also exact identities and counts), `inferred` (equation passed
+   the check, not yet validated against a measured oracle), `unresolved` (gate “cannot verify yet”, conflicting sources or
+   a validity limit exceeded — shown with the word “estimate”), `not tested` (implementation or validation not run).
+2. **Separate dashed tag “n assumptions”** on every numeric result, expandable to the list of defaults and assumed inputs
+   the number depends on (e.g. R_ph: copper thickness 34.8 µm default, PCB copper behaves like IACS copper, winding
+   temperature 60 °C default). “0 assumptions” is shown as a plain dashed tag. Re-typing a default value does not change
+   anything; an input becomes `measured` only when the user marks it and names the source.
+3. **`assumption`** remains the label for individual inputs and for a result whose **equation itself** is an engineering
+   assumption (example: ΔT from the lumped thermal model EQ-17, registry status `assumption`).
+4. Every numeric result shows: value, unit (“–” + hidden “dimensionless” when unitless), badge, EQ-ID link(s) or a tag
+   `input` / `derived` / `count`, and the assumptions tag. Applied in mockups 01–07 (rails, derived rows, result cards,
+   plugin window, phone tiles); mockup 04 shows the R_ph list expanded.
+5. Until the Phase 2 tests pass, engine results will honestly read `not tested`; the mockup statuses show the expected
+   state after the implementation tests pass and remain examples.
+Efficiency is not shown in the summary rail (P1); it appears only in Losses with its status.
 
 ### 10.5 Board & rotor (step 4) — no mockup in Phase 1
 
@@ -510,3 +522,11 @@ The embodic symbol (three teardrops) is a brand mark, not an icon: used only as 
 | Q5 | Status-derivation rule §10.4 — confirm with Engineering/Verification | as proposed |
 | Q6 | Keep a 3-D view in the standalone app? | 2-D only in Phase 2 |
 | Q7 | British or American spelling in the UI? | British |
+
+---
+
+Revision 2026-10-04 (defect fixes): §10.4 rewritten for decision D-007 (trust badge + separate “n assumptions” tag,
+DEF-06); component rows for badge and assumptions tag; §5 two-pane layout from 960 px implemented in the mockups with
+measured overflow 0 px at 1920–768 px (DEF-07) and the 880 × 600 KiCad window mockup 05b; §8.3 confirmed and mockups
+aligned (DEF-16). Mockup 04 now cites ρ₂₀ and α to EV-53 (IACS, NBS Handbook 100); the remaining assumption is “PCB
+copper behaves like IACS copper” (DEF-05).

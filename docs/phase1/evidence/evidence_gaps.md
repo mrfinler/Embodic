@@ -44,6 +44,9 @@ about the best way forward), not a result.
   check) → still `unresolved`. Proposal: ask the authors (METU, keysan@metu.edu.tr is printed on p.1) or measure the
   coil in D09 Fig. 11a photo with a scale reference; run the O2 oracle for N = 6, 7, 8 and report which matches
   R = 1.07 Ω and L = 14.8 µH.
+- DEF-08 (2026-10-04): D09 Table 6 p.7 labels the values "measured" but gives no method, test frequency, connection
+  (single phase vs line-line/2) or rotor condition for the 14.8 µH "phase inductance" → `unresolved`; a model
+  inductance may be compared with it only after the measured quantity is defined (ask the authors).
 - Proposal: (1) use O1 for back-EMF-constant regression and O2 for R/L/EMF/torque after extracting turn data from
   D09 Fig. 2/11 (image measurement) or asking the authors; (2) digitise D10 Fig. 18 (EMF vs speed) for O3;
   (3) build and measure one embodic reference board (R at known temperature, L at 1–10 kHz, K_e by spin test)
@@ -188,3 +191,17 @@ about the best way forward), not a result.
 - G26 — ECM publishes no coil dimensions, layer counts, copper weights or trace-width grading on its official pages;
   its patents (as reviewed through extracts) describe serpentine/radial-conductor windings, not graded trace widths
   (`not found`).
+
+## Revision 2026-10-04 (defect fixes)
+
+- G2: added the DEF-08 note (D09 inductance measurement undefined).
+- G27 (new) — Phase colour convention for the UI: only the installation-wiring convention L1 brown / L2 black / L3 grey
+  (N blue, PE green-and-yellow) was verified, via a secondary IET source (EV-77); IEC 60445 and IEC 60757 were not
+  accessed; no standard for phase colours in plots/diagrams was found → `not found`; any UI phase palette is an
+  `assumption` (design choice) and should be documented as such.
+- G28 (new) — ISO 273 clearance-hole values not accessed (only title/scope/status, EV-78); proposal: read the ISO OBP
+  preview or purchase; until then hole presets are `assumption`.
+- G29 (new) — KiCad 9 board-file copper-layer ordinals not documented in official file-format pages (EV-79); test by
+  saving a 4-layer board in KiCad 9.x; map by canonical layer name.
+- Font licences (EV-72…76) all SIL OFL 1.1; Liberation and Cascadia Code carry Reserved Font Names (modified/subsetted
+  copies must be renamed — inferred from the OFL text, legal confirmation not sought).

@@ -293,7 +293,57 @@
   .wrap { flex-wrap: wrap; }
   .between { justify-content: space-between; }
   .stack { display: grid; gap: 8px; }
+  .callout-placeholder { display: none; }
   .callout { position: absolute; display: grid; place-items: center; inline-size: 26px; block-size: 26px; border-radius: 50%; background: var(--surface-inverse); color: var(--text-inverse); font-size: var(--fs-xs); font-weight: 700; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--n-900); z-index: 5; }
+
+  /* reconciliation + defect fixes */
+  .doc-name { border: 0; background: none; padding: 2px 4px; border-radius: var(--radius-s); cursor: text; font: inherit; font-weight: 600; color: inherit; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-inline-size: 0; max-inline-size: 360px; }
+  .doc-name:hover { background: var(--surface-sunken); }
+  .statusbar a { color: inherit; }
+  .asm { display: inline-block; justify-self: start; }
+  li > .badge { justify-self: start; }
+  .asm > summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; min-block-size: 24px; padding: 0 8px 0 6px; border: 1.5px dashed var(--border-strong); border-radius: var(--radius-s); font-size: var(--fs-xs); color: var(--text-1); background: var(--surface); white-space: nowrap; }
+  .asm > summary::-webkit-details-marker { display: none; }
+  .asm > summary svg { inline-size: 12px; block-size: 12px; fill: none; stroke: currentColor; stroke-width: 2; }
+  .asm > summary::after { content: ""; inline-size: 6px; block-size: 6px; border-inline-end: 1.5px solid currentColor; border-block-end: 1.5px solid currentColor; rotate: -45deg; margin-inline-start: 2px; }
+  .asm[open] { flex-basis: 100%; }
+  .asm[open] > summary::after { rotate: 45deg; }
+  .asm ul { margin: 6px 0 2px; padding: 6px 10px 6px 24px; border: 1px dashed var(--border-control); border-radius: var(--radius-s); font-size: var(--fs-s); color: var(--text-2); display: grid; gap: 2px; background: var(--surface); }
+  .tag.asm-none { border-style: dashed; color: var(--text-3); }
+  .mini { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; padding: 6px 0; border-block-end: 1px solid var(--divider); font-size: var(--fs-s); }
+  .mini:last-child { border-block-end: 0; }
+  .mini .v { text-align: end; font-family: var(--font-mono); color: var(--text-1); white-space: nowrap; }
+  .mini .v .u { font-family: var(--font-ui); color: var(--text-2); margin-inline-start: 3px; }
+  .mini .m { grid-column: 1 / -1; display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+  .minis { margin-block-start: 8px; background: var(--n-50); border: 1px solid var(--divider); border-radius: var(--radius-s); padding: 2px 10px; }
+  .callout-key { display: block; }
+}
+
+@layer utilities {
+  /* Two-pane layout for windows 960-1279 px (REQ-N-15); also degrades without horizontal scroll down to 768 px. */
+  @media (width < 1280px) {
+    .app, .app.wide-main { grid-template-columns: 300px minmax(0, 1fr); grid-template-rows: 52px 48px minmax(0, 1fr) 232px 28px;
+      grid-template-areas: "top top" "steps steps" "panel fig" "rail rail" "status status"; }
+    .app.wide-main { grid-template-columns: 260px minmax(0, 1fr); }
+    .rail { border-inline-start: 0; border-block-start: 1px solid var(--border-strong); display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); grid-auto-rows: auto; align-content: start; align-items: start; }
+    .rail > .rail-head { grid-column: 1 / -1; padding-block: 8px; }
+    .rail > .kr { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); column-gap: 16px; align-content: start; }
+    .rail > .drc-card { margin-block: 8px; }
+    .steps-right, .callout { display: none; }
+    .doc-name { max-inline-size: 240px; }
+  }
+  @media (width < 1100px) {
+    .lbl-txt { position: absolute; clip-path: inset(50%); inline-size: 1px; block-size: 1px; overflow: hidden; white-space: nowrap; }
+    .doc-state, .st-units, .st-cursor { display: none; }
+    .steps a { padding: 0 10px; }
+  }
+  @media (width < 960px) {
+    .app, .app.wide-main { grid-template-columns: 260px minmax(0, 1fr); }
+    .steps a:not([aria-current="step"]) .step-lbl { position: absolute; clip-path: inset(50%); inline-size: 1px; block-size: 1px; overflow: hidden; white-space: nowrap; }
+    .step-state, .st-counts { display: none; }
+    .rail { grid-template-columns: minmax(0, 1fr); }
+    .doc-name { max-inline-size: 160px; }
+  }
 }
 
 </style>
@@ -304,20 +354,21 @@
 <section class="frame-caption"><h2>Frame A — Step 2: Phases</h2><p>Visual ring of the coils with phase label, polarity and winding direction; coil table and phasor star in the rail.</p></section>
 <div class="app" id="app-phases">
   <header class="topbar" id="app-topbar">
+  <a class="skip-link visually-hidden" href="#panel-step">Skip to parameters</a>
   <span class="logo"><img src="brand/embodic_logo.png" alt="embodic" width="1983" height="793"></span>
-  <div class="doc"><span class="doc-name" id="doc-name">12-coil / 16-pole stator (example)</span><span class="chip" id="doc-state">Unsaved changes</span></div>
+  <div class="doc"><button class="doc-name" id="doc-name" type="button" aria-label="Rename design: 12-coil / 16-pole stator (example)">12-coil / 16-pole stator (example)</button><span class="chip doc-state" id="doc-state">Unsaved changes</span></div>
   <div class="spacer"></div>
   <div class="btn-group" role="toolbar" aria-label="Document">
     <button class="btn btn-ghost icon-btn" id="btn-undo" type="button" aria-label="Undo" title="Undo (Ctrl+Z)"><svg class="i" aria-hidden="true"><use href="#i-undo"/></svg></button>
     <button class="btn btn-ghost icon-btn" id="btn-redo" type="button" aria-label="Redo" title="Redo (Ctrl+Shift+Z)"><svg class="i" aria-hidden="true"><use href="#i-redo"/></svg></button>
-    <button class="btn btn-ghost" id="btn-open" type="button"><svg class="i" aria-hidden="true"><use href="#i-open"/></svg>Open</button>
-    <button class="btn btn-ghost" id="btn-save" type="button"><svg class="i" aria-hidden="true"><use href="#i-save"/></svg>Save</button>
+    <button class="btn btn-ghost" id="btn-open" type="button"><svg class="i" aria-hidden="true"><use href="#i-open"/></svg><span class="lbl-txt">Open</span></button>
+    <button class="btn btn-ghost" id="btn-save" type="button"><svg class="i" aria-hidden="true"><use href="#i-save"/></svg><span class="lbl-txt">Save</span></button>
     <button class="btn btn-ghost icon-btn" id="btn-more" type="button" aria-label="More: presets, reference design, tests, guide" aria-haspopup="menu"><svg class="i" aria-hidden="true"><use href="#i-more"/></svg></button>
     <a class="btn btn-primary" id="btn-export" href="#step-export"><svg class="i" aria-hidden="true"><use href="#i-export"/></svg>Export</a>
   </div>
 </header>
   <nav class="stepnav" id="step-nav" aria-label="Design steps">
-  <ol class="steps" role="list"><li><a id="step-coil" href="#step-coil"><span class="step-no" aria-hidden="true">1</span>Coil</a></li><li><a id="step-phases" href="#step-phases" aria-current="step"><span class="step-no" aria-hidden="true">2</span>Phases</a></li><li><a id="step-layers" href="#step-layers"><span class="step-no" aria-hidden="true">3</span>Layers</a></li><li><a id="step-board" href="#step-board"><span class="step-no" aria-hidden="true">4</span>Board & rotor</a></li><li><a id="step-results" href="#step-results"><span class="step-no" aria-hidden="true">5</span>Results</a></li><li><a id="step-export" href="#step-export"><span class="step-no" aria-hidden="true">6</span>Export</a></li></ol>
+  <ol class="steps" role="list"><li><a id="step-coil" href="#step-coil"><span class="step-no" aria-hidden="true">1</span><span class="step-lbl">Coil</span></a></li><li><a id="step-phases" href="#step-phases" aria-current="step"><span class="step-no" aria-hidden="true">2</span><span class="step-lbl">Phases</span></a></li><li><a id="step-layers" href="#step-layers"><span class="step-no" aria-hidden="true">3</span><span class="step-lbl">Layers</span></a></li><li><a id="step-board" href="#step-board"><span class="step-no" aria-hidden="true">4</span><span class="step-lbl">Board & rotor</span></a></li><li><a id="step-results" href="#step-results"><span class="step-no" aria-hidden="true">5</span><span class="step-lbl">Results</span></a></li><li><a id="step-export" href="#step-export"><span class="step-no" aria-hidden="true">6</span><span class="step-lbl">Export</span></a></li></ol>
   <div class="steps-right"><span class="xs muted">Engine</span><span class="chip" id="engine-state">not computed · mockup</span></div>
 </nav>
   <aside class="panel" id="panel-step" aria-labelledby="panel-title">
@@ -331,7 +382,8 @@
     <h2 id="sec-assign">Phase assignment</h2>
     <fieldset class="fs" id="param-phase-assign-mode"><legend>Method</legend><div class="seg"><label><input type="radio" name="phase-assign-mode" value="auto" checked>Automatic (star of slots)</label><label><input type="radio" name="phase-assign-mode" value="manual">Manual</label></div></fieldset>
     <fieldset class="fs" id="param-phase-sequence"><legend>Phase sequence</legend><div class="seg"><label><input type="radio" name="phase-sequence" value="abc" checked>A → B → C</label><label><input type="radio" name="phase-sequence" value="acb">A → C → B</label></div></fieldset>
-    <div class="derived" id="phase-balance-status" role="status"><dt>Pattern</dt><dd id="phase-pattern-string">A C B A C B A C B A C B</dd><dt>Balance</dt><dd><span class="pf pass"><svg aria-hidden="true"><use href="#i-pass"/></svg>120° el. apart</span></dd><dt>k<sub>w1</sub> · EQ-08</dt><dd>0.866</dd><dt>k<sub>w3</sub> · EQ-08</dt><dd>0.000</dd></div>
+    <div id="phase-balance-status" role="status"><div class="derived" style="grid-template-columns:auto 1fr"><dt>Pattern</dt><dd id="phase-pattern-string">A C B A C B A C B A C B</dd><dt>Balance</dt><dd><span class="pf pass"><svg aria-hidden="true"><use href="#i-pass"/></svg>phasors 120° el. apart</span></dd></div>
+    <div class="minis"><div class="mini"><span class="k">Winding factor k<sub>w1</sub></span><span class="v"><span class="num">0.866</span><span class="u">–<span class="visually-hidden"> dimensionless</span></span></span><span class="m"><span class="badge" data-status="inferred"><svg aria-hidden="true"><use href="#i-st-inferred"/></svg><span class="visually-hidden">Status: </span>inferred</span><a class="eq" href="#">EQ-08</a><span class="tag asm-none">0 assumptions</span></span></div><div class="mini"><span class="k">Winding factor k<sub>w3</sub></span><span class="v"><span class="num">0.000</span><span class="u">–<span class="visually-hidden"> dimensionless</span></span></span><span class="m"><span class="badge" data-status="inferred"><svg aria-hidden="true"><use href="#i-st-inferred"/></svg><span class="visually-hidden">Status: </span>inferred</span><a class="eq" href="#">EQ-08</a><span class="tag asm-none">0 assumptions</span></span></div></div></div>
     <p class="hint" style="margin-top:6px"><svg class="i" aria-hidden="true"><use href="#i-info"/></svg><span>Naming of B and C follows the selected sequence; swapping them reverses the rotation direction.</span></p>
   </section>
   <section class="sec" aria-labelledby="sec-term">
@@ -358,7 +410,7 @@
   <aside class="rail" id="rail-results" aria-labelledby="rail-title">
   <div class="rail-head"><h2 id="rail-title">Assignment</h2><span class="chip">Automatic · locked</span></div>
   <section style="padding:10px 16px 4px"><h3 class="small" style="font-weight:600;margin-bottom:4px">Coil EMF phasors</h3><svg viewBox="-60 -56 120 112" role="img" aria-labelledby="ph-t ph-d" style="inline-size:100%;max-inline-size:220px;block-size:auto;margin-inline:auto"><title id="ph-t">Star of coil EMF phasors, 12 coils / 16 poles — illustrative</title><desc id="ph-d">Three phasor directions 120 electrical degrees apart: phase A coils 1, 4, 7, 10 at 0 degrees; phase B coils 3, 6, 9, 12 at 120 degrees; phase C coils 2, 5, 8, 11 at 240 degrees.</desc><circle r="40" fill="none" stroke="#dcdcdc" stroke-width=".8"/><path d="M-46 0H46M0 -46V46" stroke="#e6e6e6" stroke-width=".6"/><path d="M0 0L38.0 -0.0" stroke="var(--phase-a)" stroke-width="2.4" stroke-linecap="round"/><circle cx="38.0" cy="-0.0" r="3.2" fill="var(--phase-a)" stroke="#fff" stroke-width="1.2"/><text x="24" y="12" font-size="8" text-anchor="middle" font-family="Segoe UI, Liberation Sans, sans-serif" fill="#141414" font-weight="700">A</text><text x="24" y="20" font-size="6" text-anchor="middle" font-family="Segoe UI, Liberation Sans, sans-serif" fill="#454545">coils 1 · 4 · 7 · 10</text><path d="M0 0L-19.0 -32.9" stroke="var(--phase-b)" stroke-width="2.4" stroke-linecap="round"/><circle cx="-19.0" cy="-32.9" r="3.2" fill="var(--phase-b)" stroke="#fff" stroke-width="1.2"/><text x="-30" y="-44" font-size="8" text-anchor="middle" font-family="Segoe UI, Liberation Sans, sans-serif" fill="#141414" font-weight="700">B</text><text x="-30" y="-36" font-size="6" text-anchor="middle" font-family="Segoe UI, Liberation Sans, sans-serif" fill="#454545">coils 3 · 6 · 9 · 12</text><path d="M0 0L-19.0 32.9" stroke="var(--phase-c)" stroke-width="2.4" stroke-linecap="round"/><circle cx="-19.0" cy="32.9" r="3.2" fill="var(--phase-c)" stroke="#fff" stroke-width="1.2"/><text x="-30" y="40" font-size="8" text-anchor="middle" font-family="Segoe UI, Liberation Sans, sans-serif" fill="#141414" font-weight="700">C</text><text x="-30" y="48" font-size="6" text-anchor="middle" font-family="Segoe UI, Liberation Sans, sans-serif" fill="#454545">coils 2 · 5 · 8 · 11</text></svg></section>
-  <section style="padding:4px 16px 10px"><h3 class="small" style="font-weight:600;margin-bottom:6px">Coil table</h3><div class="table-wrap" style="max-block-size:252px;overflow-y:auto;border:1px solid var(--divider);border-radius:var(--radius-s)">
+  <section style="padding:4px 16px 10px"><h3 class="small" style="font-weight:600;margin-bottom:6px">Coil table</h3><div class="row wrap" style="gap:4px;margin-bottom:6px"><span class="xs muted">Angles (°): exact arithmetic</span><span class="badge" data-status="verified"><svg aria-hidden="true"><use href="#i-st-verified"/></svg><span class="visually-hidden">Status: </span>verified</span><a class="eq" href="#">EQ-01</a><a class="eq" href="#">EQ-08</a><span class="tag asm-none">0 assumptions</span></div><div class="table-wrap" style="max-block-size:252px;overflow-y:auto;border:1px solid var(--divider);border-radius:var(--radius-s)">
 <table class="data" id="phase-table"><caption class="visually-hidden">Coil phase assignment (automatic, example)</caption>
 <thead><tr><th scope="col" class="num">Coil</th><th scope="col" class="num">Angle</th><th scope="col" class="num">EMF °el</th><th scope="col">Phase</th><th scope="col" class="num">Pol.</th><th scope="col">Dir.</th></tr></thead>
 <tbody><tr><th scope="row" class="num">1</th><td class="num">90°</td><td class="num">0°</td><td><span class="key"><span class="sw" style="background:var(--phase-a);inline-size:10px"></span>A1</span></td><td class="num">+</td><td><svg class="i i-s" aria-hidden="true"><use href="#i-cw"/></svg><span class="visually-hidden">clockwise</span></td></tr><tr><th scope="row" class="num">2</th><td class="num">60°</td><td class="num">240°</td><td><span class="key"><span class="sw" style="background:var(--phase-c);inline-size:10px"></span>C1</span></td><td class="num">+</td><td><svg class="i i-s" aria-hidden="true"><use href="#i-cw"/></svg><span class="visually-hidden">clockwise</span></td></tr><tr><th scope="row" class="num">3</th><td class="num">30°</td><td class="num">120°</td><td><span class="key"><span class="sw" style="background:var(--phase-b);inline-size:10px"></span>B1</span></td><td class="num">+</td><td><svg class="i i-s" aria-hidden="true"><use href="#i-cw"/></svg><span class="visually-hidden">clockwise</span></td></tr><tr><th scope="row" class="num">4</th><td class="num">0°</td><td class="num">0°</td><td><span class="key"><span class="sw" style="background:var(--phase-a);inline-size:10px"></span>A2</span></td><td class="num">+</td><td><svg class="i i-s" aria-hidden="true"><use href="#i-cw"/></svg><span class="visually-hidden">clockwise</span></td></tr><tr><th scope="row" class="num">5</th><td class="num">330°</td><td class="num">240°</td><td><span class="key"><span class="sw" style="background:var(--phase-c);inline-size:10px"></span>C2</span></td><td class="num">+</td><td><svg class="i i-s" aria-hidden="true"><use href="#i-cw"/></svg><span class="visually-hidden">clockwise</span></td></tr><tr><th scope="row" class="num">6</th><td class="num">300°</td><td class="num">120°</td><td><span class="key"><span class="sw" style="background:var(--phase-b);inline-size:10px"></span>B2</span></td><td class="num">+</td><td><svg class="i i-s" aria-hidden="true"><use href="#i-cw"/></svg><span class="visually-hidden">clockwise</span></td></tr><tr><th scope="row" class="num">7</th><td class="num">270°</td><td class="num">0°</td><td><span class="key"><span class="sw" style="background:var(--phase-a);inline-size:10px"></span>A3</span></td><td class="num">+</td><td><svg class="i i-s" aria-hidden="true"><use href="#i-cw"/></svg><span class="visually-hidden">clockwise</span></td></tr><tr><th scope="row" class="num">8</th><td class="num">240°</td><td class="num">240°</td><td><span class="key"><span class="sw" style="background:var(--phase-c);inline-size:10px"></span>C3</span></td><td class="num">+</td><td><svg class="i i-s" aria-hidden="true"><use href="#i-cw"/></svg><span class="visually-hidden">clockwise</span></td></tr><tr><th scope="row" class="num">9</th><td class="num">210°</td><td class="num">120°</td><td><span class="key"><span class="sw" style="background:var(--phase-b);inline-size:10px"></span>B3</span></td><td class="num">+</td><td><svg class="i i-s" aria-hidden="true"><use href="#i-cw"/></svg><span class="visually-hidden">clockwise</span></td></tr><tr><th scope="row" class="num">10</th><td class="num">180°</td><td class="num">0°</td><td><span class="key"><span class="sw" style="background:var(--phase-a);inline-size:10px"></span>A4</span></td><td class="num">+</td><td><svg class="i i-s" aria-hidden="true"><use href="#i-cw"/></svg><span class="visually-hidden">clockwise</span></td></tr><tr><th scope="row" class="num">11</th><td class="num">150°</td><td class="num">240°</td><td><span class="key"><span class="sw" style="background:var(--phase-c);inline-size:10px"></span>C4</span></td><td class="num">+</td><td><svg class="i i-s" aria-hidden="true"><use href="#i-cw"/></svg><span class="visually-hidden">clockwise</span></td></tr><tr><th scope="row" class="num">12</th><td class="num">120°</td><td class="num">120°</td><td><span class="key"><span class="sw" style="background:var(--phase-b);inline-size:10px"></span>B4</span></td><td class="num">+</td><td><svg class="i i-s" aria-hidden="true"><use href="#i-cw"/></svg><span class="visually-hidden">clockwise</span></td></tr></tbody></table></div>
@@ -370,31 +422,32 @@
 </aside>
   <footer class="statusbar" id="statusbar">
   <span id="st-compute">Mockup · no engine</span>
-  <span id="st-drc">DRC: 1 fail, 1 warning (example)</span>
-  <span id="st-counts">6 layers · 12 coils · 84 vias (example)</span>
+  <a id="st-drc" href="#rail-drc">DRC: 1 fail, 1 warning (example)</a>
+  <span class="st-counts" id="st-counts">6 layers · 12 coils · 84 vias (example)</span>
   
   <span class="grow"></span>
-  <span id="st-units">Units: mm, °, A, V</span>
-  <span id="st-cursor" class="mono">x 21.40 y −8.15 r 22.90 mm θ −20.8°</span>
+  <span class="st-units" id="st-units">Units: mm, °, A, V</span>
+  <span id="st-cursor" class="mono st-cursor">x 21.40 y −8.15 r 22.90 mm θ −20.8°</span>
 </footer>
 </div>
 <section class="frame-caption"><h2>Frame B — Step 3: Layers</h2><p>Stack list with per-layer content, pair rotation offset, inter-layer connection (centre / transfer vias) and series / parallel pairs.</p></section>
 <div class="app" id="fb-app-layers">
   <header class="topbar" id="fb-app-topbar">
+  <a class="skip-link visually-hidden" href="#fb-panel-step">Skip to parameters</a>
   <span class="logo"><img src="brand/embodic_logo.png" alt="embodic" width="1983" height="793"></span>
-  <div class="doc"><span class="doc-name" id="fb-doc-name">12-coil / 16-pole stator (example)</span><span class="chip" id="fb-doc-state">Unsaved changes</span></div>
+  <div class="doc"><button class="doc-name" id="fb-doc-name" type="button" aria-label="Rename design: 12-coil / 16-pole stator (example)">12-coil / 16-pole stator (example)</button><span class="chip doc-state" id="fb-doc-state">Unsaved changes</span></div>
   <div class="spacer"></div>
   <div class="btn-group" role="toolbar" aria-label="Document">
     <button class="btn btn-ghost icon-btn" id="fb-btn-undo" type="button" aria-label="Undo" title="Undo (Ctrl+Z)"><svg class="i" aria-hidden="true"><use href="#i-undo"/></svg></button>
     <button class="btn btn-ghost icon-btn" id="fb-btn-redo" type="button" aria-label="Redo" title="Redo (Ctrl+Shift+Z)"><svg class="i" aria-hidden="true"><use href="#i-redo"/></svg></button>
-    <button class="btn btn-ghost" id="fb-btn-open" type="button"><svg class="i" aria-hidden="true"><use href="#i-open"/></svg>Open</button>
-    <button class="btn btn-ghost" id="fb-btn-save" type="button"><svg class="i" aria-hidden="true"><use href="#i-save"/></svg>Save</button>
+    <button class="btn btn-ghost" id="fb-btn-open" type="button"><svg class="i" aria-hidden="true"><use href="#i-open"/></svg><span class="lbl-txt">Open</span></button>
+    <button class="btn btn-ghost" id="fb-btn-save" type="button"><svg class="i" aria-hidden="true"><use href="#i-save"/></svg><span class="lbl-txt">Save</span></button>
     <button class="btn btn-ghost icon-btn" id="fb-btn-more" type="button" aria-label="More: presets, reference design, tests, guide" aria-haspopup="menu"><svg class="i" aria-hidden="true"><use href="#i-more"/></svg></button>
     <a class="btn btn-primary" id="fb-btn-export" href="#fb-step-export"><svg class="i" aria-hidden="true"><use href="#i-export"/></svg>Export</a>
   </div>
 </header>
   <nav class="stepnav" id="fb-step-nav" aria-label="Design steps">
-  <ol class="steps" role="list"><li><a id="fb-step-coil" href="#fb-step-coil"><span class="step-no" aria-hidden="true">1</span>Coil</a></li><li><a id="fb-step-phases" href="#fb-step-phases"><span class="step-no" aria-hidden="true">2</span>Phases<span class="step-state">✓</span></a></li><li><a id="fb-step-layers" href="#fb-step-layers" aria-current="step"><span class="step-no" aria-hidden="true">3</span>Layers</a></li><li><a id="fb-step-board" href="#fb-step-board"><span class="step-no" aria-hidden="true">4</span>Board & rotor</a></li><li><a id="fb-step-results" href="#fb-step-results"><span class="step-no" aria-hidden="true">5</span>Results</a></li><li><a id="fb-step-export" href="#fb-step-export"><span class="step-no" aria-hidden="true">6</span>Export</a></li></ol>
+  <ol class="steps" role="list"><li><a id="fb-step-coil" href="#fb-step-coil"><span class="step-no" aria-hidden="true">1</span><span class="step-lbl">Coil</span></a></li><li><a id="fb-step-phases" href="#fb-step-phases"><span class="step-no" aria-hidden="true">2</span><span class="step-lbl">Phases</span><span class="step-state">✓</span></a></li><li><a id="fb-step-layers" href="#fb-step-layers" aria-current="step"><span class="step-no" aria-hidden="true">3</span><span class="step-lbl">Layers</span></a></li><li><a id="fb-step-board" href="#fb-step-board"><span class="step-no" aria-hidden="true">4</span><span class="step-lbl">Board & rotor</span></a></li><li><a id="fb-step-results" href="#fb-step-results"><span class="step-no" aria-hidden="true">5</span><span class="step-lbl">Results</span></a></li><li><a id="fb-step-export" href="#fb-step-export"><span class="step-no" aria-hidden="true">6</span><span class="step-lbl">Export</span></a></li></ol>
   <div class="steps-right"><span class="xs muted">Engine</span><span class="chip" id="fb-engine-state">not computed · mockup</span></div>
 </nav>
   <aside class="panel" id="fb-panel-step" aria-labelledby="fb-panel-title">
@@ -441,21 +494,21 @@
     <div class="row" style="justify-content:flex-start;align-items:flex-start"><span class="pf pass"><svg aria-hidden="true"><use href="#i-pass"/></svg>Pass</span><span class="small">Every pair is a whole X / Y pair; via grid shared by all layers.</span></div>
   </section>
   <ul class="kr" role="list">
-    <li><span class="k">Vias per coil (3 centre + 2 transfer)</span><span class="v"><span class="num">5</span></span><span class="meta"><span class="badge" data-status="inferred"><svg aria-hidden="true"><use href="#i-st-inferred"/></svg><span class="visually-hidden">Status: </span>inferred</span><span class="tag">derived</span><span class="xs muted" style="margin-inline-start:auto">example</span></span></li>
-    <li><span class="k">Spread of fundamental B<sub>z</sub> over layers</span><span class="v"><span class="num">0.3</span><span class="u">%</span></span><span class="meta"><span class="badge" data-status="unresolved"><svg aria-hidden="true"><use href="#i-st-unresolved"/></svg><span class="visually-hidden">Status: </span>unresolved</span><a class="eq" href="#">EQ-05</a><a class="eq" href="#">EQ-07</a><span class="xs muted" style="margin-inline-start:auto">example</span></span></li>
-    <li><span class="k">Stator thickness (stack-up)</span><span class="v"><span class="num">1.60</span><span class="u">mm</span></span><span class="meta"><span class="badge" data-status="assumption"><svg aria-hidden="true"><use href="#i-st-assumption"/></svg><span class="visually-hidden">Status: </span>assumption</span><span class="tag">input</span><span class="xs muted" style="margin-inline-start:auto">example</span></span></li>
-    <li><span class="k">Series turns per phase</span><span class="v"><span class="num">84</span></span><span class="meta"><span class="badge" data-status="verified"><svg aria-hidden="true"><use href="#i-st-verified"/></svg><span class="visually-hidden">Status: </span>verified</span><span class="tag">count</span><span class="xs muted" style="margin-inline-start:auto">example</span></span></li>
+    <li><span class="k">Vias per coil (3 centre + 2 transfer)</span><span class="v"><span class="num">5</span><span class="u">vias</span></span><span class="meta"><span class="badge" data-status="not-tested"><svg aria-hidden="true"><use href="#i-st-not-tested"/></svg><span class="visually-hidden">Status: </span>not tested</span><span class="tag">count</span><span class="tag asm-none">0 assumptions</span><span class="xs muted" style="margin-inline-start:auto">example</span></span></li>
+    <li><span class="k">Spread of fundamental B<sub>z</sub> over layers</span><span class="v"><span class="num">0.3</span><span class="u">%</span></span><span class="meta"><span class="badge" data-status="unresolved"><svg aria-hidden="true"><use href="#i-st-unresolved"/></svg><span class="visually-hidden">Status: </span>unresolved</span><a class="eq" href="#">EQ-05</a><a class="eq" href="#">EQ-07</a><details class="asm" data-role="assumptions"><summary class="tag"><svg aria-hidden="true"><use href="#i-st-assumption"/></svg>4 assumptions</summary><ul><li>Magnet remanence B<sub>r</sub> = 1.30 T (default, typical NdFeB)</li><li>Recoil permeability µ<sub>r</sub> = 1.05 (no datasheet value)</li><li>Air gap 1.0 mm per side (default)</li><li>Dielectric thicknesses of the default stack-up</li></ul></details><span class="xs muted" style="margin-inline-start:auto">example</span></span></li>
+    <li><span class="k">Stator thickness (input)</span><span class="v"><span class="num">1.60</span><span class="u">mm</span></span><span class="meta"><span class="badge" data-status="assumption"><svg aria-hidden="true"><use href="#i-st-assumption"/></svg><span class="visually-hidden">Status: </span>assumption</span><span class="tag">input · default</span><span class="xs muted" style="margin-inline-start:auto">example</span></span></li>
+    <li><span class="k">Series turns per phase</span><span class="v"><span class="num">84</span><span class="u">turns</span></span><span class="meta"><span class="badge" data-status="not-tested"><svg aria-hidden="true"><use href="#i-st-not-tested"/></svg><span class="visually-hidden">Status: </span>not tested</span><span class="tag">count</span><span class="tag asm-none">0 assumptions</span><span class="xs muted" style="margin-inline-start:auto">example</span></span></li>
   </ul>
   <p class="xs muted" style="padding:0 16px 16px">Parallel pairs at different z have different EMF; the circulating loss then appears under Results › Losses (EQ-07).</p>
 </aside>
   <footer class="statusbar" id="fb-statusbar">
   <span id="fb-st-compute">Mockup · no engine</span>
-  <span id="fb-st-drc">DRC: 1 fail, 1 warning (example)</span>
-  <span id="fb-st-counts">6 layers · 12 coils · 84 vias (example)</span>
+  <a id="fb-st-drc" href="#fb-rail-drc">DRC: 1 fail, 1 warning (example)</a>
+  <span class="st-counts" id="fb-st-counts">6 layers · 12 coils · 84 vias (example)</span>
   
   <span class="grow"></span>
-  <span id="fb-st-units">Units: mm, °, A, V</span>
-  <span id="fb-st-cursor" class="mono">x 21.40 y −8.15 r 22.90 mm θ −20.8°</span>
+  <span class="st-units" id="fb-st-units">Units: mm, °, A, V</span>
+  <span id="fb-st-cursor" class="mono st-cursor">x 21.40 y −8.15 r 22.90 mm θ −20.8°</span>
 </footer>
 </div>
 </body>

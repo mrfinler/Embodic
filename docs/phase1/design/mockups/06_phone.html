@@ -293,7 +293,57 @@
   .wrap { flex-wrap: wrap; }
   .between { justify-content: space-between; }
   .stack { display: grid; gap: 8px; }
+  .callout-placeholder { display: none; }
   .callout { position: absolute; display: grid; place-items: center; inline-size: 26px; block-size: 26px; border-radius: 50%; background: var(--surface-inverse); color: var(--text-inverse); font-size: var(--fs-xs); font-weight: 700; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--n-900); z-index: 5; }
+
+  /* reconciliation + defect fixes */
+  .doc-name { border: 0; background: none; padding: 2px 4px; border-radius: var(--radius-s); cursor: text; font: inherit; font-weight: 600; color: inherit; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-inline-size: 0; max-inline-size: 360px; }
+  .doc-name:hover { background: var(--surface-sunken); }
+  .statusbar a { color: inherit; }
+  .asm { display: inline-block; justify-self: start; }
+  li > .badge { justify-self: start; }
+  .asm > summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; min-block-size: 24px; padding: 0 8px 0 6px; border: 1.5px dashed var(--border-strong); border-radius: var(--radius-s); font-size: var(--fs-xs); color: var(--text-1); background: var(--surface); white-space: nowrap; }
+  .asm > summary::-webkit-details-marker { display: none; }
+  .asm > summary svg { inline-size: 12px; block-size: 12px; fill: none; stroke: currentColor; stroke-width: 2; }
+  .asm > summary::after { content: ""; inline-size: 6px; block-size: 6px; border-inline-end: 1.5px solid currentColor; border-block-end: 1.5px solid currentColor; rotate: -45deg; margin-inline-start: 2px; }
+  .asm[open] { flex-basis: 100%; }
+  .asm[open] > summary::after { rotate: 45deg; }
+  .asm ul { margin: 6px 0 2px; padding: 6px 10px 6px 24px; border: 1px dashed var(--border-control); border-radius: var(--radius-s); font-size: var(--fs-s); color: var(--text-2); display: grid; gap: 2px; background: var(--surface); }
+  .tag.asm-none { border-style: dashed; color: var(--text-3); }
+  .mini { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; padding: 6px 0; border-block-end: 1px solid var(--divider); font-size: var(--fs-s); }
+  .mini:last-child { border-block-end: 0; }
+  .mini .v { text-align: end; font-family: var(--font-mono); color: var(--text-1); white-space: nowrap; }
+  .mini .v .u { font-family: var(--font-ui); color: var(--text-2); margin-inline-start: 3px; }
+  .mini .m { grid-column: 1 / -1; display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+  .minis { margin-block-start: 8px; background: var(--n-50); border: 1px solid var(--divider); border-radius: var(--radius-s); padding: 2px 10px; }
+  .callout-key { display: block; }
+}
+
+@layer utilities {
+  /* Two-pane layout for windows 960-1279 px (REQ-N-15); also degrades without horizontal scroll down to 768 px. */
+  @media (width < 1280px) {
+    .app, .app.wide-main { grid-template-columns: 300px minmax(0, 1fr); grid-template-rows: 52px 48px minmax(0, 1fr) 232px 28px;
+      grid-template-areas: "top top" "steps steps" "panel fig" "rail rail" "status status"; }
+    .app.wide-main { grid-template-columns: 260px minmax(0, 1fr); }
+    .rail { border-inline-start: 0; border-block-start: 1px solid var(--border-strong); display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); grid-auto-rows: auto; align-content: start; align-items: start; }
+    .rail > .rail-head { grid-column: 1 / -1; padding-block: 8px; }
+    .rail > .kr { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); column-gap: 16px; align-content: start; }
+    .rail > .drc-card { margin-block: 8px; }
+    .steps-right, .callout { display: none; }
+    .doc-name { max-inline-size: 240px; }
+  }
+  @media (width < 1100px) {
+    .lbl-txt { position: absolute; clip-path: inset(50%); inline-size: 1px; block-size: 1px; overflow: hidden; white-space: nowrap; }
+    .doc-state, .st-units, .st-cursor { display: none; }
+    .steps a { padding: 0 10px; }
+  }
+  @media (width < 960px) {
+    .app, .app.wide-main { grid-template-columns: 260px minmax(0, 1fr); }
+    .steps a:not([aria-current="step"]) .step-lbl { position: absolute; clip-path: inset(50%); inline-size: 1px; block-size: 1px; overflow: hidden; white-space: nowrap; }
+    .step-state, .st-counts { display: none; }
+    .rail { grid-template-columns: minmax(0, 1fr); }
+    .doc-name { max-inline-size: 160px; }
+  }
 }
 
 
@@ -352,13 +402,13 @@
   <div class="p-chips" role="group" aria-label="Layer visibility"><label class="layer-chip"><input type="checkbox" checked aria-label="Show layer L1">L1</label><label class="layer-chip"><input type="checkbox" checked aria-label="Show layer L2">L2</label><label class="layer-chip"><input type="checkbox" checked aria-label="Show layer L3">L3</label><label class="layer-chip"><input type="checkbox" checked aria-label="Show layer L4">L4</label><label class="layer-chip"><input type="checkbox" checked aria-label="Show layer L5">L5</label><label class="layer-chip"><input type="checkbox" checked aria-label="Show layer L6">L6</label></div>
 </section>
 <section class="p-banner" id="rail-drc" aria-labelledby="pdrc"><span class="pf fail"><svg aria-hidden="true"><use href="#i-fail"/></svg>Fail</span><span id="pdrc" class="small"><b>1 DRC failure</b> · trace to via on L3 (example)</span><a class="btn btn-s" href="#">Review</a></section>
-<section class="p-sec" aria-labelledby="kr-title"><h2 id="kr-title">Key results <span class="chip" style="margin-inline-start:auto">Example values</span></h2><div class="tiles"><div class="tile"><span class="k">Phase resistance R<sub>ph</sub></span><span class="v">1.9<small>Ω</small></span><span class="meta"><span class="badge" data-status="inferred"><svg aria-hidden="true"><use href="#i-st-inferred"/></svg><span class="visually-hidden">Status: </span>inferred</span><a class="eq" href="#">EQ-10</a></span></div><div class="tile"><span class="k">Torque constant K<sub>t</sub></span><span class="v">18.6<small>mN·m/A</small></span><span class="meta"><span class="badge" data-status="inferred"><svg aria-hidden="true"><use href="#i-st-inferred"/></svg><span class="visually-hidden">Status: </span>inferred</span><a class="eq" href="#">EQ-09</a></span></div><div class="tile"><span class="k">Inductance L<sub>s</sub> (estimate)</span><span class="v">21<small>µH</small></span><span class="meta"><span class="badge" data-status="unresolved"><svg aria-hidden="true"><use href="#i-st-unresolved"/></svg><span class="visually-hidden">Status: </span>unresolved</span><a class="eq" href="#">EQ-14</a></span></div><div class="tile"><span class="k">Temperature rise ΔT</span><span class="v">28<small>K</small></span><span class="meta"><span class="badge" data-status="assumption"><svg aria-hidden="true"><use href="#i-st-assumption"/></svg><span class="visually-hidden">Status: </span>assumption</span><a class="eq" href="#">EQ-17</a></span></div></div>
+<section class="p-sec" aria-labelledby="kr-title"><h2 id="kr-title">Key results <span class="chip" style="margin-inline-start:auto">Example values</span></h2><div class="tiles"><div class="tile"><span class="k">Phase resistance R<sub>ph</sub></span><span class="v">1.9<small class="u">Ω</small></span><span class="meta"><span class="badge" data-status="inferred"><svg aria-hidden="true"><use href="#i-st-inferred"/></svg><span class="visually-hidden">Status: </span>inferred</span><a class="eq" href="#">EQ-10</a><details class="asm" data-role="assumptions"><summary class="tag"><svg aria-hidden="true"><use href="#i-st-assumption"/></svg>3 assumptions</summary><ul><li>Copper thickness 34.8 µm (1 oz nominal, default)</li><li>PCB copper behaves like IACS annealed copper (G6)</li><li>Winding temperature 60 °C (default)</li></ul></details></span></div><div class="tile"><span class="k">Torque constant K<sub>t</sub></span><span class="v">18.6<small class="u">mN·m/A</small></span><span class="meta"><span class="badge" data-status="inferred"><svg aria-hidden="true"><use href="#i-st-inferred"/></svg><span class="visually-hidden">Status: </span>inferred</span><a class="eq" href="#">EQ-09</a><details class="asm" data-role="assumptions"><summary class="tag"><svg aria-hidden="true"><use href="#i-st-assumption"/></svg>3 assumptions</summary><ul><li>Magnet remanence B<sub>r</sub> = 1.30 T (default, typical NdFeB)</li><li>Recoil permeability µ<sub>r</sub> = 1.05 (no datasheet value)</li><li>Air gap 1.0 mm per side (default)</li></ul></details></span></div><div class="tile"><span class="k">Inductance L<sub>s</sub> (estimate)</span><span class="v">21<small class="u">µH</small></span><span class="meta"><span class="badge" data-status="unresolved"><svg aria-hidden="true"><use href="#i-st-unresolved"/></svg><span class="visually-hidden">Status: </span>unresolved</span><a class="eq" href="#">EQ-14</a><details class="asm" data-role="assumptions"><summary class="tag"><svg aria-hidden="true"><use href="#i-st-assumption"/></svg>3 assumptions</summary><ul><li>Effective gap δ′ from magnet and air-gap defaults</li><li>k<sub>w1</sub> from the textbook phasor sum</li><li>End-turn and leakage terms omitted</li></ul></details></span></div><div class="tile"><span class="k">Temperature rise ΔT</span><span class="v">28<small class="u">K</small></span><span class="meta"><span class="badge" data-status="assumption"><svg aria-hidden="true"><use href="#i-st-assumption"/></svg><span class="visually-hidden">Status: </span>assumption</span><a class="eq" href="#">EQ-17</a><details class="asm" data-role="assumptions"><summary class="tag"><svg aria-hidden="true"><use href="#i-st-assumption"/></svg>2 assumptions</summary><ul><li>Film coefficient h = 25 W/m²K (default; sources give 10–30)</li><li>Cooling area = both board faces, no enclosure</li></ul></details></span></div></div>
   <a class="btn" href="#step-results" style="margin-top:10px;inline-size:100%"><svg class="i" aria-hidden="true"><use href="#i-results"/></svg>All results</a></section>
 <section class="p-sec" aria-labelledby="panel-title" id="panel-step">
   <h2 id="panel-title"><svg class="i" aria-hidden="true"><use href="#i-coil"/></svg>Step 1 · Coil</h2>
   <div class="pfield"><label for="param-coil-count">Coils per layer <span class="sym">Q</span></label><div class="input-unit"><input id="param-coil-count" inputmode="decimal" value="12" aria-describedby="param-coil-count-unit"><span class="unit" id="param-coil-count-unit"></span></div></div>
   <div class="pfield"><label for="param-poles">Magnet poles <span class="sym">2p</span></label><div class="input-unit"><input id="param-poles" inputmode="decimal" value="16" aria-describedby="param-poles-unit"><span class="unit" id="param-poles-unit"></span></div></div>
-  <div class="derived"><dt>Combination 12 / 16</dt><dd><span class="pf pass"><svg aria-hidden="true"><use href="#i-pass"/></svg>Balanced phasors</span></dd><dt>Coils per phase</dt><dd>4</dd></div>
+  <div class="row" style="margin-top:10px"><span class="pf pass"><svg aria-hidden="true"><use href="#i-pass"/></svg>Balanced phasors</span><span class="xs muted">combination 12 / 16</span></div><div class="minis"><div class="mini"><span class="k">Coils per phase</span><span class="v"><span class="num">4</span><span class="u">coils</span></span><span class="m"><span class="badge" data-status="verified"><svg aria-hidden="true"><use href="#i-st-verified"/></svg><span class="visually-hidden">Status: </span>verified</span><span class="tag">derived</span><span class="tag asm-none">0 assumptions</span></span></div></div>
   <fieldset class="fs" style="margin-top:12px"><legend>Sides</legend><div class="seg"><label><input type="radio" name="ps">Radial</label><label><input type="radio" name="ps" checked>Parallel</label></div></fieldset>
   <fieldset class="fs"><legend>Ends</legend><div class="seg"><label><input type="radio" name="pe" checked>Arc</label><label><input type="radio" name="pe">Straight</label><label><input type="radio" name="pe">Stadium</label></div></fieldset>
   <div class="pfield"><label for="param-turns">Turns per coil per layer <span class="sym">N</span></label><div class="input-unit"><input id="param-turns" inputmode="decimal" value="7" aria-describedby="param-turns-unit param-turns-hint"><span class="unit" id="param-turns-unit"></span></div><p class="hint" id="param-turns-hint"><svg class="i" aria-hidden="true"><use href="#i-info"/></svg><span>Up to <b>7</b> turns fit with the centre via (example).</span></p></div>

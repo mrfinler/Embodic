@@ -7,7 +7,8 @@ These are merged from the documents of all agents (reconciliation round 1). A re
 and `answers_to_agents.md`; A3 = `software/migration_mapping.md` §3, `dependency_and_tooling_draft.md` §6,
 `kicad_plugin_feasibility.md` §6–7; A5 = `evidence/evidence_gaps.md`, `kicad_plugin_evidence.md` §4; A6 = this folder.
 Already decided by the user (BRIEF §1): embodic brand, white/grey/black primary palette, spiral coils, 3 phases,
-multi-layer, KiCad 9.x plugin if feasible, Python engines.
+multi-layer, KiCad 9.x plugin if feasible, Python engines. Decided by Fable, therefore not listed: D-006 (DRC acceptance
+rule) and D-007 (result status rule) in `docs/decision_log.md`.
 
 | ID | Decision | Options | Recommended option and reason | Consequence if deferred | Source |
 |---|---|---|---|---|---|
@@ -35,5 +36,11 @@ multi-layer, KiCad 9.x plugin if feasible, Python engines.
 | UD-22 | Patent review (ECM claims) before any product release | review / no review | attorney review before release; keep risky options switchable | legal risk at release time | A5 |
 | UD-23 | Obtain paywalled sources | IPC-2152 (or 2221B), IEC 60028, Bumby 2005, Dai Pré & Bianchi 2006 / none | obtain IPC-2152 and the 2006 paper first | related results keep `assumption`/`unresolved` labels | A5, A2 |
 | UD-24 | Build and measure one embodic reference board (R, L, Ke) | yes in Phase 3 / no | yes: first in-house validation case | inductance and multi-layer EMF stay unvalidated | A5, A2 |
-| UD-25 | May the team (through the user) contact the D09 paper's authors for turn data? | yes / no | yes: unblocks oracle O2 | oracle O2 stays blocked | A5 |
+| UD-25 | May the team (through the user) contact the D09 paper's authors for the turns per coil? | yes / no | yes: Agent 4's inversion gives 7 or 8 turns, not decidable from the paper; unblocks oracle O2 | oracle O2 (OR-02, OR-07) stays blocked | A5, A4 |
 | UD-26 | Keep Xcoil v3 as a read-only legacy tool | keep / retire | keep until UD-08 is settled | none | A3 |
+| UD-27 | Is FEMM (free 2-D magnetics solver for Windows) available, or may it be installed, on the user's PC? | install FEMM / no FEA until Phase 3 | install: enables field validation OR-11 (EQ-05) and per-layer B_z checks | EQ-05 field validation waits until Phase 3; Ke/torque badges cannot rise above `inferred` | A4 |
+
+## Revision 2026-10-04 (defect fixes)
+
+Added Agent 4's two user questions (UD-25 reworded to the turns per coil with Agent 4 as source; new UD-27 FEMM). D-006 and
+D-007 are Fable's decisions and are not listed as user decisions.
