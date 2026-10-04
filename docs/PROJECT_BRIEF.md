@@ -80,3 +80,26 @@ User's machine (not reachable by agents): Windows, KiCad 9.x, Python 3.11+. Dest
 | 6 | Software Architecture Specialist | `docs/phase1/architecture/` |
 
 Shared decision log: `docs/decision_log.md` (written by Fable only).
+
+
+## 5. Phase 2 scope (approved by the user on 2026-10-04 — see decision_log D-008…D-015)
+
+- Deliverable: **embodic desktop application** — Python 3.11+, PySide6 (Qt), Windows primary, Linux for dev/CI.
+  Light and dark themes; UI chrome white/grey/black; phase colours red/blue/green with a greyscale/hatching
+  accessibility mode; MATLAB-style toolstrip with original monochrome SVG icons; English-only UI text.
+- Topologies in scope: **spiral coils (new, primary)**, **serpentine** and **interleaved wave** (ported from Xcoil v3 with
+  golden regression). Multi-layer configuration, 3-phase (plus the 1/2-phase cases Xcoil supported where the port keeps
+  them), star/delta/open.
+- **KiCad is out of scope** (no plugin, no `.kicad_pcb` export). Exports: SVG, DXF (complete / outline / screws), JSON
+  project file, PDF report, README.
+- **New-design flow** (D-014): blank design, user enters all parameters; team parameter sets are labelled examples.
+- Calculation logic is ported only through the equation gate (Agent 2's registry): `reuse` → golden regression;
+  `reuse with change` / `replace` → new implementation with closed-form and oracle tests; `cannot verify yet` → shipped as
+  labelled estimates with the status rule D-007.
+- DRC rule D-006 (no slack); result status rule D-007; traceability (unit, EQ-ID, evidence, assumptions tag) on every result.
+- Phase 2 milestones (Agent 6 refines): M1 core package + primitives + DRC + golden harness; M2 winding + spiral generator
+  + physics + results/registry; M3 serpentine & wave port; M4 PySide6 UI + themes + icons + new-design flow + exports;
+  M5 packaging (pyproject, pip/venv install, PyInstaller one-folder attempt), Thai install guide, CLI.
+- File ownership during implementation: `src/embodic/**` and `tests/unit/**` — Agent 3 (and Agent 3 helpers, each with
+  a module list); `tests/independent/**` — Agent 4; `docs/**` per role folders; `resources/icons/**`, `resources/themes/**`
+  — Agent 1 (hand-off to Agent 3 for wiring). Nobody edits another owner's files; requests go through Fable.
