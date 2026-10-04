@@ -188,6 +188,12 @@ def dump_layout(layout: Layout, *, case_id: str) -> dict[str, JsonValue]:
     }
 
 
+def _scalar(value: object) -> JsonValue:
+    if value is None or isinstance(value, bool | int | float | str):
+        return value
+    raise TypeError(f"{type(value).__name__} has no board-dump form")
+
+
 def _encode(value: Any) -> JsonValue:
     if isinstance(value, float) and not math.isfinite(value):
         return {NONFINITE_TAG: "nan" if math.isnan(value) else ("inf" if value > 0 else "-inf")}
@@ -195,7 +201,7 @@ def _encode(value: Any) -> JsonValue:
         return [_encode(v) for v in value]
     if isinstance(value, Mapping):
         return {k: _encode(v) for k, v in value.items()}
-    return value  # type: ignore[no-any-return]
+    return _scalar(value)
 
 
 def _decode(value: Any) -> JsonValue:
@@ -205,7 +211,7 @@ def _decode(value: Any) -> JsonValue:
         if set(value) == {NONFINITE_TAG}:
             return {"inf": math.inf, "-inf": -math.inf, "nan": math.nan}[value[NONFINITE_TAG]]
         return {k: _decode(v) for k, v in value.items()}
-    return value  # type: ignore[no-any-return]
+    return _scalar(value)
 
 
 def _reject_constant(token: str) -> float:
