@@ -30,6 +30,7 @@ dev = [
     "ezdxf>=1.4,<2",
     "pypdf>=6,<7",
     "jsonschema>=4.23,<5",
+    "hatchling>=1.27,<2",
 ]
 desktop-dev = ["embodic[desktop,dev]", "pytest-qt>=4.5,<5"]
 
