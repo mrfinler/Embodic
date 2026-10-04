@@ -15,8 +15,6 @@ pytestmark = pytest.mark.req("REQ-F-40")
 
 HERE = Path(__file__).resolve().parent
 MINIMAL = HERE / "data" / "minimal_board_dump.json"
-REPO = HERE.parents[2]
-LAYOUT_FIXTURES = REPO / "tests" / "golden" / "data" / "m1_layout"
 
 
 def minimal() -> dict[str, Any]:
@@ -115,10 +113,19 @@ def test_non_finite_geometry_is_rejected() -> None:
     assert "primitive 0: geometry and width must be finite numbers" in problems_of(doc)
 
 
-@pytest.mark.skipif(
-    not LAYOUT_FIXTURES.is_dir(),
-    reason="tests/golden/data/m1_layout is not on main at eda8930: U-M1b (GR-19 raw layouts and mapper) not merged",
-)
 def test_golden_layout_fixtures_map_and_parse() -> None:
-    """Part 2: every GR-19 layout, mapped to a board dump by embodic's mapper, parses and is continuous per object."""
-    pytest.skip("mapper API of U-M1b not known at U-V1 part 1; part 2 wires the public mapper call here")
+    """Part 2: every GR-19 layout, mapped by U-M1b's mapper and written by embodic, parses with no contract problem.
+
+    Catches a writer that drops a field, rounds an end point, or lists a primitive under two objects. Continuity per
+    object is checked in ``test_gr19_drc.py`` (DEF-M1V-03).
+    """
+    from gr19 import boards
+
+    found = boards()
+    assert len(found) == 3
+    for board in found:
+        raw_objects = [obj for layer in board.raw["layers"] for obj in layer["objs"]]
+        assert len(board.dump.paths) == len(raw_objects)
+        assert [len(board.dump.paths[k]) for k in sorted(board.dump.paths)] == [len(o["prims"]) for o in raw_objects]
+        assert len(path_adjacent(board.dump)) == sum(len(o["prims"]) - 1 for o in raw_objects)
+        assert len(board.dump.vias) == len(board.raw["vias"])
