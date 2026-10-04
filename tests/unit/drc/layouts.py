@@ -54,7 +54,7 @@ def via(vid: int, x: float, y: float, net: str = "A", pad: float = 0.6, drill: f
 
 
 def pad(pid: int, x: float, y: float, shape: str = "round", w: float = 1.0, h: float = 1.0, **kw: object) -> Pad:
-    """Return an SMD-drill-free pad on every layer unless ``layer`` is given."""
+    """Return an undrilled pad on every layer unless ``layer`` is given."""
     fields: dict[str, object] = {"rotation_rad": 0.0, "drill_mm": 0.0, "layer": None, "net": "N", "label": "N"}
     fields.update(kw)
     return Pad(id=pid, x_mm=x, y_mm=y, shape=shape, width_mm=w, height_mm=h, **fields)  # type: ignore[arg-type]
