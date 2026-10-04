@@ -1,0 +1,21 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "tf": {"mirror": true, "rot": 1},
+        "thetaG": 0.4,
+        "x": 0,
+        "y": 0
+      },
+      "output": [-0.0, 0]
+    }
+  ],
+  "case_id": "tfpoint-origin",
+  "eq_ids": [],
+  "fn": "tfPoint",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "origin maps to the origin (atan2(0, 0) = 0)",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["mirror", "rotation", "degenerate"]
+}

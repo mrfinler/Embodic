@@ -1,0 +1,18 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "prim": {"a1": 0.5235987755982988, "a2": -3.665191429188092, "cx": -1, "cy": 1, "kind": "bus", "r": 4, "type": "arc", "width": 0.2}
+      },
+      "output": [-4.464101615137755, 2.999999999999999]
+    }
+  ],
+  "case_id": "primend-arc-cw-gt180",
+  "eq_ids": [],
+  "fn": "primEnd",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "clockwise 240 degree arc end",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["arc", "cw", "gt180"]
+}

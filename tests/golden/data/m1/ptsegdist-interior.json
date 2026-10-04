@@ -1,0 +1,20 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "px": 1,
+        "py": 2,
+        "seg": {"x1": 0, "x2": 4, "y1": 0, "y2": 0}
+      },
+      "output": 2
+    }
+  ],
+  "case_id": "ptsegdist-interior",
+  "eq_ids": ["EQ-30"],
+  "fn": "ptSegDist",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "projection inside the segment",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": []
+}

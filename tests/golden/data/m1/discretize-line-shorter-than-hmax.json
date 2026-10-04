@@ -1,0 +1,23 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "hMax": 0.5,
+        "prims": [
+          {"kind": "lead", "type": "line", "width": 0.2, "x1": 0, "x2": 0.18, "y1": 0, "y2": 0.24}
+        ]
+      },
+      "output": [
+        {"kind": "lead", "len": 0.3, "pi": 0, "s": 0.15, "w": 0.2, "x1": 0, "x2": 0.18, "y1": 0, "y2": 0.24}
+      ]
+    }
+  ],
+  "case_id": "discretize-line-shorter-than-hmax",
+  "eq_ids": ["EQ-03"],
+  "fn": "discretize",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "line shorter than hMax gives one segment",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["line"]
+}

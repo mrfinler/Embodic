@@ -1,0 +1,18 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "prim": {"a1": 1.5707963267948966, "a2": 0, "cx": 0, "cy": 0, "kind": "endturn", "r": 10, "type": "arc", "width": 0.25}
+      },
+      "output": 15.707963267948966
+    }
+  ],
+  "case_id": "primlength-arc-cw-quarter",
+  "eq_ids": ["EQ-03"],
+  "fn": "primLength",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "clockwise quarter arc (a2 < a1)",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["arc", "cw"]
+}

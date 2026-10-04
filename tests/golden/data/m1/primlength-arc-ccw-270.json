@@ -1,0 +1,18 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "prim": {"a1": 0.7853981633974483, "a2": 5.497787143782138, "cx": 1.5, "cy": -2, "kind": "bus", "r": 5, "type": "arc", "width": 0.2}
+      },
+      "output": 23.561944901923447
+    }
+  ],
+  "case_id": "primlength-arc-ccw-270",
+  "eq_ids": ["EQ-03"],
+  "fn": "primLength",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "counter-clockwise 270 degree arc off the origin",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["arc", "ccw", "gt180"]
+}

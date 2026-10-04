@@ -1,0 +1,21 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "tf": {"mirror": true, "rot": 0},
+        "thetaG": 0.3,
+        "x": 3,
+        "y": 4
+      },
+      "output": [4.734576738309176, -1.6074150394536069]
+    }
+  ],
+  "case_id": "tfpoint-mirror",
+  "eq_ids": [],
+  "fn": "tfPoint",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "mirror about the axis at thetaG = 0.3 rad",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["mirror"]
+}

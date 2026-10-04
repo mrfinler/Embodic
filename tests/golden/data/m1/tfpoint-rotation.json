@@ -1,0 +1,21 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "tf": {"mirror": false, "rot": 0.5235987755982988},
+        "thetaG": 0,
+        "x": 3,
+        "y": 4
+      },
+      "output": [0.5980762113533165, 4.964101615137754]
+    }
+  ],
+  "case_id": "tfpoint-rotation",
+  "eq_ids": [],
+  "fn": "tfPoint",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "rotation by 30 degrees",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["rotation"]
+}
