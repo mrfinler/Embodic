@@ -7,6 +7,11 @@ This file is the binding interface contract for Phase 2. It is written as Python
 survive unchanged are restated here only where Phase 2 code must match them; the rationale stays in
 `docs/phase1/architecture/architecture_draft.md` §7 and §8.
 
+Revision 2026-10-04 (U-D1, corrections from the W0 pilot): §1 replaces `round_half_away_from_zero` with `js_round` and
+`quantise` (JS `Math.round` semantics, DEF-M1a-02), adds the U-M1a conversions and `MM_PER_COPPER_OZ`, and splits the
+issue catalogue per owning unit. §2.4 adds `default` provenance (D-019). §9.1 states how a blank-origin file stores
+it. §9.2 ratifies the U-M1d number encoding and says what the Node dumper emits for GR-19.
+
 ## 0. Rules for every public boundary
 
 - Lengths are millimetres (`_mm`), angles radians (`_rad`) inside the core, temperature °C (`_degc`), current A (`_a`),
@@ -27,7 +32,7 @@ Deltas against the Phase 1 sketch (`architecture_draft.md` §7, §8):
 | KiCad | `io.kicad_items`, `.kicad_pcb` writer, plugin, `IMPORTED_KICAD` sources, nm conversion | removed | D-009 |
 | Generators | `WindingGenerator` protocol with spiral only; serpentine/wave as `dict` placeholders | `generate_spiral/serpentine/wave(DesignParameters) -> Layout or Unbuildable`; full serpentine and wave specs | D-013, ADR-0012 |
 | Winding plan | `plan_winding()` stage before geometry for every topology | spiral-only (`plan_spiral_winding`); each generator owns its phase plan and emits the shared `Circuit` | serpentine/wave assign phases per layer or per track, not by star of slots |
-| Provenance | `default / user / imported_kicad / migrated / measured`, stored per field | `user / example / measured` as a tagged union, derived from the origin example and the measurement list | D-014, D-007 |
+| Provenance | `default / user / imported_kicad / migrated / measured`, stored per field | `user / example / default / measured` as a tagged union, derived from the origin (example or blank) and the measurement list | D-014, D-007, D-019 |
 | Design entry | app opens on the default design | blank `DesignDraft`; `parse_draft()` returns `DesignParameters` only when every required field is present | D-014 |
 | Outline | one class with optional fields per shape | `CircleOutline` or `PolygonOutline` | shape-dependent fields cannot be half set |
 | Materials | `MaterialConstant` inputs carrying a free `status` string | registry constants; optional user overrides as `PropertyValue` | constants and their EV status live in the registry |
@@ -83,12 +88,23 @@ class Unit(StrEnum):
     def display(self) -> str: ...
 
 
+MM_PER_COPPER_OZ: float = 0.0348  # status assumption; Xcoil engine.js l.14 OZ_TO_MM
+
+
 def deg_to_rad(angle_deg: float) -> float: ...
 def rad_to_deg(angle_rad: float) -> float: ...
 def mm_to_m(length_mm: float) -> float: ...
 def rpm_to_rad_per_s(speed_rpm: float) -> float: ...
-def round_half_away_from_zero(value: float, step: float) -> float:
-    """Quantise for writers that emit fixed decimals. Built-in round() is banned on coordinates (MT-06)."""
+def copper_oz_to_mm(copper_oz: float) -> float: ...
+def mm2_to_mil2(area_mm2: float) -> float: ...
+def mil2_to_mm2(area_mil2: float) -> float: ...
+def js_round(value: float) -> float:
+    """ECMAScript Math.round: the nearest integer, ties toward +inf (js_round(-2.5) == -2.0). Never returns -0.0."""
+def quantise(value: float, scale: float) -> float:
+    """Xcoil fmt(): js_round(value * scale) / scale, multiplied by scale, not divided by a step. Never returns -0.0.
+
+    Writers that emit fixed decimals use scale = 1e5 (0.00001 mm). Built-in round() is banned on coordinates (MT-06).
+    """
 
 
 class Severity(StrEnum):
@@ -136,9 +152,42 @@ class Unbuildable:
     issues: tuple[ValidationIssue, ...]  # at least one ERROR with category UNBUILDABLE
 
 
+MESSAGES: Mapping[str, str]  # merged from every module of embodic.errors.catalogue; a duplicate code fails the import
+
+
 def message_for(code: str) -> str:
     """English message template for an issue code; raises KeyError for an unknown code (programming error)."""
 ```
+
+Revision 2026-10-04 (U-D1). Four changes to this section.
+
+Rounding (DEF-M1a-02). Phase 1 `architecture_draft.md` §6 U6 says JS `Math.round` rounds half away from zero. It does
+not: ECMAScript `Math.round` rounds ties toward +∞. `node -e` printed `3 -2 1 0 -1 0 0` for `Math.round` of 2.5, -2.5,
+0.5, -0.5, -1.5, 0.49999999999999994 and -0.49999999999999994 (`verified (run)`, Node v22.22.2, 2026-10-04; Agent 3
+measured the same values in Phase 1 `calculation_flow_and_port_notes.md` §2.1). Half away from zero gives -3, -1 and -2
+for the three negative ties. Xcoil's `fmt()` (`engine.js` l.2762) is
+`(Math.round(v * 1e5) / 1e5).toString()` with `"-0"` replaced by `"0"`. A port with half away from zero would therefore
+write a different last digit for every negative coordinate that sits exactly on a half quantum (for example
+`fmt(-0.000025)` is `-0.00002` in Xcoil and would be `-0.00003`). Decision: embodic's quantiser uses JS semantics, so
+SVG and DXF numbers match Xcoil's exports digit for digit. `round_half_away_from_zero` (U-M1a) is replaced by `js_round`
+and `quantise`. The obvious port `math.floor(x + 0.5)` is wrong as well: it returns 1 for 0.49999999999999994, where
+`Math.round` returns 0 (`verified (run)`, same session). `js_round` takes `n = floor(x)` and adds 1 when `x - n >= 0.5`.
+The subtraction cannot move a value across 0.5 for any finite double (`inferred` from Sterbenz's lemma; UT-UNI-01 tests
+the ties). `-0.000025 * 1e5` is exactly -2.5 in both Python and Node (`verified (run)`), so the example above is a true
+tie. The Phase 1 file is outside Agent 6's Phase 2 write scope; this section supersedes its U6 sentence.
+
+Number text in writers. The quantised value alone does not give Xcoil's text. JS `Number.prototype.toString` writes
+`0.00001` and `0`, while Python `repr` writes `1e-05` and `0.0` (`verified (run)` on the values above). Writers that must
+match Xcoil format numbers like JS `toString`; U-M4a owns that formatter (UT-EXP-01, UT-EXP-02).
+
+Copper weight. `MM_PER_COPPER_OZ = 0.0348` stays `assumption`. Xcoil `engine.js` l.14 is
+`var OZ_TO_MM = 0.0348; // 1 oz/ft^2 copper = 34.8 um` (`verified` by reading, 2026-10-04). That is a copy of Xcoil's
+value, not a standard. Agent 5's evidence register has no IPC-4562 entry, so no standard backs the nominal thickness yet.
+
+Issue catalogue. `MESSAGES` is the merge of one module per owning unit under `embodic.errors.catalogue`
+(`work_breakdown.md` §4). Each module exports `MESSAGES: Mapping[str, str]`. `embodic/errors/__init__.py` finds the
+modules with `pkgutil.iter_modules`, so a new module needs no edit to a shared file. A code defined twice raises at
+import, which fails every test run.
 
 ## 2. `embodic.model`: design inputs, draft, provenance
 
@@ -594,17 +643,29 @@ def parse_draft(draft: DesignDraft) -> DesignParameters | DraftIncomplete: ...
 def draft_from_design(design: DesignParameters) -> DesignDraft: ...
 ```
 
-### 2.4 Provenance (D-007, D-014)
+### 2.4 Provenance (D-007, D-014, D-019)
 
-Provenance is derived, not typed by hand: `example` while the value equals the value in the example the design came from,
-`measured` only for property fields the user marked with a named source, `user` otherwise. Re-entering the current value
-changes nothing; setting a changed field back to the example value makes it `example` again (value-based, keystroke
-independent, consistent with Phase 1 PR-12 and DEF-21).
+Provenance is derived, not typed by hand. A design has one origin: an example, or a blank design. The first matching
+rule gives a field's provenance.
+
+1. `measured` for a property field the user marked with a named source.
+2. `example` while the value equals the value in the origin example.
+3. `default` while the design has a blank origin and the value equals the field's `FieldSpec.neutral_value` (the
+   documented default of an optional field, D-019). Required fields have no neutral value, so they never get `default`.
+4. `user` otherwise.
+
+Re-entering the current value changes nothing. Setting a changed field back to the origin's value makes it `example` or
+`default` again (value-based, keystroke independent, consistent with Phase 1 PR-12 and DEF-21).
+
+Revision 2026-10-04 (U-D1): `DEFAULT` and `DefaultValue` added and rule 3 written, per D-019 (provenance values `user`,
+`example`, `default`, `measured`). `EXAMPLE` was already present. D-019's "`InputSource` gains `example`" is met by
+`InputRef.provenance` (§3), which uses this enum.
 
 ```python
 class Provenance(StrEnum):
     USER = "user"
     EXAMPLE = "example"
+    DEFAULT = "default"
     MEASURED = "measured"
 
 
@@ -620,12 +681,17 @@ class ExampleValue:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
+class DefaultValue:
+    provenance: Literal[Provenance.DEFAULT] = Provenance.DEFAULT
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
 class MeasuredValue:
     provenance: Literal[Provenance.MEASURED] = Provenance.MEASURED
     source: str  # datasheet, coupon or LCR record; never empty (mark_measured refuses an empty source)
 
 
-FieldProvenance: TypeAlias = UserValue | ExampleValue | MeasuredValue
+FieldProvenance: TypeAlias = UserValue | ExampleValue | DefaultValue | MeasuredValue
 ProvenanceMap: TypeAlias = Mapping[str, FieldProvenance]  # concrete pointers ("/stackup/layers/0/thickness_mm")
 
 
@@ -642,7 +708,8 @@ class Measurement:
 
 
 def derive_provenance(design: DesignParameters, origin: tuple[ExampleRef, DesignParameters] | None,
-                      measurements: Sequence[Measurement]) -> dict[str, FieldProvenance]: ...
+                      measurements: Sequence[Measurement]) -> dict[str, FieldProvenance]:
+    """origin None means a blank design: rule 3 compares with field_specs(design.topology) neutral values."""
 
 
 def mark_measured(design: DesignParameters, measurements: Sequence[Measurement], pointer: str,
@@ -658,7 +725,7 @@ def drop_stale_measurements(old: DesignParameters, new: DesignParameters,
 ## 3. `embodic.results`: Traceable, registry, analysis result
 
 `Status`, the weakest-link order, `Assumption`, `AssumedInput`, `Tolerance` and `Traceable` keep their Phase 1 meaning.
-`InputRef.source` now uses `Provenance`. `ValidityFlag` gains the DEF-23 fields.
+`InputRef.provenance` now uses `Provenance`. `ValidityFlag` gains the DEF-23 fields.
 
 ```python
 T = TypeVar("T")
@@ -1414,7 +1481,8 @@ Rules:
 - `provenance` lists every concrete pointer of the design. `save_project` writes `derive_provenance()` output; on load the
   stored map is checked against the derivation when the referenced example is packaged with the same SHA-256, and kept
   as stored otherwise (`INFO_EXAMPLE_NOT_PACKAGED`). A `measured` entry without `source`, or on a design field, is
-  `INVALID_PROVENANCE`.
+  `INVALID_PROVENANCE`. A file with no `origin_example` stores `{"provenance": "default"}` for optional fields still at
+  their neutral value (§2.4 rule 3; revision 2026-10-04, D-019).
 - `design_hash` = SHA-256 over the canonical JSON of `design` only (sorted keys, no whitespace, shortest round-trip float
   `repr`, UTF-8). `origin_example`, `provenance` and `ui` do not change the hash.
 - Integer `schema_version`; migrations `migrate_v<n>_to_v<n+1>` run in sequence with `INFO_MIGRATED`; newer versions are
@@ -1464,6 +1532,19 @@ def load_example(example_id: str) -> tuple[ExampleRef, DesignParameters]: ...
 
 The format of `docs/phase1/software/calculation_flow_and_port_notes.md` §7.5 is adopted as `embodic.board-dump` v1
 without field changes. Agent 4's independent checks and the golden harness read it.
+
+Number encoding, shared by board dumps and golden fixtures (revision 2026-10-04, U-M1d deviations ratified):
+
+- Infinity and NaN are written as `{"$f": "inf"}`, `{"$f": "-inf"}` and `{"$f": "nan"}`. JSON has no literal for
+  them, and Python's `json` would otherwise write the non-standard `Infinity`.
+- Negative zero is written `-0.0`. A reader that sees `-0` gets the integer 0 and loses the sign, and the sign changes
+  `atan2` results (`tools/golden/README.md`, case `tfpoint-negative-x-signed-zero`).
+- Comparators treat `-0.0` and `0.0` as equal (test_plan.md §3). The sign is kept for functions that read it, not for
+  value comparison.
+
+Xcoil's side of GR-19. The Node dumper does not write board dumps. For each Xcoil topology it writes the raw layout
+that Xcoil's builder returns (see test_plan.md §3, "Layout dumps"). The mapping from that raw layout to
+`embodic.board-dump` v1 is Python code owned by U-M1b, so the mapping is tested where the reader lives.
 
 ```python
 def write_board_dump(layout: Layout, design: DesignParameters, drc: DrcReport | None, path: Path,

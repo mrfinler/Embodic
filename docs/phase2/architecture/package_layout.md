@@ -6,6 +6,16 @@ This file fixes where code, tests and resources live, which module may import wh
 allowed. It replaces `docs/phase1/architecture/architecture_draft.md` §4 and §15.1 (KiCad parts removed, generators and
 Qt-free view-models added). Unit ownership of each path is in `work_breakdown.md`.
 
+Revision 2026-10-04 (U-D1, corrections from the W0 pilot):
+
+- §1. `errors.py` becomes the package `errors/` with one message-catalogue module per owning unit. The golden dumper
+  gains one function module per area under `tools/golden/functions/`.
+- §3. Contract C2 is restated in the implemented form (`-> PySide6`, `-> shiboken6`), DEF-M1a-01. MT-06 names the
+  new quantiser.
+- §4. Ruff excludes `docs/` (U-M1a deviation, ratified).
+- §5. The numpy pin is 2.4.6 (DEF-M1a-03). hatchling joins the `dev` extra. The extras `desktop` and `desktop-dev` are
+  ratified (U-M1a deviation).
+
 ## 1. Repository tree
 
 ```
@@ -18,8 +28,13 @@ embodic/
   requirements/                  lock files with hashes: py311.txt, py312.txt, py313.txt (+ -dev) (U-M5b)
   src/embodic/
     __init__.py                  __version__ only
-    units.py                     Unit vocabulary, conversions, quantisation helper
-    errors.py                    Severity, IssueCategory, ValidationIssue, Suggestion, Unbuildable, message catalogue
+    units.py                     Unit vocabulary, conversions, js_round and quantise (JS Math.round semantics)
+    errors/
+      __init__.py                Severity, IssueCategory, ValidationIssue, Suggestion, Unbuildable, MESSAGES,
+                                 message_for; merges every catalogue module, rejects duplicate codes
+      catalogue/                 one module per owning unit, each exporting MESSAGES: base.py (U-M1a) geometry.py
+                                 drc.py model.py results.py winding.py generators.py physics.py project.py
+                                 serpentine.py wave.py exporters.py cli.py (work_breakdown.md §4)
     paths.py                     resource_root() via importlib.resources
     model/                       vocabulary.py (TopologyKind, Phase, ViaSpan, ConnectionTopology; U-M1b) design.py rotor.py stackup.py layers.py vias.py connection.py outline.py
                                  operating.py materials.py analysis_options.py drc_rules.py
@@ -63,7 +78,7 @@ embodic/
     unit/<package>/              Agent 3 units
     golden/harness/              comparators, tolerance map, non-finite decoding
     golden/data/<area>/          committed Xcoil dumps
-    golden/<area>/               comparison tests per area (m1, physics, serpentine, wave)
+    golden/<area>/               comparison tests per area (m1_geometry, m1_drc, m1_layout, physics, serpentine, wave)
     golden/expected_diffs/<area>.toml   one allow-list per owning unit
     ui/<area>/                   pytest-qt tests
     static/                      AST lints: MT-04 to MT-07, LG-01 to LG-08
@@ -73,8 +88,9 @@ embodic/
     ci.py                        one entry for every gate profile (commit, nightly, release)
     trace_matrix.py              REQ markers -> matrix, TR-01/TR-02
     sync_registry.py             docs/phase2/engineering + evidence JSON -> resources/evidence, with SHA-256 check
-    golden/dump_xcoil.mjs        Node dumper, reads /home/claude/serpentine read-only
-    golden/cases/<unit>.json     case lists, one file per owning unit
+    golden/dump_xcoil.mjs        Node dumper, reads /home/claude/serpentine read-only; M1 kernel functions built in
+    golden/functions/<area>.mjs  engine functions for one area (m1_layout, physics, serpentine, wave), one owner each
+    golden/cases/<area>.json     case lists, one file per owning unit
     golden/param_map/<topology>.json  embodic field -> Xcoil parameter names (serpentine, wave)
     contrast_check.py            AX-01, AX-08, AX-09 from resources/themes and resources/icons
     build_bundle.py              PyInstaller one-folder attempt (stretch)
@@ -163,11 +179,11 @@ type = "forbidden"
 source_modules = ["embodic"]
 forbidden_modules = ["PySide6", "shiboken6"]
 ignore_imports = [
-    "embodic.ui.views -> PySide6.**",
-    "embodic.ui.views.** -> PySide6.**",
-    "embodic.ui.views.** -> shiboken6.**",
-    "embodic.ui.workers -> PySide6.**",
-    "embodic.ui.app -> PySide6.**",
+    "embodic.ui.views -> PySide6",
+    "embodic.ui.views.** -> PySide6",
+    "embodic.ui.views.** -> shiboken6",
+    "embodic.ui.workers -> PySide6",
+    "embodic.ui.app -> PySide6",
 ]
 unmatched_ignore_imports_alerting = "none"
 
@@ -190,19 +206,25 @@ source_modules = ["embodic"]
 forbidden_modules = ["kipy", "pcbnew", "wx", "tkinter"]
 ```
 
+With `include_external_packages = true`, import-linter puts an external package into the graph under its top-level
+name only. An `ignore_imports` target therefore names `PySide6` or `shiboken6`, never `PySide6.**` or `shiboken6.**`:
+a wildcard below an external package matches nothing (DEF-M1a-01, found by U-M1a and recorded in the comment above C2
+in `pyproject.toml`; `verified` by reading that file on 2026-10-04, not re-run by Agent 6).
+
 U-M1a's verify step runs `lint-imports` on the skeleton and on a scratch module that breaks each contract once (the
 scratch module is deleted before commit). If C2 or C4 cannot name an external package that is never imported, that
 contract moves into the MT-07 AST scan and this section is amended through Fable.
 
 Two rules are AST scans because they concern the standard library or call sites: no network modules (`socket`, `http`,
 `urllib.request`) anywhere in `src` (PK-07, REQ-N-17) and no built-in `sum()` over floats or `round()` on coordinates in
-physics, DRC and geometry (MT-06).
+physics, DRC and geometry (MT-06). Code that needs rounding calls `embodic.units.js_round` or `embodic.units.quantise`
+(interfaces.md §1).
 
 ## 4. Configuration that other gates read
 
 | Tool | Setting | Value |
 |---|---|---|
-| ruff | `target-version`, `line-length`, rule sets | `py311`, 120, `E,F,W,I,N,UP,B,C90,D,RUF`; `mccabe.max-complexity = 10`; pydocstyle convention `numpy` |
+| ruff | `target-version`, `line-length`, rule sets, scope | `py311`, 120, `E,F,W,I,N,UP,B,C90,D,RUF`; `mccabe.max-complexity = 10`; pydocstyle convention `numpy`; `extend-exclude = ["docs"]`, because the role folders hold other agents' check scripts in their own style and no gate reads them as product code |
 | mypy | strict on | `src/embodic` except `embodic.ui.views`, `embodic.ui.app`, `embodic.ui.workers` (Qt stubs vary across PySide6 versions; checked non-strict) |
 | pytest | markers, default options | `req`, `eq`, `slow`, `manual`; `-p no:cacheprovider` on CI; `QT_QPA_PLATFORM=offscreen` set in `tests/ui/conftest.py` |
 | coverage | scope, thresholds | `src/embodic` minus Qt views; 90 % lines, 80 % branches (REQ-N-10, `assumption`) |
@@ -210,14 +232,27 @@ physics, DRC and geometry (MT-06).
 ## 5. Dependencies
 
 Versions, licences and Python ranges were read from the PyPI JSON API on 2026-10-04 by Agent 6 (`verified (PyPI
-metadata)`); nothing was installed on the user's machine. "Pin" is the version the lock files start from.
+metadata)`); nothing was installed on the user's machine. "Pin" is the version the lock files start from (U-M5b).
+"Range" is what `pyproject.toml` declares. The two are different on purpose: the range keeps installs flexible, the pin
+makes the lock files reproducible.
+
+Extras, as implemented by U-M1a and ratified on 2026-10-04:
+
+| Extra | Contents | Used by |
+|---|---|---|
+| `desktop` | PySide6-Essentials | end users who run the app |
+| `dev` | every dev and test-only row below except pytest-qt; no Qt | core CI, every non-UI unit (`pip install -e .[dev]`) |
+| `desktop-dev` | `embodic[desktop,dev]` plus pytest-qt | UI units and the UI test profile (`pip install -e .[desktop-dev]`) |
+
+`dev` stays Qt-free so that the core gates run where PySide6 is not installed. hatchling is in `dev` so that the wheel
+test (U-M1a resource-root check, PK tests) runs offline with `pip wheel --no-build-isolation --no-deps .`.
 
 | Package | Pin | Range | Licence (PyPI) | Python | Scope | Reason |
 |---|---|---|---|---|---|---|
-| numpy | 2.4.4 | `>=2.2,<2.5` | BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0 | >= 3.11 | core | vectorised DRC and EMF kernels; 2.4.x is the last line installable on Python 3.11 (Phase 1 REQ-N-05 evidence) |
+| numpy | 2.4.6 | `>=2.2,<2.5` | BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0 | >= 3.11 | core | vectorised DRC and EMF kernels; 2.4.x is the last line installable on Python 3.11, and 2.4.6 is the newest release with a `cp311-win_amd64` wheel (Phase 1 ADR-0008 l.15, `docs/phase2/evidence/dependency_licences.snapshot.json`; `verified` by reading both on 2026-10-04). Revision 2026-10-04: the pin was 2.4.4 here and 2.4.6 in the evidence file (DEF-M1a-03); 2.4.6 is the documented pin |
 | PySide6-Essentials | 6.11.2 | `>=6.11,<6.12` | LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only | >= 3.10, < 3.15 | extra `desktop` | the approved UI toolkit (D-010); Essentials only: no Addons, no QtWebEngine |
 | pytest | 9.1.1 | `>=9,<10` | MIT | >= 3.10 | dev | test runner |
-| pytest-qt | 4.5.0 | `>=4.5,<5` | MIT | >= 3.9 | dev | UI tests on the offscreen platform |
+| pytest-qt | 4.5.0 | `>=4.5,<5` | MIT | >= 3.9 | extra `desktop-dev` | UI tests on the offscreen platform |
 | ruff | 0.16.10 | `==0.16.10` | MIT | >= 3.7 | dev | lint and format; exact pin because rule sets change between minors |
 | import-linter | 2.15 | `>=2.15,<3` | BSD 2-Clause | >= 3.10 | dev | contracts C1 to C4 |
 | mypy | 2.4.0 | `>=2.4,<3` | MIT | >= 3.10 | dev | REQ-N-08 strict typing of the core |
@@ -226,6 +261,7 @@ metadata)`); nothing was installed on the user's machine. "Pin" is the version t
 | ezdxf | 1.4.4 | `>=1.4,<2` | MIT (classifier) | >= 3.10 | dev (test-only) | independent DXF parser and audit for UT-EXP-02; never imported by `src` |
 | pypdf | 6.19.0 | `>=6,<7` | BSD-3-Clause | >= 3.9 | dev (test-only) | independent PDF parser for UT-EXP-03 |
 | jsonschema | 4.26.0 | `>=4.23,<5` | MIT | >= 3.10 | dev (test-only) | keeps the published project schema and the hand-written loader in step (UT-IO-03) |
+| hatchling | 1.32.4 | `>=1.27,<2` | MIT | >= 3.10 | dev (build backend) | already the `[build-system]` backend; in `dev` as well so that the wheel test needs no network. Read from https://pypi.org/pypi/hatchling/json on 2026-10-04 (`verified (PyPI metadata)`); Agent 5's licence register does not list it yet |
 | PyInstaller | 6.22.3 | `>=6.22,<7` | GPLv2-or-later with the bootloader exception (Agent 3, PyPI text) | >= 3.8, < 3.16 | build (stretch) | one-folder Windows bundle attempt (D-015); build tool only, nothing of it enters `src` |
 
 Not used, with the reason: reportlab (the PDF writer is a port of Xcoil's own dependency-free `report.js`), platformdirs
