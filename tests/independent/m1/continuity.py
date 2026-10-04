@@ -1,0 +1,30 @@
+"""Independent continuity check for M1 (IT-21): consecutive primitives of an ordered path must meet end to start."""
+
+import math
+from collections.abc import Sequence
+from dataclasses import dataclass
+from itertools import pairwise
+
+from records import Point, Prim, end_point, start_point
+
+CONTINUITY_TOL_MM = 1e-9
+
+
+@dataclass(frozen=True, slots=True)
+class Gap:
+    """The end of ``path[index]`` does not meet the start of ``path[index + 1]``."""
+
+    index: int
+    end: Point
+    next_start: Point
+    distance_mm: float
+
+
+def first_gap(path: Sequence[Prim], tol_mm: float = CONTINUITY_TOL_MM) -> Gap | None:
+    """Return the first joint whose end-to-start distance exceeds ``tol_mm``, or None for a continuous path."""
+    for index, (here, there) in enumerate(pairwise(path)):
+        end, nxt = end_point(here), start_point(there)
+        distance = math.dist(end, nxt)
+        if not distance <= tol_mm:
+            return Gap(index, end, nxt, distance)
+    return None
