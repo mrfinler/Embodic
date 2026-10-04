@@ -12,9 +12,16 @@ about the best way forward), not a result.
 - Available: two "armature-reaction" (sinusoidal-MMF, magnetising) formulas — D10 eq. (14) p.5 and D15 eq. (14)
   p.8 (EV-31, EV-44). Neither includes slot/end-turn/leakage inductance, layer-to-layer spacing, finite coil
   span of concentrated coils, or spiral turn-area variation.
-- Conflict 1 (inferred, Agent 5 algebra): substituting D10's own (12) into (13) gives
-  L₁ = mµ₀(N₁k_w1)²(D_mo² − D_mi²)/(8δ′p²), which equals D15's (14), but D10's printed (14) is
-  3µ₀(N₁k_w1)²(D²)/(4πδ′p²) — a factor 2/π smaller. One of the printed forms is inconsistent with its derivation.
+- Conflict 1 — **revised 2026-10-04** after Agent 2's independent derivation (EQ-14 in
+  `../engineering/equation_specification_draft.md`). My earlier statement ("D10 (14) is 2/π too small") is withdrawn.
+  Re-check (inferred, algebra): the fundamental MMF per pole of an m-phase winding is F̂₁ = (m√2/π)(N₁k_w1/p)I₁
+  (D10/D15 eq. (11) print the m√2/π coefficient but omit 1/p). With B̂ = µ₀F̂₁/δ′ and D10/D15 eq. (13),
+  L₁ = mµ₀(N₁k_w1)²(D_mo² − D_mi²)/(4πδ′p²), which for m = 3 is exactly **D10's printed (14)** and Agent 2's result.
+  The error sits in eq. (12) of both papers, which uses √2m/2 instead of √2m/π; D15's (14) inherits it and is
+  therefore **π/2 too large**. My first derivation used (12) as printed — that was the mistake.
+  Conclusion: maintain G1 as `unresolved` (no validated closed form for multi-layer spiral coils; magnetising term
+  only, no end-turn/leakage/sub-harmonic terms), but the D10-vs-D15 conflict is now resolved in favour of D10 (14)
+  (`inferred`, two independent derivations; Agent 4 to confirm).
 - Conflict 2 (verified): D15 prints analytic phase inductances 16.5 mH and 15.2 mH (p.10) but FEA 16.71 µH
   (p.13) and 16.7 µH (p.14) for the same motor — a 1000× unit discrepancy.
 - Measured magnitudes for coreless PCB windings: 14.8 µH (D09 concentric, 2 layers, Table 6 p.7), 22.3 µH
@@ -32,6 +39,11 @@ about the best way forward), not a result.
   not tabulated), O3 Wang 2019 (concentric spiral, 12 layers, measured R only as a number; EMF in figures),
   O4 Pan (spiral, 8 layers, 2-phase stepper, measured torque only).
 - No source gives a >2-layer **3-phase** spiral stator with full geometry plus measured back-EMF, R and L.
+- Update 2026-10-04 (EV-62): D09's concentric board has **12** non-overlapping trapezoidal spiral coils per layer
+  (Fig. 1a p.2), 2 layers, 6 terminals, a via at each coil's inner end; turns per coil ≈ 6–7 (image) / ≈ 7–8 (length
+  check) → still `unresolved`. Proposal: ask the authors (METU, keysan@metu.edu.tr is printed on p.1) or measure the
+  coil in D09 Fig. 11a photo with a scale reference; run the O2 oracle for N = 6, 7, 8 and report which matches
+  R = 1.07 Ω and L = 14.8 µH.
 - Proposal: (1) use O1 for back-EMF-constant regression and O2 for R/L/EMF/torque after extracting turn data from
   D09 Fig. 2/11 (image measurement) or asking the authors; (2) digitise D10 Fig. 18 (EMF vs speed) for O3;
   (3) build and measure one embodic reference board (R at known temperature, L at 1–10 kHz, K_e by spin test)
@@ -72,6 +84,9 @@ about the best way forward), not a result.
 - Proposal: cite an authoritative standard/handbook (e.g. IEC 60028 annealed-copper standard or a recognised
   materials handbook) after obtaining it; record the chosen ρ₂₀ and α₂₀ with source; note that PCB electrodeposited
   copper may differ from annealed wire (needs a manufacturer source or a 4-wire coupon measurement).
+- **Status 2026-10-04: partly closed.** NBS Handbook 100 *Copper Wire Tables* (1966), which reproduces IEC
+  Publication 28 (1925), gives ρ₂₀ = 1/58 Ω·mm²/m = 1.7241 × 10⁻⁸ Ω·m and α₂₀ = 0.00393 /°C (EV-53, read via WebFetch
+  extract — re-check pp. 2–4). Remaining open: PCB (electrodeposited, rolled) copper resistivity vs IACS.
 
 ### G7 — Via resistance and current crowding: FEA-only, different topology — `unresolved`
 - D05 provides R_via = ρl/(2πrt) (EV-37) and FEA crowding results (EV-38) for a distributed winding with a
@@ -85,6 +100,8 @@ about the best way forward), not a result.
   Electr. Power Appl. 152(5) 1065–1075, 2005 is only cited (D10 ref [25] p.12; D11 ref [14] p.6). Field models
   actually present: D08 eq. (3.1) (after Vansompel 2013), D09 eq. (1) (scalar potential), D11 eqs. (8)–(9)
   (Halbach, attributed to Bumby), D12 vector potential.
+- Update 2026-10-04 (EV-63): DOI 10.1049/ip-epa:20050094 (IET Digital Library); no open copy found (one search;
+  the IET page refused the fetcher). Still `unresolved` — needs library/IET access.
 - Proposal: obtain the 2005 paper and verify the parallel-magnetised, back-iron version of the model; compare
   D08 (3.1) and D11 (8)–(9) numerically against FEMM at mean radius for one geometry; document radial-edge
   limitations noted by D09 p.4.
@@ -119,8 +136,11 @@ about the best way forward), not a result.
   Proposal: trace copper connectivity through the 617 vias with the Gerber parser (graph of segment end-points
   and via positions per layer) to recover phases, series/parallel paths and per-phase length → resistance; this is
   a useful geometry-engine regression test but not an electrical oracle.
-- G12 — The Instagram spiral-coil concept could not be fetched (brief §1); the spiral layout remains `assumption`
-  until the user's screenshot arrives.
+- G12 — **Updated 2026-10-04:** the user's screenshots are now in `reference_images/` (EV-70). They show radial
+  conductors with nested outer and inner end-turn groups (8 + 8 positions) but cannot show whether these are
+  concentrated spiral coils or a wave winding with nested end-turns; the same-named repository's Gerbers show a
+  wave-like path with nested outer caps (EV-71). The spiral-coil choice therefore remains a user decision
+  (`assumption`), now illustrated but not dimensioned (`unresolved` topology of the render).
 - G14 — Venue/year `unresolved` for D02 (filename "2021 IEEE ECCE", not printed) and D07 (IET EPA revised manuscript,
   doi placeholder). Proposal: look up DOIs on IEEE Xplore / IET Digital Library.
 - G21 — Brief labelling: `EPA-2020-0622-FINAL.pdf` is Tokgöz/Çakal/Keysan (not Paul et al.); CIEEC pattern paper is
@@ -145,3 +165,26 @@ about the best way forward), not a result.
 - In magnetless_motor: code, equations, test data, rotor drawing (verified absent).
 - On official KiCad pages read: KiCad 9.x Windows bundled Python version; complete IPC capability list for 9.0.x
   (only the kipy source gives method-level version notes).
+
+## 7. Gaps added 2026-10-04 (coordinator follow-up)
+
+- G23 — Recoil (relative) permeability of sintered NdFeB (µ_r ≈ 1.05) **not found** in the manufacturer datasheets
+  accessed (Arnold catalog and N42 sheet give Br, HcB but no µ_rec; EV-54/55). Br/(µ₀HcB) ≈ 1.10 for Arnold N42 is
+  an apparent slope (inferred), not a datasheet value. Proposal: obtain a manufacturer application note or textbook
+  table stating µ_rec, or use the Br/(µ₀HcB) value with its derivation and label it `inferred`. Br ranges for
+  N35–N52 are available (EV-54) but came through a summarising extract — re-check in the PDF.
+- G24 — FSCW feasibility rule and winding-factor formula from a textbook: Dai Pré & Bianchi 2006 (EV-60) and
+  Pyrhönen et al. (EV-61) were **not accessed**. Corpus evidence available instead: N_c/N_pm = m/(m+1) (D12 eq. 1,
+  EV-56), GCD rule for cogging (D06, EV-57), star of slots with "coil side" for "slot" (D07, EV-58), PCB per-turn
+  pitch factor (D15 eq. 6, EV-59), distribution factor (D04 eq. 1, EV-26), overall coefficient (D11 eq. 14, EV-46).
+  Proposal: library access to the 2006 paper (IET) or the textbook; until then label the feasibility rule
+  `assumption` and verify each chosen coil/pole combination by an explicit star-of-slots EMF-phasor computation.
+- G25 — **Patent risk** (`inferred — legal review needed`; we are not lawyers): ECM patents US 10,170,953,
+  US 11,336,130 (incl. dependent claim 4 "spiral shaped winding"), US 9,800,109/10,256,690 (end-turn corner
+  geometry, slits) and US 10,211,694 (thermal-only copper) contain claim elements that some embodic design options
+  could resemble — see `ecm_pcb_stator_evidence.md` §4 (R1–R7). Highest attention: spiral coils with **all**
+  inter-layer vias placed outside the active annulus (R5). Proposal: patent-attorney review before any product
+  release; in Phase 2 keep these options switchable rather than default.
+- G26 — ECM publishes no coil dimensions, layer counts, copper weights or trace-width grading on its official pages;
+  its patents (as reviewed through extracts) describe serpentine/radial-conductor windings, not graded trace widths
+  (`not found`).

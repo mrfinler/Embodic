@@ -1,0 +1,372 @@
+<!-- Prepared by: Agent 1 — UX/UI Expert Designer — model: claude-opus-5-5 -->
+<!doctype html>
+<!-- Mockup 06: phone layout of the overview (draft, illustrative). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phone overview — embodic mockup 06</title>
+<style>
+@layer reset, tokens, base, layout, components, utilities;
+
+@layer reset {
+  :where(html) { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  :where(html, body, div, section, aside, main, header, footer, nav, article, ul, ol, li, dl, dd, dt, form,
+         fieldset, legend, label, input, select, button, textarea, table, thead, tbody, tr, th, td, details,
+         summary, figure, figcaption, dialog, a, span, p, h1, h2, h3, h4, output) { box-sizing: border-box; }
+  :where(body, h1, h2, h3, h4, p, ul, ol, dl, dd, figure, fieldset) { margin: 0; }
+  :where(ul, ol, fieldset, legend) { padding: 0; }
+  :where(fieldset) { border: 0; min-inline-size: 0; }
+  :where(ul[role="list"], ol[role="list"]) { list-style: none; }
+  :where(button, input, select, textarea) { font: inherit; color: inherit; }
+  :where(img, svg) { display: block; }
+  :where(table) { border-collapse: collapse; }
+}
+
+@layer tokens {
+  :root {
+    color-scheme: light;
+    /* tier 1 - neutrals (pure grey ramp) */
+    --n-0: #ffffff; --n-50: #f7f7f7; --n-100: #efefef; --n-200: #e4e4e4; --n-300: #dcdcdc;
+    --n-400: #9a9a9a; --n-500: #858585; --n-600: #666666; --n-700: #454545; --n-900: #141414; --n-1000: #000000;
+    /* tier 2 - semantic UI */
+    --bg-app: var(--n-50);
+    --surface: var(--n-0);
+    --surface-sunken: var(--n-100);
+    --surface-selected: var(--n-200);
+    --surface-inverse: var(--n-900);
+    --text-1: var(--n-900);
+    --text-2: var(--n-700);
+    --text-3: var(--n-600);
+    --text-disabled: var(--n-400);
+    --text-inverse: var(--n-0);
+    --border-control: var(--n-500);
+    --border-strong: var(--n-900);
+    --divider: var(--n-300);
+    --grid-line: #e6e6e6;
+    --focus-ring: var(--n-900);
+    /* tier 2 - functional colours (data semantics ONLY) */
+    --phase-a: #5c4383;  /* plum,  OKLCH L .44 C .105 h 300 */
+    --phase-b: #87660c;  /* ochre, OKLCH L .53 C .105 h 85  */
+    --phase-c: #438ebf;  /* steel, OKLCH L .62 C .105 h 240 */
+    --phase-a-grey: #262626; --phase-b-grey: #5e5e5e; --phase-c-grey: #8a8a8a;
+    --status-pass: #2f6a47;
+    --status-fail: #a6332c;
+    /* geometry canvas */
+    --board-fill: var(--n-50);
+    --board-edge: var(--n-900);
+    --via-ring: var(--n-900);
+    /* type */
+    --font-ui: "Segoe UI", "Noto Sans", "Liberation Sans", system-ui, sans-serif;
+    --font-mono: "Cascadia Mono", "JetBrains Mono", Consolas, "Liberation Mono", "DejaVu Sans Mono", monospace;
+    --fs-xs: .75rem; --fs-s: .8125rem; --fs-m: .875rem; --fs-l: 1rem; --fs-xl: 1.25rem; --fs-2xl: 1.5rem; --fs-3xl: 2rem;
+    /* space (4 px base) */
+    --sp-1: 2px; --sp-2: 4px; --sp-3: 8px; --sp-4: 12px; --sp-5: 16px; --sp-6: 24px; --sp-7: 32px; --sp-8: 48px;
+    --radius-s: 4px; --radius-m: 6px; --radius-l: 10px; --radius-pill: 999px;
+    --control-h: 32px; --target-min: 24px;
+    --shadow-overlay: 0 1px 2px rgb(0 0 0 / .12), 0 8px 24px rgb(0 0 0 / .14);
+  }
+  @media (pointer: coarse) { :root { --control-h: 44px; --target-min: 44px; } }
+}
+
+@layer base {
+  html { font-size: 100%; }
+  body { background: var(--bg-app); color: var(--text-1); font: 400 var(--fs-m)/1.45 var(--font-ui); }
+  :where(a) { color: inherit; text-underline-offset: 2px; }
+  :where(button, a, input, select, summary, [tabindex]):focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .num, .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .visually-hidden:where(:not(:focus-within, :active)) { position: absolute !important; clip-path: inset(50%) !important; overflow: hidden !important; width: 1px !important; height: 1px !important; margin: -1px !important; padding: 0 !important; border: 0 !important; white-space: nowrap !important; }
+  .skip-link { position: absolute; inset-inline-start: 8px; inset-block-start: 8px; z-index: 10; background: var(--surface); padding: 8px 12px; border: 2px solid var(--border-strong); }
+  @media (prefers-reduced-motion: reduce) { :root { --motion: 0; } }
+  @media (forced-colors: active) { .geom { forced-color-adjust: none; } }
+}
+
+@layer layout {
+  .mock-note { background: var(--n-900); color: var(--text-inverse); font-size: var(--fs-xs); padding: 4px 16px; display: flex; gap: 16px; flex-wrap: wrap; }
+  .mock-note b { font-weight: 600; }
+  .app { display: grid; grid-template-columns: 340px minmax(0, 1fr) 360px; grid-template-rows: 52px 48px minmax(0, 1fr) 28px;
+         grid-template-areas: "top top top" "steps steps steps" "panel fig rail" "status status status";
+         block-size: 900px; background: var(--bg-app); }
+  .app.no-rail { grid-template-columns: 340px minmax(0, 1fr); grid-template-areas: "top top" "steps steps" "panel fig" "status status"; }
+  .app.wide-main { grid-template-columns: 280px minmax(0, 1fr) 360px; }
+  .topbar { grid-area: top; display: flex; align-items: center; gap: var(--sp-4); padding-inline: var(--sp-5); background: var(--surface); border-block-end: 1px solid var(--divider); }
+  .stepnav { grid-area: steps; background: var(--surface); border-block-end: 1px solid var(--divider); padding-inline: var(--sp-4); display: flex; align-items: stretch; }
+  .panel, .figure, .rail { position: relative; }
+  .panel { grid-area: panel; background: var(--surface); border-inline-end: 1px solid var(--divider); overflow-y: auto; min-block-size: 0; }
+  .figure { grid-area: fig; display: flex; flex-direction: column; min-inline-size: 0; min-block-size: 0; }
+  .rail { grid-area: rail; background: var(--surface); border-inline-start: 1px solid var(--divider); overflow-y: auto; min-block-size: 0; }
+  .statusbar { grid-area: status; display: flex; align-items: center; background: var(--surface); border-block-start: 1px solid var(--divider); font-size: var(--fs-xs); color: var(--text-2); padding-inline: var(--sp-3); }
+  .statusbar > * { padding-inline: var(--sp-3); white-space: nowrap; }
+  .statusbar > *:not(:last-child) { border-inline-end: 1px solid var(--divider); }
+  .statusbar .grow { flex: 1; border: 0; }
+  .frame-caption { max-inline-size: 1440px; padding: 20px 16px 8px; font-size: var(--fs-m); color: var(--text-2); }
+  .frame-caption h2 { font-size: var(--fs-l); color: var(--text-1); margin-block-end: 4px; }
+}
+
+@layer components {
+  /* brand */
+  .logo { display: block; inline-size: 108px; block-size: 20px; overflow: hidden; flex: none; }
+  .logo img { inline-size: 121.5px; block-size: 48.6px; max-inline-size: none; margin: -14px 0 0 -7.2px; }
+  .doc { display: flex; align-items: center; gap: var(--sp-3); min-inline-size: 0; padding-inline-start: var(--sp-4); border-inline-start: 1px solid var(--divider); }
+  .doc-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; min-block-size: 22px; padding: 0 8px; border: 1px solid var(--border-control); border-radius: var(--radius-pill); font-size: var(--fs-xs); color: var(--text-2); white-space: nowrap; background: var(--surface); }
+  .spacer { flex: 1; }
+  /* icons */
+  .i { inline-size: 20px; block-size: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .i-s { inline-size: 16px; block-size: 16px; }
+  .i-l { inline-size: 28px; block-size: 28px; stroke-width: 1.4; }
+  /* buttons */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-block-size: var(--control-h); min-inline-size: var(--target-min); padding: 0 12px; border: 1px solid var(--border-strong); border-radius: var(--radius-s); background: var(--surface); color: var(--text-1); font-weight: 500; cursor: pointer; white-space: nowrap; text-decoration: none; }
+  .btn:hover:not(:disabled, [aria-disabled="true"]) { background: var(--surface-sunken); }
+  .btn-primary { background: var(--surface-inverse); color: var(--text-inverse); }
+  .btn-primary:hover:not(:disabled, [aria-disabled="true"]) { background: var(--n-700); }
+  .btn-ghost { border-color: transparent; background: transparent; }
+  .btn-ghost:hover:not(:disabled) { border-color: var(--divider); }
+  .btn[aria-disabled="true"], .btn:disabled { border-color: var(--divider); color: var(--text-disabled); cursor: not-allowed; }
+  .icon-btn { padding: 0; inline-size: var(--control-h); }
+  .btn-s { min-block-size: 28px; padding: 0 8px; font-size: var(--fs-s); }
+  .btn-group { display: inline-flex; gap: var(--sp-2); align-items: center; }
+  /* step navigation */
+  .steps { display: flex; gap: 2px; align-items: stretch; margin: 0; padding: 0; list-style: none; }
+  .steps a { display: flex; align-items: center; gap: 8px; padding: 0 14px; block-size: 100%; text-decoration: none; color: var(--text-2); border-block-end: 3px solid transparent; border-block-start: 3px solid transparent; white-space: nowrap; }
+  .steps a:hover { color: var(--text-1); background: var(--n-50); }
+  .steps a[aria-current="step"] { color: var(--text-1); font-weight: 600; border-block-end-color: var(--border-strong); }
+  .step-no { display: inline-grid; place-items: center; inline-size: 22px; block-size: 22px; border-radius: 50%; border: 1.5px solid currentColor; font-size: var(--fs-xs); font-weight: 600; }
+  a[aria-current="step"] .step-no { background: var(--surface-inverse); color: var(--text-inverse); border-color: var(--surface-inverse); }
+  .step-state { font-size: var(--fs-xs); color: var(--text-3); font-weight: 400; }
+  .steps-right { margin-inline-start: auto; display: flex; align-items: center; gap: var(--sp-3); }
+  /* panel sections */
+  .panel-head { position: sticky; inset-block-start: 0; z-index: 1; background: var(--surface); padding: 14px 16px 10px; border-block-end: 1px solid var(--divider); }
+  .panel-head h1 { font-size: var(--fs-l); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .panel-head p { color: var(--text-3); font-size: var(--fs-s); margin-block-start: 2px; }
+  .sec { padding: 12px 16px 14px; border-block-end: 1px solid var(--divider); }
+  .sec > h2, .sec > legend, .sec-title { font-size: var(--fs-s); font-weight: 600; color: var(--text-1); margin-block-end: 8px; display: flex; align-items: center; gap: 6px; }
+  .sec-title small, .sec > h2 small { font-weight: 400; color: var(--text-3); margin-inline-start: auto; }
+  /* fields */
+  .field { display: grid; grid-template-columns: minmax(0, 1fr) 140px; align-items: center; column-gap: 12px; row-gap: 2px; min-block-size: 36px; }
+  .field + .field { margin-block-start: 4px; }
+  .field > label, .field > .lbl { font-size: var(--fs-m); color: var(--text-1); }
+  .field .sym { color: var(--text-3); font-size: var(--fs-s); margin-inline-start: 4px; }
+  .input-unit { display: flex; align-items: center; min-block-size: var(--control-h); border: 1px solid var(--border-control); border-radius: var(--radius-s); background: var(--surface); }
+  .input-unit:focus-within { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .input-unit input { inline-size: 100%; min-inline-size: 0; border: 0; background: transparent; padding: 0 6px 0 8px; text-align: end; font-family: var(--font-mono); font-size: var(--fs-m); outline: none; min-block-size: calc(var(--control-h) - 2px); }
+  .input-unit .unit { padding-inline: 2px 8px; font-family: var(--font-mono); font-size: var(--fs-s); color: var(--text-3); min-inline-size: 28px; }
+  .input-unit.invalid { border-color: var(--status-fail); border-width: 2px; }
+  select.sel { inline-size: 100%; min-block-size: var(--control-h); border: 1px solid var(--border-control); border-radius: var(--radius-s); background: var(--surface); padding: 0 8px; font-size: var(--fs-m); }
+  .hint { grid-column: 1 / -1; font-size: var(--fs-s); color: var(--text-3); display: flex; gap: 6px; align-items: flex-start; line-height: 1.4; }
+  .hint .i { inline-size: 16px; block-size: 16px; margin-block-start: 1px; }
+  .hint b { color: var(--text-1); font-weight: 600; font-family: var(--font-mono); font-size: var(--fs-s); }
+  .err-msg { grid-column: 1 / -1; font-size: var(--fs-s); color: var(--status-fail); display: flex; gap: 6px; align-items: flex-start; font-weight: 500; }
+  .notice { margin-block-start: 8px; display: flex; gap: 8px; align-items: flex-start; padding: 8px 10px; border: 1px solid var(--border-strong); border-inline-start-width: 4px; border-radius: var(--radius-s); background: var(--surface); font-size: var(--fs-s); }
+  .notice .btn { margin-inline-start: auto; }
+  .derived { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; font-size: var(--fs-s); color: var(--text-2); background: var(--n-50); border: 1px solid var(--divider); border-radius: var(--radius-s); padding: 8px 10px; margin-block-start: 8px; }
+  .derived dt { color: var(--text-2); } .derived dd { text-align: end; font-family: var(--font-mono); color: var(--text-1); }
+  /* segmented control (radio group) */
+  .seg { display: flex; gap: 2px; padding: 2px; border: 1px solid var(--border-control); border-radius: var(--radius-s); background: var(--surface); }
+  .seg label { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; min-block-size: calc(var(--control-h) - 6px); padding: 0 8px; border-radius: 3px; cursor: pointer; font-size: var(--fs-s); white-space: nowrap; color: var(--text-2); }
+  .seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .seg label:has(input:checked) { background: var(--surface-inverse); color: var(--text-inverse); font-weight: 600; }
+  .seg label:has(input:focus-visible) { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .seg label:hover:not(:has(input:checked)) { background: var(--surface-sunken); }
+  /* picker cards */
+  .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .card-opt { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px 6px; border: 1px solid var(--border-control); border-radius: var(--radius-m); background: var(--surface); cursor: pointer; font-size: var(--fs-xs); color: var(--text-2); text-align: center; }
+  .card-opt input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .card-opt:has(input:checked) { border: 2px solid var(--border-strong); color: var(--text-1); font-weight: 600; padding: 7px 3px 5px; }
+  .card-opt:has(input:focus-visible) { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .card-opt svg { inline-size: 44px; block-size: 44px; }
+  .fs { border: 0; padding: 0; margin: 0; min-inline-size: 0; }
+  .fs > legend { font-size: var(--fs-m); padding: 0; margin-block-end: 4px; color: var(--text-1); }
+  .fs + .fs, .field + .fs, .fs + .field { margin-block-start: 10px; }
+  .panel-foot { position: sticky; inset-block-end: 0; background: var(--surface); border-block-start: 1px solid var(--divider); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .check { display: flex; align-items: center; gap: 8px; min-block-size: 32px; font-size: var(--fs-m); }
+  .check input { inline-size: 18px; block-size: 18px; accent-color: var(--n-900); margin: 0; }
+  /* figure */
+  .fig-head { display: flex; align-items: center; gap: var(--sp-3); padding: 8px 12px; border-block-end: 1px solid var(--divider); background: var(--surface); flex-wrap: wrap; }
+  .fig-head h2 { font-size: var(--fs-m); font-weight: 600; }
+  .fig-head .chip { margin-inline-start: 4px; }
+  .toolbar { display: flex; gap: 4px; align-items: center; margin-inline-start: auto; flex-wrap: wrap; }
+  .toolbar .sepv { inline-size: 1px; block-size: 24px; background: var(--divider); margin-inline: 4px; }
+  .canvas { position: relative; flex: 1; min-block-size: 0; background: var(--surface); display: grid; place-items: center; overflow: hidden; }
+  .canvas svg.geom { inline-size: 100%; block-size: 100%; }
+  .canvas .stamp { position: absolute; inset-inline-start: 12px; inset-block-start: 10px; font-size: var(--fs-xs); color: var(--text-2); background: var(--surface); border: 1px dashed var(--border-control); border-radius: var(--radius-s); padding: 2px 8px; }
+  .canvas .scale { position: absolute; inset-inline-end: 14px; inset-block-end: 12px; font-size: var(--fs-xs); color: var(--text-2); display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+  .canvas .scale i { display: block; inline-size: 80px; block-size: 6px; border: 1.5px solid var(--text-2); border-block-start: 0; }
+  .canvas .legend-float { position: absolute; inset-inline-start: 12px; inset-block-end: 12px; background: var(--surface); border: 1px solid var(--divider); border-radius: var(--radius-s); padding: 6px 10px; font-size: var(--fs-xs); display: grid; gap: 3px; }
+  .fig-foot { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-block-start: 1px solid var(--divider); background: var(--surface); flex-wrap: wrap; font-size: var(--fs-s); }
+  .fig-foot .lbl { color: var(--text-3); font-size: var(--fs-xs); font-weight: 600; letter-spacing: .02em; }
+  .layer-chip { position: relative; display: inline-flex; align-items: center; gap: 6px; min-block-size: 28px; padding: 0 10px; border: 1px solid var(--border-control); border-radius: var(--radius-pill); font-family: var(--font-mono); font-size: var(--fs-xs); cursor: pointer; background: var(--surface); }
+  .layer-chip input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+  .layer-chip:not(:has(input:checked)) { border-style: dashed; color: var(--text-3); text-decoration: line-through; }
+  .layer-chip:has(input:checked) { background: var(--surface-sunken); border: 1.5px solid var(--border-strong); font-weight: 600; }
+  .layer-chip:has(input:checked)::before { content: ""; inline-size: 7px; block-size: 4px; border-inline-start: 2px solid currentColor; border-block-end: 2px solid currentColor; rotate: -45deg; translate: 0 -2px; }
+  .layer-chip:has(input:focus-visible) { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .key { display: inline-flex; align-items: center; gap: 6px; }
+  .sw { inline-size: 18px; block-size: 10px; border-radius: 2px; flex: none; }
+  /* status / validation badges (monochrome, shape-coded) */
+  .badge { display: inline-flex; align-items: center; gap: 4px; min-block-size: 20px; padding: 0 7px 0 5px; border-radius: var(--radius-pill); font-size: var(--fs-xs); font-weight: 500; white-space: nowrap; border: 1.5px solid var(--border-strong); color: var(--text-1); background: var(--surface); }
+  .badge svg { inline-size: 12px; block-size: 12px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .badge[data-status="verified"] { background: var(--surface-inverse); color: var(--text-inverse); border-color: var(--surface-inverse); }
+  .badge[data-status="inferred"] { border-style: solid; }
+  .badge[data-status="assumption"] { border-style: dashed; }
+  .badge[data-status="unresolved"] { border-style: dotted; border-width: 2px; background: var(--surface-sunken); }
+  .badge[data-status="not-tested"] { border: 1px solid var(--border-control); color: var(--text-2); }
+  .eq { display: inline-flex; align-items: center; min-block-size: 24px; padding: 0 6px; border-radius: var(--radius-s); background: var(--surface-sunken); font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--text-1); text-decoration: none; border: 1px solid transparent; white-space: nowrap; }
+  a.eq:hover { border-color: var(--border-control); }
+  .tag { display: inline-flex; align-items: center; gap: 4px; min-block-size: 20px; padding: 0 6px; border-radius: var(--radius-s); border: 1px solid var(--divider); font-size: var(--fs-xs); color: var(--text-2); background: var(--surface); white-space: nowrap; }
+  /* pass/fail */
+  .pf { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; font-size: var(--fs-s); white-space: nowrap; }
+  .pf svg { inline-size: 16px; block-size: 16px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .pf.pass { color: var(--status-pass); } .pf.fail { color: var(--status-fail); } .pf.warn { color: var(--text-1); }
+  /* rail */
+  .rail-head { padding: 14px 16px 10px; border-block-end: 1px solid var(--divider); display: flex; align-items: center; gap: 8px; }
+  .rail-head h2 { font-size: var(--fs-m); font-weight: 600; }
+  .rail-head .chip { margin-inline-start: auto; }
+  .drc-card { margin: 12px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius-m); padding: 10px 12px; display: grid; gap: 6px; }
+  .drc-card .row { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+  .drc-card .meta { color: var(--text-3); font-size: var(--fs-s); }
+  .kr { list-style: none; margin: 0; padding: 0 16px 8px; }
+  .kr li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; padding: 10px 0; border-block-end: 1px solid var(--divider); }
+  .kr .k { font-size: var(--fs-s); color: var(--text-2); }
+  .kr .v { text-align: end; white-space: nowrap; }
+  .kr .v .num { font-size: var(--fs-l); font-weight: 600; font-family: var(--font-ui); font-variant-numeric: normal; }
+  .kr .v .u { color: var(--text-2); font-size: var(--fs-s); margin-inline-start: 3px; }
+  .kr .meta { grid-column: 1 / -1; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  /* result cards */
+  .rcard { border: 1px solid var(--divider); border-radius: var(--radius-m); background: var(--surface); }
+  .rcard + .rcard { margin-block-start: 8px; }
+  .rcard-main { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; padding: 12px 14px 10px; align-items: baseline; }
+  .rcard h3 { font-size: var(--fs-m); font-weight: 600; }
+  .rcard h3 .sym { font-weight: 400; color: var(--text-3); margin-inline-start: 6px; font-family: var(--font-mono); font-size: var(--fs-s); }
+  .rcard .val { text-align: end; white-space: nowrap; }
+  .rcard .val .num { font-size: var(--fs-xl); font-weight: 600; font-family: var(--font-ui); }
+  .rcard .val .u { font-size: var(--fs-m); color: var(--text-2); margin-inline-start: 4px; }
+  .rcard .meta { grid-column: 1 / -1; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .rcard .ex { font-size: var(--fs-xs); color: var(--text-3); margin-inline-start: auto; }
+  .rcard details { border-block-start: 1px solid var(--divider); }
+  .rcard summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 6px; min-block-size: 36px; padding: 0 14px; font-size: var(--fs-s); font-weight: 500; color: var(--text-1); }
+  .rcard summary::-webkit-details-marker { display: none; }
+  .rcard summary .chev { transition: rotate .12s; }
+  @media (prefers-reduced-motion: reduce) { .rcard summary .chev { transition: none; } }
+  .rcard details[open] summary .chev { rotate: 90deg; }
+  .how { padding: 4px 14px 14px; display: grid; gap: 10px; font-size: var(--fs-s); }
+  .how .formula { font-family: var(--font-mono); background: var(--n-50); border: 1px solid var(--divider); border-radius: var(--radius-s); padding: 8px 10px; overflow-x: auto; font-size: var(--fs-s); }
+  .how h4 { font-size: var(--fs-xs); font-weight: 600; color: var(--text-2); text-transform: none; margin-block-end: 2px; }
+  .how table { inline-size: 100%; font-size: var(--fs-s); }
+  .how td, .how th { padding: 3px 6px 3px 0; border-block-end: 1px solid var(--divider); text-align: start; vertical-align: top; }
+  .how th { font-weight: 600; color: var(--text-2); font-size: var(--fs-xs); }
+  .how td.num { text-align: end; white-space: nowrap; }
+  .how ul { padding-inline-start: 18px; margin: 0; display: grid; gap: 2px; }
+  /* tabs */
+  .tabs { display: flex; gap: 2px; border-block-end: 1px solid var(--divider); padding-inline: 12px; background: var(--surface); flex-wrap: wrap; }
+  .tabs [role="tab"] { min-block-size: 40px; padding: 0 12px; border: 0; border-block-end: 3px solid transparent; background: none; cursor: pointer; color: var(--text-2); font-size: var(--fs-m); display: inline-flex; align-items: center; gap: 6px; }
+  .tabs [role="tab"][aria-selected="true"] { color: var(--text-1); font-weight: 600; border-block-end-color: var(--border-strong); }
+  .count { display: inline-grid; place-items: center; min-inline-size: 20px; block-size: 20px; padding: 0 5px; border-radius: var(--radius-pill); font-size: var(--fs-xs); font-weight: 600; background: var(--surface-sunken); color: var(--text-1); }
+  .count.fail { background: var(--status-fail); color: var(--text-inverse); }
+  /* tables */
+  .data { inline-size: 100%; font-size: var(--fs-s); }
+  .data caption { text-align: start; font-weight: 600; font-size: var(--fs-s); padding-block-end: 6px; }
+  .data th, .data td { padding: 6px 8px; border-block-end: 1px solid var(--divider); text-align: start; vertical-align: middle; }
+  .data thead th { font-size: var(--fs-xs); color: var(--text-2); font-weight: 600; border-block-end: 1px solid var(--border-strong); background: var(--surface); position: sticky; inset-block-start: 0; }
+  .data td.num, .data th.num { text-align: end; }
+  .data tr[aria-selected="true"] td { background: var(--surface-selected); }
+  .table-wrap { overflow-x: auto; max-inline-size: 100%; }
+  /* drc list */
+  .drc { list-style: none; margin: 0; padding: 0; }
+  .drc li { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 2px 10px; padding: 10px 0; border-block-end: 1px solid var(--divider); align-items: start; }
+  .drc li.is-fail { border-inline-start: 4px solid var(--status-fail); padding-inline-start: 8px; }
+  .drc .code { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--text-2); }
+  .drc .msg { font-size: var(--fs-s); }
+  .drc .mv { grid-column: 2 / 3; font-size: var(--fs-xs); color: var(--text-2); font-family: var(--font-mono); }
+  /* toast + dialog */
+  .toast { position: absolute; inset-inline-start: 50%; translate: -50% 0; inset-block-end: 16px; background: var(--surface-inverse); color: var(--text-inverse); border-radius: var(--radius-m); padding: 8px 8px 8px 14px; display: flex; gap: 12px; align-items: center; font-size: var(--fs-s); box-shadow: var(--shadow-overlay); white-space: nowrap; }
+  .toast .btn { border-color: var(--n-400); background: transparent; color: var(--text-inverse); min-block-size: 28px; }
+  .dlg { position: static; border: 1px solid var(--border-strong); border-radius: var(--radius-l); padding: 0; box-shadow: var(--shadow-overlay); background: var(--surface); color: var(--text-1); inline-size: min(560px, 100%); }
+  .dlg header { padding: 16px 18px 8px; } .dlg header h2 { font-size: var(--fs-l); font-weight: 600; }
+  .dlg .body { padding: 0 18px 12px; font-size: var(--fs-m); display: grid; gap: 10px; }
+  .dlg footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 18px 16px; border-block-start: 1px solid var(--divider); }
+  /* misc */
+  .muted { color: var(--text-3); }
+  .small { font-size: var(--fs-s); }
+  .xs { font-size: var(--fs-xs); }
+  .row { display: flex; align-items: center; gap: 8px; }
+  .wrap { flex-wrap: wrap; }
+  .between { justify-content: space-between; }
+  .stack { display: grid; gap: 8px; }
+  .callout { position: absolute; display: grid; place-items: center; inline-size: 26px; block-size: 26px; border-radius: 50%; background: var(--surface-inverse); color: var(--text-inverse); font-size: var(--fs-xs); font-weight: 700; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--n-900); z-index: 5; }
+}
+
+
+@layer layout {
+  body.phone { --control-h: 44px; --target-min: 44px; background: var(--surface); }
+  .p-top { position: sticky; inset-block-start: 0; z-index: 3; display: flex; align-items: center; gap: 8px; min-block-size: 56px; padding: 0 4px 0 16px; background: var(--surface); border-block-end: 1px solid var(--divider); }
+  .p-top img { inline-size: 28px; block-size: 28px; flex: none; }
+  .p-top .doc-name { flex: 1; min-inline-size: 0; font-size: var(--fs-m); }
+  .p-fig { border-block-end: 1px solid var(--divider); }
+  .p-fig-head { display: flex; align-items: center; gap: 4px; padding: 4px 4px 4px 16px; }
+  .p-fig-head h2 { font-size: var(--fs-m); font-weight: 600; flex: 1; }
+  .p-canvas { position: relative; aspect-ratio: 1; max-block-size: 60svh; margin-inline: auto; inline-size: 100%; touch-action: pan-y; }
+  .p-canvas svg.geom { inline-size: 100%; block-size: 100%; }
+  .p-canvas .stamp { position: absolute; inset-inline-start: 12px; inset-block-start: 6px; font-size: var(--fs-xs); background: var(--surface); border: 1px dashed var(--border-control); border-radius: var(--radius-s); padding: 1px 6px; }
+  .p-chips { display: flex; gap: 6px; overflow-x: auto; padding: 8px 16px 12px; scrollbar-width: thin; }
+  .p-chips .layer-chip { min-block-size: 36px; flex: none; }
+  .p-sec { padding: 14px 16px; border-block-end: 1px solid var(--divider); }
+  .p-sec > h2 { font-size: var(--fs-l); font-weight: 600; margin-block-end: 10px; display: flex; align-items: center; gap: 8px; }
+  .p-banner { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; margin: 12px 16px; padding: 10px 12px; border: 1px solid var(--border-strong); border-inline-start: 4px solid var(--status-fail); border-radius: var(--radius-s); }
+  .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .tile { border: 1px solid var(--divider); border-radius: var(--radius-m); padding: 10px; display: grid; gap: 4px; align-content: start; }
+  .tile .k { font-size: var(--fs-s); color: var(--text-2); }
+  .tile .v { font-size: var(--fs-xl); font-weight: 600; }
+  .tile .v small { font-size: var(--fs-s); font-weight: 400; color: var(--text-2); margin-inline-start: 3px; }
+  .tile .meta { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+  .pfield { display: grid; gap: 4px; }
+  .pfield + .pfield, .pfield + .fs, .fs + .pfield { margin-block-start: 12px; }
+  .pfield label { font-size: var(--fs-m); }
+  .pfield .input-unit input { font-size: 1rem; }
+  .p-nav { position: sticky; inset-block-end: 0; z-index: 4; background: var(--surface); border-block-start: 1px solid var(--divider); padding-block-end: env(safe-area-inset-bottom, 0px); }
+  .p-nav ol { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); margin: 0; padding: 0; list-style: none; }
+  .p-nav a { display: grid; justify-items: center; gap: 2px; min-block-size: 60px; padding: 6px 0 4px; text-decoration: none; color: var(--text-2); font-size: var(--fs-xs); }
+  .p-nav a .i { inline-size: 22px; block-size: 22px; }
+  .p-nav a[aria-current="step"] { color: var(--text-1); font-weight: 700; }
+  .p-nav a[aria-current="step"] .ic { background: var(--surface-inverse); color: var(--text-inverse); }
+  .p-nav .ic { display: grid; place-items: center; inline-size: 44px; block-size: 28px; border-radius: var(--radius-pill); }
+}
+</style>
+</head>
+<body class="phone">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 7L4 12l5 5"/><path d="M4 12h10a6 6 0 0 1 0 12"/></symbol><symbol id="i-redo" viewBox="0 0 24 24"><path d="M15 7l5 5-5 5"/><path d="M20 12H10a6 6 0 0 0 0 12"/></symbol><symbol id="i-open" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3z"/><path d="M3 10h18l-2 9H5z"/></symbol><symbol id="i-save" viewBox="0 0 24 24"><path d="M5 3h11l4 4v14H4V3z"/><path d="M8 3v5h8V3"/><rect x="8" y="13" width="8" height="8"/></symbol><symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/></symbol><symbol id="i-export" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M4 14v6h16v-6"/></symbol><symbol id="i-coil" viewBox="0 0 24 24"><path d="M4 5h16l-3 15H7z"/><path d="M7.2 8h9.6l-2 9.2H9.2z"/><path d="M10 11h4l-.8 3.4h-2.4z"/><circle cx="12" cy="12.6" r=".6" fill="currentColor"/></symbol><symbol id="i-phase" viewBox="0 0 24 24"><path d="M2 12c2.5-7 5-7 7.5 0s5 7 7.5 0"/><path d="M6.5 12c2.5-7 5-7 7.5 0s5 7 7.5 0" stroke-dasharray="2.2 2"/><circle cx="12" cy="12" r="0" /></symbol><symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 4l9 4.5-9 4.5-9-4.5z"/><path d="M3 12.5l9 4.5 9-4.5"/><path d="M3 16.5l9 4.5 9-4.5"/></symbol><symbol id="i-layer-rotate" viewBox="0 0 24 24"><path d="M12 6l8 4-8 4-8-4z"/><path d="M4 14l8 4 8-4"/><path d="M19 3a7 7 0 0 1 2.5 4"/><path d="M21.6 3.4L21.5 7l-3.4-.6"/></symbol><symbol id="i-board" viewBox="0 0 24 24"><path d="M12 2.5l8.2 4.75v9.5L12 21.5l-8.2-4.75v-9.5z"/><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="5.6" r=".8"/><circle cx="17.5" cy="15.2" r=".8"/><circle cx="6.5" cy="15.2" r=".8"/></symbol><symbol id="i-rotor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/><text x="16.2" y="9.2" font-size="5" fill="currentColor" stroke="none" font-family="sans-serif">N</text></symbol><symbol id="i-results" viewBox="0 0 24 24"><path d="M3 20h18"/><path d="M5 16l4-5 4 3 6-8"/><circle cx="19" cy="6" r="1" fill="currentColor"/></symbol><symbol id="i-check" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3.2 8.3-7 10-3.8-1.7-7-5-7-10V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></symbol><symbol id="i-clearance" viewBox="0 0 24 24"><path d="M4 4v16M20 4v16"/><path d="M7 12h10"/><path d="M9 9.5L6.5 12 9 14.5M15 9.5l2.5 2.5-2.5 2.5"/></symbol><symbol id="i-kicad-board" viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="13" rx="1"/><path d="M6 6V3.5M9.5 6V3.5M13 6V3.5M6 21.5V19M9.5 21.5V19M13 21.5V19"/><path d="M13 12.5h8M18 9.5l3 3-3 3"/></symbol><symbol id="i-report" viewBox="0 0 24 24"><path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 16.5h6M9 9.5h2.5"/></symbol><symbol id="i-file-dxf" viewBox="0 0 24 24"><path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M8.5 18l7-7M8.5 18v-4M8.5 18h4"/></symbol><symbol id="i-file-svg" viewBox="0 0 24 24"><path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><circle cx="12" cy="15" r="3"/></symbol><symbol id="i-file-json" viewBox="0 0 24 24"><path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M10.5 11.5c-1 0-1 1-1 2s-.5 1.5-1 1.5c.5 0 1 .5 1 1.5s0 2 1 2M14 11.5c1 0 1 1 1 2s.5 1.5 1 1.5c-.5 0-1 .5-1 1.5s0 2-1 2"/></symbol><symbol id="i-via" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.8"/></symbol><symbol id="i-series" viewBox="0 0 24 24"><path d="M2 12h3"/><path d="M5 12c0-3 3.5-3 3.5 0s3.5 3 3.5 0"/><path d="M12 12c0-3 3.5-3 3.5 0s3.5 3 3.5 0"/><path d="M19 12h3"/></symbol><symbol id="i-parallel" viewBox="0 0 24 24"><path d="M2 12h3M19 12h3M5 7v10M19 7v10"/><path d="M5 7h2c0-2.5 3-2.5 3 0s3 2.5 3 0 3-2.5 3 0h3"/><path d="M5 17h2c0-2.5 3-2.5 3 0s3 2.5 3 0 3-2.5 3 0h3"/></symbol><symbol id="i-cw" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M18 2.5v4.2h-4.2"/></symbol><symbol id="i-ccw" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.6"/><path d="M6 2.5v4.2h4.2"/></symbol><symbol id="i-fit" viewBox="0 0 24 24"><path d="M3 9V3h6M15 3h6v6M21 15v6h-6M9 21H3v-6"/></symbol><symbol id="i-zoom-in" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21M10.5 7.5v6M7.5 10.5h6"/></symbol><symbol id="i-zoom-out" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21M7.5 10.5h6"/></symbol><symbol id="i-label" viewBox="0 0 24 24"><path d="M3 12V3h9l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.5"/></symbol><symbol id="i-pattern" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 15l12-12M9 21L21 9M3 9l6-6M15 21l6-6"/></symbol><symbol id="i-magnet" viewBox="0 0 24 24"><path d="M5 3v9a7 7 0 0 0 14 0V3h-5v9a2 2 0 0 1-4 0V3z"/><path d="M5 7h5M14 7h5"/></symbol><symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.6" r=".9" fill="currentColor"/></symbol><symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol><symbol id="i-chev-down" viewBox="0 0 24 24"><path d="M5 9l7 7 7-7"/></symbol><symbol id="i-locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></symbol><symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol><symbol id="i-func" viewBox="0 0 24 24"><path d="M14.5 4.5c-2 0-3 1-3.4 3L9.5 17c-.4 2-1.4 3-3.4 3"/><path d="M7 10h7"/><path d="M15 13l5 6M20 13l-5 6"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol><symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 2v5M15 2v5"/><path d="M6 7h12v4a6 6 0 0 1-12 0z"/><path d="M12 17v5"/></symbol><symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol><symbol id="i-compare" viewBox="0 0 24 24"><path d="M3 20h18"/><path d="M5 16l4-6 4 3 6-8"/><path d="M5 12l4-3 4 5 6-9" stroke-dasharray="2 2"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-swap" viewBox="0 0 24 24"><path d="M7 4L3 8l4 4"/><path d="M3 8h14"/><path d="M17 12l4 4-4 4"/><path d="M21 16H7"/></symbol><symbol id="i-grid3" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l7.8 4.5M12 12l-7.8 4.5"/></symbol><symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol><symbol id="i-st-verified" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol><symbol id="i-st-inferred" viewBox="0 0 24 24"><path d="M4 9.5c2.7-2.6 5.3-2.6 8 0s5.3 2.6 8 0M4 15c2.7-2.6 5.3-2.6 8 0s5.3 2.6 8 0"/></symbol><symbol id="i-st-assumption" viewBox="0 0 24 24"><path d="M12 3l9 9-9 9-9-9z"/></symbol><symbol id="i-st-unresolved" viewBox="0 0 24 24"><path d="M9 9a3 3 0 1 1 4.2 2.8c-.8.4-1.2 1-1.2 1.9V15"/><circle cx="12" cy="18.6" r=".9" fill="currentColor"/></symbol><symbol id="i-st-not-tested" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/></symbol><symbol id="i-pass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M7.5 12.5l3 3 6-6.5"/></symbol><symbol id="i-fail" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7"/></symbol><symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/><path d="M12 10v5"/><circle cx="12" cy="18" r=".9" fill="currentColor"/></symbol><symbol id="i-shape-radial-arc" viewBox="0 0 24 24"><path d="M5.6 4.2A19 19 0 0 1 18.4 4.2L13.8 20.2a5 5 0 0 1-3.6 0z"/><path d="M8 7.2A14 14 0 0 1 16 7.2L13 17.5a2.5 2.5 0 0 1-2 0z"/></symbol><symbol id="i-shape-parallel-arc" viewBox="0 0 24 24"><path d="M5 4.4A19 19 0 0 1 19 4.4L15.8 20.3a8 8 0 0 1-7.6 0z"/><path d="M7.8 7.4A14 14 0 0 1 16.2 7.4L14.3 17.3a4.6 4.6 0 0 1-4.6 0z"/></symbol><symbol id="i-shape-radial-straight" viewBox="0 0 24 24"><path d="M5.6 4.2h12.8l-4.6 16h-3.6z"/><path d="M8 7.2h8l-3 10.3h-2z"/></symbol><symbol id="i-shape-parallel-stadium" viewBox="0 0 24 24"><path d="M7 4h10a3 3 0 0 1 2.9 3.6l-2.3 10.2A3 3 0 0 1 14.7 20H9.3a3 3 0 0 1-2.9-2.2L4.1 7.6A3 3 0 0 1 7 4z"/><path d="M9 7.6h6a1.6 1.6 0 0 1 1.5 2l-1.3 5.6a1.7 1.7 0 0 1-1.6 1.3h-3.2a1.7 1.7 0 0 1-1.6-1.3L7.5 9.6A1.6 1.6 0 0 1 9 7.6z"/></symbol><symbol id="i-shape-radial-stadium" viewBox="0 0 24 24"><path d="M6.4 4.6a3 3 0 0 1 2.4-1.1h6.4a3 3 0 0 1 2.4 1.1l-4 15.2a1.8 1.8 0 0 1-3.2 0z"/><path d="M8.9 7.5h6.2l-2.6 9.6a.6.6 0 0 1-1 0z"/></symbol><symbol id="i-shape-parallel-straight" viewBox="0 0 24 24"><path d="M5 4h14l-3 16H8z"/><path d="M8 7.2h8l-1.9 10H9.9z"/></symbol></defs></svg>
+<header class="p-top" id="app-topbar">
+  <img src="brand/embodic-rounded-triangle-icon.png" alt="embodic" width="28" height="28">
+  <span class="doc-name" id="doc-name" style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">12-coil / 16-pole stator</span>
+  <button class="btn btn-ghost icon-btn" type="button" aria-label="Save"><svg class="i" aria-hidden="true"><use href="#i-save"/></svg></button>
+  <button class="btn btn-ghost icon-btn" type="button" aria-label="Menu: open, export, presets, reference design, tests, guide" aria-haspopup="menu"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg></button>
+</header>
+<div class="mock-note" role="note"><span><b>Design mockup</b> · 06 Phone · 420 px wide (checked at 360 px)</span><span>All numbers are <b>examples</b> · geometry is <b>illustrative, not computed</b> · statuses shown are examples of the mechanism</span></div>
+<main id="content">
+<section class="p-fig" aria-labelledby="fig-title">
+  <div class="p-fig-head"><h2 id="fig-title">Geometry · all layers</h2>
+    <button class="btn btn-ghost icon-btn" type="button" aria-pressed="false" aria-label="Greyscale phase display"><svg class="i" aria-hidden="true"><use href="#i-pattern"/></svg></button>
+    <button class="btn btn-ghost icon-btn" type="button" aria-label="Fit to view"><svg class="i" aria-hidden="true"><use href="#i-fit"/></svg></button></div>
+  <div class="p-canvas" id="fig-canvas" tabindex="0" aria-describedby="fig-keys"><svg class="geom" viewBox="-52 -52 104 104" role="img" aria-labelledby="geom-title-7 geom-desc-7" preserveAspectRatio="xMidYMid meet"><title id="geom-title-7">Plan view, all layers — illustrative, not computed</title><desc id="geom-desc-7">Twelve concentrated spiral coils around the stator annulus, labelled A1 to C4 in the order A C B repeated, with terminals U, V, W and N on the outer rim. Example drawing only.</desc><defs><pattern id="h45-7" width="2.6" height="2.6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V2.6" stroke="#5e5e5e" stroke-width=".7"/></pattern><pattern id="h135-7" width="2.6" height="2.6" patternUnits="userSpaceOnUse" patternTransform="rotate(135)"><path d="M0 0V2.6" stroke="#8a8a8a" stroke-width=".7"/></pattern><marker id="arr-7" viewBox="0 0 6 6" refX="3" refY="3" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse"><path d="M0 0L6 3L0 6z" fill="#141414"/></marker></defs><path d="M46.500 -12.460L34.040 -34.040L12.460 -46.500L-12.460 -46.500L-34.040 -34.040L-46.500 -12.460L-46.500 12.460L-34.040 34.040L-12.460 46.500L12.460 46.500L34.040 34.040L46.500 12.460Z" fill="var(--board-fill)" stroke="var(--board-edge)" stroke-width=".35"/><circle r="12.5" fill="var(--surface)" stroke="var(--board-edge)" stroke-width=".35"/><circle cx="38.62" cy="-22.30" r="1.55" fill="var(--surface)" stroke="var(--board-edge)" stroke-width=".3"/><circle cx="0.00" cy="-44.60" r="1.55" fill="var(--surface)" stroke="var(--board-edge)" stroke-width=".3"/><circle cx="-38.62" cy="-22.30" r="1.55" fill="var(--surface)" stroke="var(--board-edge)" stroke-width=".3"/><circle cx="-38.62" cy="22.30" r="1.55" fill="var(--surface)" stroke="var(--board-edge)" stroke-width=".3"/><circle cx="-0.00" cy="44.60" r="1.55" fill="var(--surface)" stroke="var(--board-edge)" stroke-width=".3"/><circle cx="38.62" cy="22.30" r="1.55" fill="var(--surface)" stroke="var(--board-edge)" stroke-width=".3"/><circle r="18.0" fill="none" stroke="#9a9a9a" stroke-width=".15" stroke-dasharray=".8 .8"/><circle r="38.0" fill="none" stroke="#9a9a9a" stroke-width=".15" stroke-dasharray=".8 .8"/><g opacity="1.0"><path d="M-9.254 -36.856A38.0 38.0 0 0 1 9.254 -36.856L4.077 -17.532A18.0 18.0 0 0 0 -4.077 -17.532Z" fill="var(--phase-a)" fill-opacity=".10" stroke="none"/><path d="M-8.547 -36.436A37.425 37.425 0 0 1 8.547 -36.436L3.663 -18.210A18.575 18.575 0 0 0 -3.663 -18.210Z" fill="none" stroke="var(--phase-a)" stroke-width=".62" stroke-linejoin="round"/><path d="M-7.124 -35.569A36.275 36.275 0 0 1 7.124 -35.569L2.824 -19.522A19.725 19.725 0 0 0 -2.824 -19.522Z" fill="none" stroke="var(--phase-a)" stroke-width=".62" stroke-linejoin="round"/><path d="M-5.690 -34.661A35.125 35.125 0 0 1 5.690 -34.661L1.971 -20.782A20.875 20.875 0 0 0 -1.971 -20.782Z" fill="none" stroke="var(--phase-a)" stroke-width=".62" stroke-linejoin="round"/><circle cx="0.00" cy="-22.60" r=".75" fill="var(--surface)" stroke="var(--via-ring)" stroke-width=".35"/><text x="0.00" y="-29.00" font-size="3.1" text-anchor="middle" dominant-baseline="central" font-family="Segoe UI, Liberation Sans, sans-serif" font-weight="700" fill="#141414" stroke="var(--surface)" stroke-width=".9" paint-order="stroke">A1+</text></g><g opacity="1.0"><path d="M10.413 -36.545A38.0 38.0 0 0 1 26.442 -27.291L12.297 -13.145A18.0 18.0 0 0 0 5.236 -17.222Z" fill="var(--phase-c)" fill-opacity=".10" stroke="none"/><path d="M10.816 -35.828A37.425 37.425 0 0 1 25.620 -27.281L12.277 -13.939A18.575 18.575 0 0 0 5.933 -17.602Z" fill="none" stroke="var(--phase-c)" stroke-width=".62" stroke-linejoin="round"/><path d="M11.615 -34.365A36.275 36.275 0 0 1 23.954 -27.242L12.206 -15.494A19.725 19.725 0 0 0 7.315 -18.318Z" fill="none" stroke="var(--phase-c)" stroke-width=".62" stroke-linejoin="round"/><path d="M12.403 -32.862A35.125 35.125 0 0 1 22.258 -27.172L12.098 -17.012A20.875 20.875 0 0 0 8.684 -18.983Z" fill="none" stroke="var(--phase-c)" stroke-width=".62" stroke-linejoin="round"/><circle cx="11.30" cy="-19.57" r=".75" fill="var(--surface)" stroke="var(--via-ring)" stroke-width=".35"/><text x="14.50" y="-25.11" font-size="3.1" text-anchor="middle" dominant-baseline="central" font-family="Segoe UI, Liberation Sans, sans-serif" font-weight="700" fill="#141414" stroke="var(--surface)" stroke-width=".9" paint-order="stroke">C1+</text></g><g opacity="1.0"><path d="M27.291 -26.442A38.0 38.0 0 0 1 36.545 -10.413L17.222 -5.236A18.0 18.0 0 0 0 13.145 -12.297Z" fill="var(--phase-b)" fill-opacity=".10" stroke="none"/><path d="M27.281 -25.620A37.425 37.425 0 0 1 35.828 -10.816L17.602 -5.933A18.575 18.575 0 0 0 13.939 -12.277Z" fill="none" stroke="var(--phase-b)" stroke-width=".62" stroke-linejoin="round"/><path d="M27.242 -23.954A36.275 36.275 0 0 1 34.365 -11.615L18.318 -7.315A19.725 19.725 0 0 0 15.494 -12.206Z" fill="none" stroke="var(--phase-b)" stroke-width=".62" stroke-linejoin="round"/><path d="M27.172 -22.258A35.125 35.125 0 0 1 32.862 -12.403L18.983 -8.684A20.875 20.875 0 0 0 17.012 -12.098Z" fill="none" stroke="var(--phase-b)" stroke-width=".62" stroke-linejoin="round"/><circle cx="19.57" cy="-11.30" r=".75" fill="var(--surface)" stroke="var(--via-ring)" stroke-width=".35"/><text x="25.11" y="-14.50" font-size="3.1" text-anchor="middle" dominant-baseline="central" font-family="Segoe UI, Liberation Sans, sans-serif" font-weight="700" fill="#141414" stroke="var(--surface)" stroke-width=".9" paint-order="stroke">B1+</text></g><g opacity="1.0"><path d="M36.856 -9.254A38.0 38.0 0 0 1 36.856 9.254L17.532 4.077A18.0 18.0 0 0 0 17.532 -4.077Z" fill="var(--phase-a)" fill-opacity=".10" stroke="none"/><path d="M36.436 -8.547A37.425 37.425 0 0 1 36.436 8.547L18.210 3.663A18.575 18.575 0 0 0 18.210 -3.663Z" fill="none" stroke="var(--phase-a)" stroke-width=".62" stroke-linejoin="round"/><path d="M35.569 -7.124A36.275 36.275 0 0 1 35.569 7.124L19.522 2.824A19.725 19.725 0 0 0 19.522 -2.824Z" fill="none" stroke="var(--phase-a)" stroke-width=".62" stroke-linejoin="round"/><path d="M34.661 -5.690A35.125 35.125 0 0 1 34.661 5.690L20.782 1.971A20.875 20.875 0 0 0 20.782 -1.971Z" fill="none" stroke="var(--phase-a)" stroke-width=".62" stroke-linejoin="round"/><circle cx="22.60" cy="-0.00" r=".75" fill="var(--surface)" stroke="var(--via-ring)" stroke-width=".35"/><text x="29.00" y="-0.00" font-size="3.1" text-anchor="middle" dominant-baseline="central" font-family="Segoe UI, Liberation Sans, sans-serif" font-weight="700" fill="#141414" stroke="var(--surface)" stroke-width=".9" paint-order="stroke">A2+</text></g><g opacity="1.0"><path d="M36.545 10.413A38.0 38.0 0 0 1 27.291 26.442L13.145 12.297A18.0 18.0 0 0 0 17.222 5.236Z" fill="var(--phase-c)" fill-opacity=".10" stroke="none"/><path d="M35.828 10.816A37.425 37.425 0 0 1 27.281 25.620L13.939 12.277A18.575 18.575 0 0 0 17.602 5.933Z" fill="none" stroke="var(--phase-c)" stroke-width=".62" stroke-linejoin="round"/><path d="M34.365 11.615A36.275 36.275 0 0 1 27.242 23.954L15.494 12.206A19.725 19.725 0 0 0 18.318 7.315Z" fill="none" stroke="var(--phase-c)" stroke-width=".62" stroke-linejoin="round"/><path d="M32.862 12.403A35.125 35.125 0 0 1 27.172 22.258L17.012 12.098A20.875 20.875 0 0 0 18.983 8.684Z" fill="none" stroke="var(--phase-c)" stroke-width=".62" stroke-linejoin="round"/><circle cx="19.57" cy="11.30" r=".75" fill="var(--surface)" stroke="var(--via-ring)" stroke-width=".35"/><text x="25.11" y="14.50" font-size="3.1" text-anchor="middle" dominant-baseline="central" font-family="Segoe UI, Liberation Sans, sans-serif" font-weight="700" fill="#141414" stroke="var(--surface)" stroke-width=".9" paint-order="stroke">C2+</text></g><g opacity="1.0"><path d="M26.442 27.291A38.0 38.0 0 0 1 10.413 36.545L5.236 17.222A18.0 18.0 0 0 0 12.297 13.145Z" fill="var(--phase-b)" fill-opacity=".10" stroke="none"/><path d="M25.620 27.281A37.425 37.425 0 0 1 10.816 35.828L5.933 17.602A18.575 18.575 0 0 0 12.277 13.939Z" fill="none" stroke="var(--phase-b)" stroke-width=".62" stroke-linejoin="round"/><path d="M23.954 27.242A36.275 36.275 0 0 1 11.615 34.365L7.315 18.318A19.725 19.725 0 0 0 12.206 15.494Z" fill="none" stroke="var(--phase-b)" stroke-width=".62" stroke-linejoin="round"/><path d="M22.258 27.172A35.125 35.125 0 0 1 12.403 32.862L8.684 18.983A20.875 20.875 0 0 0 12.098 17.012Z" fill="none" stroke="var(--phase-b)" stroke-width=".62" stroke-linejoin="round"/><circle cx="11.30" cy="19.57" r=".75" fill="var(--surface)" stroke="var(--via-ring)" stroke-width=".35"/><text x="14.50" y="25.11" font-size="3.1" text-anchor="middle" dominant-baseline="central" font-family="Segoe UI, Liberation Sans, sans-serif" font-weight="700" fill="#141414" stroke="var(--surface)" stroke-width=".9" paint-order="stroke">B2+</text></g><g opacity="1.0"><path d="M9.254 36.856A38.0 38.0 0 0 1 -9.254 36.856L-4.077 17.532A18.0 18.0 0 0 0 4.077 17.532Z" fill="var(--phase-a)" fill-opacity=".10" stroke="none"/><path d="M8.547 36.436A37.425 37.425 0 0 1 -8.547 36.436L-3.663 18.210A18.575 18.575 0 0 0 3.663 18.210Z" fill="none" stroke="var(--phase-a)" stroke-width=".62" stroke-linejoin="round"/><path d="M7.124 35.569A36.275 36.275 0 0 1 -7.124 35.569L-2.824 19.522A19.725 19.725 0 0 0 2.824 19.522Z" fill="none" stroke="var(--phase-a)" stroke-width=".62" stroke-linejoin="round"/><path d="M5.690 34.661A35.125 35.125 0 0 1 -5.690 34.661L-1.971 20.782A20.875 20.875 0 0 0 1.971 20.782Z" fill="none" stroke="var(--phase-a)" stroke-width=".62" stroke-linejoin="round"/><circle cx="0.00" cy="22.60" r=".75" fill="var(--surface)" stroke="var(--via-ring)" stroke-width=".35"/><text x="0.00" y="29.00" font-size="3.1" text-anchor="middle" dominant-baseline="central" font-family="Segoe UI, Liberation Sans, sans-serif" font-weight="700" fill="#141414" stroke="var(--surface)" stroke-width=".9" paint-order="stroke">A3+</text></g><g opacity="1.0"><path d="M-10.413 36.545A38.0 38.0 0 0 1 -26.442 27.291L-12.297 13.145A18.0 18.0 0 0 0 -5.236 17.222Z" fill="var(--phase-c)" fill-opacity=".10" stroke="none"/><path d="M-10.816 35.828A37.425 37.425 0 0 1 -25.620 27.281L-12.277 13.939A18.575 18.575 0 0 0 -5.933 17.602Z" fill="none" stroke="var(--phase-c)" stroke-width=".62" stroke-linejoin="round"/><path d="M-11.615 34.365A36.275 36.275 0 0 1 -23.954 27.242L-12.206 15.494A19.725 19.725 0 0 0 -7.315 18.318Z" fill="none" stroke="var(--phase-c)" stroke-width=".62" stroke-linejoin="round"/><path d="M-12.403 32.862A35.125 35.125 0 0 1 -22.258 27.172L-12.098 17.012A20.875 20.875 0 0 0 -8.684 18.983Z" fill="none" stroke="var(--phase-c)" stroke-width=".62" stroke-linejoin="round"/><circle cx="-11.30" cy="19.57" r=".75" fill="var(--surface)" stroke="var(--via-ring)" stroke-width=".35"/><text x="-14.50" y="25.11" font-size="3.1" text-anchor="middle" dominant-baseline="central" font-family="Segoe UI, Liberation Sans, sans-serif" font-weight="700" fill="#141414" stroke="var(--surface)" stroke-width=".9" paint-order="stroke">C3+</text></g><g opacity="1.0"><path d="M-27.291 26.442A38.0 38.0 0 0 1 -36.545 10.413L-17.222 5.236A18.0 18.0 0 0 0 -13.145 12.297Z" fill="var(--phase-b)" fill-opacity=".10" stroke="none"/><path d="M-27.281 25.620A37.425 37.425 0 0 1 -35.828 10.816L-17.602 5.933A18.575 18.575 0 0 0 -13.939 12.277Z" fill="none" stroke="var(--phase-b)" stroke-width=".62" stroke-linejoin="round"/><path d="M-27.242 23.954A36.275 36.275 0 0 1 -34.365 11.615L-18.318 7.315A19.725 19.725 0 0 0 -15.494 12.206Z" fill="none" stroke="var(--phase-b)" stroke-width=".62" stroke-linejoin="round"/><path d="M-27.172 22.258A35.125 35.125 0 0 1 -32.862 12.403L-18.983 8.684A20.875 20.875 0 0 0 -17.012 12.098Z" fill="none" stroke="var(--phase-b)" stroke-width=".62" stroke-linejoin="round"/><circle cx="-19.57" cy="11.30" r=".75" fill="var(--surface)" stroke="var(--via-ring)" stroke-width=".35"/><text x="-25.11" y="14.50" font-size="3.1" text-anchor="middle" dominant-baseline="central" font-family="Segoe UI, Liberation Sans, sans-serif" font-weight="700" fill="#141414" stroke="var(--surface)" stroke-width=".9" paint-order="stroke">B3+</text></g><g opacity="1.0"><path d="M-36.856 9.254A38.0 38.0 0 0 1 -36.856 -9.254L-17.532 -4.077A18.0 18.0 0 0 0 -17.532 4.077Z" fill="var(--phase-a)" fill-opacity=".10" stroke="none"/><path d="M-36.436 8.547A37.425 37.425 0 0 1 -36.436 -8.547L-18.210 -3.663A18.575 18.575 0 0 0 -18.210 3.663Z" fill="none" stroke="var(--phase-a)" stroke-width=".62" stroke-linejoin="round"/><path d="M-35.569 7.124A36.275 36.275 0 0 1 -35.569 -7.124L-19.522 -2.824A19.725 19.725 0 0 0 -19.522 2.824Z" fill="none" stroke="var(--phase-a)" stroke-width=".62" stroke-linejoin="round"/><path d="M-34.661 5.690A35.125 35.125 0 0 1 -34.661 -5.690L-20.782 -1.971A20.875 20.875 0 0 0 -20.782 1.971Z" fill="none" stroke="var(--phase-a)" stroke-width=".62" stroke-linejoin="round"/><circle cx="-22.60" cy="0.00" r=".75" fill="var(--surface)" stroke="var(--via-ring)" stroke-width=".35"/><text x="-29.00" y="0.00" font-size="3.1" text-anchor="middle" dominant-baseline="central" font-family="Segoe UI, Liberation Sans, sans-serif" font-weight="700" fill="#141414" stroke="var(--surface)" stroke-width=".9" paint-order="stroke">A4+</text></g><g opacity="1.0"><path d="M-36.545 -10.413A38.0 38.0 0 0 1 -27.291 -26.442L-13.145 -12.297A18.0 18.0 0 0 0 -17.222 -5.236Z" fill="var(--phase-c)" fill-opacity=".10" stroke="none"/><path d="M-35.828 -10.816A37.425 37.425 0 0 1 -27.281 -25.620L-13.939 -12.277A18.575 18.575 0 0 0 -17.602 -5.933Z" fill="none" stroke="var(--phase-c)" stroke-width=".62" stroke-linejoin="round"/><path d="M-34.365 -11.615A36.275 36.275 0 0 1 -27.242 -23.954L-15.494 -12.206A19.725 19.725 0 0 0 -18.318 -7.315Z" fill="none" stroke="var(--phase-c)" stroke-width=".62" stroke-linejoin="round"/><path d="M-32.862 -12.403A35.125 35.125 0 0 1 -27.172 -22.258L-17.012 -12.098A20.875 20.875 0 0 0 -18.983 -8.684Z" fill="none" stroke="var(--phase-c)" stroke-width=".62" stroke-linejoin="round"/><circle cx="-19.57" cy="-11.30" r=".75" fill="var(--surface)" stroke="var(--via-ring)" stroke-width=".35"/><text x="-25.11" y="-14.50" font-size="3.1" text-anchor="middle" dominant-baseline="central" font-family="Segoe UI, Liberation Sans, sans-serif" font-weight="700" fill="#141414" stroke="var(--surface)" stroke-width=".9" paint-order="stroke">C4+</text></g><g opacity="1.0"><path d="M-26.442 -27.291A38.0 38.0 0 0 1 -10.413 -36.545L-5.236 -17.222A18.0 18.0 0 0 0 -12.297 -13.145Z" fill="var(--phase-b)" fill-opacity=".10" stroke="none"/><path d="M-25.620 -27.281A37.425 37.425 0 0 1 -10.816 -35.828L-5.933 -17.602A18.575 18.575 0 0 0 -12.277 -13.939Z" fill="none" stroke="var(--phase-b)" stroke-width=".62" stroke-linejoin="round"/><path d="M-23.954 -27.242A36.275 36.275 0 0 1 -11.615 -34.365L-7.315 -18.318A19.725 19.725 0 0 0 -12.206 -15.494Z" fill="none" stroke="var(--phase-b)" stroke-width=".62" stroke-linejoin="round"/><path d="M-22.258 -27.172A35.125 35.125 0 0 1 -12.403 -32.862L-8.684 -18.983A20.875 20.875 0 0 0 -12.098 -17.012Z" fill="none" stroke="var(--phase-b)" stroke-width=".62" stroke-linejoin="round"/><circle cx="-11.30" cy="-19.57" r=".75" fill="var(--surface)" stroke="var(--via-ring)" stroke-width=".35"/><text x="-14.50" y="-25.11" font-size="3.1" text-anchor="middle" dominant-baseline="central" font-family="Segoe UI, Liberation Sans, sans-serif" font-weight="700" fill="#141414" stroke="var(--surface)" stroke-width=".9" paint-order="stroke">B4+</text></g><path d="M16.11 -36.18A39.60 39.60 0 1 1 -5.51 -39.21" fill="none" stroke="var(--phase-a)" stroke-width=".45" opacity="0.95"/><path d="M21.57 -34.52A40.70 40.70 0 1 1 -5.66 -40.30" fill="none" stroke="var(--phase-c)" stroke-width=".45" opacity="0.95"/><path d="M26.87 -32.02A41.80 41.80 0 1 1 -5.82 -41.39" fill="none" stroke="var(--phase-b)" stroke-width=".45" opacity="0.95"/><rect x="16.47" y="-40.57" width="2.2" height="2.2" rx=".3" fill="var(--surface)" stroke="#141414" stroke-width=".35"/><text x="18.79" y="-42.21" font-size="2.4" text-anchor="middle" dominant-baseline="central" font-family="Cascadia Mono, Liberation Mono, monospace" font-weight="700" fill="#141414">U</text><rect x="21.79" y="-37.74" width="2.2" height="2.2" rx=".3" fill="var(--surface)" stroke="#141414" stroke-width=".35"/><text x="24.48" y="-39.18" font-size="2.4" text-anchor="middle" dominant-baseline="central" font-family="Cascadia Mono, Liberation Mono, monospace" font-weight="700" fill="#141414">V</text><rect x="26.67" y="-34.19" width="2.2" height="2.2" rx=".3" fill="var(--surface)" stroke="#141414" stroke-width=".35"/><text x="29.70" y="-35.39" font-size="2.4" text-anchor="middle" dominant-baseline="central" font-family="Cascadia Mono, Liberation Mono, monospace" font-weight="700" fill="#141414">W</text><rect x="31.00" y="-30.01" width="2.2" height="2.2" rx=".3" fill="var(--surface)" stroke="#141414" stroke-width=".35"/><text x="34.33" y="-30.91" font-size="2.4" text-anchor="middle" dominant-baseline="central" font-family="Cascadia Mono, Liberation Mono, monospace" font-weight="700" fill="#141414">N</text><circle cx="19.57" cy="-11.30" r="2.6" fill="none" stroke="var(--surface)" stroke-width="1.3"/><circle cx="19.57" cy="-11.30" r="2.6" fill="none" stroke="var(--status-fail)" stroke-width=".6"/><path d="M18.47 -12.40l2.2 2.2M20.67 -12.40l-2.2 2.2" stroke="var(--status-fail)" stroke-width=".5" stroke-linecap="round"/><rect x="17.97" y="-8.30" width="4.2" height="3.1" rx=".6" fill="var(--status-fail)"/><text x="20.07" y="-6.70" font-size="2.2" text-anchor="middle" dominant-baseline="central" fill="#fff" font-family="Segoe UI, Liberation Sans, sans-serif" font-weight="700">1</text></svg><span class="stamp">Illustrative, not computed</span>
+    <span class="visually-hidden" id="fig-keys">Pinch or use the zoom buttons. Page scroll is not captured by the drawing.</span></div>
+  <div class="p-chips" role="group" aria-label="Layer visibility"><label class="layer-chip"><input type="checkbox" checked aria-label="Show layer L1">L1</label><label class="layer-chip"><input type="checkbox" checked aria-label="Show layer L2">L2</label><label class="layer-chip"><input type="checkbox" checked aria-label="Show layer L3">L3</label><label class="layer-chip"><input type="checkbox" checked aria-label="Show layer L4">L4</label><label class="layer-chip"><input type="checkbox" checked aria-label="Show layer L5">L5</label><label class="layer-chip"><input type="checkbox" checked aria-label="Show layer L6">L6</label></div>
+</section>
+<section class="p-banner" id="rail-drc" aria-labelledby="pdrc"><span class="pf fail"><svg aria-hidden="true"><use href="#i-fail"/></svg>Fail</span><span id="pdrc" class="small"><b>1 DRC failure</b> · trace to via on L3 (example)</span><a class="btn btn-s" href="#">Review</a></section>
+<section class="p-sec" aria-labelledby="kr-title"><h2 id="kr-title">Key results <span class="chip" style="margin-inline-start:auto">Example values</span></h2><div class="tiles"><div class="tile"><span class="k">Phase resistance R<sub>ph</sub></span><span class="v">1.9<small>Ω</small></span><span class="meta"><span class="badge" data-status="inferred"><svg aria-hidden="true"><use href="#i-st-inferred"/></svg><span class="visually-hidden">Status: </span>inferred</span><a class="eq" href="#">EQ-10</a></span></div><div class="tile"><span class="k">Torque constant K<sub>t</sub></span><span class="v">18.6<small>mN·m/A</small></span><span class="meta"><span class="badge" data-status="inferred"><svg aria-hidden="true"><use href="#i-st-inferred"/></svg><span class="visually-hidden">Status: </span>inferred</span><a class="eq" href="#">EQ-09</a></span></div><div class="tile"><span class="k">Inductance L<sub>s</sub> (estimate)</span><span class="v">21<small>µH</small></span><span class="meta"><span class="badge" data-status="unresolved"><svg aria-hidden="true"><use href="#i-st-unresolved"/></svg><span class="visually-hidden">Status: </span>unresolved</span><a class="eq" href="#">EQ-14</a></span></div><div class="tile"><span class="k">Temperature rise ΔT</span><span class="v">28<small>K</small></span><span class="meta"><span class="badge" data-status="assumption"><svg aria-hidden="true"><use href="#i-st-assumption"/></svg><span class="visually-hidden">Status: </span>assumption</span><a class="eq" href="#">EQ-17</a></span></div></div>
+  <a class="btn" href="#step-results" style="margin-top:10px;inline-size:100%"><svg class="i" aria-hidden="true"><use href="#i-results"/></svg>All results</a></section>
+<section class="p-sec" aria-labelledby="panel-title" id="panel-step">
+  <h2 id="panel-title"><svg class="i" aria-hidden="true"><use href="#i-coil"/></svg>Step 1 · Coil</h2>
+  <div class="pfield"><label for="param-coil-count">Coils per layer <span class="sym">Q</span></label><div class="input-unit"><input id="param-coil-count" inputmode="decimal" value="12" aria-describedby="param-coil-count-unit"><span class="unit" id="param-coil-count-unit"></span></div></div>
+  <div class="pfield"><label for="param-pole-count">Magnet poles <span class="sym">2p</span></label><div class="input-unit"><input id="param-pole-count" inputmode="decimal" value="16" aria-describedby="param-pole-count-unit"><span class="unit" id="param-pole-count-unit"></span></div></div>
+  <div class="derived"><dt>Combination 12 / 16</dt><dd><span class="pf pass"><svg aria-hidden="true"><use href="#i-pass"/></svg>Balanced</span></dd><dt>Coils per phase</dt><dd>4</dd></div>
+  <fieldset class="fs" style="margin-top:12px"><legend>Sides</legend><div class="seg"><label><input type="radio" name="ps">Radial</label><label><input type="radio" name="ps" checked>Parallel</label></div></fieldset>
+  <fieldset class="fs"><legend>Ends</legend><div class="seg"><label><input type="radio" name="pe" checked>Arc</label><label><input type="radio" name="pe">Straight</label><label><input type="radio" name="pe">Stadium</label></div></fieldset>
+  <div class="pfield"><label for="param-turns">Turns per coil per layer <span class="sym">N</span></label><div class="input-unit"><input id="param-turns" inputmode="decimal" value="7" aria-describedby="param-turns-unit param-turns-hint"><span class="unit" id="param-turns-unit"></span></div><p class="hint" id="param-turns-hint"><svg class="i" aria-hidden="true"><use href="#i-info"/></svg><span>Up to <b>7</b> turns fit with the centre via (example).</span></p></div>
+  <div class="pfield"><label for="param-trace-width">Trace width <span class="sym">w</span></label><div class="input-unit"><input id="param-trace-width" inputmode="decimal" value="0.50" aria-describedby="param-trace-width-unit"><span class="unit" id="param-trace-width-unit">mm</span></div></div>
+  <div class="pfield"><label for="param-trace-spacing">Trace spacing <span class="sym">s</span></label><div class="input-unit"><input id="param-trace-spacing" inputmode="decimal" value="0.20" aria-describedby="param-trace-spacing-unit"><span class="unit" id="param-trace-spacing-unit">mm</span></div></div>
+  <a class="btn btn-primary" href="#step-phases" style="margin-top:16px;inline-size:100%">Next: Phases<svg class="i i-s" aria-hidden="true"><use href="#i-chev"/></svg></a>
+</section>
+</main>
+<nav class="p-nav" id="step-nav" aria-label="Design steps"><ol role="list"><li><a href="#step-coil" aria-current="step"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-coil"/></svg></span>Coil</a></li><li><a href="#step-phases"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-phase"/></svg></span>Phases</a></li><li><a href="#step-layers"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-layers"/></svg></span>Layers</a></li><li><a href="#step-board"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-board"/></svg></span>Board</a></li><li><a href="#step-results"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-results"/></svg></span>Results</a></li><li><a href="#step-export"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-export"/></svg></span>Export</a></li></ol></nav>
+</body>
+</html>

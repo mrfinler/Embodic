@@ -106,6 +106,10 @@ r = 18.0 to 38.0 mm, at a uniform 2.5° pitch on angles 1.25° + k·2.5° (one 5
   r ≈ 18–38 mm; the README does not state magnet placement (`assumption` until confirmed).
 - Inferred: the remaining arcs/short segments (r 14.3–18 mm and 38–42.4 mm) are end turns ("steps between coil
   loops").
+- End-turn arcs (verified parse, added 2026-10-04): outer end turns are nested caps of 6 radii (13.5–16.4 mm)
+  centred on 12 axes per layer at r = 26 mm (G1: 0° + k·30°; G3: 15° + k·30°); inner end turns are short arcs
+  (4–6° span) concentric with the board centre (radii 14.3–17.2 mm) located at ≈20° and ≈25° (mod 30°), i.e. not
+  centred on the coil axes → a series wave-like path, not concentrated spiral coils (inferred; EV-71).
 
 **Vias (verified, `.TXT` + `.DRR`):** 617 plated, Ø0.3 mm drill with Ø0.5 mm pads (D20) on all six layers:
 - 576 on a regular grid: 144 each at r = 18.0, 18.5, 37.5 and 38.0 mm, angles 1.25° + k·2.5° (two staggered
