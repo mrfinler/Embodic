@@ -32,7 +32,7 @@ def check_numerics(modules) -> list[str]:
             elif node.func.id == "round":
                 violations.append(
                     f"{module.where(node)}: built-in round() rounds half to even; "
-                    "use embodic.units.round_half_away_from_zero"
+                    "use embodic.units.js_round or embodic.units.quantise"
                 )
     return violations
 

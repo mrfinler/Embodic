@@ -1,4 +1,4 @@
-"""Unit vocabulary, conversions and the quantisation helper.
+"""Unit vocabulary, conversions and rounding with JavaScript Math.round semantics.
 
 Every conversion between unit systems goes through this module (ADR-0009). Inside the core, lengths are millimetres
 and angles radians; degrees, ounces of copper and square mils exist only at input and output boundaries.
@@ -116,27 +116,39 @@ def mil2_to_mm2(area_mil2: float) -> float:
     return area_mil2 * MM2_PER_MIL2
 
 
-def round_half_away_from_zero(value: float, step: float) -> float:
-    """Quantise for writers that emit fixed decimals. Built-in round() is banned on coordinates (MT-06).
+def js_round(value: float) -> float:
+    """Round like ECMAScript Math.round: the nearest integer, ties toward +inf (js_round(-2.5) == -2.0).
+
+    Parameters
+    ----------
+    value : float
+        A finite number.
+
+    Returns
+    -------
+    float
+        The rounded integer as a float. Never -0.0, so a writer cannot emit "-0".
+    """
+    count = math.floor(value)
+    # Comparing the exact fractional part avoids floor(x + 0.5), which turns 0.49999999999999994 into 1.
+    if value - count >= 0.5:
+        count += 1
+    return float(count)
+
+
+def quantise(value: float, scale: float) -> float:
+    """Quantise like Xcoil fmt(): js_round(value * scale) / scale. Built-in round() is banned on coordinates (MT-06).
 
     Parameters
     ----------
     value : float
         The number to quantise, in any unit.
-    step : float
-        The quantum, in the unit of `value`; must be positive.
+    scale : float
+        Quanta per unit of `value`, positive; writers that emit fixed decimals use 1e5 (0.00001 mm).
 
     Returns
     -------
     float
-        The multiple of `step` nearest to `value`, ties away from zero. Never negative zero, so a writer cannot
-        emit "-0".
+        `value` on the grid of 1 / `scale`. Never -0.0.
     """
-    quotient = abs(value) / step
-    count = math.floor(quotient)
-    # Comparing the exact fractional part avoids floor(q + 0.5), which turns 0.49999999999999994 into 1.
-    if quotient - count >= 0.5:
-        count += 1
-    if count == 0:
-        return 0.0
-    return math.copysign(count * step, value)
+    return js_round(value * scale) / scale
