@@ -1,0 +1,14 @@
+# Intentional differences between embodic and Xcoil v3 for the M1 golden cases (owner: U-M1d, then U-M1b/U-M1c via Fable).
+# No M1 deviation is recorded yet. Schema and semantics: tools/golden/README.md, section "Allow-lists".
+#
+# [[diff]]
+# id = "XD-M1-001"                       # unique in this file
+# case = "segsegdist-*"                  # case id; "*" matches any run of characters
+# path = "$[*]"                          # optional diff path pattern, default "*"
+# eq_id = "EQ-30"                        # equation_registry.json entry that owns the deviation
+# reason = "why the port differs"
+# tolerance = { rel = 0.0, abs = 1e-9 }  # optional: admit only numeric value diffs inside this bound
+# agent2_signoff = "reference"           # Agent 2 approval
+# agent4_signoff = "reference"           # Agent 4 approval
+
+schema_version = 1
