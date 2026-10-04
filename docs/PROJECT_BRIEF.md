@@ -40,7 +40,7 @@ User decisions already taken (2026-10-04):
 | Company pitch deck | `/mnt/user-data/uploads/Desktop/Embodic-PDF.pdf` | Tone/brand only. Contains a personal name — **never copy personal data** into code or reports. |
 
 User's machine (not reachable by agents): Windows, KiCad 9.x, Python 3.11+. Destination folder
-`C:\Users\Sayoomphu\Desktop\embodic` (does not exist yet; Fable creates it from this repository).
+`%USERPROFILE%\Desktop\embodic` (does not exist yet; Fable creates it from this repository).
 
 ## 3. Rules that bind every agent
 

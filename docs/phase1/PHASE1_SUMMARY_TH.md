@@ -18,7 +18,7 @@
   ขนานกัน → ปรับให้สอดคล้อง → ตรวจสอบอิสระ (Agent 4) → แก้ defect → ตรวจซ้ำ 2 ครั้ง
 - ผลการตรวจสอบอิสระ: พบ defect 22 รายการ (major 2, minor 20) ปิดและตรวจซ้ำครบทั้ง 22 เหลือ minor ใหม่ 1 รายการ (DEF-23
   เรื่องการติดป้ายสถานะของค่าปรับแก้ขอบแม่เหล็ก) ไม่มี blocker — Agent 4 แนะนำให้ส่ง draft ให้ผู้ใช้อนุมัติได้
-- Version control: git repository ใน `C:\Users\Sayoomphu\Desktop\embodic` (คอมมิตแยกตามรอบงาน ดู diff/ย้อนกลับได้)
+- Version control: git repository ใน `%USERPROFILE%\Desktop\embodic` (คอมมิตแยกตามรอบงาน ดู diff/ย้อนกลับได้)
 
 ## 2. สิ่งที่พบ
 
