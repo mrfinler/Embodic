@@ -3,12 +3,12 @@
 The format is Phase 1 port notes section 7.5, frozen by interfaces.md section 9.2. ``BOARD_DUMP_SCHEMA`` lists every
 key with its meaning so a second reader can be written without this module. Numbers are JSON doubles in shortest
 round-trip form; infinity and NaN are ``{"$f": "inf"}``, ``{"$f": "-inf"}``, ``{"$f": "nan"}``; negative zero is
-``-0.0``. Keys are sorted, so write, read, write gives identical text.
+``-0.0``. Keys are sorted. Write, read, write gives identical text.
 
 What embodic leaves null, and why: ``params``, ``params_sha256`` and ``drc`` until the design model (U-M2a) and the
-DRC report (U-M1c) exist; ``kicad_name`` (KiCad removed, D-009); layer ``copper_t``, ``role``, ``pair`` and ``phase``
-and object ``kind``, which a Layout does not carry; circuit ``terminals``, because a PhaseCircuit names only its
-terminal net.
+DRC report (U-M1c) exist; layer ``copper_t``, ``role``, ``pair`` and ``phase`` and object ``kind``, which a Layout
+does not carry; circuit ``terminals``, because a PhaseCircuit names only its terminal net. The Phase 1 layer key for
+the PCB-tool layer name is not written (D-009, MT-07).
 """
 
 import json
@@ -40,7 +40,7 @@ BOARD_DUMP_SCHEMA: Mapping[str, str] = {
     "params_sha256": "SHA-256 of the canonical params JSON, or null",
     "units": "{length: 'mm', angle: 'rad'}",
     "frame": "x right, y up, origin on the rotor axis",
-    "layers[]": "{index, name, kicad_name, z (mm, copper centre), copper_t, role, pair, phase}",
+    "layers[]": "{index, name, z (mm, copper centre), copper_t, role, pair, phase}",
     "primitives[]": (
         "{id, type 'line' | 'arc', layer (index), start [x, y], end [x, y] in current direction, line: x1 y1 x2 y2, "
         "arc: cx cy r a1 a2 (sweep = a2 - a1, signed, counter-clockwise positive), width, kind (embodic "
@@ -131,7 +131,7 @@ def _pad_record(p: Pad, layer_index: Mapping[str, int]) -> JsonValue:
 
 
 def _layer_record(index: int, name: str, z_mm: float) -> JsonValue:
-    record: dict[str, JsonValue] = {"index": index, "name": name, "kicad_name": None, "z": z_mm}
+    record: dict[str, JsonValue] = {"index": index, "name": name, "z": z_mm}
     return record | {"copper_t": None, "role": None, "pair": None, "phase": None}
 
 
