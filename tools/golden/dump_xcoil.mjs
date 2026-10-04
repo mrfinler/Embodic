@@ -2,105 +2,26 @@
 // Usage: node tools/golden/dump_xcoil.mjs tools/golden/cases/<area>.json [--out <dir>]
 // Default output: tests/golden/data/<area>/ in this repository.
 // The engine is loaded read-only from $XCOIL_ENGINE (default /home/claude/serpentine/src/engine.js).
+// An area other than m1 adds the functions of tools/golden/functions/<area>.mjs ($GOLDEN_FUNCTIONS_DIR overrides
+// the folder) to the M1 kernels below.
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { canonicalJson, decodeNonFinite, primFromRecord, recordFromPrim, requireKeys } from './lib/codec.mjs';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const ENGINE_PATH = process.env.XCOIL_ENGINE || '/home/claude/serpentine/src/engine.js';
+const FUNCTIONS_DIR = resolve(process.env.GOLDEN_FUNCTIONS_DIR || join(REPO_ROOT, 'tools', 'golden', 'functions'));
 const REGISTRY_PATH = join(REPO_ROOT, 'docs', 'phase2', 'engineering', 'equation_registry.json');
 const CASES_FORMAT = 'embodic.golden-cases';
 const FIXTURE_FORMAT = 'embodic.golden-case';
-const NONFINITE_TAG = '$f';
-
-// ---------------------------------------------------------------- non-finite codec and canonical JSON
-
-function decodeNonFinite(value) {
-  if (Array.isArray(value)) return value.map(decodeNonFinite);
-  if (value === null || typeof value !== 'object') return value;
-  const keys = Object.keys(value);
-  if (keys.includes(NONFINITE_TAG)) {
-    if (keys.length !== 1) throw new Error(`non-finite tag mixed with other keys: ${JSON.stringify(value)}`);
-    const tag = value[NONFINITE_TAG];
-    if (tag === 'inf') return Infinity;
-    if (tag === '-inf') return -Infinity;
-    if (tag === 'nan') return NaN;
-    throw new Error(`unknown non-finite tag ${JSON.stringify(tag)}`);
-  }
-  return Object.fromEntries(keys.map((k) => [k, decodeNonFinite(value[k])]));
-}
-
-function scalarText(value) {
-  if (typeof value === 'number') {
-    if (Number.isNaN(value)) return `{"${NONFINITE_TAG}": "nan"}`;
-    if (value === Infinity) return `{"${NONFINITE_TAG}": "inf"}`;
-    if (value === -Infinity) return `{"${NONFINITE_TAG}": "-inf"}`;
-    // JSON.stringify(-0) is "0"; "-0" would parse to the integer 0 in Python, so the sign needs "-0.0".
-    if (Object.is(value, -0)) return '-0.0';
-    return String(value);
-  }
-  if (value === null || typeof value === 'boolean' || typeof value === 'string') return JSON.stringify(value);
-  throw new Error(`value of type ${typeof value} has no JSON form`);
-}
-
-const isContainer = (value) => value !== null && typeof value === 'object';
-
-// Sorted keys, two-space indent; a container holding only scalars stays on one line so fixtures diff per record.
-function canonicalJson(value, depth = 0) {
-  if (!isContainer(value)) return scalarText(value);
-  const isArray = Array.isArray(value);
-  const entries = isArray ? value.map((v) => [null, v]) : Object.keys(value).sort().map((k) => [k, value[k]]);
-  const [open, close] = isArray ? ['[', ']'] : ['{', '}'];
-  if (entries.length === 0) return open + close;
-  const item = ([key, v], d) => (key === null ? '' : `${JSON.stringify(key)}: `) + canonicalJson(v, d);
-  if (entries.every(([, v]) => !isContainer(v))) return open + entries.map((e) => item(e, depth)).join(', ') + close;
-  const pad = '  '.repeat(depth + 1);
-  return `${open}\n${entries.map((e) => pad + item(e, depth + 1)).join(',\n')}\n${'  '.repeat(depth)}${close}`;
-}
-
-// ---------------------------------------------------------------- primitives: board-dump record <-> Xcoil prim
-
-const GEOMETRY_KEYS = { line: ['x1', 'y1', 'x2', 'y2'], arc: ['cx', 'cy', 'r', 'a1', 'a2'] };
-const XCOIL_TYPE = { line: 'L', arc: 'A' };
-const RECORD_TYPE = { L: 'line', A: 'arc' };
-
-function requireKeys(obj, allowed, required, what) {
-  for (const k of Object.keys(obj)) if (!allowed.includes(k)) throw new Error(`${what}: unexpected key "${k}"`);
-  for (const k of required) if (obj[k] === undefined) throw new Error(`${what}: missing key "${k}"`);
-}
-
-function primFromRecord(record) {
-  const geometry = GEOMETRY_KEYS[record.type];
-  if (!geometry) throw new Error(`primitive record: unknown type ${JSON.stringify(record.type)}`);
-  const keys = ['type', ...geometry, 'width', 'kind'];
-  requireKeys(record, keys, keys, `${record.type} record`);
-  const prim = { t: XCOIL_TYPE[record.type] };
-  for (const k of geometry) prim[k] = record[k];
-  prim.w = record.width;
-  prim.kind = record.kind;
-  return prim;
-}
-
-function recordFromPrim(E, prim) {
-  const type = RECORD_TYPE[prim.t];
-  if (!type) throw new Error(`Xcoil primitive: unknown t ${JSON.stringify(prim.t)}`);
-  const geometry = GEOMETRY_KEYS[type];
-  requireKeys(prim, ['t', ...geometry, 'w', 'kind'], ['t', ...geometry, 'w', 'kind'], `Xcoil ${type}`);
-  const record = { type };
-  for (const k of geometry) record[k] = prim[k];
-  record.width = prim.w;
-  record.kind = prim.kind;
-  record.start = E.primStart(prim);
-  record.end = E.primEnd(prim);
-  return record;
-}
 
 // ---------------------------------------------------------------- engine functions under test
 
 // Each entry names the case-input keys (required, optional) and runs one Xcoil call on decoded inputs.
-const FUNCTIONS = {
+const M1_FUNCTIONS = {
   primLength: { required: ['prim'], run: (E, x) => E.primLength(primFromRecord(x.prim)) },
   primsLength: { required: ['prims'], run: (E, x) => E.primsLength(x.prims.map(primFromRecord)) },
   primStart: { required: ['prim'], run: (E, x) => E.primStart(primFromRecord(x.prim)) },
@@ -139,6 +60,22 @@ const FUNCTIONS = {
     },
   },
 };
+
+// Returns the function table for one area: the M1 kernels, plus the area module's FUNCTIONS for any other area.
+async function loadFunctions(area) {
+  const functions = new Map(Object.entries(M1_FUNCTIONS));
+  if (area === 'm1') return functions;
+  const modulePath = join(FUNCTIONS_DIR, `${area}.mjs`);
+  if (!existsSync(modulePath)) throw new Error(`area ${area}: no function module ${modulePath}`);
+  const { FUNCTIONS } = await import(pathToFileURL(modulePath).href);
+  if (FUNCTIONS === null || typeof FUNCTIONS !== 'object') throw new Error(`${modulePath}: export FUNCTIONS as an object`);
+  for (const [name, spec] of Object.entries(FUNCTIONS)) {
+    if (functions.has(name)) throw new Error(`${modulePath}: function ${name} is already defined by dump_xcoil.mjs`);
+    requireKeys(spec, ['required', 'optional', 'run'], ['required', 'run'], `${modulePath} function ${name}`);
+    functions.set(name, spec);
+  }
+  return functions;
+}
 
 // ---------------------------------------------------------------- seeded input generators
 
@@ -245,10 +182,10 @@ function evaluate(E, spec, inputs, where) {
   return spec.run(E, structuredClone(inputs));
 }
 
-function buildFixture(E, engineSha, eqIds, entry) {
+function buildFixture(E, functions, engineSha, eqIds, entry) {
   const where = `case ${entry.id}`;
   requireKeys(entry, ['id', 'fn', 'note', 'tags', 'inputs', 'seeded'], ['id', 'fn', 'note', 'tags'], where);
-  const spec = FUNCTIONS[entry.fn];
+  const spec = functions.get(entry.fn);
   if (!spec) throw new Error(`${where}: unknown fn ${entry.fn}`);
   if ((entry.inputs === undefined) === (entry.seeded === undefined)) throw new Error(`${where}: give inputs or seeded`);
   let calls;
@@ -276,7 +213,7 @@ function buildFixture(E, engineSha, eqIds, entry) {
   });
 }
 
-function main() {
+async function main() {
   const [casesPath, outFlag, outArg] = process.argv.slice(2);
   if (!casesPath || (outFlag !== undefined && (outFlag !== '--out' || !outArg))) {
     throw new Error('usage: node tools/golden/dump_xcoil.mjs tools/golden/cases/<area>.json [--out <dir>]');
@@ -285,6 +222,7 @@ function main() {
   if (cases.format !== CASES_FORMAT || cases.format_version !== 1) throw new Error(`${casesPath}: not ${CASES_FORMAT} v1`);
   if (!/^[a-z0-9_]+$/.test(cases.area)) throw new Error(`${casesPath}: bad area ${JSON.stringify(cases.area)}`);
 
+  const functions = await loadFunctions(cases.area);
   const engineSha = createHash('sha256').update(readFileSync(ENGINE_PATH)).digest('hex');
   const E = createRequire(import.meta.url)(ENGINE_PATH);
   const eqIds = eqIdsByFunction(JSON.parse(readFileSync(REGISTRY_PATH, 'utf8')));
@@ -295,9 +233,9 @@ function main() {
   for (const entry of cases.cases) {
     if (!/^[a-z0-9][a-z0-9-]*$/.test(entry.id) || seen.has(entry.id)) throw new Error(`bad or duplicate case id ${entry.id}`);
     seen.add(entry.id);
-    writeFileSync(join(outDir, `${entry.id}.json`), `${canonicalJson(buildFixture(E, engineSha, eqIds, entry))}\n`);
+    writeFileSync(join(outDir, `${entry.id}.json`), `${canonicalJson(buildFixture(E, functions, engineSha, eqIds, entry))}\n`);
   }
   console.log(`wrote ${seen.size} fixtures for area ${cases.area} (engine sha256 ${engineSha})`);
 }
 
-main();
+await main();

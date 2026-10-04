@@ -1,4 +1,4 @@
-Prepared by: Agent 3 (U-M1d) - model: claude-opus-5-5
+Prepared by: Agent 3 (U-M1d, fix round 2026-10-04) - model: claude-opus-5-5
 
 # Golden regression harness
 
@@ -10,7 +10,9 @@ classes of `docs/phase2/architecture/test_plan.md` section 3. CI needs no Node, 
 
 | Path | Content | Owner |
 |---|---|---|
-| `tools/golden/dump_xcoil.mjs` | the dumper | U-M1d |
+| `tools/golden/dump_xcoil.mjs` | the dumper and the M1 kernels | U-M1d |
+| `tools/golden/lib/codec.mjs` | fixture encoding and primitive-record conversion; no side effects on import | U-M1d |
+| `tools/golden/functions/<area>.mjs` | engine functions of one area other than `m1` ([README](functions/README.md)) | the area's unit |
 | `tools/golden/cases/<area>.json` | case lists, one per owning unit | U-M1d writes `m1.json` |
 | `tests/golden/data/<area>/<case_id>.json` | committed fixtures, one per case | written only by the dumper |
 | `tests/golden/harness/` | codec, comparators, allow-list reader, self-tests | U-M1d |
@@ -44,7 +46,8 @@ otherwise.
 ```
 
 - `id` is lower-case kebab and unique. It is also the fixture file name.
-- `fn` names an entry of `FUNCTIONS` in the dumper. Each entry lists its input keys. An unknown or missing key stops
+- `fn` names an M1 kernel (`M1_FUNCTIONS` in the dumper) or, in any other area, a function of
+  `tools/golden/functions/<area>.mjs`. Each entry lists its input keys. An unknown or missing key stops
   the run, so a typo such as `hmax` cannot fall back to a default silently.
 - A case gives either `inputs` (one call) or `seeded` (`count` calls from a generator). Seeded inputs come from
   mulberry32, an integer-only PRNG, and are written into the fixture, so Python needs no PRNG.
@@ -87,7 +90,7 @@ non-finite result from finite input, so a port must reproduce it.
   `x1, y1, x2, y2, s, len, kind, w, pi`. `makeGrid` gives `{cell, entries: [[key, [indices]]]}` in `Map` insertion
   order. `gridQuery` gives the visited segment indices in visiting order.
 
-Encoding rules (verified by reading the dumper and by `test_codec.py`):
+Encoding rules (verified by reading `tools/golden/lib/codec.mjs` and by `test_codec.py`):
 
 - Keys are sorted. Indent is two spaces. A list or object that holds only scalars stays on one line.
 - Finite numbers use JavaScript's shortest round-trip text (`String(x)`), so `5.0` appears as `5`.
@@ -188,12 +191,14 @@ pytest tests/golden/harness -q
 
 The self-tests seed a difference and expect it caught. They accept a difference inside the tolerance, and they check
 that an allow-listed difference comes back as `expected`. They also check that the committed M1 set agrees with
-`m1.json` and covers what the U-M1d brief requires. Each test's docstring names the defect it catches.
+`m1.json` and covers what the U-M1d brief requires. `test_dumper_loader.py` loads a scratch area module and checks
+that a function name defined twice stops the run. Each test's docstring names the defect it catches.
 
 ## Not covered yet
 
 - No sampled path-distance comparator (test_plan.md "paths by sampled distance 1e-6 mm"). Layout-level cases (GR-20,
   GR-21) need one. `unresolved`.
-- No Xcoil board dump of a whole layout. GR-19 needs one per topology. `unresolved`.
+- No Xcoil board dump of a whole layout yet. GR-19's raw layouts will come from `tools/golden/functions/m1_layout.mjs`,
+  owned by U-M1b. `unresolved`.
 - `compare_prims` does not compare `kind` against embodic's `PrimitiveRole`. The name mapping (`endturn` to
   `end_turn`) belongs to U-M1b. `not tested`.
