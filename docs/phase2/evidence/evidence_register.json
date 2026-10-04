@@ -1,0 +1,4597 @@
+{
+  "prepared_by": "Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5",
+  "schema": "embodic evidence register",
+  "schema_version": 1,
+  "generated_by": "docs/phase2/evidence/tools/build_evidence_register.py",
+  "generated_from": [
+    {
+      "path": "docs/phase1/evidence/evidence_register.md",
+      "sha256": "dc67df2b88caabd4022fdf8947ea9a3db9cc02b6758668decbda963022c91d5f"
+    },
+    {
+      "path": "docs/phase2/evidence/evidence_register.md",
+      "sha256": "d55650056a87ba9d57dc06ddda70cc9420a1dfb858fc97b637ce65a60db6688b"
+    },
+    {
+      "path": "docs/phase1/engineering/equation_registry_draft.json",
+      "sha256": "9076d91753c4be23514e5c5ca7120913220d51326603dfb124ed3a3e28bd8301"
+    }
+  ],
+  "status_vocabulary": [
+    "verified",
+    "inferred",
+    "assumption",
+    "not tested",
+    "unresolved"
+  ],
+  "status_order_weakest_first": [
+    "unresolved",
+    "not tested",
+    "assumption",
+    "inferred",
+    "verified"
+  ],
+  "status_meaning": "read in the source (or reproduced by running something) by Agent 5; never physical correctness and never experimental confirmation. Weakest qualifier in the Phase 1 status cell wins; the full cell is kept in status_note.",
+  "topology_vocabulary": {
+    "spiral": "planar spiral or concentric coils, including trapezoidal concentrated PCB coils",
+    "wave": "wave windings with radial conductors and end turns (Xcoil interleaved wave)",
+    "serpentine": "serpentine radial-conductor windings (Xcoil serpentine, ECM patents)",
+    "distributed": "overlapping distributed PCB windings",
+    "concentrated_wire": "wire-wound coreless concentrated coils (not PCB)",
+    "general": "topology-independent physics, materials, manufacturing or method",
+    "non_engineering": "licences, UI conventions, file formats; no winding physics"
+  },
+  "kind_vocabulary": [
+    "source_claim",
+    "repository_fact",
+    "bibliographic_record",
+    "marketing_claim",
+    "illustration"
+  ],
+  "citable_rule": "citable = kind in [source_claim, repository_fact] and phase2_scope",
+  "documents": [
+    {
+      "id": "D01",
+      "title": "Multiphysics analysis of printed circuit board winding for high-speed axial flux permanent magnet motor",
+      "authors": "N. Salim, S.P. Nikam, S. Pal, A.K. Wankhede, B.G. Fernandes",
+      "year": 2019,
+      "year_text": "2019",
+      "venue": "IET Electr. Power Appl. 13(6) 805–811, 2019, doi 10.1049/iet-epa.2018.5752",
+      "kind": "paper",
+      "path": "B1/IET Electric Power Appl - 2019 - Salim - Multiphysics analysis….pdf",
+      "url": null
+    },
+    {
+      "id": "D02",
+      "title": "Design Optimization and Experimental Study of Coreless Axial-flux PM Machines with Wave Winding PCB Stators",
+      "authors": "P. Han, D. Lawhorn, Y. Chulaee, D. Lewis, G. Heins, D.M. Ionel",
+      "year": null,
+      "year_text": "unresolved",
+      "venue": "Venue not printed in PDF; filename says 2021 IEEE ECCE; PDF created 2021-08-24 → unresolved",
+      "kind": "paper",
+      "path": "B1/2021IEEEECCEUKSPARKWaveWindingPCBStatorCorelessAFPMMachine.pdf = B2/Design-Optimization-and-Experimental-Study-…-Wave-Winding-PCB-Stators.pdf (identical, md5 953a2284…)",
+      "url": null
+    },
+    {
+      "id": "D03",
+      "title": "Design Optimization of Coreless Axial-Flux PM Machines with Litz Wire and PCB Stator Windings",
+      "authors": "M.G. Kesgin, P. Han, N. Taran, D. Lawhorn, D. Lewis, D.M. Ionel",
+      "year": 2020,
+      "year_text": "2020",
+      "venue": "2020 IEEE ECCE pp. 22–26, doi 10.1109/ECCE44975.2020.9236194 (accepted manuscript, UKnowledge)",
+      "kind": "paper",
+      "path": "B1/Design Optimization of Coreless Axial-Flux PM Machines with Litz.pdf",
+      "url": null
+    },
+    {
+      "id": "D04",
+      "title": "Winding Design and Analysis for a Disc-Type Permanent-Magnet Synchronous Motor with a PCB Stator",
+      "authors": "X. Wang, H. Lu, X. Li",
+      "year": 2018,
+      "year_text": "2018",
+      "venue": "Energies 11, 3383, 2018",
+      "kind": "paper",
+      "path": "B1/energies-11-03383 (1).pdf",
+      "url": null
+    },
+    {
+      "id": "D05",
+      "title": "A Study on Reducing Loss in PCB Motor Stator Using Multi-Via Structure",
+      "authors": "S.-B. Jeon, D.-H. Choi, H.-S. Han, Y.-H. Song, W.-H. Kim",
+      "year": 2025,
+      "year_text": "2025",
+      "venue": "Actuators 14, 424, 2025",
+      "kind": "paper",
+      "path": "B1/actuators-14-00424-v2 (1).pdf = B2/actuators-14-00424-v2.pdf (identical, md5 bf5d706e…)",
+      "url": null
+    },
+    {
+      "id": "D06",
+      "title": "Performance Comparison Between PCB-stator and Laminated-core-stator Based Designs of AFPM Motors for High-speed Low-power Applications",
+      "authors": "Neethu S., S.P. Nikam, S. Pal, A.K. Wankhede, B.G. Fernandes",
+      "year": 2019,
+      "year_text": "2019",
+      "venue": "IEEE Trans. Ind. Electron., accepted article, DOI 10.1109/TIE.2019.2931503 (2019)",
+      "kind": "paper",
+      "path": "B1/compare.pdf",
+      "url": null
+    },
+    {
+      "id": "D07",
+      "title": "A Comparative Analysis of Wave Winding Topologies and Performance Characteristics in Ultra-thin PCB AFPM Machine",
+      "authors": "S. Paul, M. Farshadnia, A. Pouramin, J. Fletcher, J. Chang",
+      "year": null,
+      "year_text": "unresolved",
+      "venue": "IET Electr. Power Appl. — revised manuscript, doi placeholder; year unresolved (PDF created 2019-03-26)",
+      "kind": "paper",
+      "path": "B1/Revised_manuscript_Final.pdf",
+      "url": null
+    },
+    {
+      "id": "D08",
+      "title": "Design and prototyping of PCB stator electric motor with FDM 3D printed parts",
+      "authors": "E. Collijs, R. Vereecken (supervisor P. Sergeant)",
+      "year": null,
+      "year_text": "2020-2021",
+      "venue": "Master's dissertation, Ghent University, 2020–2021",
+      "kind": "thesis",
+      "path": "B2/799354017-Pcb-stator-thesis.pdf",
+      "url": null
+    },
+    {
+      "id": "D09",
+      "title": "Comparison of PCB winding topologies for axial-flux permanent magnet synchronous machines",
+      "authors": "F. Tokgöz, G. Çakal, O. Keysan",
+      "year": 2020,
+      "year_text": "2020",
+      "venue": "IET Electr. Power Appl., accepted 28 Oct 2020, doi 10.1049/iet-epa.2020.0622 (vol 14 no 13 pp 2577–2586 per D08 ref [6])",
+      "kind": "paper",
+      "path": "B2/EPA-2020-0622-FINAL.pdf",
+      "url": null
+    },
+    {
+      "id": "D10",
+      "title": "Electromagnetic Design and Analysis of Axial Flux Permanent Magnet Generator With Unequal-Width PCB Winding",
+      "authors": "X. Wang, W. Pang, P. Gao, X. Zhao",
+      "year": 2019,
+      "year_text": "2019",
+      "venue": "IEEE Access 7, 2019, doi 10.1109/ACCESS.2019.2952893",
+      "kind": "paper",
+      "path": "B2/Electromagnetic_Design_and_Analysis_of_…Unequal-Width_PCB_Winding.pdf",
+      "url": null
+    },
+    {
+      "id": "D11",
+      "title": "Performance Improvement by Pattern Optimization of PCB Winding in Coreless Axial Flux Permanent Magnet Motor",
+      "authors": "C. Li, X. Wang, H. Lv",
+      "year": 2021,
+      "year_text": "2021",
+      "venue": "2021 IEEE 4th CIEEC, doi 10.1109/CIEEC50170.2021.9510731",
+      "kind": "paper",
+      "path": "B2/Performance_Improvement_by_Pattern_Optimization_of_PCB_Winding_in_Coreless_AFPM_Motor.pdf",
+      "url": null
+    },
+    {
+      "id": "D12",
+      "title": "Design optimization of a low-speed small-scale modular AFPM synchronous generator for urban wind turbine application",
+      "authors": "H. Saneie, A. Daniar, Z. Nasiri-Gheidari",
+      "year": 2022,
+      "year_text": "2022",
+      "venue": "Scientia Iranica D 29(6) 3326–3337, 2022",
+      "kind": "paper",
+      "path": "B2/SCI_Volume 29_Issue 6_Pages 3326-3337.pdf",
+      "url": null
+    },
+    {
+      "id": "D13",
+      "title": "Magnetic Equivalent Circuit-Based Performance Evaluation of Modular PCB AFPM Motor for Electric Water Pumps",
+      "authors": "D.-H. Choi, W.-H. Kim, H. Jang",
+      "year": 2026,
+      "year_text": "2026",
+      "venue": "Actuators 15, 87, 2026",
+      "kind": "paper",
+      "path": "B2/actuators-15-00087.pdf",
+      "url": null
+    },
+    {
+      "id": "D14",
+      "title": "A Printed Circuit Board Stator Pattern for Loss Trade-Off Mitigation in Slotless AFPM Motors",
+      "authors": "J.-W. Moon, H.-S. Han, J.-H. Lee, D.-H. Choi, W.-H. Kim",
+      "year": 2026,
+      "year_text": "2026",
+      "venue": "Actuators 15, 327, 2026",
+      "kind": "paper",
+      "path": "B2/actuators-15-00327.pdf",
+      "url": null
+    },
+    {
+      "id": "D15",
+      "title": "Design and Performance Enhancement of a PCB-Based Axial-Flux Stepper Motor",
+      "authors": "Y. Pan, H. Zhang, J. Xu, C. Zhu, C. Wu, H. Li",
+      "year": 2026,
+      "year_text": "2026",
+      "venue": "Electronics 15, 777, 2026",
+      "kind": "paper",
+      "path": "B2/electronics-15-00777.pdf",
+      "url": null
+    },
+    {
+      "id": "D16",
+      "title": "Design for Loss Reduction in a Compact AFPM Electric Water Pump with a PCB Motor",
+      "authors": "D.-H. Choi, H.-S. Han, M.-K. Hong, D.-H. Jung, W.-H. Kim",
+      "year": 2025,
+      "year_text": "2025",
+      "venue": "Energies 18, 2538, 2025",
+      "kind": "paper",
+      "path": "B2/energies-18-02538-v2.pdf",
+      "url": null
+    },
+    {
+      "id": "D17",
+      "title": "A Study on the Mitigation of Back-EMF Imbalance in Axial Flux Motors with PCB Stators",
+      "authors": "M.-S. Youn, M.-K. Hong, S.-H. Ko, D.-W. Nam, W.-H. Kim",
+      "year": 2026,
+      "year_text": "2026",
+      "venue": "Energies 19, 1060, 2026",
+      "kind": "paper",
+      "path": "B2/energies-19-01060-v2.pdf",
+      "url": null
+    },
+    {
+      "id": "D18",
+      "title": "The Utilization of Printed Circuit Boards (PCBs) in Axial Flux Machines: A Systematic Review",
+      "authors": "I. Shuaibu, E.H.T. Wei, R. Kannan, Y.A. Samaila",
+      "year": 2025,
+      "year_text": "2025",
+      "venue": "Eng. Proc. 87, 13, 2025",
+      "kind": "review",
+      "path": "B2/engproc-87-00013.pdf",
+      "url": null
+    },
+    {
+      "id": "NBS-HB100",
+      "title": "Copper Wire Tables, Handbook 100",
+      "authors": "U.S. National Bureau of Standards",
+      "year": 1966,
+      "year_text": "1966",
+      "venue": "NBS Handbook 100",
+      "kind": "standard",
+      "path": null,
+      "url": "https://nvlpubs.nist.gov/nistpubs/Legacy/hb/nbshandbook100.pdf"
+    },
+    {
+      "id": "ARNOLD-CAT",
+      "title": "Sintered NdFeB catalog, Rev. 181031",
+      "authors": "Arnold Magnetic Technologies",
+      "year": null,
+      "year_text": null,
+      "venue": "manufacturer catalog",
+      "kind": "datasheet",
+      "path": null,
+      "url": "https://www.arnoldmagnetics.com/wp-content/uploads/2017/10/Catalog-151021.pdf"
+    },
+    {
+      "id": "ARNOLD-N42",
+      "title": "N42 datasheet, Rev. 210607",
+      "authors": "Arnold Magnetic Technologies",
+      "year": null,
+      "year_text": null,
+      "venue": "manufacturer datasheet",
+      "kind": "datasheet",
+      "path": null,
+      "url": "https://www.arnoldmagnetics.com/wp-content/uploads/2017/11/N42-151021.pdf"
+    },
+    {
+      "id": "BIB-DAIPRE2006",
+      "title": "Use of the star of slots in designing fractional-slot single-layer synchronous motors",
+      "authors": "M. Dai Pre, N. Bianchi",
+      "year": 2006,
+      "year_text": "2006",
+      "venue": "IEE Proc. Electr. Power Appl. 153(3) 459-466",
+      "kind": "journal",
+      "path": null,
+      "url": "https://dialnet.unirioja.es/servlet/articulo?codigo=1979238"
+    },
+    {
+      "id": "BIB-PYRHONEN",
+      "title": "Design of Rotating Electrical Machines",
+      "authors": "J. Pyrhonen, T. Jokinen, V. Hrabovcova",
+      "year": null,
+      "year_text": null,
+      "venue": "Wiley (edition not verified)",
+      "kind": "textbook",
+      "path": null,
+      "url": null
+    },
+    {
+      "id": "BIB-BUMBY2005",
+      "title": "Axial-flux permanent-magnet air-cored generator for small-scale wind turbines",
+      "authors": "J.R. Bumby, R. Martin",
+      "year": 2005,
+      "year_text": "2005",
+      "venue": "IEE Proc. Electr. Power Appl. 152(5) 1065-1075",
+      "kind": "journal",
+      "path": null,
+      "url": "https://digital-library.theiet.org/doi/10.1049/ip-epa:20050094"
+    },
+    {
+      "id": "PAT-US10170953",
+      "title": "US 10,170,953 B2",
+      "authors": "E-Circuit Motors (Shaw)",
+      "year": null,
+      "year_text": null,
+      "venue": "US patent",
+      "kind": "patent",
+      "path": null,
+      "url": "https://patents.google.com/patent/US10170953"
+    },
+    {
+      "id": "PAT-US11336130",
+      "title": "US 11,336,130 B1",
+      "authors": "E-Circuit Motors (Shaw, Milheim)",
+      "year": null,
+      "year_text": null,
+      "venue": "US patent",
+      "kind": "patent",
+      "path": null,
+      "url": "https://patents.justia.com/patent/11336130"
+    },
+    {
+      "id": "PAT-US9800109",
+      "title": "US 9,800,109 and US 10,256,690",
+      "authors": "E-Circuit Motors (Shaw)",
+      "year": null,
+      "year_text": null,
+      "venue": "US patent",
+      "kind": "patent",
+      "path": null,
+      "url": "https://patents.justia.com/patent/9800109"
+    },
+    {
+      "id": "PAT-US10211694",
+      "title": "US 10,211,694",
+      "authors": "E-Circuit Motors (Shaw)",
+      "year": null,
+      "year_text": null,
+      "venue": "US patent",
+      "kind": "patent",
+      "path": null,
+      "url": "https://patents.justia.com/patent/10211694"
+    },
+    {
+      "id": "PAT-US12424901",
+      "title": "US 12,424,901 B2",
+      "authors": "E-Circuit Motors (Shaw, Milheim)",
+      "year": null,
+      "year_text": null,
+      "venue": "US patent",
+      "kind": "patent",
+      "path": null,
+      "url": "https://patents.justia.com/patent/12424901"
+    },
+    {
+      "id": "WEB-PCBSTATOR",
+      "title": "PCB stator technology pages",
+      "authors": "E-Circuit Motors",
+      "year": null,
+      "year_text": null,
+      "venue": "pcbstator.com",
+      "kind": "marketing",
+      "path": null,
+      "url": "https://pcbstator.com/pcb-stator-technology/"
+    },
+    {
+      "id": "IMG-USER",
+      "title": "User reference screenshots",
+      "authors": "user",
+      "year": null,
+      "year_text": null,
+      "venue": "reference images",
+      "kind": "image",
+      "path": "docs/phase1/evidence/reference_images/",
+      "url": null
+    },
+    {
+      "id": "REPO-magnetless_motor",
+      "title": "magnetless_motor @c6ec327e",
+      "authors": "gouldpa00",
+      "year": 2026,
+      "year_text": "2026",
+      "venue": "GitHub (GPL-3.0)",
+      "kind": "repository",
+      "path": "/home/claude/embodic-ref/magnetless_motor/",
+      "url": null
+    },
+    {
+      "id": "REPO-kimotor",
+      "title": "kimotor @dc6cac3a",
+      "authors": "cooked",
+      "year": 2024,
+      "year_text": "2024",
+      "venue": "GitHub (GPL-2.0-only)",
+      "kind": "repository",
+      "path": "/home/claude/embodic-ref/kimotor/",
+      "url": null
+    },
+    {
+      "id": "WEB-NOTO",
+      "title": "Noto Sans OFL.txt",
+      "authors": "The Noto Project Authors",
+      "year": 2022,
+      "year_text": "2022",
+      "venue": "notofonts",
+      "kind": "licence",
+      "path": null,
+      "url": "https://github.com/notofonts/latin-greek-cyrillic/blob/main/OFL.txt"
+    },
+    {
+      "id": "WEB-LIBERATION",
+      "title": "Liberation fonts LICENSE",
+      "authors": "Google Corporation; Red Hat, Inc.",
+      "year": 2012,
+      "year_text": "2010-2012",
+      "venue": "liberationfonts",
+      "kind": "licence",
+      "path": null,
+      "url": "https://github.com/liberationfonts/liberation-fonts/blob/main/LICENSE"
+    },
+    {
+      "id": "WEB-CASCADIA",
+      "title": "Cascadia Code LICENSE",
+      "authors": "Microsoft Corporation",
+      "year": 2019,
+      "year_text": "2019",
+      "venue": "microsoft/cascadia-code",
+      "kind": "licence",
+      "path": null,
+      "url": "https://github.com/microsoft/cascadia-code/blob/main/LICENSE"
+    },
+    {
+      "id": "WEB-JETBRAINS",
+      "title": "JetBrains Mono OFL.txt",
+      "authors": "The JetBrains Mono Project Authors",
+      "year": 2020,
+      "year_text": "2020",
+      "venue": "JetBrains/JetBrainsMono",
+      "kind": "licence",
+      "path": null,
+      "url": "https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt"
+    },
+    {
+      "id": "WEB-MANROPE",
+      "title": "Manrope OFL.txt",
+      "authors": "The Manrope Project Authors",
+      "year": 2018,
+      "year_text": "2018",
+      "venue": "google/fonts",
+      "kind": "licence",
+      "path": null,
+      "url": "https://github.com/google/fonts/blob/main/ofl/manrope/OFL.txt"
+    },
+    {
+      "id": "WEB-IET-WM2004",
+      "title": "Harmonised colours and alphanumeric marking",
+      "authors": "IET Wiring Matters",
+      "year": 2004,
+      "year_text": "2004",
+      "venue": "IET Wiring Matters, Spring 2004",
+      "kind": "magazine",
+      "path": null,
+      "url": "https://electrical.theiet.org/media/1720/harmonised-colours-and-alphanumeric-marketing.pdf"
+    },
+    {
+      "id": "STD-ISO273",
+      "title": "ISO 273:1979 Fasteners - Clearance holes for bolts and screws",
+      "authors": "ISO/TC 2/SC 7",
+      "year": 1979,
+      "year_text": "1979",
+      "venue": "ISO",
+      "kind": "standard",
+      "path": null,
+      "url": "https://www.iso.org/standard/4183.html"
+    },
+    {
+      "id": "WEB-KICAD-DEVDOCS",
+      "title": "KiCad developer documentation",
+      "authors": "KiCad project",
+      "year": null,
+      "year_text": null,
+      "venue": "dev-docs.kicad.org",
+      "kind": "documentation",
+      "path": null,
+      "url": "https://dev-docs.kicad.org/"
+    },
+    {
+      "id": "PYPI-kicad-python",
+      "title": "kicad-python 0.8.0",
+      "authors": "KiCad project",
+      "year": null,
+      "year_text": null,
+      "venue": "PyPI",
+      "kind": "package",
+      "path": null,
+      "url": "https://pypi.org/project/kicad-python/"
+    },
+    {
+      "id": "WEB-KICAD-LICENCES",
+      "title": "KiCad licenses",
+      "authors": "KiCad project",
+      "year": null,
+      "year_text": null,
+      "venue": "kicad.org",
+      "kind": "documentation",
+      "path": null,
+      "url": "https://www.kicad.org/about/licenses/"
+    },
+    {
+      "id": "MFR-HGT-NDFEB",
+      "title": "Sintered NdFeB Magnets' Specifications",
+      "authors": "HGT Advanced Magnets Co., Ltd",
+      "year": null,
+      "year_text": null,
+      "venue": "manufacturer specification sheet (no revision or date printed)",
+      "kind": "datasheet",
+      "path": null,
+      "url": "https://www.advancedmagnets.com/wp-content/uploads/2020/07/Sintered-Neodymium-Iron-Boron-NdFeB-Magnets-Specifications.pdf"
+    },
+    {
+      "id": "MFR-ARNOLD-SMMA2004",
+      "title": "NdFeB for High Temperature Motor Applications",
+      "authors": "S. Constantinides, D. Gulick",
+      "year": 2004,
+      "year_text": "2004",
+      "venue": "SMMA Fall Technical Conference, 3-5 Nov 2004 (Arnold Magnetic Technologies slides)",
+      "kind": "presentation",
+      "path": null,
+      "url": "https://www.arnoldmagnetics.com/wp-content/uploads/2017/10/NdFeB-for-high-temperature-motor-applications.pdf"
+    },
+    {
+      "id": "THESIS-UARK2014",
+      "title": "Design, Simulation and Implementation of Three-Phase Bidirectional DC-DC Dual Active Bridge Converter Using SiC MOSFETs",
+      "authors": "T. Aldawsari",
+      "year": 2014,
+      "year_text": "2014",
+      "venue": "MSc thesis, Electrical Engineering, University of Arkansas",
+      "kind": "thesis",
+      "path": null,
+      "url": "https://scholarworks.uark.edu/cgi/viewcontent.cgi?article=3596&context=etd"
+    },
+    {
+      "id": "MFR-BITTELE-TWC",
+      "title": "Trace Width Calculator",
+      "authors": "Bittele Electronics",
+      "year": null,
+      "year_text": null,
+      "venue": "PCB manufacturer web page",
+      "kind": "manufacturer_page",
+      "path": null,
+      "url": "https://www.7pcb.com/trace-width-calculator"
+    }
+  ],
+  "entries": [
+    {
+      "id": "EV-01",
+      "claim": "Spiral winding = spiral coils, each two complementary spirals (top and bottom layer, same direction) joined by vias; suited to high-polarity machines; coils in one layer may belong to one phase or several",
+      "kind": "source_claim",
+      "source": {
+        "document": "D02",
+        "title": "Design Optimization and Experimental Study of Coreless Axial-flux PM Machines with Wave Winding PCB Stators",
+        "authors": "P. Han, D. Lawhorn, Y. Chulaee, D. Lewis, G. Heins, D.M. Ionel",
+        "year": null,
+        "year_text": "unresolved"
+      },
+      "documents": [
+        "D02"
+      ],
+      "location": {
+        "text": "B2/Design-Optimization-…pdf p.1 §I, Fig. 1b p.2",
+        "pages_pdf": [
+          1,
+          2
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes — defines the embodic topology",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-02",
+      "claim": "Concentrated spiral trapezoidal coil modelled as closed concentric loops; w_d = w_tr + w_s (3.5); flux per loop/slice Φ_l,q = B̄ t_sl r (φ_max−φ_min) (3.6–3.11); Φ_l = ΣΦ_l,q (3.12); ψ_coil = ΣΦ_l (3.13)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D08",
+        "title": "Design and prototyping of PCB stator electric motor with FDM 3D printed parts",
+        "authors": "E. Collijs, R. Vereecken (supervisor P. Sergeant)",
+        "year": null,
+        "year_text": "2020-2021"
+      },
+      "documents": [
+        "D08"
+      ],
+      "location": {
+        "text": "B2/799354017-Pcb-stator-thesis.pdf p.32–35 (printed 27–30) §3.1.2",
+        "pages_pdf": [
+          32,
+          33,
+          34,
+          35
+        ],
+        "pages_printed": "27–30",
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes — direct spiral-coil flux-linkage integration",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-02",
+        "EQ-06"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-03",
+      "claim": "Axial field between two back plates: Fourier series with sinh/cosh terms (3.1), τ_P(r) = rπ/p (3.2), rectangular-magnet angular width τ_M(r) (3.3); assumes infinite back-plate permeability; source Vansompel 2013",
+      "kind": "source_claim",
+      "source": {
+        "document": "D08",
+        "title": "Design and prototyping of PCB stator electric motor with FDM 3D printed parts",
+        "authors": "E. Collijs, R. Vereecken (supervisor P. Sergeant)",
+        "year": null,
+        "year_text": "2020-2021"
+      },
+      "documents": [
+        "D08"
+      ],
+      "location": {
+        "text": "p.30–32 (printed 25–27) §3.1.1, Table 3.1, Fig. 3.3",
+        "pages_pdf": [
+          30,
+          31,
+          32
+        ],
+        "pages_printed": "25–27",
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (double rotor, coreless) — compared with FEM at r = 40 mm only",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-01",
+        "EQ-04",
+        "EQ-05"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-04",
+      "claim": "Back-EMF per coil E = −(dψ/dθ_m)·ω (3.14); phase EMF = signed sum of coils per winding table (12-slot/10-pole, Bavaria tool)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D08",
+        "title": "Design and prototyping of PCB stator electric motor with FDM 3D printed parts",
+        "authors": "E. Collijs, R. Vereecken (supervisor P. Sergeant)",
+        "year": null,
+        "year_text": "2020-2021"
+      },
+      "documents": [
+        "D08"
+      ],
+      "location": {
+        "text": "p.36 (printed 31) §3.1.3",
+        "pages_pdf": [
+          36
+        ],
+        "pages_printed": "31",
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-06",
+        "EQ-09"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-05",
+      "claim": "Torque per wire section T = I·B·L·cos α·r (3.19–3.21), summed over sections/loops/coils (3.22–3.23); only straight (radial) sections produce torque",
+      "kind": "source_claim",
+      "source": {
+        "document": "D08",
+        "title": "Design and prototyping of PCB stator electric motor with FDM 3D printed parts",
+        "authors": "E. Collijs, R. Vereecken (supervisor P. Sergeant)",
+        "year": null,
+        "year_text": "2020-2021"
+      },
+      "documents": [
+        "D08"
+      ],
+      "location": {
+        "text": "p.38–40 (printed 33–35) §3.2",
+        "pages_pdf": [
+          38,
+          39,
+          40
+        ],
+        "pages_printed": "33–35",
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-06",
+      "claim": "Max turns per trapezoidal spiral coil: N_c < ½((r_o−r_i)/w_d + 1) (3.24) and trapezoid/triangle split (3.25–3.26), after Noh et al. AIM 2019",
+      "kind": "source_claim",
+      "source": {
+        "document": "D08",
+        "title": "Design and prototyping of PCB stator electric motor with FDM 3D printed parts",
+        "authors": "E. Collijs, R. Vereecken (supervisor P. Sergeant)",
+        "year": null,
+        "year_text": "2020-2021"
+      },
+      "documents": [
+        "D08"
+      ],
+      "location": {
+        "text": "p.43 (printed 38) §3.3",
+        "pages_pdf": [
+          43
+        ],
+        "pages_printed": "38",
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (single-layer geometry rule)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-02"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-07",
+      "claim": "Spiral coil track length = Σ over loops of outer arc + inner arc + 2 straight segments, coil span θ_cs = π/p (3.27–3.36)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D08",
+        "title": "Design and prototyping of PCB stator electric motor with FDM 3D printed parts",
+        "authors": "E. Collijs, R. Vereecken (supervisor P. Sergeant)",
+        "year": null,
+        "year_text": "2020-2021"
+      },
+      "documents": [
+        "D08"
+      ],
+      "location": {
+        "text": "p.44–45 (printed 39–40) §3.4",
+        "pages_pdf": [
+          44,
+          45
+        ],
+        "pages_printed": "39–40",
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (ignores vias, corner rounding). Re-check 2026-10-04: θ_cs = π/p is the pole pitch; it equals the geometric coil pitch 2π/Q only when Q = 2p. For D08's own 12 coils/10 poles, 12 × 36° > 360°, so non-overlapping coils must use 2π/Q = 30° (inferred; agrees with Agent 2 EQ-01/C7). Residual check (DEF-15, re-run of verification/checks/v3_geometry_resistance.py on 2026-10-04): D08 Table 4.5 p.54 states a 50 °C track temperature; at 50 °C the π/p variant gives 0.439 Ω (+12.7 %) and 2π/Q gives 0.381 Ω (−2.3 %) against D08 Table 4.6's 0.39 Ω (π/p reaches 0.393 Ω only at 20 °C, which contradicts the stated 50 °C). The residual therefore favours 2π/Q; which span the thesis model actually used is undetermined",
+        "status": "inferred"
+      },
+      "status": "inferred",
+      "status_note": "verified (as printed); correction inferred",
+      "topology_tags": [
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-03"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-08",
+      "claim": "ρ_T = ρ_20(1 + α_c(T − 20 °C)) (3.37); R_phase = ρ_T L_tot /(w_tr t_tr) (3.38); no numeric α_c or ρ_20 given",
+      "kind": "source_claim",
+      "source": {
+        "document": "D08",
+        "title": "Design and prototyping of PCB stator electric motor with FDM 3D printed parts",
+        "authors": "E. Collijs, R. Vereecken (supervisor P. Sergeant)",
+        "year": null,
+        "year_text": "2020-2021"
+      },
+      "documents": [
+        "D08"
+      ],
+      "location": {
+        "text": "p.45 (printed 40)",
+        "pages_pdf": [
+          45
+        ],
+        "pages_printed": "40",
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (DC only)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-10"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-09",
+      "claim": "Copper-loss budget method: 4 W total copper loss per PCB, phase current from Ohm's law with the two PCB sides in series (4.3, extracted text reads \"√(4 (3 W)/R_tot,series)\", i.e. probably (4 W/3)/R per phase — reading inferred); design sweep w_tr 0.16–3.5 mm and r_i, r_o",
+      "kind": "source_claim",
+      "source": {
+        "document": "D08",
+        "title": "Design and prototyping of PCB stator electric motor with FDM 3D printed parts",
+        "authors": "E. Collijs, R. Vereecken (supervisor P. Sergeant)",
+        "year": null,
+        "year_text": "2020-2021"
+      },
+      "documents": [
+        "D08"
+      ],
+      "location": {
+        "text": "p.53–54 (printed 48–49) §4.2, Table 4.5",
+        "pages_pdf": [
+          53,
+          54
+        ],
+        "pages_printed": "48–49",
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (method)",
+        "status": "inferred"
+      },
+      "status": "inferred",
+      "status_note": "verified (text); formula reading inferred",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-21"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-10",
+      "claim": "Area-utilisation coefficient (w_tr·l_total)/(π(r_si + r_so)) (2.1), attributed to Tokgöz et al.",
+      "kind": "source_claim",
+      "source": {
+        "document": "D08",
+        "title": "Design and prototyping of PCB stator electric motor with FDM 3D printed parts",
+        "authors": "E. Collijs, R. Vereecken (supervisor P. Sergeant)",
+        "year": null,
+        "year_text": "2020-2021"
+      },
+      "documents": [
+        "D08"
+      ],
+      "location": {
+        "text": "p.23 (printed 18) §2.2.2",
+        "pages_pdf": [
+          23
+        ],
+        "pages_printed": "18",
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "no",
+        "note": "doubtful — dimension is length, not a ratio (see gaps G9)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (as printed)",
+      "topology_tags": [
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [
+        "G9"
+      ],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-11",
+      "claim": "Thermal: layer resistances R = l/(kA) (7.1), convection R = 1/(hA) (7.2), h correlation after Osczevski (7.3–7.4), network R_total = 5.11 K/W (7.5) for 4 W per side",
+      "kind": "source_claim",
+      "source": {
+        "document": "D08",
+        "title": "Design and prototyping of PCB stator electric motor with FDM 3D printed parts",
+        "authors": "E. Collijs, R. Vereecken (supervisor P. Sergeant)",
+        "year": null,
+        "year_text": "2020-2021"
+      },
+      "documents": [
+        "D08"
+      ],
+      "location": {
+        "text": "p.81–83 (printed 76–78) §7",
+        "pages_pdf": [
+          81,
+          82,
+          83
+        ],
+        "pages_printed": "76–78",
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly (motor-specific network)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-17"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-12",
+      "claim": "Concentric winding: high induced voltage from large flux-linking area and long radial paths, but long end connections → higher resistance and losses",
+      "kind": "source_claim",
+      "source": {
+        "document": "D09",
+        "title": "Comparison of PCB winding topologies for axial-flux permanent magnet synchronous machines",
+        "authors": "F. Tokgöz, G. Çakal, O. Keysan",
+        "year": 2020,
+        "year_text": "2020"
+      },
+      "documents": [
+        "D09"
+      ],
+      "location": {
+        "text": "B2/EPA-2020-0622-FINAL.pdf p.1 §1, p.1–2 §2.1.1",
+        "pages_pdf": [
+          1,
+          2
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (concentric ≈ spiral)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-13",
+      "claim": "Analytical open-circuit field by magnetic scalar potential (eq. 1), <1 % fundamental error vs FEA at mean radius; misses radial edge leakage → Br(r) curve-fitted from FEA",
+      "kind": "source_claim",
+      "source": {
+        "document": "D09",
+        "title": "Comparison of PCB winding topologies for axial-flux permanent magnet synchronous machines",
+        "authors": "F. Tokgöz, G. Çakal, O. Keysan",
+        "year": 2020,
+        "year_text": "2020"
+      },
+      "documents": [
+        "D09"
+      ],
+      "location": {
+        "text": "p.3–4 §3.1, Table 3, Figs 5–7",
+        "pages_pdf": [
+          3,
+          4
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly — needs radial correction",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-05"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-14",
+      "claim": "Flux linkage by area integration over each loop region: φ = ∫∫ k_w B_r(r) B_max sin(ωt + pθ) r dθ dr with r-dependent limits; V = −N dφ/dt (eqs 5–11); any loop shape via integration limits",
+      "kind": "source_claim",
+      "source": {
+        "document": "D09",
+        "title": "Comparison of PCB winding topologies for axial-flux permanent magnet synchronous machines",
+        "authors": "F. Tokgöz, G. Çakal, O. Keysan",
+        "year": 2020,
+        "year_text": "2020"
+      },
+      "documents": [
+        "D09"
+      ],
+      "location": {
+        "text": "p.5 §3.2",
+        "pages_pdf": [
+          5
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes — method transfers to spiral loops",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-06"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-15",
+      "claim": "Torque via f = J×B integrated over copper volume (eqs 2–4); simplified f = J_rms B_avg B_r(r) cos α, v = N l w t (12–14)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D09",
+        "title": "Comparison of PCB winding topologies for axial-flux permanent magnet synchronous machines",
+        "authors": "F. Tokgöz, G. Çakal, O. Keysan",
+        "year": 2020,
+        "year_text": "2020"
+      },
+      "documents": [
+        "D09"
+      ],
+      "location": {
+        "text": "p.4, p.6 §3.2 (img)",
+        "pages_pdf": [
+          4,
+          6
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "img",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-16",
+      "claim": "PCB cost: >6 layers increases cost sharply; 35→70 µm copper large cost step, 70→105 µm almost none; 1000-piece cost 13 % of 10-piece cost (for their supplier)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D09",
+        "title": "Comparison of PCB winding topologies for axial-flux permanent magnet synchronous machines",
+        "authors": "F. Tokgöz, G. Çakal, O. Keysan",
+        "year": 2020,
+        "year_text": "2020"
+      },
+      "documents": [
+        "D09"
+      ],
+      "location": {
+        "text": "p.3 §2.2, Fig. 3",
+        "pages_pdf": [
+          3
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (manufacturing context, supplier-specific)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-17",
+      "claim": "In spiral-type PCB windings only radial tracks produce back-EMF/torque; concentric (circumferential) tracks are a \"passive conduction path\" adding Joule loss and occupying active area",
+      "kind": "source_claim",
+      "source": {
+        "document": "D07",
+        "title": "A Comparative Analysis of Wave Winding Topologies and Performance Characteristics in Ultra-thin PCB AFPM Machine",
+        "authors": "S. Paul, M. Farshadnia, A. Pouramin, J. Fletcher, J. Chang",
+        "year": null,
+        "year_text": "unresolved"
+      },
+      "documents": [
+        "D07"
+      ],
+      "location": {
+        "text": "B1/Revised_manuscript_Final.pdf p.3 §2.1",
+        "pages_pdf": [
+          3
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-06"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-18",
+      "claim": "Line current density A_m(r) = m₁√2 N₁ I_a /(p τ(r)) (1); dT = 2π α_i k_w1 A(r) B_mg r² dr (3)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D07",
+        "title": "A Comparative Analysis of Wave Winding Topologies and Performance Characteristics in Ultra-thin PCB AFPM Machine",
+        "authors": "S. Paul, M. Farshadnia, A. Pouramin, J. Fletcher, J. Chang",
+        "year": null,
+        "year_text": "unresolved"
+      },
+      "documents": [
+        "D07"
+      ],
+      "location": {
+        "text": "p.2–3",
+        "pages_pdf": [
+          2,
+          3
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly (radius-dependent loading)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "wave",
+        "distributed"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-19",
+      "claim": "Coreless PCB inductances are µH-range because the effective air gap is large and turns are few",
+      "kind": "source_claim",
+      "source": {
+        "document": "D07",
+        "title": "A Comparative Analysis of Wave Winding Topologies and Performance Characteristics in Ultra-thin PCB AFPM Machine",
+        "authors": "S. Paul, M. Farshadnia, A. Pouramin, J. Fletcher, J. Chang",
+        "year": null,
+        "year_text": "unresolved"
+      },
+      "documents": [
+        "D07"
+      ],
+      "location": {
+        "text": "p.7 §3",
+        "pages_pdf": [
+          7
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-14"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-20",
+      "claim": "Multilayer parallel layers: R_eff = R/(N/2) (1); circulating-current loss P_c = V_d²/(R₁+R₂+R_c) (2); 24 layers: V_d = 14 V, P_c ≈ 12 W; 12 layers: ≈ 0.5 W",
+      "kind": "source_claim",
+      "source": {
+        "document": "D01",
+        "title": "Multiphysics analysis of printed circuit board winding for high-speed axial flux permanent magnet motor",
+        "authors": "N. Salim, S.P. Nikam, S. Pal, A.K. Wankhede, B.G. Fernandes",
+        "year": 2019,
+        "year_text": "2019"
+      },
+      "documents": [
+        "D01"
+      ],
+      "location": {
+        "text": "B1/IET…Salim….pdf p.2–3 (journal 806–807) §2, Fig. 2–3",
+        "pages_pdf": [
+          2,
+          3
+        ],
+        "pages_printed": "806–807",
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes for parallel layer connection (layers at different distance from magnets see different EMF)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-07"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-21",
+      "claim": "Skin depth δ = 1/√(πfμσ) (4); R_sk = ρl/(w t_eff), t_eff = δ(1 − e^(−t/δ)) (5); proximity effect negligible for their 12 × 50-conductor model at 1 kHz",
+      "kind": "source_claim",
+      "source": {
+        "document": "D01",
+        "title": "Multiphysics analysis of printed circuit board winding for high-speed axial flux permanent magnet motor",
+        "authors": "N. Salim, S.P. Nikam, S. Pal, A.K. Wankhede, B.G. Fernandes",
+        "year": 2019,
+        "year_text": "2019"
+      },
+      "documents": [
+        "D01"
+      ],
+      "location": {
+        "text": "p.3–4 (journal 807–808) §3",
+        "pages_pdf": [
+          3,
+          4
+        ],
+        "pages_printed": "807–808",
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (general conductor physics)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-12",
+        "EQ-13"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-22",
+      "claim": "Thermal: θ = L/(K·A_c) (6), ΔT_cond = P·θ (7), ΔT_conv = P/(h_t A_PCB) (8), h_t = 10 W/m²K \"widely used\"; K: copper 355, FR4 0.25, solder mask 0.21, air 0.0275 W/mK (Table 3); stack-up prepreg 0.07, laminate 0.13/0.15 mm (Table 4)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D01",
+        "title": "Multiphysics analysis of printed circuit board winding for high-speed axial flux permanent magnet motor",
+        "authors": "N. Salim, S.P. Nikam, S. Pal, A.K. Wankhede, B.G. Fernandes",
+        "year": 2019,
+        "year_text": "2019"
+      },
+      "documents": [
+        "D01"
+      ],
+      "location": {
+        "text": "p.4 (journal 808) §4",
+        "pages_pdf": [
+          4
+        ],
+        "pages_printed": "808",
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (lumped thermal)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-17"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-23",
+      "claim": "Eddy loss in a conducting support disc P_e = 1.65 V_e B_m² d² f²/ρ; ≈ 5 W at 3000 rpm with stainless steel → use non-conducting support (nylon)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D01",
+        "title": "Multiphysics analysis of printed circuit board winding for high-speed axial flux permanent magnet motor",
+        "authors": "N. Salim, S.P. Nikam, S. Pal, A.K. Wankhede, B.G. Fernandes",
+        "year": 2019,
+        "year_text": "2019"
+      },
+      "documents": [
+        "D01",
+        "D06"
+      ],
+      "location": {
+        "text": "D01 p.3 eq (3); D06 B1/compare.pdf p.3 eq (4) (img)",
+        "pages_pdf": [
+          3
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "img",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (mechanical/material rule)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-24",
+      "claim": "EMF E_f = π√2 p N₁ K_w N_s Φ_f /60, Φ_f = πB_g(R_mo² − R_mi²)/(2p) (3); torque T_d = m₁E_f I_a·60/(2πN_s) (2)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D06",
+        "title": "Performance Comparison Between PCB-stator and Laminated-core-stator Based Designs of AFPM Motors for High-speed Low-power Applications",
+        "authors": "Neethu S., S.P. Nikam, S. Pal, A.K. Wankhede, B.G. Fernandes",
+        "year": 2019,
+        "year_text": "2019"
+      },
+      "documents": [
+        "D06"
+      ],
+      "location": {
+        "text": "B1/compare.pdf p.3 §III-A (img)",
+        "pages_pdf": [
+          3
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "img",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly (sinusoidal, distributed)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "distributed"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-09"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-25",
+      "claim": "Spiral winding (concentric circle coils per phase in series): inner coils have shorter effective length and smaller pitch coefficient; more copper, lower efficiency than distributed",
+      "kind": "source_claim",
+      "source": {
+        "document": "D04",
+        "title": "Winding Design and Analysis for a Disc-Type Permanent-Magnet Synchronous Motor with a PCB Stator",
+        "authors": "X. Wang, H. Lu, X. Li",
+        "year": 2018,
+        "year_text": "2018"
+      },
+      "documents": [
+        "D04"
+      ],
+      "location": {
+        "text": "B1/energies-11-03383 (1).pdf p.3 §2.1, Fig. 3a",
+        "pages_pdf": [
+          3
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (qualitative)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-26",
+      "claim": "Winding/distribution factor k_wν = k_qν = sin(qα₁ν/2)/(q sin(α₁ν/2)) (1); Φ, E₀ = √2πfNk_w1Φ (2–4); r_s = ρΣl_n/S_n (7)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D04",
+        "title": "Winding Design and Analysis for a Disc-Type Permanent-Magnet Synchronous Motor with a PCB Stator",
+        "authors": "X. Wang, H. Lu, X. Li",
+        "year": 2018,
+        "year_text": "2018"
+      },
+      "documents": [
+        "D04"
+      ],
+      "location": {
+        "text": "p.5–6 §3.1–3.3",
+        "pages_pdf": [
+          5,
+          6
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly (distributed-winding factor)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "distributed"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-08"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-27",
+      "claim": "Eddy loss ΔP = (π²/3ρ) f² w_L³ b L (B_mtλ² + B_maλ²) η_d² (9), η_d distortion factor (10); loss ∝ f² and w³; symbol \"L\" undefined",
+      "kind": "source_claim",
+      "source": {
+        "document": "D04",
+        "title": "Winding Design and Analysis for a Disc-Type Permanent-Magnet Synchronous Motor with a PCB Stator",
+        "authors": "X. Wang, H. Lu, X. Li",
+        "year": 2018,
+        "year_text": "2018"
+      },
+      "documents": [
+        "D04"
+      ],
+      "location": {
+        "text": "p.7 §3.4 (img)",
+        "pages_pdf": [
+          7
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "img",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly — coefficient conflicts with EV-36/EV-39 (gaps G4)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-12"
+      ],
+      "related_gaps": [
+        "G4"
+      ],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-28",
+      "claim": "Concentric spiral PCB winding with unequal-width active conductors; D_mo = D_max − 2N(w_oc + d_oc) (2); w_oe = πD_mo/(2mpN) − d_L (3); 12 layers = 2 groups of 6 parallel layers in series",
+      "kind": "source_claim",
+      "source": {
+        "document": "D10",
+        "title": "Electromagnetic Design and Analysis of Axial Flux Permanent Magnet Generator With Unequal-Width PCB Winding",
+        "authors": "X. Wang, W. Pang, P. Gao, X. Zhao",
+        "year": 2019,
+        "year_text": "2019"
+      },
+      "documents": [
+        "D10"
+      ],
+      "location": {
+        "text": "B2/Electromagnetic_Design_…pdf p.2–3 §II-A, Fig. 2–3, Table 1 (img)",
+        "pages_pdf": [
+          2,
+          3
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "img",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (spiral coil geometry rules)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-29",
+      "claim": "Conductor EMF E_c = ΩB_av(D_mo² − D_mi²)/8 (4); E_φ = √2πfN₁k_w1Φ_m (6); Φ_m = (π/8p)α_iB_m(D_mo² − D_mi²) (7); r₀ = ρΣL_n/S_L (8)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D10",
+        "title": "Electromagnetic Design and Analysis of Axial Flux Permanent Magnet Generator With Unequal-Width PCB Winding",
+        "authors": "X. Wang, W. Pang, P. Gao, X. Zhao",
+        "year": 2019,
+        "year_text": "2019"
+      },
+      "documents": [
+        "D10"
+      ],
+      "location": {
+        "text": "p.3–4 §III-A,B (img)",
+        "pages_pdf": [
+          3,
+          4
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "img",
+      "applies": {
+        "judgement": "partly",
+        "note": "yes/partly (sinusoidal fundamental)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-10"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-30",
+      "claim": "Eddy loss p_v = (1/ρ_L)(π²/3ρ) f² w_L² m_c (B_mt1² + B_ma1²) η_d² (10)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D10",
+        "title": "Electromagnetic Design and Analysis of Axial Flux Permanent Magnet Generator With Unequal-Width PCB Winding",
+        "authors": "X. Wang, W. Pang, P. Gao, X. Zhao",
+        "year": 2019,
+        "year_text": "2019"
+      },
+      "documents": [
+        "D10"
+      ],
+      "location": {
+        "text": "p.4 §III-B (img)",
+        "pages_pdf": [
+          4
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "img",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly — see gaps G4",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-12"
+      ],
+      "related_gaps": [
+        "G4"
+      ],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-31",
+      "claim": "Armature-reaction inductance: F₁ = (m√2/π)N₁k_w1I₁ (11); B_m1 = (µ₀/δ′)(√2m/2)(N₁k_w1/p)I₁ (12); ψ₁ (13); L₁ = (3µ₀/πδ′)(N₁k_w1/2p)²(D_mo² − D_mi²) (14), δ′ = δ + 2h_m",
+      "kind": "source_claim",
+      "source": {
+        "document": "D10",
+        "title": "Electromagnetic Design and Analysis of Axial Flux Permanent Magnet Generator With Unequal-Width PCB Winding",
+        "authors": "X. Wang, W. Pang, P. Gao, X. Zhao",
+        "year": 2019,
+        "year_text": "2019"
+      },
+      "documents": [
+        "D10"
+      ],
+      "location": {
+        "text": "p.4–5 §III-C (img)",
+        "pages_pdf": [
+          4,
+          5
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "img",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly — magnetising term only. Revised 2026-10-04: printed (14) is consistent with the standard MMF amplitude F̂₁ = (m√2/π)(N₁k_w1/p)I₁ and with (13); the inconsistent step is (12), which uses √2m/2 instead of √2m/π (and (11) omits 1/p) — see gaps G1",
+        "status": "inferred"
+      },
+      "status": "inferred",
+      "status_note": "verified (as printed); consistency inferred",
+      "topology_tags": [
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-14"
+      ],
+      "related_gaps": [
+        "G1"
+      ],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-32",
+      "claim": "IPC-2221 recommends a minimum 0.13 mm gap between traces \"at our intended voltage\"; 0.15 mm minimum trace width chosen; literature widths: 1.2 mm (25 Hz), 0.2–0.3 mm with 0.23–0.3 mm gap (33.3 Hz), 0.3 mm with 0.3 mm gap (1 kHz)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D03",
+        "title": "Design Optimization of Coreless Axial-Flux PM Machines with Litz Wire and PCB Stator Windings",
+        "authors": "M.G. Kesgin, P. Han, N. Taran, D. Lawhorn, D. Lewis, D.M. Ionel",
+        "year": 2020,
+        "year_text": "2020"
+      },
+      "documents": [
+        "D03"
+      ],
+      "location": {
+        "text": "B1/Design Optimization…Litz.pdf p.4 (paper p.2) §II",
+        "pages_pdf": [
+          2,
+          4
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (manufacturing/voltage rule; secondary citation of IPC-2221)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-15"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-33",
+      "claim": "Max Litz strand diameter ≈ δ/3",
+      "kind": "source_claim",
+      "source": {
+        "document": "D03",
+        "title": "Design Optimization of Coreless Axial-Flux PM Machines with Litz Wire and PCB Stator Windings",
+        "authors": "M.G. Kesgin, P. Han, N. Taran, D. Lawhorn, D. Lewis, D.M. Ionel",
+        "year": 2020,
+        "year_text": "2020"
+      },
+      "documents": [
+        "D03"
+      ],
+      "location": {
+        "text": "p.3 §II",
+        "pages_pdf": [
+          3
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly (Litz)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-13"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-34",
+      "claim": "PCB macro-coil fill factor 0.303 (D03) and 0.2286 (D02, 16 traces in substrate)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D02",
+        "title": "Design Optimization and Experimental Study of Coreless Axial-flux PM Machines with Wave Winding PCB Stators",
+        "authors": "P. Han, D. Lawhorn, Y. Chulaee, D. Lewis, G. Heins, D.M. Ionel",
+        "year": null,
+        "year_text": "unresolved"
+      },
+      "documents": [
+        "D02",
+        "D03"
+      ],
+      "location": {
+        "text": "D03 p.5 §IV; D02 p.2 Fig. 3",
+        "pages_pdf": [
+          2,
+          5
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly (depends on stack-up)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "wave"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-35",
+      "claim": "Trace-by-trace model: OC voltage larger in layers closer to the PMs and rows nearer the coil centre-line; with all traces of a turn in parallel the peak circulating current is 1.44 A vs 0.315 A applied per trace at 3050 r/min; speed limited to 1400 r/min",
+      "kind": "source_claim",
+      "source": {
+        "document": "D02",
+        "title": "Design Optimization and Experimental Study of Coreless Axial-flux PM Machines with Wave Winding PCB Stators",
+        "authors": "P. Han, D. Lawhorn, Y. Chulaee, D. Lewis, G. Heins, D.M. Ionel",
+        "year": null,
+        "year_text": "unresolved"
+      },
+      "documents": [
+        "D02"
+      ],
+      "location": {
+        "text": "p.4–5 §IV, Fig. 11 (img)",
+        "pages_pdf": [
+          4,
+          5
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "img",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes for any parallel-connected traces/layers",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-07"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-36",
+      "claim": "PCB trace eddy loss (rectangular): P_eddy = σL_cN_cN_tN_s ω² (B_az² w² + B_aφ² h²) w h /24 (2); Litz (1)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D03",
+        "title": "Design Optimization of Coreless Axial-Flux PM Machines with Litz Wire and PCB Stator Windings",
+        "authors": "M.G. Kesgin, P. Han, N. Taran, D. Lawhorn, D. Lewis, D.M. Ionel",
+        "year": 2020,
+        "year_text": "2020"
+      },
+      "documents": [
+        "D03"
+      ],
+      "location": {
+        "text": "p.5 §III (img)",
+        "pages_pdf": [
+          5
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "img",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (straight traces, uniform sinusoidal field, end coils neglected)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-12"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-37",
+      "claim": "Via barrel area A = π(r² − (r−t)²) ≈ 2πrt (3–5); R_via = ρ l/(2πrt) (6); plating 25 µm",
+      "kind": "source_claim",
+      "source": {
+        "document": "D05",
+        "title": "A Study on Reducing Loss in PCB Motor Stator Using Multi-Via Structure",
+        "authors": "S.-B. Jeon, D.-H. Choi, H.-S. Han, Y.-H. Song, W.-H. Kim",
+        "year": 2025,
+        "year_text": "2025"
+      },
+      "documents": [
+        "D05"
+      ],
+      "location": {
+        "text": "B2/actuators-14-00424-v2.pdf p.6, p.8 §2.2–3",
+        "pages_pdf": [
+          6,
+          8
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (vias in any PCB stator)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-11"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-38",
+      "claim": "Current crowding at vias raises phase resistance; multi-via (two 0.30 mm vias at inner 1st position + outer 0.40/0.30 mm) lowers phase resistance and peak current density ≈ 20.7 % (0.106 → ≈ 0.084 Ω; 42.19 → 33.45 A/mm²), copper loss 50.08 → 39.70 W — FEA only",
+      "kind": "source_claim",
+      "source": {
+        "document": "D05",
+        "title": "A Study on Reducing Loss in PCB Motor Stator Using Multi-Via Structure",
+        "authors": "S.-B. Jeon, D.-H. Choi, H.-S. Han, Y.-H. Song, W.-H. Kim",
+        "year": 2025,
+        "year_text": "2025"
+      },
+      "documents": [
+        "D05"
+      ],
+      "location": {
+        "text": "p.3, p.12–15 §4",
+        "pages_pdf": [
+          3,
+          12,
+          13,
+          14,
+          15
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly (distributed winding with stator yoke)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "distributed"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-11"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-39",
+      "claim": "Rectangular conductor eddy loss per volume P_ec = c²ω²B_m²/(24ρ) (3); reduce/split effective width",
+      "kind": "source_claim",
+      "source": {
+        "document": "D14",
+        "title": "A Printed Circuit Board Stator Pattern for Loss Trade-Off Mitigation in Slotless AFPM Motors",
+        "authors": "J.-W. Moon, H.-S. Han, J.-H. Lee, D.-H. Choi, W.-H. Kim",
+        "year": 2026,
+        "year_text": "2026"
+      },
+      "documents": [
+        "D14"
+      ],
+      "location": {
+        "text": "B2/actuators-15-00327.pdf p.5 §2.2",
+        "pages_pdf": [
+          5
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (planar concentrated pattern)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-12"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-40",
+      "claim": "Concentrated PCB pattern current path: outer → inner on one layer, via to next layer, inner → outer",
+      "kind": "source_claim",
+      "source": {
+        "document": "D14",
+        "title": "A Printed Circuit Board Stator Pattern for Loss Trade-Off Mitigation in Slotless AFPM Motors",
+        "authors": "J.-W. Moon, H.-S. Han, J.-H. Lee, D.-H. Choi, W.-H. Kim",
+        "year": 2026,
+        "year_text": "2026"
+      },
+      "documents": [
+        "D14"
+      ],
+      "location": {
+        "text": "p.4 §2.1, Fig. 2",
+        "pages_pdf": [
+          4
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (describes spiral coil layer pairing)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-41",
+      "claim": "Narrow effective conductor (α = 0.53) + two parallel conductors via-connected: phase R −11.82 %, DC −12.1 %, AC −15.09 %, total −12.48 %, efficiency 81.53 → 83.5 % — FEA only; Cu σ = 5.8 × 10⁷ S/m, Br 1.43 T (Table 1)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D14",
+        "title": "A Printed Circuit Board Stator Pattern for Loss Trade-Off Mitigation in Slotless AFPM Motors",
+        "authors": "J.-W. Moon, H.-S. Han, J.-H. Lee, D.-H. Choi, W.-H. Kim",
+        "year": 2026,
+        "year_text": "2026"
+      },
+      "documents": [
+        "D14"
+      ],
+      "location": {
+        "text": "p.1 abstract, p.11 Table 1",
+        "pages_pdf": [
+          1,
+          11
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly (stator core)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-42",
+      "claim": "Layers closer to magnets see higher B and dB/dt → AC loss concentrates there; \"pyramid\" layer-dependent trace width; MEC within ≈ 5 % of 3D FEA and prototype",
+      "kind": "source_claim",
+      "source": {
+        "document": "D13",
+        "title": "Magnetic Equivalent Circuit-Based Performance Evaluation of Modular PCB AFPM Motor for Electric Water Pumps",
+        "authors": "D.-H. Choi, W.-H. Kim, H. Jang",
+        "year": 2026,
+        "year_text": "2026"
+      },
+      "documents": [
+        "D13"
+      ],
+      "location": {
+        "text": "B2/actuators-15-00087.pdf p.3 §1, p.15 §5",
+        "pages_pdf": [
+          3,
+          15
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (layer-dependent field); MEC partly (yoke)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-07"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-43",
+      "claim": "Spiral multilayer coils: via current is axial (parallel to field) → no torque; \"flux linked by coil units at the same angle on different layers is essentially the same\" → torque = single-layer torque × layers",
+      "kind": "source_claim",
+      "source": {
+        "document": "D15",
+        "title": "Design and Performance Enhancement of a PCB-Based Axial-Flux Stepper Motor",
+        "authors": "Y. Pan, H. Zhang, J. Xu, C. Zhu, C. Wu, H. Li",
+        "year": 2026,
+        "year_text": "2026"
+      },
+      "documents": [
+        "D15"
+      ],
+      "location": {
+        "text": "B2/electronics-15-00777.pdf p.8 §2.3 (img)",
+        "pages_pdf": [
+          8
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "img",
+      "applies": {
+        "judgement": "partly",
+        "note": "yes, but the equal-flux assumption conflicts with EV-20/EV-35/EV-42 (gaps G3) [judgement override: via part applies; equal-flux assumption conflicts (G3)]",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-06",
+        "EQ-07"
+      ],
+      "related_gaps": [
+        "G3"
+      ],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-44",
+      "claim": "Spiral resistance r = ρΣL_i/(w·d) (10); inductance L = m(µ₀/δ)(Nk_w1)²(D_out² − D_in²)/(8p²) (14), δ = air gap + two magnet thicknesses",
+      "kind": "source_claim",
+      "source": {
+        "document": "D15",
+        "title": "Design and Performance Enhancement of a PCB-Based Axial-Flux Stepper Motor",
+        "authors": "Y. Pan, H. Zhang, J. Xu, C. Zhu, C. Wu, H. Li",
+        "year": 2026,
+        "year_text": "2026"
+      },
+      "documents": [
+        "D15"
+      ],
+      "location": {
+        "text": "p.7–8 §2.2.3 (img)",
+        "pages_pdf": [
+          7,
+          8
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "img",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly (magnetising term). Revised: (14) follows from its eq. (12), which carries the same √2m/2 coefficient as D10 (12); with √2m/π it would be π/2 smaller, i.e. D10's (14) (inferred, G1)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (as printed)",
+      "topology_tags": [
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-10",
+        "EQ-14"
+      ],
+      "related_gaps": [
+        "G1"
+      ],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-45",
+      "claim": "Pole-arc coefficient α_i = 2/π for sinusoidal flux (p.7) but α_i = π/2 \"under a sinusoidal flux density distribution\" (p.8)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D15",
+        "title": "Design and Performance Enhancement of a PCB-Based Axial-Flux Stepper Motor",
+        "authors": "Y. Pan, H. Zhang, J. Xu, C. Zhu, C. Wu, H. Li",
+        "year": 2026,
+        "year_text": "2026"
+      },
+      "documents": [
+        "D15"
+      ],
+      "location": {
+        "text": "p.7 below eq. (7); p.8 below eq. (15) (img)",
+        "pages_pdf": [
+          7,
+          8
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "img",
+      "applies": {
+        "judgement": "partly",
+        "note": "internal inconsistency (gaps G15)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [
+        "G15"
+      ],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-46",
+      "claim": "Non-overlapping concentrated coils: outer-bridge connection balances MMF, lowest pull force (0.026 N vs 0.68/0.65 N inner bridge); Halbach B_z model (8)–(9) citing Bumby & Martin; per-turn flux (10)–(12); E = 4√2 f S_c N_l q p Σφ_i (13); S_c (14)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D11",
+        "title": "Performance Improvement by Pattern Optimization of PCB Winding in Coreless Axial Flux Permanent Magnet Motor",
+        "authors": "C. Li, X. Wang, H. Lv",
+        "year": 2021,
+        "year_text": "2021"
+      },
+      "documents": [
+        "D11"
+      ],
+      "location": {
+        "text": "B2/Performance_Improvement_….pdf p.3–4 §III–IV (img)",
+        "pages_pdf": [
+          3,
+          4
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "img",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (planar concentrated coils, coreless)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-06",
+        "EQ-08"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-47",
+      "claim": "Coreless modular AFPM (wire-wound concentrated coils): 2-D vector-potential model at a given radius + 3-D correction; self/mutual inductance eqs (38)–(41); validated only by 3-D TSFEM (no prototype)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D12",
+        "title": "Design optimization of a low-speed small-scale modular AFPM synchronous generator for urban wind turbine application",
+        "authors": "H. Saneie, A. Daniar, Z. Nasiri-Gheidari",
+        "year": 2022,
+        "year_text": "2022"
+      },
+      "documents": [
+        "D12"
+      ],
+      "location": {
+        "text": "B2/SCI_Volume 29….pdf p.3–9 §2–5",
+        "pages_pdf": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly (coreless concentrated, not PCB)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "concentrated_wire"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-48",
+      "claim": "End-turn layout of PCB stator causes back-EMF imbalance between phases; BCAACB layout gives lowest average resistance and phase-resistance variance (FEA)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D17",
+        "title": "A Study on the Mitigation of Back-EMF Imbalance in Axial Flux Motors with PCB Stators",
+        "authors": "M.-S. Youn, M.-K. Hong, S.-H. Ko, D.-W. Nam, W.-H. Kim",
+        "year": 2026,
+        "year_text": "2026"
+      },
+      "documents": [
+        "D17"
+      ],
+      "location": {
+        "text": "B2/energies-19-01060-v2.pdf p.1 abstract, p.6–7 §3",
+        "pages_pdf": [
+          1,
+          6,
+          7
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly (yoke stator, distributed) — relevant to 3-phase balance checks",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "distributed"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-49",
+      "claim": "Design current density limited to 30 A/mm² for manufacturability; PCB permits 4–5× conventional current density, limited to 2× for stability (FEA)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D16",
+        "title": "Design for Loss Reduction in a Compact AFPM Electric Water Pump with a PCB Motor",
+        "authors": "D.-H. Choi, H.-S. Han, M.-K. Hong, D.-H. Jung, W.-H. Kim",
+        "year": 2025,
+        "year_text": "2025"
+      },
+      "documents": [
+        "D16"
+      ],
+      "location": {
+        "text": "B2/energies-18-02538-v2.pdf p.16–17",
+        "pages_pdf": [
+          16,
+          17
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-22"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-50",
+      "claim": "Review: follow IPC-2221 for trace width/spacing; use many vias for interlayer connections; FR4 Tg ≥ 170 °C",
+      "kind": "source_claim",
+      "source": {
+        "document": "D18",
+        "title": "The Utilization of Printed Circuit Boards (PCBs) in Axial Flux Machines: A Systematic Review",
+        "authors": "I. Shuaibu, E.H.T. Wei, R. Kannan, Y.A. Samaila",
+        "year": 2025,
+        "year_text": "2025"
+      },
+      "documents": [
+        "D18"
+      ],
+      "location": {
+        "text": "B2/engproc-87-00013.pdf p.10 §3.5",
+        "pages_pdf": [
+          10
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (secondary source)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-15"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-51",
+      "claim": "Review claims spiral windings give \"reduced harmonic distortions\"",
+      "kind": "source_claim",
+      "source": {
+        "document": "D18",
+        "title": "The Utilization of Printed Circuit Boards (PCBs) in Axial Flux Machines: A Systematic Review",
+        "authors": "I. Shuaibu, E.H.T. Wei, R. Kannan, Y.A. Samaila",
+        "year": 2025,
+        "year_text": "2025"
+      },
+      "documents": [
+        "D18"
+      ],
+      "location": {
+        "text": "p.8",
+        "pages_pdf": [
+          8
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "no",
+        "note": "conflicts with measured O2 (D09 Table 7: concentric THD 5.7 %, highest) — gaps G16",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (claim exists)",
+      "topology_tags": [
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [
+        "G16"
+      ],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-52",
+      "claim": "PCB stators operate at current densities 3–4× wound machines (citing [15])",
+      "kind": "source_claim",
+      "source": {
+        "document": "D05",
+        "title": "A Study on Reducing Loss in PCB Motor Stator Using Multi-Via Structure",
+        "authors": "S.-B. Jeon, D.-H. Choi, H.-S. Han, Y.-H. Song, W.-H. Kim",
+        "year": 2025,
+        "year_text": "2025"
+      },
+      "documents": [
+        "D05"
+      ],
+      "location": {
+        "text": "p.3 §2.1",
+        "pages_pdf": [
+          3
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly (secondary)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-53",
+      "claim": "International Annealed Copper Standard: volume conductivity exactly 58 m/(Ω·mm²) at 20 °C, i.e. ρ₂₀ = 0.017241 Ω·mm²/m = 1.7241 × 10⁻⁸ Ω·m (mass resistivity 0.15328 Ω·g/m²); temperature coefficient 0.00393 per °C at 20 °C; density 8.89 g/cm³; adopted by the IEC in 1913, IEC Publication 28 (rev. 1925) reproduced as Appendix 5",
+      "kind": "source_claim",
+      "source": {
+        "document": "NBS-HB100",
+        "title": "Copper Wire Tables, Handbook 100",
+        "authors": "U.S. National Bureau of Standards",
+        "year": 1966,
+        "year_text": "1966"
+      },
+      "documents": [
+        "NBS-HB100"
+      ],
+      "location": {
+        "text": "https://nvlpubs.nist.gov/nistpubs/Legacy/hb/nbshandbook100.pdf p.2 (resistivity), p.3 (0.00393), p.4 (density), p.39 (App. 5) — page numbers from WebFetch extract",
+        "pages_pdf": [
+          2,
+          3,
+          4,
+          39
+        ],
+        "pages_printed": null,
+        "urls": [
+          "https://nvlpubs.nist.gov/nistpubs/Legacy/hb/nbshandbook100.pdf"
+        ]
+      },
+      "read_method": "webfetch_extract",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes for annealed copper; PCB electrodeposited copper may differ (G6)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (extract; re-check pages)",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-10",
+        "EQ-16"
+      ],
+      "related_gaps": [
+        "G6"
+      ],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-54",
+      "claim": "Sintered NdFeB, Arnold catalog Rev. 181031: Br typical/min — N35 1.21/1.17 T, N38 1.26/1.22, N40 1.285/1.25, N42 1.315/1.28, N45 1.35/1.32, N48 1.40/1.37, N50 1.425/1.39, N52 1.45/1.42 T; α(Br) −0.12 %/°C",
+      "kind": "source_claim",
+      "source": {
+        "document": "ARNOLD-CAT",
+        "title": "Sintered NdFeB catalog, Rev. 181031",
+        "authors": "Arnold Magnetic Technologies",
+        "year": null,
+        "year_text": null
+      },
+      "documents": [
+        "ARNOLD-CAT"
+      ],
+      "location": {
+        "text": "https://www.arnoldmagnetics.com/wp-content/uploads/2017/10/Catalog-151021.pdf (table)",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://www.arnoldmagnetics.com/wp-content/uploads/2017/10/Catalog-151021.pdf"
+        ]
+      },
+      "read_method": "webfetch_extract",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (magnet input data)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (extract; numbers must be re-checked in the PDF — a second datasheet extract (Eclipse) returned implausible values and was rejected)",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-05"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-55",
+      "claim": "Arnold N42 datasheet Rev. 210607: Br nominal 1315 mT, min 1280 mT, HcB 955 kA/m, BHmax 334 kJ/m³, α(Br) −0.12 %/°C; no recoil permeability stated. Apparent recoil slope Br/(µ₀HcB) = 1.315/(4π×10⁻⁷ × 955×10³) ≈ 1.10 (Agent 5 arithmetic)",
+      "kind": "source_claim",
+      "source": {
+        "document": "ARNOLD-N42",
+        "title": "N42 datasheet, Rev. 210607",
+        "authors": "Arnold Magnetic Technologies",
+        "year": null,
+        "year_text": null
+      },
+      "documents": [
+        "ARNOLD-N42"
+      ],
+      "location": {
+        "text": "https://www.arnoldmagnetics.com/wp-content/uploads/2017/11/N42-151021.pdf",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://www.arnoldmagnetics.com/wp-content/uploads/2017/11/N42-151021.pdf"
+        ]
+      },
+      "read_method": "webfetch_extract",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes; µ_r ≈ 1.05 not found in sources accessed (G23)",
+        "status": "inferred"
+      },
+      "status": "inferred",
+      "status_note": "verified (extract); 1.10 inferred",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-05"
+      ],
+      "related_gaps": [
+        "G23"
+      ],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-56",
+      "claim": "Coil/pole relation for the coreless concentrated-coil generator: N_c/N_pm = m/(m+1) (eq. 1)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D12",
+        "title": "Design optimization of a low-speed small-scale modular AFPM synchronous generator for urban wind turbine application",
+        "authors": "H. Saneie, A. Daniar, Z. Nasiri-Gheidari",
+        "year": 2022,
+        "year_text": "2022"
+      },
+      "documents": [
+        "D12"
+      ],
+      "location": {
+        "text": "B2/SCI_Volume 29….pdf p.3 §2 (img)",
+        "pages_pdf": [
+          3
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "img",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (e.g. 12 coils/16 poles, 3 phases); one rule among others, not a general FSCW feasibility test",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "spiral",
+        "concentrated_wire"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-08"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-57",
+      "claim": "Pole number chosen so that GCD(N_c, N_m) = 2K to minimise torque pulsation (core-type AFPM)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D06",
+        "title": "Performance Comparison Between PCB-stator and Laminated-core-stator Based Designs of AFPM Motors for High-speed Low-power Applications",
+        "authors": "Neethu S., S.P. Nikam, S. Pal, A.K. Wankhede, B.G. Fernandes",
+        "year": 2019,
+        "year_text": "2019"
+      },
+      "documents": [
+        "D06"
+      ],
+      "location": {
+        "text": "B1/compare.pdf p.2 §II",
+        "pages_pdf": [
+          2
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly (cogging context; coreless has no cogging)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-58",
+      "claim": "Slotted-machine winding relations (star of slots, Liwschitz wave method) apply to slotless PCB windings with \"slot\" replaced by \"coil side\"",
+      "kind": "source_claim",
+      "source": {
+        "document": "D07",
+        "title": "A Comparative Analysis of Wave Winding Topologies and Performance Characteristics in Ultra-thin PCB AFPM Machine",
+        "authors": "S. Paul, M. Farshadnia, A. Pouramin, J. Fletcher, J. Chang",
+        "year": null,
+        "year_text": "unresolved"
+      },
+      "documents": [
+        "D07"
+      ],
+      "location": {
+        "text": "B1/Revised_manuscript_Final.pdf p.3 §2.2",
+        "pages_pdf": [
+          3
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (method)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-08"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-59",
+      "claim": "PCB pitch factor as average of per-turn pitch factors: K_pν = (1/N) Σ sin(((β − 2α_i)/β)(π/2)ν) (eq. 6)",
+      "kind": "source_claim",
+      "source": {
+        "document": "D15",
+        "title": "Design and Performance Enhancement of a PCB-Based Axial-Flux Stepper Motor",
+        "authors": "Y. Pan, H. Zhang, J. Xu, C. Zhu, C. Wu, H. Li",
+        "year": 2026,
+        "year_text": "2026"
+      },
+      "documents": [
+        "D15"
+      ],
+      "location": {
+        "text": "B2/electronics-15-00777.pdf p.7 (img)",
+        "pages_pdf": [
+          7
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "img",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (spiral coils with turns of different span)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [
+        "EQ-08"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-60",
+      "claim": "M. Dai Pré, N. Bianchi, \"Use of the star of slots in designing fractional-slot single-layer synchronous motors\", IEE Proc. Electr. Power Appl. 153(3) 459–466, 2006, ISSN 1350-2352 (author order as listed by Dialnet) — full text not available there",
+      "kind": "bibliographic_record",
+      "source": {
+        "document": "BIB-DAIPRE2006",
+        "title": "Use of the star of slots in designing fractional-slot single-layer synchronous motors",
+        "authors": "M. Dai Pre, N. Bianchi",
+        "year": 2006,
+        "year_text": "2006"
+      },
+      "documents": [
+        "BIB-DAIPRE2006"
+      ],
+      "location": {
+        "text": "https://dialnet.unirioja.es/servlet/articulo?codigo=1979238",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://dialnet.unirioja.es/servlet/articulo?codigo=1979238"
+        ]
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (FSCW feasibility/winding factor)",
+        "status": "inferred"
+      },
+      "status": "unresolved",
+      "status_note": "bibliographic verified; content not accessed",
+      "topology_tags": [
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": false,
+      "related_equations": [
+        "EQ-08"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-61",
+      "claim": "J. Pyrhönen, T. Jokinen, V. Hrabovcová, *Design of Rotating Electrical Machines* (Wiley) — winding-factor chapter",
+      "kind": "bibliographic_record",
+      "source": {
+        "document": "BIB-PYRHONEN",
+        "title": "Design of Rotating Electrical Machines",
+        "authors": "J. Pyrhonen, T. Jokinen, V. Hrabovcova",
+        "year": null,
+        "year_text": null
+      },
+      "documents": [
+        "BIB-PYRHONEN"
+      ],
+      "location": {
+        "text": "—",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes",
+        "status": "inferred"
+      },
+      "status": "unresolved",
+      "status_note": "not accessed (edition/section not verified)",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": false,
+      "related_equations": [
+        "EQ-08"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-62",
+      "claim": "D09 concentric board: 12 non-overlapping trapezoidal spiral coils per layer, each with a via at its inner end; 2 layers (Table 2); 6 terminals at the top; turns per coil ≈ 6–7 per layer (count from embedded raster, low resolution); cross-check: 3244 mm/8 coil-layers ≈ 405 mm per coil-layer and a mean loop of ≈ 50–55 mm → ≈ 7–8 turns",
+      "kind": "source_claim",
+      "source": {
+        "document": "D09",
+        "title": "Comparison of PCB winding topologies for axial-flux permanent magnet synchronous machines",
+        "authors": "F. Tokgöz, G. Çakal, O. Keysan",
+        "year": 2020,
+        "year_text": "2020"
+      },
+      "documents": [
+        "D09"
+      ],
+      "location": {
+        "text": "B2/EPA-2020-0622-FINAL.pdf p.2 Fig. 1a (img, 600–1200 dpi render), p.3 Tables 1–2, p.7 Fig. 11a",
+        "pages_pdf": [
+          2,
+          3,
+          7
+        ],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "img",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes — oracle O2 geometry",
+        "status": "inferred"
+      },
+      "status": "unresolved",
+      "status_note": "coil count verified; turn count inferred → unresolved",
+      "topology_tags": [
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-63",
+      "claim": "J.R. Bumby, R. Martin, \"Axial-flux permanent-magnet air-cored generator for small-scale wind turbines\", IEE Proc.-Electr. Power Appl. 152(5) 1065–1075, Sept. 2005, DOI 10.1049/ip-epa:20050094; no open copy found (IET page 403 to the fetcher)",
+      "kind": "bibliographic_record",
+      "source": {
+        "document": "BIB-BUMBY2005",
+        "title": "Axial-flux permanent-magnet air-cored generator for small-scale wind turbines",
+        "authors": "J.R. Bumby, R. Martin",
+        "year": 2005,
+        "year_text": "2005"
+      },
+      "documents": [
+        "BIB-BUMBY2005",
+        "D10"
+      ],
+      "location": {
+        "text": "B2/Electromagnetic_Design_…pdf p.12 ref [25]; https://digital-library.theiet.org/doi/10.1049/ip-epa:20050094",
+        "pages_pdf": [
+          12
+        ],
+        "pages_printed": null,
+        "urls": [
+          "https://digital-library.theiet.org/doi/10.1049/ip-epa:20050094"
+        ]
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (field model)",
+        "status": "inferred"
+      },
+      "status": "unresolved",
+      "status_note": "bibliographic verified; content not accessed",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": false,
+      "related_equations": [
+        "EQ-05"
+      ],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-64",
+      "claim": "ECM US 10,170,953 B2: radial conductors + inner/outer end turns in serpentine pattern, parallel layers via blind/buried vias (FIG. 3), serpentine encircles centre three times (FIG. 9), subassemblies in series; independent claims 1, 9, 14, 15, 17",
+      "kind": "source_claim",
+      "source": {
+        "document": "PAT-US10170953",
+        "title": "US 10,170,953 B2",
+        "authors": "E-Circuit Motors (Shaw)",
+        "year": null,
+        "year_text": null
+      },
+      "documents": [
+        "PAT-US10170953"
+      ],
+      "location": {
+        "text": "https://patents.google.com/patent/US10170953 ; https://patents.justia.com/patent/10170953",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://patents.google.com/patent/US10170953",
+          "https://patents.justia.com/patent/10170953"
+        ]
+      },
+      "read_method": "webfetch_extract",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly — wave/serpentine prior art and patent-risk reference (ecm_pcb_stator_evidence.md R1–R4)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (extract)",
+      "topology_tags": [
+        "serpentine"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-65",
+      "claim": "ECM US 11,336,130 B1: all inter-layer vias on one radial side outside the active region, layers in series; dep. cl. 3 serpentine, cl. 4 spiral; FIG. 10 16-pole three-turn single-phase connection",
+      "kind": "source_claim",
+      "source": {
+        "document": "PAT-US11336130",
+        "title": "US 11,336,130 B1",
+        "authors": "E-Circuit Motors (Shaw, Milheim)",
+        "year": null,
+        "year_text": null
+      },
+      "documents": [
+        "PAT-US11336130"
+      ],
+      "location": {
+        "text": "https://patents.justia.com/patent/11336130",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://patents.justia.com/patent/11336130"
+        ]
+      },
+      "read_method": "webfetch_extract",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes — patent-risk item R5",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (extract)",
+      "topology_tags": [
+        "serpentine",
+        "spiral"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-66",
+      "claim": "ECM US 9,800,109 / US 10,256,690: end-turn corner geometry (\"Corner Equation\", continuously varying curvature), slit end turns for eddy-loss reduction (FIGS. 9–11)",
+      "kind": "source_claim",
+      "source": {
+        "document": "PAT-US9800109",
+        "title": "US 9,800,109 and US 10,256,690",
+        "authors": "E-Circuit Motors (Shaw)",
+        "year": null,
+        "year_text": null
+      },
+      "documents": [
+        "PAT-US9800109"
+      ],
+      "location": {
+        "text": "https://patents.justia.com/patent/9800109 ; …/10256690",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://patents.justia.com/patent/9800109"
+        ]
+      },
+      "read_method": "webfetch_extract",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly — patent-risk item R6",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (extract)",
+      "topology_tags": [
+        "serpentine"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-67",
+      "claim": "ECM US 10,211,694: thermal-only copper elements inside/outside the active radii, thermally but not electrically connected",
+      "kind": "source_claim",
+      "source": {
+        "document": "PAT-US10211694",
+        "title": "US 10,211,694",
+        "authors": "E-Circuit Motors (Shaw)",
+        "year": null,
+        "year_text": null
+      },
+      "documents": [
+        "PAT-US10211694"
+      ],
+      "location": {
+        "text": "https://patents.justia.com/patent/10211694 cl. 1",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://patents.justia.com/patent/10211694"
+        ]
+      },
+      "read_method": "webfetch_extract",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly — patent-risk item R7",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (extract)",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-68",
+      "claim": "ECM US 12,424,901 B2: stator segments with different winding characteristics; Y/delta/separate terminal schemes (FIGS. 8A–8C)",
+      "kind": "source_claim",
+      "source": {
+        "document": "PAT-US12424901",
+        "title": "US 12,424,901 B2",
+        "authors": "E-Circuit Motors (Shaw, Milheim)",
+        "year": null,
+        "year_text": null
+      },
+      "documents": [
+        "PAT-US12424901"
+      ],
+      "location": {
+        "text": "https://patents.justia.com/patent/12424901",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://patents.justia.com/patent/12424901"
+        ]
+      },
+      "read_method": "webfetch_extract",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (extract)",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-69",
+      "claim": "ECM site: >90 % efficiency, 66 % weight and 70 % axial-length reduction, up to 80 % less copper, zero cogging, \"continuous coil design\", PrintStator outputs Gerbers",
+      "kind": "marketing_claim",
+      "source": {
+        "document": "WEB-PCBSTATOR",
+        "title": "PCB stator technology pages",
+        "authors": "E-Circuit Motors",
+        "year": null,
+        "year_text": null
+      },
+      "documents": [
+        "WEB-PCBSTATOR"
+      ],
+      "location": {
+        "text": "https://pcbstator.com/overviews/printed-circuit-board-stator-electric-motor/ ; https://pcbstator.com/pcb-stator-technology/",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://pcbstator.com/overviews/printed-circuit-board-stator-electric-motor/",
+          "https://pcbstator.com/pcb-stator-technology/"
+        ]
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "no",
+        "note": "context only",
+        "status": "inferred"
+      },
+      "status": "unresolved",
+      "status_note": "marketing claim",
+      "topology_tags": [
+        "serpentine"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": false,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-70",
+      "claim": "User images: Instagram render shows dense radial conductors with nested outer/inner end-turn groups (8 + 8 positions), via rows, 8 rim holes; ECM board shows fine radial traces and 9 terminal pads (3 × 3)",
+      "kind": "illustration",
+      "source": {
+        "document": "IMG-USER",
+        "title": "User reference screenshots",
+        "authors": "user",
+        "year": null,
+        "year_text": null
+      },
+      "documents": [
+        "IMG-USER"
+      ],
+      "location": {
+        "text": "reference_images/ (see ecm_pcb_stator_evidence.md §1)",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "image_view",
+      "applies": {
+        "judgement": "no",
+        "note": "illustrative only",
+        "status": "inferred"
+      },
+      "status": "inferred",
+      "status_note": "inferred from image",
+      "topology_tags": [
+        "spiral",
+        "wave"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": false,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-71",
+      "claim": "magnetless_motor end turns: outer nested caps of 6 radii (13.5–16.4 mm) centred at r = 26 mm on 12 axes per layer (G1 0° + k·30°, G3 15° + k·30°); inner arcs concentric with the board, radii 14.3–17.2 mm, 4–6° spans at ≈20°/25° mod 30° → wave-like series path, not concentrated spiral coils",
+      "kind": "repository_fact",
+      "source": {
+        "document": "REPO-magnetless_motor",
+        "title": "magnetless_motor @c6ec327e",
+        "authors": "gouldpa00",
+        "year": 2026,
+        "year_text": "2026"
+      },
+      "documents": [
+        "REPO-magnetless_motor"
+      ],
+      "location": {
+        "text": "…/gerbers/mini_wave-bb.G1, .G3 (Agent 5 parse)",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "parse",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly",
+        "status": "inferred"
+      },
+      "status": "inferred",
+      "status_note": "verified (parse); interpretation inferred",
+      "topology_tags": [
+        "wave"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-72",
+      "claim": "Noto Sans (latin-greek-cyrillic): SIL Open Font License 1.1, \"Copyright 2022 The Noto Project Authors\"; no reserved font name listed. (The notofonts.github.io site repo itself is Apache-2.0 — code, not the fonts)",
+      "kind": "source_claim",
+      "source": {
+        "document": "WEB-NOTO",
+        "title": "Noto Sans OFL.txt",
+        "authors": "The Noto Project Authors",
+        "year": 2022,
+        "year_text": "2022"
+      },
+      "documents": [
+        "WEB-NOTO"
+      ],
+      "location": {
+        "text": "https://github.com/notofonts/latin-greek-cyrillic/blob/main/OFL.txt ; https://github.com/notofonts/notofonts.github.io/blob/main/LICENSE",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://github.com/notofonts/latin-greek-cyrillic/blob/main/OFL.txt",
+          "https://github.com/notofonts/notofonts.github.io/blob/main/LICENSE"
+        ]
+      },
+      "read_method": "webfetch_extract",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (UI font licence)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (extract)",
+      "topology_tags": [
+        "non_engineering"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-73",
+      "claim": "Liberation fonts: SIL OFL 1.1, \"Digitized data copyright (c) 2010 Google Corporation\", \"Copyright (c) 2012 Red Hat, Inc.\", with Reserved Font Name Liberation",
+      "kind": "source_claim",
+      "source": {
+        "document": "WEB-LIBERATION",
+        "title": "Liberation fonts LICENSE",
+        "authors": "Google Corporation; Red Hat, Inc.",
+        "year": 2012,
+        "year_text": "2010-2012"
+      },
+      "documents": [
+        "WEB-LIBERATION"
+      ],
+      "location": {
+        "text": "https://github.com/liberationfonts/liberation-fonts/blob/main/LICENSE",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://github.com/liberationfonts/liberation-fonts/blob/main/LICENSE"
+        ]
+      },
+      "read_method": "webfetch_extract",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes — a modified/subsetted copy may not keep the name \"Liberation\" (OFL RFN rule; inferred)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (extract)",
+      "topology_tags": [
+        "non_engineering"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-74",
+      "claim": "Cascadia Code: SIL OFL 1.1, \"Copyright (c) 2019 - Present, Microsoft Corporation, with Reserved Font Name Cascadia Code\"",
+      "kind": "source_claim",
+      "source": {
+        "document": "WEB-CASCADIA",
+        "title": "Cascadia Code LICENSE",
+        "authors": "Microsoft Corporation",
+        "year": 2019,
+        "year_text": "2019"
+      },
+      "documents": [
+        "WEB-CASCADIA"
+      ],
+      "location": {
+        "text": "https://github.com/microsoft/cascadia-code/blob/main/LICENSE",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://github.com/microsoft/cascadia-code/blob/main/LICENSE"
+        ]
+      },
+      "read_method": "webfetch_extract",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes — RFN applies to modified versions (inferred)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (extract)",
+      "topology_tags": [
+        "non_engineering"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-75",
+      "claim": "JetBrains Mono: SIL OFL 1.1, \"Copyright 2020 The JetBrains Mono Project Authors\"; no reserved name listed",
+      "kind": "source_claim",
+      "source": {
+        "document": "WEB-JETBRAINS",
+        "title": "JetBrains Mono OFL.txt",
+        "authors": "The JetBrains Mono Project Authors",
+        "year": 2020,
+        "year_text": "2020"
+      },
+      "documents": [
+        "WEB-JETBRAINS"
+      ],
+      "location": {
+        "text": "https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt"
+        ]
+      },
+      "read_method": "webfetch_extract",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (extract)",
+      "topology_tags": [
+        "non_engineering"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-76",
+      "claim": "Manrope: SIL OFL 1.1, \"Copyright 2018 The Manrope Project Authors (https://github.com/sharanda/manrope)\"; no reserved name listed (upstream repo path OFL.txt returned 404; copy read from the Google Fonts repository)",
+      "kind": "source_claim",
+      "source": {
+        "document": "WEB-MANROPE",
+        "title": "Manrope OFL.txt",
+        "authors": "The Manrope Project Authors",
+        "year": 2018,
+        "year_text": "2018"
+      },
+      "documents": [
+        "WEB-MANROPE"
+      ],
+      "location": {
+        "text": "https://github.com/google/fonts/blob/main/ofl/manrope/OFL.txt",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://github.com/google/fonts/blob/main/ofl/manrope/OFL.txt"
+        ]
+      },
+      "read_method": "webfetch_extract",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (extract, mirror of upstream)",
+      "topology_tags": [
+        "non_engineering"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-77",
+      "claim": "Harmonised conductor colours: L1 brown, L2 black, L3 grey, N blue, PE green-and-yellow (citing BS EN 60446:2000, BS EN 60445:2000, HD 308 S2, BS 7671:2001 Amd 2:2004). IEC 60445 itself (webstore.iec.ch/en/publication/66712, 2021 ed.) and IEC 60757 (colour code designations) were not accessed (paywalled)",
+      "kind": "source_claim",
+      "source": {
+        "document": "WEB-IET-WM2004",
+        "title": "Harmonised colours and alphanumeric marking",
+        "authors": "IET Wiring Matters",
+        "year": 2004,
+        "year_text": "2004"
+      },
+      "documents": [
+        "WEB-IET-WM2004"
+      ],
+      "location": {
+        "text": "https://electrical.theiet.org/media/1720/harmonised-colours-and-alphanumeric-marketing.pdf",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://electrical.theiet.org/media/1720/harmonised-colours-and-alphanumeric-marketing.pdf"
+        ]
+      },
+      "read_method": "webfetch_extract",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly — an installation-wiring convention, not a rule for plot/UI phase colours; other regional practices (e.g. North American) not found",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (extract, secondary IET source)",
+      "topology_tags": [
+        "non_engineering"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-78",
+      "claim": "ISO 273:1979 \"Fasteners — Clearance holes for bolts and screws\", edition 1, 2 pages, ISO/TC 2/SC 7, status published, confirmed 2024-07-10; scope: hole diameters for fine, medium and coarse series for threads 1–150 mm; preview on ISO OBP. Table values not accessed",
+      "kind": "bibliographic_record",
+      "source": {
+        "document": "STD-ISO273",
+        "title": "ISO 273:1979 Fasteners - Clearance holes for bolts and screws",
+        "authors": "ISO/TC 2/SC 7",
+        "year": 1979,
+        "year_text": "1979"
+      },
+      "documents": [
+        "STD-ISO273"
+      ],
+      "location": {
+        "text": "https://www.iso.org/standard/4183.html",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://www.iso.org/standard/4183.html"
+        ]
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (mounting-hole presets)",
+        "status": "inferred"
+      },
+      "status": "unresolved",
+      "status_note": "bibliographic/scope verified; values not accessed",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": false,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-79",
+      "claim": "KiCad board file (layers (ORDINAL \"CANONICAL_NAME\" TYPE [\"USER_NAME\"])); ordinal \"used to associate the layer stack ordering\"; canonical names F.Cu, In1.Cu…In30.Cu, B.Cu; no ordinal values or KiCad 9 change documented. KiCad 8 baseline file writes 0 = F.Cu, 1…6 = In1…In6.Cu, 31 = B.Cu",
+      "kind": "source_claim",
+      "source": {
+        "document": "WEB-KICAD-DEVDOCS",
+        "title": "KiCad developer documentation",
+        "authors": "KiCad project",
+        "year": null,
+        "year_text": null
+      },
+      "documents": [
+        "WEB-KICAD-DEVDOCS",
+        "REPO-kimotor"
+      ],
+      "location": {
+        "text": "https://dev-docs.kicad.org/en/file-formats/sexpr-pcb/ (Layers Section); /home/claude/embodic-ref/kimotor/kimotor-project/kimotor-project.kicad_pcb (layers …)",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://dev-docs.kicad.org/en/file-formats/sexpr-pcb/"
+        ]
+      },
+      "read_method": "webfetch_extract",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes",
+        "status": "inferred"
+      },
+      "status": "unresolved",
+      "status_note": "docs verified (extract); KiCad 9 ordinals unresolved",
+      "topology_tags": [
+        "non_engineering"
+      ],
+      "phase2_scope": false,
+      "out_of_scope_reason": "KiCad file format (D-009)",
+      "citable": false,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-R1",
+      "claim": "magnetless_motor README: 6-layer, 1 oz, 0.5 mm radial traces, wave winding, 3 phases, 16 coils-equivalent/phase, layer groups 3+3, Ø25 mm hole, 93 mm flats, 16 magnets 20×6×2",
+      "kind": "repository_fact",
+      "source": {
+        "document": "REPO-magnetless_motor",
+        "title": "magnetless_motor @c6ec327e",
+        "authors": "gouldpa00",
+        "year": 2026,
+        "year_text": "2026"
+      },
+      "documents": [
+        "REPO-magnetless_motor"
+      ],
+      "location": {
+        "text": "/home/claude/embodic-ref/magnetless_motor/README.md lines 1–12",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly — wave, not spiral",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "wave"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-R2",
+      "claim": "Gerber parse: 144 radial conductors/layer r 18–38 mm at 2.5°; 617 Ø0.3/0.5 vias (576 on 4 rings + 41 in clusters); 3 terminal lands; R3 corners on 93.0 mm flats",
+      "kind": "repository_fact",
+      "source": {
+        "document": "REPO-magnetless_motor",
+        "title": "magnetless_motor @c6ec327e",
+        "authors": "gouldpa00",
+        "year": 2026,
+        "year_text": "2026"
+      },
+      "documents": [
+        "REPO-magnetless_motor"
+      ],
+      "location": {
+        "text": "…/gerbers/ (.GTL…GBL, .TXT, .DRR, .GM1); details repo_survey.md §1.4",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "parse",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly — manufacturing example",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (parse)",
+      "topology_tags": [
+        "wave"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-R3",
+      "claim": "Licence GPL-3.0",
+      "kind": "repository_fact",
+      "source": {
+        "document": "REPO-magnetless_motor",
+        "title": "magnetless_motor @c6ec327e",
+        "authors": "gouldpa00",
+        "year": 2026,
+        "year_text": "2026"
+      },
+      "documents": [
+        "REPO-magnetless_motor"
+      ],
+      "location": {
+        "text": "LICENSE lines 1–2",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "no",
+        "note": "reference only",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "non_engineering"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-R4",
+      "claim": "kimotor: SWIG pcbnew.ActionPlugin + wxPython + NumPy; PCM metadata kicad_version \"6.0\"; GPL-2.0-only SPDX headers, no LICENSE file; last commit 2024-06-09",
+      "kind": "repository_fact",
+      "source": {
+        "document": "REPO-kimotor",
+        "title": "kimotor @dc6cac3a",
+        "authors": "cooked",
+        "year": 2024,
+        "year_text": "2024"
+      },
+      "documents": [
+        "REPO-kimotor"
+      ],
+      "location": {
+        "text": "/home/claude/embodic-ref/kimotor/ kimotor_action.py l.24, metadata.json, file headers",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "no",
+        "note": "architecture reference only",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "non_engineering"
+      ],
+      "phase2_scope": false,
+      "out_of_scope_reason": "KiCad plugin architecture (D-009)",
+      "citable": false,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-R5",
+      "claim": "kimotor stats_rlc temperature coefficient 3.99e-2 /°C (≈10× typical copper value)",
+      "kind": "repository_fact",
+      "source": {
+        "document": "REPO-kimotor",
+        "title": "kimotor @dc6cac3a",
+        "authors": "cooked",
+        "year": 2024,
+        "year_text": "2024"
+      },
+      "documents": [
+        "REPO-kimotor"
+      ],
+      "location": {
+        "text": "kimotor_action.py stats_rlc ≈ l.1520–1530",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "no",
+        "note": "do not reuse",
+        "status": "inferred"
+      },
+      "status": "inferred",
+      "status_note": "verified value; judgement inferred",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-K1",
+      "claim": "SWIG bindings deprecated as of KiCad 9.0, removal planned 11.0; unstable between major versions",
+      "kind": "source_claim",
+      "source": {
+        "document": "WEB-KICAD-DEVDOCS",
+        "title": "KiCad developer documentation",
+        "authors": "KiCad project",
+        "year": null,
+        "year_text": null
+      },
+      "documents": [
+        "WEB-KICAD-DEVDOCS"
+      ],
+      "location": {
+        "text": "https://dev-docs.kicad.org/en/apis-and-binding/pcbnew/ §Deprecation notice, §Introduction",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://dev-docs.kicad.org/en/apis-and-binding/pcbnew/"
+        ]
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (plugin route)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "non_engineering"
+      ],
+      "phase2_scope": false,
+      "out_of_scope_reason": "KiCad integration (D-009)",
+      "citable": false,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-K2",
+      "claim": "IPC API in 9.0: PCB editor only (9 and 10), running GUI required, no plotting/export, standalone plugin processes, plugins in ${KICAD_DOCUMENTS_HOME}/<version>/plugins, per-plugin venv in ${KICAD_CACHE_HOME}/python-environments/<id>, bundled Python on Windows by default",
+      "kind": "source_claim",
+      "source": {
+        "document": "WEB-KICAD-DEVDOCS",
+        "title": "KiCad developer documentation",
+        "authors": "KiCad project",
+        "year": null,
+        "year_text": null
+      },
+      "documents": [
+        "WEB-KICAD-DEVDOCS"
+      ],
+      "location": {
+        "text": "https://dev-docs.kicad.org/en/apis-and-binding/ipc-api/for-addon-developers/",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://dev-docs.kicad.org/en/apis-and-binding/ipc-api/for-addon-developers/"
+        ]
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "non_engineering"
+      ],
+      "phase2_scope": false,
+      "out_of_scope_reason": "KiCad integration (D-009)",
+      "citable": false,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-K3",
+      "claim": "PCM metadata.json required fields; code packages must use a GPL-compatible open-source licence; runtime \"ipc\"/\"swig\" (9.0.1+, default swig); archive layout plugins/ (files directly inside; 24×24 toolbar icon), resources/icon.png 64×64; schema v1 = KiCad 6.0+, v2 = KiCad 10.0+ (so v1 for KiCad 9)",
+      "kind": "source_claim",
+      "source": {
+        "document": "WEB-KICAD-DEVDOCS",
+        "title": "KiCad developer documentation",
+        "authors": "KiCad project",
+        "year": null,
+        "year_text": null
+      },
+      "documents": [
+        "WEB-KICAD-DEVDOCS"
+      ],
+      "location": {
+        "text": "https://dev-docs.kicad.org/en/addons/",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://dev-docs.kicad.org/en/addons/"
+        ]
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "non_engineering"
+      ],
+      "phase2_scope": false,
+      "out_of_scope_reason": "KiCad integration (D-009)",
+      "citable": false,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-K4",
+      "claim": "kicad-python: MIT, Python ≥ 3.9, protobuf/pynng/jsonschema; requires running KiCad with API enabled (Preferences > Plugins); 0.4–0.6 ↔ KiCad 9.0.3–9.0.8",
+      "kind": "source_claim",
+      "source": {
+        "document": "PYPI-kicad-python",
+        "title": "kicad-python 0.8.0",
+        "authors": "KiCad project",
+        "year": null,
+        "year_text": null
+      },
+      "documents": [
+        "PYPI-kicad-python"
+      ],
+      "location": {
+        "text": "https://pypi.org/project/kicad-python/; kipy/board.py version notes",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://pypi.org/project/kicad-python/"
+        ]
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "non_engineering"
+      ],
+      "phase2_scope": false,
+      "out_of_scope_reason": "KiCad integration (D-009)",
+      "citable": false,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-K5",
+      "claim": "kipy Board: commit API, create/update/remove items, Track/ArcTrack/Via/Zone/FootprintInstance/Pad, get_stackup, refill_zones, save; no DRC-run method",
+      "kind": "source_claim",
+      "source": {
+        "document": "PYPI-kicad-python",
+        "title": "kicad-python 0.8.0",
+        "authors": "KiCad project",
+        "year": null,
+        "year_text": null
+      },
+      "documents": [
+        "PYPI-kicad-python"
+      ],
+      "location": {
+        "text": "kipy/board.py l.584–1417; kipy/board_types.py",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "source_read",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (source read)",
+      "topology_tags": [
+        "non_engineering"
+      ],
+      "phase2_scope": false,
+      "out_of_scope_reason": "KiCad integration (D-009)",
+      "citable": false,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-K6",
+      "claim": "KiCad source licensed GPL v3 or later",
+      "kind": "source_claim",
+      "source": {
+        "document": "WEB-KICAD-LICENCES",
+        "title": "KiCad licenses",
+        "authors": "KiCad project",
+        "year": null,
+        "year_text": null
+      },
+      "documents": [
+        "WEB-KICAD-LICENCES"
+      ],
+      "location": {
+        "text": "https://www.kicad.org/about/licenses/",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://www.kicad.org/about/licenses/"
+        ]
+      },
+      "read_method": "text",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (licensing)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified",
+      "topology_tags": [
+        "non_engineering"
+      ],
+      "phase2_scope": false,
+      "out_of_scope_reason": "KiCad integration (D-009)",
+      "citable": false,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase1",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-80",
+      "claim": "Sintered NdFeB recoil permeability µrec = 1.05, listed in \"Table IV Some Physical Properties of Sintered NdFeB Magnets\"; no revision or date printed (closes the datasheet part of G23)",
+      "kind": "source_claim",
+      "source": {
+        "document": "MFR-HGT-NDFEB",
+        "title": "Sintered NdFeB Magnets' Specifications",
+        "authors": "HGT Advanced Magnets Co., Ltd",
+        "year": null,
+        "year_text": null
+      },
+      "documents": [
+        "MFR-HGT-NDFEB"
+      ],
+      "location": {
+        "text": "https://www.advancedmagnets.com/wp-content/uploads/2020/07/Sintered-Neodymium-Iron-Boron-NdFeB-Magnets-Specifications.pdf Table IV",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://www.advancedmagnets.com/wp-content/uploads/2020/07/Sintered-Neodymium-Iron-Boron-NdFeB-Magnets-Specifications.pdf"
+        ]
+      },
+      "read_method": "webfetch_extract",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (µ_r input of EQ-05 for sintered grades); one typical value, not grade-specific",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (extract)",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [
+        "G23"
+      ],
+      "register_origin": "phase2",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-81",
+      "claim": "\"Typical values of Recoil Permeability are about 1.05 for sintered Ferrite, SmCo and NdFeB\"; \"Bonded Neo magnets range from about 1.1 to 1.7, depending upon grade\"; one example material quoted with recoil permeability 1.04",
+      "kind": "source_claim",
+      "source": {
+        "document": "MFR-ARNOLD-SMMA2004",
+        "title": "NdFeB for High Temperature Motor Applications",
+        "authors": "S. Constantinides, D. Gulick",
+        "year": 2004,
+        "year_text": "2004"
+      },
+      "documents": [
+        "MFR-ARNOLD-SMMA2004"
+      ],
+      "location": {
+        "text": "https://www.arnoldmagnetics.com/wp-content/uploads/2017/10/NdFeB-for-high-temperature-motor-applications.pdf slide 13; slide 25 (1.04)",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://www.arnoldmagnetics.com/wp-content/uploads/2017/10/NdFeB-for-high-temperature-motor-applications.pdf"
+        ]
+      },
+      "read_method": "webfetch_extract",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (cross-check of EV-80); bonded magnets need a different value (G23)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (extract)",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [
+        "G23"
+      ],
+      "register_origin": "phase2",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-82",
+      "claim": "Trace current capacity attributed to IPC-2221: Area[mil²] = (I / (k·ΔT^b))^(1/c), with k = 0.024, b = 0.44, c = 0.725 for internal layers and k = 0.048, b = 0.44, c = 0.725 for external layers; Width[mil] = Area / (Thickness[oz] × 1.378 mil/oz)",
+      "kind": "source_claim",
+      "source": {
+        "document": "THESIS-UARK2014",
+        "title": "Design, Simulation and Implementation of Three-Phase Bidirectional DC-DC Dual Active Bridge Converter Using SiC MOSFETs",
+        "authors": "T. Aldawsari",
+        "year": 2014,
+        "year_text": "2014"
+      },
+      "documents": [
+        "THESIS-UARK2014"
+      ],
+      "location": {
+        "text": "https://scholarworks.uark.edu/cgi/viewcontent.cgi?article=3596&context=etd p.38–39 (thesis page numbers from the extract)",
+        "pages_pdf": [
+          38,
+          39
+        ],
+        "pages_printed": null,
+        "urls": [
+          "https://scholarworks.uark.edu/cgi/viewcontent.cgi?article=3596&context=etd"
+        ]
+      },
+      "read_method": "webfetch_extract",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (EQ-15 coefficients); secondary statement, the standard's own text not read (G5)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (extract)",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [
+        "G5"
+      ],
+      "register_origin": "phase2",
+      "accessed": "2026-10-04"
+    },
+    {
+      "id": "EV-83",
+      "claim": "Bittele Electronics states the formulas are \"published in the IPC-2221 standard section 6.2\": internal I = 0.024·dT^0.44·A^0.725, external I = 0.048·dT^0.44·A^0.725, A in mil², dT in °C above ambient; same width conversion 1.378 mil/oz",
+      "kind": "source_claim",
+      "source": {
+        "document": "MFR-BITTELE-TWC",
+        "title": "Trace Width Calculator",
+        "authors": "Bittele Electronics",
+        "year": null,
+        "year_text": null
+      },
+      "documents": [
+        "MFR-BITTELE-TWC"
+      ],
+      "location": {
+        "text": "https://www.7pcb.com/trace-width-calculator",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://www.7pcb.com/trace-width-calculator"
+        ]
+      },
+      "read_method": "webfetch_extract",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (independent cross-check of EV-82); manufacturer web page, not an application note; validity range not quoted",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (extract)",
+      "topology_tags": [
+        "general"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase2",
+      "accessed": "2026-10-04"
+    }
+  ]
+}
