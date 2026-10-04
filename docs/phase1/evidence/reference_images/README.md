@@ -1,3 +1,5 @@
+Prepared by: Fable 5.1 — coordinator — model: claude-fable-5-1 (configured id; serving model may differ)
+
 # Reference images (user-supplied, 2026-10-04)
 
 Provenance: screenshots attached by the user in chat on 2026-10-04. Treat as *illustrative* evidence
