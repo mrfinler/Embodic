@@ -24,6 +24,10 @@ python tests/independent/m1/mutants.py      # seeded defects; every one must be 
 | `board_dump_reader.py` | parses `embodic.board-dump` v1 into own records; reports every missing field, duplicate id, unknown layer, end point that disagrees with its geometry, and primitive not owned by exactly one object | a writer that drops or renames fields, rounds end points, or orders paths by file position |
 | `xcoil_oracle.py`, `xcoil_oracle.cjs` | third oracle: Xcoil `segSegDist`, `ptSegDist`, `drcObjects` under Node, read-only | a defect in the instrument itself |
 | `mutants.py` | applies 16 named defects to a copy of the instruments and checks a test fails for each | a self-test that passes whatever the instrument does |
+| `drc_universe.py` | every copper item of a board (traces, vias, pads, edges, holes) on its layers; contract and extended exemptions; brute pair sweep | a DRC that checks the wrong layer pairs, exempts too much or too little, or picks the wrong kind |
+| `random_boards.py` | seeded boards: 1 to 3 layers, self-crossing line and arc paths, vias on and off path ends, pads, holes, edges | - |
+| `embodic_adapter.py` | the only instrument that imports embodic: builds a `Layout` from items through public constructors | - |
+| `gr19.py` | GR-19 raw layouts through U-M1b's mapper and embodic's writer, read back by `board_dump_reader.py`; prints the violation table | - |
 
 ## Why the bracket is certified
 
@@ -69,10 +73,10 @@ step 2 that box contains the arc, so box distance is a lower bound of `D`.
 | Line kernel agrees with Xcoil `segSegDist` and `ptSegDist` within 1e-9 mm | verified (`test_against_xcoil_kernels.py`) |
 | Brackets contain the closed-form values for parallel, crossing, tangent, concentric and arc-line cases | verified (`test_brute_clearance.py`) |
 | Brackets overlap a dense point sampling with the 1-Lipschitz bound on 40 random arc pairs | verified (`test_bracket_contains_dense_point_sampling_on_random_arc_pairs`) |
-| A 1 um intrusion is a violation and rule - 0.9 um is clean, for lines, concentric arcs and arc-line | verified |
+| A 1 um (1e-3 mm) intrusion is a violation; rule - 0.9 nm is clean and rule - 1.1 nm a violation (epsilon 1e-6 mm), for lines, concentric arcs and arc-line | verified |
 | Each of the 16 seeded defects in `mutants.py` fails a test | verified (run `mutants.py`) |
 | Rounding stays below `FP_MARGIN_MM` | assumption |
-| embodic's DRC agrees with this instrument | not tested (part 2, after U-M1c merges) |
+| embodic's DRC agrees with this instrument | verified on main a138975 (part 2, table below) |
 | Xcoil `drcObjects` differs from exact arc distances by at most 0.002 mm | inferred from `discretize` sagTol 0.001 (engine.js l.536-555); one concentric case verified |
 
 ## Known limits
@@ -81,6 +85,48 @@ step 2 that box contains the arc, so box distance is a lower bound of `D`.
   That exemption is wider than D-006 allows. Compare it with embodic only for pairs between objects.
 - `drcObjects` checks segments only within one grid cell of each other (`gridQuery` with radius 0). Far-apart objects
   return `Infinity`.
-- Exemptions follow interfaces.md section 7: consecutive primitives of one path (`path_adjacent`) and the via or pad
-  that terminates a path end. The via and pad part is not wired yet (part 2).
-- Pads other than round ones are not modelled yet.
+- `contract_exemptions` reads interfaces.md section 7 literally. `extended_exemptions` recodes the three extra rules the
+  U-M1c worker documents in `exempt_pairs`; agreement tests use it, and a separate test shows the gap is exactly those
+  rules.
+- Pads other than round ones are not modelled. All GR-19 pads are round.
+- Epsilon is 1e-6 mm = 1 nm. A 1 um intrusion is 1000 epsilon.
+
+## M1 verdicts (part 2, against main a138975)
+
+Run `pytest tests/independent/m1 -q` (about 1 min) and `python tests/independent/m1/gr19.py` (violation table).
+
+| Area | Verdict | Evidence |
+|---|---|---|
+| D-006 epsilon | pass | `test_intrusion_is_decided_by_d006`: rule - 1.05e-6 mm reported, rule - 0.95e-6 mm not, on 6 geometries; 1 um and 4 um reported; same on real copper (`test_injected_intrusion_in_a_real_layout`) |
+| Kernels exact | pass | every reported value lies in a 1e-10 mm bracket on 200 boards; a +2 nm bias in the line-line, line-arc or arc-arc kernel fails the test (seeded in process) |
+| `run_drc` vs brute sweep | pass | 200 random boards, violation sets equal under the documented exemptions |
+| Exemptions | pass with defects | DEF-M1V-01; contract text narrower than the code (DEF-M1V-01 note) |
+| Symmetry shortcut | pass | 18 symmetric boards: method `symmetric+grid+exact`, same violations as the full check; a false claim falls back |
+| CancelToken | pass | pre-cancelled and cancel at every poll return None; an idle token returns a report |
+| Board dump | pass with defects | 3 layouts parse in the own reader; geometry equals raw Xcoil records; DEF-M1V-04 |
+| GR-19 mapper | pass with defects | DEF-M1c-01 confirmed, DEF-M1V-02, DEF-M1V-03 |
+| GR-19 minima | pass | lo <= `measured_min_mm` <= hi for every pair kind on 3 layouts |
+| Timing ~0.1 s | inferred | medians 90, 141, 103 ms over 7 warm runs (2 cores, load 0.8); limiter not profiled |
+
+GR-19 violation classes (rule 0.2 mm everywhere, Xcoil's `clearance`):
+
+| Class | sector | serpentine | wave |
+|---|---|---|---|
+| `run_drc` violation_count | 133 | 23 | 576 |
+| trace_via: DEF-M1c-01 artefact (via net `A`, path net `PHASE_A`) | 114 | 12 | 372 |
+| trace_via: real D-006, near rule (0.199965 mm, hidden by Xcoil's 4 um slack) | 0 | 0 | 180 |
+| trace_trace: real D-006, near rule (0.199965 mm) | 0 | 0 | 6 |
+| trace_via: overlap, both report (DEF-M1V-02 junctions) | 13 | 6 | 12 |
+| trace_trace: overlap, both report (DEF-M1V-02 junctions, DEF-M1V-03 `ic` objects) | 6 | 5 | 6 |
+| trace_trace: contract would report, engine exempts by a documented rule | 132 | 187 | 373 |
+
+## Defects (part 2)
+
+| ID | Severity | Reproduce | Expected vs actual | Owner |
+|---|---|---|---|---|
+| DEF-M1c-01 | medium | `pytest tests/independent/m1/test_gr19_drc.py -k same_phase_path --runxfail` | no trace_via violation where a via ends a same-phase path; 114 / 12 / 372 reported | U-M1z (mapper) |
+| DEF-M1V-01 | low | `pytest tests/independent/m1/test_drc_agreement.py -k two_steps_back --runxfail` | a fillet is exempt only from its neighbours; `abs(main) <= 1` also exempts it from the main primitive two steps back, so a 0.104 mm same-net clearance goes unreported. Same rule as Xcoil drcObjects l.1697, which applies it only to `cornerOk` objects. Also: interfaces.md section 7 must name the fillet, coincident-end and pad-via rules, or a literal reading reports every tight fillet corner | U-M1c owner; contract text: Fable |
+| DEF-M1V-02 | medium | `python tests/independent/m1/gr19.py` | phase copper (`PHASE_A`), leads (`U`), neutral (`N`) and vias (`A`) use four net names for joined copper, so star-point and lead junctions show as overlaps; sampled, not every pair attributed (inferred) | U-M1z (mapper) |
+| DEF-M1V-03 | medium | `pytest tests/independent/m1/test_gr19_drc.py -k continuous --runxfail` | one continuous chain per CopperPath; Xcoil `ic` objects map to one path with gaps of 11.28 mm (serpentine path 15) and 22.11 mm (wave path 192) | U-M1z (mapper) |
+| DEF-M1V-04 | low | read `src/embodic/io/board_dump.py` l.8-11, l.108 | interfaces.md 9.2 says v1 has no field changes; the writer omits the layer PCB-tool name (D-009, MT-07) and always writes via `phase` null | interfaces.md owner (Fable) |
+| DEF-M1V-05 | low | `grep -n "edge:" src/embodic/drc/report.py src/embodic/drc/items.py` | report.py documents ids `edge:0/prim:5`; items.py emits `edge:outer/prim:5` | U-M1c owner |

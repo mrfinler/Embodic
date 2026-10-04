@@ -162,7 +162,7 @@ def test_one_micron_intrusion_is_a_violation(shape: Shape) -> None:
 
 @pytest.mark.parametrize("shape", SHAPES)
 def test_epsilon_edge_follows_d006(shape: Shape) -> None:
-    """Rule - 0.9 um passes and rule - 1.1 um fails: catches epsilon 0 (fails both) and a larger slack (passes both)."""
+    """Rule - 0.9 nm passes, rule - 1.1 nm fails (epsilon 1e-6 mm): catches epsilon 0 and any larger slack."""
     inside, _ = pair_verdict(*shape(0.9 * DRC_EPSILON_MM), RULE)
     outside, _ = pair_verdict(*shape(1.1 * DRC_EPSILON_MM), RULE)
     assert (inside, outside) == (Verdict.CLEAN, Verdict.VIOLATION)

@@ -23,7 +23,8 @@ TOP_KEYS = frozenset(
     {"format", "format_version", "producer", "case_id", "params", "params_sha256", "units", "frame", "layers",
      "primitives", "objects", "vias", "pads", "outline", "circuits", "drc"}
 )  # fmt: skip
-LAYER_KEYS = frozenset({"index", "name", "kicad_name", "z", "copper_t", "role", "pair", "phase"})
+# Port notes 7.5 also lists the PCB-tool layer name; D-009 and scope test MT-07 removed it, so v1 dumps omit it.
+LAYER_KEYS = frozenset({"index", "name", "z", "copper_t", "role", "pair", "phase"})
 COMMON_PRIM_KEYS = frozenset(
     {"id", "type", "layer", "start", "end", "width", "kind", "object", "seq", "net", "phase", "coil"}
 )
