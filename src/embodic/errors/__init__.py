@@ -4,9 +4,14 @@ A failure the user can cause is returned as a value (`ValidationIssue`, `Unbuild
 errors (interfaces.md section 0).
 """
 
+import importlib
+import pkgutil
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from types import MappingProxyType
+
+from embodic.errors import catalogue
 
 
 class Severity(StrEnum):
@@ -67,22 +72,19 @@ class Unbuildable:
 
 CODE_PREFIXES = ("INVALID_", "MISSING_", "RANGE_", "UNBUILDABLE_", "DRC_", "INTERNAL_", "INFO_")
 
-MESSAGES = MappingProxyType(
-    {
-        "RANGE_SKIN_DEPTH": (
-            "The trace is wider than one third of the skin depth at the operating frequency, "
-            "so resistance and eddy-loss results lose accuracy."
-        ),
-        "INVALID_MEASURED_SOURCE_EMPTY": "A measured value needs a named source, such as a datasheet or a test record.",
-        "INVALID_MEASURED_DESIGN_FIELD": "Only material and property fields can be marked as measured.",
-        "INVALID_PROVENANCE": "A measured entry needs a source and must belong to a property field.",
-        "INVALID_SCHEMA_VERSION_NEWER": "This project file was written by a newer version of embodic.",
-        "INFO_EXAMPLE_NOT_PACKAGED": (
-            "The example this project started from is not packaged with this version, so provenance is kept as saved."
-        ),
-        "INFO_MIGRATED": "The project file was upgraded to the current file format.",
-    }
-)
+
+def _merge_catalogue() -> Mapping[str, str]:
+    """Merge `MESSAGES` of every module in `embodic.errors.catalogue`; raise on a code defined twice."""
+    merged: dict[str, str] = {}
+    for name in sorted(info.name for info in pkgutil.iter_modules(catalogue.__path__)):
+        messages: Mapping[str, str] = importlib.import_module(f"{catalogue.__name__}.{name}").MESSAGES
+        if clash := merged.keys() & messages.keys():
+            raise ValueError(f"catalogue module {name!r} redefines issue codes {sorted(clash)}")
+        merged.update(messages)
+    return MappingProxyType(merged)
+
+
+MESSAGES = _merge_catalogue()
 
 
 def message_for(code: str) -> str:
