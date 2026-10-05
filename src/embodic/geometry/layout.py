@@ -1,7 +1,4 @@
-"""The Layout every generator produces and every consumer reads (interfaces.md section 5).
-
-Interim shape (work_breakdown.md U-M1b): the ``derived`` and ``detail`` fields arrive with U-M2d.
-"""
+"""The Layout every generator produces and every consumer reads (interfaces.md section 5)."""
 
 import hashlib
 import json
@@ -12,10 +9,12 @@ from typing import Literal
 
 from embodic.geometry.arrays import LayoutArrays, layout_arrays
 from embodic.geometry.circuit import Circuit
+from embodic.geometry.details import TopologyDetail
 from embodic.geometry.hashing import compute_layout_hash
 from embodic.geometry.paths import CopperPath
 from embodic.geometry.primitives import Primitive
 from embodic.model.vocabulary import TopologyKind, ViaSpan
+from embodic.results import Traceable
 
 
 class ViaRole(StrEnum):
@@ -103,6 +102,9 @@ class Layout:
     circuit: Circuit
     symmetry: RotationalSymmetry | None
     envelope_mm: tuple[float, float]  # r_min_cu, r_max_cu
+    # Defaults keep hand-built Layouts in tests valid; every generator sets both (deviation from section 5).
+    detail: TopologyDetail | None = None  # generator-specific record; consumers other than the UI ignore it
+    derived: tuple[Traceable[float], ...] = ()  # feasibility-rail values shared by all topologies
     layout_hash: str = field(init=False)  # "sha256:<hex>" over the canonical primitive list
 
     def __post_init__(self) -> None:
