@@ -75,6 +75,30 @@ def test_d08_builds_three_turns_with_the_half_closing(registry: Registry) -> Non
     assert not any(p.role is PrimitiveRole.LEAD for path in board.paths for p in path.primitives)
 
 
+@pytest.mark.req("REQ-F-19")
+def test_layout_derived_carries_turns_length_and_envelope(board: Layout) -> None:
+    """Layout.derived lists the feasibility-rail values; catches a missing or stale value (CF-11 worked example 1)."""
+    derived = {t.quantity: t for t in board.derived}
+    assert derived["turns_per_coil_per_layer"].value == 10.0
+    assert derived["turn_limit_per_coil_per_layer"].value == 10.0
+    assert derived["track_length_per_coil_layer_mm"].value == pytest.approx(415.4808, abs=5e-5)
+    assert (derived["copper_r_min_mm"].value, derived["copper_r_max_mm"].value) == board.envelope_mm
+    assert derived["turns_per_coil_per_layer"].kind_tag == "count"
+    assert all(t.inputs for t in board.derived)
+
+
+@pytest.mark.req("REQ-F-09")
+def test_ut_geo_14_outline_is_closed_and_encloses_the_copper(board: Layout) -> None:
+    """UT-GEO-14: edge and bore are closed loops within 1e-9 mm; the bore lies inside r_min, the edge beyond r_max."""
+    for loop in (board.outline.outer, *board.outline.cutouts):
+        assert math.dist(loop[-1].end_point(), loop[0].start_point()) <= 1e-9
+        assert is_continuous(loop, 1e-9)
+    bore = max(math.hypot(*p.start_point()) for p in board.outline.cutouts[0])
+    edge = min(abs(p.x1_mm * p.y2_mm - p.x2_mm * p.y1_mm) / math.dist(p.start_point(), p.end_point())
+               for p in board.outline.outer)  # fmt: skip
+    assert bore < board.envelope_mm[0] and edge > board.envelope_mm[1]
+
+
 @pytest.mark.req("REQ-F-01", "REQ-N-21")
 def test_every_path_is_continuous(board: Layout) -> None:
     """UT-GEO-01: every joint of every coil path closes within 1e-6 mm."""

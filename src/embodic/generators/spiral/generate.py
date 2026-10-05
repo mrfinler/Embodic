@@ -18,6 +18,7 @@ from types import MappingProxyType
 from embodic.errors import IssueCategory, Severity, Unbuildable, ValidationIssue, message_for
 from embodic.generators.spiral.artwork import CoilArtwork, coil_artwork
 from embodic.generators.spiral.chain import BusRings, CoilEnds, End, PhaseChain, chain_coils, norm_angle
+from embodic.generators.spiral.derived import spiral_derived
 from embodic.generators.spiral.interconnect import Interconnect, PhaseEnd, build_interconnect, plan_links
 from embodic.generators.spiral.turns import (
     Closing,
@@ -386,5 +387,6 @@ def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack 
         symmetry=None,
         envelope_mm=envelope,
         detail=detail,
+        derived=spiral_derived(design, coil, n, best.n, length_mm, envelope, registry),
     )
     return BoardStack(boards=(layout,), board_thickness_mm=design.stackup.board_thickness_mm(), board_gap_mm=0.0)
