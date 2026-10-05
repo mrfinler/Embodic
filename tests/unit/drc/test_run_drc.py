@@ -53,6 +53,30 @@ def test_ut_drc_04_adjacent_primitives_and_corner_fillets_are_exempt() -> None:
     assert report.passed, report.violations
 
 
+def test_ut_drc_04_fillet_is_checked_against_the_main_primitive_two_steps_back() -> None:
+    """Catches DEF-M1V-01 (D-022 b): a fillet exempt from every main within one index of its own hides a tight U-turn.
+
+    main0 east, fillet0 (r 0.05), main1 north 0.25 mm, fillet1 (r 0.5), main2 west, all 0.2 mm wide. fillet1 starts at
+    (10.05, 0.30), 0.304 mm from main0's end (10, 0). fillet0 and fillet1 sit 0.25 mm apart along main1 and stay exempt.
+    """
+    hairpin = path(
+        0,
+        [
+            line(0, 0, 10, 0),
+            replace(arc(10, 0.05, 0.05, -math.pi / 2, math.pi / 2), role=PrimitiveRole.FILLET),
+            line(10.05, 0.05, 10.05, 0.30),
+            replace(arc(9.55, 0.30, 0.5, 0, math.pi / 2), role=PrimitiveRole.FILLET),
+            line(9.55, 0.80, 0, 0.80),
+        ],
+    )
+    report = run_drc(layout(paths=[hairpin]), RULES)
+    assert report is not None
+    assert [(v.kind, v.objects) for v in report.violations] == [
+        (DrcCheckKind.TRACE_TRACE, ("path:0/prim:0", "path:0/prim:3"))
+    ]
+    assert report.violations[0].measured_mm == pytest.approx(math.hypot(0.05, 0.30) - 0.2, abs=1e-12)
+
+
 def test_ut_drc_04_terminating_via_is_exempt_but_a_foreign_via_is_not() -> None:
     """Catches a via exemption that is too wide (any via) or missing (the via the path ends on)."""
     lead = path(0, [line(0, 0, 3, 0)], net="A")

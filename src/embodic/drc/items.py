@@ -37,7 +37,7 @@ class ItemClass(IntEnum):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Items:
-    """Struct of arrays, one row per item; ``path`` and ``main`` are NO_INDEX for anything but traces."""
+    """Struct of arrays, one row per item; ``path`` and ``slot`` are NO_INDEX for anything but traces."""
 
     rows: FloatArray  # (n, 6): line (x1, y1, x2, y2, 0, 0) or arc (cx, cy, r, start, sweep, 0)
     is_arc: NDArray[np.bool_]
@@ -45,7 +45,7 @@ class Items:
     item_class: IntArray
     layer: IntArray  # index into Layout.copper_layers, EVERY_LAYER for through vias, through pads, edges, holes
     path: IntArray  # CopperPath.id
-    main: IntArray  # main-primitive index: fillets and tapers share the index of the primitive before them
+    slot: IntArray  # 2 * main index; a fillet or taper takes 2 * main index + 1 of the main before it
     pad: IntArray  # index into Layout.pads
     centre_mm: FloatArray  # (n, 2) land centre for pad-to-pad and pad-to-via checks
     land_radius_mm: FloatArray  # circumscribed land radius for those checks
@@ -64,7 +64,7 @@ class _Builder:
     item_class: list[int]
     layer: list[int]
     path: list[int]
-    main: list[int]
+    slot: list[int]
     pad: list[int]
     centre_mm: list[tuple[float, float]]
     land_radius_mm: list[float]
@@ -79,7 +79,7 @@ class _Builder:
         half_width_mm: float,
         layer: int,
         path: int = NO_INDEX,
-        main: int = NO_INDEX,
+        slot: int = NO_INDEX,
         pad: int = NO_INDEX,
     ) -> int:
         if isinstance(prim, Line):
@@ -93,7 +93,7 @@ class _Builder:
         self.item_class.append(item_class)
         self.layer.append(layer)
         self.path.append(path)
-        self.main.append(main)
+        self.slot.append(slot)
         self.pad.append(pad)
         self.centre_mm.append(centre)
         self.land_radius_mm.append(half_width_mm)
@@ -130,7 +130,7 @@ def build_items(layout: Layout) -> tuple[Items, dict[int, int]]:
                 half_width_mm=prim.width_mm / 2,
                 layer=layer_index[path.layer],
                 path=path.id,
-                main=main,
+                slot=2 * main + (prim.role in _CORNER_ROLES),
             )
     for via in layout.vias:
         b.add(
@@ -154,7 +154,7 @@ def build_items(layout: Layout) -> tuple[Items, dict[int, int]]:
         item_class=np.array(b.item_class, dtype=np.int64),
         layer=np.array(b.layer, dtype=np.int64),
         path=np.array(b.path, dtype=np.int64),
-        main=np.array(b.main, dtype=np.int64),
+        slot=np.array(b.slot, dtype=np.int64),
         pad=np.array(b.pad, dtype=np.int64),
         centre_mm=np.array(b.centre_mm, dtype=np.float64).reshape(-1, 2),
         land_radius_mm=np.array(b.land_radius_mm, dtype=np.float64),
@@ -190,7 +190,7 @@ def exempt_pairs(layout: Layout, items: Items, first_item: dict[int, int]) -> In
     Exempt: a via or pad and the end group of a same-net path whose end point lies on that via or pad; the end groups
     of different paths that meet at one via, pad or coincident end point (a node); a pad and a same-net via whose
     centre lies inside it. An interconnect path ending on a terminal via or a pad joins it whatever the nets (D-022 a).
-    Primitives adjacent in one path are exempted in the engine from ``path`` and ``main``.
+    Primitives adjacent in one path are exempted in the engine from ``path`` and ``slot``.
     """
     ends = list(_path_ends(layout, first_item))
     via_base = int(np.count_nonzero(items.item_class == ItemClass.TRACE))
