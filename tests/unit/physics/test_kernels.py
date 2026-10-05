@@ -26,6 +26,7 @@ from embodic.physics import (
 
 RHO20 = 1.7241e-8  # registry EQ-10 constant (EV-53)
 ALPHA20 = 0.00393  # registry EQ-10 constant (EV-53)
+pytestmark = pytest.mark.req("REQ-F-11")
 
 
 def _rotor(rotor_type: RotorType = RotorType.DOUBLE, *, poles: int = 2, air_gap_mm: float = 0.8) -> RotorSpec:
@@ -41,6 +42,7 @@ def _rotor(rotor_type: RotorType = RotorType.DOUBLE, *, poles: int = 2, air_gap_
     )
 
 
+@pytest.mark.req("REQ-F-07")
 def test_cf01_field_fundamental_equals_the_1d_magnetic_circuit() -> None:
     """CF-01 (EQ-05): B_z1 = (4/pi) sin(pi a/2) Br lm/(lm + mu_r G) = 1.162077823241657 T, rel 1e-9.
 
@@ -51,6 +53,7 @@ def test_cf01_field_fundamental_equals_the_1d_magnetic_circuit() -> None:
     assert abs(bt[0]) < 1e-3
 
 
+@pytest.mark.req("REQ-F-07")
 def test_ut_phy_04_symmetry_plane_per_rotor_type_and_open_rotor_limit() -> None:
     """UT-PHY-04 (EQ-05): G = (t + 2g)/2 double, t + 2g yoke, inf open; open rotor decays as exp(-u z).
 
@@ -66,6 +69,7 @@ def test_ut_phy_04_symmetry_plane_per_rotor_type_and_open_rotor_limit() -> None:
     assert b2[0] / b1[0] == pytest.approx(math.exp(-(8 / 28.0) * 1.0), rel=1e-12)
 
 
+@pytest.mark.req("REQ-F-07")
 def test_field_is_mirrored_about_the_symmetry_plane() -> None:
     """Defect caught: no mirror beyond G, which would give a double rotor an asymmetric field across the board."""
     rotor = _rotor(poles=16)
@@ -75,6 +79,7 @@ def test_field_is_mirrored_about_the_symmetry_plane() -> None:
     assert bt[0] == pytest.approx(bt[1], rel=1e-12)
 
 
+@pytest.mark.req("REQ-F-07")
 def test_ut_phy_02_block_magnet_pole_arc_ratio() -> None:
     """UT-PHY-02 (EQ-04): 6 mm wide block, 2p = 16: 0.853 / 0.547 / 0.402 at r 18 / 28 / 38 mm, +/-5e-4."""
     alpha = pole_arc_ratio_block(6.0, np.array([18.0, 28.0, 38.0]), 16)

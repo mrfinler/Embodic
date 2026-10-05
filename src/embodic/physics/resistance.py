@@ -66,7 +66,7 @@ def path_resistance_ohm(
         )
         widths = np.concatenate([lines[:, 4], arcs[:, 5]])
         thickness_m = mm_to_m(layer_thickness_mm[layer])
-        terms = resistivity_ohm_m * mm_to_m(lengths) / (mm_to_m(widths) * thickness_m)
+        terms = resistivity_ohm_m * (lengths / MM_PER_M) / ((widths / MM_PER_M) * thickness_m)
         np.add.at(out, path_ids, terms)
     return out
 

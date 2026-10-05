@@ -51,7 +51,7 @@ def ipc2221_current_a(cross_section_mm2: float, temperature_rise_k: float, inter
         Current in A.
     """
     k = 0.024 if internal else 0.048
-    return k * temperature_rise_k**0.44 * mm2_to_mil2(cross_section_mm2) ** 0.725
+    return float(k * temperature_rise_k**0.44 * mm2_to_mil2(cross_section_mm2) ** 0.725)
 
 
 def thd(harmonic_amplitudes: Mapping[int, float]) -> float:
