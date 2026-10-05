@@ -2,10 +2,10 @@
 
 Run ``python tests/independent/m1/gr19.py`` from the repository root to print the per-layout violation table.
 
-Two universes come from each dump. ``as_mapped`` keeps every net the dump states, so its exemptions match what
-``run_drc`` sees and minima compare like for like. ``intended`` gives each via the net of the copper of its own phase
-(Xcoil via ``phase`` read from the raw layout), which is what interfaces.md section 7 means by the via that terminates
-a path end. A pair exempt in ``intended`` but reported by ``run_drc`` is a mapper net-name artefact (DEF-M1c-01).
+Two universes come from each dump. ``as_mapped`` keeps every net the dump states, as ``run_drc`` sees them.
+``intended`` gives each via the net of the copper of its own phase (Xcoil via ``phase`` read from the raw layout), so a
+mapper that renames via nets (DEF-M1c-01) cannot also move the expected exemptions. Interconnect path ids come from
+``Layout.circuit.interconnect_path_ids``.
 """
 
 import importlib.util
@@ -18,7 +18,7 @@ from typing import Any
 
 from board_dump_reader import BoardDump, parse_board_dump
 from brute_clearance import Verdict
-from drc_universe import Cls, Item, PairResult, contract_exemptions, extended_exemptions, sweep
+from drc_universe import Cls, Item, PairResult, Rule, contract_exemptions, sweep
 from records import Arc, Line, Prim, disc
 
 REPO = Path(__file__).resolve().parents[3]
@@ -75,7 +75,7 @@ def universe(dump: BoardDump, raw: dict[str, Any], *, intended: bool) -> list[It
 
 @dataclass(frozen=True, slots=True)
 class Board:
-    """One GR-19 case: the mapped Layout, its parsed dump and both universes."""
+    """One GR-19 case: the mapped Layout, its parsed dump, both universes and the interconnect path ids."""
 
     case_id: str
     raw: dict[str, Any]
@@ -83,6 +83,7 @@ class Board:
     dump: BoardDump
     as_mapped: list[Item]
     intended: list[Item]
+    interconnect: frozenset[int]
 
 
 def boards() -> list[Board]:
@@ -95,8 +96,9 @@ def boards() -> list[Board]:
         layout = mapper.layout_from_xcoil(raw)
         dump = parse_board_dump(json.loads(encode_board_dump(dump_layout(layout, case_id=case_id))))
         out.append(
-            Board(case_id, raw, layout, dump, universe(dump, raw, intended=False), universe(dump, raw, intended=True))
-        )
+            Board(case_id, raw, layout, dump, universe(dump, raw, intended=False), universe(dump, raw, intended=True),
+                  frozenset(layout.circuit.interconnect_path_ids))
+        )  # fmt: skip
     return out
 
 
@@ -105,26 +107,28 @@ def violations(results: list[PairResult]) -> dict[frozenset[str], PairResult]:
     return {frozenset((r.a, r.b)): r for r in results if r.verdict is Verdict.VIOLATION}
 
 
+DEF_M1C3_01 = "trace_via: DEF-M1c3-01, contract exempts by the D-022c interconnect waiver, engine reports"
+WAIVER = frozenset({Rule.INTERCONNECT_END, Rule.INTERCONNECT_TAP})
+
+
 def classify(board: Board, engine: dict[frozenset[str], tuple[str, float]], rule_mm: float) -> Counter[str]:
-    """Count every engine and brute violation by class; ``other`` classes are disagreements."""
-    layers = range(len(board.dump.layers))
-    strict = contract_exemptions(board.intended)
-    wide = extended_exemptions(board.intended)
-    mine = violations(sweep(board.intended, layers, lambda kind: rule_mm, strict))
+    """Count every engine and brute violation by class; ``OTHER`` classes are disagreements with the contract."""
+    exempt = contract_exemptions(board.intended, board.interconnect)
+    mine = violations(sweep(board.intended, range(len(board.dump.layers)), lambda kind: rule_mm, exempt))
     classes: Counter[str] = Counter()
     for key, (kind, measured) in engine.items():
         if key in mine:
             near = "near-rule" if measured > rule_mm - 1e-3 else "overlap" if measured < 0 else "intrusion"
             classes[f"{kind}: real D-006 ({near}), both report"] += 1
-        elif key in strict and kind == "trace_via":
-            classes["trace_via: DEF-M1c-01 artefact (via net 'A' vs path net 'PHASE_A')"] += 1
+        elif kind == "trace_via" and exempt.get(key) in WAIVER:
+            classes[DEF_M1C3_01] += 1
+        elif key in exempt:
+            classes[f"{kind}: engine reports, contract exempts by {exempt[key]} (OTHER)"] += 1
         else:
-            classes[f"{kind}: engine only, OTHER"] += 1
+            classes[f"{kind}: engine only, brute clean (OTHER)"] += 1
     for key, result in mine.items():
-        if key in engine:
-            continue
-        rule = "documented extension" if key in wide else "OTHER"
-        classes[f"{result.kind}: brute only, engine exempts ({rule})"] += 1
+        if key not in engine:
+            classes[f"{result.kind}: brute only, engine exempts (OTHER)"] += 1
     return classes
 
 

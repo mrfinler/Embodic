@@ -10,9 +10,9 @@ import pytest
 from board_dump_reader import parse_board_dump
 from brute_clearance import DRC_EPSILON_MM, Verdict, bounding_boxes, clearance_bracket
 from continuity import first_gap
-from drc_universe import Item, PairResult, contract_exemptions, extended_exemptions, sweep
+from drc_universe import Item, PairResult, Rule, contract_exemptions, sweep
 from embodic_adapter import pair_violations, uniform_rules
-from gr19 import Board, boards, classify, universe, violations
+from gr19 import WAIVER, Board, boards, classify, universe, violations
 from records import Line
 
 from embodic.drc import DrcReport, run_drc
@@ -38,17 +38,16 @@ def _report(case_id: str) -> DrcReport:
 
 @cache
 def _mapped_sweep(case_id: str) -> list[PairResult]:
-    """Decided sweep with run_drc's nets and the documented exemptions: every pair below the rule, verdict known."""
+    """Decided sweep with run_drc's nets and the contract exemptions: every pair below the rule, verdict known."""
     board = _boards()[case_id]
-    return sweep(
-        board.as_mapped, range(len(board.dump.layers)), lambda kind: RULE_MM, extended_exemptions(board.as_mapped)
-    )
+    exempt = contract_exemptions(board.as_mapped, board.interconnect)
+    return sweep(board.as_mapped, range(len(board.dump.layers)), lambda kind: RULE_MM, exempt)
 
 
 @cache
 def _intended_violations(case_id: str) -> dict[frozenset[str], PairResult]:
     board = _boards()[case_id]
-    exempt = contract_exemptions(board.intended)
+    exempt = contract_exemptions(board.intended, board.interconnect)
     return violations(sweep(board.intended, range(len(board.dump.layers)), lambda kind: RULE_MM, exempt))
 
 
@@ -96,20 +95,28 @@ def test_every_dumped_object_is_a_continuous_path(case_id: str) -> None:
 def test_run_drc_minima_lie_in_brute_brackets(case_id: str) -> None:
     """Catches a kernel, broad phase or exemption error on real layouts: lo <= measured min <= hi per pair kind.
 
-    Same nets and exemptions as run_drc sees (``as_mapped``). The minimum of a kind lies among its violating pairs when
-    there are any, else among its pairs within 1e-6 mm above the rule; those are refined to 1e-10 mm. A kind with no
-    pair below the rule may report None or any value at or above the rule, since only pairs near the rule are measured.
+    Same nets as run_drc sees (``as_mapped``) and the contract exemptions. The minimum of a kind lies among its
+    violating pairs when there are any: the pairs the sweep finds below the rule plus the pairs run_drc reports (a pair
+    the contract exempts but run_drc reports, DEF-M1c3-01, is the job of the two exemption tests below). Those are
+    refined to 1e-10 mm. Otherwise it lies among the pairs within 1e-6 mm above the rule, refined to 1e-8 mm because
+    concentric arcs at the rule are a plateau (README). A kind with no pair near the rule may report None or any value
+    at or above the rule, since only pairs near the rule are measured.
     """
     board = _boards()[case_id]
     prims = {it.label: it.prim for it in board.as_mapped}
+    engine = pair_violations(_report(case_id))
     for summary in _report(case_id).summaries:
         kind = summary.kind.value
         if kind in ("min_width", "min_drill", "annular_ring"):
             continue
         mine = [r for r in _mapped_sweep(case_id) if r.kind == kind]
-        bad = [r for r in mine if r.verdict is not Verdict.CLEAN]
-        near = bad or [r for r in mine if r.clearance.lo < RULE_MM + 1e-6]
-        brackets = [clearance_bracket(prims[r.a], prims[r.b], tol=1e-10) for r in near]
+        bad = {frozenset((r.a, r.b)) for r in mine if r.verdict is not Verdict.CLEAN}
+        bad |= {key for key, (reported, _) in engine.items() if reported == kind}
+        if bad:
+            brackets = [clearance_bracket(*(prims[label] for label in sorted(key)), tol=1e-10) for key in bad]
+        else:
+            near = [r for r in mine if r.clearance.lo < RULE_MM + 1e-6]
+            brackets = [clearance_bracket(prims[r.a], prims[r.b], tol=1e-8) for r in near]
         measured = summary.measured_min_mm
         if brackets:
             lo, hi = min(b.lo for b in brackets), min(b.hi for b in brackets)
@@ -125,15 +132,32 @@ def test_every_violation_class_is_accounted_for(case_id: str) -> None:
     assert not [name for name in classes if "OTHER" in name], classes
 
 
-@pytest.mark.xfail(reason="DEF-M1c-01: mapper via nets ('A') differ from path nets ('PHASE_A')", strict=True)
+def _reported_exempt(case_id: str, rules: frozenset[Rule]) -> list[tuple[str, ...]]:
+    board = _boards()[case_id]
+    exempt = contract_exemptions(board.intended, board.interconnect)
+    engine = pair_violations(_report(case_id))
+    hits = [key for key, (kind, _) in engine.items() if kind == "trace_via" and exempt.get(key) in rules]
+    return sorted(tuple(sorted(key)) for key in hits)
+
+
 @pytest.mark.parametrize("case_id", CASES)
 def test_no_trace_via_violation_where_the_via_ends_a_same_phase_path(case_id: str) -> None:
-    """Interfaces.md section 7 exempts the via that terminates a path end; run_drc must not report those pairs."""
-    exempt = contract_exemptions(_boards()[case_id].intended)
-    reported = [
-        key for key, (kind, _) in pair_violations(_report(case_id)).items() if kind == "trace_via" and key in exempt
-    ]
-    assert reported == []
+    """Rule 2 exempts a via and the end group of a same-net path ending on it; run_drc must not report those pairs.
+
+    Via nets come from the raw Xcoil phase, so a mapper that renames via nets again (DEF-M1c-01) fails here.
+    """
+    assert _reported_exempt(case_id, frozenset({Rule.END_ON_LAND})) == []
+
+
+@pytest.mark.xfail(
+    reason="DEF-M1c3-01: run_drc lacks the D-022c waiver (sector: 4 N ends on transfer vias, 3 taps; "
+    "serpentine and wave: 2 taps each on the N path over terminal vias)",
+    strict=True,
+)
+@pytest.mark.parametrize("case_id", CASES)
+def test_no_trace_via_violation_where_a_via_touches_an_interconnect_path(case_id: str) -> None:
+    """D-022c exempts an interconnect path from any via its end lies on or whose centre lies on its centreline."""
+    assert _reported_exempt(case_id, WAIVER) == []
 
 
 def test_wave_reports_xcoil_near_rule_pairs_as_d006_violations() -> None:
@@ -194,5 +218,6 @@ def test_injected_intrusion_in_a_real_layout(case_id: str, intrusion_mm: float, 
     pair = frozenset((target.a, target.b))
     assert (pair in new) is caught, (target, exact, sorted(map(sorted, new))[:5])
     local = _neighbourhood(items, target.a, 2.0)
-    found = violations(sweep(local, range(len(board.dump.layers)), lambda kind: RULE_MM, extended_exemptions(items)))
+    exempt = contract_exemptions(items, board.interconnect)
+    found = violations(sweep(local, range(len(board.dump.layers)), lambda kind: RULE_MM, exempt))
     assert new == {k for k in found if target.a in k} - set(pair_violations(_report(case_id)))

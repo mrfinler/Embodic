@@ -7,7 +7,7 @@ from itertools import pairwise
 
 from records import Point, Prim, end_point, start_point
 
-CONTINUITY_TOL_MM = 1e-9
+CONTINUITY_TOL_MM = 1e-6  # REQ-N-21 (revision 2026-10-05, U-D2): COINCIDENCE_MM
 
 
 @dataclass(frozen=True, slots=True)

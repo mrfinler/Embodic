@@ -20,11 +20,11 @@ python tests/independent/m1/mutants.py      # seeded defects; every one must be 
 |---|---|---|
 | `records.py` | own `Line` and `Arc` records; a via or round pad is a zero-length `Line` whose width is the pad diameter | - |
 | `brute_clearance.py` | certified bracket of the clearance between two primitives; rule D-006 verdict; O(n^2) pair sweep of one layer with a proven box cull (IT-12) | a DRC that misses a 1 um intrusion, uses Xcoil's 0.004 mm slack or epsilon 0, or under-reports arc pairs (PR-01, PR-13) |
-| `continuity.py` | first joint of an ordered path whose end-to-start gap exceeds 1e-9 mm (IT-21) | a generator or writer that breaks a path, reverses a primitive or emits NaN |
+| `continuity.py` | first joint of an ordered path whose end-to-start gap exceeds 1e-6 mm (IT-21; REQ-N-21 revision 2026-10-05, `COINCIDENCE_MM`) | a generator or writer that breaks a path, reverses a primitive or emits NaN |
 | `board_dump_reader.py` | parses `embodic.board-dump` v1 into own records; reports every missing field, duplicate id, unknown layer, end point that disagrees with its geometry, and primitive not owned by exactly one object | a writer that drops or renames fields, rounds end points, or orders paths by file position |
 | `xcoil_oracle.py`, `xcoil_oracle.cjs` | third oracle: Xcoil `segSegDist`, `ptSegDist`, `drcObjects` under Node, read-only | a defect in the instrument itself |
-| `mutants.py` | applies 16 named defects to a copy of the instruments and checks a test fails for each | a self-test that passes whatever the instrument does |
-| `drc_universe.py` | every copper item of a board (traces, vias, pads, edges, holes) on its layers; contract and extended exemptions; brute pair sweep | a DRC that checks the wrong layer pairs, exempts too much or too little, or picks the wrong kind |
+| `mutants.py` | applies 18 named defects to a copy of the instruments and checks a test fails for each | a self-test that passes whatever the instrument does |
+| `drc_universe.py` | every copper item of a board (traces, vias, pads, edges, holes) on its layers; the section 7 exemptions as D-022 and D-022c amend them, each pair labelled with its rule; brute pair sweep | a DRC that checks the wrong layer pairs, exempts too much or too little, or picks the wrong kind |
 | `random_boards.py` | seeded boards: 1 to 3 layers, self-crossing line and arc paths, vias on and off path ends, pads, holes, edges | - |
 | `embodic_adapter.py` | the only instrument that imports embodic: builds a `Layout` from items through public constructors | - |
 | `gr19.py` | GR-19 raw layouts through U-M1b's mapper and embodic's writer, read back by `board_dump_reader.py`; prints the violation table | - |
@@ -74,7 +74,7 @@ step 2 that box contains the arc, so box distance is a lower bound of `D`.
 | Brackets contain the closed-form values for parallel, crossing, tangent, concentric and arc-line cases | verified (`test_brute_clearance.py`) |
 | Brackets overlap a dense point sampling with the 1-Lipschitz bound on 40 random arc pairs | verified (`test_bracket_contains_dense_point_sampling_on_random_arc_pairs`) |
 | A 1 um (1e-3 mm) intrusion is a violation; rule - 0.9 nm is clean and rule - 1.1 nm a violation (epsilon 1e-6 mm), for lines, concentric arcs and arc-line | verified |
-| Each of the 16 seeded defects in `mutants.py` fails a test | verified (run `mutants.py`) |
+| Each of the 18 seeded defects in `mutants.py` fails a test | verified for the 5 continuity and exemption mutants on 69381b5 (U-V1b-fix); the other 13 last run in part 2 |
 | Rounding stays below `FP_MARGIN_MM` | assumption |
 | embodic's DRC agrees with this instrument | verified on main a138975 (part 2, table below) |
 | Xcoil `drcObjects` differs from exact arc distances by at most 0.002 mm | inferred from `discretize` sagTol 0.001 (engine.js l.536-555); one concentric case verified |
@@ -85,9 +85,11 @@ step 2 that box contains the arc, so box distance is a lower bound of `D`.
   That exemption is wider than D-006 allows. Compare it with embodic only for pairs between objects.
 - `drcObjects` checks segments only within one grid cell of each other (`gridQuery` with radius 0). Far-apart objects
   return `Infinity`.
-- `contract_exemptions` reads interfaces.md section 7 literally. `extended_exemptions` recodes the three extra rules the
-  U-M1c worker documents in `exempt_pairs`; agreement tests use it, and a separate test shows the gap is exactly those
-  rules.
+- `contract_exemptions` codes interfaces.md section 7 with D-022 and D-022c from the text, not from
+  `embodic.drc.items`. `test_exemption_model.py` checks it on hand-worked cases. D-022c says a land on an interconnect
+  centreline is "exempt from that path"; the model reads that as every primitive of the path (open question to Fable).
+- The minima test brackets the pairs run_drc reports as well as its own violating pairs, so a pair the contract exempts
+  but run_drc reports is caught by the exemption tests, not by the minima test.
 - Pads other than round ones are not modelled. All GR-19 pads are round.
 - Epsilon is 1e-6 mm = 1 nm. A 1 um intrusion is 1000 epsilon.
 
@@ -104,7 +106,7 @@ Run `pytest tests/independent/m1 -q` (about 1 min) and `python tests/independent
 | Symmetry shortcut | pass | 18 symmetric boards: method `symmetric+grid+exact`, same violations as the full check; a false claim falls back |
 | CancelToken | pass | pre-cancelled and cancel at every poll return None; an idle token returns a report |
 | Board dump | pass with defects | 3 layouts parse in the own reader; geometry equals raw Xcoil records; DEF-M1V-04 |
-| GR-19 mapper | pass with defects | DEF-M1c-01 confirmed, DEF-M1V-02, DEF-M1V-03 |
+| GR-19 mapper | pass with defects | DEF-M1c-01 confirmed (closed by U-M1z, see U-V1b-fix), DEF-M1V-02, DEF-M1V-03 |
 | GR-19 minima | pass | lo <= `measured_min_mm` <= hi for every pair kind on 3 layouts |
 | Timing ~0.1 s | inferred | medians 90, 141, 103 ms over 7 warm runs (2 cores, load 0.8); limiter not profiled |
 
@@ -120,13 +122,36 @@ GR-19 violation classes (rule 0.2 mm everywhere, Xcoil's `clearance`):
 | trace_trace: overlap, both report (DEF-M1V-02 junctions, DEF-M1V-03 `ic` objects) | 6 | 5 | 6 |
 | trace_trace: contract would report, engine exempts by a documented rule | 132 | 187 | 373 |
 
-## Defects (part 2)
+## U-V1b-fix verdicts (against main 69381b5)
 
-| ID | Severity | Reproduce | Expected vs actual | Owner |
-|---|---|---|---|---|
-| DEF-M1c-01 | medium | `pytest tests/independent/m1/test_gr19_drc.py -k same_phase_path --runxfail` | no trace_via violation where a via ends a same-phase path; 114 / 12 / 372 reported | U-M1z (mapper) |
-| DEF-M1V-01 | low | `pytest tests/independent/m1/test_drc_agreement.py -k two_steps_back --runxfail` | a fillet is exempt only from its neighbours; `abs(main) <= 1` also exempts it from the main primitive two steps back, so a 0.104 mm same-net clearance goes unreported. Same rule as Xcoil drcObjects l.1697, which applies it only to `cornerOk` objects. Also: interfaces.md section 7 must name the fillet, coincident-end and pad-via rules, or a literal reading reports every tight fillet corner | U-M1c owner; contract text: Fable |
-| DEF-M1V-02 | medium | `python tests/independent/m1/gr19.py` | phase copper (`PHASE_A`), leads (`U`), neutral (`N`) and vias (`A`) use four net names for joined copper, so star-point and lead junctions show as overlaps; sampled, not every pair attributed (inferred) | U-M1z (mapper) |
-| DEF-M1V-03 | medium | `pytest tests/independent/m1/test_gr19_drc.py -k continuous --runxfail` | one continuous chain per CopperPath; Xcoil `ic` objects map to one path with gaps of 11.28 mm (serpentine path 15) and 22.11 mm (wave path 192) | U-M1z (mapper) |
-| DEF-M1V-04 | low | read `src/embodic/io/board_dump.py` l.8-11, l.108 | interfaces.md 9.2 says v1 has no field changes; the writer omits the layer PCB-tool name (D-009, MT-07) and always writes via `phase` null | interfaces.md owner (Fable) |
-| DEF-M1V-05 | low | `grep -n "edge:" src/embodic/drc/report.py src/embodic/drc/items.py` | report.py documents ids `edge:0/prim:5`; items.py emits `edge:outer/prim:5` | U-M1c owner |
+`pytest tests/independent -q` passes except the strict xfails for DEF-M1c3-01 (3 layouts) and DEF-M1V-03 (2 layouts).
+The two xfails for closed defects are removed and their tests still fail on the old behaviour: the hairpin test fails
+on the engine of 2f80dc8^1 (before U-M1c-fix), and renaming the via nets back to `A` makes run_drc report 114 / 12 / 378
+rule-2 pairs that `test_no_trace_via_violation_where_the_via_ends_a_same_phase_path` rejects.
+
+GR-19 violation classes (`python tests/independent/m1/gr19.py`, rule 0.2 mm):
+
+| Class | sector | serpentine | wave |
+|---|---|---|---|
+| `run_drc` violation_count | 7 | 6 | 193 |
+| trace_via: DEF-M1c3-01, contract exempts by the D-022c waiver, engine reports | 7 | 2 | 2 |
+| trace_via: real D-006, near rule (0.199965 mm) | 0 | 0 | 180 |
+| trace_trace: real D-006, near rule (0.199965 mm) | 0 | 0 | 6 |
+| trace_trace: real D-006, overlap, both report | 0 | 4 | 5 |
+| any class marked OTHER (a disagreement with the contract) | 0 | 0 | 0 |
+
+Board-dump case ids of a multi-board stack (Agent 6, D-016, U-D3). Preferred form: `<case_id>-board<k>` with `k` the
+zero-based board index in stack order, plain decimal, no padding (`layout-serpentine-stack-board0`), and no suffix on a
+one-board stack, so the existing GR-19 case ids stay as they are. This matches interfaces.md section 5 (l.1546).
+
+## Defects (part 2, statuses as of U-V1b-fix)
+
+| ID | Severity | Reproduce | Expected vs actual | Owner | Status |
+|---|---|---|---|---|---|
+| DEF-M1c3-01 | medium | `pytest tests/independent/m1/test_gr19_drc.py -k touches_an_interconnect --runxfail` | no trace_via violation between an interconnect path and a via its end lies on or that lies on its centreline (D-022c); sector 7 (4 N ends on transfer vias 60-62, 3 taps), serpentine 2 and wave 2 (N path 15 / 192 over terminal vias) | Agent 3 (U-M1c-fix2) | open; remove the xfail and the `DEF_M1C3_01` class in `gr19.py` when it lands |
+| DEF-M1c-01 | medium | `pytest tests/independent/m1/test_gr19_drc.py -k same_phase_path --runxfail` | no trace_via violation where a via ends a same-phase path; 114 / 12 / 372 reported | U-M1z (mapper) | closed by U-M1z; xfail removed |
+| DEF-M1V-01 | low | `pytest tests/independent/m1/test_drc_agreement.py -k two_steps_back --runxfail` | a fillet is exempt only from its neighbours; `abs(main) <= 1` also exempts it from the main primitive two steps back, so a 0.104 mm same-net clearance goes unreported. Same rule as Xcoil drcObjects l.1697, which applies it only to `cornerOk` objects. Also: interfaces.md section 7 must name the fillet, coincident-end and pad-via rules, or a literal reading reports every tight fillet corner | U-M1c owner; contract text: Fable | closed by U-M1c-fix (D-022b); xfail removed |
+| DEF-M1V-02 | medium | `python tests/independent/m1/gr19.py` | phase copper (`PHASE_A`), leads (`U`), neutral (`N`) and vias (`A`) use four net names for joined copper, so star-point and lead junctions show as overlaps; sampled, not every pair attributed (inferred) | U-M1z (mapper) | superseded by D-022 (nets stay, interconnect waiver) |
+| DEF-M1V-03 | medium | `pytest tests/independent/m1/test_gr19_drc.py -k continuous --runxfail` | one continuous chain per CopperPath; Xcoil `ic` objects map to one path with gaps of 11.28 mm (serpentine path 15) and 22.11 mm (wave path 192) | U-M1z (mapper) | open; strict xfail still fails on 69381b5 |
+| DEF-M1V-04 | low | read `src/embodic/io/board_dump.py` l.8-11, l.108 | interfaces.md 9.2 says v1 has no field changes; the writer omits the layer PCB-tool name (D-009, MT-07) and always writes via `phase` null | interfaces.md owner (Fable) | open; `src/embodic/io/board_dump.py` l.11-12 and l.108 unchanged on 69381b5 |
+| DEF-M1V-05 | low | `grep -n "edge:" src/embodic/drc/report.py src/embodic/drc/items.py` | report.py documents ids `edge:0/prim:5`; items.py emits `edge:outer/prim:5` | U-M1c owner | closed; `report.py` l.63 now documents `edge:outer/prim:5` |
