@@ -9,6 +9,7 @@ neutral ``N``, delta links ``D0``..``D2``, leads ``U``/``V``/``W``; every path h
 import math
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
+from types import MappingProxyType
 from typing import Literal
 
 from embodic.generators.spiral.chain import norm_angle
@@ -18,7 +19,7 @@ from embodic.geometry.primitives import Arc, Line, Primitive, PrimitiveRole
 from embodic.model.connection import ConnectionSpec
 from embodic.model.vocabulary import ConnectionTopology, Phase
 
-LINE_NET: Mapping[Phase, str] = {Phase.A: "U", Phase.B: "V", Phase.C: "W"}  # D-019: phase A is U
+LINE_NET: Mapping[Phase, str] = MappingProxyType({Phase.A: "U", Phase.B: "V", Phase.C: "W"})  # D-019: A is U
 DELTA_PAIRS = ((Phase.A, Phase.B), (Phase.B, Phase.C), (Phase.C, Phase.A))
 
 

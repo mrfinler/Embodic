@@ -2,11 +2,11 @@
 
 Built: G1 to G7 for one layer pair with parallel sides, arc ends, sharp corners, the outer-end jog and the full
 (lead arc) or half closing of G5 (revision 2026-10-05, U-E3 and U-E3b); G8 series chains of each phase on the bus
-rings (legs on layer Y, ring arcs on layer X, net PHASE_x).
+rings (legs on layer Y, ring arcs on layer X, net PHASE_x), the star or delta links and the U/V/W(/N) leads with
+their pads.
 Not built yet (returned as Unbuildable, never ignored): several pairs, pair rotation, phase per pair, radial sides,
 straight and stadium ends, fillets (G9), the straight lead, custom terminal offset, parallel paths, screw holes, and
-polygon corner radii. The star or delta links and the U/V/W/N leads of G8 are not built: ``interconnect_path_ids``
-stays empty and each phase ends on the ring vias of its first and last coil.
+polygon corner radii. Open phases end on the ring vias of their first and last coil, without pads.
 """
 
 import dataclasses
@@ -19,7 +19,7 @@ from embodic.errors import IssueCategory, Severity, Unbuildable, ValidationIssue
 from embodic.generators.spiral.artwork import CoilArtwork, coil_artwork
 from embodic.generators.spiral.chain import BusRings, CoilEnds, End, PhaseChain, chain_coils, norm_angle
 from embodic.generators.spiral.derived import spiral_derived
-from embodic.generators.spiral.interconnect import Interconnect, PhaseEnd, build_interconnect, plan_links
+from embodic.generators.spiral.interconnect import LINE_NET, Interconnect, PhaseEnd, build_interconnect, plan_links
 from embodic.generators.spiral.turns import (
     Closing,
     CoilFrame,
@@ -45,8 +45,6 @@ from embodic.model.vocabulary import ConnectionTopology, Phase, TopologyKind, Vi
 from embodic.model.winding_specs import EndStyle, InnerTurnMode, LeadStyle, Sense, SideStyle, SpiralWindingSpec
 from embodic.results import Registry
 from embodic.winding import SpiralWindingPlan, plan_spiral_winding
-
-TERMINAL_NET = MappingProxyType({Phase.A: "U", Phase.B: "V", Phase.C: "W"})  # D-019: phase A is U
 
 
 def _issue(code: str, pointers: tuple[str, ...], limit: int | None = None) -> ValidationIssue:
@@ -159,7 +157,7 @@ class _ChainCopper:
 
 def _chain_copper(
     chain: PhaseChain, phase: Phase, phase_index: int, bus: BusRings, terminal_vias: Mapping[tuple[int, End], Via],
-    pair: LayerPair, design: DesignParameters, paths: list[CopperPath], vias: list[Via],
+    pair: LayerPair, paths: list[CopperPath], vias: list[Via],
 ) -> _ChainCopper:  # fmt: skip
     """Append the radial legs (layer Y), ring vias and ring arcs (layer X) of one phase chain, in current direction."""
     net = f"PHASE_{phase.value}"
@@ -338,7 +336,7 @@ def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack 
         if chain is None:
             return Unbuildable(issues=(_issue("UNBUILDABLE_PHASE_CHAIN_UNROUTABLE", ("/connection/ring_width_mm",)),))
         top_level = max(top_level, len(Phase) * chain.n_levels - 1)
-        chained = _chain_copper(chain, phase, phase_index, bus, terminal_vias, pair, design, paths, vias)
+        chained = _chain_copper(chain, phase, phase_index, bus, terminal_vias, pair, paths, vias)
         phase_groups[phase] = [ParallelGroup(members=(_with_chain(coil_members[k], k, chained),)) for k in chain.order]
         phase_ends[(phase, 1)] = PhaseEnd(phase=phase, sign=1, via=vias[chained.ring_vias[(chain.order[0], End.ENTRY)]])
         phase_ends[(phase, -1)] = PhaseEnd(
@@ -378,7 +376,7 @@ def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack 
         outline=build_outline(design.outline, envelope),
         circuit=Circuit(
             phases=tuple(
-                PhaseCircuit(phase=phase, groups=tuple(groups), terminal_net=TERMINAL_NET[phase])
+                PhaseCircuit(phase=phase, groups=tuple(groups), terminal_net=LINE_NET[phase])
                 for phase, groups in phase_groups.items()
             ),
             topology=design.connection.topology,
