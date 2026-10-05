@@ -7,7 +7,7 @@ from collections import Counter
 
 import numpy as np
 import pytest
-from hypothesis import given, settings
+from hypothesis import example, given, settings
 from hypothesis import strategies as st
 from tests.unit.generators.d08_example import d08_design
 from tests.unit.generators.default_example import default_design
@@ -256,6 +256,9 @@ def _check_contract(result: BoardStack | Unbuildable) -> None:
 
 @pytest.mark.req("REQ-F-19")
 @settings(max_examples=40, deadline=None)
+@example(coils=12, poles=16, r_inner=60.0, span=40.0, w=0.001, s=0.0, gap=0.0, pad=0.6, turns=None)  # DEF-M2d2-01
+@example(coils=12, poles=16, r_inner=60.0, span=40.0, w=1e-9, s=0.0, gap=0.0, pad=0.6, turns=None)  # unbounded turns
+@example(coils=12, poles=16, r_inner=60.0, span=40.0, w=0.15, s=1e-6, gap=0.0, pad=0.6, turns=None)  # turn cap
 @given(
     coils=st.sampled_from([3, 6, 9, 12, 18, 24]),
     poles=st.sampled_from([2, 4, 8, 10, 14, 16, 20]),
