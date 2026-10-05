@@ -5,7 +5,7 @@ from collections import Counter
 
 import pytest
 from brute_clearance import Verdict, clearance_bracket
-from drc_universe import Cls, Item, contract_exemptions, extended_exemptions, rotate, sweep
+from drc_universe import Cls, Item, contract_exemptions, rotate, sweep
 from embodic_adapter import pair_violations, to_layout, uniform_rules
 from random_boards import random_board
 from records import Arc, Line, disc
@@ -30,16 +30,12 @@ def _compare(items: tuple[Item, ...], layers: int, rule_mm: float, exempt: set[f
 
 
 def test_run_drc_violation_sets_equal_brute_sweep_on_random_boards() -> None:
-    """Catches a missed or invented pair, a wrong kind, a wrong exemption, or a kernel that is not exact.
-
-    Exemptions are the worker's documented rules recoded here; ``test_contract_exemptions_differ_only_where_documented``
-    accounts for the gap to the contract text.
-    """
+    """Catches a missed or invented pair, a wrong kind, a wrong exemption, or a kernel that is not exact."""
     coverage: Counter[str] = Counter()
     for seed in SEEDS:
         board = random_board(seed)
         by_label = {it.label: it.prim for it in board.items}
-        got = _compare(board.items, board.layers, board.rule_mm, extended_exemptions(board.items))
+        got = _compare(board.items, board.layers, board.rule_mm, contract_exemptions(board.items))
         engine, found, undecided = got["engine"], got["found"], got["undecided"]
         assert isinstance(engine, dict) and isinstance(found, dict) and isinstance(undecided, set)
         assert set(engine) - undecided == set(found) - undecided, f"seed {seed}"
@@ -57,22 +53,6 @@ def test_run_drc_violation_sets_equal_brute_sweep_on_random_boards() -> None:
     for need in ("trace_trace", "trace_via", "copper_edge", "copper_hole", "pad_trace", "same_path_non_adjacent"):
         assert coverage[need] > 0, f"no {need} violation in {len(SEEDS)} boards: the test lost its power"
     assert all(coverage[f"layers_{n}"] > 0 for n in (1, 2, 3)) and coverage["arcs"] > 0
-
-
-def test_contract_exemptions_differ_only_where_documented() -> None:
-    """Pairs the engine exempts beyond interfaces.md section 7 must be exactly the documented extensions."""
-    extra: Counter[str] = Counter()
-    for seed in SEEDS:
-        board = random_board(seed)
-        strict, wide = contract_exemptions(board.items), extended_exemptions(board.items)
-        got = _compare(board.items, board.layers, board.rule_mm, strict)
-        engine, found = got["engine"], got["found"]
-        assert isinstance(engine, dict) and isinstance(found, dict)
-        assert set(engine) <= set(found), f"seed {seed}: engine reports a pair the contract exempts"
-        for key in set(found) - set(engine):
-            assert key in wide - strict, f"seed {seed}: {sorted(key)} missed and not covered by a documented rule"
-            extra[found[key].kind] += 1
-    assert set(extra) <= {"pad_pad"}, extra
 
 
 INTRUSION_CASES = {
@@ -160,7 +140,7 @@ def test_symmetry_shortcut_reports_the_same_violations_as_the_full_check(seed: i
     a, b = pair_violations(fast), pair_violations(full)
     assert set(a) == set(b)
     assert all(a[k][1] == pytest.approx(b[k][1], abs=1e-9) for k in a)
-    mine = sweep(items, range(layers), lambda kind: 0.2, extended_exemptions(items))
+    mine = sweep(items, range(layers), lambda kind: 0.2, contract_exemptions(items))
     assert set(a) == {frozenset((r.a, r.b)) for r in mine if r.verdict is Verdict.VIOLATION}
     mins = {s.kind: s.measured_min_mm for s in full.summaries}
     for s in fast.summaries:
@@ -221,11 +201,8 @@ def _hairpin() -> tuple[Item, ...]:
     )
 
 
-@pytest.mark.xfail(
-    reason="DEF-M1V-01: |main index| <= 1 exempts a fillet from the main two primitives back", strict=True
-)
 def test_fillet_is_not_exempt_from_the_main_primitive_two_steps_back() -> None:
-    """Interfaces.md section 7 exempts only adjacent primitives; fillet1 and main0 are two primitives apart."""
+    """Rule 1 (D-022b): fillet1 belongs to main1 and main2, not main0, so the 0.104 mm pair must be reported."""
     items = _hairpin()
     report = run_drc(to_layout(items, 1), uniform_rules(0.2))
     assert report is not None
