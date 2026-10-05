@@ -1,6 +1,7 @@
 """Spiral stator of one layer pair: Q rotated copies of the canonical coil (spiral_generator_spec.md, Full stator).
 
-Built: G1 to G7 for one layer pair with parallel sides, arc ends, sharp corners and the radial-then-arc lead.
+Built: G1 to G7 for one layer pair with parallel sides, arc ends, sharp corners, the outer-end jog and the full
+(lead arc) or half closing of G5 (revision 2026-10-05, U-E3 and U-E3b).
 Not built yet (returned as Unbuildable, never ignored): several pairs, pair rotation, phase per pair, radial sides,
 straight and stadium ends, fillets (G9), the straight lead, custom terminal offset, parallel paths, screw holes, and
 polygon corner radii. G8 phase chaining and star or delta links are not built: the Circuit lists every coil, and
@@ -12,7 +13,7 @@ from types import MappingProxyType
 
 from embodic.errors import IssueCategory, Severity, Unbuildable, ValidationIssue, message_for
 from embodic.generators.spiral.artwork import coil_artwork
-from embodic.generators.spiral.turns import CoilFrame, LoopStop, Point, TurnKind, eye, eye_limited_turns, loop_turns
+from embodic.generators.spiral.turns import CoilFrame, LoopStop, Point, TurnKind, closing_for, loop_turns, max_closing
 from embodic.generators.spiral.turns import radial_bound as eq_3_24_bound
 from embodic.geometry.circuit import Circuit, Member, ParallelGroup, PhaseCircuit
 from embodic.geometry.details import SpiralDetail, TurnLimit, TurnLimitReason
@@ -96,10 +97,10 @@ def _refusal(design: DesignParameters, spec: SpiralWindingSpec) -> Unbuildable |
     return None
 
 
-def _limiting_reason(requested: int | None, eye_limit: int, loops: int, stop: LoopStop) -> TurnLimitReason:
-    if requested is not None and requested < eye_limit:
+def _limiting_reason(requested: int | None, closing_limit: int, loops: int, stop: LoopStop) -> TurnLimitReason:
+    if requested is not None and requested < closing_limit:
         return TurnLimitReason.USER
-    if eye_limit < loops:
+    if closing_limit < loops:
         return TurnLimitReason.EYE
     return TurnLimitReason.LATERAL if stop is LoopStop.LATERAL else TurnLimitReason.RADIAL
 
@@ -144,15 +145,15 @@ def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack 
     coil, pair = spec.coil, spec.layers.pairs[0]
     frame = CoilFrame.of(coil, design.vias.pad_mm)
     loops, stop = loop_turns(frame)
-    eye_limit = eye_limited_turns(frame, loops)
-    if eye_limit == 0 or eye(frame, loops, eye_limit).via_radius_mm <= frame.offset_mm(eye_limit):
+    best = max_closing(frame, loops)
+    if best is None:
         return Unbuildable(issues=(_issue("UNBUILDABLE_ZERO_TURNS", ("/winding/coil/turns",)),))
-    if coil.turns is not None and not 1 <= coil.turns <= eye_limit:
-        return Unbuildable(issues=(_issue("UNBUILDABLE_TURNS_EXCEED_LIMIT", ("/winding/coil/turns",), eye_limit),))
-    n = eye_limit if coil.turns is None else coil.turns
-    reason = _limiting_reason(coil.turns, eye_limit, len(loops), stop)
-    turns = loops[:n]
-    art = coil_artwork(frame, turns, eye(frame, loops, n).via_radius_mm, design.connection.ring_width_mm)
+    closing = best if coil.turns is None else closing_for(frame, loops, coil.turns)
+    if closing is None or closing.n > best.n:
+        return Unbuildable(issues=(_issue("UNBUILDABLE_TURNS_EXCEED_LIMIT", ("/winding/coil/turns",), best.n),))
+    n = closing.n
+    reason = _limiting_reason(coil.turns, best.n, len(loops), stop)
+    art = coil_artwork(frame, closing, design.connection.ring_width_mm)
     x_canonical = art.primitives
     y_canonical = reverse_path(mirror(x_canonical, 0.0))  # mirror about the coil axis, traversed outward
 
@@ -200,7 +201,7 @@ def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack 
             radial_bound=eq_3_24_bound(frame),
             loops_trapezoidal=sum(t.kind is TurnKind.TRAPEZOID for t in loops),
             loops_triangular=sum(t.kind is TurnKind.TRIANGLE for t in loops),
-            eye_limit=eye_limit,
+            eye_limit=best.n,
             limiting_reason=reason,
         ),
         track_length_per_coil_layer_mm=MappingProxyType({"X": length_mm, "Y": path_length_mm(y_canonical)}),

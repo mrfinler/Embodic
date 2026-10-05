@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from tests.unit.generators.d08_example import d08_design
 from tests.unit.generators.default_example import default_design
 from tests.unit.model.designs import serpentine_design
 
@@ -18,7 +19,9 @@ from embodic.geometry.details import SpiralDetail, TurnLimitReason
 from embodic.geometry.discretise import discretise
 from embodic.geometry.layout import BoardStack, Layout, ViaRole
 from embodic.geometry.paths import CopperPath, is_continuous
+from embodic.geometry.primitives import PrimitiveRole
 from embodic.geometry.transforms import mirror, reverse_path, rotate
+from embodic.model.drc_rules import DrcRules
 from embodic.model.vocabulary import TopologyKind
 from embodic.model.winding_specs import SpiralWindingSpec
 from embodic.results import Registry, load_registry
@@ -48,13 +51,27 @@ def _points(path: CopperPath) -> np.ndarray:
 
 @pytest.mark.req("REQ-F-06")
 def test_default_track_length_matches_cf11(board: Layout) -> None:
-    """CF-11 total per coil-layer 400.1591 mm (body + lead + stub), N = 10, eye-limited (relative 1e-6)."""
+    """CF-11 worked example 1: 415.4808 mm per coil-layer (body + lead + stub), N = 10, eye-limited."""
     detail = board.detail
     assert isinstance(detail, SpiralDetail)
     assert detail.turns_achieved == 10 and detail.turn_limit.limiting_reason is TurnLimitReason.EYE
     assert detail.turn_limit.loops_trapezoidal == 8 and detail.turn_limit.loops_triangular == 3
-    assert detail.track_length_per_coil_layer_mm["X"] == pytest.approx(400.1591, rel=1e-6)
+    assert detail.track_length_per_coil_layer_mm["X"] == pytest.approx(415.4808, abs=5e-5)
     assert detail.plan.pattern == "ACBACBACBACB"
+
+
+@pytest.mark.req("REQ-F-06")
+def test_d08_builds_three_turns_with_the_half_closing(registry: Registry) -> None:
+    """CF-10 worked example 2: N = 3 (2 full turns and the closing half turn), 160.2750 mm per coil-layer, no lead."""
+    stack = generate_spiral(d08_design(), registry)
+    assert isinstance(stack, BoardStack)
+    board = stack.boards[0]
+    detail = board.detail
+    assert isinstance(detail, SpiralDetail)
+    assert detail.turns_achieved == 3 and detail.turn_limit.eye_limit == 3
+    assert detail.track_length_per_coil_layer_mm["X"] == pytest.approx(160.2750, abs=5e-5)
+    assert detail.plan.pattern == "AabBCcaABbcC"
+    assert not any(p.role is PrimitiveRole.LEAD for path in board.paths for p in path.primitives)
 
 
 @pytest.mark.req("REQ-F-01", "REQ-N-21")
@@ -197,31 +214,27 @@ def test_ut_gen_01_fuzz_never_raises(
     _check_contract(generate_spiral(fuzzed, load_registry()))
 
 
-def _drc_violations(board: Layout) -> Counter[tuple[str, str]]:
-    report = run_drc(board, default_design().drc_rules, use_symmetry=False)
+def _drc_summary(board: Layout, rules: DrcRules) -> dict[str, float | None]:
+    report = run_drc(board, rules)
     assert report is not None
-    roles = {v.id: v.role for v in board.vias}
-    paths = {p.id: p for p in board.paths}
-    out: Counter[tuple[str, str]] = Counter()
-    for v in report.violations:
-        trace, via = v.objects
-        path_id, prim = (int(part.split(":")[1]) for part in trace.split("/"))
-        out[(paths[path_id].primitives[prim].role.value, roles[int(via.split(":")[1])].value)] += 1
-    return out
+    assert report.violation_count == 0 and report.passed, [v.objects for v in report.violations]
+    return {s.kind.value: s.measured_min_mm for s in report.summaries}
 
 
 @pytest.mark.req("REQ-F-05")
-def test_default_drc_violations_are_only_the_lead_against_its_own_centre_via(board: Layout) -> None:
-    """DEF-M2d-01: the 24 violations are the radial-then-arc lead line on X and Y of each coil against its centre via.
-
-    Nothing else fails: trace to trace, terminals, neighbours and the outline pass with s = 0.2 mm.
-    """
-    assert _drc_violations(board) == Counter({("lead", "centre"): 24})
-
-
-@pytest.mark.req("REQ-F-05")
-@pytest.mark.xfail(strict=True, reason="DEF-M2d-01: G5 lead line passes 0.32 mm from its own centre via")
 def test_default_example_passes_drc(board: Layout) -> None:
-    """Acceptance: the default 12/16 spiral passes run_drc with no violation."""
-    report = run_drc(board, default_design().drc_rules)
-    assert report is not None and report.passed and report.violation_count == 0
+    """Acceptance (DEF-M2d-01 closed): the default 12/16 spiral passes run_drc; its tightest gaps are exactly s."""
+    least = _drc_summary(board, default_design().drc_rules)
+    assert least["trace_trace"] == pytest.approx(0.2, abs=1e-6)
+    assert least["trace_via"] == pytest.approx(0.2, abs=1e-6)
+
+
+@pytest.mark.req("REQ-F-05")
+def test_d08_example_passes_drc_at_its_own_clearance(registry: Registry) -> None:
+    """Worked example 2: D08 passes run_drc with trace and via rules at s 0.8 mm; the tightest gaps are exactly s."""
+    design = d08_design()
+    stack = generate_spiral(design, registry)
+    assert isinstance(stack, BoardStack)
+    least = _drc_summary(stack.boards[0], design.drc_rules)
+    assert least["trace_trace"] == pytest.approx(0.8, abs=1e-6)
+    assert least["trace_via"] == pytest.approx(0.8, abs=1e-6)

@@ -1,9 +1,9 @@
-"""Layer-X artwork of the canonical coil: terminal stub, turns and centre-via lead (spiral_generator_spec.md G4-G6)."""
+"""Layer-X artwork of the canonical coil: terminal stub, turns and closing (spiral_generator_spec.md G4-G6)."""
 
 import math
 from dataclasses import dataclass
 
-from embodic.generators.spiral.turns import CoilFrame, Point, Turn, TurnKind
+from embodic.generators.spiral.turns import Closing, CoilFrame, FullClosing, Point, left_side_tops
 from embodic.geometry.primitives import Arc, Line, Primitive, PrimitiveRole
 
 
@@ -13,7 +13,7 @@ class CoilArtwork:
 
     primitives: tuple[Primitive, ...]
     terminal: Point  # entry terminal via centre, angle +a_V
-    centre_via: Point  # (r_v, 0)
+    centre_via: Point
 
 
 def _angle(p: Point) -> float:
@@ -37,29 +37,34 @@ def _arc(r_mm: float, start: Point, end: Point, width_mm: float, role: Primitive
     )
 
 
-def terminal_point(frame: CoilFrame, first: Turn, bus_width_mm: float) -> Point:
+def terminal_point(frame: CoilFrame, start_corner: Point, bus_width_mm: float) -> Point:
     """G6 entry terminal: ring r_T = r_outer + s + pad/2 at a_V = min(start corner angle, the neighbour bound)."""
     s, pad = frame.clearance_mm, frame.via_pad_mm
     r_t = frame.r_outer_mm + s + pad / 2
     neighbour_rad = frame.half_angle_rad - math.asin(min(1.0, (max(pad, bus_width_mm) + s) / (2 * r_t)))
-    a_v = min(_angle(first.a), neighbour_rad)
+    a_v = min(_angle(start_corner), neighbour_rad)
     return (r_t * math.cos(a_v), r_t * math.sin(a_v))
 
 
-def coil_artwork(frame: CoilFrame, turns: tuple[Turn, ...], via_radius_mm: float, bus_width_mm: float) -> CoilArtwork:
-    """Layer X for ``turns`` (the first N of the loop rule) with its centre via at ``via_radius_mm`` on the axis."""
+def coil_artwork(frame: CoilFrame, closing: Closing, bus_width_mm: float) -> CoilArtwork:
+    """Layer X: stub, the full turns of ``closing``, then its lead arc (full) or its half turn (half)."""
     w, w_out, w_in = frame.trace_width_mm, frame.end_width_outer_mm, frame.end_width_inner_mm
-    terminal = terminal_point(frame, turns[0], bus_width_mm)
-    prims: list[Primitive] = [_line(terminal, turns[0].a, w, PrimitiveRole.STUB)]
-    for turn, after in zip(turns, (*turns[1:], None), strict=True):
-        prims.append(_arc(turn.outer_radius_mm, turn.a, turn.b, w_out, PrimitiveRole.END_TURN))
-        prims.append(_line(turn.b, turn.c, w, PrimitiveRole.SIDE))
-        if turn.kind is TurnKind.TRAPEZOID:
-            prims.append(_arc(turn.end_radius_mm, turn.c, turn.e, w_in, PrimitiveRole.END_TURN))
-        if after is not None:
-            prims.append(_line(turn.e, after.a, w, PrimitiveRole.SIDE))
-    lead_corner = frame.on_left(frame.offset_mm(len(turns)), via_radius_mm)
-    centre_via = (via_radius_mm, 0.0)
-    prims.append(_line(turns[-1].e, lead_corner, w, PrimitiveRole.LEAD))
-    prims.append(_arc(via_radius_mm, lead_corner, centre_via, w, PrimitiveRole.LEAD))
-    return CoilArtwork(primitives=tuple(prims), terminal=terminal, centre_via=centre_via)
+    terminal = terminal_point(frame, closing.start_corner, bus_width_mm)
+    prims: list[Primitive] = [_line(terminal, closing.start_corner, w, PrimitiveRole.STUB)]
+    for turn, top in zip(closing.turns, left_side_tops(closing), strict=True):
+        prims += [
+            _arc(turn.outer_radius_mm, turn.j, turn.b, w_out, PrimitiveRole.END_TURN),
+            _line(turn.b, turn.c, w, PrimitiveRole.SIDE),
+            _arc(turn.end_radius_mm, turn.c, turn.d, w_in, PrimitiveRole.END_TURN),
+            _line(turn.d, top, w, PrimitiveRole.SIDE),
+        ]
+    if isinstance(closing, FullClosing):
+        r_v = closing.eye.via_radius_mm
+        prims.append(_arc(r_v, closing.lead_point, closing.centre_via, w, PrimitiveRole.LEAD))
+    else:
+        half = closing.half
+        prims += [
+            _arc(half.outer_radius_mm, half.j, half.b, w_out, PrimitiveRole.END_TURN),
+            _line(half.b, half.via, w, PrimitiveRole.SIDE),
+        ]
+    return CoilArtwork(primitives=tuple(prims), terminal=terminal, centre_via=closing.centre_via)
