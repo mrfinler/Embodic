@@ -15,12 +15,14 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 
+from embodic.drc.report import violates
 from embodic.errors import IssueCategory, Severity, Unbuildable, ValidationIssue, message_for
 from embodic.generators.spiral.artwork import CoilArtwork, coil_artwork
 from embodic.generators.spiral.chain import BusRings, CoilEnds, End, PhaseChain, chain_coils, norm_angle
 from embodic.generators.spiral.derived import spiral_derived
 from embodic.generators.spiral.interconnect import LINE_NET, Interconnect, PhaseEnd, build_interconnect, plan_links
 from embodic.generators.spiral.turns import (
+    MAX_TURNS_PER_LAYER,
     Closing,
     CoilFrame,
     LoopStop,
@@ -79,24 +81,26 @@ def _unsupported(design: DesignParameters, spec: SpiralWindingSpec) -> tuple[str
 
 
 def _out_of_range(design: DesignParameters, spec: SpiralWindingSpec) -> tuple[str, ...]:
-    """Pointers of inputs the geometry cannot use: a zero turn pitch would never end the loop rule."""
+    """Pointers of inputs the geometry cannot use (D-030): a zero or NaN pitch, or a width the DRC would flag."""
     coil, vias = spec.coil, design.vias
-    lengths = {
-        "/winding/coil/trace_width_mm": coil.trace_width_mm,
+    positive = {
         "/winding/coil/end_width_outer_mm": coil.end_width_outer_mm or coil.trace_width_mm,
         "/winding/coil/end_width_inner_mm": coil.end_width_inner_mm or coil.trace_width_mm,
+        "/winding/coil/clearance_mm": coil.clearance_mm,
+        "/winding/coil/r_inner_mm": coil.r_inner_mm,
         "/vias/pad_mm": vias.pad_mm,
         "/connection/ring_width_mm": design.connection.ring_width_mm,
     }
-    bad = [p for p, v in lengths.items() if not (math.isfinite(v) and v > 0)]
-    others = {
-        "/winding/coil/clearance_mm": coil.clearance_mm,
+    bad = [p for p, v in positive.items() if not (math.isfinite(v) and v > 0)]
+    width_mm = coil.trace_width_mm
+    if not (math.isfinite(width_mm) and width_mm > 0) or violates(width_mm, design.drc_rules.min_trace_width_mm):
+        bad.append("/winding/coil/trace_width_mm")
+    non_negative = {
         "/winding/coil/coil_gap_mm": coil.coil_gap_mm,
-        "/winding/coil/r_inner_mm": coil.r_inner_mm,
         "/winding/coil/first_coil_angle_rad": coil.first_coil_angle_rad,
         "/winding/coil/min_side_length_mm": 0.0 if coil.min_side_length_mm is None else coil.min_side_length_mm,
     }
-    bad += [p for p, v in others.items() if not (math.isfinite(v) and v >= 0)]
+    bad += [p for p, v in non_negative.items() if not (math.isfinite(v) and v >= 0)]
     if not (math.isfinite(coil.r_outer_mm) and coil.r_outer_mm > coil.r_inner_mm):
         bad.append("/winding/coil/r_outer_mm")
     if coil.coil_count < 3:
@@ -104,9 +108,16 @@ def _out_of_range(design: DesignParameters, spec: SpiralWindingSpec) -> tuple[st
     return tuple(bad)
 
 
+def _turns_exceed_limit() -> Unbuildable:
+    issue = _issue("UNBUILDABLE_TURNS_EXCEED_LIMIT", ("/winding/coil/turns",), MAX_TURNS_PER_LAYER)
+    return Unbuildable(issues=(issue,))
+
+
 def _refusal(design: DesignParameters, spec: SpiralWindingSpec) -> Unbuildable | None:
     if pointers := _out_of_range(design, spec):
         return Unbuildable(issues=(_issue("UNBUILDABLE_SPIRAL_INPUT_OUT_OF_RANGE", pointers),))
+    if spec.coil.turns is not None and spec.coil.turns > MAX_TURNS_PER_LAYER:
+        return _turns_exceed_limit()
     if pointers := _unsupported(design, spec):
         return Unbuildable(issues=(_issue("UNBUILDABLE_SPIRAL_OPTION_NOT_IMPLEMENTED", pointers),))
     return None
@@ -273,12 +284,16 @@ def _coil_copper(
 
 
 def _closings(
-    frame: CoilFrame, loops: tuple[LoopTurn, ...], requested: int | None
+    frame: CoilFrame, loops: tuple[LoopTurn, ...], stop: LoopStop, requested: int | None
 ) -> tuple[Closing, Closing] | Unbuildable:
     """Return the closing to build and the one with the most turns (G5), or why none fits."""
+    if stop is LoopStop.CAP:
+        return _turns_exceed_limit()
     best = max_closing(frame, loops)
     if best is None:
         return Unbuildable(issues=(_issue("UNBUILDABLE_ZERO_TURNS", ("/winding/coil/turns",)),))
+    if best.n > MAX_TURNS_PER_LAYER:
+        return _turns_exceed_limit()
     closing = best if requested is None else closing_for(frame, loops, requested)
     if closing is None or closing.n > best.n:
         return Unbuildable(issues=(_issue("UNBUILDABLE_TURNS_EXCEED_LIMIT", ("/winding/coil/turns",), best.n),))
@@ -316,7 +331,7 @@ def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack 
     coil, pair = spec.coil, spec.layers.pairs[0]
     frame = CoilFrame.of(coil, design.vias.pad_mm)
     loops, stop = loop_turns(frame)
-    closings = _closings(frame, loops, coil.turns)
+    closings = _closings(frame, loops, stop, coil.turns)
     if isinstance(closings, Unbuildable):
         return closings
     closing, best = closings
