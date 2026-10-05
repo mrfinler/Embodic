@@ -204,3 +204,20 @@ def test_ec05_above_the_cap_downgrades_emf_results_to_unresolved() -> None:
         assert t.status is Status.UNRESOLVED, t.quantity
         assert any("EC-05" in reason or "validity" in reason for reason in t.status_reasons), t.status_reasons
     assert narrow.resistance_phase_20c_ohm.status is not Status.UNRESOLVED
+
+
+@pytest.mark.parametrize("case", CASES)
+def test_line_peak_differs_from_the_fundamental_by_at_most_the_harmonic_sum(
+    results: Mapping[str, AnalysisResult], case: str
+) -> None:
+    """Defect caught: the line peak taken from the phase waveform (factor sqrt(3) off) or left in V instead of V*s/rad.
+
+    With line harmonics A_n, |peak - A_1| <= sum_{n>1} A_n <= sqrt(N - 1) * sqrt(sum_{n>1} A_n^2) (Cauchy-Schwarz), and
+    the root-sum-square over A_1 is thd_line, so |peak / ke_line - 1| <= sqrt(N - 1) * thd_line.
+    """
+    r = results[case]
+    n_other = len(_design(_raw(case)).analysis.harmonics) - 1
+    deviation = abs(r.ke_line_peak_v_s_per_rad.value / r.ke_line_v_s_per_rad.value - 1.0)
+    assert 0.0 < deviation <= math.sqrt(n_other) * r.thd_line.value, (deviation, r.thd_line.value)
+    assert r.ke_line_peak_v_s_per_rad.unit is r.ke_line_v_s_per_rad.unit
+    assert r.ke_line_peak_v_s_per_rad.eq_ids == ("EQ-18", "EQ-09", "EQ-06")

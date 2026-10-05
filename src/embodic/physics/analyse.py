@@ -330,6 +330,7 @@ def analyse(
     line_phasors = _line_phasors([emf[ph] for ph in phases], connection)
     line_amplitudes = {n: float(abs(e)) for n, e in zip(harmonics, line_phasors, strict=True)}
     waveform = emf_waveform_v(dict(zip(harmonics, emf[first] * omega_m, strict=True)))
+    ke_line_peak = float(np.max(np.abs(emf_waveform_v(dict(zip(harmonics, line_phasors, strict=True))))))
 
     parallel = max((len(g.members) for b in boards.boards for pc in b.circuit.phases for g in pc.groups), default=1)
     t_min = min(thickness[layer] for b in boards.boards for layer in b.copper_layers)
@@ -423,6 +424,9 @@ def analyse(
         ke_phase_v_s_per_rad=ke_t,
         ke_line_v_s_per_rad=tr(
             "ke_line", constants.ke_line_v_s_per_rad, Unit.V_S_PER_RAD, ("EQ-09", "EQ-06"), emf_refs, emf_validity
+        ),
+        ke_line_peak_v_s_per_rad=tr(
+            "ke_line_peak", ke_line_peak, Unit.V_S_PER_RAD, ("EQ-18", "EQ-09", "EQ-06"), emf_refs, emf_validity
         ),
         kt_n_m_per_a=tr("kt", constants.kt_n_m_per_a, Unit.N_M_PER_A, ("EQ-09", "EQ-06"), emf_refs, emf_validity),
         kv_rpm_per_v=tr("kv", constants.kv_rpm_per_v, Unit.RPM_PER_V, ("EQ-09", "EQ-06"), emf_refs, emf_validity),

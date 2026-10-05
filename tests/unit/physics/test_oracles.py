@@ -89,15 +89,17 @@ def _d08_design() -> DesignParameters:
 @pytest.mark.xfail(
     raises=AssertionError,
     strict=True,
-    reason="OR-01 (O1-D08, D08 Table 9.1 p.98): the generated D08 layout gives Ke_LL 0.0236 V*s/rad on a7f3d8b, "
-    "-24 % against 0.031, outside [-8 %, +8 % + e_edge]. Cause unresolved: gap G10 (G 1.4 mm assumed), T-arrangement "
-    "magnets approximated by alpha_p 0.72 (EQ-04), ke_line is the EQ-09 fundamental where O1 compares the waveform "
-    "peak, and the G8 links are not built (U-M2d-2)",
+    reason="OR-01 (O1-D08, D08 Table 9.1 p.98): the generated D08 layout gives a line-waveform peak of 0.0234 "
+    "V*s/rad (fundamental 0.0236), -24.5 % against 0.031, outside [-8 %, +8 % + e_edge]. The peak is the quantity "
+    "O1 compares, so the shortfall is not the fundamental-versus-peak choice. Fable's root cause is the spiral turn "
+    "advance (investigations_2026-10-05.md section 1.2, D-028); other candidates: gap G10 (G 1.4 mm assumed), "
+    "T-arrangement magnets approximated by alpha_p 0.72 (EQ-04), the G8 links not built (U-M2d-2)",
 )
 def test_or01_d08_line_line_ke_within_the_registry_band() -> None:
-    """OR-01: model Ke_LL against D08's measured 0.031 V*s/rad in [-8 %, +8 % + e_edge] (test_plan.md section 4).
+    """OR-01: model Ke_LL peak against D08's measured 0.031 V*s/rad in [-8 %, +8 % + e_edge] (test_plan.md section 4).
 
-    Defect caught: a D08 layout or an EMF chain (EQ-05, EQ-06, EQ-07, EQ-09) that misses the measured line-line Ke.
+    Defect caught: a D08 layout or an EMF chain (EQ-05, EQ-06, EQ-07, EQ-09, EQ-18) that misses the measured line-line
+    Ke. The compared value is the synthesised line waveform peak per rad/s, as D08 Table 9.1 measures it.
     e_edge is the computed edge_leakage_fraction of this design, not a constant (test_plan.md section 4). Only the band
     check raises AssertionError, so an Unbuildable D08 design fails this test outright instead of hiding in the xfail.
     """
@@ -110,7 +112,7 @@ def test_or01_d08_line_line_ke_within_the_registry_band() -> None:
     if result is None:
         pytest.fail("analyse() returned None without a cancel token")
     measured = next(e for e in _o1_d08()["expected"] if e["quantity"].startswith("Ke_LL_peak"))["value"]
-    model = result.ke_line_v_s_per_rad.value
+    model = result.ke_line_peak_v_s_per_rad.value
     deviation = model / measured - 1.0
     upper = D08_TOLERANCE + result.edge_leakage_fraction.value
     assert -D08_TOLERANCE <= deviation <= upper, (

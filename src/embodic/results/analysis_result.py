@@ -54,6 +54,7 @@ class AnalysisResult:
 
     ke_phase_v_s_per_rad: Traceable[float]  # EQ-06, EQ-09
     ke_line_v_s_per_rad: Traceable[float]  # EQ-09
+    ke_line_peak_v_s_per_rad: Traceable[float]  # EQ-18, EQ-09: peak of the synthesised line waveform per mech. rad/s
     kt_n_m_per_a: Traceable[float]  # EQ-09
     kv_rpm_per_v: Traceable[float]  # EQ-09
     winding_factor_1: Traceable[float]  # EQ-08 (spiral); kind_tag "derived" from the generator for serpentine/wave
