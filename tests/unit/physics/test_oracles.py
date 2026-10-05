@@ -86,15 +86,6 @@ def _d08_design() -> DesignParameters:
 
 
 @pytest.mark.req("REQ-F-11")
-@pytest.mark.xfail(
-    raises=AssertionError,
-    strict=True,
-    reason="OR-01 (O1-D08, D08 Table 9.1 p.98): the generated D08 layout gives a line-waveform peak of 0.0234 "
-    "V*s/rad (fundamental 0.0236), -24.5 % against 0.031, outside [-8 %, +8 % + e_edge]. The peak is the quantity "
-    "O1 compares, so the shortfall is not the fundamental-versus-peak choice. Fable's root cause is the spiral turn "
-    "advance (investigations_2026-10-05.md section 1.2, D-028); other candidates: gap G10 (G 1.4 mm assumed), "
-    "T-arrangement magnets approximated by alpha_p 0.72 (EQ-04), the G8 links not built (U-M2d-2)",
-)
 def test_or01_d08_line_line_ke_within_the_registry_band() -> None:
     """OR-01: model Ke_LL peak against D08's measured 0.031 V*s/rad in [-8 %, +8 % + e_edge] (test_plan.md section 4).
 

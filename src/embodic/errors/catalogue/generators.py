@@ -10,4 +10,6 @@ MESSAGES: Mapping[str, str] = {
     "UNBUILDABLE_SPIRAL_INPUT_OUT_OF_RANGE": "A spiral coil input is outside the range the geometry can use.",
     "UNBUILDABLE_ZERO_TURNS": "No spiral turn with a centre via fits between the inner and outer radius.",
     "UNBUILDABLE_TURNS_EXCEED_LIMIT": "The requested turn count exceeds the largest buildable count {limit}.",
+    "UNBUILDABLE_PHASE_CHAIN_UNROUTABLE": "The coils of a phase cannot be chained on four bus ring levels.",
+    "UNBUILDABLE_INTERCONNECT_CROSSING": "The delta links cross, and one ring layer cannot carry crossing links.",
 }
