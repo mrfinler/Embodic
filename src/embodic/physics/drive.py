@@ -14,9 +14,9 @@ from embodic.units import FloatArray
 
 XCOIL_CURVE_POINTS = 121
 FIELD_WEAKENING_STEPS = 80  # id = -I_max * i / 80 scan, i = 0..80
-OVERSPEED_FACTOR = 1.15  # the curve ends 15 % above the no-load speed
+OVERSPEED_FACTOR = 1.15  # Xcoil ends the curve 15 % above the no-load speed
 BASE_SPEED_TORQUE_FRACTION = 0.995  # base speed: first point below 99.5 % of the peak torque
-PHASES = 3
+PHASES = 3  # the envelope is a three-phase star equivalent
 CURRENT_TIE_A = 1.0 / 10.0**12  # Xcoil's 1e-12 A margin for 'current limit reached at i_d = 0' (engine.js l.2703)
 
 

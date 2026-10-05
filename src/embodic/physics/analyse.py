@@ -31,6 +31,7 @@ from embodic.physics.circuit import (
 )
 from embodic.physics.constants import phase_constants
 from embodic.physics.drive import (
+    PHASES,
     XCOIL_CURVE_POINTS,
     base_speed_rpm,
     no_load_speed_rpm,
@@ -71,7 +72,6 @@ from embodic.units import Unit, rpm_to_rad_per_s
 EDGE_CHECK_ID = "EC-05"
 SKIN_DEPTH_FRACTION = 1.0 / 3.0  # REQ-T-08: w above delta / 3 raises RANGE_SKIN_DEPTH
 IDEAL_INTEGRAL_STEPS = 200  # Xcoil analyzeElements `ideal` integral (EQ-27)
-PHASES_FOR_DRIVE_MODEL = 3  # the EQ-20 envelope is a three-phase star equivalent
 
 
 class CancelToken(Protocol):
@@ -429,7 +429,7 @@ def analyse(
         for ph in phases
     )
     torque_speed = None
-    if op.dc_link_v is not None and design.phases == PHASES_FOR_DRIVE_MODEL and ke1 > 0.0:
+    if op.dc_link_v is not None and design.phases == PHASES and ke1 > 0.0:
         drive_refs = [*emf_refs, *r_refs, current, inputs.field("/operating/dc_link_v")]
         drive_refs.append(inputs.field("/operating/modulation"))
         drive_eq = ("EQ-20", "EQ-14", "EQ-09", "EQ-23")
