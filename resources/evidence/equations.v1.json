@@ -1587,6 +1587,14 @@
      "source": "EV-53",
      "status": "verified",
      "basis": "IACS temperature coefficient at 20 degC, NBS Handbook 100 p.3"
+    },
+    {
+     "name": "vacuum_permeability_h_per_m",
+     "value": 1.2566370614359173e-06,
+     "unit": "H_per_m",
+     "source": null,
+     "status": "assumption",
+     "basis": "4*pi*1e-7 as in Xcoil engine.js l.11 (MU0) and src/embodic/physics/losses.py MU0_H_PER_M; no evidence entry"
     }
    ]
   },
@@ -1715,7 +1723,16 @@
     "EQT-14-O2"
    ],
    "label": "estimate",
-   "constants": []
+   "constants": [
+    {
+     "name": "vacuum_permeability_h_per_m",
+     "value": 1.2566370614359173e-06,
+     "unit": "H_per_m",
+     "source": null,
+     "status": "assumption",
+     "basis": "4*pi*1e-7 as in Xcoil engine.js l.11 (MU0) and src/embodic/physics/losses.py MU0_H_PER_M; no evidence entry"
+    }
+   ]
   },
   {
    "id": "EQ-15",
@@ -2481,7 +2498,7 @@
   {
    "id": "EQ-25",
    "name": "Spiral coil centre-via eye, lead and terminal stub",
-   "formula": "via on the coil centre line at r_v = (r_lo + r_hi)/2; r_lo = max((d_side + w/2 + s + pad/2)/sin(pi/Q), R_in,N-1 + w_in/2 + s + pad/2 [trapezoid]); r_hi = R_out,N-1 - w_out/2 - s - pad/2; d_side = d_(N-1) for one centre via, d_N for k > 1 series groups; fits iff r_hi - r_lo >= (k - 1)(max(pad, w)/2 + pad/2 + s); lead = line d_N from the last inner end to radius r_v, then an arc at r_v to the centre line; terminal via at r_T = r_outer + s + pad/2, angle min(angle of start corner, pi/Q - asin((max(pad, bw) + s)/(2 r_T)))",
+   "formula": "via on the coil centre line at r_v = r_hi, m = max(pad, w)/2; r_lo = max((d_(N-1) + w/2 + s + m)/sin(pi/Q), r_end,N-1 + w_in/2 + s + m); r_hi = R_out,N-1 - w_out/2 - s - m; fits iff r_hi - r_lo >= (k - 1)(max(pad, w)/2 + pad/2 + s); lead = the last left side d_(N-1) ends at radius r_v, then one arc at r_v to the centre line (revision 2026-10-05, U-E3); terminal via at r_T = r_outer + s + pad/2, angle min(angle of start corner, pi/Q - asin((max(pad, bw) + s)/(2 r_T)))",
    "variables": [
     {
      "symbol": "pad",
@@ -2531,7 +2548,7 @@
     },
     "expected": {
      "N_eye": 10,
-     "r_v_mm": 29.6457
+     "r_v_mm": 30.7
     },
     "tolerance": "exact / 1e-4 mm"
    },
@@ -2804,7 +2821,16 @@
     "EQT-29-GR"
    ],
    "label": "upper bound",
-   "constants": []
+   "constants": [
+    {
+     "name": "vacuum_permittivity_f_per_m",
+     "value": 8.854e-12,
+     "unit": "F_per_m",
+     "source": null,
+     "status": "assumption",
+     "basis": "Xcoil engine.js l.1181 (EPS0 = 8.854e-12); no evidence entry"
+    }
+   ]
   },
   {
    "id": "EQ-30",
