@@ -8,6 +8,14 @@ function analysisOf(E, params) {
   const r = E.compute(params);
   if (!r.ok || !r.analysis) throw new Error(`Xcoil compute failed: ${JSON.stringify(r.errors)}`);
   const a = r.analysis;
+  // Xcoil's own EQ-23 on the winding copper alone: no via barrels, links or interconnect (icR = null).
+  const windingOnly = E.applyConnection(
+    r.params,
+    { ...structuredClone(a), phases: a.phases.map((ph) => ({ ...structuredClone(ph), R: ph.Rtrace })) },
+    null,
+  );
+  const copperT = r.layout.layers.map((layer) => layer.copperT);
+  const ic = E.interconnectResistance(r.params, r.layout.interconnect, copperT);
   const phaseWaveform = E.emfWaveform(a, SAMPLES)[0].v;
   const lineWaveform = E.lineWaveform(a, SAMPLES)[0].v;
   return {
@@ -19,7 +27,13 @@ function analysisOf(E, params) {
     keLinePeakWaveform: Math.max(...lineWaveform.map(Math.abs)) / a.omegaM,
     thd: a.thd,
     Rphase: a.Rphase,
+    // Rtrace is the winding copper alone; Rphase adds via barrels and links (Rextra), which the mapped circuits omit.
+    phaseRtrace: a.phases.map((ph) => ph.Rtrace),
+    phaseRextra: a.phases.map((ph) => ph.Rextra),
+    phaseR: a.phases.map((ph) => ph.R),
+    interconnect: { lineStub: ic.lineStub, link: ic.link, neutralRing: ic.neutralRing },
     rLineLine: a.rLineLine,
+    rLineLineWindingOnly: windingOnly.rLineLine,
     pEddy: a.pEddy,
     pCu: a.pCu,
     pCirc: a.pCirc,
