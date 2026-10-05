@@ -30,6 +30,12 @@ from embodic.physics.circuit import (
     solve_phase_circuit,
 )
 from embodic.physics.constants import phase_constants
+from embodic.physics.drive import (
+    XCOIL_CURVE_POINTS,
+    base_speed_rpm,
+    no_load_speed_rpm,
+    torque_speed_envelope,
+)
 from embodic.physics.emf import (
     PathField,
     eddy_loss_w,
@@ -52,6 +58,7 @@ from embodic.results import (
     PhaseResult,
     Registry,
     Status,
+    TorqueSpeedEstimate,
     Traceable,
     ValidityEffect,
     ValidityFlag,
@@ -64,6 +71,7 @@ from embodic.units import Unit, rpm_to_rad_per_s
 EDGE_CHECK_ID = "EC-05"
 SKIN_DEPTH_FRACTION = 1.0 / 3.0  # REQ-T-08: w above delta / 3 raises RANGE_SKIN_DEPTH
 IDEAL_INTEGRAL_STEPS = 200  # Xcoil analyzeElements `ideal` integral (EQ-27)
+PHASES_FOR_DRIVE_MODEL = 3  # the EQ-20 envelope is a three-phase star equivalent
 
 
 class CancelToken(Protocol):
@@ -420,6 +428,46 @@ def analyse(
         )
         for ph in phases
     )
+    torque_speed = None
+    if op.dc_link_v is not None and design.phases == PHASES_FOR_DRIVE_MODEL and ke1 > 0.0:
+        drive_refs = [*emf_refs, *r_refs, current, inputs.field("/operating/dc_link_v")]
+        drive_refs.append(inputs.field("/operating/modulation"))
+        drive_eq = ("EQ-20", "EQ-14", "EQ-09", "EQ-23")
+        ke_equivalent = constants.ke_line_v_s_per_rad / math.sqrt(3.0)
+        speed_rpm, curve_torque_n_m = torque_speed_envelope(
+            r_line / 2.0,
+            inductance / 3.0 if connection is ConnectionTopology.DELTA else inductance,
+            ke_equivalent,
+            op.dc_link_v,
+            op.modulation,
+            i_line,
+            rotor.poles,
+            XCOIL_CURVE_POINTS,
+        )
+        power_w = curve_torque_n_m * speed_rpm * (2.0 * math.pi / 60.0)
+        torque_speed = TorqueSpeedEstimate(
+            speed_rpm=tr("torque_speed_rpm", tuple(speed_rpm.tolist()), Unit.RPM, drive_eq, drive_refs, emf_validity),
+            torque_n_m=tr(
+                "torque_speed_torque", tuple(curve_torque_n_m.tolist()), Unit.N_M, drive_eq, drive_refs, emf_validity
+            ),
+            power_w=tr("torque_speed_power", tuple(power_w.tolist()), Unit.W, drive_eq, drive_refs, emf_validity),
+            no_load_speed_rpm=tr(
+                "no_load_speed",
+                no_load_speed_rpm(ke_equivalent, op.dc_link_v, op.modulation),
+                Unit.RPM,
+                drive_eq,
+                drive_refs,
+                emf_validity,
+            ),
+            base_speed_rpm=tr(
+                "base_speed",
+                base_speed_rpm(speed_rpm, curve_torque_n_m),
+                Unit.RPM,
+                drive_eq,
+                drive_refs,
+                emf_validity,
+            ),
+        )
     return AnalysisResult(
         ke_phase_v_s_per_rad=ke_t,
         ke_line_v_s_per_rad=tr(
@@ -483,7 +531,7 @@ def analyse(
         emf_waveform_v=tr(
             "emf_waveform", tuple(waveform.tolist()), Unit.V, ("EQ-18", "EQ-06"), [*emf_refs, speed], emf_validity
         ),
-        torque_speed=None,
+        torque_speed=torque_speed,
         registry_version=registry.version,
     )
 

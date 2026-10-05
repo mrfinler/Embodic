@@ -20,7 +20,7 @@ from embodic.geometry.layout import BoardStack, Layout
 from embodic.model.connection import ConnectionSpec
 from embodic.model.design import DesignParameters
 from embodic.model.drc_rules import DrcRules
-from embodic.model.operating import OperatingPoint
+from embodic.model.operating import Modulation, OperatingPoint
 from embodic.model.outline import CircleOutline, OutlineSpec
 from embodic.model.rotor import ArcMagnet, RotorSpec, RotorType
 from embodic.model.stackup import CopperLayer, DielectricLayer, Stackup
@@ -33,6 +33,7 @@ from embodic.results import AnalysisResult, Status, Traceable, load_registry
 DATA = Path(__file__).parents[1] / "data" / "m1_layout"
 CASES = ("layout-sector-default", "layout-serpentine-default", "layout-wave-turns-2")
 ROTOR_TYPE = {"double": RotorType.DOUBLE, "singleYoke": RotorType.SINGLE_YOKE, "singleOpen": RotorType.SINGLE_OPEN}
+MODULATION = {"svpwm": Modulation.SVPWM, "sine": Modulation.SPWM, "sixstep": Modulation.SIX_STEP}
 pytestmark = pytest.mark.req("REQ-F-11")
 
 
@@ -96,6 +97,8 @@ def _design(raw: Mapping[str, Any], magnet_r_outer_mm: float | None = None) -> D
             winding_temperature_degc=p["tempC"],
             ambient_temperature_degc=p["ambientC"],
             convection_h_w_m2k=p["hConv"],
+            dc_link_v=p["vDc"],
+            modulation=MODULATION[p["modulation"]],
         ),
         drc_rules=DrcRules(
             trace_clearance_mm=0.15,
@@ -221,3 +224,46 @@ def test_line_peak_differs_from_the_fundamental_by_at_most_the_harmonic_sum(
     assert 0.0 < deviation <= math.sqrt(n_other) * r.thd_line.value, (deviation, r.thd_line.value)
     assert r.ke_line_peak_v_s_per_rad.unit is r.ke_line_v_s_per_rad.unit
     assert r.ke_line_peak_v_s_per_rad.eq_ids == ("EQ-18", "EQ-09", "EQ-06")
+
+
+@pytest.mark.parametrize("case", CASES)
+def test_torque_speed_estimate_is_an_unresolved_estimate_tied_to_the_other_results(
+    results: Mapping[str, AnalysisResult], case: str
+) -> None:
+    """Defect caught: EQ-20 above unresolved or unlabelled, a no-load speed off V_dc / Ke_LL, a wrong stall torque.
+
+    The mapped layouts use SVPWM, where the line EMF peak reaches V_dc at the no-load speed. The current limit binds at
+    standstill (V_ph / R_eq is far above the 0.8 A line current), so the stall torque is Kt times that current.
+    """
+    r = results[case]
+    estimate = r.torque_speed
+    assert estimate is not None
+    for t in (
+        estimate.speed_rpm,
+        estimate.torque_n_m,
+        estimate.power_w,
+        estimate.no_load_speed_rpm,
+        estimate.base_speed_rpm,
+    ):
+        assert t.status is Status.UNRESOLVED, t.quantity
+        assert t.label == "estimate", t.quantity
+        assert t.eq_ids[0] == "EQ-20", t.quantity
+    raw = _raw(case)["params"]
+    assert estimate.no_load_speed_rpm.value == pytest.approx(
+        raw["vDc"] / r.ke_line_v_s_per_rad.value * 60.0 / (2.0 * math.pi), rel=1e-12
+    )
+    speed, torque, power = estimate.speed_rpm.value, estimate.torque_n_m.value, estimate.power_w.value
+    assert speed[0] == 0.0 and speed[-1] == pytest.approx(1.15 * estimate.no_load_speed_rpm.value, rel=1e-12)
+    assert 0.0 < estimate.base_speed_rpm.value < speed[-1]
+    assert torque[0] == pytest.approx(r.torque_n_m.value, rel=1e-12)
+    for rpm, t, p in zip(speed, torque, power, strict=True):
+        assert p == pytest.approx(t * rpm * 2.0 * math.pi / 60.0, rel=1e-12, abs=1e-15)
+
+
+def test_torque_speed_is_none_without_a_dc_link_voltage() -> None:
+    """Defect caught: an envelope computed from a default voltage when the design has no DC link (REQ-F-20)."""
+    raw = _raw("layout-sector-default")
+    design = _design(raw)
+    bare = dataclasses.replace(design, operating=dataclasses.replace(design.operating, dc_link_v=None))
+    result = analyse(bare, _stack(raw), {}, load_registry())
+    assert result is not None and result.torque_speed is None
