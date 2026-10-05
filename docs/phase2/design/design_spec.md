@@ -338,7 +338,7 @@ Agent 3 sets `Qt.StrongFocus` and ignores wheel events on `QAbstractSpinBox` and
 | Q1 | Phase naming: which phase is "A" relative to terminal U? | A = U, B = V, C = W (assumption) |
 | Q2 | `InputSource` needs `example` (D-014); Phase 1 architecture has `user`, `default`, `measured`, `migrated`, `imported_kicad`. | Chips for `user`, `example`, `default`, `measured`; request to Agent 6 through Fable |
 | Q3 | Which connections each topology supports, and whether 1- and 2-phase cases stay | Hide unsupported connection buttons |
-| Q4 | Optional fields in a blank design: start empty or start at a documented default with a `default` chip? | Required fields start empty; optional advanced fields start at their documented default with a `default` chip, counted in "n assumptions" |
+| Q4 | Optional fields in a blank design: start empty or start at a documented default with a `default` chip? | Decided by D-019 and D-023: required fields start empty; optional fields start at `FieldSpec.neutral_value` with a `default` chip. A design or geometry input at its default is not counted in "n assumptions"; property inputs not marked measured are. B_r, mu_r and h are required (`screens.md` v2, R10). |
 
 ## Appendix A. Contrast of every text and background pair
 
