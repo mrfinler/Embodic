@@ -13,8 +13,8 @@ from enum import IntEnum
 import numpy as np
 from numpy.typing import NDArray
 
-from embodic.drc.kernels import D, pad_bounding_radius_mm, pad_closest
-from embodic.geometry.layout import Layout, Pad, ViaRole
+from embodic.drc.kernels import D, closest_pairs, pad_bounding_radius_mm, pad_closest
+from embodic.geometry.layout import Layout, Pad
 from embodic.geometry.paths import COINCIDENCE_MM, CopperPath
 from embodic.geometry.primitives import Arc, Line, Primitive, PrimitiveRole
 from embodic.units import FloatArray
@@ -189,8 +189,9 @@ def exempt_pairs(layout: Layout, items: Items, first_item: dict[int, int]) -> In
 
     Exempt: a via or pad and the end group of a same-net path whose end point lies on that via or pad; the end groups
     of different paths that meet at one via, pad or coincident end point (a node); a pad and a same-net via whose
-    centre lies inside it. An interconnect path ending on a terminal via or a pad joins it whatever the nets (D-022 a).
-    Primitives adjacent in one path are exempted in the engine from ``path`` and ``slot``.
+    centre lies inside it. An interconnect path joins, whatever the nets and the via role, a via or pad its end lies on
+    and every via whose centre lies within ``pad_mm / 2`` of its centreline (D-022 a and c). Primitives adjacent in one
+    path are exempted in the engine from ``path`` and ``slot``.
     """
     ends = list(_path_ends(layout, first_item))
     via_base = int(np.count_nonzero(items.item_class == ItemClass.TRACE))
@@ -199,14 +200,14 @@ def exempt_pairs(layout: Layout, items: Items, first_item: dict[int, int]) -> In
     pairs: set[tuple[int, int]] = set()
     nodes: list[tuple[int | None, list[_PathEnd]]] = []
     for v, via in enumerate(layout.vias):
-        any_net = interconnects if via.role is ViaRole.TERMINAL else frozenset()
         on_via = [
             e
             for e in ends
-            if (e.path.net == via.net or e.path.id in any_net)
+            if (e.path.net == via.net or e.path.id in interconnects)
             and math.dist(e.point, (via.x_mm, via.y_mm)) <= via.pad_mm / 2
         ]
         nodes.append((via_base + v, on_via))
+    pairs.update(_taps(layout, items, interconnects, via_base))
     for p, pad in enumerate(layout.pads):
         on_pad = [
             e
@@ -230,6 +231,19 @@ def exempt_pairs(layout: Layout, items: Items, first_item: dict[int, int]) -> In
     n = len(items)
     keys = [min(a, c) * n + max(a, c) for a, c in pairs]
     return np.unique(np.array(keys, dtype=np.int64))
+
+
+def _taps(layout: Layout, items: Items, interconnects: frozenset[int], via_base: int) -> Iterator[tuple[int, int]]:
+    """Yield (via item, trace item) for each item of an interconnect path passing within pad_mm / 2 of the via."""
+    traces = np.flatnonzero((items.item_class == ItemClass.TRACE) & np.isin(items.path, list(interconnects)))
+    for v, via in enumerate(layout.vias):
+        centre = np.tile([via.x_mm, via.y_mm, via.x_mm, via.y_mm, 0.0, 0.0], (len(traces), 1))
+        distance_mm = np.empty(len(traces))
+        for arcs in (False, True):
+            kind = items.is_arc[traces] == arcs
+            distance_mm[kind] = closest_pairs(centre[kind], False, items.rows[traces[kind]], arcs)[D]
+        tapped = items.path[traces[distance_mm <= via.pad_mm / 2]]
+        yield from ((via_base + v, int(i)) for i in traces[np.isin(items.path[traces], tapped)])
 
 
 def _coincident_ends(ends: list[_PathEnd]) -> list[list[_PathEnd]]:
