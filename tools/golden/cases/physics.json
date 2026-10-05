@@ -448,6 +448,205 @@
           "iMaxIpcPhase": 1.0
         }
       }
+    },
+    {
+      "id": "analysis-sector-default",
+      "fn": "computeAnalysis",
+      "note": "Xcoil sector compute().analysis: Ke, R, eddy, interconnect, losses, waveforms",
+      "tags": [
+        "analysis",
+        "sector",
+        "default-params",
+        "eq-06",
+        "eq-09",
+        "eq-12",
+        "eq-18",
+        "eq-23",
+        "eq-26"
+      ],
+      "inputs": {
+        "params": {
+          "topology": "sector"
+        }
+      }
+    },
+    {
+      "id": "analysis-serpentine-default",
+      "fn": "computeAnalysis",
+      "note": "Xcoil serpentine compute().analysis: Ke, R, eddy, interconnect, losses, waveforms",
+      "tags": [
+        "analysis",
+        "serpentine",
+        "default-params",
+        "eq-06",
+        "eq-09",
+        "eq-12",
+        "eq-18",
+        "eq-23",
+        "eq-26"
+      ],
+      "inputs": {
+        "params": {
+          "topology": "serpentine"
+        }
+      }
+    },
+    {
+      "id": "analysis-wave-turns-2",
+      "fn": "computeAnalysis",
+      "note": "Xcoil wave compute().analysis: Ke, R, eddy, interconnect, losses, waveforms",
+      "tags": [
+        "analysis",
+        "wave",
+        "default-params",
+        "eq-06",
+        "eq-09",
+        "eq-12",
+        "eq-18",
+        "eq-23",
+        "eq-26"
+      ],
+      "inputs": {
+        "params": {
+          "topology": "wave",
+          "turns": 2
+        }
+      }
+    },
+    {
+      "id": "drive-sector-default",
+      "fn": "driveAnalysis",
+      "note": "Xcoil sector torque-speed curve from compute() (SVPWM, star)",
+      "tags": [
+        "drive",
+        "sector",
+        "default-params",
+        "eq-20"
+      ],
+      "inputs": {
+        "params": {
+          "topology": "sector"
+        }
+      }
+    },
+    {
+      "id": "drive-serpentine-default",
+      "fn": "driveAnalysis",
+      "note": "Xcoil serpentine torque-speed curve from compute() (SVPWM, star)",
+      "tags": [
+        "drive",
+        "serpentine",
+        "default-params",
+        "eq-20"
+      ],
+      "inputs": {
+        "params": {
+          "topology": "serpentine"
+        }
+      }
+    },
+    {
+      "id": "drive-wave-turns-2",
+      "fn": "driveAnalysis",
+      "note": "Xcoil wave torque-speed curve from compute() (SVPWM, star)",
+      "tags": [
+        "drive",
+        "wave",
+        "default-params",
+        "eq-20"
+      ],
+      "inputs": {
+        "params": {
+          "topology": "wave",
+          "turns": 2
+        }
+      }
+    },
+    {
+      "id": "drive-sector-sine",
+      "fn": "driveAnalysis",
+      "note": "sector with sinusoidal PWM voltage limit",
+      "tags": [
+        "drive",
+        "sector",
+        "sine",
+        "eq-20"
+      ],
+      "inputs": {
+        "params": {
+          "topology": "sector",
+          "modulation": "sine"
+        }
+      }
+    },
+    {
+      "id": "drive-sector-sixstep",
+      "fn": "driveAnalysis",
+      "note": "sector with six-step voltage limit",
+      "tags": [
+        "drive",
+        "sector",
+        "sixstep",
+        "eq-20"
+      ],
+      "inputs": {
+        "params": {
+          "topology": "sector",
+          "modulation": "sixstep"
+        }
+      }
+    },
+    {
+      "id": "drive-sector-delta",
+      "fn": "driveAnalysis",
+      "note": "sector in delta: star-equivalent R, L and Ke",
+      "tags": [
+        "drive",
+        "sector",
+        "delta",
+        "eq-20"
+      ],
+      "inputs": {
+        "params": {
+          "topology": "sector",
+          "connection": "delta"
+        }
+      }
+    },
+    {
+      "id": "torque-speed-field-weakening",
+      "fn": "torqueSpeed",
+      "note": "synthetic example inputs, large L_s: deep field weakening, current limit binding at low speed",
+      "tags": [
+        "drive",
+        "synthetic",
+        "field-weakening",
+        "eq-20"
+      ],
+      "inputs": {
+        "p": {
+          "phases": 3,
+          "poles": 14,
+          "rpm": 3000,
+          "vDc": 48,
+          "modulation": "svpwm",
+          "iMax": 20,
+          "currentRms": 20,
+          "rotorInertia": 0.0001
+        },
+        "an": {
+          "connection": "star",
+          "rLineLine": 0.4,
+          "Rphase": 0.2,
+          "Ke1": 0.02,
+          "keLinePk": 0.034641016151377546,
+          "KtPerArms": 0.04242640687119285,
+          "pEddy": 0.5
+        },
+        "ind": {
+          "Ls": 0.0002
+        }
+      }
     }
   ]
 }

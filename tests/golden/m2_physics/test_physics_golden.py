@@ -30,6 +30,9 @@ XCOIL_RHO20_OHM_M = 1.724e-8
 XCOIL_ALPHA_PER_K = 0.00393
 pytestmark = pytest.mark.req("REQ-F-11")
 CASES = load_area("physics")
+LAYOUT_FNS = frozenset(
+    {"computeAnalysis", "driveAnalysis", "torqueSpeed"}
+)  # test_analysis_golden, test_torque_speed_golden
 ALLOWED = load_allow_list(Path(__file__).parents[1] / "expected_diffs" / "physics.toml")
 
 
@@ -81,10 +84,10 @@ PORTS: Mapping[str, Callable[[Mapping[str, Any]], object]] = {
 def test_every_physics_fixture_has_a_port() -> None:
     """Defect caught: a fixture added for a function that no test compares."""
     assert CASES, "no physics fixtures found"
-    assert {case.fn for case in CASES.values()} <= set(PORTS)
+    assert {case.fn for case in CASES.values()} <= set(PORTS) | LAYOUT_FNS
 
 
-@pytest.mark.parametrize("case_id", sorted(CASES))
+@pytest.mark.parametrize("case_id", sorted(c for c, case in CASES.items() if case.fn in PORTS))
 def test_physics_kernel_matches_xcoil(case_id: str) -> None:
     """Every call agrees with Xcoil within the kernel class (rel 1e-12); an infinity must match exactly."""
     case = CASES[case_id]
