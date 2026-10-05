@@ -10,3 +10,23 @@ reason = "mm2 to mil2 uses embodic.units MM2_PER_MIL2 = 1/0.0254^2 (1550.0031000
 tolerance = { rel = 1e-11, abs = 0.0 }
 agent2_signoff = "pending"
 agent4_signoff = "pending"
+
+[[diff]]
+id = "XD-PHY-002"
+case = "analysis-serpentine-default"
+path = "$[0].loss_eddy"
+eq_id = "EQ-12"
+reason = "Xcoil integrates the eddy loss of `strand` objects only (engine.js l.889, `if (o.kind !== 'strand') return;`). embodic integrates every copper path of the layout, so the layer-pair via bus (`vbus`) is counted too (D-029, docs/phase2/fable/investigations_2026-10-05.md section 2). Measured +0.699 % on the default serpentine; tests/golden/m2_physics/test_copper_accounting_golden.py shows the strand-only sum equals Xcoil's value within 1e-12"
+tolerance = { rel = 0.007, abs = 0.0 }
+agent2_signoff = "pending"
+agent4_signoff = "pending"
+
+[[diff]]
+id = "XD-PHY-003"
+case = "analysis-serpentine-default"
+path = "$[0].resistance_trace_phase"
+eq_id = "EQ-10"
+reason = "Same cause as XD-PHY-002 for the phase resistance: Xcoil's winding resistance (`Rtrace`) sums the `strand` objects only, embodic adds the `vbus` copper. Measured +0.347 % against Xcoil's Rtrace; the strand-only sum equals it within 1e-12. Xcoil's Rphase also adds via barrels and links (Rextra), which the mapped circuit omits, so the comparison uses Rtrace"
+tolerance = { rel = 0.0035, abs = 0.0 }
+agent2_signoff = "pending"
+agent4_signoff = "pending"
