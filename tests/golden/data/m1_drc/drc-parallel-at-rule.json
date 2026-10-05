@@ -1,0 +1,31 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "clearance": 0.2,
+        "objs": [
+          {
+            "prims": [
+              {"kind": "side", "type": "line", "width": 0.2, "x1": 0, "x2": 5, "y1": 0, "y2": 0}
+            ]
+          },
+          {
+            "prims": [
+              {"kind": "side", "type": "line", "width": 0.2, "x1": 0, "x2": 5, "y1": 0.4, "y2": 0.4}
+            ]
+          }
+        ],
+        "wMax": 0.2
+      },
+      "output": {"clearance": 0.2, "pass": true, "slack": 0.004}
+    }
+  ],
+  "case_id": "drc-parallel-at-rule",
+  "eq_ids": ["EQ-30"],
+  "fn": "drcObjects",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "two parallel 0.2 mm traces exactly 0.2 mm apart, rule 0.2 mm: at the rule, both tools pass",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["line", "parallel", "at-rule"]
+}
