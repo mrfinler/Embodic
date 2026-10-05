@@ -18,6 +18,7 @@ from embodic.model.winding_specs import (
     PairConnection,
     SerpentineWindingSpec,
     SpiralWindingSpec,
+    StackMode,
     WaveWindingSpec,
 )
 from embodic.units import Unit
@@ -39,15 +40,16 @@ def issue(
     limit: float | int | None = None,
     unit: Unit | None = None,
     suggestion: Suggestion | None = None,
+    severity: Severity = Severity.ERROR,
 ) -> ValidationIssue:
-    """Build an ERROR issue whose category follows the code prefix and whose message names limit and unit."""
+    """Build an issue whose category follows the code prefix and whose message names limit and unit."""
     category = next(c for prefix, c in _CATEGORY_BY_PREFIX.items() if code.startswith(prefix))
     unit_text = f" {unit.display()}" if unit is not None and unit.display() else ""
     message = message_for(code).format(limit=limit, unit=unit_text)
     return ValidationIssue(
         code=code,
         category=category,
-        severity=Severity.ERROR,
+        severity=severity,
         message=message,
         pointers=tuple(pointers),
         value=value,
@@ -164,6 +166,10 @@ def _serpentine_layers(design: DesignParameters) -> Iterator[ValidationIssue]:
     if spec.pair_connection is PairConnection.SERIES and pairs > design.rotor.poles // 2:
         pointers = ["/winding/layers_per_phase", "/winding/pair_connection", "/rotor/poles"]
         yield issue("INVALID_SERIES_PAIRS_EXCEED_POLE_PAIRS", pointers, value=pairs, limit=design.rotor.poles // 2)
+    copper = len(design.stackup.copper_layers())
+    if spec.stack_mode is StackMode.ONE_BOARD_PER_PHASE and copper != count:
+        pointers = ["/stackup/layers", "/winding/layers_per_phase", "/winding/stack_mode"]
+        yield issue("INVALID_SERPENTINE_COPPER_COUNT", pointers, value=copper, limit=count)
     if spec.turns * spec.strands > TRACES_MAX:
         yield issue(
             "RANGE_TOO_MANY_TRACES",
@@ -190,6 +196,20 @@ def _spiral_inputs(design: DesignParameters) -> Iterator[ValidationIssue]:
     if design.phases != SPIRAL_PHASES:
         yield issue("INVALID_SPIRAL_PHASES", ["/phases"], value=design.phases, limit=SPIRAL_PHASES)
     coil = spec.coil
+    if coil.coil_gap_mm < coil.clearance_mm:
+        spacing = Suggestion(
+            pointer="/winding/coil/coil_gap_mm",
+            proposed_value=coil.clearance_mm,
+            reason="The generator uses the trace spacing when the gap is smaller.",
+        )
+        yield issue(
+            "RANGE_COIL_GAP_BELOW_CLEARANCE",
+            ["/winding/coil/coil_gap_mm", "/winding/coil/clearance_mm"],
+            value=coil.coil_gap_mm,
+            limit=coil.clearance_mm,
+            suggestion=spacing,
+            severity=Severity.INFO,
+        )
     for name, width_mm in (
         ("end_width_outer_mm", coil.end_width_outer_mm),
         ("end_width_inner_mm", coil.end_width_inner_mm),

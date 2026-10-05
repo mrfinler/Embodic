@@ -146,3 +146,11 @@ def test_units_property_input_units_exist(code, display):
     The code is what a project file stores in a PropertyValue, so it is pinned; the display is the SI symbol.
     """
     assert Unit(code).display() == display
+
+
+@pytest.mark.req("REQ-N-21")
+@pytest.mark.parametrize(("code", "display"), [("H_per_m", "H/m"), ("F_per_m", "F/m")])
+def test_units_vacuum_constant_units_exist(code, display):
+    """Catches mu_0 (H/m) and eps_0 (F/m) having no unit, which keeps them out of the registry constants (U-E2)."""
+    assert Unit(code).display() == display
+    assert Unit(code).value == code

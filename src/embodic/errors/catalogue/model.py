@@ -24,10 +24,17 @@ MESSAGES: Mapping[str, str] = {
     "INVALID_SERIES_PAIRS_EXCEED_POLE_PAIRS": (
         "Series connection supports at most p layer pairs (p = pole pairs): each pair is rotated by two pole pitches."
     ),
+    "INVALID_SERPENTINE_COPPER_COUNT": (
+        "With one board per phase the stack-up describes one board and needs {limit} copper layers "
+        "(the layers per phase)."
+    ),
     "RANGE_TOO_MANY_TRACES": "Total traces (turns x strands) exceed {limit}.",
     "INVALID_VIA_RING": "Via pad diameter must exceed the drill by at least {limit} mm (annular ring).",
     "INVALID_TERMINAL_PAD_RING": "Terminal pad must exceed its drill by at least {limit} mm.",
     "INVALID_SPIRAL_PHASES": "Spiral coils need 3 phases.",
+    "RANGE_COIL_GAP_BELOW_CLEARANCE": (
+        "Coil gap is below the trace spacing; the generator uses the trace spacing ({limit} mm) instead."
+    ),
     "INVALID_END_WIDTH_BELOW_TRACE": "End-turn width must be at least the trace width ({limit} mm).",
     "INVALID_STACKUP_NO_COPPER": "The stack-up needs at least one copper layer.",
     "INVALID_LAYER_NAME_DUPLICATE": "Each layer needs its own name.",
