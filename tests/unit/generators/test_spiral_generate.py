@@ -1,6 +1,7 @@
 """Spiral generator on the default 12/16 example (CF-11): geometry properties, contract, determinism and DRC."""
 
 import dataclasses
+import itertools
 import math
 from collections import Counter
 
@@ -136,7 +137,8 @@ def test_ut_geo_06_and_16_coils_are_rotated_copies_with_polarity_in_direction_on
             for a, b in zip(rotate(ref, coil * 2 * math.pi / 12), path.primitives, strict=True):
                 assert math.dist(a.start_point(), b.start_point()) <= 1e-9
                 assert math.dist(a.end_point(), b.end_point()) <= 1e-9
-    assert Counter(p.polarity for p in board.paths) == {1: 24}  # 12/16: every coil is positive (ACBACB...)
+    coil_paths = [p for p in board.paths if p.element is not None]
+    assert Counter(p.polarity for p in coil_paths) == {1: 24}  # 12/16: every coil is positive (ACBACB...)
 
 
 @pytest.mark.req("REQ-F-19")
@@ -167,6 +169,31 @@ def test_ut_gen_02_dispatch(registry: Registry) -> None:
         generate_wave(default_design(), registry)
     with pytest.raises(TypeError):
         generate_spiral(serpentine_design(), registry)
+
+
+@pytest.mark.req("REQ-F-03")
+@pytest.mark.parametrize("example", ["CF-11", "CF-10"])
+def test_g8_each_phase_is_one_continuous_series_route(example: str, registry: Registry) -> None:
+    """G8: walking a phase's members in order, every path starts where the previous one ended (legs, coil, ring arc).
+
+    Catches a ring arc run backwards, on the wrong level radius, or a leg on the wrong terminal.
+    """
+    design = default_design() if example == "CF-11" else d08_design()
+    stack = generate_spiral(design, registry)
+    assert isinstance(stack, BoardStack)
+    board = stack.boards[0]
+    paths = {p.id: p for p in board.paths}
+    pair = design.winding.layers.pairs[0]  # type: ignore[union-attr]
+    for phase in board.circuit.phases:
+        route = [paths[i] for g in phase.groups for m in g.members for i in m.path_ids]
+        assert len({p.element for p in route if p.element is not None}) == len(phase.groups)
+        for before, after in itertools.pairwise(route):
+            assert math.dist(before.primitives[-1].end_point(), after.primitives[0].start_point()) <= 1e-6
+        chain_copper = [p for p in route if p.element is None]
+        assert {p.layer for p in chain_copper if p.primitives[0].role is PrimitiveRole.LEG} == {pair.layer_out}
+        assert {p.layer for p in chain_copper if p.primitives[0].role is PrimitiveRole.RING} <= {pair.layer_in}
+        assert all(p.net == f"PHASE_{phase.phase.value}" for p in route)
+    assert Counter(v.role for v in board.vias)[ViaRole.RING] == 2 * 12
 
 
 def _check_contract(result: BoardStack | Unbuildable) -> None:
