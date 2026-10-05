@@ -30,6 +30,13 @@ from embodic.physics.circuit import (
     solve_phase_circuit,
 )
 from embodic.physics.constants import phase_constants
+from embodic.physics.drive import (
+    PHASES,
+    XCOIL_CURVE_POINTS,
+    base_speed_rpm,
+    no_load_speed_rpm,
+    torque_speed_envelope,
+)
 from embodic.physics.emf import (
     PathField,
     eddy_loss_w,
@@ -52,6 +59,7 @@ from embodic.results import (
     PhaseResult,
     Registry,
     Status,
+    TorqueSpeedEstimate,
     Traceable,
     ValidityEffect,
     ValidityFlag,
@@ -330,6 +338,7 @@ def analyse(
     line_phasors = _line_phasors([emf[ph] for ph in phases], connection)
     line_amplitudes = {n: float(abs(e)) for n, e in zip(harmonics, line_phasors, strict=True)}
     waveform = emf_waveform_v(dict(zip(harmonics, emf[first] * omega_m, strict=True)))
+    ke_line_peak = float(np.max(np.abs(emf_waveform_v(dict(zip(harmonics, line_phasors, strict=True))))))
 
     parallel = max((len(g.members) for b in boards.boards for pc in b.circuit.phases for g in pc.groups), default=1)
     t_min = min(thickness[layer] for b in boards.boards for layer in b.copper_layers)
@@ -419,10 +428,53 @@ def analyse(
         )
         for ph in phases
     )
+    torque_speed = None
+    if op.dc_link_v is not None and design.phases == PHASES and ke1 > 0.0:
+        drive_refs = [*emf_refs, *r_refs, current, inputs.field("/operating/dc_link_v")]
+        drive_refs.append(inputs.field("/operating/modulation"))
+        drive_eq = ("EQ-20", "EQ-14", "EQ-09", "EQ-23")
+        ke_equivalent = constants.ke_line_v_s_per_rad / math.sqrt(3.0)
+        speed_rpm, curve_torque_n_m = torque_speed_envelope(
+            r_line / 2.0,
+            inductance / 3.0 if connection is ConnectionTopology.DELTA else inductance,
+            ke_equivalent,
+            op.dc_link_v,
+            op.modulation,
+            i_line,
+            rotor.poles,
+            XCOIL_CURVE_POINTS,
+        )
+        power_w = curve_torque_n_m * speed_rpm * (2.0 * math.pi / 60.0)
+        torque_speed = TorqueSpeedEstimate(
+            speed_rpm=tr("torque_speed_rpm", tuple(speed_rpm.tolist()), Unit.RPM, drive_eq, drive_refs, emf_validity),
+            torque_n_m=tr(
+                "torque_speed_torque", tuple(curve_torque_n_m.tolist()), Unit.N_M, drive_eq, drive_refs, emf_validity
+            ),
+            power_w=tr("torque_speed_power", tuple(power_w.tolist()), Unit.W, drive_eq, drive_refs, emf_validity),
+            no_load_speed_rpm=tr(
+                "no_load_speed",
+                no_load_speed_rpm(ke_equivalent, op.dc_link_v, op.modulation),
+                Unit.RPM,
+                drive_eq,
+                drive_refs,
+                emf_validity,
+            ),
+            base_speed_rpm=tr(
+                "base_speed",
+                base_speed_rpm(speed_rpm, curve_torque_n_m),
+                Unit.RPM,
+                drive_eq,
+                drive_refs,
+                emf_validity,
+            ),
+        )
     return AnalysisResult(
         ke_phase_v_s_per_rad=ke_t,
         ke_line_v_s_per_rad=tr(
             "ke_line", constants.ke_line_v_s_per_rad, Unit.V_S_PER_RAD, ("EQ-09", "EQ-06"), emf_refs, emf_validity
+        ),
+        ke_line_peak_v_s_per_rad=tr(
+            "ke_line_peak", ke_line_peak, Unit.V_S_PER_RAD, ("EQ-18", "EQ-09", "EQ-06"), emf_refs, emf_validity
         ),
         kt_n_m_per_a=tr("kt", constants.kt_n_m_per_a, Unit.N_M_PER_A, ("EQ-09", "EQ-06"), emf_refs, emf_validity),
         kv_rpm_per_v=tr("kv", constants.kv_rpm_per_v, Unit.RPM_PER_V, ("EQ-09", "EQ-06"), emf_refs, emf_validity),
@@ -479,7 +531,7 @@ def analyse(
         emf_waveform_v=tr(
             "emf_waveform", tuple(waveform.tolist()), Unit.V, ("EQ-18", "EQ-06"), [*emf_refs, speed], emf_validity
         ),
-        torque_speed=None,
+        torque_speed=torque_speed,
         registry_version=registry.version,
     )
 

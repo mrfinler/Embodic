@@ -9,6 +9,12 @@ from embodic.physics.circuit import (
     solve_phase_circuit,
 )
 from embodic.physics.constants import MotorConstants, phase_constants
+from embodic.physics.drive import (
+    base_speed_rpm,
+    inverter_phase_voltage_v,
+    no_load_speed_rpm,
+    torque_speed_envelope,
+)
 from embodic.physics.emf import eddy_loss_w, edge_leakage_fraction, field_table, integrate_path
 from embodic.physics.estimates import MassBreakdown, inductance_estimate_h, mass_g
 from embodic.physics.field import field_harmonic, symmetry_plane_mm
@@ -29,6 +35,7 @@ __all__ = [
     "MassBreakdown",
     "MotorConstants",
     "analyse",
+    "base_speed_rpm",
     "copper_resistivity_ohm_m",
     "current_density_a_per_mm2",
     "delta_circulating_loss_w",
@@ -40,11 +47,13 @@ __all__ = [
     "field_table",
     "inductance_estimate_h",
     "integrate_path",
+    "inverter_phase_voltage_v",
     "ipc2221_current_a",
     "line_resistance_ohm",
     "line_waveforms_v",
     "loss_budget_current_a",
     "mass_g",
+    "no_load_speed_rpm",
     "path_resistance_ohm",
     "phase_constants",
     "pole_arc_ratio_block",
@@ -53,5 +62,6 @@ __all__ = [
     "symmetry_plane_mm",
     "temperature_rise_k",
     "thd",
+    "torque_speed_envelope",
     "via_resistance_ohm",
 ]
