@@ -42,5 +42,8 @@ MESSAGES: Mapping[str, str] = {
     "INVALID_PAIR_LAYER_SAME": "A layer pair needs two different copper layers.",
     "INVALID_PAIR_INDEX_DUPLICATE": "Each layer pair needs its own index.",
     "INVALID_SERIES_GROUPS": "Series groups must list every layer pair index exactly once.",
+    "RANGE_SPIRAL_COPPER_COUNT_ODD": (
+        "Spiral coils use copper layers in pairs; with an odd count one copper layer carries no coil."
+    ),
     "INVALID_HARMONIC": "Harmonic orders must be odd and positive.",
 }

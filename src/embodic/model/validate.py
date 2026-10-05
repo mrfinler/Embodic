@@ -221,6 +221,9 @@ def _spiral_inputs(design: DesignParameters) -> Iterator[ValidationIssue]:
 
 
 def _layer_pairs(design: DesignParameters, spec: SpiralWindingSpec) -> Iterator[ValidationIssue]:
+    copper_count = len(design.stackup.copper_layers())
+    if copper_count % 2:
+        yield issue("RANGE_SPIRAL_COPPER_COUNT_ODD", ["/stackup/layers"], value=copper_count, severity=Severity.WARNING)
     copper = {layer.name for layer in design.stackup.copper_layers()}
     indices = [pair.index for pair in spec.layers.pairs]
     for position, pair in enumerate(spec.layers.pairs):

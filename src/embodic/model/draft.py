@@ -84,3 +84,45 @@ def parse_draft(draft: DesignDraft) -> DesignParameters | DraftIncomplete:
 def draft_from_design(design: DesignParameters) -> DesignDraft:
     """Return the draft holding every input value of a design."""
     return DesignDraft(topology=design.topology, values=design_values(design))
+
+
+_PAIRS = "/winding/layers/pairs"
+_SERIES_GROUPS = "/winding/layers/series_groups"
+_PAIR_SETTINGS = ("rotation_rad", "phases")
+
+
+def _copper_names(values: Mapping[str, JsonValue]) -> list[JsonValue]:
+    names: list[JsonValue] = []
+    position = 0
+    while f"/stackup/layers/{position}/kind" in values:
+        if values[f"/stackup/layers/{position}/kind"] == "copper":
+            names.append(values.get(f"/stackup/layers/{position}/name"))
+        position += 1
+    return names
+
+
+def derive_layer_pairs(draft: DesignDraft) -> DesignDraft:
+    """Return a spiral draft whose pair list follows its copper layers (D-024); other topologies are returned as is.
+
+    Pair k joins copper layers 2k and 2k + 1 in stack order, so an odd count leaves the last layer unpaired. A pair that
+    still exists keeps every value the draft holds for it; a new pair starts at the documented defaults and in its own
+    series group. Pairs beyond the copper count and their group entries are removed.
+    """
+    if draft.topology is not TopologyKind.SPIRAL:
+        return draft
+    copper = _copper_names(draft.values)
+    values = {p: v for p, v in draft.values.items() if not p.startswith(_PAIRS) and p != _SERIES_GROUPS}
+    indices: list[JsonValue] = []
+    for k in range(len(copper) // 2):
+        derived: dict[str, JsonValue] = {"index": k, "layer_in": copper[2 * k], "layer_out": copper[2 * k + 1]}
+        derived |= {leaf: FIELD_BY_KEY[f"{_PAIRS}/*/{leaf}"].neutral_value for leaf in _PAIR_SETTINGS}
+        for leaf, value in derived.items():
+            pointer = f"{_PAIRS}/{k}/{leaf}"
+            values[pointer] = draft.values.get(pointer, value)
+        indices.append(values[f"{_PAIRS}/{k}/index"])
+    if indices:
+        old_groups = draft.values.get(_SERIES_GROUPS) or []
+        groups = [kept for group in old_groups if (kept := [i for i in group if i in indices])]
+        grouped = {i for group in groups for i in group}
+        values[_SERIES_GROUPS] = groups + [[i] for i in indices if i not in grouped]
+    return DesignDraft(topology=draft.topology, values=values)
