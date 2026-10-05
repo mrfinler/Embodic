@@ -39,7 +39,8 @@
   "Revision 2026-10-04 (defect fixes): DEF-02 (status fields), DEF-08 (EQ-14 quantity_note), DEF-09 (EQ-02 modes, EQ-03 tolerance basis), DEF-11 (EQ-10 D09 temperature case)",
   "Revision 2026-10-04 (final fix round): DEF-18 (EQ-05 validity_checks EC-05, graded), DEF-22 (assumptions_tag_rule and provenance vocabulary aligned with ADR-0003)",
   "reference values are computed by Agent 2 (scripts in checks/); none is a measurement",
-  "v1.0: EQ-23...EQ-30 added for the serpentine/wave port (D-013); EC-05 labels per DEF-23; EQ-02 eye counts per EQ-25"
+  "v1.0: EQ-23...EQ-30 added for the serpentine/wave port (D-013); EC-05 labels per DEF-23; EQ-02 eye counts per EQ-25",
+  "v1.0 rev. U-E2 (2026-10-05): DEF-M2b-01 EC-05 typed fields; DEF-M2b-02 EV-24 on EQ-20, EV-82/EV-83 on EQ-15, unsourced equations listed in equation_specification.md 'Source and unit gaps'; DEF-M2b-03 label, constants, object-form dominant_assumptions"
  ],
  "golden_tolerance_default": "relative 1e-9 vs Xcoil engine.js at function level, same inputs, Xcoil-compatible constants injected",
  "fields_added_in_v1": {
@@ -47,7 +48,10 @@
   "golden_functions": "engine.js functions whose numerics the port must reproduce (1e-9)",
   "replaced_functions": "engine.js functions that are NOT ported bug-for-bug",
   "changes": "required changes for 'reuse with change'",
-  "tests": "EQT-<nn>-GR golden, -CFxx closed form (oracle_cases.json), -O1/-O2 literature oracle, -EC validity check, -UTn unit test"
+  "tests": "EQT-<nn>-GR golden, -CFxx closed form (oracle_cases.json), -O1/-O2 literature oracle, -EC validity check, -UTn unit test",
+  "label": "result label (estimate / guideline (unverified) / upper bound) or null",
+  "constants": "physical and material constants {name, value, unit (embodic.units.Unit), source (EV id or null), status, basis}",
+  "dominant_assumptions": "objects {text, status, fields}; fields = FIELDS property patterns whose measured value retires the assumption"
  },
  "equations": [
   {
@@ -118,7 +122,9 @@
    "tests": [
     "EQT-01-GR",
     "EQT-01-UT1"
-   ]
+   ],
+   "label": null,
+   "constants": []
   },
   {
    "id": "EQ-02",
@@ -173,10 +179,26 @@
     "basis": "DEF-09: three-mode criterion (checks/eq03_spiral_vs_loops.py); printed 3.25-3.26 informational only"
    },
    "dominant_assumptions": [
-    "trace width w and clearance s (fabricator capability)",
-    "coil gap",
-    "centre-via pad and clearance (eye)",
-    "concentric-loop model"
+    {
+     "text": "trace width w and clearance s (fabricator capability)",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "coil gap",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "centre-via pad and clearance (eye)",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "concentric-loop model",
+     "status": "assumption",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "D08 Table 4.5 p.54 / Table 4.6 p.57 (3 loops); checks/eq02_eq03_reference.py",
@@ -253,7 +275,9 @@
     "EQT-02-CF10",
     "EQT-02-CF11",
     "EQT-02-UT1"
-   ]
+   ],
+   "label": null,
+   "constants": []
   },
   {
    "id": "EQ-03",
@@ -297,8 +321,16 @@
     "basis": "DEF-09: independent true-spiral construction incl. triangular turns (checks/eq03_spiral_vs_loops.py): closed form exceeds the spiral by +4.2...+8.0 % for N >= 4 and by +21...+23 % for D08 N = 2-3; spiral reference agrees with the Xcoil spiral within 0.4-0.9 %"
    },
    "dominant_assumptions": [
-    "trace width and clearance",
-    "corner radius (closed form uses sharp corners)"
+    {
+     "text": "trace width and clearance",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "corner radius (closed form uses sharp corners)",
+     "status": "assumption",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "checks/eq02_eq03_reference.py (D08 geometry)",
@@ -400,7 +432,9 @@
     "EQT-03-CF04",
     "EQT-03-CF10",
     "EQT-03-CF11"
-   ]
+   ],
+   "label": null,
+   "constants": []
   },
   {
    "id": "EQ-04",
@@ -434,8 +468,16 @@
     "basis": "geometry"
    },
    "dominant_assumptions": [
-    "block width",
-    "block orientation (long side radial)"
+    {
+     "text": "block width",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "block orientation (long side radial)",
+     "status": "assumption",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "checks/c1_field.js C1e",
@@ -465,7 +507,9 @@
    "golden_functions": [],
    "tests": [
     "EQT-04-UT1"
-   ]
+   ],
+   "label": null,
+   "constants": []
   },
   {
    "id": "EQ-05",
@@ -549,7 +593,7 @@
      },
      "basis": "D09 p.4 sec. 3.1 (scalar-potential model misses radial edge leakage; B_r(r) curve-fitted from FEA, eq. 7 p.5). Calibration quantity: D09 Fig. 7 plots |B| 'at the middle of the magnet' (caption p.4, axial position not stated); EC-05 uses it as a proxy for B_z at the copper. Near the radial ends |B| contains a radial component, so the B_z deficit is at least as large: e_edge is probably a lower bound (inferred). Fit residual <= 0.02 in k; ONE calibration case -> calibration inferred",
      "rule": "e_edge <= 0.10: no badge cap; one-sided tolerance add-on +e_edge (model high) on Ke, EMF, torque and EMF-derived results, limitation listed; e_edge > 0.10: badge capped at unresolved",
-     "threshold_basis": "assumption: 10 % is a design choice. The calibration case sits at 5.6-5.8 %, so 10 % allows about 1.7x extrapolation of the single-case calibration. It is not derived from the +/-8 % O1 tolerance (errors between 8 % and 10 % already exceed that band)",
+     "threshold_basis": "10 % is a design choice (D-017). The calibration case sits at 5.6-5.8 %, so 10 % allows about 1.7x extrapolation of the single-case calibration. It is not derived from the +/-8 % O1 tolerance (errors between 8 % and 10 % already exceed that band)",
      "optional_correction": "edge-corrected field k(d) = 1 - D_e*exp(-d/(c_e*G)), off by default; residual +/-e_edge/3 (assumption)",
      "consequences": {
       "default_12_16": 0.053,
@@ -557,17 +601,57 @@
       "O2_D09_N8": 0.058
      },
      "geometry_threshold_example": "D09-like rotor (G 1.5 mm): cap for radial magnet length below ~12 mm (10 mm -> 12.4 %, 15 mm -> 8.4 %, 20 mm -> 6.3 %)",
-     "transfer_status": "assumption: scaling the decay length with G and keeping D_e = 0.47 for rotors with other magnet thickness, alpha_p, pole pitch or block/T-arrangement magnets is untested",
-     "independence": "D09 is both the calibration source and oracle O2: O2 cannot validate EC-05. O1 (D08) is the only independent check and depends on the G10 gap reading (e_edge 4.21 % at G 1.4 mm, 5.11 % at G 1.7 mm, Agent 4 v12)"
+     "transfer_basis": "scaling the decay length with G and keeping D_e = 0.47 for rotors with other magnet thickness, alpha_p, pole pitch or block/T-arrangement magnets is untested",
+     "independence": "D09 is both the calibration source and oracle O2: O2 cannot validate EC-05. O1 (D08) is the only independent check and depends on the G10 gap reading (e_edge 4.21 % at G 1.4 mm, 5.11 % at G 1.7 mm, Agent 4 v12)",
+     "threshold": 0.1,
+     "metric_bound": "lower_bound",
+     "calibration_status": "inferred",
+     "transfer_status": "assumption",
+     "threshold_status": "assumption",
+     "independent_oracles": [
+      "OR-01"
+     ],
+     "dependent_oracles": [
+      "OR-07",
+      "OR-08"
+     ]
     }
    ],
    "dominant_assumptions": [
-    "B_r (grade, temperature)",
-    "mu_r (no datasheet value, G23)",
-    "magnet thickness l_m",
-    "air gap g",
-    "unsaturated back iron",
-    "alpha_p (magnet shape)"
+    {
+     "text": "B_r (grade, temperature)",
+     "status": "assumption",
+     "fields": [
+      "/rotor/remanence_t"
+     ]
+    },
+    {
+     "text": "mu_r (no datasheet value, G23)",
+     "status": "assumption",
+     "fields": [
+      "/rotor/recoil_permeability"
+     ]
+    },
+    {
+     "text": "magnet thickness l_m",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "air gap g",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "unsaturated back iron",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "alpha_p (magnet shape)",
+     "status": "assumption",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "checks/c1_field.js C1a (1-D magnetic circuit limit)",
@@ -628,7 +712,9 @@
     "EQT-05-EC",
     "EQT-05-O1",
     "EQT-05-O2"
-   ]
+   ],
+   "label": null,
+   "constants": []
   },
   {
    "id": "EQ-06",
@@ -677,8 +763,16 @@
     "basis": "numerical integration; D08 p.98 reports max 8 % model deviation"
    },
    "dominant_assumptions": [
-    "as EQ-05",
-    "copper-layer z from the stack-up"
+    {
+     "text": "as EQ-05",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "copper-layer z from the stack-up",
+     "status": "assumption",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "checks/e1.js (C2)",
@@ -723,7 +817,9 @@
     "EQT-06-CF03",
     "EQT-06-O1",
     "EQT-06-O2"
-   ]
+   ],
+   "label": null,
+   "constants": []
   },
   {
    "id": "EQ-07",
@@ -760,8 +856,18 @@
     "basis": "algebra; physical accuracy depends on per-layer field (G3)"
    },
    "dominant_assumptions": [
-    "per-layer z (dielectric thicknesses)",
-    "member resistances (copper thickness)"
+    {
+     "text": "per-layer z (dielectric thicknesses)",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "member resistances (copper thickness)",
+     "status": "assumption",
+     "fields": [
+      "/stackup/layers/*/thickness_mm"
+     ]
+    }
    ],
    "reference_case": {
     "source": "identity with D01 eq. 2",
@@ -795,7 +901,9 @@
    "tests": [
     "EQT-07-GR",
     "EQT-07-CF07"
-   ]
+   ],
+   "label": null,
+   "constants": []
   },
   {
    "id": "EQ-08",
@@ -908,7 +1016,9 @@
     "EQT-08-CF09",
     "EQT-08-GR",
     "EQT-08-UT1"
-   ]
+   ],
+   "label": null,
+   "constants": []
   },
   {
    "id": "EQ-09",
@@ -953,8 +1063,16 @@
     "basis": "definitions; compare synthesised waveform peak with measured peak voltages"
    },
    "dominant_assumptions": [
-    "as EQ-06 (Ke)",
-    "operating current"
+    {
+     "text": "as EQ-06 (Ke)",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "operating current",
+     "status": "assumption",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "D08 Table 9.1 p.98",
@@ -981,7 +1099,9 @@
     "EQT-09-GR",
     "EQT-09-CF06",
     "EQT-09-O1"
-   ]
+   ],
+   "label": null,
+   "constants": []
   },
   {
    "id": "EQ-10",
@@ -1038,9 +1158,25 @@
     "basis": "D10 measured +7.5 % over its simulation (p.8); D09 measured +2.9 % over calc (Tables 1/6)"
    },
    "dominant_assumptions": [
-    "finished copper thickness t",
-    "winding temperature T",
-    "PCB copper resistivity = IACS (G6)"
+    {
+     "text": "finished copper thickness t",
+     "status": "assumption",
+     "fields": [
+      "/stackup/layers/*/thickness_mm"
+     ]
+    },
+    {
+     "text": "winding temperature T",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "PCB copper resistivity = IACS (G6)",
+     "status": "assumption",
+     "fields": [
+      "/materials/copper_resistivity_20c_ohm_m/value"
+     ]
+    }
    ],
    "reference_case": {
     "source": "hand calculation (C3) and D08 Table 4.6 p.57",
@@ -1101,6 +1237,25 @@
     "EQT-10-GR",
     "EQT-10-CF04",
     "EQT-10-O2"
+   ],
+   "label": null,
+   "constants": [
+    {
+     "name": "copper_resistivity_20c_ohm_m",
+     "value": 1.7241e-08,
+     "unit": "ohm_m",
+     "source": "EV-53",
+     "status": "verified",
+     "basis": "IACS annealed copper at 20 degC, NBS Handbook 100 p.2"
+    },
+    {
+     "name": "copper_temp_coeff_per_k",
+     "value": 0.00393,
+     "unit": "per_K",
+     "source": "EV-53",
+     "status": "verified",
+     "basis": "IACS temperature coefficient at 20 degC, NBS Handbook 100 p.3"
+    }
    ]
   },
   {
@@ -1146,9 +1301,23 @@
     "basis": "no measured oracle (G7)"
    },
    "dominant_assumptions": [
-    "plating thickness t_p",
-    "barrel length",
-    "vias per transition"
+    {
+     "text": "plating thickness t_p",
+     "status": "assumption",
+     "fields": [
+      "/vias/plating_um"
+     ]
+    },
+    {
+     "text": "barrel length",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "vias per transition",
+     "status": "assumption",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "engine test ELE-04; checks/c9_reference_values.js",
@@ -1181,6 +1350,25 @@
    "tests": [
     "EQT-11-GR",
     "EQT-11-CF04"
+   ],
+   "label": null,
+   "constants": [
+    {
+     "name": "copper_resistivity_20c_ohm_m",
+     "value": 1.7241e-08,
+     "unit": "ohm_m",
+     "source": "EV-53",
+     "status": "verified",
+     "basis": "IACS annealed copper at 20 degC, NBS Handbook 100 p.2"
+    },
+    {
+     "name": "copper_temp_coeff_per_k",
+     "value": 0.00393,
+     "unit": "per_K",
+     "source": "EV-53",
+     "status": "verified",
+     "basis": "IACS temperature coefficient at 20 degC, NBS Handbook 100 p.3"
+    }
    ]
   },
   {
@@ -1244,10 +1432,28 @@
     "basis": "assumption until Agent 4 runs the FEM (uniform-field and end effects)"
    },
    "dominant_assumptions": [
-    "B peak (via EQ-05)",
-    "copper thickness",
-    "electrical frequency",
-    "coefficient 1/24 (by derivation)"
+    {
+     "text": "B peak (via EQ-05)",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "copper thickness",
+     "status": "assumption",
+     "fields": [
+      "/stackup/layers/*/thickness_mm"
+     ]
+    },
+    {
+     "text": "electrical frequency",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "coefficient 1/24 (by derivation)",
+     "status": "inferred",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "checks/c9_reference_values.js",
@@ -1281,6 +1487,25 @@
    "tests": [
     "EQT-12-GR",
     "EQT-12-CF05"
+   ],
+   "label": null,
+   "constants": [
+    {
+     "name": "copper_resistivity_20c_ohm_m",
+     "value": 1.7241e-08,
+     "unit": "ohm_m",
+     "source": "EV-53",
+     "status": "verified",
+     "basis": "IACS annealed copper at 20 degC, NBS Handbook 100 p.2"
+    },
+    {
+     "name": "copper_temp_coeff_per_k",
+     "value": 0.00393,
+     "unit": "per_K",
+     "source": "EV-53",
+     "status": "verified",
+     "basis": "IACS temperature coefficient at 20 degC, NBS Handbook 100 p.3"
+    }
    ]
   },
   {
@@ -1316,7 +1541,11 @@
     "basis": "standard formula"
    },
    "dominant_assumptions": [
-    "winding temperature (rho_T)"
+    {
+     "text": "winding temperature (rho_T)",
+     "status": "assumption",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "checks/c9_reference_values.js",
@@ -1340,6 +1569,25 @@
    "tests": [
     "EQT-13-GR",
     "EQT-13-CF05"
+   ],
+   "label": null,
+   "constants": [
+    {
+     "name": "copper_resistivity_20c_ohm_m",
+     "value": 1.7241e-08,
+     "unit": "ohm_m",
+     "source": "EV-53",
+     "status": "verified",
+     "basis": "IACS annealed copper at 20 degC, NBS Handbook 100 p.2"
+    },
+    {
+     "name": "copper_temp_coeff_per_k",
+     "value": 0.00393,
+     "unit": "per_K",
+     "source": "EV-53",
+     "status": "verified",
+     "basis": "IACS temperature coefficient at 20 degC, NBS Handbook 100 p.3"
+    }
    ]
   },
   {
@@ -1391,9 +1639,21 @@
     "basis": "assumption"
    },
    "dominant_assumptions": [
-    "effective gap delta'",
-    "k_w1",
-    "omission of end-turn and leakage terms"
+    {
+     "text": "effective gap delta'",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "k_w1",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "omission of end-turn and leakage terms",
+     "status": "assumption",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "checks/c9_reference_values.js (example) and D09 Table 6 p.7 (oracle, turns unknown)",
@@ -1453,7 +1713,9 @@
    "tests": [
     "EQT-14-GR",
     "EQT-14-O2"
-   ]
+   ],
+   "label": "estimate",
+   "constants": []
   },
   {
    "id": "EQ-15",
@@ -1478,9 +1740,11 @@
    ],
    "sources": [
     "EV-32",
-    "EV-50"
+    "EV-50",
+    "EV-82",
+    "EV-83"
    ],
-   "source_notes": "IPC-2221 itself not in the corpus (G5); corpus cites it only for spacing",
+   "source_notes": "IPC-2221 itself not in the corpus (G5); corpus cites it only for spacing; EV-82 and EV-83 state the IPC-2221 coefficients second-hand; the standard's own text is not read (G5)",
    "gate_verdict": "cannot verify yet",
    "status": "unresolved",
    "tolerance": {
@@ -1488,9 +1752,21 @@
     "basis": "design guideline; single isolated trace"
    },
    "dominant_assumptions": [
-    "allowed temperature rise",
-    "external/internal classification",
-    "standard source missing"
+    {
+     "text": "allowed temperature rise",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "external/internal classification",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "standard source missing",
+     "status": "unresolved",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "checks/c9_reference_values.js",
@@ -1515,7 +1791,9 @@
    ],
    "tests": [
     "EQT-15-GR"
-   ]
+   ],
+   "label": "guideline (unverified)",
+   "constants": []
   },
   {
    "id": "EQ-16",
@@ -1554,8 +1832,18 @@
     "basis": "assumption (resin content, mask, plating)"
    },
    "dominant_assumptions": [
-    "laminate density",
-    "copper fill and thickness"
+    {
+     "text": "laminate density",
+     "status": "assumption",
+     "fields": [
+      "/materials/laminate_density_g_per_cm3/value"
+     ]
+    },
+    {
+     "text": "copper fill and thickness",
+     "status": "assumption",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "hand arithmetic (example)",
@@ -1586,6 +1874,25 @@
    "tests": [
     "EQT-16-GR",
     "EQT-16-UT1"
+   ],
+   "label": null,
+   "constants": [
+    {
+     "name": "copper_density_g_per_cm3",
+     "value": 8.89,
+     "unit": "g_per_cm3",
+     "source": "EV-53",
+     "status": "verified",
+     "basis": "IACS density, NBS Handbook 100 p.4"
+    },
+    {
+     "name": "laminate_density_g_per_cm3",
+     "value": 1.85,
+     "unit": "g_per_cm3",
+     "source": null,
+     "status": "assumption",
+     "basis": "Xcoil engine.js l.1151 and l.1377 (FR-4), no datasheet in the evidence register"
+    }
    ]
   },
   {
@@ -1626,8 +1933,18 @@
     "basis": "assumption; h uncertain by x3 between sources"
    },
    "dominant_assumptions": [
-    "film coefficient h",
-    "cooling area / enclosure"
+    {
+     "text": "film coefficient h",
+     "status": "assumption",
+     "fields": [
+      "/operating/convection_h_w_m2k"
+     ]
+    },
+    {
+     "text": "cooling area / enclosure",
+     "status": "assumption",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "D08 p.83-84",
@@ -1656,7 +1973,9 @@
    ],
    "tests": [
     "EQT-17-GR"
-   ]
+   ],
+   "label": null,
+   "constants": []
   },
   {
    "id": "EQ-18",
@@ -1683,8 +2002,18 @@
     "basis": "oracle basis (phase/line) unresolved"
    },
    "dominant_assumptions": [
-    "magnet shape alpha_p(r)",
-    "mu_r"
+    {
+     "text": "magnet shape alpha_p(r)",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "mu_r",
+     "status": "assumption",
+     "fields": [
+      "/rotor/recoil_permeability"
+     ]
+    }
    ],
    "reference_case": {
     "source": "identity",
@@ -1711,7 +2040,9 @@
    ],
    "tests": [
     "EQT-18-GR"
-   ]
+   ],
+   "label": null,
+   "constants": []
   },
   {
    "id": "EQ-19",
@@ -1743,8 +2074,16 @@
     "basis": "inductance of the mesh neglected"
    },
    "dominant_assumptions": [
-    "loop resistance",
-    "triplen EMF (magnet shape)"
+    {
+     "text": "loop resistance",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "triplen EMF (magnet shape)",
+     "status": "assumption",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "arithmetic",
@@ -1772,7 +2111,9 @@
    "tests": [
     "EQT-19-GR",
     "EQT-19-CF07"
-   ]
+   ],
+   "label": "upper bound",
+   "constants": []
   },
   {
    "id": "EQ-20",
@@ -1795,8 +2136,10 @@
      "meaning": "current limit"
     }
    ],
-   "sources": [],
-   "source_notes": "standard PMSM/inverter theory - textbook source needed; depends on EQ-14",
+   "sources": [
+    "EV-24"
+   ],
+   "source_notes": "standard PMSM/inverter theory - textbook source needed; depends on EQ-14; EV-24 (D06 eq. 2) supports only the torque relation T = m E I / omega; the inverter fundamentals and the pull-out and pull-in formulas still have no source",
    "gate_verdict": "cannot verify yet",
    "status": "unresolved",
    "tolerance": {
@@ -1804,9 +2147,21 @@
     "basis": "depends on unvalidated L_s"
    },
    "dominant_assumptions": [
-    "L_s (EQ-14)",
-    "DC-link voltage",
-    "modulation"
+    {
+     "text": "L_s (EQ-14)",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "DC-link voltage",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "modulation",
+     "status": "assumption",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "none",
@@ -1826,7 +2181,9 @@
    ],
    "tests": [
     "EQT-20-GR"
-   ]
+   ],
+   "label": "estimate",
+   "constants": []
   },
   {
    "id": "EQ-21",
@@ -1860,7 +2217,11 @@
     "basis": "Ohm's law"
    },
    "dominant_assumptions": [
-    "copper-loss budget (user target)"
+    {
+     "text": "copper-loss budget (user target)",
+     "status": "assumption",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "D08 Table 4.6 p.57",
@@ -1883,7 +2244,9 @@
    "golden_functions": [],
    "tests": [
     "EQT-21-UT1"
-   ]
+   ],
+   "label": null,
+   "constants": []
   },
   {
    "id": "EQ-22",
@@ -1927,8 +2290,18 @@
     "basis": "definition (limits unresolved)"
    },
    "dominant_assumptions": [
-    "operating current",
-    "copper thickness"
+    {
+     "text": "operating current",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "copper thickness",
+     "status": "assumption",
+     "fields": [
+      "/stackup/layers/*/thickness_mm"
+     ]
+    }
    ],
    "reference_case": {
     "source": "arithmetic",
@@ -1956,7 +2329,9 @@
    ],
    "tests": [
     "EQT-22-GR"
-   ]
+   ],
+   "label": null,
+   "constants": []
   },
   {
    "id": "EQ-23",
@@ -1993,8 +2368,18 @@
     "basis": "exact network algebra"
    },
    "dominant_assumptions": [
-    "finished copper thickness",
-    "temperature"
+    {
+     "text": "finished copper thickness",
+     "status": "assumption",
+     "fields": [
+      "/stackup/layers/*/thickness_mm"
+     ]
+    },
+    {
+     "text": "temperature",
+     "status": "assumption",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "oracle_cases.json CF-06",
@@ -2023,7 +2408,9 @@
    "tests": [
     "EQT-23-GR",
     "EQT-23-CF06"
-   ]
+   ],
+   "label": null,
+   "constants": []
   },
   {
    "id": "EQ-24",
@@ -2050,8 +2437,16 @@
     "basis": "CF-08 sampling resolution"
    },
    "dominant_assumptions": [
-    "end-turn width",
-    "clearance"
+    {
+     "text": "end-turn width",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "clearance",
+     "status": "assumption",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "oracle_cases.json CF-08",
@@ -2079,7 +2474,9 @@
    "tests": [
     "EQT-24-GR",
     "EQT-24-CF08"
-   ]
+   ],
+   "label": null,
+   "constants": []
   },
   {
    "id": "EQ-25",
@@ -2111,9 +2508,21 @@
     "basis": "deterministic geometry"
    },
    "dominant_assumptions": [
-    "via pad",
-    "clearance",
-    "series group count"
+    {
+     "text": "via pad",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "clearance",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "series group count",
+     "status": "assumption",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "oracle_cases.json CF-10, CF-11",
@@ -2139,7 +2548,9 @@
     "EQT-25-CF10",
     "EQT-25-CF11",
     "EQT-25-UT1"
-   ]
+   ],
+   "label": null,
+   "constants": []
   },
   {
    "id": "EQ-26",
@@ -2161,8 +2572,16 @@
     "basis": "definition"
    },
    "dominant_assumptions": [
-    "all upstream assumptions (EQ-06, EQ-10, EQ-12)",
-    "mechanical losses omitted"
+    {
+     "text": "all upstream assumptions (EQ-06, EQ-10, EQ-12)",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "mechanical losses omitted",
+     "status": "assumption",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "arithmetic",
@@ -2185,7 +2604,9 @@
    ],
    "tests": [
     "EQT-26-GR"
-   ]
+   ],
+   "label": null,
+   "constants": []
   },
   {
    "id": "EQ-27",
@@ -2220,7 +2641,11 @@
     "basis": "port equivalence; information output only"
    },
    "dominant_assumptions": [
-    "magnet shape alpha_p(r)"
+    {
+     "text": "magnet shape alpha_p(r)",
+     "status": "assumption",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "arithmetic",
@@ -2244,7 +2669,9 @@
    ],
    "tests": [
     "EQT-27-GR"
-   ]
+   ],
+   "label": null,
+   "constants": []
   },
   {
    "id": "EQ-28",
@@ -2270,8 +2697,16 @@
     "basis": "densities and yoke geometry assumed"
    },
    "dominant_assumptions": [
-    "magnet and steel densities",
-    "yoke geometry"
+    {
+     "text": "magnet and steel densities",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "yoke geometry",
+     "status": "assumption",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "arithmetic",
@@ -2289,6 +2724,25 @@
    ],
    "tests": [
     "EQT-28-GR"
+   ],
+   "label": "estimate",
+   "constants": [
+    {
+     "name": "ndfeb_density_g_per_cm3",
+     "value": 7.5,
+     "unit": "g_per_cm3",
+     "source": null,
+     "status": "assumption",
+     "basis": "Xcoil engine.js l.2556, no datasheet in the evidence register"
+    },
+    {
+     "name": "steel_density_g_per_cm3",
+     "value": 7.85,
+     "unit": "g_per_cm3",
+     "source": null,
+     "status": "assumption",
+     "basis": "Xcoil engine.js l.2556, no datasheet in the evidence register"
+    }
    ]
   },
   {
@@ -2315,8 +2769,16 @@
     "basis": "overlap and eps_r assumed"
    },
    "dominant_assumptions": [
-    "eps_r",
-    "dielectric thickness"
+    {
+     "text": "eps_r",
+     "status": "assumption",
+     "fields": []
+    },
+    {
+     "text": "dielectric thickness",
+     "status": "assumption",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "arithmetic",
@@ -2340,7 +2802,9 @@
    ],
    "tests": [
     "EQT-29-GR"
-   ]
+   ],
+   "label": "upper bound",
+   "constants": []
   },
   {
    "id": "EQ-30",
@@ -2367,7 +2831,11 @@
     "basis": "D-006"
    },
    "dominant_assumptions": [
-    "fabricator clearance rule"
+    {
+     "text": "fabricator clearance rule",
+     "status": "assumption",
+     "fields": []
+    }
    ],
    "reference_case": {
     "source": "engine_probe.js",
@@ -2404,7 +2872,9 @@
    "tests": [
     "EQT-30-GR",
     "EQT-30-UT1"
-   ]
+   ],
+   "label": null,
+   "constants": []
   }
  ]
 }

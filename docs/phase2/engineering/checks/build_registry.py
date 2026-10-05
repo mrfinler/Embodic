@@ -181,13 +181,84 @@ DEF23 = {
              "D09 Fig. 7 plots |B| 'at the middle of the magnet' (caption p.4, axial position not stated); EC-05 uses it as a proxy for B_z at the copper. "
              "Near the radial ends |B| contains a radial component, so the B_z deficit is at least as large: e_edge is probably a lower bound (inferred). "
              "Fit residual <= 0.02 in k; ONE calibration case -> calibration inferred",
-    "transfer_status": "assumption: scaling the decay length with G and keeping D_e = 0.47 for rotors with other magnet thickness, alpha_p, pole pitch or "
-                       "block/T-arrangement magnets is untested",
-    "threshold_basis": "assumption: 10 % is a design choice. The calibration case sits at 5.6-5.8 %, so 10 % allows about 1.7x extrapolation of the single-case "
+    "transfer_basis": "scaling the decay length with G and keeping D_e = 0.47 for rotors with other magnet thickness, alpha_p, pole pitch or "
+                      "block/T-arrangement magnets is untested",
+    "threshold_basis": "10 % is a design choice (D-017). The calibration case sits at 5.6-5.8 %, so 10 % allows about 1.7x extrapolation of the single-case "
                        "calibration. It is not derived from the +/-8 % O1 tolerance (errors between 8 % and 10 % already exceed that band)",
     "independence": "D09 is both the calibration source and oracle O2: O2 cannot validate EC-05. O1 (D08) is the only independent check and depends on the "
                     "G10 gap reading (e_edge 4.21 % at G 1.4 mm, 5.11 % at G 1.7 mm, Agent 4 v12)",
+    # Typed fields of requirements.md section 6 (DEF-M2b-01); the prose keys above keep the reasoning.
+    "threshold": 0.10,
+    "metric_bound": "lower_bound",
+    "calibration_status": "inferred",
+    "transfer_status": "assumption",
+    "threshold_status": "assumption",
+    "independent_oracles": ["OR-01"],
+    "dependent_oracles": ["OR-07", "OR-08"],
 }
+
+# DEF-M2b-03. Physical and material constants only; formula coefficients (1/24, IPC-2221 k/b/c) stay in the formula with its sources.
+# Names match embodic.model.materials.MaterialOverrides where a user override exists. mu_0 and eps_0 are missing: units.Unit has no
+# H/m or F/m symbol and the evidence register has no entry for them (equation_specification.md, "Source and unit gaps").
+RHO_CU = {"name": "copper_resistivity_20c_ohm_m", "value": 1.7241e-8, "unit": "ohm_m", "source": "EV-53", "status": "verified",
+          "basis": "IACS annealed copper at 20 degC, NBS Handbook 100 p.2"}
+ALPHA_CU = {"name": "copper_temp_coeff_per_k", "value": 0.00393, "unit": "per_K", "source": "EV-53", "status": "verified",
+            "basis": "IACS temperature coefficient at 20 degC, NBS Handbook 100 p.3"}
+DENSITY_CU = {"name": "copper_density_g_per_cm3", "value": 8.89, "unit": "g_per_cm3", "source": "EV-53", "status": "verified",
+              "basis": "IACS density, NBS Handbook 100 p.4"}
+DENSITY_LAMINATE = {"name": "laminate_density_g_per_cm3", "value": 1.85, "unit": "g_per_cm3", "source": None, "status": "assumption",
+                    "basis": "Xcoil engine.js l.1151 and l.1377 (FR-4), no datasheet in the evidence register"}
+DENSITY_NDFEB = {"name": "ndfeb_density_g_per_cm3", "value": 7.5, "unit": "g_per_cm3", "source": None, "status": "assumption",
+                 "basis": "Xcoil engine.js l.2556, no datasheet in the evidence register"}
+DENSITY_STEEL = {"name": "steel_density_g_per_cm3", "value": 7.85, "unit": "g_per_cm3", "source": None, "status": "assumption",
+                 "basis": "Xcoil engine.js l.2556, no datasheet in the evidence register"}
+CONSTANTS = {
+    "EQ-10": [RHO_CU, ALPHA_CU], "EQ-11": [RHO_CU, ALPHA_CU], "EQ-12": [RHO_CU, ALPHA_CU], "EQ-13": [RHO_CU, ALPHA_CU],
+    "EQ-16": [DENSITY_CU, DENSITY_LAMINATE], "EQ-28": [DENSITY_NDFEB, DENSITY_STEEL],
+}
+
+# Result labels (interfaces.md Traceable.label); every other equation gets an explicit null.
+LABELS = {"EQ-14": "estimate", "EQ-15": "guideline (unverified)", "EQ-19": "upper bound", "EQ-20": "estimate", "EQ-28": "estimate",
+          "EQ-29": "upper bound"}
+
+# Dominant assumption text -> PROPERTY field patterns whose measured value retires it (REQ-T-06: only property fields take
+# `measured`). A design field here would hide the assumption whenever that input is used, so none is listed.
+THICKNESS = "/stackup/layers/*/thickness_mm"
+ASSUMPTION_FIELDS = {
+    "B_r (grade, temperature)": ["/rotor/remanence_t"],
+    "mu_r (no datasheet value, G23)": ["/rotor/recoil_permeability"],
+    "mu_r": ["/rotor/recoil_permeability"],
+    "member resistances (copper thickness)": [THICKNESS],
+    "finished copper thickness t": [THICKNESS],
+    "finished copper thickness": [THICKNESS],
+    "copper thickness": [THICKNESS],
+    "PCB copper resistivity = IACS (G6)": ["/materials/copper_resistivity_20c_ohm_m/value"],
+    "plating thickness t_p": ["/vias/plating_um"],
+    "laminate density": ["/materials/laminate_density_g_per_cm3/value"],
+    "film coefficient h": ["/operating/convection_h_w_m2k"],
+}
+ASSUMPTION_STATUS = {"standard source missing": "unresolved", "coefficient 1/24 (by derivation)": "inferred"}
+
+# DEF-M2b-02: evidence entries that support part of an equation; the equation status stays as it is.
+EXTRA_SOURCES = {
+    "EQ-15": (["EV-82", "EV-83"], "EV-82 and EV-83 state the IPC-2221 coefficients second-hand; the standard's own text is not read (G5)"),
+    "EQ-20": (["EV-24"], "EV-24 (D06 eq. 2) supports only the torque relation T = m E I / omega; the inverter fundamentals and the "
+                         "pull-out and pull-in formulas still have no source"),
+}
+
+
+def typed_fields(e):
+    """Add label, constants and object-form dominant assumptions; return the assumption texts seen."""
+    e["label"] = LABELS.get(e["id"])
+    e["constants"] = copy.deepcopy(CONSTANTS.get(e["id"], []))
+    texts = list(e["dominant_assumptions"])
+    e["dominant_assumptions"] = [{"text": t, "status": ASSUMPTION_STATUS.get(t, "assumption"), "fields": ASSUMPTION_FIELDS.get(t, [])}
+                                 for t in texts]
+    if e["id"] in EXTRA_SOURCES:
+        ev_ids, note = EXTRA_SOURCES[e["id"]]
+        e["sources"] = e["sources"] + ev_ids
+        e["source_notes"] = f"{e['source_notes']}; {note}"
+    return set(texts)
 
 
 def build():
@@ -200,7 +271,15 @@ def build():
     reg["fields_added_in_v1"] = {"applies_to": "topologies that use the equation", "golden_functions": "engine.js functions whose numerics the port must reproduce (1e-9)",
                                  "replaced_functions": "engine.js functions that are NOT ported bug-for-bug", "changes": "required changes for 'reuse with change'",
                                  "tests": "EQT-<nn>-GR golden, -CFxx closed form (oracle_cases.json), -O1/-O2 literature oracle, -EC validity check, -UTn unit test"}
-    reg["notes"] = list(p1["notes"]) + ["v1.0: EQ-23...EQ-30 added for the serpentine/wave port (D-013); EC-05 labels per DEF-23; EQ-02 eye counts per EQ-25"]
+    reg["fields_added_in_v1"].update({
+        "label": "result label (estimate / guideline (unverified) / upper bound) or null",
+        "constants": "physical and material constants {name, value, unit (embodic.units.Unit), source (EV id or null), status, basis}",
+        "dominant_assumptions": "objects {text, status, fields}; fields = FIELDS property patterns whose measured value retires the assumption",
+    })
+    reg["notes"] = list(p1["notes"]) + ["v1.0: EQ-23...EQ-30 added for the serpentine/wave port (D-013); EC-05 labels per DEF-23; EQ-02 eye counts per EQ-25",
+                                        "v1.0 rev. U-E2 (2026-10-05): DEF-M2b-01 EC-05 typed fields; DEF-M2b-02 EV-24 on EQ-20, EV-82/EV-83 on EQ-15, "
+                                        "unsourced equations listed in equation_specification.md 'Source and unit gaps'; DEF-M2b-03 label, constants, "
+                                        "object-form dominant_assumptions"]
     eqs = []
     for e in p1["equations"]:
         e = copy.deepcopy(e)
@@ -216,6 +295,10 @@ def build():
             e["validity_checks"][0].update(DEF23)
         eqs.append(e)
     eqs.extend(copy.deepcopy(NEW))
+    seen = set().union(*(typed_fields(e) for e in eqs))
+    stale = (set(ASSUMPTION_FIELDS) | set(ASSUMPTION_STATUS)) - seen
+    assert not stale, f"assumption texts not in any equation: {sorted(stale)}"
+    assert set(LABELS) | set(CONSTANTS) | set(EXTRA_SOURCES) <= {e["id"] for e in eqs}
     reg["equations"] = eqs
     return reg
 

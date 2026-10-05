@@ -113,7 +113,7 @@ w trace width; t copper thickness; s clearance; w_d = w + s; N turns per coil pe
   µ_r and B_r(T) uncertainty).
 - EC-05 radial edge leakage (graded, DEF-18 and DEF-23). e_edge = Σ w·D_e exp(−d/(c_e G))/Σ w, w = |B_z1 r Δr| over the
   EMF segments in the magnet span, d = distance to the nearer magnet end, D_e = 0.47, c_e = 0.9. Rule: e_edge ≤ 10 % → no
-  badge cap, one-sided add-on "model may be high by up to e_edge"; e_edge > 10 % → badge `unresolved`.
+  badge cap, one-sided add-on "model may be high by at least e_edge"; e_edge > 10 % → badge `unresolved`.
   Labels (DEF-23):
   (a) The calibration quantity is |B| "at the middle of the magnet" from D09 Fig. 7 (caption p.4, axial position not
   stated). EC-05 uses it as a proxy for B_z at the copper. Near the radial ends |B| also holds a radial component, so the
@@ -124,6 +124,9 @@ w trace width; t copper thickness; s clearance; w_d = w + s; N turns per coil pe
   about 1.7 times extrapolation. It is not derived from the ±8 % O1 band.
   (d) D09 is both the calibration source and oracle O2, so O2 cannot validate EC-05. O1 (D08) is the only independent
   check. It depends on the G10 gap reading (e_edge 4.21 % at G 1.4 mm, 5.11 % at G 1.7 mm, Agent 4 v12).
+  Registry typed fields (requirements.md section 6, D-017): `threshold` 0.10, `metric_bound` lower_bound,
+  `calibration_status` inferred, `transfer_status` assumption, `threshold_status` assumption, `independent_oracles` OR-01,
+  `dependent_oracles` OR-07 and OR-08. The prose reasoning stays in `basis`, `transfer_basis` and `threshold_basis`.
   Consequences (Phase 1 `checks/edge_zone_d09.js`): default 12/16 5.3 %, O1 4.2 %, O2 5.8 %. None is capped.
 - Gate: `reuse with change` (`fieldHarmonic`, `fieldSetup`). Changes: α_p(r) (EQ-04), B_r(T), configurable odd harmonic
   set (default 1 to 13), EC-05, one rotor type for field, inductance and inertia. Status: inferred.
@@ -266,7 +269,7 @@ w trace width; t copper thickness; s clearance; w_d = w + s; N turns per coil pe
 ### EQ-15 IPC-2221 current capacity
 
 - Formula: I = k ΔT^0.44 A^0.725, A in mil², k 0.048 external, 0.024 internal.
-- Sources: IPC-2221 not in the corpus (G5), `assumption: standard value, source needed`.
+- Sources: EV-82 and EV-83 state the IPC-2221 coefficients second-hand. The standard's own text is not in the corpus (G5).
 - Variables: ΔT [K]; A [mil²]; I [A]. Validity: external or internal trace, still air.
 - Reference: 0.5 mm × 34.8 µm, ΔT 20 K → 1.9547 A external, 0.9774 A internal (`checks/engine_probe.js`).
 - Limitations: single isolated trace in still air. Tolerance: none. Gate: `cannot verify yet` (`ipc2221Current`), display
@@ -323,7 +326,8 @@ w trace width; t copper thickness; s clearance; w_d = w + s; N turns per coil pe
 - Formula: steady-state dq model with R, L_s (EQ-14), Ke and inverter limits: SVPWM V_LL,rms = V_dc/√2; SPWM
   √3V_dc/(2√2); six-step √6V_dc/π; open phases V_dc/√2 or 4V_dc/(π√2). Pull-out T_po = m(E/Z)(V − ER/Z)/ω; pull-in
   T_pi = T_po − Jωf_e (Xcoil estimate, J from EQ-28).
-- Sources: standard PMSM and inverter theory, textbook source needed (`assumption`).
+- Sources: EV-24 (D06 eq. 2) supports the torque relation T = mEI/ω only. The inverter fundamentals and the pull-out and
+  pull-in formulas have no source (`unresolved`).
 - Variables: V_dc [V]; R, X, Z [Ω]; E [V]; ω [rad/s]; J [kg·m²]. Validity: steady state, i_d ≤ 0 field weakening.
 - Limitations: depends on L_s (EQ-14); no iron or switching losses.
 - Reference: `checks/engine_probe.js` V_dc 24 V star: SVPWM V_LL 16.9706 V, SPWM 14.6969 V, six-step 18.7127 V.
@@ -544,6 +548,47 @@ Counts over EQ-01 to EQ-30 (`checks/check_consistency.py` recomputes them from t
 The result badge and the assumptions tag follow D-007 exactly as written in the draft ("Status rule for computed results")
 and in the registry fields `result_badge_rule` and `assumptions_tag_rule`. The dominant assumed inputs per EQ are the
 registry field `dominant_assumptions`.
+
+## Registry constants and labels
+
+`checks/build_registry.py` writes these fields (DEF-M2b-03). The registry lists physical and material constants only.
+Formula coefficients such as 1/24 (EQ-12) and the IPC-2221 k, b and c (EQ-15) stay in the formula with its sources.
+
+| Constant | Value | Unit | Source | Status | Used by |
+|---|---|---|---|---|---|
+| `copper_resistivity_20c_ohm_m` | 1.7241e-8 | ohm_m | EV-53 | verified | EQ-10, 11, 12, 13 |
+| `copper_temp_coeff_per_k` | 0.00393 | per_K | EV-53 | verified | EQ-10, 11, 12, 13 |
+| `copper_density_g_per_cm3` | 8.89 | g_per_cm3 | EV-53 | verified | EQ-16 |
+| `laminate_density_g_per_cm3` | 1.85 | g_per_cm3 | none (Xcoil engine.js l.1377) | assumption | EQ-16 |
+| `ndfeb_density_g_per_cm3` | 7.5 | g_per_cm3 | none (Xcoil engine.js l.2556) | assumption | EQ-28 |
+| `steel_density_g_per_cm3` | 7.85 | g_per_cm3 | none (Xcoil engine.js l.2556) | assumption | EQ-28 |
+
+Labels: EQ-14 and EQ-20 `estimate`; EQ-15 `guideline (unverified)`; EQ-19 and EQ-29 `upper bound`; EQ-28 `estimate`.
+Every other equation has `label: null`.
+
+Each dominant assumption is an object `{text, status, fields}`. `fields` names only PROPERTY patterns of
+`embodic.model.fields.FIELDS`, because only a property input takes `measured` provenance (REQ-T-06). A design field in
+`fields` would hide the assumption whenever that input is used. Seven patterns are in use: `/rotor/remanence_t`,
+`/rotor/recoil_permeability`, `/stackup/layers/*/thickness_mm`, `/vias/plating_um`, `/operating/convection_h_w_m2k`,
+`/materials/copper_resistivity_20c_ohm_m/value` and `/materials/laminate_density_g_per_cm3/value`.
+
+## Source and unit gaps
+
+These are requests to Agent 5 and to the owner of `src/embodic/units.py`, routed through Fable. Agent 2 does not edit
+`docs/phase2/evidence/source_gaps_phase2.md`. Each listed equation keeps an empty or partial `sources` list until an
+evidence entry exists. Its status already states what the evidence supports.
+
+| Item | Status | What is missing |
+|---|---|---|
+| EQ-18 | inferred | a citable THD definition; an evidence entry for the D09 Table 7 p.8 THD oracle (basis unresolved) |
+| EQ-19 | inferred | a source for triplen circulating current in a delta winding (resistance-limited upper bound) |
+| EQ-20 | unresolved | a textbook source for SVPWM, SPWM and six-step fundamentals and for PMSM pull-out torque |
+| EQ-23, EQ-24, EQ-26 | verified | reproduced by CF-06, CF-08 and arithmetic; the register has no `kind` for a reproduction, and no textbook entry exists for the involute property |
+| EQ-25, EQ-30 | inferred | project rules (spiral_generator_spec.md G5 and G6; decision D-006); no external source applies |
+| EQ-28 | assumption | datasheet densities for sintered NdFeB and rotor steel |
+| EQ-29 | assumption | ε_r per dielectric (datasheets); ε_0 |
+| EQ-16 | assumption | laminate density (FR-4 datasheet) |
+| μ_0 (EQ-13, EQ-14), ε_0 (EQ-29) | missing | an evidence entry (SI or CODATA value) and the `Unit` symbols for H/m and F/m |
 
 ## Defects found in this unit
 
