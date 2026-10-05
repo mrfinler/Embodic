@@ -14,7 +14,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from embodic.drc.kernels import D, pad_bounding_radius_mm, pad_closest
-from embodic.geometry.layout import Layout, Pad
+from embodic.geometry.layout import Layout, Pad, ViaRole
 from embodic.geometry.paths import COINCIDENCE_MM, CopperPath
 from embodic.geometry.primitives import Arc, Line, Primitive, PrimitiveRole
 from embodic.units import FloatArray
@@ -189,23 +189,31 @@ def exempt_pairs(layout: Layout, items: Items, first_item: dict[int, int]) -> In
 
     Exempt: a via or pad and the end group of a same-net path whose end point lies on that via or pad; the end groups
     of different paths that meet at one via, pad or coincident end point (a node); a pad and a same-net via whose
-    centre lies inside it. Primitives adjacent in one path are exempted in the engine from ``path`` and ``main``.
+    centre lies inside it. An interconnect path ending on a terminal via or a pad joins it whatever the nets (D-022 a).
+    Primitives adjacent in one path are exempted in the engine from ``path`` and ``main``.
     """
     ends = list(_path_ends(layout, first_item))
     via_base = int(np.count_nonzero(items.item_class == ItemClass.TRACE))
     pad_base = via_base + len(layout.vias)
+    interconnects = frozenset(layout.circuit.interconnect_path_ids)
     pairs: set[tuple[int, int]] = set()
     nodes: list[tuple[int | None, list[_PathEnd]]] = []
     for v, via in enumerate(layout.vias):
+        any_net = interconnects if via.role is ViaRole.TERMINAL else frozenset()
         on_via = [
-            e for e in ends if e.path.net == via.net and math.dist(e.point, (via.x_mm, via.y_mm)) <= via.pad_mm / 2
+            e
+            for e in ends
+            if (e.path.net == via.net or e.path.id in any_net)
+            and math.dist(e.point, (via.x_mm, via.y_mm)) <= via.pad_mm / 2
         ]
         nodes.append((via_base + v, on_via))
     for p, pad in enumerate(layout.pads):
         on_pad = [
             e
             for e in ends
-            if e.path.net == pad.net and pad.layer in (None, e.path.layer) and _inside_pad(pad, *e.point)
+            if (e.path.net == pad.net or e.path.id in interconnects)
+            and pad.layer in (None, e.path.layer)
+            and _inside_pad(pad, *e.point)
         ]
         nodes.append((pad_base + p, on_pad))
         pairs.update(

@@ -38,7 +38,15 @@ def path(pid: int, prims: Sequence[Primitive], layer: str = "F.Cu", net: str = "
     return CopperPath(id=pid, layer=layer, net=net, primitives=tuple(prims), phase=None, element=None, polarity=0)
 
 
-def via(vid: int, x: float, y: float, net: str = "A", pad: float = 0.6, drill: float = 0.3) -> Via:
+def via(
+    vid: int,
+    x: float,
+    y: float,
+    net: str = "A",
+    pad: float = 0.6,
+    drill: float = 0.3,
+    role: ViaRole = ViaRole.TRANSFER,
+) -> Via:
     """Return a through via spanning every layer."""
     return Via(
         id=vid,
@@ -46,7 +54,7 @@ def via(vid: int, x: float, y: float, net: str = "A", pad: float = 0.6, drill: f
         y_mm=y,
         drill_mm=drill,
         pad_mm=pad,
-        role=ViaRole.TRANSFER,
+        role=role,
         span=ViaSpan.THROUGH,
         layer_from=LAYERS[0],
         layer_to=LAYERS[-1],
@@ -88,8 +96,9 @@ def layout(
     holes: Sequence[Hole] = (),
     symmetry: RotationalSymmetry | None = None,
     layers: tuple[str, ...] = LAYERS,
+    interconnects: Sequence[int] = (),
 ) -> Layout:
-    """Return a Layout with only the given objects; circuit empty, symmetry as given."""
+    """Return a Layout with only the given objects; the circuit names only ``interconnects``, symmetry as given."""
     return Layout(
         topology=TopologyKind.SPIRAL,
         copper_layers=layers,
@@ -98,7 +107,7 @@ def layout(
         vias=tuple(vias),
         pads=tuple(pads),
         outline=BoardOutline(outer=tuple(outer), cutouts=(), holes=tuple(holes)),
-        circuit=Circuit(phases=(), topology=ConnectionTopology.STAR, interconnect_path_ids=()),
+        circuit=Circuit(phases=(), topology=ConnectionTopology.STAR, interconnect_path_ids=tuple(interconnects)),
         symmetry=symmetry,
         envelope_mm=(0.0, 50.0),
     )
