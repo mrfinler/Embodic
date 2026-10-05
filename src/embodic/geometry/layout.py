@@ -3,6 +3,8 @@
 Interim shape (work_breakdown.md U-M1b): the ``derived`` and ``detail`` fields arrive with U-M2d.
 """
 
+import hashlib
+import json
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -110,3 +112,32 @@ class Layout:
     def arrays(self) -> LayoutArrays:
         """Return the per-layer NumPy view for DRC and physics."""
         return layout_arrays(self.copper_layers, self.paths, self.vias)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class BoardStack:
+    """The boards a design produces (D-016; revision 2026-10-05, U-D3).
+
+    One Layout per board, in phase order for ``StackMode.ONE_BOARD_PER_PHASE``; one board for every other design.
+    """
+
+    boards: tuple[Layout, ...]  # never empty; board k of a per-phase stack holds only phase k
+    board_thickness_mm: float  # one board, = design.stackup.board_thickness_mm()
+    board_gap_mm: float  # 0.0 when len(boards) == 1
+    stack_hash: str = field(init=False)  # "sha256:<hex>" over the boards' layout_hash values in order and the gap
+
+    def __post_init__(self) -> None:
+        """Set ``stack_hash``; raise ValueError for no board, or a gap other than 0.0 on a one-board stack."""
+        if not self.boards:
+            raise ValueError("a BoardStack needs at least one board")
+        if len(self.boards) == 1 and self.board_gap_mm != 0.0:
+            raise ValueError(f"a one-board stack has no board gap, got {self.board_gap_mm!r} mm")
+        document = {"boards": [b.layout_hash for b in self.boards], "board_gap_mm": self.board_gap_mm}
+        text = json.dumps(document, sort_keys=True, separators=(",", ":"), allow_nan=False)
+        object.__setattr__(self, "stack_hash", "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest())
+
+    @property
+    def stack_thickness_mm(self) -> float:
+        """Return n * board_thickness_mm + (n - 1) * board_gap_mm (Xcoil statorThickness, engine.js l.689)."""
+        n = len(self.boards)
+        return n * self.board_thickness_mm + (n - 1) * self.board_gap_mm

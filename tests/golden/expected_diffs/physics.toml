@@ -1,0 +1,12 @@
+# Intentional differences between embodic.physics and Xcoil v3 (owner: U-M2e). Schema: tools/golden/README.md.
+
+schema_version = 1
+
+[[diff]]
+id = "XD-PHY-001"
+case = "ipc2221-*"
+eq_id = "EQ-15"
+reason = "mm2 to mil2 uses embodic.units MM2_PER_MIL2 = 1/0.0254^2 (1550.0031000062) where Xcoil writes 1550.0031 (engine.js l.88); relative 4.0e-12 on the area, 2.9e-12 after the 0.725 power"
+tolerance = { rel = 1e-11, abs = 0.0 }
+agent2_signoff = "pending"
+agent4_signoff = "pending"

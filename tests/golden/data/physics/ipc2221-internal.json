@@ -1,0 +1,16 @@
+{
+  "calls": [
+    {
+      "inputs": {"areaMm2": 0.0174, "dT": 20, "internal": true},
+      "output": 0.9773581880245067
+    }
+  ],
+  "case_id": "ipc2221-internal",
+  "eq_ids": ["EQ-15"],
+  "fn": "ipc2221Current",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "EQ-15 UT-PHY-15 internal",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["eq-15"]
+}

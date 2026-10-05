@@ -1,0 +1,453 @@
+{
+  "format": "embodic.golden-cases",
+  "format_version": 1,
+  "area": "physics",
+  "cases": [
+    {
+      "id": "copper-resistivity-20c",
+      "fn": "copperResistivity",
+      "note": "EQ-10 at 20 degC",
+      "tags": [
+        "eq-10"
+      ],
+      "inputs": {
+        "tempC": 20
+      }
+    },
+    {
+      "id": "copper-resistivity-60c",
+      "fn": "copperResistivity",
+      "note": "EQ-10 at 60 degC",
+      "tags": [
+        "eq-10"
+      ],
+      "inputs": {
+        "tempC": 60
+      }
+    },
+    {
+      "id": "trace-resistance-cf04-straight-60c",
+      "fn": "traceResistance",
+      "note": "EQ-10 CF-04 straight track at 60 degC",
+      "tags": [
+        "eq-10"
+      ],
+      "inputs": {
+        "lengthMm": 1000,
+        "widthMm": 0.5,
+        "thickMm": 0.0348,
+        "tempC": 60
+      }
+    },
+    {
+      "id": "trace-resistance-thin-arc-length",
+      "fn": "traceResistance",
+      "note": "EQ-10 arc length of a 90 degree arc r 30 mm",
+      "tags": [
+        "eq-10"
+      ],
+      "inputs": {
+        "lengthMm": 47.12388980384689,
+        "widthMm": 0.2,
+        "thickMm": 0.07,
+        "tempC": 25
+      }
+    },
+    {
+      "id": "via-barrel-area-cf04",
+      "fn": "viaBarrelArea",
+      "note": "EQ-11 barrel area, drill 0.3 mm, plating 25 um",
+      "tags": [
+        "eq-11"
+      ],
+      "inputs": {
+        "drillMm": 0.3,
+        "platingMm": 0.025
+      }
+    },
+    {
+      "id": "skin-depth-133hz-20c",
+      "fn": "skinDepthMm",
+      "note": "EQ-13 UT-PHY-13 frequency",
+      "tags": [
+        "eq-13"
+      ],
+      "inputs": {
+        "freqHz": 133.3,
+        "tempC": 20
+      }
+    },
+    {
+      "id": "skin-depth-zero-hz",
+      "fn": "skinDepthMm",
+      "note": "EQ-13 no skin effect at 0 Hz",
+      "tags": [
+        "eq-13",
+        "nonfinite-output"
+      ],
+      "inputs": {
+        "freqHz": 0,
+        "tempC": 20
+      }
+    },
+    {
+      "id": "ipc2221-external",
+      "fn": "ipc2221Current",
+      "note": "EQ-15 UT-PHY-15 external",
+      "tags": [
+        "eq-15"
+      ],
+      "inputs": {
+        "areaMm2": 0.0174,
+        "dT": 20,
+        "internal": false
+      }
+    },
+    {
+      "id": "ipc2221-internal",
+      "fn": "ipc2221Current",
+      "note": "EQ-15 UT-PHY-15 internal",
+      "tags": [
+        "eq-15"
+      ],
+      "inputs": {
+        "areaMm2": 0.0174,
+        "dT": 20,
+        "internal": true
+      }
+    },
+    {
+      "id": "field-harmonic-double-n1",
+      "fn": "fieldHarmonic",
+      "note": "EQ-05 double rotor, n 1, inside the gap",
+      "tags": [
+        "eq-05"
+      ],
+      "inputs": {
+        "n": 1,
+        "r": 28,
+        "z": 0.8,
+        "F": {
+          "pp": 8,
+          "Br": 1.3,
+          "muR": 1.05,
+          "lm": 3.0,
+          "alphaP": 0.85,
+          "G": 1.6
+        }
+      }
+    },
+    {
+      "id": "field-harmonic-double-n3-mirrored",
+      "fn": "fieldHarmonic",
+      "note": "EQ-05 double rotor, n 3, z beyond G (mirror)",
+      "tags": [
+        "eq-05"
+      ],
+      "inputs": {
+        "n": 3,
+        "r": 20,
+        "z": 2.0,
+        "F": {
+          "pp": 8,
+          "Br": 1.3,
+          "muR": 1.05,
+          "lm": 3.0,
+          "alphaP": 0.85,
+          "G": 1.6
+        }
+      }
+    },
+    {
+      "id": "field-harmonic-open-n5",
+      "fn": "fieldHarmonic",
+      "note": "EQ-05 open rotor, n 5",
+      "tags": [
+        "eq-05"
+      ],
+      "inputs": {
+        "n": 5,
+        "r": 36,
+        "z": 1.2,
+        "F": {
+          "pp": 8,
+          "Br": 1.3,
+          "muR": 1.05,
+          "lm": 3.0,
+          "alphaP": 0.85,
+          "G": {
+            "$f": "inf"
+          }
+        }
+      }
+    },
+    {
+      "id": "apply-connection-star",
+      "fn": "applyConnection",
+      "note": "EQ-09 star constants",
+      "tags": [
+        "eq-09"
+      ],
+      "inputs": {
+        "p": {
+          "phases": 3,
+          "connection": "star",
+          "currentRms": 1.0
+        },
+        "an": {
+          "phases": [
+            {
+              "R": 1.0,
+              "E": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            },
+            {
+              "R": 1.1,
+              "E": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            },
+            {
+              "R": 1.2,
+              "E": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            }
+          ],
+          "Ke1": 0.01,
+          "omegaM": 157.07963267948966,
+          "harmonics": [
+            1,
+            3,
+            5,
+            7,
+            9,
+            11,
+            13
+          ],
+          "pEddy": 0,
+          "pCirc": 0,
+          "Rphase": 1.1,
+          "currentDensityPerPhaseAmp": 1.0,
+          "iMaxIpcPhase": 1.0
+        }
+      }
+    },
+    {
+      "id": "apply-connection-delta",
+      "fn": "applyConnection",
+      "note": "EQ-09 delta constants",
+      "tags": [
+        "eq-09"
+      ],
+      "inputs": {
+        "p": {
+          "phases": 3,
+          "connection": "delta",
+          "currentRms": 1.0
+        },
+        "an": {
+          "phases": [
+            {
+              "R": 1.0,
+              "E": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            },
+            {
+              "R": 1.1,
+              "E": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            },
+            {
+              "R": 1.2,
+              "E": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            }
+          ],
+          "Ke1": 0.01,
+          "omegaM": 157.07963267948966,
+          "harmonics": [
+            1,
+            3,
+            5,
+            7,
+            9,
+            11,
+            13
+          ],
+          "pEddy": 0,
+          "pCirc": 0,
+          "Rphase": 1.1,
+          "currentDensityPerPhaseAmp": 1.0,
+          "iMaxIpcPhase": 1.0
+        }
+      }
+    }
+  ]
+}

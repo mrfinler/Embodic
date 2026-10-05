@@ -1,0 +1,16 @@
+{
+  "calls": [
+    {
+      "inputs": {"lengthMm": 47.12388980384689, "tempC": 25, "thickMm": 0.07, "widthMm": 0.2},
+      "output": 0.059169987990829315
+    }
+  ],
+  "case_id": "trace-resistance-thin-arc-length",
+  "eq_ids": ["EQ-10"],
+  "fn": "traceResistance",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "EQ-10 arc length of a 90 degree arc r 30 mm",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["eq-10"]
+}
