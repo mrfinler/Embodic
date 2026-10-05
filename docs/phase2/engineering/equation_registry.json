@@ -218,8 +218,9 @@
      "spiral_mode_with_eye_pad0.6_clr0.8": 3,
      "limiting_reason_with_eye": "loop",
      "printed_3_25_3_26": "2 + 1 = 3",
-     "spiral_mode_with_eye_pad1.2_clr0.8": 2,
-     "limiting_reason_with_eye_pad1.2": "eye",
+     "spiral_mode_with_eye_pad1.2_clr0.8": 3,
+     "limiting_reason_with_eye_pad1.2": "loop",
+     "closing_with_eye": "half (revision 2026-10-05, U-E3b)",
      "note": "Phase 2 eye rule (centre via on the coil centre line, EQ-25) replaces the Phase 1 placement on the lead line; 12/16 -> 10 and 18/16 -> 7 unchanged; D08 pad 0.6 mm -> 3 (was 2). min_side_length 2w gives 18/16 loop count 7 (8th right side 0.607 mm < 1.0 mm); concentric test mode keeps 3 / 11 / 8"
     },
     "tolerance": "exact",
@@ -2498,7 +2499,7 @@
   {
    "id": "EQ-25",
    "name": "Spiral coil centre-via eye, lead and terminal stub",
-   "formula": "via on the coil centre line at r_v = r_hi, m = max(pad, w)/2; r_lo = max((d_(N-1) + w/2 + s + m)/sin(pi/Q), r_end,N-1 + w_in/2 + s + m); r_hi = R_out,N-1 - w_out/2 - s - m; fits iff r_hi - r_lo >= (k - 1)(max(pad, w)/2 + pad/2 + s); lead = the last left side d_(N-1) ends at radius r_v, then one arc at r_v to the centre line (revision 2026-10-05, U-E3); terminal via at r_T = r_outer + s + pad/2, angle min(angle of start corner, pi/Q - asin((max(pad, bw) + s)/(2 r_T)))",
+   "formula": "via on the coil centre line at r_v = r_hi, m = max(pad, w)/2; r_lo = max((d_(N-1) + w/2 + s + m)/sin(pi/Q), r_end,N-1 + w_in/2 + s + m); r_hi = R_out,N-1 - w_out/2 - s - m; fits iff r_hi - r_lo >= (k - 1)(max(pad, w)/2 + pad/2 + s); lead = the last left side d_(N-1) ends at radius r_v, then one arc at r_v to the centre line (revision 2026-10-05, U-E3); half closing (revision 2026-10-05, U-E3b, k = 1, pad <= w): last turn = outer arc + right side d_(N-1) ending on the via at r_v = d_(N-1)/sin(pi/Q), used when it builds more turns than the full closing; terminal via at r_T = r_outer + s + pad/2, angle min(angle of start corner, pi/Q - asin((max(pad, bw) + s)/(2 r_T)))",
    "variables": [
     {
      "symbol": "pad",

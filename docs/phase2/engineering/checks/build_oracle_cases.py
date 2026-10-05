@@ -255,9 +255,9 @@ g12 = Geo = None
 for pad in (1.2,):
     g = sr.Geo(12, 11.47, 45.03, 2.06, 0.8, 0.8, pad)
     tt, _ = sr.turn_limit(g)
-    d08_pad12 = sr.max_turns_with_eye(g, tt)
+    d08_pad12 = sr.closing(g, tt)["N"]
 cases.append({
-    "case_id": "CF-10", "version": 2, "version_note": "version 2 (revision 2026-10-05, U-E3): G3-G5 revised (both sides on d_t, outer-end jog, lead arc at r_v = r_hi); eye-limited 2 at pad 0.6 and 1.2 mm", "kind": "reference model (spiral_reference.py)", "eq_ids": ["EQ-02", "EQ-03", "EQ-25"],
+    "case_id": "CF-10", "version": 3, "version_note": "version 3 (revision 2026-10-05, U-E3b): G5 half closing (last turn = outer arc + right side ending on the centre via at P = (d_2/sin h, 0)); 3 turns at via pad 0.6 and 1.2 mm (version 2, U-E3: 2 turns)", "kind": "reference model (spiral_reference.py)", "eq_ids": ["EQ-02", "EQ-03", "EQ-25"],
     "title": "D08 3-turn coil geometry (12 coils, 10 poles): turn limit, turn types, eye, path lengths",
     "inputs": {"coil_centre_lines_mm": inp([12.5, 44.0], "mm", "verified", "D08 p.55"),
                "trace_width_mm": inp(2.06, "mm", "verified", "D08 Table 4.6 p.57"),
@@ -268,9 +268,10 @@ cases.append({
     "expected": [{"quantity": "radial bound D08 eq. 3.24", "value": d08["turn_limit"]["radial_bound_eq_3_24"], "unit": "1", "tolerance": "relative 1e-9"},
                  {"quantity": "loop-rule turns and types", "value": [d08["turn_limit"]["loop_rule_turns"], d08["turn_limit"]["types"]], "unit": "-",
                   "tolerance": "exact; equals D08 Table 4.6 p.57 (3 loops)"},
-                 {"quantity": "eye-limited turns, via pad 0.6 / 1.2 mm", "value": [d08["turn_limit"]["eye_limited_turns"], d08_pad12], "unit": "1", "tolerance": "exact"},
-                 {"quantity": "EQ-03 concentric closed form, N = eye-limited (2)", "value": d08["closed_form_eq03_mm"], "unit": "mm", "tolerance": "absolute 1e-3 mm"},
-                 {"quantity": "generated body (sides + ends), N = eye-limited (2)", "value": d08["path_mm"]["body"], "unit": "mm", "tolerance": "relative 1e-6 (same rules) / +-1 % (fillet or lead conventions)"},
+                 {"quantity": "turns after the centre-via rule, via pad 0.6 / 1.2 mm; closing", "value": [d08["turn_limit"]["eye_limited_turns"], d08_pad12, d08["turn_limit"]["closing"]], "unit": "1", "tolerance": "exact"},
+                 {"quantity": "centre via radius r_v = d_2 / sin(pi/Q)", "value": d08["eye"]["r_v"], "unit": "mm", "tolerance": "absolute 1e-4 mm"},
+                 {"quantity": "EQ-03 concentric closed form, N = 3 (three full loops)", "value": d08["closed_form_eq03_mm"], "unit": "mm", "tolerance": "absolute 1e-3 mm"},
+                 {"quantity": "generated body (sides + ends), N = 3 with half closing", "value": d08["path_mm"]["body"], "unit": "mm", "tolerance": "relative 1e-6 (same rules) / +-1 % (fillet or lead conventions)"},
                  {"quantity": "lead / terminal stub / total", "value": [d08["path_mm"]["lead"], d08["path_mm"]["stub"], d08["path_mm"]["total"]], "unit": "mm", "tolerance": "relative 1e-6"},
                  {"quantity": "R per coil-layer at 50 degC (coil copper only)", "value": d08["R_coil_layer_ohm"], "unit": "ohm", "tolerance": "relative 1e-6"}],
     "status": "inferred", "evidence": "reference model of the spec rules; D08 gives no measured coil length or R (O1 phase R 0.39 ohm is a loop-model calculation)",
@@ -295,14 +296,17 @@ cases.append({
 p1 = json.load(open(PHASE1))
 lit = {c["case_id"]: copy.deepcopy(c) for c in p1["cases"]}
 o1 = lit["O1-D08"]
-o1["version"] = 2
-o1["version_note"] = ("version 2 (Phase 2): 'turns that fit' comparison uses the Phase 2 centre-via rule (via on the coil centre line, "
-                      "spiral_generator_spec.md G5): loop rule 3, eye-limited 3 at via pad 0.6 mm and 2 at 1.2 mm (D08 via pad unresolved); "
-                      "EC-05 add-on labelled per DEF-23. Inputs unchanged.")
+o1["version"] = 3
+o1["version_note"] = ("version 3 (revision 2026-10-05, U-E3b): 'turns that fit' uses the G5 half closing of spiral_generator_spec.md "
+                      "(3 turns at via pad 0.6 and 1.2 mm, D08 via pad unresolved); Ke comparison names the result field ke_line_peak. "
+                      "Version 2: Phase 2 centre-via rule; EC-05 add-on labelled per DEF-23. Inputs unchanged.")
 for e in o1["expected"]:
     if e["quantity"] == "turns that fit":
-        e["comparison"] = "EQ-02 / EQ-25: concentric loop rule 3 (1 trapezoid + 2 triangles); generator with eye 3 at via pad 0.6 mm, 2 at 1.2 mm (limiting_reason 'eye')"
+        e["comparison"] = ("EQ-02 / EQ-25: concentric loop rule 3 (1 trapezoid + 2 triangles); generator turns_achieved 3 at via pad 0.6 and 1.2 mm "
+                           "with the half closing (G5): turns 0-1 full, turn 2 = outer arc + right side ending on the centre via")
     if e["quantity"].startswith("Ke_LL_peak"):
+        e["comparison"] = ("AnalysisResult.ke_line_peak_v_s_per_rad (trace key ke_line_peak): peak of the synthesised line-line waveform "
+                           "per mechanical rad/s from EQ-05/06/09/18, not the fundamental ke_line")
         e["tolerance"] = ("model/measured in [-8 %, +8 % + e_edge], e_edge = 4.2 % (EC-05). O1 is the only oracle independent of the EC-05 "
                           "calibration source (D09); the add-on itself is an assumption when transferred to D08's 5 mm T-arrangement magnets (DEF-23)")
 o1["runnable"] = True

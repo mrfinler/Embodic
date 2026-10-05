@@ -394,16 +394,19 @@ w trace width; t copper thickness; s clearance; w_d = w + s; N turns per coil pe
 - Formula (revision 2026-10-05 (U-E3), DEF-M2d-01): centre via on the coil centre line at r_v = r_hi with m = max(pad, w)/2,
   r_lo = max((d_N−1 + w/2 + s + m)/sin(π/Q), r_end,N−1 + w_in/2 + s + m), r_hi = R_out,N−1 − w_out/2 − s − m, for any k.
   The eye fits iff r_hi − r_lo ≥ (k − 1)(max(pad, w)/2 + pad/2 + s). Lead: the last left side d_N−1 ends at radius r_v,
-  then one arc at r_v to the centre line (no lead on d_N). Terminal via: r_T = r_outer + s + pad/2 at angle
-  min(start-corner angle, π/Q − asin((max(pad, bw) + s)/(2r_T))).
+  then one arc at r_v to the centre line (no lead on d_N). Half closing (revision 2026-10-05 (U-E3b), k = 1, pad ≤ w):
+  the last turn is the outer arc and the right side d_N−1, which ends on the via at r_v = d_N−1/sin(π/Q); the generator
+  uses it when it builds more turns than the full closing (conditions in `spiral_generator_spec.md` G5). Terminal via:
+  r_T = r_outer + s + pad/2 at angle min(start-corner angle, π/Q − asin((max(pad, bw) + s)/(2r_T))).
 - Sources: geometry rules of `spiral_generator_spec.md` G5 and G6, derived from engine.js `sectorViaSpot` (2269 to 2273)
   and `sectorCoilX` (2285 to 2328). The coil centre line is the only locus that layer X and its mirror Y share.
 - Variables: pad via pad [mm]; k centre vias per coil [1]; r_T [mm]; bw bus width [mm].
 - Validity: through vias (D-015); radial or tangential eye arrangement only as stated.
 - Limitations: Phase 1 eye mode placed the via on the lead line, a point layer Y does not reach (DEF-P2-01 below).
 - Reference (revision 2026-10-05 (U-E3)): CF-11 default 12/16 → N 10, r_lo 28.5914, r_hi 30.7000, r_v 30.7000 mm, lead
-  1.3341 mm, stub 0.7877 mm; CF-10 D08 → N 2 at pad 0.6 and 1.2 mm (r_v 38.2800 mm at pad 0.6). Lead clearances in
-  `spiral_generator_spec.md` worked examples 1 and 2 (smallest = s).
+  1.3341 mm, stub 0.7877 mm; CF-10 D08 → N 3 with the half closing at pad 0.6 and 1.2 mm, r_v 27.6255 mm (revision
+  2026-10-05 (U-E3b); U-E3 gave N 2). Lead and via clearances in `spiral_generator_spec.md` worked examples 1 and 2
+  (smallest = s).
 - Tolerance: exact counts; lengths 1e-6 relative. Gate: `replace` (Xcoil `sectorViaSpot`, `sectorCoilX`, `chainCoils`
   not ported bug-for-bug). Status: inferred.
 - Dominant assumptions: via pad, clearance, series group count. Applies to: spiral.

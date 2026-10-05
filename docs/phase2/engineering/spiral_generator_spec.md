@@ -12,6 +12,10 @@ Revision 2026-10-05 (U-E3, D-028 and DEF-M2d-01): G3, G4, G5, the outputs and bo
 sides of turn t now lie on offset d_t, the pitch advance happens in an outer end-turn jog, and the lead is one arc at
 the via radius. `checks/spiral_r2_check.py` prints the flux-linkage ratios and the lead clearance tables.
 
+Revision 2026-10-05 (U-E3b): G5 gains the half closing (the last turn ends on the centre via where its side meets the
+coil centre line). D08 now builds its three turns. G3, G4, G9, the outputs, worked example 2 and the acceptance checks
+change with it. Worked example 1 is unchanged.
+
 ## Conventions
 
 - Canonical coil: centred on the +x axis, half-angle h = π/Q. The left sector edge is at +h (y > 0), the right edge at −h.
@@ -84,6 +88,11 @@ Turn t of layer X, in current direction (clockwise in the F.Cu view), is four pr
    left side of the same turn (they are not adjacent primitives, so DRC rule 1 does not exempt them).
 4. Left side: line d_t from D_t up to J_t+1, at radius R_out,t+1 = R_out,t − w_d,out. For the last turn, up to L at r_v (G5).
 
+Closing half turn (revision 2026-10-05 (U-E3b)). With the half closing of G5, the last turn N − 1 has only primitives 1
+and 2: the outer arc J → B with its jog, and the right side d_N−1 from B straight to P = (d_N−1/sin h, 0), the point
+where the line d_N−1 meets the coil centre line. It has no inner end and no left side. The loop rule does not apply to
+it; G5 states its own conditions.
+
 Why the jog is at the outer end (`inferred`, checked by `checks/spiral_r2_check.py`). The path enters at the start corner
 A_0 on the outer end. A turn that starts there and stops one end pitch below it, on the same left line, closes a full
 loop with both sides on d_t. A step at any other corner leaves one side set shifted by one pitch. The v1.0 rule stepped
@@ -115,6 +124,8 @@ trapezoids and triangles uses its own trapezoid test, so only the total is compa
 Append the terminal stub (G6), then for t = 0 to N − 1 the four primitives of G3, then the lead of G5. Record per turn:
 type, d_t, R_out,t, r_end,t, the jog length, the span at mean radius σ_t = θ_cp − 2 asin(d_t/r_mean) (EQ-08 per-turn
 pitch factor), and the outer, right, inner and left lengths. The left length of the last turn ends at L.
+Half closing (revision 2026-10-05 (U-E3b)): turns 0 to N − 2 as above, then the outer arc and right side of the closing
+half turn; no lead. Its table row has type `half`, r_end = r_v, and no inner or left length.
 
 ### G5 Centre via and lead (EQ-25) (revision 2026-10-05 (U-E3))
 
@@ -138,6 +149,49 @@ The via pad and the lead-arc end share V, so each bound below uses m = max(pad, 
 - If the eye does not fit, reduce N until it fits and report `turn_limit.limiting_reason = "eye"`.
 - DRC rule 2 exempts the lead arc from the via it lands on, and the stub from its terminal via. No other exemption is
   needed or proposed: every other lead-to-via and lead-to-turn distance is at least s (worked examples).
+
+Half closing (revision 2026-10-05 (U-E3b), `inferred`). The rule above is the full closing. The half closing ends the
+path on the closing half turn of G3: the right side d_N−1 runs to P = (d_N−1/sin h, 0) and the centre via sits at
+V = P, so r_v = d_N−1/sin h. P lies on the coil centre line and on the line d_N−1, so the last side itself lands on the
+via and layer Y's mirrored side lands on the same point. There is no lead.
+
+- Evidence (`inferred from image`, D08 Fig. 4.8 p.52 of the PDF page 57, rendered at 400 dpi and measured on the pixel
+  grid, scale 12.77 px/mm from the 45.03 mm copper edge). Front layer, coil at 0°: at r ≈ 34 mm the copper across the
+  coil is two side tracks on one side (offsets ≈ 1.4 and 4.4 mm from the sector edge, so d_0 and d_1) and three on the
+  other (≈ 1.3, 4.2 and 7.1 mm, so d_0, d_1 and d_2). The innermost outer-end strip (r ≈ 38.4 mm, R_out,2) joins the
+  d_1 side at one corner (the outer-end jog) and the d_2 side at the other. The d_2 side runs inward into the eye, and
+  its copper covers the centre line from r ≈ 25.3 to 30.4 mm. The small circle sits on that copper near the centre line
+  at r ≈ 31 mm, at the eye's narrow (inner) end; the eye is open from r ≈ 30.6 to 37.3 mm. The coil at −90° and the
+  back-layer coil at 0° carry the via the same way, at the eye's inner end (r ≈ 30.5 to 31 mm); their side counts
+  were not measured. So D08's third turn is a half turn per layer:
+  three outer arcs, five side tracks. This differs from the brief's reading (via near the eye's widest end, see the
+  U-E3b report). The image resolution is about 0.1 mm per pixel with blur over 2 to 3 pixels; positions carry about
+  ±1 mm.
+- Why the via is not at the widest end with a jog (`verified (by computation)`, arithmetic on the D08 inputs). On the
+  centre line inside turn 2 of a full closing, a lead end of width w needs r sin h − d_2 ≥ w/2 + s + w/2, so
+  r ≥ (7.15 + 2.86)/sin 15° = 38.68 mm, outside the outer arc limit 35.42 mm. A via there with no lead is not reachable
+  by the last side, which lies 2.2 mm off the centre line at r 36 mm. Only where the side copper covers the centre line
+  can the side reach the via on its own, and the mirror condition (layer Y reaches the same via) puts that point at P.
+- Conditions for the half closing with N turns (one centre via, k = 1):
+  1. Turns 0 to N − 2 pass the loop rule of G3. The closing half turn may be turn N_loop itself, because it needs no
+     inner end.
+  2. Its outer arc exists: d_N−1 < R_out,N−1 sin h.
+  3. Its right side |B P| ≥ `min_side_length`.
+  4. Via pad inside the side copper: pad ≤ w. Then the side end cap (half-width w/2) is the outermost copper at V.
+  5. Clear of the previous inner end: r_v − w/2 ≥ r_end,N−2 + w_in/2 + s (for N = 1: r_v − w/2 ≥ r_inner).
+  6. Clear of its own outer arc: r_v + w/2 + s ≤ R_out,N−1 − w_out/2.
+  The previous turn's sides need no condition. P lies on the lines d_N−1, which are w_d from the lines d_N−2, so the
+  side end cap clears them by w_d − w = s exactly and the via pad by w_d − w/2 − pad/2 ≥ s.
+- Choice. The generator computes N_full (largest N with the full closing) and N_half (largest N meeting conditions 1 to
+  6), builds the half closing when N_half > N_full and the full closing otherwise (at equal N the full closing keeps the
+  last left side), and reports `turn_limit.closing` (`full` or `half`). When neither closing fits N_loop turns it
+  reports `limiting_reason = "eye"` with the N it built, as U-M2d does with `turn_limit`. Example: a 0.6 mm via in D08
+  with the full closing builds N − 1 = 2 turns and reports `eye`; the half closing builds 3.
+- Not covered (`not tested`): pad > w (the pad would cross the s band to the previous sides; a connector inside the pad
+  would fix it but is not specified), and k > 1 series groups (k vias cannot share P; those keep the full closing).
+- DRC: the last side ends at V and has V's net, so embodic's connectivity exemption (a via and the end group of a
+  same-net path whose end point lies on it, `src/embodic/drc/items.py` `exempt_pairs`) covers it. No new exemption.
+  Clearances of worked example 2 are in its table.
 
 ### G6 Terminals, layer pairs and the via plan
 
@@ -181,6 +235,8 @@ a pre-check only.
   adds one pitch. This is valid only when the end pitch equals the side pitch (w_out = w_in = w) or the corner is square;
   otherwise corners stay sharp and width steps are tapered (Xcoil `taperJunctions`). If any fillet does not fit, multiply
   ρ by 0.7 and retry, at most 12 times; report `rho_used`. The inner end of a triangular turn is an arc of chord w_d at ρ_t (G3, revision 2026-10-05 (U-E3)).
+- Half closing (revision 2026-10-05 (U-E3b)): the last side ends at P with a round end cap and is not filleted there;
+  its clearance to the lines d_N−2 is exactly s, so a fillet or taper must not widen it.
 - Neighbour coils: the first side offset gap/2 + w/2 gives a copper gap of max(gap, s) along the shared sector edge
   (parallel sides) or at R_i0 (radial sides).
 - Rims: r_inner ≥ bore radius + edge clearance; the outermost bus ring + bw/2 + edge clearance ≤ board outline radius.
@@ -202,7 +258,7 @@ a pre-check only.
 | primitives per layer | lines and arcs with width and kind (`side`, `endturn`, `lead`, `stub`, `leg`, `ring`, `ic`), net and coil index |
 | via list | position, kind (`centre`, `terminal`, `transfer`, `stitch`, `ring`), net, drill, pad, layers joined |
 | electrical element list | one element per coil: phase, sign, members {layer, prims} per layer, series group; the format `analyzeElements` consumes |
-| `turns_achieved`, `turn_limit` | N built; radial bound, loop-rule count, eye-limited count, `limiting_reason` (`loop`, `eye`, `min_side`, `user`) |
+| `turns_achieved`, `turn_limit` | N built; radial bound, loop-rule count, eye-limited count, `closing` (`full`, `half`; revision 2026-10-05 (U-E3b)), `limiting_reason` (`loop`, `eye`, `min_side`, `user`) |
 | `turn_table` | per turn: type, d_t, R_out,t, r_end,t (R_in,t or ρ_t), jog length, σ_t, lengths (revision 2026-10-05 (U-E3)) |
 | derived geometry | per-coil track length per layer (body, lead, stub), EQ-03 closed form beside it, envelope r_min_cu, r_max_cu, copper area per layer, smallest clearance |
 
@@ -256,61 +312,76 @@ Inputs: Q 12, 2p 16, r 18.0 to 38.0 mm, w 0.5, s 0.2, gap 0.2, via pad 0.6, bus 
 - G8: bus ring radii 39.5, 40.7, 41.9 mm for levels 0 to 2.
 - EQ-10: 0.411684 Ω per coil-layer at 20 °C; 4 coils × 2 layers in series = 3.293473 Ω per phase before links.
 
-## Worked example 2: D08 12/10 (revision 2026-10-05 (U-E3))
+## Worked example 2: D08 12/10 (revision 2026-10-05 (U-E3b))
 
 Inputs: Q 12, 2p 10, centre-lines 12.5 and 44.0 mm (D08 p.55, so copper edges 11.47 and 45.03 mm), w 2.06 mm (Table 4.6
-p.57), s 0.8 mm (Table 4.5 p.54), gap 0.8 mm (`inferred`), via pad 0.6 mm (`unresolved`, not in D08), 34.8 µm, 50 °C.
+p.57), s 0.8 mm (Table 4.5 p.54), gap 0.8 mm (`inferred`), 34.8 µm, 50 °C. Centre via: drill 0.3 mm, pad 0.6 mm
+(`assumption`; D08 gives no via size; pad = Xcoil `viaPad`; the drill enters no rule here except pad > drill). The
+small circle in Fig. 4.8 measures about 1.3 mm across (`inferred from image`); the sensitivity run at pad 1.2 mm gives
+the same turns. Numbers from `.venv/bin/python checks/spiral_reference.py` and `checks/spiral_r2_check.py`
+(`verified (by computation)` for the rules as written; the rules are `inferred`).
 
 - G1: w_d 2.86 mm; d_0 1.43 mm.
 - G7: pattern AabBCcaABbcC = D08 Fig. 3.7 p.36 (`verified (reproduced)`). Six of twelve coils sit exactly on a belt edge,
   so the half-open belt rule decides them; floating-point floors do not.
 - G3: loop rule 3 turns (trapezoid, triangle, triangle). Total = D08 Table 4.6 p.57 (3 loops) and eq. 3.24 to 3.26
   (bounds 6.007, 2.526 so N_c1 = 2, 1.059 so N_c2 = 1; D08 counts two trapezoids where this rule counts one).
-- G5: N = 3 does not fit: turn 2 has R_out 38.28 and d_2 7.15 mm, so r_lo = (7.15 + 1.03 + 0.8 + 1.03)/sin 15° =
-  38.68 > r_hi = 35.42 mm. Inside that 5 mm triangle the side centre lines are 2.17 mm from the centre line at r 36 mm,
-  and a 2.06 mm lead needs 2.86 mm. N = 2 fits: r_lo 27.6255, r_hi 38.2800, r_v 38.2800 mm; `limiting_reason = "eye"`.
-  v1.0 reached N = 3 only by running the lead on d_3 = 10.01 mm, which at r_v 36.0026 mm lies 0.69 mm past the centre
-  line (r_v sin h − d_3 = 9.318 − 10.01): the same defect as DEF-M2d-01, with clearance −0.64 mm (`verified (by
-  computation)`, arithmetic on the v1.0 numbers).
-- G3/G4 per-turn table, N = 2 (mm; left of turn 1 ends at L):
+- G5: the full closing fits N = 2 only (turn 2: r_lo 38.68 > r_hi 35.42 mm; a 2.06 mm lead needs 2.86 mm from the right
+  side on the centre line). The half closing fits N = 3: P = d_2/sin 15° = 7.15/0.258819, r_v 27.6255 mm. Conditions:
+  side |B P| 10.9222 ≥ 4.12 mm; pad 0.6 ≤ w 2.06 mm; previous inner end r_end,1 + w/2 + s = 21.9587 + 1.03 + 0.8 =
+  23.7887 ≤ r_v − w/2 = 26.5955 mm; own outer arc r_v + w/2 + s = 29.4555 ≤ 37.25 mm. Result N = 3, `closing = "half"`,
+  `limiting_reason = "loop"`. The image places the via near r 31 mm on the same side copper (see G5 evidence); the
+  model's P is 3.4 mm further in, inside the band where the side copper covers the centre line (24.8 to 30.5 mm for
+  a 0.6 mm pad).
+- G3/G4 per-turn table, N = 3 (mm; left of turn 1 ends at J_2, the start of the last jog):
 
 | t | type | d_t | R_out | r_end | jog | outer | right | inner | left |
 |---|---|---|---|---|---|---|---|---|---|
 | 0 | trapezoid | 1.43 | 44.00 | 12.5000 | 0 | 20.1778 | 31.5588 | 3.6787 | 28.6972 |
 | 1 | triangle | 4.29 | 41.14 | 21.9587 | 2.8675 | 15.8128 | 19.3801 | 2.8620 | 16.5033 |
+| 2 | half | 7.15 | 38.28 | 27.6255 (r_v) | 2.8932 | 8.5521 | 10.9222 | none | none |
 
-  Not built: turn 2 (triangle, d_2 7.15, R_out 38.28, ρ_2 33.0 mm).
-- Path per coil-layer: body 138.6707 mm (jog 2.8675), lead 5.7226 mm, stub 2.1300 mm, total 146.5234 mm. EQ-03 closed
-  form for N = 2: 149.7299 mm.
-- Flux linkage (D08 design of `tests/unit/physics/test_oracles.py`, embodic field and integrator): layer X 0.002262
-  V·s/rad; concentric loops with the same radii 0.001639, 0.000814, 0.000130 (first 2: 0.002453, all 3: 0.002583).
-  Ratio 0.922 against 2 loops (jog loss 7.8 %, larger than CF-11 because w_d is 2.86 mm on sides of 19 to 32 mm) and
-  0.874 against D08's 3 loops (`verified (by computation)`). The v1.0 generated coil was 0.00177 (Fable's lever).
-- Predicted Ke_LL after the change: 0.02358 × 0.002262/0.00177 = 0.0301 V·s/rad (−2.8 % against 0.031), or 0.0340 ×
-  0.874 = 0.0297 (−4.2 %) from Fable's loop-model value. Both are inside the OR-01 band [−8 %, +9.8 %]. Status `inferred`
-  until U-M2d-2 runs OR-01. If the back-iron factor of D08 Table 4.8 (1.2 T for 1.38 T) is applied as well, the value
-  falls to about 0.026 (−16 %), outside the band; that factor is `unresolved` (`back_iron: unresolved`).
-- Lead clearance table (mm, rule s 0.8):
+- Path per coil-layer: outer 44.5427 (jogs 5.7607) + right 61.8611 + inner 6.5407 + left 45.2005 = body 158.1450 mm;
+  lead 0; stub 2.1300 mm; total 160.2750 mm (160.5750 mm at pad 1.2 mm, a longer stub). EQ-03 closed form for three
+  full loops: 177.2331 mm (+12.07 % over the body: it counts the inner end and left side of turn 2, and no jogs).
+- Flux linkage (D08 design of `tests/unit/physics/test_oracles.py`, embodic field and integrator): layer X 0.002405
+  V·s/rad; X and Y in series, per layer 0.002344 V·s/rad; D08's three concentric loops 0.001639 + 0.000814 + 0.000130
+  = 0.002583. Ratio 0.908 (series pair) and 0.931 (layer X alone) against three loops (`verified (by computation)`).
+  Why 0.908 and not about 0.97 as in CF-11 (`inferred`): the two jogs cost 7.8 % here (U-E3, N = 2: 0.922 of two loops),
+  because each jog removes w_d = 2.86 mm from left sides only 16.5 and 28.7 mm long; the closing half turns add about
+  0.00008 per layer, against 0.000130 for a whole loop 3. X alone exceeds the pair because the two half turns lie on opposite sides
+  on X and Y, so their phasors add at an angle.
+- Predicted Ke_LL with three turns (`inferred`, until U-M2d-2 runs OR-01 on the generator output): 0.02358 ×
+  0.002344/0.00177 = 0.0312 V·s/rad (+0.7 % against the measured 0.031, D08 Table 9.1 p.98), from Fable's v1.0 lever
+  (Ke 0.02358 at 0.00177); or 0.0340 × 0.908 = 0.0309 (−0.5 %) from Fable's loop-model value. Both lie inside the OR-01
+  band [−8 %, +9.8 %]. With the back-iron factor of D08 Table 4.8 (1.2 T for 1.38 T) as well, about 0.027 (−12 % to
+  −13 %), outside the band; that factor stays `unresolved` (`back_iron: unresolved`).
+- Lead and via clearance table (copper edge to edge, mm, rule s 0.8 for trace-trace and trace-via; own coil and both
+  neighbours, both layers, all vias through):
 
-| Lead | Nearest via (not landed on) | Nearest own turn | Nearest neighbour copper |
+| Track or via | Nearest via (not landed on) | Nearest own copper | Nearest neighbour copper |
 |---|---|---|---|
 | X stub (entry) | 1.6669 (neighbour Y terminal) | 0.8016 (left side 0) | 0.8000 (neighbour right side 0) |
-| X lead arc (to centre via) | 7.2059 (own X terminal) | 0.8000 (outer arc 1) | 3.6600 (neighbour right side 0) |
-| Y lead arc (from centre via) | 7.2059 (own Y terminal) | 0.8000 (outer arc 1, mirrored) | 3.6600 |
+| X last side (turn 2, lands on the centre via) | 8.8763 (own Y terminal) | 0.8000 (left side 1) | 6.5200 (neighbour right side 0) |
+| Y last side (mirror) | 8.8763 (own X terminal) | 0.8000 (left side 1, mirrored) | 6.5200 |
 | Y stub (exit) | 1.6669 (neighbour X terminal) | 0.8016 (left side 0, mirrored) | 0.8000 (neighbour outer arc 0) |
+| Centre via pad 0.6 mm, layers X and Y | none | 1.5300 (left side 1) | not nearer |
 
-  Smallest clearance over all non-adjacent copper pairs 0.8000 mm; smallest trace-to-via 0.8000 mm.
-- EQ-10: 0.039394 Ω per coil-layer at 50 °C; 4 coils × 2 layers = 0.315149 Ω per phase before links. D08 prints 0.39 Ω
+  At pad 1.2 mm the centre via clearance is 1.2300 mm. Smallest clearance over all non-adjacent copper pairs 0.8000 mm
+  (outer arc 1 to left side 1); smallest trace-to-via 0.8000 mm (outer arc 0 to its own terminal via). No exemption
+  beyond the existing connectivity rule.
+- EQ-10: 0.043091 Ω per coil-layer at 50 °C; 4 coils × 2 layers = 0.344727 Ω per phase before links. D08 prints 0.39 Ω
   from the loop model (Table 4.6 p.57, calculated, not measured), so this is no validation.
 
 ## Acceptance checks for the implementation
 
-- Turn counts exactly as above (CF-11: loop 11, eye 10; CF-10: loop 3, eye 2 at pad 0.6 mm), and the concentric
-  test mode of EQ-02 (3, 11, 8). Revision 2026-10-05 (U-E3): the CF-10 eye count changes from 3 to 2.
+- Turn counts exactly as above (CF-11: loop 11, full closing 10; CF-10: loop 3, half closing 3 at pad 0.6 and 1.2 mm),
+  and the concentric test mode of EQ-02 (3, 11, 8). Revision 2026-10-05 (U-E3b): the CF-10 count returns from 2 to 3
+  with `closing = "half"`, r_v 27.6255 mm.
 - Lengths within 1e-6 relative of the reference model for the same rules; within ±1 % when fillets are on.
 - Pattern strings exactly as CF-09.
 - The implementation's DRC (EQ-30) reports no violation for both examples. `checks/spiral_r2_check.py` measures the
   clearances with embodic's DRC distance kernels on the reference geometry (smallest = s in both examples); the
   generator's own DRC run is `not tested` until U-M2d-2.
-- Per-coil flux linkage of layer X at least 0.96 (CF-11) and 0.92 (CF-10, N = 2) of the concentric loops with the same
-  radii (revision 2026-10-05 (U-E3)).
+- Per-coil flux linkage at least 0.96 of the concentric loops with the same radii for CF-11 (layer X), and at least 0.90
+  of D08's three loops for CF-10 (series pair per layer; revision 2026-10-05 (U-E3b)).

@@ -1,5 +1,6 @@
 # Prepared by: Agent 2 — Motor Design Expert — model: claude-opus-5-5
-# Reference model of the spiral-coil generator rules in spiral_generator_spec.md (steps G1-G9; G3-G5 revision 2026-10-05, U-E3).
+# Reference model of the spiral-coil generator rules in spiral_generator_spec.md (steps G1-G9; G3-G5 revision 2026-10-05, U-E3;
+# G5 half closing revision 2026-10-05, U-E3b).
 # not product code: it prints every intermediate number of the two worked examples (default 12/16 and D08 12/10).
 # Geometry: canonical coil centred on the +x axis, half-angle h = pi/Q, left sector edge at +h (y > 0), right edge at -h.
 # Run: python3 docs/phase2/engineering/checks/spiral_reference.py [--json]
@@ -152,23 +153,80 @@ def max_turns_with_eye(g, turns, k=1):
     return n
 
 
-def coil_path(g, turns, N):
-    """Steps G4-G6 (revision 2026-10-05, U-E3): lengths of the canonical layer-X path for N turns.
+def half_turn(g, t):
+    """Closing half turn t (revision 2026-10-05, U-E3b): the outer arc J_t -> B_t with its jog, then the right side d_t
+    from B_t straight to P_t = (d_t / sin h, 0), where the line d_t meets the coil centre line. The centre via sits at P_t,
+    so the side itself lands on it; layer Y's mirrored side ends at the same point."""
+    dt, Ro = g.d(t), g.R_out(t)
+    if not dt < Ro * math.sin(g.h):
+        return None
+    A, B = g.on_L(dt, lam(Ro, dt)), g.on_R(dt, lam(Ro, dt))
+    J = A if t == 0 else g.on_L(g.d(t - 1), lam(Ro, g.d(t - 1)))
+    rv = dt / math.sin(g.h)
+    V = (rv, 0.0)
+    return {"t": t, "type": "half", "d_t": dt, "R_out": Ro, "r_v": rv, "A": A, "B": B, "J": J, "V": V,
+            "outer": Ro * (ang(J) - ang(B)), "jog": Ro * (ang(J) - ang(A)), "right": dist(B, V)}
+
+
+def half_closing(g, turns, N, min_side=None):
+    """Feasibility of N turns whose last turn is the closing half turn N-1 (one centre via, pad <= w).
+    Turns 0..N-2 are loop-rule turns. The via pad lies inside the side copper, so m = w/2 bounds the copper at V."""
+    min_side = 2 * g.w if min_side is None else min_side
+    if N < 1 or N - 1 > len(turns) or g.pad > g.w:
+        return None
+    ht = half_turn(g, N - 1)
+    if ht is None:
+        return None
+    m, rv = g.w / 2, ht["r_v"]
+    inner = turns[N - 2]["R_in_or_apex"] + g.w_in / 2 + g.s if N >= 2 else g.r_inner
+    conds = {"side >= min_side": ht["right"] >= min_side,
+             "clear of previous inner end": rv - m >= inner - 1e-9,
+             "clear of own outer arc": rv + m + g.s <= ht["R_out"] - g.w_out / 2 + 1e-9}
+    return {"N": N, "r_v": rv, "fits": all(conds.values()), "conditions": conds, "half_turn": ht,
+            "via_to_previous_sides": g.d(N - 1) - (g.d(N - 2) if N >= 2 else 0.0) - g.w / 2 - m}
+
+
+def closing(g, turns, k=1):
+    """G5 choice: the full closing (lead arc in the eye, U-E3) or the half closing (via at P_(N-1), U-E3b), whichever
+    builds more turns; at equal N the full closing wins because it keeps the last left side."""
+    n_full = max_turns_with_eye(g, turns, k)
+    n_half = 0
+    if k == 1:
+        n_half = max((N for N in range(1, len(turns) + 2) if (hc := half_closing(g, turns, N)) and hc["fits"]), default=0)
+    if n_half > n_full:
+        return {"kind": "half", "N": n_half, "n_full": n_full, "n_half": n_half}
+    return {"kind": "full", "N": n_full, "n_full": n_full, "n_half": n_half}
+
+
+def coil_path(g, turns, N, kind="full"):
+    """Steps G4-G6 (revision 2026-10-05, U-E3; half closing U-E3b): lengths of the canonical layer-X path for N turns.
     'outer' includes the jogs; 'left' runs from each inner end to the next jog start J_(t+1), or to L at r_v for the
-    last turn; the lead is the single arc at r_v from L to the centre via."""
+    last turn; the lead is the single arc at r_v from L to the centre via. With kind 'half' the last turn is the outer
+    arc and the right side to P_(N-1); there is no lead."""
     parts = {"outer": 0.0, "inner": 0.0, "right": 0.0, "left": 0.0}
-    rv = eye(g, turns, N)["r_v"]
-    d_last = g.d(N - 1)
-    L = g.on_L(d_last, lam(rv, d_last))
     jog = 0.0
-    for t in range(N):
-        tt = turns[t]
+    if kind == "half":
+        ht = half_turn(g, N - 1)
+        rv, L = ht["r_v"], ht["V"]
+        full = turns[:N - 1]
+        tops = [tt["J"] for tt in turns[1:N - 1]] + [ht["J"]]
+    else:
+        rv = eye(g, turns, N)["r_v"]
+        d_last = g.d(N - 1)
+        L = g.on_L(d_last, lam(rv, d_last))
+        full = turns[:N]
+        tops = [tt["J"] for tt in turns[1:N]] + [L]
+    for tt, top in zip(full, tops, strict=True):
         parts["outer"] += tt["outer"]
         parts["inner"] += tt["inner"]
         parts["right"] += tt["right"]
-        parts["left"] += dist(tt["D"], turns[t + 1]["J"] if t < N - 1 else L)
+        parts["left"] += dist(tt["D"], top)
         jog += tt["jog"]
-    lead = rv * ang(L)
+    if kind == "half":
+        parts["outer"] += ht["outer"]
+        parts["right"] += ht["right"]
+        jog += ht["jog"]
+    lead = 0.0 if kind == "half" else rv * ang(L)
     r_T = g.r_outer + g.s + g.pad / 2
     c0 = turns[0]["A"]
     aV = min(ang(c0), g.h - math.asin(min(1.0, (max(g.pad, g.bw) + g.s) / (2 * r_T))) - 1e-6)
@@ -177,7 +235,7 @@ def coil_path(g, turns, N):
     body = sum(parts.values())
     return {"parts": parts, "body": body, "jog": jog, "lead": lead, "stub": stub, "total": body + lead + stub, "r_v": rv,
             "r_T": r_T, "terminal_angle_deg": math.degrees(aV), "start_corner_angle_deg": math.degrees(ang(c0)),
-            "lead_point_L": L, "terminal_point": tv}
+            "lead_point_L": L, "terminal_point": tv, "closing": kind}
 
 
 def closed_form(g, N):
@@ -218,11 +276,16 @@ def example(name, Q, poles, r_inner, r_outer, w, s, gap, pad, t_cu, T, layers, b
     sos = star_of_slots(Q, poles // 2)
     turns, radial = turn_limit(g)
     n_loop = len(turns)
-    n_eye = max_turns_with_eye(g, turns)
-    N = n_eye
-    path = coil_path(g, turns, N)
+    cl = closing(g, turns)
+    N = n_eye = cl["N"]
+    path = coil_path(g, turns, N, cl["kind"])
     cf = closed_form(g, N)
-    ey = eye(g, turns, N)
+    if cl["kind"] == "half":
+        hc = half_closing(g, turns, N)
+        ey = {"closing": "half", "r_v": hc["r_v"], "fits": hc["fits"], "conditions": hc["conditions"],
+              "via_to_previous_sides": hc["via_to_previous_sides"], "n_full_closing": cl["n_full"]}
+    else:
+        ey = dict(eye(g, turns, N), closing="full")
     coils_per_phase = sos["coils_per_phase"]
     R_coil_layer = resistance(path["total"], w, t_cu, T)
     out = {
@@ -232,11 +295,11 @@ def example(name, Q, poles, r_inner, r_outer, w, s, gap, pad, t_cu, T, layers, b
         "derived": {"theta_cp_deg": 360 / Q, "w_d_mm": g.wd, "R_o0_mm": g.Ro0, "R_i0_mm": g.Ri0, "d0_mm": g.d(0)},
         "star_of_slots": {k: v for k, v in sos.items() if k != "coils"},
         "turn_limit": {"radial_bound_eq_3_24": radial, "loop_rule_turns": n_loop,
-                       "types": [tt["type"] for tt in turns], "eye_limited_turns": n_eye,
+                       "types": [tt["type"] for tt in turns], "eye_limited_turns": n_eye, "closing": cl["kind"],
                        "limiting_reason": "eye" if n_eye < n_loop else "loop"},
-        "turn_table": [{k: (round(v, 4) if isinstance(v, float) else v) for k, v in tt.items() if k not in ("A", "B", "C", "D", "J")}
-                       for tt in turns[:N]],
-        "eye": {k: (round(v, 4) if isinstance(v, float) else v) for k, v in ey.items()},
+        "turn_table": [{k: (round(v, 4) if isinstance(v, float) else v) for k, v in tt.items() if k not in ("A", "B", "C", "D", "J", "V")}
+                       for tt in (turns[:N] if cl["kind"] == "full" else turns[:N - 1] + [half_turn(g, N - 1)])],
+        "eye": {k: (round(v, 4) if isinstance(v, float) else v) for k, v in ey.items() if k != "conditions"},
         "path_mm": {k: (round(v, 4) if isinstance(v, float) else v) for k, v in path.items() if k not in ("parts", "lead_point_L", "terminal_point")},
         "path_parts_mm": {k: round(v, 4) for k, v in path["parts"].items()},
         "closed_form_eq03_mm": round(cf, 4),
@@ -268,10 +331,12 @@ if __name__ == "__main__":
                                                 ("D08 12/10", 12, 10, 11.47, 45.03, 2.06, 0.8, 0.8)):
             g = Geo(Q, ri, ro, w, s, gap, pad)
             turns, _ = turn_limit(g)
-            extra.append((nm, pad, len(turns), max_turns_with_eye(g, turns)))
+            cl = closing(g, turns)
+            extra.append((nm, pad, len(turns), cl["N"], cl["kind"]))
     g18 = Geo(18, 18.0, 38.0, 0.5, 0.2, 0.2, 0.6)
     t18, _ = turn_limit(g18)
-    extra.append(("18/16", 0.6, len(t18), max_turns_with_eye(g18, t18)))
+    cl18 = closing(g18, t18)
+    extra.append(("18/16", 0.6, len(t18), cl18["N"], cl18["kind"]))
     if "--json" in sys.argv:
         print(json.dumps({"examples": results, "eye_sensitivity": extra}, indent=1))
         sys.exit(0)
@@ -297,6 +362,6 @@ if __name__ == "__main__":
     gap_y = (g.d(N) - g.d(N - 1)) - g.w / 2 - g.pad / 2
     print("=" * 100)
     print(f"DEF-P2-01: Phase 1 via on the X lead line d_N; copper gap to layer Y's last side d_(N-1) = {gap_y:.4f} mm (rule {g.s} mm)")
-    print("eye sensitivity (case, via pad mm, loop-rule turns, eye-limited turns):")
+    print("eye sensitivity (case, via pad mm, loop-rule turns, turns after the centre-via rule, closing):")
     for e in extra:
         print("  ", e)

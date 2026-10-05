@@ -1,6 +1,6 @@
 # Prepared by: Agent 2 — Motor Design Expert — model: claude-opus-5-5
-# Check of the spiral turn geometry revision 2026-10-05 (U-E3): flux linkage against the concentric-loop model and lead
-# clearances, for worked examples 1 (CF-11) and 2 (D08). Uses spiral_reference.py for the geometry and embodic's own
+# Check of the spiral turn geometry revision 2026-10-05 (U-E3; G5 half closing U-E3b): flux linkage against the
+# concentric-loop model and lead / centre-via clearances, for worked examples 1 (CF-11) and 2 (D08). Uses spiral_reference.py for the geometry and embodic's own
 # field table, path integrator and DRC distance kernels (read-only). Run from the repo root:
 #     .venv/bin/python docs/phase2/engineering/checks/spiral_r2_check.py
 import math
@@ -33,19 +33,26 @@ def arc(r, a, b, w, role=PrimitiveRole.END_TURN):
     return Arc(cx_mm=0.0, cy_mm=0.0, r_mm=r, start_rad=ang(a), sweep_rad=ang(b) - ang(a), width_mm=w, role=role)
 
 
-def x_path(g, turns, N):
-    """Canonical layer X (revision 2026-10-05): stub, N turns with the outer-end jog, one lead arc at r_v."""
-    p = sr.coil_path(g, turns, N)
+def x_path(g, turns, N, kind="full"):
+    """Canonical layer X: stub, N turns with the outer-end jog, then either one lead arc at r_v (full closing, U-E3) or
+    the closing half turn whose right side ends on the centre via at P_(N-1) (half closing, U-E3b)."""
+    p = sr.coil_path(g, turns, N, kind)
     L, T, rv = p["lead_point_L"], p["terminal_point"], p["r_v"]
     prims = [("stub", line(T, turns[0]["A"], g.w, PrimitiveRole.STUB))]
-    for t in range(N):
+    n_full = N - 1 if kind == "half" else N
+    ht = sr.half_turn(g, N - 1) if kind == "half" else None
+    for t in range(n_full):
         tt = turns[t]
-        top = turns[t + 1]["J"] if t < N - 1 else L
+        top = turns[t + 1]["J"] if t < n_full - 1 else (ht["J"] if ht else L)
         prims += [(f"outer {t}", arc(tt["R_out"], tt["J"], tt["B"], g.w_out)),
                   (f"right {t}", line(tt["B"], tt["C"], g.w)),
                   (f"inner {t}", arc(tt["R_in_or_apex"], tt["C"], tt["D"], g.w_in)),
                   (f"left {t}", line(tt["D"], top, g.w))]
-    prims.append(("lead", arc(rv, L, (rv, 0.0), g.w, PrimitiveRole.LEAD)))
+    if ht:
+        prims += [(f"outer {N - 1}", arc(ht["R_out"], ht["J"], ht["B"], g.w_out)),
+                  (f"last {N - 1}", line(ht["B"], ht["V"], g.w))]
+    else:
+        prims.append(("lead", arc(rv, L, (rv, 0.0), g.w, PrimitiveRole.LEAD)))
     vias = {"centre": (rv, 0.0), "terminal X": T, "terminal Y": (T[0], -T[1])}
     return prims, vias
 
@@ -111,8 +118,9 @@ def linkage(design, prims_list):
 
 def report(name, g, design, n_override=None):
     turns, _ = sr.turn_limit(g)
-    N = sr.max_turns_with_eye(g, turns) if n_override is None else n_override
-    prims, vias = x_path(g, turns, N)
+    cl = sr.closing(g, turns)
+    N = cl["N"] if n_override is None else n_override
+    prims, vias = x_path(g, turns, N, cl["kind"])
     x = [pr for _, pr in prims]
     y = [mirror(pr) for pr in reversed(x)]
     loops_all = concentric_loops(g, turns, len(turns))
@@ -121,7 +129,22 @@ def report(name, g, design, n_override=None):
     conc_n, conc_all = abs(sum(lc[:N])), abs(sum(lc))
     pair = abs(lx - ly) / 2 if abs(lx - ly) > abs(lx + ly) else abs(lx + ly) / 2
     print("=" * 100)
-    print(f"{name}: loop-rule turns {len(turns)}, eye-limited N = {N}, r_v {vias['centre'][0]:.4f} mm")
+    print(f"{name}: loop-rule turns {len(turns)}, closing {cl['kind']} (full {cl['n_full']}, half {cl['n_half']}), "
+          f"N = {N}, centre via r_v {vias['centre'][0]:.4f} mm, pad {g.pad} mm")
+    print("  per turn (mm): t, type, d_t, R_out, r_end (R_in / apex rho / via P), outer, right, inner, left")
+    seg = {na: pr for na, pr in prims}
+    for t in range(N):
+        tt = turns[t] if (cl["kind"] == "full" or t < N - 1) else sr.half_turn(g, t)
+        if tt["type"] == "half":
+            print(f"   {t} half      {tt['d_t']:.4f} {tt['R_out']:.4f} {tt['r_v']:.4f} {seg[f'outer {t}'].r_mm * seg[f'outer {t}'].sweep_rad:.4f} "
+                  f"{math.dist(seg[f'last {t}'].start_point(), seg[f'last {t}'].end_point()):.4f} - -")
+        else:
+            lf = seg[f"left {t}"]
+            print(f"   {t} {tt['type']:9s} {tt['d_t']:.4f} {tt['R_out']:.4f} {tt['R_in_or_apex']:.4f} {abs(tt['outer']):.4f} "
+                  f"{tt['right']:.4f} {abs(tt['inner']):.4f} {math.dist(lf.start_point(), lf.end_point()):.4f}")
+    body = sum(math.dist(pr.start_point(), pr.end_point()) if isinstance(pr, Line) else abs(pr.r_mm * pr.sweep_rad)
+               for na, pr in prims)
+    print(f"  track length per coil-layer (stub + body + lead) {body:.4f} mm")
     print(f" p*flux one layer X (stub+body+lead) |lambda_X| = {abs(lx):.6f} V*s/rad; X+Y pair per layer = {pair:.6f}")
     print(f" concentric loops (same radii): first N = {conc_n:.6f}, all {len(turns)} = {conc_all:.6f} V*s/rad; "
           f"per-loop {[round(abs(v), 6) for v in lc]}")
@@ -156,7 +179,7 @@ def report(name, g, design, n_override=None):
                 c = distance(a, point(v)) - a.width_mm / 2 - g.pad / 2
                 if c < worst_tv[0]:
                     worst_tv = (c, f"{lay}: {na} / via {vn}")
-            if na in ("stub", "lead"):
+            if na in ("stub", "lead") or na.startswith("last"):
                 tv = min((distance(a, point(v)) - a.width_mm / 2 - g.pad / 2, vn) for vn, v in all_vias.items()
                          if not lands_on(a, v))
                 own_t = min((distance(a, b) - a.width_mm / 2 - b.width_mm / 2, nbn) for j, (nbn, b) in enumerate(seq)
@@ -165,8 +188,12 @@ def report(name, g, design, n_override=None):
                 lead_rows.append((lay, na, tv, own_t, nb_t))
     print(" lead clearance table (copper edge to edge, mm; rule s = %.3f):" % g.s)
     for lay, na, tv, own_t, nb_t in lead_rows:
-        print(f"   layer {lay} {na:5s}: to nearest via {tv[0]:.4f} ({tv[1]}); to own turns {own_t[0]:.4f} ({own_t[1]}); "
+        print(f"   layer {lay} {na:6s}: to nearest via {tv[0]:.4f} ({tv[1]}); to own turns {own_t[0]:.4f} ({own_t[1]}); "
               f"to neighbours {nb_t[0]:.4f} ({nb_t[1]})")
+    for lay in ("X", "Y"):
+        cv = min((distance(b, point(vias["centre"])) - b.width_mm / 2 - g.pad / 2, f"{lay}: {nbn}")
+                 for nbn, b in own[lay] + nb[lay] if not lands_on(b, vias["centre"]))
+        print(f"   centre via pad to nearest copper it does not land on, layer {lay}: {cv[0]:.4f} ({cv[1]})")
     print(f" smallest trace-trace clearance (non-adjacent, own + neighbours): {worst_tt[0]:.4f} mm ({worst_tt[1]})")
     print(f" smallest trace-via clearance (pairs that do not land): {worst_tv[0]:.4f} mm ({worst_tv[1]})")
     return pair / conc_all
@@ -177,3 +204,4 @@ if __name__ == "__main__":
     report("CF-11 default 12/16", g11, default_design())
     g08 = sr.Geo(12, 11.47, 45.03, 2.06, 0.8, 0.8, 0.6)
     report("CF-10 D08 12/10", g08, _d08_design())
+    report("CF-10 D08 12/10, via pad 1.2 mm (sensitivity)", sr.Geo(12, 11.47, 45.03, 2.06, 0.8, 0.8, 1.2), _d08_design())

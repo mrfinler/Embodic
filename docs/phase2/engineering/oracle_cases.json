@@ -48,7 +48,7 @@
  "cases": [
   {
    "case_id": "O1-D08",
-   "version": 2,
+   "version": 3,
    "title": "Collijs & Vereecken (UGent thesis 2020-21): 12-coil/10-pole concentrated spiral PCB stator, double rotor",
    "document": "D08 B2/799354017-Pcb-stator-thesis.pdf",
    "topology": "FSCW spiral, all phases on each layer",
@@ -219,7 +219,7 @@
      "unit": "V*s/rad",
      "kind": "measured",
      "source": "D08 Table 9.1 p.98",
-     "comparison": "synthesised line-line waveform peak / omega_m from EQ-05/06/09 (not the fundamental alone)",
+     "comparison": "AnalysisResult.ke_line_peak_v_s_per_rad (trace key ke_line_peak): peak of the synthesised line-line waveform per mechanical rad/s from EQ-05/06/09/18, not the fundamental ke_line",
      "tolerance": "model/measured in [-8 %, +8 % + e_edge], e_edge = 4.2 % (EC-05). O1 is the only oracle independent of the EC-05 calibration source (D09); the add-on itself is an assumption when transferred to D08's 5 mm T-arrangement magnets (DEF-23)"
     },
     {
@@ -253,12 +253,12 @@
      "unit": "1",
      "kind": "built prototype",
      "source": "D08 Table 4.6 p.57",
-     "comparison": "EQ-02 / EQ-25: concentric loop rule 3 (1 trapezoid + 2 triangles); generator with eye 3 at via pad 0.6 mm, 2 at 1.2 mm (limiting_reason 'eye')",
+     "comparison": "EQ-02 / EQ-25: concentric loop rule 3 (1 trapezoid + 2 triangles); generator turns_achieved 3 at via pad 0.6 and 1.2 mm with the half closing (G5): turns 0-1 full, turn 2 = outer arc + right side ending on the centre via",
      "tolerance": "exact per mode"
     }
    ],
    "pre_registration": "run the primary case with the 'assumed' values first and report it; sweeps are sensitivity runs, not tuning; any change of a frozen value creates version 2",
-   "version_note": "version 2 (Phase 2): 'turns that fit' comparison uses the Phase 2 centre-via rule (via on the coil centre line, spiral_generator_spec.md G5): loop rule 3, eye-limited 3 at via pad 0.6 mm and 2 at 1.2 mm (D08 via pad unresolved); EC-05 add-on labelled per DEF-23. Inputs unchanged.",
+   "version_note": "version 3 (revision 2026-10-05, U-E3b): 'turns that fit' uses the G5 half closing of spiral_generator_spec.md (3 turns at via pad 0.6 and 1.2 mm, D08 via pad unresolved); Ke comparison names the result field ke_line_peak. Version 2: Phase 2 centre-via rule; EC-05 add-on labelled per DEF-23. Inputs unchanged.",
    "runnable": true
   },
   {
@@ -1280,8 +1280,8 @@
   },
   {
    "case_id": "CF-10",
-   "version": 2,
-   "version_note": "version 2 (revision 2026-10-05, U-E3): G3-G5 revised (both sides on d_t, outer-end jog, lead arc at r_v = r_hi); eye-limited 2 at pad 0.6 and 1.2 mm",
+   "version": 3,
+   "version_note": "version 3 (revision 2026-10-05, U-E3b): G5 half closing (last turn = outer arc + right side ending on the centre via at P = (d_2/sin h, 0)); 3 turns at via pad 0.6 and 1.2 mm (version 2, U-E3: 2 turns)",
    "kind": "reference model (spiral_reference.py)",
    "eq_ids": [
     "EQ-02",
@@ -1357,39 +1357,46 @@
      "tolerance": "exact; equals D08 Table 4.6 p.57 (3 loops)"
     },
     {
-     "quantity": "eye-limited turns, via pad 0.6 / 1.2 mm",
+     "quantity": "turns after the centre-via rule, via pad 0.6 / 1.2 mm; closing",
      "value": [
-      2,
-      2
+      3,
+      3,
+      "half"
      ],
      "unit": "1",
      "tolerance": "exact"
     },
     {
-     "quantity": "EQ-03 concentric closed form, N = eye-limited (2)",
-     "value": 149.7299,
+     "quantity": "centre via radius r_v = d_2 / sin(pi/Q)",
+     "value": 27.6255,
+     "unit": "mm",
+     "tolerance": "absolute 1e-4 mm"
+    },
+    {
+     "quantity": "EQ-03 concentric closed form, N = 3 (three full loops)",
+     "value": 177.2331,
      "unit": "mm",
      "tolerance": "absolute 1e-3 mm"
     },
     {
-     "quantity": "generated body (sides + ends), N = eye-limited (2)",
-     "value": 138.6707,
+     "quantity": "generated body (sides + ends), N = 3 with half closing",
+     "value": 158.145,
      "unit": "mm",
      "tolerance": "relative 1e-6 (same rules) / +-1 % (fillet or lead conventions)"
     },
     {
      "quantity": "lead / terminal stub / total",
      "value": [
-      5.7226,
+      0.0,
       2.13,
-      146.5234
+      160.275
      ],
      "unit": "mm",
      "tolerance": "relative 1e-6"
     },
     {
      "quantity": "R per coil-layer at 50 degC (coil copper only)",
-     "value": 0.03939361903122826,
+     "value": 0.043090813699768464,
      "unit": "ohm",
      "tolerance": "relative 1e-6"
     }
