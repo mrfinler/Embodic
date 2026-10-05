@@ -121,8 +121,18 @@ def derive_layer_pairs(draft: DesignDraft) -> DesignDraft:
             values[pointer] = draft.values.get(pointer, value)
         indices.append(values[f"{_PAIRS}/{k}/index"])
     if indices:
-        old_groups = draft.values.get(_SERIES_GROUPS) or []
-        groups = [kept for group in old_groups if (kept := [i for i in group if i in indices])]
-        grouped = {i for group in groups for i in group}
-        values[_SERIES_GROUPS] = groups + [[i] for i in indices if i not in grouped]
+        values[_SERIES_GROUPS] = _series_groups(draft.values.get(_SERIES_GROUPS), indices)
     return DesignDraft(topology=draft.topology, values=values)
+
+
+def _series_groups(old: JsonValue, indices: list[JsonValue]) -> list[JsonValue]:
+    """Keep the draft's groups for pairs that still exist; every other pair goes in its own series group."""
+    groups: list[JsonValue] = []
+    grouped: list[JsonValue] = []
+    for group in old if isinstance(old, list) else []:
+        kept = [i for i in group if i in indices] if isinstance(group, list) else []
+        if kept:
+            groups.append(kept)
+            grouped.extend(kept)
+    groups.extend([[i] for i in indices if i not in grouped])
+    return groups
