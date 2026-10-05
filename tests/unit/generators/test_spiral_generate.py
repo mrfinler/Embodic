@@ -193,7 +193,28 @@ def test_g8_each_phase_is_one_continuous_series_route(example: str, registry: Re
         assert {p.layer for p in chain_copper if p.primitives[0].role is PrimitiveRole.LEG} == {pair.layer_out}
         assert {p.layer for p in chain_copper if p.primitives[0].role is PrimitiveRole.RING} <= {pair.layer_in}
         assert all(p.net == f"PHASE_{phase.phase.value}" for p in route)
-    assert Counter(v.role for v in board.vias)[ViaRole.RING] == 2 * 12
+    assert sum(v.role is ViaRole.RING and v.net.startswith("PHASE_") for v in board.vias) == 2 * 12
+
+
+@pytest.mark.req("REQ-F-03")
+def test_g8_star_joins_the_three_phase_ends_and_leads_reach_pads(board: Layout) -> None:
+    """D-022 nets: the neutral N taps the end of every phase chain; U/V/W leads run from each phase start to its pad.
+
+    Catches a lead on the wrong phase end, a missing neutral tap, or interconnect copper left out of the circuit.
+    """
+    paths = {p.id: p for p in board.paths}
+    vias = {v.id: v for v in board.vias}
+    ic = [paths[i] for i in board.circuit.interconnect_path_ids]
+    assert Counter(p.net for p in ic) == {"N": 4, "U": 1, "V": 1, "W": 1}
+    for phase in board.circuit.phases:
+        start_via = vias[phase.groups[0].members[0].via_ids[0]]
+        end_via = vias[phase.groups[-1].members[0].via_ids[-1]]
+        lead = next(p for p in ic if p.net == phase.terminal_net)
+        assert math.dist(lead.primitives[0].start_point(), (start_via.x_mm, start_via.y_mm)) <= start_via.pad_mm / 2
+        pad = next(d for d in board.pads if d.label == phase.terminal_net)
+        assert math.dist(lead.primitives[-1].end_point(), (pad.x_mm, pad.y_mm)) <= 1e-9
+        neutral_stub_starts = [p.primitives[0].start_point() for p in ic if p.net == "N" and len(p.primitives) == 1]
+        assert min(math.dist(q, (end_via.x_mm, end_via.y_mm)) for q in neutral_stub_starts) <= end_via.pad_mm / 2
 
 
 def _check_contract(result: BoardStack | Unbuildable) -> None:

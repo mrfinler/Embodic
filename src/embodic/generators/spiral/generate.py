@@ -16,8 +16,9 @@ from dataclasses import dataclass
 from types import MappingProxyType
 
 from embodic.errors import IssueCategory, Severity, Unbuildable, ValidationIssue, message_for
-from embodic.generators.spiral.artwork import coil_artwork
+from embodic.generators.spiral.artwork import CoilArtwork, coil_artwork
 from embodic.generators.spiral.chain import BusRings, CoilEnds, End, PhaseChain, chain_coils, norm_angle
+from embodic.generators.spiral.interconnect import Interconnect, PhaseEnd, build_interconnect, plan_links
 from embodic.generators.spiral.turns import (
     Closing,
     CoilFrame,
@@ -39,10 +40,10 @@ from embodic.geometry.primitives import Arc, Line, Primitive, PrimitiveRole, pat
 from embodic.geometry.transforms import Transform, mirror, reverse_path, rotate, transform_point
 from embodic.model.design import DesignParameters
 from embodic.model.layers import LayerPair
-from embodic.model.vocabulary import Phase, TopologyKind, ViaSpan
+from embodic.model.vocabulary import ConnectionTopology, Phase, TopologyKind, ViaSpan
 from embodic.model.winding_specs import EndStyle, InnerTurnMode, LeadStyle, Sense, SideStyle, SpiralWindingSpec
 from embodic.results import Registry
-from embodic.winding import plan_spiral_winding
+from embodic.winding import SpiralWindingPlan, plan_spiral_winding
 
 TERMINAL_NET = MappingProxyType({Phase.A: "U", Phase.B: "V", Phase.C: "W"})  # D-019: phase A is U
 
@@ -206,48 +207,29 @@ def _with_chain(member: Member, coil: int, chained: _ChainCopper) -> Member:
     )
 
 
-def _closings(
-    frame: CoilFrame, loops: tuple[LoopTurn, ...], requested: int | None
-) -> tuple[Closing, Closing] | Unbuildable:
-    """Return the closing to build and the one with the most turns (G5), or why none fits."""
-    best = max_closing(frame, loops)
-    if best is None:
-        return Unbuildable(issues=(_issue("UNBUILDABLE_ZERO_TURNS", ("/winding/coil/turns",)),))
-    closing = best if requested is None else closing_for(frame, loops, requested)
-    if closing is None or closing.n > best.n:
-        return Unbuildable(issues=(_issue("UNBUILDABLE_TURNS_EXCEED_LIMIT", ("/winding/coil/turns",), best.n),))
-    return closing, best
+@dataclass(frozen=True, slots=True, kw_only=True)
+class _CoilCopper:
+    """Both layers and the three vias of every coil, with what the G8 chain needs."""
+
+    paths: tuple[CopperPath, ...]
+    vias: tuple[Via, ...]
+    members: Mapping[int, Member]
+    terminal_vias: Mapping[tuple[int, End], Via]
+    ends: Mapping[Phase, list[CoilEnds]]
 
 
-def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack | Unbuildable:
-    """Build one board; a winding other than SpiralWindingSpec raises TypeError (a dispatch bug, not user input)."""
-    spec = design.winding
-    if not isinstance(spec, SpiralWindingSpec):
-        raise TypeError(f"generate_spiral needs a spiral winding, got {type(spec).__name__}")
-    if refusal := _refusal(design, spec):
-        return refusal
-    plan = plan_spiral_winding(design, spec, registry)
-    if isinstance(plan, Unbuildable):
-        return plan
-
-    coil, pair = spec.coil, spec.layers.pairs[0]
-    frame = CoilFrame.of(coil, design.vias.pad_mm)
-    loops, stop = loop_turns(frame)
-    closings = _closings(frame, loops, coil.turns)
-    if isinstance(closings, Unbuildable):
-        return closings
-    closing, best = closings
-    n = closing.n
-    reason = _limiting_reason(coil.turns, best.n, len(loops), stop)
-    art = coil_artwork(frame, closing, design.connection.ring_width_mm)
-    x_canonical = art.primitives
-    y_canonical = reverse_path(mirror(x_canonical, 0.0))  # mirror about the coil axis, traversed outward
-
+def _coil_copper(
+    design: DesignParameters, plan: SpiralWindingPlan, spec: SpiralWindingSpec, art: CoilArtwork
+) -> _CoilCopper:
+    """Rotate the canonical X and mirrored Y artwork to every coil, in current direction per polarity."""
     paths: list[CopperPath] = []
     vias: list[Via] = []
     coil_members: dict[int, Member] = {}
     terminal_vias: dict[tuple[int, End], Via] = {}
     coil_ends: dict[Phase, list[CoilEnds]] = {phase: [] for phase in Phase}
+    coil, pair = spec.coil, spec.layers.pairs[0]
+    x_canonical = art.primitives
+    y_canonical = reverse_path(mirror(x_canonical, 0.0))  # mirror about the coil axis, traversed outward
     via_points = (art.terminal, art.centre_via, (art.terminal[0], -art.terminal[1]))
     terminal_rad = math.atan2(art.terminal[1], art.terminal[0])
     for assignment in plan.assignment:
@@ -286,8 +268,69 @@ def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack 
             )
         )
 
+    return _CoilCopper(
+        paths=tuple(paths), vias=tuple(vias), members=coil_members, terminal_vias=terminal_vias, ends=coil_ends
+    )
+
+
+def _closings(
+    frame: CoilFrame, loops: tuple[LoopTurn, ...], requested: int | None
+) -> tuple[Closing, Closing] | Unbuildable:
+    """Return the closing to build and the one with the most turns (G5), or why none fits."""
+    best = max_closing(frame, loops)
+    if best is None:
+        return Unbuildable(issues=(_issue("UNBUILDABLE_ZERO_TURNS", ("/winding/coil/turns",)),))
+    closing = best if requested is None else closing_for(frame, loops, requested)
+    if closing is None or closing.n > best.n:
+        return Unbuildable(issues=(_issue("UNBUILDABLE_TURNS_EXCEED_LIMIT", ("/winding/coil/turns",), best.n),))
+    return closing, best
+
+
+def _interconnect(
+    design: DesignParameters, phase_ends: Mapping[tuple[Phase, int], PhaseEnd], r_bus_mm: float, clearance_mm: float,
+    pair: LayerPair, first_path_id: int, first_via_id: int,
+) -> Interconnect | Unbuildable:  # fmt: skip
+    """Star or delta links and leads beyond the bus rings (G8); nothing for open phases or a hidden interconnect."""
+    connection = design.connection
+    if not connection.draw_interconnect or connection.topology is ConnectionTopology.OPEN:
+        return Interconnect(paths=(), vias=(), pads=(), r_max_mm=0.0)
+    links = plan_links(connection.topology, phase_ends)
+    if links is None:
+        return Unbuildable(issues=(_issue("UNBUILDABLE_INTERCONNECT_CROSSING", ("/connection/topology",)),))
+    return build_interconnect(
+        connection, phase_ends, links, r_bus_mm, clearance_mm, pair.layer_in, pair.layer_out,
+        first_path_id=first_path_id, first_via_id=first_via_id, first_pad_id=0,
+    )  # fmt: skip
+
+
+def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack | Unbuildable:
+    """Build one board; a winding other than SpiralWindingSpec raises TypeError (a dispatch bug, not user input)."""
+    spec = design.winding
+    if not isinstance(spec, SpiralWindingSpec):
+        raise TypeError(f"generate_spiral needs a spiral winding, got {type(spec).__name__}")
+    if refusal := _refusal(design, spec):
+        return refusal
+    plan = plan_spiral_winding(design, spec, registry)
+    if isinstance(plan, Unbuildable):
+        return plan
+
+    coil, pair = spec.coil, spec.layers.pairs[0]
+    frame = CoilFrame.of(coil, design.vias.pad_mm)
+    loops, stop = loop_turns(frame)
+    closings = _closings(frame, loops, coil.turns)
+    if isinstance(closings, Unbuildable):
+        return closings
+    closing, best = closings
+    n = closing.n
+    reason = _limiting_reason(coil.turns, best.n, len(loops), stop)
+    art = coil_artwork(frame, closing, design.connection.ring_width_mm)
+    copper = _coil_copper(design, plan, spec, art)
+    paths, vias = list(copper.paths), list(copper.vias)
+    coil_members, terminal_vias, coil_ends = copper.members, copper.terminal_vias, copper.ends
+
     bus = BusRings.of(frame, design.connection.ring_width_mm)
     phase_groups: dict[Phase, list[ParallelGroup]] = {}
+    phase_ends: dict[tuple[Phase, int], PhaseEnd] = {}
     top_level = 0
     for phase_index, phase in enumerate(Phase):
         chain = chain_coils(sorted(coil_ends[phase], key=lambda c: c.entry_rad))
@@ -296,9 +339,21 @@ def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack 
         top_level = max(top_level, len(Phase) * chain.n_levels - 1)
         chained = _chain_copper(chain, phase, phase_index, bus, terminal_vias, pair, design, paths, vias)
         phase_groups[phase] = [ParallelGroup(members=(_with_chain(coil_members[k], k, chained),)) for k in chain.order]
+        phase_ends[(phase, 1)] = PhaseEnd(phase=phase, sign=1, via=vias[chained.ring_vias[(chain.order[0], End.ENTRY)]])
+        phase_ends[(phase, -1)] = PhaseEnd(
+            phase=phase, sign=-1, via=vias[chained.ring_vias[(chain.order[-1], End.EXIT)]]
+        )
 
-    envelope = (coil.r_inner_mm, bus.radius_mm(top_level) + bus.half_width_mm)
-    length_mm = path_length_mm(x_canonical)
+    r_bus_mm = bus.radius_mm(top_level) + bus.half_width_mm
+    ic = _interconnect(design, phase_ends, r_bus_mm, coil.clearance_mm, pair, len(paths), len(vias))
+    if isinstance(ic, Unbuildable):
+        return ic
+    paths += ic.paths
+    vias += ic.vias
+    r_max_mm = max(r_bus_mm, ic.r_max_mm)
+
+    envelope = (coil.r_inner_mm, r_max_mm)
+    length_mm = path_length_mm(art.primitives)
     detail = SpiralDetail(
         plan=plan,
         turns_achieved=n,
@@ -309,7 +364,7 @@ def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack 
             eye_limit=best.n,
             limiting_reason=reason,
         ),
-        track_length_per_coil_layer_mm=MappingProxyType({"X": length_mm, "Y": path_length_mm(y_canonical)}),
+        track_length_per_coil_layer_mm=MappingProxyType({"X": length_mm, "Y": length_mm}),
     )
     copper_z = design.stackup.copper_z_mm()
     layout = Layout(
@@ -318,7 +373,7 @@ def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack 
         copper_z_mm=MappingProxyType({name: copper_z[name] for name in (pair.layer_in, pair.layer_out)}),
         paths=tuple(paths),
         vias=tuple(vias),
-        pads=(),
+        pads=ic.pads,
         outline=build_outline(design.outline, envelope),
         circuit=Circuit(
             phases=tuple(
@@ -326,7 +381,7 @@ def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack 
                 for phase, groups in phase_groups.items()
             ),
             topology=design.connection.topology,
-            interconnect_path_ids=(),
+            interconnect_path_ids=tuple(p.id for p in ic.paths),
         ),
         symmetry=None,
         envelope_mm=envelope,
