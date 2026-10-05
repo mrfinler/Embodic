@@ -6,7 +6,7 @@ import math
 import pytest
 
 from embodic.geometry.circuit import Circuit, Member, ParallelGroup, PhaseCircuit
-from embodic.geometry.layout import BoardOutline, Layout, Via, ViaRole
+from embodic.geometry.layout import BoardOutline, BoardStack, Layout, Via, ViaRole
 from embodic.geometry.paths import CopperPath
 from embodic.geometry.primitives import Arc, Line, PrimitiveRole
 from embodic.model.vocabulary import ConnectionTopology, Phase, TopologyKind, ViaSpan
@@ -88,3 +88,28 @@ def test_layout_arrays_rows_map_back_to_their_primitive() -> None:
     assert arrays.arcs["L1"][0].tolist() == [5.0, 1.0, 1.0, -math.pi / 2, math.pi, 0.2]
     assert arrays.path_index["L2"].tolist() == [8]
     assert arrays.vias.tolist() == [[5.0, 2.0, 0.6, 0.3]]
+
+
+def test_board_stack_thickness_matches_xcoil_stator_thickness() -> None:
+    """Defect caught: gap counted n times instead of n - 1 (Xcoil engine.js l.689: 3 * 1.6 + 2 * 0.5 = 5.8 mm)."""
+    stack = BoardStack(boards=(_layout(), _layout(6.0), _layout(7.0)), board_thickness_mm=1.6, board_gap_mm=0.5)
+    assert stack.stack_thickness_mm == pytest.approx(5.8, rel=1e-15)
+    assert BoardStack(boards=(_layout(),), board_thickness_mm=1.6, board_gap_mm=0.0).stack_thickness_mm == 1.6
+
+
+def test_board_stack_rejects_no_board_and_a_gap_on_one_board() -> None:
+    """Defect caught: an empty stack, or a one-board stack with a gap, would give a wrong symmetry plane."""
+    with pytest.raises(ValueError, match="at least one board"):
+        BoardStack(boards=(), board_thickness_mm=1.6, board_gap_mm=0.0)
+    with pytest.raises(ValueError, match="no board gap"):
+        BoardStack(boards=(_layout(),), board_thickness_mm=1.6, board_gap_mm=0.2)
+
+
+def test_board_stack_hash_follows_board_order_copper_and_gap() -> None:
+    """Defect caught: a hash that ignores board order or the gap lets two different stacks share a cache key."""
+    a, b = _layout(5.0), _layout(6.0)
+    base = BoardStack(boards=(a, b), board_thickness_mm=1.6, board_gap_mm=0.5)
+    assert base.stack_hash == BoardStack(boards=(a, b), board_thickness_mm=1.6, board_gap_mm=0.5).stack_hash
+    assert base.stack_hash.startswith("sha256:")
+    assert base.stack_hash != BoardStack(boards=(b, a), board_thickness_mm=1.6, board_gap_mm=0.5).stack_hash
+    assert base.stack_hash != BoardStack(boards=(a, b), board_thickness_mm=1.6, board_gap_mm=0.6).stack_hash
