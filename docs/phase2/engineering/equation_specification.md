@@ -184,6 +184,15 @@ w trace width; t copper thickness; s clearance; w_d = w + s; N turns per coil pe
 - Gate: `replace` (`starOfSlots`, `balancedSectorList` not ported; wave `beltPhase`, `beltSign`, `slotAngle` golden).
   Status: inferred.
 - Dominant assumptions: none for k_d, k_p. Applies to: spiral, wave. Tests: EQT-08-CF09, EQT-08-GR, EQT-08-UT1.
+- U-M2c questions (revision 2026-10-05 (U-E3), both `inferred` from the star-of-slots arithmetic above; no source in the
+  evidence register; registry status unchanged).
+  (a) One phase per layer pair (option M4). All Q coils of a pair must be co-phasal up to sign, so neighbouring coils
+  differ by p·θ_cp = 2πp/Q, which must be a multiple of π: 2p/Q is an integer k. k_p1 = |sin(kπ/2)| is 1 for odd k
+  and 0 for even k. So the pair gives EMF and is self-consistent when 2p/Q is odd (Q = 2p, 2p/3, ...), not only when
+  Q = 2p. Balance between the three phases then comes from the pair rotation (θ_cp/3 electrical steps), not from G7.
+  (b) Parallel paths a. Each path must carry the same EMF phasor. The winding repeats t = gcd(Q, p) times, so a must
+  divide t; a ≤ t is not enough (t = 4, a = 3 cannot split four equal sub-windings into three equal paths). When Q/t is
+  even, alternate sub-windings are equal and opposite, and a may also divide 2t. A citable textbook entry is a gap.
 
 ### EQ-09 EMF and torque constants, star/delta conversion
 
@@ -382,19 +391,19 @@ w trace width; t copper thickness; s clearance; w_d = w + s; N turns per coil pe
 
 ### EQ-25 Spiral coil centre-via eye, lead and terminal stub
 
-- Formula: centre via on the coil centre line at r_v = (r_lo + r_hi)/2 with
-  r_lo = max((d_side + w/2 + s + pad/2)/sin(π/Q), R_in,N−1 + w_in/2 + s + pad/2 [trapezoidal last turn]),
-  r_hi = R_out,N−1 − w_out/2 − s − pad/2, d_side = d_N−1 for one centre via, d_N for k > 1 series groups.
-  The eye fits iff r_hi − r_lo ≥ (k − 1)(max(pad, w)/2 + pad/2 + s). Lead: line d_N from the last inner end to radius r_v,
-  then an arc at r_v to the centre line. Terminal via: r_T = r_outer + s + pad/2 at angle
+- Formula (revision 2026-10-05 (U-E3), DEF-M2d-01): centre via on the coil centre line at r_v = r_hi with m = max(pad, w)/2,
+  r_lo = max((d_N−1 + w/2 + s + m)/sin(π/Q), r_end,N−1 + w_in/2 + s + m), r_hi = R_out,N−1 − w_out/2 − s − m, for any k.
+  The eye fits iff r_hi − r_lo ≥ (k − 1)(max(pad, w)/2 + pad/2 + s). Lead: the last left side d_N−1 ends at radius r_v,
+  then one arc at r_v to the centre line (no lead on d_N). Terminal via: r_T = r_outer + s + pad/2 at angle
   min(start-corner angle, π/Q − asin((max(pad, bw) + s)/(2r_T))).
 - Sources: geometry rules of `spiral_generator_spec.md` G5 and G6, derived from engine.js `sectorViaSpot` (2269 to 2273)
   and `sectorCoilX` (2285 to 2328). The coil centre line is the only locus that layer X and its mirror Y share.
 - Variables: pad via pad [mm]; k centre vias per coil [1]; r_T [mm]; bw bus width [mm].
 - Validity: through vias (D-015); radial or tangential eye arrangement only as stated.
 - Limitations: Phase 1 eye mode placed the via on the lead line, a point layer Y does not reach (DEF-P2-01 below).
-- Reference: CF-11 default 12/16 → N 10, r_lo 28.5914, r_hi 30.7000, r_v 29.6457 mm, lead 3.0233 mm, stub 0.7877 mm;
-  CF-10 D08 → N 3 at pad 0.6 mm (r_v 36.0026 mm), 2 at pad 1.2 mm.
+- Reference (revision 2026-10-05 (U-E3)): CF-11 default 12/16 → N 10, r_lo 28.5914, r_hi 30.7000, r_v 30.7000 mm, lead
+  1.3341 mm, stub 0.7877 mm; CF-10 D08 → N 2 at pad 0.6 and 1.2 mm (r_v 38.2800 mm at pad 0.6). Lead clearances in
+  `spiral_generator_spec.md` worked examples 1 and 2 (smallest = s).
 - Tolerance: exact counts; lengths 1e-6 relative. Gate: `replace` (Xcoil `sectorViaSpot`, `sectorCoilX`, `chainCoils`
   not ported bug-for-bug). Status: inferred.
 - Dominant assumptions: via pad, clearance, series group count. Applies to: spiral.
@@ -562,6 +571,8 @@ Formula coefficients such as 1/24 (EQ-12) and the IPC-2221 k, b and c (EQ-15) st
 | `laminate_density_g_per_cm3` | 1.85 | g_per_cm3 | none (Xcoil engine.js l.1377) | assumption | EQ-16 |
 | `ndfeb_density_g_per_cm3` | 7.5 | g_per_cm3 | none (Xcoil engine.js l.2556) | assumption | EQ-28 |
 | `steel_density_g_per_cm3` | 7.85 | g_per_cm3 | none (Xcoil engine.js l.2556) | assumption | EQ-28 |
+| `vacuum_permeability_h_per_m` | 4π×10⁻⁷ | H_per_m | none (Xcoil engine.js l.11; revision 2026-10-05 (U-E3)) | assumption | EQ-13, 14 |
+| `vacuum_permittivity_f_per_m` | 8.854e-12 | F_per_m | none (Xcoil engine.js l.1181; revision 2026-10-05 (U-E3)) | assumption | EQ-29 |
 
 Labels: EQ-14 and EQ-20 `estimate`; EQ-15 `guideline (unverified)`; EQ-19 and EQ-29 `upper bound`; EQ-28 `estimate`.
 Every other equation has `label: null`.
@@ -588,7 +599,8 @@ evidence entry exists. Its status already states what the evidence supports.
 | EQ-28 | assumption | datasheet densities for sintered NdFeB and rotor steel |
 | EQ-29 | assumption | ε_r per dielectric (datasheets); ε_0 |
 | EQ-16 | assumption | laminate density (FR-4 datasheet) |
-| μ_0 (EQ-13, EQ-14), ε_0 (EQ-29) | missing | an evidence entry (SI or CODATA value) and the `Unit` symbols for H/m and F/m |
+| μ_0 (EQ-13, EQ-14), ε_0 (EQ-29) | assumption | revision 2026-10-05 (U-E3): registry constants added with the values the code ports from Xcoil (4π×10⁻⁷ H/m, 8.854×10⁻¹² F/m) and `source: null`; an evidence entry (SI or CODATA) is missing |
+| Screw clearance holes (U-M2d) | unresolved | revision 2026-10-05 (U-E3): no ISO 273 or other entry in the evidence register; `/outline/screws/*/size` and `fit` point at a `screw-table` with no source, and FIELDS has no hole-diameter input. Proposal: the user enters the hole diameter in mm per screw group |
 
 ## Defects found in this unit
 

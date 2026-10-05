@@ -1280,7 +1280,8 @@
   },
   {
    "case_id": "CF-10",
-   "version": 1,
+   "version": 2,
+   "version_note": "version 2 (revision 2026-10-05, U-E3): G3-G5 revised (both sides on d_t, outer-end jog, lead arc at r_v = r_hi); eye-limited 2 at pad 0.6 and 1.2 mm",
    "kind": "reference model (spiral_reference.py)",
    "eq_ids": [
     "EQ-02",
@@ -1353,42 +1354,42 @@
       ]
      ],
      "unit": "-",
-     "tolerance": "exact; equals D08 Table 4.6 p.57 (3 turns)"
+     "tolerance": "exact; equals D08 Table 4.6 p.57 (3 loops)"
     },
     {
      "quantity": "eye-limited turns, via pad 0.6 / 1.2 mm",
      "value": [
-      3,
+      2,
       2
      ],
      "unit": "1",
      "tolerance": "exact"
     },
     {
-     "quantity": "EQ-03 concentric closed form, N = 3",
-     "value": 177.2331,
+     "quantity": "EQ-03 concentric closed form, N = eye-limited (2)",
+     "value": 149.7299,
      "unit": "mm",
      "tolerance": "absolute 1e-3 mm"
     },
     {
-     "quantity": "generated body (sides + ends), N = 3",
-     "value": 141.2781,
+     "quantity": "generated body (sides + ends), N = eye-limited (2)",
+     "value": 138.6707,
      "unit": "mm",
      "tolerance": "relative 1e-6 (same rules) / +-1 % (fillet or lead conventions)"
     },
     {
      "quantity": "lead / terminal stub / total",
      "value": [
-      2.227,
+      5.7226,
       2.13,
-      145.6351
+      146.5234
      ],
      "unit": "mm",
      "tolerance": "relative 1e-6"
     },
     {
      "quantity": "R per coil-layer at 50 degC (coil copper only)",
-     "value": 0.03915478722153971,
+     "value": 0.03939361903122826,
      "unit": "ohm",
      "tolerance": "relative 1e-6"
     }
@@ -1398,7 +1399,8 @@
   },
   {
    "case_id": "CF-11",
-   "version": 1,
+   "version": 2,
+   "version_note": "version 2 (revision 2026-10-05, U-E3): G3-G5 revised (both sides on d_t, outer-end jog, lead arc at r_v = r_hi); inputs unchanged",
    "kind": "reference model (spiral_reference.py)",
    "eq_ids": [
     "EQ-02",
@@ -1499,17 +1501,17 @@
     },
     {
      "quantity": "centre via radius r_v",
-     "value": 29.6457,
+     "value": 30.7,
      "unit": "mm",
      "tolerance": "absolute 1e-6 mm"
     },
     {
      "quantity": "generated body / lead / stub / total, N = 10",
      "value": [
-      396.3481,
-      3.0233,
+      413.359,
+      1.3341,
       0.7877,
-      400.1591
+      415.4808
      ],
      "unit": "mm",
      "tolerance": "relative 1e-6"
@@ -1518,14 +1520,14 @@
      "quantity": "EQ-03 closed form N = 10 and (closed - body)/body",
      "value": [
       416.8085,
-      5.162
+      0.835
      ],
      "unit": "mm, %",
      "tolerance": "absolute 1e-3 mm"
     },
     {
      "quantity": "R per coil-layer 20 degC",
-     "value": 0.3965024763025965,
+     "value": 0.4116841855287007,
      "unit": "ohm",
      "tolerance": "relative 1e-6"
     },

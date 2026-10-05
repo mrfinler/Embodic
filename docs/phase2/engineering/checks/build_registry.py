@@ -105,9 +105,9 @@ NEW = [
      "applies_to": ["wave"], "golden_functions": ["invol", "involutePoint", "involutePrims", "biarc", "waveTrack", "deriveWave", "maxWaveTurns"],
      "tests": tests("EQ-24", "GR", "CF08")},
     {"id": "EQ-25", "name": "Spiral coil centre-via eye, lead and terminal stub",
-     "formula": "via on the coil centre line at r_v = (r_lo + r_hi)/2; r_lo = max((d_side + w/2 + s + pad/2)/sin(pi/Q), R_in,N-1 + w_in/2 + s + pad/2 [trapezoid]); "
-                "r_hi = R_out,N-1 - w_out/2 - s - pad/2; d_side = d_(N-1) for one centre via, d_N for k > 1 series groups; fits iff r_hi - r_lo >= (k - 1)(max(pad, w)/2 + pad/2 + s); "
-                "lead = line d_N from the last inner end to radius r_v, then an arc at r_v to the centre line; terminal via at r_T = r_outer + s + pad/2, "
+     "formula": "via on the coil centre line at r_v = r_hi, m = max(pad, w)/2; r_lo = max((d_(N-1) + w/2 + s + m)/sin(pi/Q), r_end,N-1 + w_in/2 + s + m); "
+                "r_hi = R_out,N-1 - w_out/2 - s - m; fits iff r_hi - r_lo >= (k - 1)(max(pad, w)/2 + pad/2 + s); "
+                "lead = the last left side d_(N-1) ends at radius r_v, then one arc at r_v to the centre line (revision 2026-10-05, U-E3); terminal via at r_T = r_outer + s + pad/2, "
                 "angle min(angle of start corner, pi/Q - asin((max(pad, bw) + s)/(2 r_T)))",
      "variables": [{"symbol": "pad", "unit": "mm", "meaning": "via pad diameter"}, {"symbol": "k", "unit": "1", "meaning": "centre vias per coil (series groups)"},
                    {"symbol": "r_T", "unit": "mm", "meaning": "terminal via ring radius"}],
@@ -115,7 +115,7 @@ NEW = [
                                      "the centre line is the only locus shared by layer X and its mirror Y",
      "gate_verdict": "replace", "status": "inferred", "tolerance": {"value": "exact (counts), relative 1e-6 (lengths)", "basis": "deterministic geometry"},
      "dominant_assumptions": ["via pad", "clearance", "series group count"],
-     "reference_case": {"source": "oracle_cases.json CF-10, CF-11", "inputs": {"case": "default 12/16, pad 0.6"}, "expected": {"N_eye": 10, "r_v_mm": 29.6457}, "tolerance": "exact / 1e-4 mm"},
+     "reference_case": {"source": "oracle_cases.json CF-10, CF-11", "inputs": {"case": "default 12/16, pad 0.6"}, "expected": {"N_eye": 10, "r_v_mm": 30.7}, "tolerance": "exact / 1e-4 mm"},
      "applies_to": ["spiral"], "golden_functions": [], "replaced_functions": ["sectorViaSpot", "sectorCoilX", "chainCoils"],
      "tests": tests("EQ-25", "CF10", "CF11", "UT1")},
     {"id": "EQ-26", "name": "Loss sum, efficiency and motor constant",
@@ -198,8 +198,9 @@ DEF23 = {
 }
 
 # DEF-M2b-03. Physical and material constants only; formula coefficients (1/24, IPC-2221 k/b/c) stay in the formula with its sources.
-# Names match embodic.model.materials.MaterialOverrides where a user override exists. mu_0 and eps_0 are missing: units.Unit has no
-# H/m or F/m symbol and the evidence register has no entry for them (equation_specification.md, "Source and unit gaps").
+# Names match embodic.model.materials.MaterialOverrides where a user override exists. mu_0 and eps_0 (revision 2026-10-05, U-E3):
+# Unit H_per_m and F_per_m exist since U-M2a-fix; the evidence register has no SI or CODATA entry, so both are `assumption` with the
+# value the code ports from Xcoil (equation_specification.md, "Source and unit gaps").
 RHO_CU = {"name": "copper_resistivity_20c_ohm_m", "value": 1.7241e-8, "unit": "ohm_m", "source": "EV-53", "status": "verified",
           "basis": "IACS annealed copper at 20 degC, NBS Handbook 100 p.2"}
 ALPHA_CU = {"name": "copper_temp_coeff_per_k", "value": 0.00393, "unit": "per_K", "source": "EV-53", "status": "verified",
@@ -212,9 +213,14 @@ DENSITY_NDFEB = {"name": "ndfeb_density_g_per_cm3", "value": 7.5, "unit": "g_per
                  "basis": "Xcoil engine.js l.2556, no datasheet in the evidence register"}
 DENSITY_STEEL = {"name": "steel_density_g_per_cm3", "value": 7.85, "unit": "g_per_cm3", "source": None, "status": "assumption",
                  "basis": "Xcoil engine.js l.2556, no datasheet in the evidence register"}
+MU_0 = {"name": "vacuum_permeability_h_per_m", "value": 4e-7 * 3.141592653589793, "unit": "H_per_m", "source": None, "status": "assumption",
+        "basis": "4*pi*1e-7 as in Xcoil engine.js l.11 (MU0) and src/embodic/physics/losses.py MU0_H_PER_M; no evidence entry"}
+EPS_0 = {"name": "vacuum_permittivity_f_per_m", "value": 8.854e-12, "unit": "F_per_m", "source": None, "status": "assumption",
+         "basis": "Xcoil engine.js l.1181 (EPS0 = 8.854e-12); no evidence entry"}
 CONSTANTS = {
-    "EQ-10": [RHO_CU, ALPHA_CU], "EQ-11": [RHO_CU, ALPHA_CU], "EQ-12": [RHO_CU, ALPHA_CU], "EQ-13": [RHO_CU, ALPHA_CU],
+    "EQ-10": [RHO_CU, ALPHA_CU], "EQ-11": [RHO_CU, ALPHA_CU], "EQ-12": [RHO_CU, ALPHA_CU],
     "EQ-16": [DENSITY_CU, DENSITY_LAMINATE], "EQ-28": [DENSITY_NDFEB, DENSITY_STEEL],
+    "EQ-13": [RHO_CU, ALPHA_CU, MU_0], "EQ-14": [MU_0], "EQ-29": [EPS_0],
 }
 
 # Result labels (interfaces.md Traceable.label); every other equation gets an explicit null.

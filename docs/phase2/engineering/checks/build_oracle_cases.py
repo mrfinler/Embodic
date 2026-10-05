@@ -257,7 +257,7 @@ for pad in (1.2,):
     tt, _ = sr.turn_limit(g)
     d08_pad12 = sr.max_turns_with_eye(g, tt)
 cases.append({
-    "case_id": "CF-10", "version": 1, "kind": "reference model (spiral_reference.py)", "eq_ids": ["EQ-02", "EQ-03", "EQ-25"],
+    "case_id": "CF-10", "version": 2, "version_note": "version 2 (revision 2026-10-05, U-E3): G3-G5 revised (both sides on d_t, outer-end jog, lead arc at r_v = r_hi); eye-limited 2 at pad 0.6 and 1.2 mm", "kind": "reference model (spiral_reference.py)", "eq_ids": ["EQ-02", "EQ-03", "EQ-25"],
     "title": "D08 3-turn coil geometry (12 coils, 10 poles): turn limit, turn types, eye, path lengths",
     "inputs": {"coil_centre_lines_mm": inp([12.5, 44.0], "mm", "verified", "D08 p.55"),
                "trace_width_mm": inp(2.06, "mm", "verified", "D08 Table 4.6 p.57"),
@@ -267,17 +267,17 @@ cases.append({
                "copper_mm": inp(0.0348, "mm", "verified", "D08 Table 4.5 p.54"), "T_degC": inp(50, "degC", "verified", "D08 Table 4.5 p.54")},
     "expected": [{"quantity": "radial bound D08 eq. 3.24", "value": d08["turn_limit"]["radial_bound_eq_3_24"], "unit": "1", "tolerance": "relative 1e-9"},
                  {"quantity": "loop-rule turns and types", "value": [d08["turn_limit"]["loop_rule_turns"], d08["turn_limit"]["types"]], "unit": "-",
-                  "tolerance": "exact; equals D08 Table 4.6 p.57 (3 turns)"},
+                  "tolerance": "exact; equals D08 Table 4.6 p.57 (3 loops)"},
                  {"quantity": "eye-limited turns, via pad 0.6 / 1.2 mm", "value": [d08["turn_limit"]["eye_limited_turns"], d08_pad12], "unit": "1", "tolerance": "exact"},
-                 {"quantity": "EQ-03 concentric closed form, N = 3", "value": d08["closed_form_eq03_mm"], "unit": "mm", "tolerance": "absolute 1e-3 mm"},
-                 {"quantity": "generated body (sides + ends), N = 3", "value": d08["path_mm"]["body"], "unit": "mm", "tolerance": "relative 1e-6 (same rules) / +-1 % (fillet or lead conventions)"},
+                 {"quantity": "EQ-03 concentric closed form, N = eye-limited (2)", "value": d08["closed_form_eq03_mm"], "unit": "mm", "tolerance": "absolute 1e-3 mm"},
+                 {"quantity": "generated body (sides + ends), N = eye-limited (2)", "value": d08["path_mm"]["body"], "unit": "mm", "tolerance": "relative 1e-6 (same rules) / +-1 % (fillet or lead conventions)"},
                  {"quantity": "lead / terminal stub / total", "value": [d08["path_mm"]["lead"], d08["path_mm"]["stub"], d08["path_mm"]["total"]], "unit": "mm", "tolerance": "relative 1e-6"},
                  {"quantity": "R per coil-layer at 50 degC (coil copper only)", "value": d08["R_coil_layer_ohm"], "unit": "ohm", "tolerance": "relative 1e-6"}],
     "status": "inferred", "evidence": "reference model of the spec rules; D08 gives no measured coil length or R (O1 phase R 0.39 ohm is a loop-model calculation)",
 })
 dft = ex["default 12/16"]
 cases.append({
-    "case_id": "CF-11", "version": 1, "kind": "reference model (spiral_reference.py)", "eq_ids": ["EQ-02", "EQ-03", "EQ-08", "EQ-25"],
+    "case_id": "CF-11", "version": 2, "version_note": "version 2 (revision 2026-10-05, U-E3): G3-G5 revised (both sides on d_t, outer-end jog, lead arc at r_v = r_hi); inputs unchanged", "kind": "reference model (spiral_reference.py)", "eq_ids": ["EQ-02", "EQ-03", "EQ-08", "EQ-25"],
     "title": "Default example 12/16 spiral coil (r 18-38 mm copper edge, w 0.5, s 0.2, gap 0.2, via pad 0.6 mm)",
     "inputs": {k: inp(v, "mm or 1", "assumption", "example values (D-014); answers_to_agents.md 3.2 defaults; Xcoil viaPad/busWidth")
                for k, v in dft["inputs"].items()},

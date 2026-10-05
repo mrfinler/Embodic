@@ -1,5 +1,5 @@
 # Prepared by: Agent 2 — Motor Design Expert — model: claude-opus-5-5
-# Reference model of the spiral-coil generator rules in spiral_generator_spec.md (steps G1-G9). It is a check script,
+# Reference model of the spiral-coil generator rules in spiral_generator_spec.md (steps G1-G9; G3-G5 revision 2026-10-05, U-E3).
 # not product code: it prints every intermediate number of the two worked examples (default 12/16 and D08 12/10).
 # Geometry: canonical coil centred on the +x axis, half-angle h = pi/Q, left sector edge at +h (y > 0), right edge at -h.
 # Run: python3 docs/phase2/engineering/checks/spiral_reference.py [--json]
@@ -89,39 +89,40 @@ def lam(R, d):
     return math.sqrt(R * R - d * d)
 
 
+def apex_limit_radius(g, d):
+    """Radius where the right and left side lines at offset d are w_d apart (|y| = w_d/2): the apex-limited inner end."""
+    xc = (d + g.wd / 2 * math.cos(g.h)) / math.sin(g.h)
+    return math.hypot(xc, g.wd / 2)
+
+
 def turn(g, t):
-    """Step G3: geometry of spiral turn t, or None when the turn does not exist (loop rule)."""
-    dt, dn, Ro, Ri = g.d(t), g.d(t + 1), g.R_out(t), g.R_in(t)
+    """Step G3 (revision 2026-10-05, U-E3): turn t with both sides on offset d_t, or None when it does not exist.
+    The outer arc of turn t starts at J_t on the left line d_(t-1) (the jog: the pitch advance at constant radius R_out,t)
+    and ends at B_t on the right line d_t; the right side runs down to C_t, the inner end joins C_t to D_t on the left
+    line d_t, and the left side d_t runs up to J_(t+1) at R_out,t+1 (or to the lead at r_v for the last turn)."""
+    dt, Ro, Ri = g.d(t), g.R_out(t), g.R_in(t)
     if not dt < Ro * math.sin(g.h):
         return None
     A, B = g.on_L(dt, lam(Ro, dt)), g.on_R(dt, lam(Ro, dt))
-    kind = "triangle"
-    if Ri > dn:
-        C, D = g.on_R(dt, lam(Ri, dt)), g.on_L(dn, lam(Ri, dn))
-        if ang(D) - ang(C) > 0:
-            kind = "trapezoid"
-    if kind == "trapezoid":
-        E, inner = D, Ri * (ang(D) - ang(C))
-        right = dist(B, C)
-        r_end = Ri
-    else:
-        E = g.apex(dt, dn)
-        inner, right, r_end = 0.0, dist(B, E), math.hypot(*E)
-    if not r_end < Ro - 1e-9:
+    J = A if t == 0 else g.on_L(g.d(t - 1), lam(Ro, g.d(t - 1)))
+    rho = apex_limit_radius(g, dt)
+    kind, r_end = ("trapezoid", Ri) if Ri >= rho else ("triangle", rho)
+    if not r_end < Ro:
         return None
-    return {"t": t, "type": kind, "d_t": dt, "R_out": Ro, "R_in_or_apex": r_end, "A": A, "B": B, "E": E,
-            "outer": Ro * (ang(A) - ang(B)), "right": right, "inner": inner,
+    C, D = g.on_R(dt, lam(r_end, dt)), g.on_L(dt, lam(r_end, dt))
+    return {"t": t, "type": kind, "d_t": dt, "R_out": Ro, "R_in_or_apex": r_end, "A": A, "B": B, "C": C, "D": D, "J": J,
+            "outer": Ro * (ang(J) - ang(B)), "jog": Ro * (ang(J) - ang(A)), "right": dist(B, C),
+            "inner": r_end * (ang(D) - ang(C)),
             "span_mean_deg": math.degrees(2 * g.h - 2 * math.asin(dt / ((Ro + r_end) / 2)))}
 
 
 def turn_limit(g, min_side=None):
+    """Loop rule: rule 1 inside turn(); rule 2 right side >= min_side; rule 3 the left side reaches R_out,t+1."""
     min_side = 2 * g.w if min_side is None else min_side
     turns = []
     while True:
         tt = turn(g, len(turns))
-        if tt is None or tt["right"] < min_side:
-            break
-        if turns and not g.R_out(tt["t"]) > math.hypot(*turns[-1]["E"]):
+        if tt is None or tt["right"] < min_side or not tt["R_in_or_apex"] < g.R_out(tt["t"] + 1):
             break
         turns.append(tt)
     radial = 0.5 * ((g.Ro0 - g.Ri0) / g.wd + 1)            # D08 eq. 3.24
@@ -129,16 +130,17 @@ def turn_limit(g, min_side=None):
 
 
 def eye(g, turns, N, k=1):
-    """Step G5: centre vias on the coil centre line (the only points shared by layer X and its mirror Y).
-    k = 1 (single pair or all pairs parallel): clear the last right side d_(N-1) on X and its mirror on Y.
-    k > 1 (series groups): also clear the leads of the other groups at offset d_N."""
+    """Step G5 (revision 2026-10-05, U-E3): centre vias on the coil centre line inside turn N-1.
+    The last left side d_(N-1) ends at r_v and one lead arc at r_v lands on the via, so the via pad and the lead-arc end
+    share the point (r_v, 0): every bound uses m = max(pad, w)/2. No lead runs on d_N any more, so k > 1 uses d_(N-1).
+    r_v = r_hi: the last left side is as long as the window allows (the lead arc itself has no radial length)."""
     last = turns[N - 1]
-    d_side = g.d(N - 1) if k == 1 else g.d(N)
-    side_lo = (d_side + g.w / 2 + g.s + g.pad / 2) / math.sin(g.h)
-    inner_lo = last["R_in_or_apex"] + g.w_in / 2 + g.s + g.pad / 2 if last["type"] == "trapezoid" else 0.0
-    r_lo, r_hi = max(side_lo, inner_lo), last["R_out"] - g.w_out / 2 - g.s - g.pad / 2
+    m = max(g.pad, g.w) / 2
+    side_lo = (g.d(N - 1) + g.w / 2 + g.s + m) / math.sin(g.h)
+    inner_lo = last["R_in_or_apex"] + g.w_in / 2 + g.s + m
+    r_lo, r_hi = max(side_lo, inner_lo), last["R_out"] - g.w_out / 2 - g.s - m
     pitch = max(g.pad, g.w) / 2 + g.pad / 2 + g.s
-    return {"r_lo": r_lo, "r_hi": r_hi, "fits": r_hi - r_lo >= (k - 1) * pitch - 1e-9, "r_v": (r_lo + r_hi) / 2,
+    return {"r_lo": r_lo, "r_hi": r_hi, "fits": r_hi - r_lo >= (k - 1) * pitch - 1e-9, "r_v": r_hi,
             "binding": "side" if side_lo >= inner_lo else "inner end", "via_pitch": pitch}
 
 
@@ -151,28 +153,31 @@ def max_turns_with_eye(g, turns, k=1):
 
 
 def coil_path(g, turns, N):
-    """Steps G4-G6: lengths of the canonical layer-X path for N turns (sides, ends, lead, terminal stub)."""
+    """Steps G4-G6 (revision 2026-10-05, U-E3): lengths of the canonical layer-X path for N turns.
+    'outer' includes the jogs; 'left' runs from each inner end to the next jog start J_(t+1), or to L at r_v for the
+    last turn; the lead is the single arc at r_v from L to the centre via."""
     parts = {"outer": 0.0, "inner": 0.0, "right": 0.0, "left": 0.0}
+    rv = eye(g, turns, N)["r_v"]
+    d_last = g.d(N - 1)
+    L = g.on_L(d_last, lam(rv, d_last))
+    jog = 0.0
     for t in range(N):
         tt = turns[t]
         parts["outer"] += tt["outer"]
         parts["inner"] += tt["inner"]
         parts["right"] += tt["right"]
-        if t < N - 1:
-            parts["left"] += dist(tt["E"], turns[t + 1]["A"])
-    ey = eye(g, turns, N)
-    E, dN, rv = turns[N - 1]["E"], g.d(N), ey["r_v"]
-    P1 = g.on_L(dN, lam(rv, dN))
-    lead = dist(E, P1) + rv * ang(P1)
+        parts["left"] += dist(tt["D"], turns[t + 1]["J"] if t < N - 1 else L)
+        jog += tt["jog"]
+    lead = rv * ang(L)
     r_T = g.r_outer + g.s + g.pad / 2
     c0 = turns[0]["A"]
     aV = min(ang(c0), g.h - math.asin(min(1.0, (max(g.pad, g.bw) + g.s) / (2 * r_T))) - 1e-6)
     tv = (r_T * math.cos(aV), r_T * math.sin(aV))
     stub = dist(tv, c0)
     body = sum(parts.values())
-    return {"parts": parts, "body": body, "lead": lead, "stub": stub, "total": body + lead + stub, "r_v": rv,
+    return {"parts": parts, "body": body, "jog": jog, "lead": lead, "stub": stub, "total": body + lead + stub, "r_v": rv,
             "r_T": r_T, "terminal_angle_deg": math.degrees(aV), "start_corner_angle_deg": math.degrees(ang(c0)),
-            "lead_point_P1": P1}
+            "lead_point_L": L, "terminal_point": tv}
 
 
 def closed_form(g, N):
@@ -229,10 +234,10 @@ def example(name, Q, poles, r_inner, r_outer, w, s, gap, pad, t_cu, T, layers, b
         "turn_limit": {"radial_bound_eq_3_24": radial, "loop_rule_turns": n_loop,
                        "types": [tt["type"] for tt in turns], "eye_limited_turns": n_eye,
                        "limiting_reason": "eye" if n_eye < n_loop else "loop"},
-        "turn_table": [{k: (round(v, 4) if isinstance(v, float) else v) for k, v in tt.items() if k not in ("A", "B", "E")}
+        "turn_table": [{k: (round(v, 4) if isinstance(v, float) else v) for k, v in tt.items() if k not in ("A", "B", "C", "D", "J")}
                        for tt in turns[:N]],
         "eye": {k: (round(v, 4) if isinstance(v, float) else v) for k, v in ey.items()},
-        "path_mm": {k: (round(v, 4) if isinstance(v, float) else v) for k, v in path.items() if k not in ("parts", "lead_point_P1")},
+        "path_mm": {k: (round(v, 4) if isinstance(v, float) else v) for k, v in path.items() if k not in ("parts", "lead_point_L", "terminal_point")},
         "path_parts_mm": {k: round(v, 4) for k, v in path["parts"].items()},
         "closed_form_eq03_mm": round(cf, 4),
         "closed_minus_body_pct": round(100 * (cf - path["body"]) / path["body"], 3),
