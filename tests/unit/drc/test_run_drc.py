@@ -9,7 +9,7 @@ import pytest
 
 from embodic.drc import CancelToken, DrcCheckKind, DrcReport, run_drc
 from embodic.errors import MESSAGES
-from embodic.geometry.layout import Hole
+from embodic.geometry.layout import Hole, ViaRole
 from embodic.geometry.primitives import PrimitiveRole
 from embodic.model.drc_rules import validate_drc_rules
 
@@ -53,6 +53,30 @@ def test_ut_drc_04_adjacent_primitives_and_corner_fillets_are_exempt() -> None:
     assert report.passed, report.violations
 
 
+def test_ut_drc_04_fillet_is_checked_against_the_main_primitive_two_steps_back() -> None:
+    """Catches DEF-M1V-01 (D-022 b): a fillet exempt from every main within one index of its own hides a tight U-turn.
+
+    main0 east, fillet0 (r 0.05), main1 north 0.25 mm, fillet1 (r 0.5), main2 west, all 0.2 mm wide. fillet1 starts at
+    (10.05, 0.30), 0.304 mm from main0's end (10, 0). fillet0 and fillet1 sit 0.25 mm apart along main1 and stay exempt.
+    """
+    hairpin = path(
+        0,
+        [
+            line(0, 0, 10, 0),
+            replace(arc(10, 0.05, 0.05, -math.pi / 2, math.pi / 2), role=PrimitiveRole.FILLET),
+            line(10.05, 0.05, 10.05, 0.30),
+            replace(arc(9.55, 0.30, 0.5, 0, math.pi / 2), role=PrimitiveRole.FILLET),
+            line(9.55, 0.80, 0, 0.80),
+        ],
+    )
+    report = run_drc(layout(paths=[hairpin]), RULES)
+    assert report is not None
+    assert [(v.kind, v.objects) for v in report.violations] == [
+        (DrcCheckKind.TRACE_TRACE, ("path:0/prim:0", "path:0/prim:3"))
+    ]
+    assert report.violations[0].measured_mm == pytest.approx(math.hypot(0.05, 0.30) - 0.2, abs=1e-12)
+
+
 def test_ut_drc_04_terminating_via_is_exempt_but_a_foreign_via_is_not() -> None:
     """Catches a via exemption that is too wide (any via) or missing (the via the path ends on)."""
     lead = path(0, [line(0, 0, 3, 0)], net="A")
@@ -61,6 +85,37 @@ def test_ut_drc_04_terminating_via_is_exempt_but_a_foreign_via_is_not() -> None:
     report = run_drc(layout(paths=[lead], vias=[own, foreign]), RULES)
     assert report is not None
     assert {v.objects for v in report.violations} == {("path:0/prim:0", "via:1")}
+
+
+def test_ut_drc_04_interconnect_ending_on_a_terminal_via_or_a_pad_is_a_joint_whatever_the_nets() -> None:
+    """Catches DEF-M1z-01 (D-022 a): a lead (U) or star link (N) ending on a terminal via or a pad is not a short."""
+    phase = path(0, [line(0, 0, 3, 0)], net="PHASE_A")
+    lead = path(1, [line(3, 0, 3, 3)], net="U")
+    star = path(2, [line(0, 10, 3, 10)], net="N")
+    terminal = via(0, 3, 0, net="PHASE_A", role=ViaRole.TERMINAL)
+    land = pad(0, 3, 10, net="U")
+    board = layout(paths=[phase, lead, star], vias=[terminal], pads=[land], interconnects=[1, 2])
+    report = run_drc(board, RULES)
+    assert report is not None
+    assert report.passed, report.violations
+
+
+def test_ut_drc_04_other_phase_on_a_terminal_via_and_interconnect_on_a_transfer_via_are_reported() -> None:
+    """Catches an exemption that drops the net test for every via or every path: each of these joints is a mistake."""
+    stray = path(0, [line(0, 0, 3, 0)], net="PHASE_B")
+    lead = path(1, [line(7, 0, 10, 0)], net="U")
+    star = path(2, [line(0, 10, 3, 10)], net="N")
+    terminal = via(0, 3, 0, net="PHASE_A", role=ViaRole.TERMINAL)
+    transfer = via(1, 10, 0, net="PHASE_A")
+    land = pad(0, 3, 10, net="U")
+    board = layout(paths=[stray, lead, star], vias=[terminal, transfer], pads=[land], interconnects=[1])
+    report = run_drc(board, RULES)
+    assert report is not None
+    assert {(v.kind, v.objects) for v in report.violations} == {
+        (DrcCheckKind.TRACE_VIA, ("path:0/prim:0", "via:0")),
+        (DrcCheckKind.TRACE_VIA, ("path:1/prim:0", "via:1")),
+        (DrcCheckKind.PAD_TRACE, ("path:2/prim:0", "pad:0")),
+    }
 
 
 def test_ut_drc_03_one_micron_intrusion_is_exactly_one_new_violation_at_its_place() -> None:
@@ -104,6 +159,19 @@ def test_ut_drc_06_copper_near_the_board_edge_and_a_screw_hole_fails() -> None:
     assert found == pytest.approx({DrcCheckKind.COPPER_EDGE: 0.25, DrcCheckKind.COPPER_HOLE: 0.2}, abs=1e-12)
     required = {v.kind: v.required_mm for v in report.violations}
     assert required == {DrcCheckKind.COPPER_EDGE: 0.3, DrcCheckKind.COPPER_HOLE: 0.4}
+
+
+def test_ut_drc_06_edge_ids_name_the_outer_loop_or_the_cutout() -> None:
+    """Catches DEF-M1V-05: edge ids are ``edge:outer/prim:k`` and ``edge:cutout<n>/prim:k``, not ``edge:<n>/prim:k``."""
+    near_outer = path(0, [line(9.0, 0, 9.65, 0)], net="A")
+    near_cutout = path(1, [line(-1, 1.6, 1, 1.6)], net="B")
+    board = layout(paths=[near_outer, near_cutout], outer=circle_outline(10), cutouts=[circle_outline(1.5)])
+    report = run_drc(board, RULES)
+    assert report is not None
+    assert {v.objects for v in report.violations} == {
+        ("path:0/prim:0", "edge:outer/prim:0"),
+        ("path:1/prim:0", "edge:cutout0/prim:0"),
+    }
 
 
 @pytest.mark.req("REQ-F-09", "REQ-F-24")

@@ -1,4 +1,4 @@
-"""UT-GEO-15 (brief U-M1b): discretised chords respect the length, angle and sagitta bounds and cover the path."""
+"""UT-GEO-23 (brief U-M1b): discretised chords respect the length, angle and sagitta bounds and cover the path."""
 
 import math
 
@@ -20,7 +20,7 @@ max_sagitta_mm = st.floats(1e-4, 0.05)
 
 
 @given(chains(), max_segment_mm, max_angle_rad, max_sagitta_mm)
-def test_ut_geo_15_chords_respect_every_bound(chain, seg_mm, ang_rad, sag_mm) -> None:
+def test_ut_geo_23_chords_respect_every_bound(chain, seg_mm, ang_rad, sag_mm) -> None:
     """Catches a piece count taken with floor, or an arc split by length alone that breaks the sagitta bound."""
     for g in discretise_path(chain, seg_mm, ang_rad, sag_mm):
         assert g.length_mm <= seg_mm * (1 + 1e-12)
@@ -32,7 +32,7 @@ def test_ut_geo_15_chords_respect_every_bound(chain, seg_mm, ang_rad, sag_mm) ->
 
 
 @given(chains(), max_segment_mm)
-def test_ut_geo_15_chords_cover_the_path_once_in_order(chain, seg_mm) -> None:
+def test_ut_geo_23_chords_cover_the_path_once_in_order(chain, seg_mm) -> None:
     """Catches a skipped or doubled piece: piece lengths sum to the path length and positions increase."""
     segments = discretise_path(chain, seg_mm)
     assert math.isclose(math.fsum(g.length_mm for g in segments), path_length_mm(chain), rel_tol=1e-12)
@@ -44,7 +44,7 @@ def test_ut_geo_15_chords_cover_the_path_once_in_order(chain, seg_mm) -> None:
     assert is_continuous(lines)
 
 
-def test_ut_geo_15_quarter_arc_count_follows_the_tightest_bound() -> None:
+def test_ut_geo_23_quarter_arc_count_follows_the_tightest_bound() -> None:
     """Catches the wrong bound winning: r = 10 mm, 90 degrees, 5 degree step gives 18 chords, not 32 by length."""
     arc = Arc(
         cx_mm=0.0, cy_mm=0.0, r_mm=10.0, start_rad=0.0, sweep_rad=math.pi / 2, width_mm=0.2, role=PrimitiveRole.SIDE
@@ -54,7 +54,7 @@ def test_ut_geo_15_quarter_arc_count_follows_the_tightest_bound() -> None:
     assert len(discretise_path((arc,), 2.0, max_sagitta_mm=1.0)) == 18
 
 
-def test_ut_geo_15_points_start_and_end_on_the_primitive() -> None:
+def test_ut_geo_23_points_start_and_end_on_the_primitive() -> None:
     """Catches an off-by-one polyline: K chords give K + 1 points from start to end."""
     line = Line(x1_mm=0.0, y1_mm=0.0, x2_mm=3.0, y2_mm=4.0, width_mm=0.2, role=PrimitiveRole.SIDE)
     points = discretise(line, 1.0)

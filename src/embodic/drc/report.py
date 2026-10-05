@@ -58,7 +58,10 @@ def violates(measured_mm: float, required_mm: float, epsilon_mm: float = DRC_EPS
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class DrcViolation:
-    """One failed check; ``objects`` are ids such as ``path:17/prim:4``, ``via:33``, ``pad:2``, ``edge:0/prim:5``."""
+    """One failed check; ``objects`` are ids such as ``path:17/prim:4``, ``via:33``, ``pad:2``, ``hole:1``.
+
+    Board edge ids name the loop: ``edge:outer/prim:5`` on the outer edge, ``edge:cutout0/prim:2`` on the first cutout.
+    """
 
     kind: DrcCheckKind
     layer: str | None  # None for checks that hold on every layer (through vias, through-hole pads, drills)

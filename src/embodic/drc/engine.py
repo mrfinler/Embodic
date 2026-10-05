@@ -191,7 +191,8 @@ def _check(items: Items, layout: Layout, a: IntArray, b: IntArray, exempt: IntAr
     """Drop pairs no check applies to and exempt pairs, then measure the rest."""
     kind = _KIND_TABLE[items.item_class[a], items.item_class[b]]
     same_path = (items.path[a] == items.path[b]) & (items.path[a] >= 0)
-    adjacent = same_path & (np.abs(items.main[a] - items.main[b]) <= 1)
+    # D-022 b: mains one index apart, a fillet or taper and the two mains it joins, corners one main apart.
+    adjacent = same_path & (np.abs(items.slot[a] - items.slot[b]) <= 2)
     keep = (kind != _NO_KIND) & ~adjacent & ~np.isin(a * len(items) + b, exempt)
     a, b, kind = a[keep], b[keep], kind[keep]
     clearance_mm, at_mm = _measure(items, layout, a, b, kind)
