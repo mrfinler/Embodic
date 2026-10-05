@@ -161,6 +161,19 @@ def test_ut_drc_06_copper_near_the_board_edge_and_a_screw_hole_fails() -> None:
     assert required == {DrcCheckKind.COPPER_EDGE: 0.3, DrcCheckKind.COPPER_HOLE: 0.4}
 
 
+def test_ut_drc_06_edge_ids_name_the_outer_loop_or_the_cutout() -> None:
+    """Catches DEF-M1V-05: edge ids are ``edge:outer/prim:k`` and ``edge:cutout<n>/prim:k``, not ``edge:<n>/prim:k``."""
+    near_outer = path(0, [line(9.0, 0, 9.65, 0)], net="A")
+    near_cutout = path(1, [line(-1, 1.6, 1, 1.6)], net="B")
+    board = layout(paths=[near_outer, near_cutout], outer=circle_outline(10), cutouts=[circle_outline(1.5)])
+    report = run_drc(board, RULES)
+    assert report is not None
+    assert {v.objects for v in report.violations} == {
+        ("path:0/prim:0", "edge:outer/prim:0"),
+        ("path:1/prim:0", "edge:cutout0/prim:0"),
+    }
+
+
 @pytest.mark.req("REQ-F-09", "REQ-F-24")
 def test_ut_drc_06_copper_clear_of_edge_and_hole_passes() -> None:
     """Catches an edge check that measures to the board centre or a hole check that ignores the hole radius."""
