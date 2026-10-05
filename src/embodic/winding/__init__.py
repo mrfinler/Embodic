@@ -1,4 +1,4 @@
-"""Spiral phase plan: feasibility, exact star of slots and winding factors (interfaces.md §4, EQ-08)."""
+"""Spiral phase plan: feasibility, exact star of slots and winding factors (interfaces.md section 4, EQ-08)."""
 
 from embodic.winding.feasibility import Feasibility, balanced_coil_counts, check_feasibility
 from embodic.winding.plan import SpiralWindingPlan, plan_issues, plan_spiral_winding

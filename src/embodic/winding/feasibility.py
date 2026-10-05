@@ -25,8 +25,8 @@ def check_feasibility(coil_count: int, poles: int, phases: int = 3, *, phase_per
 
     All phases on every layer pair (FSCW): q = Q/(2p·m); balanced when the pre-check Q mod m = 0 and (Q/t) mod m = 0
     holds and the exact star of slots confirms it (EQ-08). One phase per layer pair (option M4): each phase owns all
-    Q coils of its pair, so q = Q/(2p); only the full-pitch construction Q = 2p of A2-TOP §2.3 option B is balanced
-    (phases B and C come from pair rotation by 2π/(m·p), not from the star of slots).
+    Q coils of its pair, so q = Q/(2p); only the full-pitch construction Q = 2p of A2-TOP section 2.3 option B is
+    balanced (phases B and C come from pair rotation by 2pi/(m·p), not from the star of slots).
     """
     require_three_phases(phases)
     t = gcd(coil_count, poles // 2)

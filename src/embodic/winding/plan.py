@@ -1,4 +1,4 @@
-"""The spiral winding plan of a design: assignment, pattern, feasibility and winding factors (interfaces.md §4)."""
+"""Spiral winding plan of a design: assignment, pattern, feasibility, winding factors (interfaces.md section 4)."""
 
 import cmath
 import math
@@ -43,8 +43,8 @@ def plan_spiral_winding(
     """Plan the phases of a spiral design, or say why it cannot be built.
 
     The star of slots decides unless `spec.assignment` lists a manual assignment, which is accepted even when
-    unbalanced (`plan_issues` warns). Winding factors use the outermost-turn span 2π/Q as in A2-TOP §2.2; the generator
-    passes the real turn spans to `compute_winding_factors` for the turn-averaged values.
+    unbalanced (`plan_issues` warns). Winding factors use the outermost-turn span 2pi/Q as in A2-TOP section 2.2; the
+    generator passes the real turn spans to `compute_winding_factors` for the turn-averaged values.
     """
     coils, poles = spec.coil.coil_count, design.rotor.poles
     phase_per_pair = bool(spec.layers.pairs) and all(

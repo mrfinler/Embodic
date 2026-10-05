@@ -1,6 +1,6 @@
 """Distribution, turn-averaged pitch and winding factors of concentrated spiral coils (EQ-08).
 
-k_d,n = |Σ_{k∈A} s_k e^{j n alpha_k}| / N_A; k_p,avg,n = (1/N) Σ_t |sin(n p sigma_t / 2)| (D15 eq. 6, EV-59);
+k_d,n = |sum_{k in A} s_k e^{j n alpha_k}| / N_A; k_p,avg,n = (1/N) sum_t |sin(n p sigma_t / 2)| (D15 eq. 6, EV-59);
 k_w,n = k_d,n · k_p,avg,n. The phasor angle n·alpha_k is reduced in integers before any trigonometry.
 """
 
@@ -26,7 +26,7 @@ def distribution_factor(assignment: Sequence[CoilAssignment], harmonic: int, coi
 
 
 def turn_averaged_pitch_factor(harmonic: int, poles: int, spans_rad: Sequence[float]) -> float:
-    """Return (1/N) Σ_t |sin(n p sigma_t / 2)| over the turn spans sigma_t (mechanical radians)."""
+    """Return (1/N) sum_t |sin(n p sigma_t / 2)| over the turn spans sigma_t (mechanical radians)."""
     if not spans_rad:
         raise ValueError("at least one turn span is needed")
     p = poles // 2

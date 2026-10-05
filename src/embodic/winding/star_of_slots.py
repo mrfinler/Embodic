@@ -1,7 +1,7 @@
 """Exact star of slots for concentrated coils (EQ-08 `replace`; spiral_generator_spec.md step G7).
 
 Angles are integers in units of 360°/(12Q) electrical, so a phasor on a belt edge is an exact tie, never a float
-rounding accident (Xcoil `starOfSlots` defect C6, calculation_flow_and_port_notes.md §2.3).
+rounding accident (Xcoil `starOfSlots` defect C6, calculation_flow_and_port_notes.md section 2.3).
 """
 
 from collections import Counter
@@ -29,7 +29,7 @@ BELTS: Mapping[PhaseSequence, tuple[tuple[Phase, Polarity], ...]] = MappingProxy
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class CoilAssignment:
-    """Phase and polarity of one coil; its EMF phasor sits at `phasor_index`·2π/Q electrical."""
+    """Phase and polarity of one coil; its EMF phasor sits at `phasor_index`·2pi/Q electrical."""
 
     coil_index: int
     phasor_index: int
@@ -38,7 +38,7 @@ class CoilAssignment:
 
 
 def phasor_index(coil_index: int, coil_count: int, poles: int) -> int:
-    """Return (k·p) mod Q, the exact electrical position of coil k in steps of 2π/Q."""
+    """Return (k·p) mod Q, the exact electrical position of coil k in steps of 2pi/Q."""
     return coil_index * (poles // 2) % coil_count
 
 
@@ -47,7 +47,7 @@ def assign_phases(
 ) -> tuple[CoilAssignment, ...]:
     """Assign phase and polarity to every coil by half-open 60° belts (EQ-08, G7).
 
-    belt = ⌊(12·r + Q)/(2Q)⌋ mod 6 with r = (k·p) mod Q; a coil on a belt edge goes to the belt that starts there.
+    belt = floor((12·r + Q)/(2Q)) mod 6 with r = (k·p) mod Q; a coil on a belt edge goes to the belt that starts there.
     """
     require_three_phases(phases)
     assignment = []
