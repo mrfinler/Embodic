@@ -124,7 +124,7 @@ GR-19 violation classes (rule 0.2 mm everywhere, Xcoil's `clearance`):
 
 ## U-V1b-fix verdicts (against main 69381b5)
 
-`pytest tests/independent -q` passes except the strict xfails for DEF-M1c3-01 (3 layouts) and DEF-M1V-03 (2 layouts).
+`pytest tests/independent -q` passes except the strict xfails for DEF-M1V-03 (2 layouts). DEF-M1c3-01 closed by U-M1c-fix2 (merged 2026-10-05).
 The two xfails for closed defects are removed and their tests still fail on the old behaviour: the hairpin test fails
 on the engine of 2f80dc8^1 (before U-M1c-fix), and renaming the via nets back to `A` makes run_drc report 114 / 12 / 378
 rule-2 pairs that `test_no_trace_via_violation_where_the_via_ends_a_same_phase_path` rejects.
@@ -134,7 +134,7 @@ GR-19 violation classes (`python tests/independent/m1/gr19.py`, rule 0.2 mm):
 | Class | sector | serpentine | wave |
 |---|---|---|---|
 | `run_drc` violation_count | 7 | 6 | 193 |
-| trace_via: DEF-M1c3-01, contract exempts by the D-022c waiver, engine reports | 7 | 2 | 2 |
+| trace_via: DEF-M1c3-01, contract exempts by the D-022c waiver, engine reports (before U-M1c-fix2; 0 after) | 7 | 2 | 2 |
 | trace_via: real D-006, near rule (0.199965 mm) | 0 | 0 | 180 |
 | trace_trace: real D-006, near rule (0.199965 mm) | 0 | 0 | 6 |
 | trace_trace: real D-006, overlap, both report | 0 | 4 | 5 |
@@ -148,7 +148,7 @@ one-board stack, so the existing GR-19 case ids stay as they are. This matches i
 
 | ID | Severity | Reproduce | Expected vs actual | Owner | Status |
 |---|---|---|---|---|---|
-| DEF-M1c3-01 | medium | `pytest tests/independent/m1/test_gr19_drc.py -k touches_an_interconnect --runxfail` | no trace_via violation between an interconnect path and a via its end lies on or that lies on its centreline (D-022c); sector 7 (4 N ends on transfer vias 60-62, 3 taps), serpentine 2 and wave 2 (N path 15 / 192 over terminal vias) | Agent 3 (U-M1c-fix2) | open; remove the xfail and the `DEF_M1C3_01` class in `gr19.py` when it lands |
+| DEF-M1c3-01 | medium | `pytest tests/independent/m1/test_gr19_drc.py -k touches_an_interconnect --runxfail` | no trace_via violation between an interconnect path and a via its end lies on or that lies on its centreline (D-022c); sector 7 (4 N ends on transfer vias 60-62, 3 taps), serpentine 2 and wave 2 (N path 15 / 192 over terminal vias) | Agent 3 (U-M1c-fix2) | closed 2026-10-05 (xfail and `DEF_M1C3_01` class removed by Fable at merge; test active) |
 | DEF-M1c-01 | medium | `pytest tests/independent/m1/test_gr19_drc.py -k same_phase_path --runxfail` | no trace_via violation where a via ends a same-phase path; 114 / 12 / 372 reported | U-M1z (mapper) | closed by U-M1z; xfail removed |
 | DEF-M1V-01 | low | `pytest tests/independent/m1/test_drc_agreement.py -k two_steps_back --runxfail` | a fillet is exempt only from its neighbours; `abs(main) <= 1` also exempts it from the main primitive two steps back, so a 0.104 mm same-net clearance goes unreported. Same rule as Xcoil drcObjects l.1697, which applies it only to `cornerOk` objects. Also: interfaces.md section 7 must name the fillet, coincident-end and pad-via rules, or a literal reading reports every tight fillet corner | U-M1c owner; contract text: Fable | closed by U-M1c-fix (D-022b); xfail removed |
 | DEF-M1V-02 | medium | `python tests/independent/m1/gr19.py` | phase copper (`PHASE_A`), leads (`U`), neutral (`N`) and vias (`A`) use four net names for joined copper, so star-point and lead junctions show as overlaps; sampled, not every pair attributed (inferred) | U-M1z (mapper) | superseded by D-022 (nets stay, interconnect waiver) |

@@ -107,7 +107,6 @@ def violations(results: list[PairResult]) -> dict[frozenset[str], PairResult]:
     return {frozenset((r.a, r.b)): r for r in results if r.verdict is Verdict.VIOLATION}
 
 
-DEF_M1C3_01 = "trace_via: DEF-M1c3-01, contract exempts by the D-022c interconnect waiver, engine reports"
 WAIVER = frozenset({Rule.INTERCONNECT_END, Rule.INTERCONNECT_TAP})
 
 
@@ -120,8 +119,6 @@ def classify(board: Board, engine: dict[frozenset[str], tuple[str, float]], rule
         if key in mine:
             near = "near-rule" if measured > rule_mm - 1e-3 else "overlap" if measured < 0 else "intrusion"
             classes[f"{kind}: real D-006 ({near}), both report"] += 1
-        elif kind == "trace_via" and exempt.get(key) in WAIVER:
-            classes[DEF_M1C3_01] += 1
         elif key in exempt:
             classes[f"{kind}: engine reports, contract exempts by {exempt[key]} (OTHER)"] += 1
         else:

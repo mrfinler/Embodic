@@ -149,11 +149,6 @@ def test_no_trace_via_violation_where_the_via_ends_a_same_phase_path(case_id: st
     assert _reported_exempt(case_id, frozenset({Rule.END_ON_LAND})) == []
 
 
-@pytest.mark.xfail(
-    reason="DEF-M1c3-01: run_drc lacks the D-022c waiver (sector: 4 N ends on transfer vias, 3 taps; "
-    "serpentine and wave: 2 taps each on the N path over terminal vias)",
-    strict=True,
-)
 @pytest.mark.parametrize("case_id", CASES)
 def test_no_trace_via_violation_where_a_via_touches_an_interconnect_path(case_id: str) -> None:
     """D-022c exempts an interconnect path from any via its end lies on or whose centre lies on its centreline."""
