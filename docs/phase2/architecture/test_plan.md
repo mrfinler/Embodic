@@ -23,6 +23,10 @@ the two tests the brief meant. §5.2 restates PR-01 and PR-02 here, so M1's DRC 
 Phase 1 file only (DEF-V1-01). §5.4 adds MT-08. §2 renames the export test folder to `tests/unit/embodic_io/`
 (U-M1y). §3 ratifies the GR-19 label for Xcoil's sector topology. §7 adds the new IDs to the M1 exit.
 
+Revision 2026-10-05 (U-D3, D-016 and D-022): §5.1 amends UT-DRC-04 with one exempt case and one near miss per
+connectivity rule of interfaces.md §7 (D-022). §5.1 amends UT-GEN-01 and UT-GEN-03 and adds UT-GEN-05 for the
+one-board-per-phase serpentine stack (D-016). §3 adds stack-mode cases to GR-20. §7 adds UT-GEN-05 to the M3 exit.
+
 ## 1. What changed and why
 
 | Change | Reason |
@@ -98,7 +102,7 @@ counterpart; it is checked against closed forms and the true-spiral reference (U
 | GR-17 | function | `discretize`, `primLength` | `geometry.discretise`, `primitive_length_mm` | lines and arcs, sweeps of both signs, segment limits 0.1 to 2 mm | point lists exact in count, coordinates 1e-12 mm |
 | GR-18 | function | `segSegDist` and the arc distance helpers used by `runDrc`/`drcObjects` | `drc.min_distance_*` | 1000 seeded pairs per kind incl. touching and crossing | 1e-12 mm abs. |
 | GR-19 | format | raw layouts from `tools/golden/functions/m1_layout.mjs` (serpentine `buildLayout`, wave, sector), mapped to board dumps in Python | `io.read_board_dump`, `io.write_board_dump` | one layout per Xcoil topology, from Xcoil's default parameters; owner U-M1b (amended 2026-10-04) | the reader parses both producers; write, read, write is byte-identical; primitive, via and pad counts per layer equal the raw layout's |
-| GR-20 | layout | serpentine `buildCanonical`, `buildLayout` (l.163-753) | `generators.generate_serpentine` | Xcoil serpentine presets plus a seeded set over phases 1 to 3, layers per phase 1/2/4, series/parallel, grouped/interleaved, round/sharp, `{"interconnect": false}` and `true` | equal primitive, via and pad counts and roles; sampled path distance at most 1e-6 mm; DRC values 1e-6 mm abs. with the band rule |
+| GR-20 | layout | serpentine `buildCanonical`, `buildLayout` (l.163-753) | `generators.generate_serpentine` | Xcoil serpentine presets plus a seeded set over phases 1 to 3, layers per phase 1/2/4, series/parallel, grouped/interleaved, round/sharp, `{"interconnect": false}` and `true`, `stackMode` `single` and `perPhase` with `boardGap` 0.1 and 0.5 mm (Xcoil tests.js l.32, l.354; added 2026-10-05, U-D3); a `perPhase` case is compared board by board | equal primitive, via and pad counts and roles; sampled path distance at most 1e-6 mm; DRC values 1e-6 mm abs. with the band rule |
 | GR-21 | layout | `buildWave` (l.1639), `buildWaveOverlap` (l.2095) | `generators.generate_wave` | each style: involute, jog, chord, overlap; 2/4/6 layers; 1 to 3 phases | GR-20 criteria |
 | GR-22 | result | serpentine `analyze` (l.880-1017), wave `analyzeElements` (l.1846) | `physics.analyse` on the ported Layout | the GR-20 and GR-21 case sets | Ke, R, eddy loss: 1e-9 rel. where both integrate the same elements; any other difference goes to `expected_diffs/<area>.toml` or is a defect (open question Q-2) |
 | GR-23 | function | serpentine and wave helpers that the port reproduces line by line (corner, fillet, involute biarc, jog and chord construction) | the matching private helpers, tested through their module seam | 200 seeded inputs per helper | 1e-12 rel. |
@@ -125,10 +129,12 @@ Phase 1 UT-PHY-01 to UT-PHY-21 and OR-01 to OR-12 stay. Two changes apply.
 | UT-GEO-22 | New 2026-10-05: transform exactness | rotating (2, 0) by 60 degrees gives (1, sqrt 3) within 1e-12 mm; a mirror about 45 degrees swaps x and y and negates an arc's sweep; `transform` mirrors before it rotates; rotating forward and back, and `reverse_path`, return or swap every end point within 1e-9 mm (`tests/unit/geometry/test_transforms.py`, labelled UT-GEO-12 there until relabelled) |
 | UT-GEO-23 | New 2026-10-05: discretise bounds | every chord of `discretise_path` respects `max_segment_mm`, `max_angle_rad` and `max_sagitta_mm`; piece lengths sum to the path length and `s_mm` increases; a 90 degree arc of r = 10 mm with a 5 degree step gives 18 chords; K chords give K + 1 points from start to end (`tests/unit/geometry/test_discretise.py`, labelled UT-GEO-15 there until relabelled) |
 | UT-UNI-01 | Amended 2026-10-04: unit conversions and rounding | deg and rad, mm and m, rpm and rad/s, mil² and mm² round trips within 2 ulp of the input (`math.ulp`), not exact (requirements.md revision note); `js_round` gives 3, -2, 1, 0, -1, 0 for 2.5, -2.5, 0.5, -0.5, -1.5, 0.49999999999999994 (JS `Math.round`); `quantise(-0.000025, 1e5) == -0.00002`; neither returns -0.0 |
-| UT-GEN-01 | Generator contract for spiral, serpentine, wave and a stub | returns Layout or Unbuildable, never raises on fuzzed input; same design gives the same `layout_hash`; every circuit path and via ID exists; every winding path belongs to exactly one Member or to `interconnect_path_ids` |
+| UT-DRC-04 | Amended 2026-10-05 (U-D3, D-022): connectivity exemptions, one exempt case and one near miss per rule of interfaces.md §7, each below the rule so only the exemption decides | 1a adjacent main primitives exempt; 1b same-net main primitives two indices apart reported; 1c a corner fillet or taper exempt from both mains it belongs to and from the other fillets and tapers of those mains; 1d the DEF-M1V-01 hairpin: a fillet against the main two steps back reported; 2a a path end group exempt from the via or pad its end lies on; 2b a via the path does not end on reported; 2c an interconnect path (net `U`) ending on a `PHASE_A` terminal via, and on a pad of another net, exempt; 2d the same interconnect end on a `PHASE_A` centre or transfer via reported; 3a same-net end groups meeting at one via, one pad or within `COINCIDENCE_MM` exempt; 3b different-net end groups at a coincident point with no via or pad reported; 3c an interconnect end group and a phase path end group on one terminal via exempt; 4a a same-net via inside a pad exempt; 4b an other-net via inside a pad reported |
+| UT-GEN-01 | Amended 2026-10-05 (U-D3): generator contract for spiral, serpentine, wave and a stub | returns a `BoardStack` or Unbuildable, never raises on fuzzed input; spiral and wave stacks hold exactly one board; same design gives the same `stack_hash`; on every board, every circuit path and via ID exists and every winding path belongs to exactly one Member or to `interconnect_path_ids` |
 | UT-GEN-02 | Dispatch | `build_layout` routes by `design.topology`; calling `generate_wave` with a spiral design raises TypeError |
-| UT-GEN-03 | Serpentine validation | layers per phase 1 or even; copper count = phases x layers per phase, else INVALID with the pointer |
+| UT-GEN-03 | Amended 2026-10-05 (U-D3): serpentine validation | layers per phase 1 or even; copper count = phases x layers per phase for `stack_mode` `single` and = layers per phase for `one_board_per_phase` (one board's stack-up, Xcoil `stackupFor(p, perBoard)` l.686-688), else INVALID with the pointer; `board_gap_mm` below 0 is INVALID and above 10 mm is UNSUPPORTED_RANGE (Xcoil l.127) |
 | UT-GEN-04 | Wave validation | copper count even and at least 2; each style builds for 1, 2 and 3 phases |
+| UT-GEN-05 | New 2026-10-05 (U-D3): one board per phase | `stack_mode` `one_board_per_phase` with 3 phases gives 3 boards in phase order; board k holds only phase k copper and one PhaseCircuit, and its `copper_z_mm` equals the single-board stack-up z plus k x (board thickness + `board_gap_mm`) within 1e-12 mm (Xcoil l.695); `stack_thickness_mm` = n x board thickness + (n - 1) x gap (l.689); no board has interconnect paths or pads, and with the interconnect requested for three phases in star or delta the outcome carries a WARNING issue that the phase connection is made externally (Xcoil warning `INTERCONNECT_EXTERNAL`, l.2525-2535); `stack_mode` `single` gives one board whose `layout_hash` equals the one built with `board_gap_mm` changed (the gap has no effect, l.689 and l.695); a via of board A placed over board B copper produces no DRC pair |
 | UT-MOD-01 | Blank draft | `blank_draft(t)` has no required value and every optional field at its neutral value; `parse_draft` returns DraftIncomplete listing all required pointers in form order |
 | UT-MOD-02 | Draft round trip | `parse_draft(draft_from_design(d)) == d` for every example |
 | UT-MOD-03 | Field table completeness | every leaf of every DesignParameters variant has exactly one FieldSpec where it applies; `_mm` fields carry Unit.MM, `_rad` fields Unit.RAD; property fields are the closed list in ADR-0010 |
@@ -205,7 +211,7 @@ default design at start (D-014). AX-07 tested the web option (D-010).
 |---|---|
 | M1 | MT-01 to MT-03, MT-06 to MT-08, UT-GEO-01, UT-GEO-15, UT-GEO-22, UT-GEO-23, UT-DRC-01 to UT-DRC-08 on hand-built layouts, GR-17 to GR-19, PR-01 and PR-02 on random primitive sets, TR-02 |
 | M2 | all UT-GEO, UT-WND, UT-PHY, UT-RES, UT-MOD, UT-IO, UT-GEN-01/02, GR-01 to GR-16, OR tests (pass or documented `xfail`), PR-01 to PR-12, BV, TR-01 to TR-04 |
-| M3 | GR-20 to GR-23, UT-GEN-03/04, PR-13, PR-14, and every M2 gate still green |
+| M3 | GR-20 to GR-23, UT-GEN-03/04/05, PR-13, PR-14, and every M2 gate still green |
 | M4 | UI, AX, LG, UT-EXP, UT-SES tests; Agent 4 U-V4 independent export parsing |
 | M5 | UT-CLI, PF (baseline recorded), PK-01 to PK-08, PK-06 walkthrough |
 
@@ -251,7 +257,7 @@ the owner packages of `interfaces.md`.
 | REQ-F-31 | carried | should | M4 | embodic.ui.app | UI-21 |
 | REQ-F-32 | carried | must | M4 | embodic.ui.views | UI-28, UT-MOD-03 |
 | REQ-F-33 | amended | must | M4 | embodic.ui.views | UI-29, UT-EXP-05, UT-CLI-01 |
-| REQ-F-34 | new | must | M3 | embodic.generators.serpentine | GR-20, GR-23, UT-GEN-03, PR-13, PR-14 |
+| REQ-F-34 | new | must | M3 | embodic.generators.serpentine | GR-20, GR-23, UT-GEN-03, UT-GEN-05, PR-13, PR-14 |
 | REQ-F-35 | new | must | M3 | embodic.generators.wave | GR-21, GR-22, GR-23, UT-GEN-04, PR-13, PR-14 |
 | REQ-F-36 | new | must | M4 | embodic.model | UT-MOD-01, UI-24, UT-SES-01 |
 | REQ-F-37 | new | must | M2 | embodic.model | UT-MOD-01, UT-MOD-02, UT-MOD-03 |

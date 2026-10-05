@@ -223,6 +223,38 @@ def check_work(errors: list[str]) -> list[dict[str, object]]:
     return units
 
 
+def section(text: str, number: int) -> str:
+    match = re.search(rf"^## {number}\. .*?(?=^## |\Z)", text, re.S | re.M)
+    return match.group(0) if match else ""
+
+
+def check_batches(units: list[dict[str, object]], errors: list[str]) -> tuple[int, int]:
+    """work_breakdown.md section 8 (U-D3): units of one batch, plus the section 1 units of the wave a batch is named
+    after (section 3), run at the same time and must not share a write path."""
+    text = WORK.read_text(encoding="utf-8")
+    waves = {c[0]: re.findall(r"U-(?:M\d[a-z]|V\d|F\d)\b", c[1]) for c in table_rows(section(text, 3)) if re.fullmatch(r"W\d+", c[0])}
+    paths_of = {str(u["id"]): u["paths"] for u in units}
+    rows = [c for c in table_rows(section(text, 8)) if c[0].startswith("U-")]
+    batches: dict[str, list[tuple[str, list[str]]]] = {}
+    for cells in rows:
+        if len(cells) != 7:
+            raise SystemExit(f"section 8 row {cells[0]}: expected 7 columns, found {len(cells)}")
+        unit_id, _owner, batch, paths = cells[0], cells[1], cells[2], cells[3]
+        batches.setdefault(batch, []).append((unit_id, [p.strip().strip("`") for p in paths.split("<br>") if p.strip()]))
+    ids = [r[0] for r in rows]
+    for dupe in sorted({i for i in ids if ids.count(i) > 1}):
+        errors.append(f"section 8: unit {dupe} listed twice")
+    for batch, members in batches.items():
+        group = members + [(u, paths_of[u]) for u in waves.get(batch, []) if u in paths_of]  # type: ignore[misc]
+        for i, (a, pa_list) in enumerate(group):
+            for b, pb_list in group[i + 1:]:
+                for pa in pa_list:
+                    for pb in pb_list:
+                        if paths_overlap(pa, pb):
+                            errors.append(f"batch {batch}: {a} and {b} share write path {pa} ~ {pb}")
+    return len(rows), len(batches)
+
+
 TEST_LEVELS = ("unit", "golden", "ui")
 NON_PACKAGE_FOLDERS = {"data", "expected_diffs"}
 
@@ -280,6 +312,7 @@ def main() -> int:
     blocks = check_interfaces(errors) if INTERFACES.exists() else 0
     units = check_work(errors) if WORK.exists() else []
     test_packages = check_test_packages(units, errors)
+    batch_rows, batch_count = check_batches(units, errors) if WORK.exists() else (0, 0)
     live = [r for r in reqs if r["disposition"] != "withdrawn"]
     print(f"files checked: {len(files)}")
     print(f"requirements: {len(reqs)} total, {len(live)} live, {len(reqs) - len(live)} withdrawn; "
@@ -287,6 +320,7 @@ def main() -> int:
     print(f"interfaces.md python blocks: {blocks} (ast.parse each, then exec in order)")
     print(f"work units: {len(units)}; milestones: {sorted({str(u['milestone']) for u in units})}")
     print(f"planned top-level test packages: {test_packages}")
+    print(f"section 8 units: {batch_rows} in {batch_count} batches")
     if errors:
         print(f"FAIL: {len(errors)} problem(s)")
         for e in errors:
@@ -294,6 +328,7 @@ def main() -> int:
         return 1
     print("PASS: REQ IDs unique; every REQ has >= 1 defined test ID; Phase 1 REQs all dispositioned; "
           "matrix current; interfaces parse and execute; concurrent and same-milestone write paths disjoint; "
+          "section 8 batch write paths disjoint; "
           "planned test package names unique and not stdlib; model line first; no Thai; no long dashes")
     return 0
 

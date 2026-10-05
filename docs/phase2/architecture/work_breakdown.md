@@ -22,6 +22,12 @@ predicate uses the test IDs of test_plan.md. U-M2f gains `src/embodic/io/board_d
 gains `tests/unit/ui/__init__.py`. §7 lists the fix rounds the W1 and W2 reports need, and §6 the hand-offs to Agents 1
 and 4.
 
+Revision 2026-10-05 (U-D3, units Fable added on 2026-10-05): §8 records the six units of that day with their batch,
+write paths and merge order. `checks/check_contract.py` now also reads §8 and fails when two units of one batch, or a
+§8 unit and a §1 unit of the wave it runs beside, share a write path. §7 marks which rows moved: the U-M1b fix round
+is merged into the U-M1c fix round, the U-M1d fix round 2 runs beside W5, and the U-M2a fix round gains the two D-016
+fields.
+
 Sizes: S below 300 lines of code and tests, M 300 to 1000, L 1000 to 2500, XL above 2500 (`assumption`, estimated from
 the Xcoil line counts in Agent 3's `migration_mapping.md` §3 and the Phase 1 module list).
 
@@ -198,6 +204,27 @@ writes them; the "after" column names the in-flight unit that must merge first.
 
 | Fix round | Write paths | After | Deliverable | Done when |
 |---|---|---|---|---|
-| U-M1d fix round 2 (band-rule fixtures, U-M1c report) | `tools/golden/functions/m1_drc.mjs`<br>`tools/golden/cases/m1_drc.json`<br>`tests/golden/data/m1_drc/**`<br>`tests/golden/m1_drc/**` | U-M1z | DRC golden cases whose fixtures carry the rule `p.clearance`, Xcoil's value and Xcoil's own verdict, so GR-18 can call `compare_drc(..., golden_pass=...)` with the band rule of test_plan.md §3. The M1 kernel fixtures carry no rule and no verdict today | at least one case below the band, one inside `[rule - 0.004, rule)` and one at or above the rule; the inside case is logged indeterminate, the others agree; two dumps are byte-identical; `tests/golden/data/m1/**` unchanged |
-| U-M1b fix round (test IDs, DEF-M1b-01) | `tests/unit/geometry/test_transforms.py`<br>`tests/unit/geometry/test_discretise.py` | - | test names and docstrings say UT-GEO-22 and UT-GEO-23 instead of UT-GEO-12 and UT-GEO-15 | no test in `tests/unit/geometry` names UT-GEO-12, and only the determinism test in `test_layout.py` names UT-GEO-15; commit gates green |
-| U-M2a fix round (model, U-M2a report and `screen_model_reconciliation.md`) | `src/embodic/model/**`<br>`src/embodic/errors/catalogue/model.py`<br>`tests/unit/model/**` | U-M1z, Agent 1's screens.md revision | units `UM`, `W_PER_M2_K`, `OHM_M`, `PER_K`, `G_PER_CM3` on plating, convection and material override values; `phases` optional with neutral value 3 (R9); widget ids of R5, R6 and R9; INFO issue `RANGE_COIL_GAP_BELOW_CLEARANCE` (R12); a UT-GEO-12 test (stack-up z exact, Phase 1 meaning) | commit gates green; UT-MOD-03 asserts the new units; a blank spiral draft no longer lists `/phases`; `checks/screen_model_diff.py` prints nothing in lists 2 and 3 |
+| U-M1d fix round 2 (band-rule fixtures, U-M1c report); revision 2026-10-05 (U-D3): deferred, runs beside W5, see §8 | `tools/golden/functions/m1_drc.mjs`<br>`tools/golden/cases/m1_drc.json`<br>`tests/golden/data/m1_drc/**`<br>`tests/golden/m1_drc/**` | U-M1z | DRC golden cases whose fixtures carry the rule `p.clearance`, Xcoil's value and Xcoil's own verdict, so GR-18 can call `compare_drc(..., golden_pass=...)` with the band rule of test_plan.md §3. The M1 kernel fixtures carry no rule and no verdict today | at least one case below the band, one inside `[rule - 0.004, rule)` and one at or above the rule; the inside case is logged indeterminate, the others agree; two dumps are byte-identical; `tests/golden/data/m1/**` unchanged |
+| U-M1b fix round (test IDs, DEF-M1b-01); revision 2026-10-05 (U-D3): merged into the U-M1c fix round, see §8 | `tests/unit/geometry/test_transforms.py`<br>`tests/unit/geometry/test_discretise.py` | - | test names and docstrings say UT-GEO-22 and UT-GEO-23 instead of UT-GEO-12 and UT-GEO-15 | no test in `tests/unit/geometry` names UT-GEO-12, and only the determinism test in `test_layout.py` names UT-GEO-15; commit gates green |
+| U-M2a fix round (model, U-M2a report and `screen_model_reconciliation.md`); revision 2026-10-05 (U-D3): runs after U-S4b and U-D3 merge and also adds the D-016 fields, see §8 | `src/embodic/model/**`<br>`src/embodic/errors/catalogue/model.py`<br>`tests/unit/model/**` | U-M1z, Agent 1's screens.md revision | units `UM`, `W_PER_M2_K`, `OHM_M`, `PER_K`, `G_PER_CM3` on plating, convection and material override values; `phases` optional with neutral value 3 (R9); widget ids of R5, R6 and R9; INFO issue `RANGE_COIL_GAP_BELOW_CLEARANCE` (R12); a UT-GEO-12 test (stack-up z exact, Phase 1 meaning) | commit gates green; UT-MOD-03 asserts the new units; a blank spiral draft no longer lists `/phases`; `checks/screen_model_diff.py` prints nothing in lists 2 and 3 |
+
+## 8. Units added 2026-10-05 (revision 2026-10-05, U-D3)
+
+Fable added these units on 2026-10-05. Units with the same **Batch** run at the same time. A batch named after a wave
+of §3 (for example `W5`) runs beside that wave's §1 units. `checks/check_contract.py` parses this table and checks that
+no two units of one batch share a write path. **After** names what must merge first; it orders merges, not runs.
+
+| Unit | Owner | Batch | Write paths | After | Deliverable | Done when |
+|---|---|---|---|---|---|---|
+| U-M1c fix round | Agent 3 | B1 | `src/embodic/drc/**`<br>`src/embodic/errors/catalogue/drc.py`<br>`tests/unit/drc/**`<br>`tests/unit/geometry/test_transforms.py`<br>`tests/unit/geometry/test_discretise.py` | - | D-022 in `exempt_pairs` and `_check` per interfaces.md §7 (net waiver for interconnect ends on terminal vias and pads; fillet and taper exemption narrowed, DEF-M1V-01); DEF-M1V-05 object ids made to agree between `report.py` and `items.py`; the U-M1b fix-round test IDs (§7). One worker | commit gates green; UT-DRC-04 cases 1a to 4b of test_plan.md §5.1 pass, and the D-022 cases 1d, 2c and 3c fail on the pre-fix code; no test in `tests/unit/geometry` names UT-GEO-12, and only the determinism test names UT-GEO-15 |
+| U-E2 | Agent 2 | B1 | `docs/phase2/engineering/**` | - | equation registry corrections (typed fields the results package reads) | the ACCEPTANCE of its brief; Fable reviews |
+| U-S4b | Agent 1 | B1 | `docs/phase2/design/**` | - | screens.md revision per `screen_model_reconciliation.md` rows R1 to R14 | the ACCEPTANCE of its brief; Fable reviews |
+| U-D3 | Agent 6 | B1 | `docs/phase2/architecture/**` | - | contract text for D-016, D-022, D-023 and DEF-M1V-04; this table | `checks/check_contract.py` passes |
+| U-V1b-fix | Agent 4 | B1 | `tests/independent/m1/**`<br>`tests/independent/README.md` | U-M1c fix round, for the DEF-M1V-01 xfail | stale xfail marks removed; continuity instrument at the 1e-6 mm bound of interfaces.md §5 | `pytest tests/independent/m1 -q` green on the merged head |
+| U-M1d fix round 2 | Agent 3 | W5 | `tools/golden/functions/m1_drc.mjs`<br>`tools/golden/cases/m1_drc.json`<br>`tests/golden/data/m1_drc/**`<br>`tests/golden/m1_drc/**` | U-M1c fix round | as in §7 (band-rule fixtures for GR-18) | as in §7 |
+| U-M2a fix round | Agent 3 | B2 | `src/embodic/model/**`<br>`src/embodic/errors/catalogue/model.py`<br>`tests/unit/model/**` | U-S4b, U-D3 | as in §7, plus `StackMode`, `SerpentineWindingSpec.stack_mode` and `board_gap_mm` with the two FIELDS rows of interfaces.md §2.2, and the UT-GEN-03 relations (copper count per stack mode, gap range) | as in §7; UT-MOD-03 sees both new leaves with their rows; a blank serpentine draft holds `stack_mode` `"single"` and `board_gap_mm` 0.1 with `default` provenance |
+
+The M1 rows of §1 keep U-M1c's full path list. The U-M1c fix round leaves out `src/embodic/model/drc_rules.py` and
+`tests/golden/m1_drc/**`, so it shares no path with the U-M2a fix round or the U-M1d fix round 2. U-V1b-fix may run
+beside the U-M1c fix round, but Fable merges it second: once D-022 lands, the strict DEF-M1V-01 xfail in
+`tests/independent/m1/test_drc_agreement.py` passes unexpectedly and fails the run until its mark is removed.

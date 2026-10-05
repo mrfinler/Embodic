@@ -31,6 +31,11 @@ branches in modules that should not know it.
 3. DRC and physics read only `Layout` (paths, vias, pads, outline, circuit, z per layer). There is one DRC and one physics
    path for all topologies. Xcoil's serpentine canonical-frame DRC becomes the generic `RotationalSymmetry` shortcut,
    proven equal to the full check by PR-02.
+
+   Revision 2026-10-05 (U-D3, D-016). A generator now returns `BoardStack | Unbuildable`: one `Layout` per board, and
+   one board for every design except the one-board-per-phase serpentine (interfaces.md §5 gives the shape and the
+   reason). Decisions 2 and 3 hold per board: DRC checks one board at a time, and physics reads every board of the
+   stack plus its thickness.
 4. Each generator owns its phase plan. The spiral generator calls `embodic.winding.plan_spiral_winding`; serpentine and
    wave keep Xcoil's own assignment inside their packages.
 5. The import contract C1 orders `generators` above `io`, `outcome`, `physics` and `drc`, so no consumer can import a

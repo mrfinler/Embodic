@@ -45,6 +45,24 @@ optional settings start with?
 6. **Assumed-inputs tag.** The tag lists inputs with `example` provenance, property inputs not marked measured, registry
    constants used, and equation-level assumptions (D-007 unchanged; the Phase 1 reason `default` becomes `example`).
 
+   Revision 2026-10-05 (U-D3, D-023 b). The tag lists four kinds of entry and no other:
+   - inputs whose value has `example` provenance;
+   - property inputs (`FieldKind.PROPERTY`) not marked measured, whatever value they hold;
+   - registry constants the chain uses;
+   - the equation-level assumptions of the chain.
+
+   A design or geometry input (`FieldKind.DESIGN`) that holds its documented default is not listed. The result is exact
+   for that geometry, and the form already shows the `default` chip (D-019). D-007's word "defaults" therefore means
+   property defaults. `src/embodic/results/traceable.py` `assumed_inputs_tag` implements this list (`verified` by
+   reading its docstring and body, 2026-10-05).
+
+   Pointer for ADR-0003. `docs/phase1/architecture/decisions/ADR-0003-traceable-result-objects.md` decision 3 is a
+   read-only Phase 1 file. Where it says "defaults", read "property defaults" as defined here (D-023).
+
+   Packaged evidence (D-023 a). The evidence copy that ships, `resources/evidence/evidence.v1.json`, is the
+   `phase2_scope` filter of `docs/phase2/evidence/evidence_register.json`, not a byte copy: it keeps the entries Agent 5
+   marks `phase2_scope` and the documents they cite (`tools/sync_registry.py` `phase2_scope`, l.30-42).
+
 ## Options considered
 
 ### Option A: nullable fields inside DesignParameters

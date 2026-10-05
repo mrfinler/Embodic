@@ -20,6 +20,12 @@ exemptions, fixes the clearance rule per check kind, ratifies the pad-to-pad rul
 covers. §9.1 decides that the project file stores degrees. §9.2 removes the PCB-tool layer key, names the circuit phase
 key and states the interim `write_board_dump` signature. §13 records D-016 and the board dump v2 needs.
 
+Revision 2026-10-05 (U-D3, decisions D-016 and D-022, defect DEF-M1V-04): §2.2 adds `StackMode`,
+`SerpentineWindingSpec.stack_mode` and `board_gap_mm` with their FIELDS rows. §5 adds `BoardStack`, one `Layout` per
+board. §6, §8 and §10 take or return a `BoardStack`, and `ComputeOutcome.drc` holds one report per board. §7 narrows
+the fillet exemption and adds the interconnect net waiver, with test cases per rule. §9.2 describes the board dump
+`board_dump.py` writes today and its two differences from Phase 1 §7.5. §13 point 1 is closed.
+
 ## 0. Rules for every public boundary
 
 - Lengths are millimetres (`_mm`), angles radians (`_rad`) inside the core, temperature °C (`_degc`), current A (`_a`),
@@ -537,10 +543,14 @@ class LayerOrder(StrEnum):
     INTERLEAVED = "interleaved"
 
 
+class StackMode(StrEnum):  # revision 2026-10-05 (U-D3, D-016)
+    SINGLE = "single"  # Xcoil stackMode 'single': all phases on one board
+    ONE_BOARD_PER_PHASE = "one_board_per_phase"  # Xcoil stackMode 'perPhase'
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class SerpentineWindingSpec:
-    """Xcoil 'serpentine': one phase per layer group. Xcoil's stackMode 'perPhase' (one board per phase) is not ported:
-    a Layout is one board (open question Q-3 in requirements.md)."""
+    """Xcoil 'serpentine': one phase per layer group, on one board or on one board per phase (D-016)."""
 
     kind: Literal["serpentine"] = "serpentine"
     r_inner_mm: float  # Xcoil rIn
@@ -559,7 +569,9 @@ class SerpentineWindingSpec:
     start_angle_rad: float = 0.0  # Xcoil startAngleDeg
     layers_per_phase: int  # Xcoil layersPerPhase: 1 or even
     pair_connection: PairConnection = PairConnection.SERIES  # Xcoil pairConnection
-    layer_order: LayerOrder = LayerOrder.GROUPED  # Xcoil layerOrder
+    layer_order: LayerOrder = LayerOrder.GROUPED  # Xcoil layerOrder; ignored for ONE_BOARD_PER_PHASE (l.681)
+    stack_mode: StackMode = StackMode.SINGLE  # Xcoil stackMode (l.37)
+    board_gap_mm: float = 0.1  # Xcoil boardGap (l.54); no effect for SINGLE (l.689, l.695)
 
 
 class WaveStyle(StrEnum):
@@ -616,6 +628,47 @@ def validate_design(design: DesignParameters) -> tuple[ValidationIssue, ...]:
     """Single-field ranges and cross-field relations (INVALID, UNSUPPORTED_RANGE). Winding and geometry feasibility are
     the generators' job (UNBUILDABLE)."""
 ```
+
+Revision 2026-10-05 (U-D3, D-016): one board per phase. `SerpentineWindingSpec` gains `stack_mode` and
+`board_gap_mm`. The defaults reproduce today's single board: with `StackMode.SINGLE` Xcoil places every layer on board
+0 and the gap term `(nBoards - 1) * boardGap` is 0 (`engine.js` l.687-695; `verified` by reading, 2026-10-05). The gap
+default 0.1 mm is Xcoil's default (l.54), so the golden parameter map needs no special case. What Xcoil does with
+`stackMode = 'perPhase'`, each point `verified` by reading `/home/claude/serpentine/src/engine.js` on 2026-10-05:
+
+- One board per phase: `nBoards = phases` and board k carries phase k (l.687, l.691). Layers are grouped by phase
+  whatever `layerOrder` says (l.681).
+- Every board uses one board's stack-up with `layersPerPhase` copper layers (`stackupFor(p, perBoard)`, l.686-688).
+  The design's `stackup` therefore describes one board in this mode (UT-GEN-03).
+- Board k's copper sits at `z = k * (boardThickness + boardGap) + zLocal`, and the stator is
+  `nBoards * boardThickness + (nBoards - 1) * boardGap` thick (l.689, l.695). The serpentine analysis takes the
+  symmetry plane from that stator thickness (l.869-872) and the link-via length from `statorThickness / nBoards`
+  (l.969).
+- Layer names carry a board prefix `B<k+1>:` when there is more than one board (l.706).
+- The bus level offset that keeps vias of different phases apart is 0, because no two phases share a board (l.186).
+- DRC skips a via against a layer of another board and a via pair on two boards (l.779, l.819).
+- No on-board star or delta interconnect is built. When the interconnect is requested for three phases in star or
+  delta, Xcoil warns `INTERCONNECT_EXTERNAL`: "One board per phase: make the ... connection between boards
+  externally" (`wantIc`, l.2525-2535). The analysis still applies the
+  chosen connection (`tests.js` l.468).
+- Xcoil offers the option for serpentine only (`ui.js` l.54 and l.107, `only: 's'`); wave layouts always report one
+  board (l.1940, l.2192).
+
+Validation adds two relations for `one_board_per_phase` (UT-GEN-03): the copper layer count of `stackup` equals
+`layers_per_phase`, and `board_gap_mm` follows Xcoil's clamp range 0 to 10 mm (l.127). `layer_order` and
+`board_gap_mm` are temporarily inapplicable in the modes where Xcoil disables them (`ui.js` l.236), which REQ-F-32
+covers through `FieldSpec.topologies` plus the applicability rule of the form (U-M4c).
+
+FIELDS rows that the U-M2a fix round adds to `src/embodic/model/fields.py` `_ROWS` (widget ids from screens.md §4;
+limits and step from Xcoil `normalizeParams` l.127 and `ui.js` l.107):
+
+| Pointer | Kind | Unit | Required | Default (neutral value) | Group | Widget id | Limits | Step | Topologies |
+|---|---|---|---|---|---|---|---|---|---|
+| `/winding/stack_mode` | design | none | no | `"single"` | LAYERS | `param-stack-mode` | choices `single`, `one_board_per_phase` | none | serpentine |
+| `/winding/board_gap_mm` | design | mm | no | 0.1 | LAYERS | `param-board-gap` | `Limits(sign=NON_NEGATIVE, low=0, high=10)` | 0.05 | serpentine |
+
+Both are design fields, so they can never be marked measured, and a blank serpentine draft starts them at their
+neutral values with the `default` chip (D-019). The screens.md binding keys `/winding/serpentine/stack_mode` and
+`/winding/serpentine/board_gap_mm` are labels only; the UI binds through `widget_id` (§2.3).
 
 ### 2.3 Field table, draft and the new-design flow (ADR-0010)
 
@@ -1356,6 +1409,24 @@ class Layout:
     def arrays(self) -> LayoutArrays: ...
 
 
+@dataclass(frozen=True, slots=True, kw_only=True)
+class BoardStack:
+    """The boards a design produces (D-016; revision 2026-10-05, U-D3). One Layout per board, in phase order for
+    StackMode.ONE_BOARD_PER_PHASE; exactly one board for every other design."""
+
+    boards: tuple[Layout, ...]  # never empty; board k of a per-phase stack holds only phase k
+    board_thickness_mm: float  # one board, = design.stackup.board_thickness_mm()
+    board_gap_mm: float  # 0.0 when len(boards) == 1
+    stack_hash: str = field(init=False)  # "sha256:<hex>" over the boards' layout_hash values in order and the gap
+
+    def __post_init__(self) -> None:
+        """Sets stack_hash. Raises ValueError for no board, or a gap other than 0.0 on a one-board stack."""
+
+    @property
+    def stack_thickness_mm(self) -> float:
+        """n * board_thickness_mm + (n - 1) * board_gap_mm (Xcoil statorThickness, engine.js l.689)."""
+
+
 COINCIDENCE_MM: float = 1e-6  # embodic.geometry.paths; the one continuity tolerance (REQ-N-21, UT-GEO-01, IT-21)
 
 
@@ -1448,53 +1519,96 @@ Revision 2026-10-05 (U-D2, U-M1b and U-V1 reports).
   instrument to 1e-6 mm and may log the largest gap as information (request through Fable). The mirror and centre-via
   criteria of REQ-F-01 (1e-9 mm) are separate checks and stay.
 
+Revision 2026-10-05 (U-D3, D-016): board stack. A `Layout` stays one board. A design that produces several boards
+(serpentine `StackMode.ONE_BOARD_PER_PHASE`) produces a `BoardStack` with one `Layout` per board, and so does every
+other design, with one board. Board k of a per-phase stack holds phase k's copper, vias and outline, and a `Circuit`
+with one `PhaseCircuit` and no interconnect paths or pads (Xcoil builds none, `engine.js` l.2525-2535). Each board's
+`copper_z_mm` is in the stack frame: board k adds `k * (board_thickness_mm + board_gap_mm)` to the single-board z
+(l.695). Layer names are the stack-up names on every board; two boards may repeat a name, so no consumer merges
+layer-keyed maps across boards. Xcoil's `B<k+1>:` prefix (l.706) is a display label for the UI and exports only.
+
+Why one Layout per board and not a board index on paths, vias and pads. Copper on two boards never touches: Xcoil
+skips every pair across boards (l.779, l.819). With a board index, every pair loop in DRC, its broad phase, the
+symmetry shortcut and each exemption rule would need a board-equality test, and one missed test reports a phantom
+violation or checks a via against copper it does not pierce. `ViaSpan.THROUGH` would also stop meaning "every copper
+layer of the Layout". One Layout per board makes the separation structural: `run_drc`, `layout_hash`, the outline and
+the board dump keep their one-board meaning and need no change. The cost sits in two places that must see the whole
+stack anyway: the facade loops over boards, and physics reads every board plus `stack_thickness_mm`, as Xcoil's
+analysis reads `statorThickness` (l.869-872, l.969).
+
+How each consumer reads a stack:
+
+| Consumer | Contract |
+|---|---|
+| `build_layout`, `Generator.generate` (§6) | return `BoardStack | Unbuildable` for every topology; spiral and wave return one board |
+| `run_drc` (§7) | unchanged, one board per call; `compute` calls it once per board, and `ComputeOutcome.drc` holds one report per board in board order |
+| `analyse` (§8) | takes the `BoardStack`; reads `paths`, `vias`, `circuit` and `copper_z_mm` of every board and uses `stack_thickness_mm` for the EQ-05 symmetry plane where Xcoil uses `statorThickness` (l.869-872) and `stack_thickness_mm / len(boards)` for the series-link via length (EQ-11, l.969); phase results are per phase as before |
+| board dump (§9.2) | v1 stays one board per file; a stack of n boards writes n dumps whose `case_id` ends in `-board<k>`, k from 0 |
+| exporters (§9.3) | SVG and DXF write one file per board when the stack has more than one, suffixed `_board` plus the phase letter (Xcoil `ui-main.js` l.31); the PDF report and README describe the whole stack and its thickness (Xcoil `report.js` l.292) |
+| UI geometry view (§11) | shows one board of the stack at a time; how the user picks the board is Agent 1's screens.md decision (request through Fable) |
+
 
 ## 6. `embodic.generators`: plug-in interface (ADR-0012)
 
 ```python
 class Generator(Protocol):
-    """A topology generator. Pure; never raises for user input; deterministic (same design -> same layout_hash)."""
+    """A topology generator. Pure; never raises for user input; deterministic (same design -> same stack_hash)."""
 
     kind: ClassVar[TopologyKind]
 
-    def generate(self, design: DesignParameters, registry: Registry) -> Layout | Unbuildable: ...
+    def generate(self, design: DesignParameters, registry: Registry) -> BoardStack | Unbuildable: ...
 
 
-def generate_spiral(design: DesignParameters, registry: Registry) -> Layout | Unbuildable:
-    """Requires design.winding to be SpiralWindingSpec (TypeError otherwise: a dispatch bug, not user input)."""
+def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack | Unbuildable:
+    """Requires design.winding to be SpiralWindingSpec (TypeError otherwise: a dispatch bug, not user input). One board."""
 
 
-def generate_serpentine(design: DesignParameters, registry: Registry) -> Layout | Unbuildable:
-    """Faithful port of Xcoil buildCanonical/buildLayout (single board). Layout-level golden regression GR-20."""
+def generate_serpentine(design: DesignParameters, registry: Registry) -> BoardStack | Unbuildable:
+    """Faithful port of Xcoil buildCanonical/buildLayout, one board or one board per phase (D-016). Golden GR-20."""
 
 
-def generate_wave(design: DesignParameters, registry: Registry) -> Layout | Unbuildable:
-    """Faithful port of Xcoil buildWave/buildWaveOverlap. Layout-level golden regression GR-21."""
+def generate_wave(design: DesignParameters, registry: Registry) -> BoardStack | Unbuildable:
+    """Faithful port of Xcoil buildWave/buildWaveOverlap. One board. Layout-level golden regression GR-21."""
 
 
-GENERATORS: Mapping[TopologyKind, Callable[[DesignParameters, Registry], Layout | Unbuildable]] = {
+GENERATORS: Mapping[TopologyKind, Callable[[DesignParameters, Registry], BoardStack | Unbuildable]] = {
     TopologyKind.SPIRAL: generate_spiral,
     TopologyKind.SERPENTINE: generate_serpentine,
     TopologyKind.WAVE: generate_wave,
 }
 
 
-def build_layout(design: DesignParameters, registry: Registry) -> Layout | Unbuildable:
+def build_layout(design: DesignParameters, registry: Registry) -> BoardStack | Unbuildable:
     """Dispatch on design.topology through GENERATORS. Adding a topology = one module + one table entry."""
 ```
+
+Revision 2026-10-05 (U-D3, D-016): every generator returns a `BoardStack` (§5). The names `build_layout` and
+`generate_*` stay, because no code calls them yet (U-M2d writes them) and the rename would touch ADR-0012 and
+package_layout.md for no behavioural gain.
 
 ## 7. `embodic.drc`
 
 Rule D-006: violation when measured clearance < rule - `DRC_EPSILON_MM`. Turns of one spiral share a net and still keep
 clearance. Connectivity exempts exactly the pairs below (revision 2026-10-05, U-M1c report; implemented in
 `src/embodic/drc/items.py` `exempt_pairs` and `src/embodic/drc/engine.py` `_check`). Every other pair is checked,
-including same-net pairs.
+including same-net pairs. `run_drc` checks one board; a board stack (§5, D-016) is checked board by board, so copper
+of two boards never forms a pair (Xcoil skips other-board pairs, `engine.js` l.779 and l.819).
 
-1. Neighbours in one path. Each primitive that is not a fillet or a taper starts a new main index; a fillet or taper
-   takes the main index of the primitive before it (Xcoil `mi`, `engine.js` `drcObjects` l.1697). Two primitives of one
-   path are exempt when their main indices differ by at most 1. A corner's fillets and tapers are therefore exempt
-   from both primitives the corner joins. Xcoil's wider exemption of pairs closer than `1.6 * (wMax + s)` along the
-   path is not adopted (`tests/independent/README.md`, known limits).
+Revision 2026-10-05 (U-D3, D-022). Rule 1 is narrowed (D-022 b, DEF-M1V-01) and rules 2 and 3 gain one net waiver
+(D-022 a, DEF-M1z-01). Agent 3 implements both in the U-M1c fix round. Nothing else in this section changed.
+
+1. Neighbours in one path. Each primitive that is not a fillet or a taper is a main primitive and starts a new main
+   index (Xcoil `mi`, `engine.js` `drcObjects` l.1697). A fillet or taper belongs to the main primitive it follows and
+   to the main primitive it precedes; at a path end it has only one of them. Two primitives of one path are exempt in
+   exactly these cases:
+   - two main primitives whose main indices differ by at most 1;
+   - a fillet or taper and a main primitive it belongs to;
+   - a fillet or taper and another fillet or taper that belongs to one of those two main primitives.
+
+   A fillet is therefore not exempt from the main primitive two steps back (DEF-M1V-01). Xcoil applies the plain
+   `abs(a.mi - b.mi) <= 1` test, and only to `cornerOk` objects (l.1697, l.1705). Xcoil's wider exemption of pairs
+   closer than `1.6 * (wMax + s)` along the path (l.1700, l.1705) is not adopted (`tests/independent/README.md`, known
+   limits).
 2. A path end on a land. A via and the end group of a path whose end point lies within `pad_mm / 2` of the via
    centre. A pad and the end group of a path whose end point lies inside the pad outline, when the pad is on the
    path's layer or on all layers. The end group is the terminating main primitive with its fillets and tapers.
@@ -1502,7 +1616,34 @@ including same-net pairs.
    on one pad, or within `COINCIDENCE_MM` of each other.
 4. A pad and a via whose centre lies inside the pad.
 
-Rules 2 to 4 apply only when both objects carry the same net. Rule 1 needs no net test, because a path has one net.
+Net test. Rules 2 to 4 apply only when both objects carry the same net, with one waiver (D-022 a). Rules 2 and 3 also
+apply, whatever the net names, when one object is an interconnect path (its id is in `Circuit.interconnect_path_ids`;
+nets `N`, `U`, `V`, `W`, `D...`) and the land is a terminal via (`ViaRole.TERMINAL`) or a pad:
+
+- rule 2: an interconnect path's end group and the terminal via or pad its end point lies on;
+- rule 3: an interconnect path's end group and the end group of another path, when both end points lie on one terminal
+  via or one pad.
+
+A lead or star-point link that ends on a phase's terminal via is an intended joint, not a short. The waiver does not
+reach rule 4, a via of another role, or a node of coincident end points with no via or pad; those keep the net test.
+Net names do not change: phase copper and vias carry `PHASE_A`, `PHASE_B` and `PHASE_C`, and interconnects keep their
+circuit net. Xcoil's single `WINDING` net is not adopted, because it would also exempt another phase's path end that
+lands on a via by mistake. Rule 1 needs no net test, because a path has one net.
+
+Tests per rule (test_plan.md §5.1 UT-DRC-04, amended 2026-10-05). Every rule has one case that must be exempt and one
+near miss that must be reported. PR-01 and PR-13 check the exemption set as a whole against Agent 4's brute-force
+checker, and `tests/independent/m1/test_drc_agreement.py` `test_fillet_is_not_exempt_from_the_main_primitive_two_steps_back`
+is the independent check of rule 1.
+
+| Rule | Test cases |
+|---|---|
+| 1, main pairs | UT-DRC-04 cases 1a (adjacent mains exempt) and 1b (mains two apart, same net, reported) |
+| 1, fillets and tapers | UT-DRC-04 cases 1c (corner fillet exempt from both mains) and 1d (fillet against the main two steps back reported, the DEF-M1V-01 hairpin) |
+| 2 | UT-DRC-04 cases 2a (end on its via or pad exempt) and 2b (foreign via reported) |
+| 2, waiver | UT-DRC-04 cases 2c (interconnect end on a terminal via of another net exempt) and 2d (interconnect end on a centre or transfer via of another net reported) |
+| 3 | UT-DRC-04 cases 3a (same-net ends at one via, pad or coincident point exempt) and 3b (different-net ends at a coincident point without a land reported) |
+| 3, waiver | UT-DRC-04 case 3c (interconnect end and phase path end on one terminal via exempt) |
+| 4 | UT-DRC-04 cases 4a (same-net via inside a pad exempt) and 4b (other-net via inside a pad reported) |
 
 ```python
 DRC_EPSILON_MM: float = 1e-6
@@ -1670,9 +1811,10 @@ def current_density_a_per_mm2(phase_current_a: float, parallel_paths: int, width
                               thickness_mm: float) -> float: ...  # EQ-22
 
 
-def analyse(design: DesignParameters, layout: Layout, provenance: ProvenanceMap, registry: Registry,
+def analyse(design: DesignParameters, boards: BoardStack, provenance: ProvenanceMap, registry: Registry,
             *, cancel: CancelToken | None = None) -> AnalysisResult | None:
-    """Topology-agnostic: reads Layout.paths, vias, circuit and copper_z_mm only. None only when cancelled."""
+    """Topology-agnostic: reads paths, vias, circuit and copper_z_mm of every board and boards.stack_thickness_mm only
+    (revision 2026-10-05, U-D3, D-016). None only when cancelled."""
 ```
 
 ## 9. `embodic.io`: project file v1, examples, board dump, exporters
@@ -1794,24 +1936,31 @@ def load_example(example_id: str) -> tuple[ExampleRef, DesignParameters]: ...
 
 ### 9.2 Board dump (Agent 3 format, frozen here as v1)
 
-The format of `docs/phase1/software/calculation_flow_and_port_notes.md` §7.5 is adopted as `embodic.board-dump` v1
-with the two changes below. Agent 4's independent checks and the golden harness read it. `BOARD_DUMP_SCHEMA` in
+Agent 4's independent checks and the golden harness read `embodic.board-dump` v1. `BOARD_DUMP_SCHEMA` in
 `src/embodic/io/board_dump.py` lists every key with its meaning, so a second reader needs nothing else.
 
-Revision 2026-10-05 (U-D2, U-M1b and U-V1 reports):
+Revision 2026-10-05 (U-D3, DEF-M1V-04). This section describes the file that `src/embodic/io/board_dump.py`
+`dump_layout` writes today (`verified` by reading l.33-188, 2026-10-05). The earlier text said v1 had no field changes
+against `docs/phase1/software/calculation_flow_and_port_notes.md` §7.5. It has two, both in what embodic writes:
 
-- `layers[]` has no PCB-tool layer-name key. Phase 1 §7.5 listed one; MT-07 forbids the tool's name in shipped files
-  (D-009), and U-M1b's writer omits the key (DEF-M1b-02). A layer record is `{index, name, z, copper_t, role, pair,
-  phase}`.
+1. `layers[]` has no PCB-tool layer-name key. Phase 1 §7.5 lists `kicad_name`; MT-07 forbids the tool's name in
+   shipped files (D-009), so the writer never writes the key (`_layer_record`, l.133-135; DEF-M1b-02). A layer record
+   is `{index, name, z, copper_t, role, pair, phase}`.
+2. `vias[].phase` is always null. Phase 1 §7.5 gives every via its phase index; embodic's `Via` has a `net` and no
+   phase field, and `_via_record` writes `"phase": None` (l.97-112). A reader takes a via's phase from its net
+   (`PHASE_A`, `PHASE_B`, `PHASE_C`) or from the circuit that lists it.
+
+The rest of the file follows Phase 1 §7.5 key for key:
+
 - Each `circuits[]` record names its phase in the key `phase`, an integer with the encoding of `primitives[].phase`
-  (0 = A, 1 = B, 2 = C). Phase 1 §7.5 said "per phase" without naming the key (DEF-V1-02).
-- Interim content, as U-M1b wrote it: embodic writes `params`, `params_sha256` and `drc` as null, layer `copper_t`,
-  `role`, `pair` and `phase` as null, object `kind` as null, via `phase` as null and `label` as "", and circuit
-  `terminals` as `{plus: null, minus: null}`. A Layout does not carry these values yet. A reader treats null as
-  "not provided", never as zero.
-- `write_board_dump(layout, path, *, case_id)` is U-M1b's interim signature. U-M2f adds the keyword `design`
-  to fill `params` and `params_sha256` (`work_breakdown.md` §1). `drc` stays null until §13 point 4 fixes its shape for
-  per-kind rules.
+  (0 = A, 1 = B, 2 = C). Phase 1 §7.5 said "per phase" without naming the key (DEF-V1-02); naming it is not a change.
+- Null until a Layout carries the value: `params`, `params_sha256` and `drc`; layer `copper_t`, `role`, `pair` and
+  `phase`; object `kind`; circuit `terminals` as `{plus: null, minus: null}`. Object `touch_vias` is `[]` and via
+  `label` is `""`. A reader treats null as "not provided", never as zero.
+- The writer's signatures today are `dump_layout(layout, *, case_id)` and `write_board_dump(layout, path, *,
+  case_id)`. U-M2f adds the keyword `design` shown in the block below, to fill `params` and `params_sha256`
+  (`work_breakdown.md` §1). `drc` stays null until §13 point 4 fixes its shape for per-kind rules.
+- A board stack (§5) writes one dump per board.
 
 Number encoding, shared by board dumps and golden fixtures (revision 2026-10-04, U-M1d deviations ratified):
 
@@ -1932,15 +2081,15 @@ class ComputeOutcome:
     design_hash: str
     provenance: ProvenanceMap
     issues: tuple[ValidationIssue, ...]
-    layout: Layout | None
-    drc: DrcReport | None
+    boards: BoardStack | None  # revision 2026-10-05 (U-D3, D-016): was `layout: Layout | None`
+    drc: tuple[DrcReport, ...] | None  # one report per board, in board order
     analysis: AnalysisResult | None
     timings_s: Mapping[str, float]
     versions: VersionInfo
 
     @property
     def ok(self) -> bool:
-        """No ERROR issue and DRC passed."""
+        """No ERROR issue and the DRC of every board passed."""
 
 
 # embodic.api
@@ -1957,7 +2106,8 @@ class StageCache:
 def compute(design: DesignParameters, provenance: ProvenanceMap, *, options: ComputeOptions = ComputeOptions(),
             cache: StageCache | None = None, cancel: CancelToken | None = None,
             registry: Registry | None = None) -> ComputeOutcome | None:
-    """validate -> build_layout -> run_drc -> analyse. Physics runs even with DRC violations. None only when cancelled."""
+    """validate -> build_layout -> run_drc per board -> analyse. Physics runs even with DRC violations. None only when
+    cancelled."""
 
 
 def compute_project(path: Path) -> ComputeOutcome | tuple[ValidationIssue, ...]:
@@ -2177,10 +2327,9 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 ## 13. Open interface points
 
-1. `SerpentineWindingSpec` omits Xcoil `stackMode = perPhase` and `boardGap` (multi-board stacks). Decided since: D-016
-   ports the multi-board option (revision 2026-10-05). The contract change is still open: the two fields, and how a
-   Layout represents one board per phase. Agent 6 writes it before U-M3a starts; screens.md already has
-   `param-stack-mode` and `param-board-gap` for it (`screen_model_reconciliation.md`).
+1. Closed 2026-10-05 (U-D3, D-016). `SerpentineWindingSpec` has `stack_mode` and `board_gap_mm` with their FIELDS rows
+   (§2.2), and a design's boards are a `BoardStack` of one `Layout` per board (§5). U-M2a's fix round adds the fields
+   and rows; U-M2d builds the stack type into the generator interface; U-M3a builds the per-phase serpentine.
 2. Physics kernel argument lists for EQ-12, EQ-14, EQ-16, EQ-17, EQ-20 follow the Phase 1 registry variables. Agent 2's
    v1 specification (U-S2) may change them before M2; the change goes through Fable and updates this file.
 3. Whether Xcoil's serpentine analysis path (`engine.js` `analyze`, l.880-1017) and the generic element path
