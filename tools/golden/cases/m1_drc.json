@@ -1,0 +1,20 @@
+{"format": "embodic.golden-cases", "format_version": 1, "area": "m1_drc", "cases": [
+  {"id": "drc-parallel-below-band", "fn": "drcObjects",
+   "note": "two parallel 0.2 mm traces 0.195 mm apart, rule 0.2 mm: below Xcoil's slack band, both tools fail",
+   "tags": ["line", "parallel", "below-band"],
+   "inputs": {"clearance": 0.2, "wMax": 0.2, "objs": [
+     {"prims": [{"type": "line", "x1": 0, "y1": 0, "x2": 5, "y2": 0, "width": 0.2, "kind": "side"}]},
+     {"prims": [{"type": "line", "x1": 0, "y1": 0.395, "x2": 5, "y2": 0.395, "width": 0.2, "kind": "side"}]}]}},
+  {"id": "drc-parallel-in-band", "fn": "drcObjects",
+   "note": "two parallel 0.2 mm traces 0.198 mm apart, rule 0.2 mm: inside [rule - 0.004, rule), Xcoil passes by its slack",
+   "tags": ["line", "parallel", "in-band"],
+   "inputs": {"clearance": 0.2, "wMax": 0.2, "objs": [
+     {"prims": [{"type": "line", "x1": 0, "y1": 0, "x2": 5, "y2": 0, "width": 0.2, "kind": "side"}]},
+     {"prims": [{"type": "line", "x1": 0, "y1": 0.398, "x2": 5, "y2": 0.398, "width": 0.2, "kind": "side"}]}]}},
+  {"id": "drc-parallel-at-rule", "fn": "drcObjects",
+   "note": "two parallel 0.2 mm traces exactly 0.2 mm apart, rule 0.2 mm: at the rule, both tools pass",
+   "tags": ["line", "parallel", "at-rule"],
+   "inputs": {"clearance": 0.2, "wMax": 0.2, "objs": [
+     {"prims": [{"type": "line", "x1": 0, "y1": 0, "x2": 5, "y2": 0, "width": 0.2, "kind": "side"}]},
+     {"prims": [{"type": "line", "x1": 0, "y1": 0.4, "x2": 5, "y2": 0.4, "width": 0.2, "kind": "side"}]}]}}
+]}
