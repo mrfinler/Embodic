@@ -9,7 +9,8 @@ import pytest
 
 from embodic.drc import CancelToken, DrcCheckKind, DrcReport, run_drc
 from embodic.errors import MESSAGES
-from embodic.geometry.layout import Hole, ViaRole
+from embodic.geometry.layout import Hole, Via, ViaRole
+from embodic.geometry.paths import CopperPath
 from embodic.geometry.primitives import PrimitiveRole
 from embodic.model.drc_rules import validate_drc_rules
 
@@ -100,21 +101,59 @@ def test_ut_drc_04_interconnect_ending_on_a_terminal_via_or_a_pad_is_a_joint_wha
     assert report.passed, report.violations
 
 
-def test_ut_drc_04_other_phase_on_a_terminal_via_and_interconnect_on_a_transfer_via_are_reported() -> None:
-    """Catches an exemption that drops the net test for every via or every path: each of these joints is a mistake."""
+def test_ut_drc_04_other_phase_on_a_terminal_via_and_a_phase_path_on_another_net_pad_are_reported() -> None:
+    """Catches an exemption that drops the net test for paths outside the circuit's interconnects."""
     stray = path(0, [line(0, 0, 3, 0)], net="PHASE_B")
-    lead = path(1, [line(7, 0, 10, 0)], net="U")
     star = path(2, [line(0, 10, 3, 10)], net="N")
     terminal = via(0, 3, 0, net="PHASE_A", role=ViaRole.TERMINAL)
-    transfer = via(1, 10, 0, net="PHASE_A")
     land = pad(0, 3, 10, net="U")
-    board = layout(paths=[stray, lead, star], vias=[terminal, transfer], pads=[land], interconnects=[1])
+    board = layout(paths=[stray, star], vias=[terminal], pads=[land])
     report = run_drc(board, RULES)
     assert report is not None
     assert {(v.kind, v.objects) for v in report.violations} == {
         (DrcCheckKind.TRACE_VIA, ("path:0/prim:0", "via:0")),
-        (DrcCheckKind.TRACE_VIA, ("path:1/prim:0", "via:1")),
         (DrcCheckKind.PAD_TRACE, ("path:2/prim:0", "pad:0")),
+    }
+
+
+def _ring_with_taps(net: str) -> tuple[CopperPath, list[Via]]:
+    """Return an arc-plus-line ring on ``net`` and four vias of other nets that overlap its copper.
+
+    Vias 0 and 1 sit on the centreline mid-primitive, via 2 on the far end, and via 3 lies 0.35 mm off the arc,
+    beyond ``pad_mm / 2`` = 0.3 mm.
+    """
+    ring = path(0, [arc(0, 0, 5, 0, math.pi / 2), line(0, 5, -3, 5)], net=net)
+    q = math.pi / 4
+    taps = [
+        via(0, 5 * math.cos(q), 5 * math.sin(q), net="PHASE_A"),
+        via(1, -1.5, 5, net="PHASE_B", role=ViaRole.CENTRE),
+        via(2, -3, 5, net="PHASE_C"),
+        via(3, 5.35 * math.cos(q / 2), 5.35 * math.sin(q / 2), net="PHASE_C"),
+    ]
+    return ring, taps
+
+
+def test_ut_drc_04_interconnect_tapped_mid_path_by_vias_of_any_net_and_role_is_a_joint() -> None:
+    """Catches DEF-M1c3-01 (D-022c): a star-point ring tapped by a via mid-path, or ending on one, is not a short.
+
+    A via whose centre is off the centreline is still a short, so an exemption by copper overlap would be too wide.
+    """
+    ring, taps = _ring_with_taps("N")
+    report = run_drc(layout(paths=[ring], vias=taps, interconnects=[0]), RULES)
+    assert report is not None
+    assert {(v.kind, v.objects) for v in report.violations} == {(DrcCheckKind.TRACE_VIA, ("path:0/prim:0", "via:3"))}
+
+
+def test_ut_drc_04_via_on_a_non_interconnect_path_of_another_net_is_reported() -> None:
+    """Catches a tap exemption that ignores whether the path is an interconnect: a phase path keeps the net test."""
+    ring, taps = _ring_with_taps("PHASE_D")
+    report = run_drc(layout(paths=[ring], vias=taps), RULES)
+    assert report is not None
+    assert {(v.kind, v.objects) for v in report.violations} == {
+        (DrcCheckKind.TRACE_VIA, ("path:0/prim:0", "via:0")),
+        (DrcCheckKind.TRACE_VIA, ("path:0/prim:1", "via:1")),
+        (DrcCheckKind.TRACE_VIA, ("path:0/prim:1", "via:2")),
+        (DrcCheckKind.TRACE_VIA, ("path:0/prim:0", "via:3")),
     }
 
 
