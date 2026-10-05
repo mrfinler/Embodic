@@ -38,6 +38,7 @@ class Unit(StrEnum):
     OHM = "ohm"
     OHM_M = "ohm_m"
     H = "H"
+    H_PER_M = "H_per_m"
     W = "W"
     W_PER_M2_K = "W_per_m2_K"
     A = "A"
@@ -50,6 +51,7 @@ class Unit(StrEnum):
     N_M = "N_m"
     RPM = "rpm"
     HZ = "Hz"
+    F_PER_M = "F_per_m"
     ONE = "one"
     COUNT = "count"
 
@@ -73,6 +75,7 @@ _DISPLAY = MappingProxyType(
         Unit.OHM: "Ω",
         Unit.OHM_M: "Ω·m",
         Unit.H: "H",
+        Unit.H_PER_M: "H/m",
         Unit.W: "W",
         Unit.W_PER_M2_K: "W/(m²·K)",
         Unit.A: "A",
@@ -85,6 +88,7 @@ _DISPLAY = MappingProxyType(
         Unit.N_M: "N·m",
         Unit.RPM: "rpm",
         Unit.HZ: "Hz",
+        Unit.F_PER_M: "F/m",
         Unit.ONE: "",
         Unit.COUNT: "",
     }
