@@ -36,7 +36,7 @@ def test_negative_sweep_arc_ends_where_its_sweep_says() -> None:
 
 
 def test_reports_the_first_gap_with_its_index_and_distance() -> None:
-    """Seeded defect: the last side starts 2 nm off; the gap is at joint 1 and measures 2e-6 mm."""
+    """Seeded defect: the last side starts 2e-6 mm (2 nm) off, twice the bound; the gap is at joint 1."""
     path = side_turn_side()
     path[2] = Line(0.0, 10.0 + 2e-6, -5.0, 10.0, W)
     gap = first_gap(path)
@@ -46,10 +46,10 @@ def test_reports_the_first_gap_with_its_index_and_distance() -> None:
     assert gap.next_start == (0.0, 10.0 + 2e-6)
 
 
-def test_tolerance_is_1e9_mm() -> None:
-    """A 0.5 nm offset passes and a 5 nm offset fails, so the threshold sits between them (U-V1 brief: gap <= 1e-9)."""
-    within = [Line(0.0, 0.0, 1.0, 0.0, W), Line(1.0 + 0.5e-9, 0.0, 2.0, 0.0, W)]
-    beyond = [Line(0.0, 0.0, 1.0, 0.0, W), Line(1.0 + 5e-9, 0.0, 2.0, 0.0, W)]
+def test_tolerance_is_1e6_mm() -> None:
+    """A 0.9e-6 mm offset passes and 1.1e-6 mm fails: the bound is REQ-N-21's 1e-6 mm (revision 2026-10-05)."""
+    within = [Line(0.0, 0.0, 1.0, 0.0, W), Line(1.0 + 0.9e-6, 0.0, 2.0, 0.0, W)]
+    beyond = [Line(0.0, 0.0, 1.0, 0.0, W), Line(1.0 + 1.1e-6, 0.0, 2.0, 0.0, W)]
     assert first_gap(within) is None
     assert first_gap(beyond) is not None
 
