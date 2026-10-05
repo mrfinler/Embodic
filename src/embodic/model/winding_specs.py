@@ -83,6 +83,13 @@ class LayerOrder(StrEnum):
     INTERLEAVED = "interleaved"
 
 
+class StackMode(StrEnum):
+    """Serpentine boards: every phase on one board, or one board per phase (D-016)."""
+
+    SINGLE = "single"  # Xcoil stackMode 'single'
+    ONE_BOARD_PER_PHASE = "one_board_per_phase"  # Xcoil stackMode 'perPhase'
+
+
 class WaveStyle(StrEnum):
     """Xcoil wave track shapes."""
 
@@ -139,9 +146,9 @@ class SpiralWindingSpec:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class SerpentineWindingSpec:
-    """Xcoil 'serpentine': one phase per layer group.
+    """Xcoil 'serpentine': one phase per layer group, on one board or on one board per phase (D-016).
 
-    Xcoil's stackMode 'perPhase' (one board per phase) is not ported: a Layout is one board (requirements.md Q-3).
+    With ONE_BOARD_PER_PHASE the design's stack-up describes one board (Xcoil stackupFor(p, perBoard), l.686-688).
     """
 
     kind: Literal["serpentine"] = "serpentine"
@@ -161,7 +168,9 @@ class SerpentineWindingSpec:
     start_angle_rad: float = 0.0  # Xcoil startAngleDeg
     layers_per_phase: int  # Xcoil layersPerPhase: 1 or even
     pair_connection: PairConnection = PairConnection.SERIES  # Xcoil pairConnection
-    layer_order: LayerOrder = LayerOrder.GROUPED  # Xcoil layerOrder
+    layer_order: LayerOrder = LayerOrder.GROUPED  # Xcoil layerOrder; ignored for ONE_BOARD_PER_PHASE (l.681)
+    stack_mode: StackMode = StackMode.SINGLE  # Xcoil stackMode (l.37)
+    board_gap_mm: float = 0.1  # Xcoil boardGap (l.54); no effect for SINGLE (l.689, l.695)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

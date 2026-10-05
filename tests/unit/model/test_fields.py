@@ -5,7 +5,7 @@ import re
 
 import pytest
 
-from embodic.model.fields import FIELD_BY_KEY, FIELDS, FieldKind, field_specs
+from embodic.model.fields import FIELD_BY_KEY, FIELDS, FieldGroup, FieldKind, Sign, field_specs
 from embodic.model.schema import ValueType, field_key, leaves
 from embodic.model.vocabulary import TopologyKind
 from embodic.units import Unit
@@ -44,8 +44,8 @@ def test_every_leaf_has_exactly_one_field_and_every_field_a_leaf(topology):
 def test_field_counts_per_topology():
     """Defect caught: a topology silently losing or gaining inputs (counts pinned from the first run)."""
     counts = {topology.value: len(field_specs(topology)) for topology in TopologyKind}
-    assert counts == {"spiral": 113, "serpentine": 99, "wave": 93}
-    assert len(FIELDS) == 132
+    assert counts == {"spiral": 113, "serpentine": 101, "wave": 93}
+    assert len(FIELDS) == 134
 
 
 @pytest.mark.req("REQ-N-24")
@@ -100,6 +100,8 @@ def test_property_inputs_carry_their_unit(key, unit):
         ("/drc_rules/edge_clearance_mm", "param-min-edge"),
         ("/drc_rules/hole_clearance_mm", "param-min-hole-space"),
         ("/drc_rules/min_annular_ring_mm", "param-min-ring"),
+        ("/winding/stack_mode", "param-stack-mode"),
+        ("/winding/board_gap_mm", "param-board-gap"),
     ],
 )
 def test_screens_v2_widgets_bind_their_field(key, widget_id):
@@ -156,3 +158,21 @@ def test_field_specs_are_frozen():
     """Defect caught: a form mutating the shared table at run time."""
     with pytest.raises(dataclasses.FrozenInstanceError):
         FIELDS[0].required = False  # type: ignore[misc]
+
+
+@pytest.mark.req("REQ-F-34")
+def test_d016_rows_match_interfaces_section_2_2():
+    """D-016 FIELDS rows. Defect caught: a stack-mode default that leaves one board, or a gap without Xcoil's limits."""
+    mode, gap = FIELD_BY_KEY["/winding/stack_mode"], FIELD_BY_KEY["/winding/board_gap_mm"]
+    assert (mode.kind, mode.unit, mode.required, mode.neutral_value) == (FieldKind.DESIGN, None, False, "single")
+    assert mode.choices == ("single", "one_board_per_phase")
+    assert (gap.kind, gap.unit, gap.required, gap.neutral_value, gap.step) == (
+        FieldKind.DESIGN,
+        Unit.MM,
+        False,
+        0.1,
+        0.05,
+    )
+    assert (gap.limits.sign, gap.limits.low, gap.limits.high) == (Sign.NON_NEGATIVE, 0, 10)
+    assert mode.topologies == gap.topologies == {TopologyKind.SERPENTINE}
+    assert mode.group is gap.group is FieldGroup.LAYERS

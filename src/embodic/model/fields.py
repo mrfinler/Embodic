@@ -155,6 +155,8 @@ _ROWS: Mapping[str, _Row] = types.MappingProxyType(
         "/winding/layers_per_phase": _Row(D, None, G.LAYERS, "param-layers-per-phase", _lim(POS, 1, 16), 1),
         "/winding/pair_connection": _Row(D, None, G.LAYERS, "param-pair-connection"),
         "/winding/layer_order": _Row(D, None, G.LAYERS, "param-layer-order"),
+        "/winding/stack_mode": _Row(D, None, G.LAYERS, "param-stack-mode"),
+        "/winding/board_gap_mm": _Row(D, Unit.MM, G.LAYERS, "param-board-gap", _lim(NONNEG, 0, 10), 0.05),
         "/winding/layers/pairs": _Row(D, None, G.LAYERS, "layer-list"),
         "/winding/layers/pairs/*/index": _Row(D, None, G.LAYERS, "layer-list", _lim(NONNEG)),
         "/winding/layers/pairs/*/layer_in": _Row(D, None, G.LAYERS, "layer-list"),

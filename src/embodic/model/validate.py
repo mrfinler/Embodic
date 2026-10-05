@@ -18,6 +18,7 @@ from embodic.model.winding_specs import (
     PairConnection,
     SerpentineWindingSpec,
     SpiralWindingSpec,
+    StackMode,
     WaveWindingSpec,
 )
 from embodic.units import Unit
@@ -165,6 +166,10 @@ def _serpentine_layers(design: DesignParameters) -> Iterator[ValidationIssue]:
     if spec.pair_connection is PairConnection.SERIES and pairs > design.rotor.poles // 2:
         pointers = ["/winding/layers_per_phase", "/winding/pair_connection", "/rotor/poles"]
         yield issue("INVALID_SERIES_PAIRS_EXCEED_POLE_PAIRS", pointers, value=pairs, limit=design.rotor.poles // 2)
+    copper = len(design.stackup.copper_layers())
+    if spec.stack_mode is StackMode.ONE_BOARD_PER_PHASE and copper != count:
+        pointers = ["/stackup/layers", "/winding/layers_per_phase", "/winding/stack_mode"]
+        yield issue("INVALID_SERPENTINE_COPPER_COUNT", pointers, value=copper, limit=count)
     if spec.turns * spec.strands > TRACES_MAX:
         yield issue(
             "RANGE_TOO_MANY_TRACES",
