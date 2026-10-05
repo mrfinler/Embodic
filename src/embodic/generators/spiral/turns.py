@@ -16,6 +16,9 @@ Point = tuple[float, float]
 # generator uses the same comparisons so both build the same turn count.
 _FIT_SLACK_MM = 1e-9
 
+# D-030 (assumption: no PCB coil approaches it). Bounds the turn scan, so every later step builds at most this many.
+MAX_TURNS_PER_LAYER = 100
+
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class CoilFrame:
@@ -171,10 +174,11 @@ class LoopStop(StrEnum):
 
     LATERAL = "lateral"  # rule 1, the outer arc vanishes between the side lines
     RADIAL = "radial"  # rules 2 and 3
+    CAP = "cap"  # the scan stopped at MAX_TURNS_PER_LAYER while the loop rule would admit more
 
 
 def loop_turns(frame: CoilFrame) -> tuple[tuple[LoopTurn, ...], LoopStop]:
-    """Every turn the loop rule admits (G3), and the rule that stopped the sequence."""
+    """Every turn the loop rule admits (G3) up to MAX_TURNS_PER_LAYER, and the rule that stopped the sequence."""
     turns: list[LoopTurn] = []
     while True:
         t = len(turns)
@@ -183,6 +187,8 @@ def loop_turns(frame: CoilFrame) -> tuple[tuple[LoopTurn, ...], LoopStop]:
             return tuple(turns), LoopStop.RADIAL if frame.outer_arc_exists(t) else LoopStop.LATERAL
         if math.dist(turn.b, turn.c) < frame.min_side_mm or not turn.end_radius_mm < frame.outer_radius_mm(t + 1):
             return tuple(turns), LoopStop.RADIAL
+        if t == MAX_TURNS_PER_LAYER:
+            return tuple(turns), LoopStop.CAP
         turns.append(turn)
 
 
