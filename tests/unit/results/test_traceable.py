@@ -89,14 +89,13 @@ def test_traceable_tag_lists_exactly_the_assumed_inputs_dominant_first(packaged)
     """UT-RES-05: catches a user design input or a result reference in the tag, or a missing property or constant."""
     result = traced("r", 1.0, Unit.OHM, eq_ids=["EQ-10"], inputs=R_INPUTS, registry=packaged)
     assert [(a.item, a.reason, a.label, a.dominant) for a in result.assumed_inputs] == [
-        ("finished copper thickness t", "equation_assumption", Status.ASSUMPTION, True),
+        (THICKNESS, "unmeasured_property", Status.ASSUMPTION, True),
         ("winding temperature T", "equation_assumption", Status.ASSUMPTION, True),
         ("PCB copper resistivity = IACS (G6)", "equation_assumption", Status.ASSUMPTION, True),
-        (THICKNESS, "unmeasured_property", Status.ASSUMPTION, False),
         ("/operating/winding_temperature_degc", "example", Status.ASSUMPTION, False),
         ("constant:rho_20", "registry_constant", Status.INFERRED, False),
     ]
-    assert result.assumed_inputs[3].value_text == "0.0350 mm"
+    assert result.assumed_inputs[0].value_text == "0.0350 mm"
 
 
 def registry_with_thickness_field() -> Registry:
@@ -184,7 +183,7 @@ def test_traceable_how_computed_names_status_reasons_inputs_and_tag(packaged):
     text = traced("r", 1.0, Unit.OHM, eq_ids=["EQ-10"], inputs=R_INPUTS, registry=packaged).how_computed()
     assert "Status: not tested (EQ-10 verified; EQ-10 tests not passed in this build)" in text
     assert f"{THICKNESS} = 0.0350 mm (example)" in text
-    assert "Assumed inputs (6):" in text
+    assert "Assumed inputs (5):" in text
     assert "Tolerance: +/-8 % vs measured DC resistance" in text
 
 

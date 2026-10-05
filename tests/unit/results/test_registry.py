@@ -8,22 +8,25 @@ from pathlib import Path
 import pytest
 from tests.unit.results.registries import raw_documents
 
+from embodic.model.fields import FIELDS
+from embodic.model.schema import pattern_of
 from embodic.model.vocabulary import TopologyKind
 from embodic.results.registry import RegistryFormatError, parse_registry
 from embodic.results.status import MetricBound, Status
+from embodic.units import Unit
 
 SRC = Path(__file__).resolve().parents[3] / "src" / "embodic"
-# Registry v1 cites no EV-ID for these equations (registry content, owner Agent 2; reported as a defect).
-UNSOURCED_IN_V1 = {"EQ-18", "EQ-19", "EQ-20", "EQ-23", "EQ-24", "EQ-25", "EQ-26", "EQ-28", "EQ-29", "EQ-30"}
-EC05_UNTYPED_IN_V1 = [
-    "threshold",
-    "metric_bound",
-    "calibration_status",
-    "transfer_status",
-    "threshold_status",
-    "independent_oracles",
-    "dependent_oracles",
-]
+# U-E2 registry: equations still without an EV-ID (registry content, owner Agent 2).
+UNSOURCED = {"EQ-18", "EQ-19", "EQ-23", "EQ-24", "EQ-25", "EQ-26", "EQ-28", "EQ-29", "EQ-30"}
+# U-E2: three constants from EV-53, three labelled `assumption` without a source.
+CONSTANTS = {
+    "copper_resistivity_20c_ohm_m": (1.7241e-08, Unit.OHM_M, Status.VERIFIED),
+    "copper_temp_coeff_per_k": (0.00393, Unit.PER_K, Status.VERIFIED),
+    "copper_density_g_per_cm3": (8.89, Unit.G_PER_CM3, Status.VERIFIED),
+    "laminate_density_g_per_cm3": (1.85, Unit.G_PER_CM3, Status.ASSUMPTION),
+    "ndfeb_density_g_per_cm3": (7.5, Unit.G_PER_CM3, Status.ASSUMPTION),
+    "steel_density_g_per_cm3": (7.85, Unit.G_PER_CM3, Status.ASSUMPTION),
+}
 
 
 @pytest.mark.req("REQ-T-04")
@@ -36,14 +39,12 @@ def test_registry_packaged_counts_and_versions(packaged):
 
 
 @pytest.mark.req("REQ-T-04")
-def test_registry_packaged_issues_are_exactly_the_known_v1_gaps(packaged):
-    """Catches a dangling EV-ID appearing, or a gap the loader stops reporting (UT-RES-03)."""
+def test_registry_packaged_issues_are_exactly_the_known_gaps(packaged):
+    """Catches a dangling or dropped EV-ID, an untyped EC-05 field, or a gap the loader stops reporting (UT-RES-03)."""
     by_code: dict[str, list[str]] = {}
     for issue in packaged.issues:
         by_code.setdefault(issue.code, []).append(str(issue.value))
-    assert "INTERNAL_REGISTRY_EVIDENCE_MISSING" not in by_code
-    assert set(by_code["INTERNAL_REGISTRY_EQUATION_UNSOURCED"]) == UNSOURCED_IN_V1
-    assert by_code["INTERNAL_REGISTRY_FIELD_UNTYPED"] == EC05_UNTYPED_IN_V1
+    assert by_code == {"INTERNAL_REGISTRY_EQUATION_UNSOURCED": sorted(UNSOURCED)}
 
 
 @pytest.mark.req("REQ-T-04")
@@ -99,13 +100,14 @@ def test_registry_is_frozen_after_load(packaged):
 
 
 @pytest.mark.req("REQ-T-16")
-def test_registry_ec05_prose_fields_give_their_status_and_the_rest_the_weakest_value(packaged):
-    """Catches a guessed value for an EC-05 field that registry v1 does not type (no fabrication)."""
+def test_registry_packaged_ec05_fields_are_read_as_typed(packaged):
+    """Catches the loader falling back to a weakest value for an EC-05 field the U-E2 registry types."""
     check = packaged.equation("EQ-05").validity_checks[0]
+    assert check.threshold == 0.10
+    assert check.metric_bound is MetricBound.LOWER_BOUND
+    assert check.calibration_status is Status.INFERRED
     assert (check.transfer_status, check.threshold_status) == (Status.ASSUMPTION, Status.ASSUMPTION)
-    assert check.calibration_status is Status.UNRESOLVED
-    assert check.metric_bound is MetricBound.ESTIMATE
-    assert check.threshold == 0.0
+    assert (check.independent_oracles, check.dependent_oracles) == (("OR-01",), ("OR-07", "OR-08"))
 
 
 @pytest.mark.req("REQ-T-16")
@@ -120,10 +122,26 @@ def test_registry_ec05_contract_fields_are_read_as_typed(contract_registry):
 
 
 @pytest.mark.req("REQ-T-16")
-@pytest.mark.xfail(strict=True, reason="registry v1 writes EC-05's DEF-23 fields as prose (DEF-M2b-01, Agent 2)")
 def test_registry_packaged_ec05_carries_the_typed_def23_fields(packaged):
-    """Turns XPASS, and so fails, once the packaged registry types EC-05: then drop this marker."""
+    """Catches a DEF-23 field of EC-05 written back as prose (DEF-M2b-01, closed by U-E2)."""
     assert not [i for i in packaged.issues if i.code == "INTERNAL_REGISTRY_FIELD_UNTYPED"]
+
+
+@pytest.mark.req("REQ-T-04")
+@pytest.mark.parametrize("name", sorted(CONSTANTS))
+def test_registry_packaged_constants_carry_value_unit_and_status(packaged, name):
+    """Catches a U-E2 constant dropped, or one whose value, unit or label changed without a registry revision."""
+    constant = packaged.constant(name)
+    assert (constant.value, Unit(constant.unit), constant.status) == CONSTANTS[name]
+
+
+@pytest.mark.req("REQ-T-03")
+def test_registry_assumption_fields_name_field_table_pointers(packaged):
+    """Catches a dominant assumption whose `fields` pattern matches no FIELDS pointer, so no input can retire it."""
+    pointers = {spec.pointer for spec in FIELDS}
+    patterns = {pattern for eq in packaged.equations.values() for a in eq.assumptions for pattern in a.fields}
+    assert patterns
+    assert {pattern_of(p) for p in patterns} <= pointers
 
 
 @pytest.mark.req("REQ-T-05")
