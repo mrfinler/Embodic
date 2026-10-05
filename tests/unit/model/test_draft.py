@@ -3,14 +3,13 @@
 import pytest
 
 from embodic.model.draft import DesignDraft, DraftIncomplete, blank_draft, draft_from_design, parse_draft
-from embodic.model.fields import field_specs
+from embodic.model.fields import field_for, field_specs
 from embodic.model.vocabulary import TopologyKind
 
 from .designs import EXAMPLES, spiral_design
 
 SPIRAL_BLANK_MISSING = (
     "/name",
-    "/phases",
     "/winding/coil/coil_count",
     "/winding/coil/r_inner_mm",
     "/winding/coil/r_outer_mm",
@@ -133,3 +132,25 @@ def test_choosing_no_bore_and_no_screws_is_a_value():
     outcome = parse_draft(DesignDraft(topology=TopologyKind.SPIRAL, values=values))
     assert not isinstance(outcome, DraftIncomplete)
     assert outcome.outline.bore is None
+
+
+@pytest.mark.req("REQ-F-36", "REQ-F-37")
+@pytest.mark.parametrize("topology", list(TopologyKind))
+def test_blank_draft_starts_with_three_phases_as_a_default(topology):
+    """R9. Defect caught: `/phases` still required, so a spiral form (no phase widget) could never be completed."""
+    draft = blank_draft(topology)
+    assert draft.values["/phases"] == 3
+    outcome = parse_draft(draft)
+    assert isinstance(outcome, DraftIncomplete)
+    assert "/phases" not in outcome.missing
+
+
+@pytest.mark.req("REQ-F-37", "REQ-N-24")
+@pytest.mark.parametrize("topology", list(TopologyKind))
+def test_every_required_pointer_of_a_blank_draft_has_a_widget(topology):
+    """Defect caught: a required field the form cannot fill (screen_model_diff.py list 3, R9)."""
+    draft = blank_draft(topology)
+    outcome = parse_draft(draft)
+    assert isinstance(outcome, DraftIncomplete)
+    orphans = [pointer for pointer in outcome.missing if field_for(pointer, draft.values).widget_id is None]
+    assert orphans == []

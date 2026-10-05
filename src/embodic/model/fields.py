@@ -67,7 +67,7 @@ class FieldSpec:
 
     pointer: str  # JSON pointer into the "design" object, list items as "/stackup/layers/*/thickness_mm"
     kind: FieldKind
-    unit: Unit | None  # None for enums, names, booleans and units missing from the Unit vocabulary
+    unit: Unit | None  # None for enums, names and booleans
     required: bool  # required fields start empty in a blank design
     topologies: frozenset[TopologyKind]
     neutral_value: JsonValue = None  # optional fields only; written into a blank design (ADR-0010 decision 2)
@@ -104,7 +104,7 @@ def _lim(sign: Sign = Sign.ANY, low: float | None = None, high: float | None = N
 _ROWS: Mapping[str, _Row] = types.MappingProxyType(
     {
         "/name": _Row(D, None, G.DESIGN, "param-design-name"),
-        "/phases": _Row(D, None, G.DESIGN, None),
+        "/phases": _Row(D, None, G.PHASES, "param-phase-count"),
         # Coil: spiral (spiral_generator_spec.md Inputs)
         "/winding/coil/coil_count": _Row(D, None, G.COIL, "param-coil-count", _lim(POS), 1),
         "/winding/coil/r_inner_mm": _Row(D, Unit.MM, G.COIL, "param-r-inner", _lim(POS), 0.5),
@@ -137,12 +137,12 @@ _ROWS: Mapping[str, _Row] = types.MappingProxyType(
         "/winding/corner_style": _Row(D, None, G.COIL, None),
         "/winding/fillet_radius_mm": _Row(D, Unit.MM, G.COIL, "param-corner-radius", _lim(NONNEG, 0, 100), 0.1),
         "/winding/fillet_max": _Row(D, None, G.COIL, "param-fillet-max"),
-        "/winding/terminal_side": _Row(D, None, G.COIL, None),
+        "/winding/terminal_side": _Row(D, None, G.PHASES, "param-terminal-location"),
         "/winding/start_angle_rad": _Row(
             D, Unit.RAD, G.COIL, "param-first-coil-angle", _lim(low=-TURN_RAD, high=TURN_RAD)
         ),
         "/winding/wave_style": _Row(D, None, G.COIL, "param-wave-style"),
-        "/winding/bus_width_mm": _Row(D, Unit.MM, G.COIL, None, _lim(POS, 0.1, 20), 0.1),
+        "/winding/bus_width_mm": _Row(D, Unit.MM, G.COIL, "param-bus-width", _lim(POS, 0.1, 20), 0.1),
         # Phases
         "/connection/topology": _Row(D, None, G.PHASES, "param-connection"),
         "/winding/phase_sequence": _Row(D, None, G.PHASES, "param-phase-sequence"),
@@ -164,12 +164,12 @@ _ROWS: Mapping[str, _Row] = types.MappingProxyType(
         "/winding/layers/series_groups": _Row(D, None, G.LAYERS, "layer-list"),
         "/vias/drill_mm": _Row(D, Unit.MM, G.LAYERS, "param-via-drill", _lim(POS, 0.1, 5), 0.05),
         "/vias/pad_mm": _Row(D, Unit.MM, G.LAYERS, "param-via-pad", _lim(POS, 0.2, 10), 0.05),
-        "/vias/plating_um": _Row(P, None, G.LAYERS, None, _lim(POS), 1),
+        "/vias/plating_um": _Row(P, Unit.UM, G.LAYERS, "param-via-plating", _lim(POS), 1),
         "/vias/vias_per_transition": _Row(D, None, G.LAYERS, "param-vias-per-transition", _lim(POS), 1),
         "/connection/draw_interconnect": _Row(D, None, G.PHASES, None),
-        "/connection/ring_width_mm": _Row(D, Unit.MM, G.PHASES, None, _lim(POS, 0.1, 20), 0.1),
-        "/connection/terminal_pad_mm": _Row(D, Unit.MM, G.PHASES, None, _lim(POS, 0.5, 20), 0.1),
-        "/connection/terminal_drill_mm": _Row(D, Unit.MM, G.PHASES, None, _lim(NONNEG, 0, 15), 0.1),
+        "/connection/ring_width_mm": _Row(D, Unit.MM, G.PHASES, "param-ring-width", _lim(POS, 0.1, 20), 0.1),
+        "/connection/terminal_pad_mm": _Row(D, Unit.MM, G.PHASES, "param-terminal-pad", _lim(POS, 0.5, 20), 0.1),
+        "/connection/terminal_drill_mm": _Row(D, Unit.MM, G.PHASES, "param-terminal-drill", _lim(NONNEG, 0, 15), 0.1),
         "/connection/neutral_pad": _Row(D, None, G.PHASES, None),
         # Board outline and bore (Xcoil outlineSides 4..16, rotation -360..360 deg, corner radius 0..500)
         "/outline/board/shape": _Row(D, None, G.OUTLINE, "param-outline-shape"),
@@ -192,12 +192,14 @@ _ROWS: Mapping[str, _Row] = types.MappingProxyType(
             D, Unit.RAD, G.OUTLINE, "param-bore", _lim(low=-TURN_RAD, high=TURN_RAD)
         ),
         # Fasteners (Xcoil screw count 1..64, angle -360..360 deg)
-        "/outline/screws": _Row(D, None, G.FASTENERS, None),
-        "/outline/screws/*/size": _Row(D, None, G.FASTENERS, None),
-        "/outline/screws/*/fit": _Row(D, None, G.FASTENERS, "param-screw-fit"),
-        "/outline/screws/*/count": _Row(D, None, G.FASTENERS, None, _lim(POS, 1, 64), 1),
-        "/outline/screws/*/pitch_radius_mm": _Row(D, Unit.MM, G.FASTENERS, None, _lim(POS), 0.5),
-        "/outline/screws/*/angle_offset_rad": _Row(D, Unit.RAD, G.FASTENERS, None, _lim(low=-TURN_RAD, high=TURN_RAD)),
+        "/outline/screws": _Row(D, None, G.FASTENERS, "screw-table"),
+        "/outline/screws/*/size": _Row(D, None, G.FASTENERS, "screw-table"),
+        "/outline/screws/*/fit": _Row(D, None, G.FASTENERS, "screw-table"),
+        "/outline/screws/*/count": _Row(D, None, G.FASTENERS, "screw-table", _lim(POS, 1, 64), 1),
+        "/outline/screws/*/pitch_radius_mm": _Row(D, Unit.MM, G.FASTENERS, "screw-table", _lim(POS), 0.5),
+        "/outline/screws/*/angle_offset_rad": _Row(
+            D, Unit.RAD, G.FASTENERS, "screw-table", _lim(low=-TURN_RAD, high=TURN_RAD)
+        ),
         # Stack-up (Xcoil copperOz 0.25..10 oz, here as finished thickness)
         "/stackup/layers": _Row(D, None, G.STACKUP, "layer-list"),
         "/stackup/layers/*/kind": _Row(D, None, G.STACKUP, "layer-list"),
@@ -212,20 +214,20 @@ _ROWS: Mapping[str, _Row] = types.MappingProxyType(
         "/rotor/poles": _Row(D, None, G.ROTOR, "param-poles", _lim(POS, 2, 200), 2),
         "/rotor/rotor_type": _Row(D, None, G.ROTOR, "param-rotor-kind"),
         "/rotor/magnet/kind": _Row(D, None, G.ROTOR, "param-magnet-shape"),
-        "/rotor/magnet/pole_arc_ratio#arc": _Row(D, None, G.ROTOR, None, _lim(POS, 0.05, 1), 0.01),
-        "/rotor/magnet/r_inner_mm#arc": _Row(D, Unit.MM, G.ROTOR, None, _lim(POS, 0.5, 2000), 0.5),
-        "/rotor/magnet/r_outer_mm#arc": _Row(D, Unit.MM, G.ROTOR, None, _lim(POS, 1, 2000), 0.5),
+        "/rotor/magnet/pole_arc_ratio#arc": _Row(D, None, G.ROTOR, "param-magnet-arc-ratio", _lim(POS, 0.05, 1), 0.01),
+        "/rotor/magnet/r_inner_mm#arc": _Row(D, Unit.MM, G.ROTOR, "param-magnet-r-inner", _lim(POS, 0.5, 2000), 0.5),
+        "/rotor/magnet/r_outer_mm#arc": _Row(D, Unit.MM, G.ROTOR, "param-magnet-r-outer", _lim(POS, 1, 2000), 0.5),
         "/rotor/magnet/thickness_mm#arc": _Row(D, Unit.MM, G.ROTOR, "param-magnet-thickness", _lim(POS, 0.1, 100), 0.1),
         "/rotor/magnet/thickness_mm#block": _Row(
             D, Unit.MM, G.ROTOR, "param-magnet-thickness", _lim(POS, 0.1, 100), 0.1
         ),
-        "/rotor/magnet/width_mm#block": _Row(D, Unit.MM, G.ROTOR, None, _lim(POS), 0.5),
-        "/rotor/magnet/length_mm#block": _Row(D, Unit.MM, G.ROTOR, None, _lim(POS), 0.5),
-        "/rotor/magnet/r_center_mm#block": _Row(D, Unit.MM, G.ROTOR, None, _lim(POS), 0.5),
+        "/rotor/magnet/width_mm#block": _Row(D, Unit.MM, G.ROTOR, "param-magnet-width", _lim(POS), 0.5),
+        "/rotor/magnet/length_mm#block": _Row(D, Unit.MM, G.ROTOR, "param-magnet-length", _lim(POS), 0.5),
+        "/rotor/magnet/r_center_mm#block": _Row(D, Unit.MM, G.ROTOR, "param-magnet-r-center", _lim(POS), 0.5),
         "/rotor/remanence_t": _Row(P, Unit.T, G.ROTOR, "param-magnet-br", _lim(POS, 0.1, 2), 0.01),
         "/rotor/recoil_permeability": _Row(P, Unit.ONE, G.ROTOR, "param-magnet-mur", _lim(POS, 1, 2), 0.01),
         "/rotor/air_gap_mm": _Row(D, Unit.MM, G.ROTOR, "param-air-gap", _lim(POS, 0.05, 50), 0.05),
-        "/rotor/back_iron_thickness_mm": _Row(D, Unit.MM, G.ROTOR, None, _lim(NONNEG), 0.5),
+        "/rotor/back_iron_thickness_mm": _Row(D, Unit.MM, G.ROTOR, "param-back-iron", _lim(NONNEG), 0.5),
         "/rotor/magnet_offset_rad": _Row(D, Unit.RAD, G.ROTOR, None),
         # Operating point, drive, cooling (Xcoil rpm 0..1e6, current 0..1e4, tempC -50..250, ambient -60..200,
         # hConv 1..5000, vDc 0..2000)
@@ -236,34 +238,34 @@ _ROWS: Mapping[str, _Row] = types.MappingProxyType(
         ),
         "/operating/dc_link_v": _Row(D, Unit.V, G.DRIVE, "param-dc-link", _lim(POS, 0, 2000), 1),
         "/operating/modulation": _Row(D, None, G.DRIVE, "param-modulation"),
-        "/operating/convection_h_w_m2k": _Row(P, None, G.COOLING, "param-h-conv", _lim(POS, 1, 5000), 1),
+        "/operating/convection_h_w_m2k": _Row(P, Unit.W_PER_M2_K, G.COOLING, "param-h-conv", _lim(POS, 1, 5000), 1),
         "/operating/ambient_temperature_degc": _Row(
             D, Unit.DEGC, G.COOLING, "param-ambient", _lim(low=-60, high=200), 1
         ),
         # Material overrides (registry constants apply while a group is None)
         "/materials/copper_resistivity_20c_ohm_m": _Row(P, None, G.MATERIALS, None),
-        "/materials/copper_resistivity_20c_ohm_m/value": _Row(P, None, G.MATERIALS, None, _lim(POS)),
+        "/materials/copper_resistivity_20c_ohm_m/value": _Row(P, Unit.OHM_M, G.MATERIALS, None, _lim(POS)),
         "/materials/copper_resistivity_20c_ohm_m/unit": _Row(P, None, G.MATERIALS, None),
         "/materials/copper_temp_coeff_per_k": _Row(P, None, G.MATERIALS, None),
-        "/materials/copper_temp_coeff_per_k/value": _Row(P, None, G.MATERIALS, None, _lim(POS)),
+        "/materials/copper_temp_coeff_per_k/value": _Row(P, Unit.PER_K, G.MATERIALS, None, _lim(POS)),
         "/materials/copper_temp_coeff_per_k/unit": _Row(P, None, G.MATERIALS, None),
         "/materials/copper_density_g_per_cm3": _Row(P, None, G.MATERIALS, None),
-        "/materials/copper_density_g_per_cm3/value": _Row(P, None, G.MATERIALS, None, _lim(POS)),
+        "/materials/copper_density_g_per_cm3/value": _Row(P, Unit.G_PER_CM3, G.MATERIALS, None, _lim(POS)),
         "/materials/copper_density_g_per_cm3/unit": _Row(P, None, G.MATERIALS, None),
         "/materials/laminate_density_g_per_cm3": _Row(P, None, G.MATERIALS, None),
-        "/materials/laminate_density_g_per_cm3/value": _Row(P, None, G.MATERIALS, None, _lim(POS)),
+        "/materials/laminate_density_g_per_cm3/value": _Row(P, Unit.G_PER_CM3, G.MATERIALS, None, _lim(POS)),
         "/materials/laminate_density_g_per_cm3/unit": _Row(P, None, G.MATERIALS, None),
         # Analysis
         "/analysis/harmonics": _Row(D, None, G.ANALYSIS, None),
         "/analysis/max_segment_mm": _Row(D, Unit.MM, G.ANALYSIS, None, _lim(POS), 0.1),
         # Manufacturing rules (DrcRules, U-M1c)
         "/drc_rules/trace_clearance_mm": _Row(D, Unit.MM, G.MANUFACTURING, "param-min-space", _lim(POS), 0.01),
-        "/drc_rules/via_clearance_mm": _Row(D, Unit.MM, G.MANUFACTURING, None, _lim(POS), 0.01),
-        "/drc_rules/edge_clearance_mm": _Row(D, Unit.MM, G.MANUFACTURING, None, _lim(POS), 0.01),
-        "/drc_rules/hole_clearance_mm": _Row(D, Unit.MM, G.MANUFACTURING, None, _lim(POS), 0.01),
+        "/drc_rules/via_clearance_mm": _Row(D, Unit.MM, G.MANUFACTURING, "param-min-via-space", _lim(POS), 0.01),
+        "/drc_rules/edge_clearance_mm": _Row(D, Unit.MM, G.MANUFACTURING, "param-min-edge", _lim(POS), 0.01),
+        "/drc_rules/hole_clearance_mm": _Row(D, Unit.MM, G.MANUFACTURING, "param-min-hole-space", _lim(POS), 0.01),
         "/drc_rules/min_trace_width_mm": _Row(D, Unit.MM, G.MANUFACTURING, "param-min-trace", _lim(POS), 0.01),
         "/drc_rules/min_drill_mm": _Row(D, Unit.MM, G.MANUFACTURING, "param-min-via", _lim(POS), 0.01),
-        "/drc_rules/min_annular_ring_mm": _Row(D, Unit.MM, G.MANUFACTURING, None, _lim(POS), 0.01),
+        "/drc_rules/min_annular_ring_mm": _Row(D, Unit.MM, G.MANUFACTURING, "param-min-ring", _lim(POS), 0.01),
     }
 )
 

@@ -24,7 +24,7 @@ class DesignParameters:
 
     schema_version: Literal[1] = 1
     name: str
-    phases: PhaseCount
+    phases: PhaseCount = 3  # neutral value (R9): spiral needs 3 and hides the widget
     rotor: RotorSpec
     winding: WindingSpec
     stackup: Stackup
