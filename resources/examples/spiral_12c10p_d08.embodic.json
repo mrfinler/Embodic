@@ -1,0 +1,506 @@
+{
+ "app_version": "0.0.1",
+ "design": {
+  "analysis": {
+   "edge_correction": "off",
+   "harmonics": [
+    1,
+    3,
+    5,
+    7,
+    9,
+    11,
+    13
+   ],
+   "max_segment_mm": 0.25
+  },
+  "connection": {
+   "draw_interconnect": true,
+   "neutral_pad": false,
+   "ring_width_mm": 1.0,
+   "terminal_drill_mm": 1.2,
+   "terminal_pad_mm": 2.4,
+   "topology": "star"
+  },
+  "drc_rules": {
+   "edge_clearance_mm": 0.3,
+   "hole_clearance_mm": 0.3,
+   "min_annular_ring_mm": 0.1,
+   "min_drill_mm": 0.3,
+   "min_trace_width_mm": 0.15,
+   "trace_clearance_mm": 0.8,
+   "via_clearance_mm": 0.8
+  },
+  "materials": {
+   "copper_density_g_per_cm3": null,
+   "copper_resistivity_20c_ohm_m": null,
+   "copper_temp_coeff_per_k": null,
+   "laminate_density_g_per_cm3": null
+  },
+  "name": "Example: UGent D08 12-coil 10-pole spiral",
+  "operating": {
+   "ambient_temperature_degc": 20.0,
+   "convection_h_w_m2k": 10.0,
+   "dc_link_v": null,
+   "line_current_rms_a": 1.0,
+   "modulation": "svpwm",
+   "speed_rpm": 1000.0,
+   "winding_temperature_degc": 60.0
+  },
+  "outline": {
+   "board": {
+    "radius_mm": 66.0,
+    "shape": "circle"
+   },
+   "bore": {
+    "radius_mm": 10.0,
+    "shape": "circle"
+   },
+   "screws": []
+  },
+  "phases": 3,
+  "rotor": {
+   "air_gap_mm": 1.0999999999999999,
+   "back_iron_thickness_mm": 3.0,
+   "magnet": {
+    "kind": "arc",
+    "pole_arc_ratio": 0.72,
+    "r_inner_mm": 15.4,
+    "r_outer_mm": 43.4,
+    "thickness_mm": 5.0
+   },
+   "magnet_offset_deg": 0.0,
+   "poles": 10,
+   "recoil_permeability": 1.05,
+   "remanence_t": 1.38,
+   "rotor_type": "double"
+  },
+  "stackup": {
+   "layers": [
+    {
+     "kind": "copper",
+     "name": "L1",
+     "thickness_mm": 0.0348
+    },
+    {
+     "kind": "dielectric",
+     "material": "FR-4",
+     "name": "D1",
+     "thickness_mm": 0.5304
+    },
+    {
+     "kind": "copper",
+     "name": "L2",
+     "thickness_mm": 0.0348
+    }
+   ]
+  },
+  "vias": {
+   "drill_mm": 0.3,
+   "pad_mm": 0.6,
+   "plating_um": 25.0,
+   "vias_per_transition": 1
+  },
+  "winding": {
+   "assignment": null,
+   "coil": {
+    "clearance_mm": 0.8,
+    "coil_count": 12,
+    "coil_gap_mm": 0.8,
+    "corner_radius_mm": 0.0,
+    "end_style": "arc",
+    "end_width_inner_mm": null,
+    "end_width_outer_mm": null,
+    "first_coil_angle_deg": 90.0,
+    "inner_turn_mode": "moving",
+    "lead_style": "radial_then_arc",
+    "min_side_length_mm": null,
+    "r_inner_mm": 11.47,
+    "r_outer_mm": 45.03,
+    "side_style": "parallel",
+    "terminal_offset_mm": null,
+    "trace_width_mm": 2.06,
+    "turns": 3,
+    "x_inward_sense": "cw"
+   },
+   "kind": "spiral",
+   "layers": {
+    "pairs": [
+     {
+      "index": 0,
+      "layer_in": "L1",
+      "layer_out": "L2",
+      "phases": null,
+      "rotation_deg": 0.0
+     }
+    ],
+    "series_groups": [
+     [
+      0
+     ]
+    ]
+   },
+   "parallel_paths": 1,
+   "phase_sequence": "abc"
+  }
+ },
+ "design_hash": "sha256:b6a6a48d3a06eb023757245d55dcea7a21fe14f5bc41905d29f693eb455a2076",
+ "example": {
+  "source_note": "D08 thesis configuration (oracle O1-D08, OR-01); the 66 mm circle board and 10 mm bore are an assumption",
+  "title": "Example: UGent D08 12-coil 10-pole spiral"
+ },
+ "format": "embodic-project",
+ "origin_example": {
+  "example_id": "spiral_12c10p_d08",
+  "example_sha256": "sha256:b6a6a48d3a06eb023757245d55dcea7a21fe14f5bc41905d29f693eb455a2076"
+ },
+ "provenance": {
+  "/analysis/harmonics": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/analysis/max_segment_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/connection/draw_interconnect": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/connection/neutral_pad": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/connection/ring_width_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/connection/terminal_drill_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/connection/terminal_pad_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/connection/topology": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/drc_rules/edge_clearance_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/drc_rules/hole_clearance_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/drc_rules/min_annular_ring_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/drc_rules/min_drill_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/drc_rules/min_trace_width_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/drc_rules/trace_clearance_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/drc_rules/via_clearance_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/materials/copper_density_g_per_cm3": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/materials/copper_resistivity_20c_ohm_m": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/materials/copper_temp_coeff_per_k": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/materials/laminate_density_g_per_cm3": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/name": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/operating/ambient_temperature_degc": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/operating/convection_h_w_m2k": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/operating/dc_link_v": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/operating/line_current_rms_a": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/operating/modulation": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/operating/speed_rpm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/operating/winding_temperature_degc": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/outline/board/radius_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/outline/board/shape": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/outline/bore/radius_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/outline/bore/shape": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/outline/screws": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/phases": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/rotor/air_gap_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/rotor/back_iron_thickness_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/rotor/magnet/kind": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/rotor/magnet/pole_arc_ratio": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/rotor/magnet/r_inner_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/rotor/magnet/r_outer_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/rotor/magnet/thickness_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/rotor/magnet_offset_deg": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/rotor/poles": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/rotor/recoil_permeability": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/rotor/remanence_t": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/rotor/rotor_type": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/stackup/layers/0/kind": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/stackup/layers/0/name": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/stackup/layers/0/thickness_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/stackup/layers/1/kind": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/stackup/layers/1/material": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/stackup/layers/1/name": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/stackup/layers/1/thickness_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/stackup/layers/2/kind": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/stackup/layers/2/name": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/stackup/layers/2/thickness_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/vias/drill_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/vias/pad_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/vias/plating_um": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/vias/vias_per_transition": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/assignment": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/coil/clearance_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/coil/coil_count": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/coil/coil_gap_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/coil/corner_radius_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/coil/end_style": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/coil/end_width_inner_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/coil/end_width_outer_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/coil/first_coil_angle_deg": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/coil/inner_turn_mode": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/coil/lead_style": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/coil/min_side_length_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/coil/r_inner_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/coil/r_outer_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/coil/side_style": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/coil/terminal_offset_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/coil/trace_width_mm": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/coil/turns": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/coil/x_inward_sense": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/layers/pairs/0/index": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/layers/pairs/0/layer_in": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/layers/pairs/0/layer_out": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/layers/pairs/0/phases": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/layers/pairs/0/rotation_deg": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/layers/series_groups": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/parallel_paths": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  },
+  "/winding/phase_sequence": {
+   "example_id": "spiral_12c10p_d08",
+   "provenance": "example"
+  }
+ },
+ "saved_utc": "2026-10-08T00:00:00Z",
+ "schema_version": 1,
+ "ui": {}
+}
