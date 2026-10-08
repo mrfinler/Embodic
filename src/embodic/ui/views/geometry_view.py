@@ -38,6 +38,7 @@ from PySide6.QtWidgets import (
 
 from embodic.geometry.labels import Box, PlacedLabel, Viewport
 from embodic.geometry.layout import Layout
+from embodic.geometry.marks import CoilMark
 from embodic.geometry.primitives import Line, Primitive
 from embodic.model.vocabulary import Phase
 from embodic.ui.strings import text
@@ -45,7 +46,6 @@ from embodic.ui.theme import PhaseStyle, ThemeTokens
 from embodic.ui.viewmodels.appearance import PhaseRenderMode
 from embodic.ui.viewmodels.outcome import (
     BoardMarks,
-    CoilMark,
     GeometryScene,
     eyes_shown,
     phases_drawn,

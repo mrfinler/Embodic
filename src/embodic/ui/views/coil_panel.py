@@ -448,13 +448,8 @@ def _column_widths(table: QTableWidget) -> dict[int, int]:
     header, cells = table.horizontalHeader(), table.fontMetrics()
     shown = [c for c in range(table.columnCount()) if not table.isColumnHidden(c)]
     floor = {c: header.sectionSizeHint(c) for c in shown}  # the styled header, wrapped at its line breaks
-    wanted = {
-        c: max(
-            [floor[c]]
-            + [cells.horizontalAdvance(table.item(r, c).text()) + CELL_PAD_PX for r in range(table.rowCount())]
-        )
-        for c in shown
-    }
+    texts = {c: [item.text() for r in range(table.rowCount()) if (item := table.item(r, c))] for c in shown}
+    wanted = {c: max([floor[c]] + [cells.horizontalAdvance(t) + CELL_PAD_PX for t in texts[c]]) for c in shown}
     room = table.viewport().width() - 2 * table.frameWidth()
     slack = sum(wanted.values()) - room
     spare = sum(wanted[c] - floor[c] for c in shown)
