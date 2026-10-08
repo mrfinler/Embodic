@@ -1,0 +1,1019 @@
+{
+  "calls": [
+    {
+      "inputs": {"count": 200, "seed": 2305},
+      "output": {
+        "items": [
+          {
+            "output": 20.759952668233147,
+            "params": {"boardGap": 0.1, "clearance": 0.288, "connection": "open", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.085, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 3, "poles": 10, "rIn": 34.082, "rOut": 55.571, "stackMode": "single", "startAngleDeg": -30.844, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.283, "turns": 2},
+            "rho0": 0
+          },
+          {
+            "output": 22.976332318663033,
+            "params": {"boardGap": 0.5, "clearance": 0.164, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.366, "filletMax": true, "filletRadius": 1.398, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 1, "poles": 12, "rIn": 35.991, "rOut": 61.87, "stackMode": "single", "startAngleDeg": 113.941, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.326, "turns": 1},
+            "rho0": 1.4567232685512863
+          },
+          {
+            "output": 18.826,
+            "params": {"boardGap": 0.1, "clearance": 0.295, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0.624, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.154, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "series", "phases": 1, "poles": 12, "rIn": 16.438, "rOut": 34.737, "stackMode": "perPhase", "startAngleDeg": 166.3, "strands": 2, "style": "radial", "terminalSide": "inner", "traceWidth": 0.422, "turns": 2},
+            "rho0": 0
+          },
+          {
+            "output": 10.940094946855297,
+            "params": {"boardGap": 0.1, "clearance": 0.263, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.36, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 1, "pairConnection": "series", "phases": 3, "poles": 16, "rIn": 25.36, "rOut": 35.873, "stackMode": "perPhase", "startAngleDeg": 111.679, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.308, "turns": 3},
+            "rho0": 0.9508281342335977
+          },
+          {
+            "output": 12.748702697087964,
+            "params": {"boardGap": 0.1, "clearance": 0.195, "connection": "star", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.584, "interconnect": false, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 3, "poles": 12, "rIn": 35.863, "rOut": 49.869, "stackMode": "perPhase", "startAngleDeg": -167.013, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.314, "turns": 1},
+            "rho0": 0.6016238301643171
+          },
+          {
+            "output": 28.449000000000005,
+            "params": {"boardGap": 0.5, "clearance": 0.211, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.852, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 3, "poles": 16, "rIn": 29.738, "rOut": 56.811, "stackMode": "perPhase", "startAngleDeg": -91.134, "strands": 2, "style": "radial", "terminalSide": "outer", "traceWidth": 0.298, "turns": 3},
+            "rho0": 0.9695371800800786
+          },
+          {
+            "output": 16.187499999999996,
+            "params": {"boardGap": 0.1, "clearance": 0.286, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.545, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 2, "poles": 12, "rIn": 20.711, "rOut": 36.275, "stackMode": "single", "startAngleDeg": -117.501, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.425, "turns": 3},
+            "rho0": 0
+          },
+          {
+            "output": 31.580000000000002,
+            "params": {"boardGap": 0.1, "clearance": 0.189, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.33, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 2, "poles": 8, "rIn": 29.985, "rOut": 59.576, "stackMode": "single", "startAngleDeg": 16.474, "strands": 2, "style": "radial", "terminalSide": "outer", "traceWidth": 0.492, "turns": 3},
+            "rho0": 1.579245236713905
+          },
+          {
+            "output": 13.367,
+            "params": {"boardGap": 0.5, "clearance": 0.267, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.827, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "series", "phases": 1, "poles": 12, "rIn": 21.011, "rOut": 35.147, "stackMode": "single", "startAngleDeg": 15.195, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.404, "turns": 1},
+            "rho0": 0
+          },
+          {
+            "output": 9.087161534073331,
+            "params": {"boardGap": 0.1, "clearance": 0.24, "connection": "open", "cornerStyle": "round", "endWidthInner": 0.259, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.678, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 1, "poles": 12, "rIn": 20.692, "rOut": 31.62, "stackMode": "single", "startAngleDeg": 83.982, "strands": 2, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.228, "turns": 1},
+            "rho0": 0.9250211110687815
+          },
+          {
+            "output": 25.885134013157106,
+            "params": {"boardGap": 0.5, "clearance": 0.228, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.447, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 1, "poles": 8, "rIn": 25.743, "rOut": 54.507, "stackMode": "single", "startAngleDeg": 73.441, "strands": 2, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.391, "turns": 4},
+            "rho0": 1.4779893205151893
+          },
+          {
+            "output": 15.450135852441345,
+            "params": {"boardGap": 0.1, "clearance": 0.228, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.025, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 1, "pairConnection": "series", "phases": 3, "poles": 10, "rIn": 30.421, "rOut": 45.621, "stackMode": "single", "startAngleDeg": -33.775, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.214, "turns": 3},
+            "rho0": 0
+          },
+          {
+            "output": 11.735956793155514,
+            "params": {"boardGap": 0.5, "clearance": 0.295, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0.65, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.907, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "series", "phases": 2, "poles": 10, "rIn": 15.782, "rOut": 26.37, "stackMode": "single", "startAngleDeg": -26.965, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.306, "turns": 3},
+            "rho0": 1.5879029630334116
+          },
+          {
+            "output": 23.892118537332358,
+            "params": {"boardGap": 0.5, "clearance": 0.218, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.662, "filletMax": false, "filletRadius": 1.107, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 8, "rIn": 19.81, "rOut": 47.531, "stackMode": "single", "startAngleDeg": 93.072, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.493, "turns": 4},
+            "rho0": 1.970149918203242
+          },
+          {
+            "output": 15.026631855472665,
+            "params": {"boardGap": 0.5, "clearance": 0.213, "connection": "star", "cornerStyle": "round", "endWidthInner": 0.446, "endWidthOuter": 0.429, "filletMax": false, "filletRadius": 0.3, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 1, "poles": 16, "rIn": 35.294, "rOut": 51.092, "stackMode": "perPhase", "startAngleDeg": -82.091, "strands": 2, "style": "radial", "terminalSide": "outer", "traceWidth": 0.497, "turns": 1},
+            "rho0": 0
+          },
+          {
+            "output": 26.065456953266875,
+            "params": {"boardGap": 0.1, "clearance": 0.233, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0.682, "endWidthOuter": 0.207, "filletMax": false, "filletRadius": 0.423, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 3, "poles": 10, "rIn": 20.67, "rOut": 48.005, "stackMode": "single", "startAngleDeg": -107.647, "strands": 2, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.342, "turns": 2},
+            "rho0": 0
+          },
+          {
+            "output": 20.88319821129726,
+            "params": {"boardGap": 0.5, "clearance": 0.267, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": true, "filletRadius": 0.242, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 3, "poles": 12, "rIn": 19.991, "rOut": 40.433, "stackMode": "single", "startAngleDeg": 89.161, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.313, "turns": 3},
+            "rho0": 0.5195940165780485
+          },
+          {
+            "output": 12.591398744529098,
+            "params": {"boardGap": 0.5, "clearance": 0.291, "connection": "open", "cornerStyle": "round", "endWidthInner": 0.622, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.137, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 1, "poles": 12, "rIn": 15.382, "rOut": 31.734, "stackMode": "single", "startAngleDeg": 29.699, "strands": 2, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.262, "turns": 1},
+            "rho0": 1.909559075452853
+          },
+          {
+            "output": 17.069476786531233,
+            "params": {"boardGap": 0.1, "clearance": 0.231, "connection": "star", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.056, "interconnect": false, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 12, "rIn": 34.712, "rOut": 52.519, "stackMode": "single", "startAngleDeg": 174.301, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.414, "turns": 2},
+            "rho0": 0
+          },
+          {
+            "output": 19.881999999999998,
+            "params": {"boardGap": 0.5, "clearance": 0.164, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0.557, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.131, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "parallel", "phases": 1, "poles": 10, "rIn": 16.871, "rOut": 36.739, "stackMode": "perPhase", "startAngleDeg": -106.562, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.486, "turns": 2},
+            "rho0": 1.031956214189995
+          },
+          {
+            "output": 20.912669421593225,
+            "params": {"boardGap": 0.5, "clearance": 0.21, "connection": "star", "cornerStyle": "round", "endWidthInner": 0.584, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.378, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 10, "rIn": 20.227, "rOut": 41.926, "stackMode": "perPhase", "startAngleDeg": 2.35, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.352, "turns": 4},
+            "rho0": 0.3693911672220565
+          },
+          {
+            "output": 22.506414282783034,
+            "params": {"boardGap": 0.1, "clearance": 0.211, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0.404, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.486, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "series", "phases": 3, "poles": 8, "rIn": 34.254, "rOut": 57.473, "stackMode": "single", "startAngleDeg": -87.705, "strands": 2, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.333, "turns": 1},
+            "rho0": 1.3413993917871267
+          },
+          {
+            "output": 24.665300646228335,
+            "params": {"boardGap": 0.5, "clearance": 0.213, "connection": "star", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.447, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 2, "poles": 12, "rIn": 16.258, "rOut": 41.783, "stackMode": "single", "startAngleDeg": 99.324, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.367, "turns": 1},
+            "rho0": 0.16288063528481872
+          },
+          {
+            "output": 16.547233291038214,
+            "params": {"boardGap": 0.1, "clearance": 0.282, "connection": "open", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.08, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 12, "rIn": 14.871, "rOut": 35.428, "stackMode": "perPhase", "startAngleDeg": 63.124, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.332, "turns": 4},
+            "rho0": 1.9538433533045463
+          },
+          {
+            "output": 24.802599630027487,
+            "params": {"boardGap": 0.5, "clearance": 0.164, "connection": "open", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.5, "filletMax": false, "filletRadius": 1.038, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 16, "rIn": 25.372, "rOut": 50.71, "stackMode": "single", "startAngleDeg": -92.375, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.379, "turns": 2},
+            "rho0": 0
+          },
+          {
+            "output": 27.76852999195264,
+            "params": {"boardGap": 0.1, "clearance": 0.195, "connection": "open", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.421, "filletMax": false, "filletRadius": 0.647, "interconnect": false, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 12, "rIn": 27.364, "rOut": 56.531, "stackMode": "perPhase", "startAngleDeg": 157.754, "strands": 2, "style": "radial", "terminalSide": "inner", "traceWidth": 0.419, "turns": 4},
+            "rho0": 0.5020323018077761
+          },
+          {
+            "output": 21.238866872347266,
+            "params": {"boardGap": 0.5, "clearance": 0.268, "connection": "open", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.434, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "parallel", "phases": 3, "poles": 12, "rIn": 32.912, "rOut": 56.482, "stackMode": "single", "startAngleDeg": 21.591, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.32, "turns": 1},
+            "rho0": 1.1694192878319882
+          },
+          {
+            "output": 18.072999999999997,
+            "params": {"boardGap": 0.5, "clearance": 0.253, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.128, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 3, "poles": 10, "rIn": 20.085, "rOut": 38.341, "stackMode": "single", "startAngleDeg": -171.46, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.234, "turns": 2},
+            "rho0": 0.14043402889510617
+          },
+          {
+            "output": 27.333228241441937,
+            "params": {"boardGap": 0.1, "clearance": 0.189, "connection": "star", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.778, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "series", "phases": 3, "poles": 10, "rIn": 24.763, "rOut": 53.158, "stackMode": "single", "startAngleDeg": 21.575, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.291, "turns": 4},
+            "rho0": 0.39534106677165254
+          },
+          {
+            "output": 11.011741480930617,
+            "params": {"boardGap": 0.5, "clearance": 0.258, "connection": "open", "cornerStyle": "round", "endWidthInner": 0.229, "endWidthOuter": 0.573, "filletMax": false, "filletRadius": 1.219, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 1, "pairConnection": "parallel", "phases": 3, "poles": 12, "rIn": 35.182, "rOut": 47.714, "stackMode": "perPhase", "startAngleDeg": 56.975, "strands": 2, "style": "radial", "terminalSide": "outer", "traceWidth": 0.497, "turns": 1},
+            "rho0": 0.4272427008487284
+          },
+          {
+            "output": 10.89132867954693,
+            "params": {"boardGap": 0.5, "clearance": 0.172, "connection": "star", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.755, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 10, "rIn": 17.378, "rOut": 29.504, "stackMode": "single", "startAngleDeg": -113.539, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.338, "turns": 3},
+            "rho0": 0.5510174230206758
+          },
+          {
+            "output": 24.961034229683378,
+            "params": {"boardGap": 0.1, "clearance": 0.186, "connection": "star", "cornerStyle": "round", "endWidthInner": 0.475, "endWidthOuter": 0.484, "filletMax": true, "filletRadius": 0.657, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 2, "poles": 8, "rIn": 21.879, "rOut": 50.389, "stackMode": "perPhase", "startAngleDeg": -146.479, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.27, "turns": 1},
+            "rho0": 1.7919203117722646
+          },
+          {
+            "output": 13.173384856806408,
+            "params": {"boardGap": 0.5, "clearance": 0.159, "connection": "star", "cornerStyle": "round", "endWidthInner": 0.208, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.182, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 12, "rIn": 22.844, "rOut": 38.285, "stackMode": "single", "startAngleDeg": 89.275, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.29, "turns": 2},
+            "rho0": 1.1016785242711193
+          },
+          {
+            "output": 11.133033288086647,
+            "params": {"boardGap": 0.1, "clearance": 0.245, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0.63, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.396, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 8, "rIn": 23.048, "rOut": 34.49, "stackMode": "perPhase", "startAngleDeg": -179.006, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.475, "turns": 4},
+            "rho0": 0
+          },
+          {
+            "output": 15.599434630687355,
+            "params": {"boardGap": 0.5, "clearance": 0.229, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0.466, "endWidthOuter": 0.537, "filletMax": false, "filletRadius": 0.285, "interconnect": false, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 8, "rIn": 16.981, "rOut": 34.019, "stackMode": "single", "startAngleDeg": 95.062, "strands": 2, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.283, "turns": 2},
+            "rho0": 1.0153647251077926
+          },
+          {
+            "output": 15.720895686410675,
+            "params": {"boardGap": 0.1, "clearance": 0.173, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.256, "filletMax": false, "filletRadius": 1.174, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 16, "rIn": 26.055, "rOut": 43.602, "stackMode": "single", "startAngleDeg": -108.984, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.392, "turns": 1},
+            "rho0": 0.9159166202298366
+          },
+          {
+            "output": 17.39046044049951,
+            "params": {"boardGap": 0.5, "clearance": 0.288, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.148, "interconnect": false, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 10, "rIn": 18.683, "rOut": 37.225, "stackMode": "perPhase", "startAngleDeg": -150.09, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.419, "turns": 1},
+            "rho0": 0.35235595963895316
+          },
+          {
+            "output": 14.481776470291443,
+            "params": {"boardGap": 0.5, "clearance": 0.209, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.435, "filletMax": false, "filletRadius": 1.409, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 3, "poles": 10, "rIn": 21.929, "rOut": 37.899, "stackMode": "perPhase", "startAngleDeg": 103.892, "strands": 2, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.422, "turns": 1},
+            "rho0": 0.7489832178107463
+          },
+          {
+            "output": 18.043475465475282,
+            "params": {"boardGap": 0.1, "clearance": 0.208, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.697, "interconnect": false, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 10, "rIn": 33.441, "rOut": 53.847, "stackMode": "perPhase", "startAngleDeg": -102.309, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.24, "turns": 4},
+            "rho0": 1.1809284062241203
+          },
+          {
+            "output": 10.367052128147918,
+            "params": {"boardGap": 0.1, "clearance": 0.214, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.487, "filletMax": false, "filletRadius": 0.831, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "series", "phases": 3, "poles": 8, "rIn": 30.092, "rOut": 42.38, "stackMode": "single", "startAngleDeg": 117.217, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.261, "turns": 2},
+            "rho0": 0.9716248664306477
+          },
+          {
+            "output": 24.86571649308148,
+            "params": {"boardGap": 0.1, "clearance": 0.297, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0.552, "endWidthOuter": 0.585, "filletMax": true, "filletRadius": 0.591, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 3, "poles": 10, "rIn": 15.862, "rOut": 41.549, "stackMode": "perPhase", "startAngleDeg": 99.642, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.459, "turns": 4},
+            "rho0": 0.25014019982190805
+          },
+          {
+            "output": 18.587090462313203,
+            "params": {"boardGap": 0.1, "clearance": 0.19, "connection": "open", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.553, "filletMax": false, "filletRadius": 0.322, "interconnect": false, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 1, "poles": 8, "rIn": 26.434, "rOut": 48.882, "stackMode": "single", "startAngleDeg": -74.095, "strands": 2, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.308, "turns": 1},
+            "rho0": 1.9473010730114766
+          },
+          {
+            "output": 23.032000000000004,
+            "params": {"boardGap": 0.1, "clearance": 0.186, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.14, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "series", "phases": 2, "poles": 12, "rIn": 19.017, "rOut": 39.164, "stackMode": "single", "startAngleDeg": -121.718, "strands": 2, "style": "radial", "terminalSide": "inner", "traceWidth": 0.41, "turns": 4},
+            "rho0": 0.7811710686655715
+          },
+          {
+            "output": 27.462000000000003,
+            "params": {"boardGap": 0.5, "clearance": 0.193, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.473, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 1, "pairConnection": "parallel", "phases": 1, "poles": 8, "rIn": 21.953, "rOut": 47.883, "stackMode": "single", "startAngleDeg": -106.995, "strands": 2, "style": "radial", "terminalSide": "inner", "traceWidth": 0.358, "turns": 3},
+            "rho0": 1.5888486612122505
+          },
+          {
+            "output": 17.979915632476732,
+            "params": {"boardGap": 0.1, "clearance": 0.25, "connection": "open", "cornerStyle": "round", "endWidthInner": 0.536, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.625, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 16, "rIn": 35.182, "rOut": 55.606, "stackMode": "single", "startAngleDeg": -68.441, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.313, "turns": 1},
+            "rho0": 1.2254524046904407
+          },
+          {
+            "output": 21.701,
+            "params": {"boardGap": 0.1, "clearance": 0.263, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.688, "filletMax": false, "filletRadius": 0.834, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 12, "rIn": 26.715, "rOut": 47.256, "stackMode": "single", "startAngleDeg": 115.218, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.317, "turns": 3},
+            "rho0": 1.1316293212701567
+          },
+          {
+            "output": 18.493399200907522,
+            "params": {"boardGap": 0.1, "clearance": 0.213, "connection": "open", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.035, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 8, "rIn": 22.134, "rOut": 41.273, "stackMode": "single", "startAngleDeg": -158.655, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.27, "turns": 3},
+            "rho0": 0
+          },
+          {
+            "output": 9.990306988735764,
+            "params": {"boardGap": 0.5, "clearance": 0.249, "connection": "open", "cornerStyle": "round", "endWidthInner": 0.648, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.954, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 1, "poles": 12, "rIn": 29.98, "rOut": 42.502, "stackMode": "single", "startAngleDeg": -21.076, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.302, "turns": 3},
+            "rho0": 1.244857279851567
+          },
+          {
+            "output": 27.79349221721145,
+            "params": {"boardGap": 0.1, "clearance": 0.242, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0.3, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.288, "interconnect": false, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "parallel", "phases": 3, "poles": 10, "rIn": 34.671, "rOut": 61.576, "stackMode": "single", "startAngleDeg": -173.721, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.404, "turns": 4},
+            "rho0": 1.8371492390171624
+          },
+          {
+            "output": 14.632333601722355,
+            "params": {"boardGap": 0.5, "clearance": 0.157, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.378, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 3, "poles": 16, "rIn": 24.448, "rOut": 42.323, "stackMode": "single", "startAngleDeg": 36.898, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.413, "turns": 3},
+            "rho0": 1.6381627860246226
+          },
+          {
+            "output": 9.509,
+            "params": {"boardGap": 0.5, "clearance": 0.292, "connection": "star", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.421, "interconnect": false, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "parallel", "phases": 3, "poles": 8, "rIn": 27.209, "rOut": 37.484, "stackMode": "perPhase", "startAngleDeg": -68.302, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.348, "turns": 1},
+            "rho0": 0
+          },
+          {
+            "output": 13.025710662209406,
+            "params": {"boardGap": 0.5, "clearance": 0.162, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.256, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "series", "phases": 1, "poles": 8, "rIn": 32.37, "rOut": 46.547, "stackMode": "single", "startAngleDeg": -127.044, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.415, "turns": 2},
+            "rho0": 0.4994195529608987
+          },
+          {
+            "output": 15.476499999999998,
+            "params": {"boardGap": 0.1, "clearance": 0.193, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.808, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 1, "pairConnection": "series", "phases": 3, "poles": 12, "rIn": 27.562, "rOut": 43.632, "stackMode": "single", "startAngleDeg": -166.489, "strands": 2, "style": "radial", "terminalSide": "outer", "traceWidth": 0.201, "turns": 1},
+            "rho0": 0.6114766926621087
+          },
+          {
+            "output": 22.672964362909166,
+            "params": {"boardGap": 0.1, "clearance": 0.224, "connection": "star", "cornerStyle": "round", "endWidthInner": 0.616, "endWidthOuter": 0.688, "filletMax": false, "filletRadius": 0.468, "interconnect": false, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 3, "poles": 12, "rIn": 27.756, "rOut": 53.817, "stackMode": "single", "startAngleDeg": 159.486, "strands": 2, "style": "radial", "terminalSide": "outer", "traceWidth": 0.392, "turns": 1},
+            "rho0": 1.8411858097068035
+          },
+          {
+            "output": 12.863499999999998,
+            "params": {"boardGap": 0.5, "clearance": 0.153, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.369, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "series", "phases": 1, "poles": 16, "rIn": 19.632, "rOut": 32.556, "stackMode": "perPhase", "startAngleDeg": -70.044, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.479, "turns": 2},
+            "rho0": 1.0153375202440655
+          },
+          {
+            "output": 19.317,
+            "params": {"boardGap": 0.1, "clearance": 0.274, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": true, "filletRadius": 1.143, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 8, "rIn": 27.277, "rOut": 45.301, "stackMode": "single", "startAngleDeg": 123.304, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.418, "turns": 4},
+            "rho0": 0.3846902663703076
+          },
+          {
+            "output": 16.812,
+            "params": {"boardGap": 0.5, "clearance": 0.291, "connection": "star", "cornerStyle": "round", "endWidthInner": 0.612, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.103, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "series", "phases": 2, "poles": 8, "rIn": 20.746, "rOut": 38.28, "stackMode": "single", "startAngleDeg": -159.006, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.262, "turns": 1},
+            "rho0": 0
+          },
+          {
+            "output": 18.40394714046093,
+            "params": {"boardGap": 0.5, "clearance": 0.297, "connection": "star", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": true, "filletRadius": 1.336, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 8, "rIn": 22.97, "rOut": 42.184, "stackMode": "perPhase", "startAngleDeg": 57.13, "strands": 2, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.405, "turns": 2},
+            "rho0": 0
+          },
+          {
+            "output": 15.071867174193635,
+            "params": {"boardGap": 0.5, "clearance": 0.284, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.244, "filletMax": false, "filletRadius": 0.791, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 2, "poles": 12, "rIn": 26.389, "rOut": 44.725, "stackMode": "single", "startAngleDeg": -96.169, "strands": 2, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.472, "turns": 4},
+            "rho0": 0.8337122891680337
+          },
+          {
+            "output": 16.37560120944268,
+            "params": {"boardGap": 0.5, "clearance": 0.235, "connection": "star", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.928, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 1, "pairConnection": "series", "phases": 3, "poles": 8, "rIn": 24.358, "rOut": 43.98, "stackMode": "single", "startAngleDeg": 123.477, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.253, "turns": 1},
+            "rho0": 1.6331273178453558
+          },
+          {
+            "output": 20.37968512559769,
+            "params": {"boardGap": 0.1, "clearance": 0.289, "connection": "star", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.239, "filletMax": false, "filletRadius": 0.249, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 1, "poles": 12, "rIn": 27.001, "rOut": 51.561, "stackMode": "single", "startAngleDeg": -119.567, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.481, "turns": 4},
+            "rho0": 1.7316730611841193
+          },
+          {
+            "output": 18.120021599037674,
+            "params": {"boardGap": 0.1, "clearance": 0.207, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.903, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 8, "rIn": 31.889, "rOut": 50.715, "stackMode": "perPhase", "startAngleDeg": -116.413, "strands": 2, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.399, "turns": 1},
+            "rho0": 0.817254729103297
+          },
+          {
+            "output": 25.258500000000005,
+            "params": {"boardGap": 0.5, "clearance": 0.187, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0.226, "endWidthOuter": 0.207, "filletMax": false, "filletRadius": 1.067, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 1, "pairConnection": "series", "phases": 3, "poles": 8, "rIn": 26.528, "rOut": 49.899, "stackMode": "perPhase", "startAngleDeg": 3.834, "strands": 2, "style": "radial", "terminalSide": "outer", "traceWidth": 0.246, "turns": 4},
+            "rho0": 0.5909947559703141
+          },
+          {
+            "output": 18.98421039041266,
+            "params": {"boardGap": 0.1, "clearance": 0.278, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.77, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 2, "poles": 16, "rIn": 24.027, "rOut": 43.812, "stackMode": "perPhase", "startAngleDeg": -62.259, "strands": 2, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.448, "turns": 1},
+            "rho0": 1.101535022247117
+          },
+          {
+            "output": 11.734981571213268,
+            "params": {"boardGap": 0.5, "clearance": 0.251, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0.24, "endWidthOuter": 0.451, "filletMax": false, "filletRadius": 0.602, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "series", "phases": 2, "poles": 12, "rIn": 35.474, "rOut": 47.44, "stackMode": "single", "startAngleDeg": 168.299, "strands": 2, "style": "radial", "terminalSide": "inner", "traceWidth": 0.303, "turns": 4},
+            "rho0": 0
+          },
+          {
+            "output": 14.444000000000003,
+            "params": {"boardGap": 0.1, "clearance": 0.253, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.267, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 1, "pairConnection": "parallel", "phases": 2, "poles": 10, "rIn": 24.507, "rOut": 38.377, "stackMode": "perPhase", "startAngleDeg": -61.805, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.414, "turns": 3},
+            "rho0": 1.5496109155472368
+          },
+          {
+            "output": 22.088,
+            "params": {"boardGap": 0.5, "clearance": 0.185, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0.633, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.548, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "series", "phases": 3, "poles": 12, "rIn": 29.642, "rOut": 49.153, "stackMode": "single", "startAngleDeg": -37.828, "strands": 2, "style": "radial", "terminalSide": "outer", "traceWidth": 0.42, "turns": 3},
+            "rho0": 0.47187649355037137
+          },
+          {
+            "output": 15.703904938686586,
+            "params": {"boardGap": 0.1, "clearance": 0.288, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0.487, "endWidthOuter": 0.625, "filletMax": false, "filletRadius": 0.085, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "series", "phases": 3, "poles": 8, "rIn": 16.609, "rOut": 30.863, "stackMode": "single", "startAngleDeg": -127.081, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.496, "turns": 4},
+            "rho0": 1.0642885077977553
+          },
+          {
+            "output": 11.076522541519168,
+            "params": {"boardGap": 0.5, "clearance": 0.254, "connection": "star", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.184, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 8, "rIn": 32.364, "rOut": 46.228, "stackMode": "single", "startAngleDeg": 93.75, "strands": 2, "style": "radial", "terminalSide": "inner", "traceWidth": 0.258, "turns": 3},
+            "rho0": 1.3226430202834307
+          },
+          {
+            "output": 27.068098172444078,
+            "params": {"boardGap": 0.5, "clearance": 0.237, "connection": "open", "cornerStyle": "round", "endWidthInner": 0.665, "endWidthOuter": 0.447, "filletMax": false, "filletRadius": 0.828, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "series", "phases": 3, "poles": 16, "rIn": 19.584, "rOut": 46.061, "stackMode": "perPhase", "startAngleDeg": -52.536, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.217, "turns": 4},
+            "rho0": 0
+          },
+          {
+            "output": 21.7765,
+            "params": {"boardGap": 0.1, "clearance": 0.177, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.297, "filletMax": false, "filletRadius": 0.371, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 10, "rIn": 20.457, "rOut": 41.933, "stackMode": "single", "startAngleDeg": 41.691, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.341, "turns": 3},
+            "rho0": 1.2656067758332938
+          },
+          {
+            "output": 24.5079077165073,
+            "params": {"boardGap": 0.1, "clearance": 0.241, "connection": "open", "cornerStyle": "round", "endWidthInner": 0.304, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.474, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "series", "phases": 1, "poles": 16, "rIn": 22.256, "rOut": 48.24, "stackMode": "single", "startAngleDeg": 70.645, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.202, "turns": 2},
+            "rho0": 0.7366231737774797
+          },
+          {
+            "output": 23.068476904563692,
+            "params": {"boardGap": 0.5, "clearance": 0.164, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.492, "filletMax": true, "filletRadius": 1.034, "interconnect": false, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "parallel", "phases": 2, "poles": 10, "rIn": 23.709, "rOut": 46.04, "stackMode": "single", "startAngleDeg": 165.209, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.204, "turns": 3},
+            "rho0": 1.6809331663302145
+          },
+          {
+            "output": 10.309776511265568,
+            "params": {"boardGap": 0.1, "clearance": 0.202, "connection": "star", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.574, "filletMax": false, "filletRadius": 1.014, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 3, "poles": 12, "rIn": 28.102, "rOut": 41.378, "stackMode": "single", "startAngleDeg": -57.013, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.304, "turns": 1},
+            "rho0": 1.4879487718688325
+          },
+          {
+            "output": 12.704486682469806,
+            "params": {"boardGap": 0.1, "clearance": 0.249, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.486, "interconnect": false, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 2, "poles": 16, "rIn": 35.949, "rOut": 47.673, "stackMode": "single", "startAngleDeg": 166.457, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.312, "turns": 4},
+            "rho0": 1.273857940628659
+          },
+          {
+            "output": 9.797716056368863,
+            "params": {"boardGap": 0.1, "clearance": 0.295, "connection": "star", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.221, "filletMax": false, "filletRadius": 0.458, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 16, "rIn": 33.473, "rOut": 43.973, "stackMode": "single", "startAngleDeg": -170.199, "strands": 2, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.355, "turns": 2},
+            "rho0": 0
+          },
+          {
+            "output": 19.95644304531111,
+            "params": {"boardGap": 0.5, "clearance": 0.273, "connection": "star", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.428, "interconnect": false, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "series", "phases": 3, "poles": 8, "rIn": 18.014, "rOut": 38.72, "stackMode": "single", "startAngleDeg": 42.103, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.356, "turns": 2},
+            "rho0": 0
+          },
+          {
+            "output": 18.39598898464737,
+            "params": {"boardGap": 0.1, "clearance": 0.181, "connection": "star", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.529, "filletMax": false, "filletRadius": 1.11, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 3, "poles": 8, "rIn": 24.494, "rOut": 43.729, "stackMode": "single", "startAngleDeg": 169.083, "strands": 2, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.201, "turns": 1},
+            "rho0": 0.2559409173903987
+          },
+          {
+            "output": 10.060761086031338,
+            "params": {"boardGap": 0.5, "clearance": 0.19, "connection": "star", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.145, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 2, "poles": 8, "rIn": 30.076, "rOut": 40.997, "stackMode": "perPhase", "startAngleDeg": 162.472, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.281, "turns": 1},
+            "rho0": 0.22909520871471611
+          },
+          {
+            "output": 11.24297750582594,
+            "params": {"boardGap": 0.5, "clearance": 0.222, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.461, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 1, "pairConnection": "parallel", "phases": 3, "poles": 12, "rIn": 14.283, "rOut": 25.675, "stackMode": "single", "startAngleDeg": 66.267, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.3, "turns": 2},
+            "rho0": 0.7188074072590098
+          },
+          {
+            "output": 29.056534250826637,
+            "params": {"boardGap": 0.1, "clearance": 0.247, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0.517, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.091, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 1, "pairConnection": "parallel", "phases": 2, "poles": 8, "rIn": 18.352, "rOut": 45.996, "stackMode": "single", "startAngleDeg": 46.666, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.486, "turns": 4},
+            "rho0": 0.756840803322848
+          },
+          {
+            "output": 9.010890079301497,
+            "params": {"boardGap": 0.1, "clearance": 0.266, "connection": "open", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.913, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 10, "rIn": 31.605, "rOut": 42.675, "stackMode": "perPhase", "startAngleDeg": -158.625, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.36, "turns": 4},
+            "rho0": 0.9877315713791177
+          },
+          {
+            "output": 8.212132937702464,
+            "params": {"boardGap": 0.1, "clearance": 0.249, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.674, "filletMax": true, "filletRadius": 1.003, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "series", "phases": 1, "poles": 10, "rIn": 29.427, "rOut": 39.749, "stackMode": "single", "startAngleDeg": -126.711, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.26, "turns": 2},
+            "rho0": 1.0579328450607135
+          },
+          {
+            "output": 17.864500000000003,
+            "params": {"boardGap": 0.5, "clearance": 0.168, "connection": "open", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.864, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "series", "phases": 3, "poles": 12, "rIn": 23.413, "rOut": 41.942, "stackMode": "perPhase", "startAngleDeg": -0.829, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.393, "turns": 1},
+            "rho0": 0
+          },
+          {
+            "output": 17.48189193656259,
+            "params": {"boardGap": 0.1, "clearance": 0.192, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.781, "interconnect": false, "layerOrder": "interleaved", "layersPerPhase": 1, "pairConnection": "parallel", "phases": 1, "poles": 8, "rIn": 20.35, "rOut": 36.58, "stackMode": "perPhase", "startAngleDeg": 62.432, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.463, "turns": 4},
+            "rho0": 1.7453205018420703
+          },
+          {
+            "output": 18.85512456898456,
+            "params": {"boardGap": 0.5, "clearance": 0.17, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.513, "filletMax": false, "filletRadius": 1.154, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "series", "phases": 3, "poles": 12, "rIn": 30.869, "rOut": 49.003, "stackMode": "perPhase", "startAngleDeg": 137.877, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.353, "turns": 3},
+            "rho0": 0.33365380445029585
+          },
+          {
+            "output": 9.904325035116926,
+            "params": {"boardGap": 0.1, "clearance": 0.253, "connection": "star", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": true, "filletRadius": 0.125, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "series", "phases": 3, "poles": 12, "rIn": 18.064, "rOut": 31.598, "stackMode": "single", "startAngleDeg": 20.916, "strands": 2, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.348, "turns": 2},
+            "rho0": 1.837211381155066
+          },
+          {
+            "output": 12.215459303632587,
+            "params": {"boardGap": 0.5, "clearance": 0.21, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.201, "interconnect": false, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 12, "rIn": 14.008, "rOut": 26.826, "stackMode": "single", "startAngleDeg": -156.097, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.244, "turns": 3},
+            "rho0": 0
+          },
+          {
+            "output": 21.933530906930425,
+            "params": {"boardGap": 0.5, "clearance": 0.233, "connection": "open", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": true, "filletRadius": 1.04, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 16, "rIn": 19.405, "rOut": 43.886, "stackMode": "single", "startAngleDeg": -91.989, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.246, "turns": 1},
+            "rho0": 1.283998682978563
+          },
+          {
+            "output": 9.572532305737486,
+            "params": {"boardGap": 0.5, "clearance": 0.162, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.497, "filletMax": false, "filletRadius": 0.402, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "parallel", "phases": 3, "poles": 8, "rIn": 25.954, "rOut": 36.775, "stackMode": "single", "startAngleDeg": 111.549, "strands": 2, "style": "radial", "terminalSide": "inner", "traceWidth": 0.423, "turns": 4},
+            "rho0": 0.7284366327919998
+          },
+          {
+            "output": 11.925311658231529,
+            "params": {"boardGap": 0.5, "clearance": 0.158, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.327, "filletMax": false, "filletRadius": 0.661, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 1, "pairConnection": "parallel", "phases": 1, "poles": 16, "rIn": 16.693, "rOut": 29.239, "stackMode": "single", "startAngleDeg": 29.466, "strands": 2, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.352, "turns": 1},
+            "rho0": 1.3427310004015454
+          },
+          {
+            "output": 11.594824338691183,
+            "params": {"boardGap": 0.5, "clearance": 0.212, "connection": "open", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": true, "filletRadius": 0.708, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "series", "phases": 3, "poles": 10, "rIn": 33.509, "rOut": 46.167, "stackMode": "perPhase", "startAngleDeg": -31.998, "strands": 2, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.23, "turns": 4},
+            "rho0": 0.4121039859950542
+          },
+          {
+            "output": 28.23878566227974,
+            "params": {"boardGap": 0.1, "clearance": 0.256, "connection": "star", "cornerStyle": "round", "endWidthInner": 0.691, "endWidthOuter": 0.623, "filletMax": true, "filletRadius": 0.017, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 1, "pairConnection": "series", "phases": 2, "poles": 10, "rIn": 27.992, "rOut": 56.719, "stackMode": "single", "startAngleDeg": -38.907, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.227, "turns": 2},
+            "rho0": 0.08613595080096276
+          },
+          {
+            "output": 25.159,
+            "params": {"boardGap": 0.1, "clearance": 0.243, "connection": "star", "cornerStyle": "round", "endWidthInner": 0.542, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.747, "interconnect": false, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "series", "phases": 3, "poles": 16, "rIn": 28.455, "rOut": 54.428, "stackMode": "single", "startAngleDeg": -59.911, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.21, "turns": 1},
+            "rho0": 0
+          },
+          {
+            "output": 18.0185,
+            "params": {"boardGap": 0.1, "clearance": 0.279, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.249, "filletMax": false, "filletRadius": 0.803, "interconnect": false, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 16, "rIn": 15.705, "rOut": 33.681, "stackMode": "perPhase", "startAngleDeg": 82.045, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.467, "turns": 2},
+            "rho0": 0.6821026191930287
+          },
+          {
+            "output": 15.429929912488397,
+            "params": {"boardGap": 0.5, "clearance": 0.221, "connection": "open", "cornerStyle": "round", "endWidthInner": 0.323, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.263, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 1, "pairConnection": "series", "phases": 3, "poles": 10, "rIn": 21.827, "rOut": 39.828, "stackMode": "single", "startAngleDeg": 110.497, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.242, "turns": 1},
+            "rho0": 1.2927755172946491
+          },
+          {
+            "output": 22.213500000000003,
+            "params": {"boardGap": 0.5, "clearance": 0.217, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.528, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "parallel", "phases": 3, "poles": 16, "rIn": 33.035, "rOut": 54.877, "stackMode": "single", "startAngleDeg": 28.154, "strands": 2, "style": "radial", "terminalSide": "inner", "traceWidth": 0.303, "turns": 2},
+            "rho0": 0
+          },
+          {
+            "output": 29.695,
+            "params": {"boardGap": 0.1, "clearance": 0.161, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0.527, "endWidthOuter": 0.342, "filletMax": false, "filletRadius": 1.359, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "series", "phases": 1, "poles": 16, "rIn": 24.462, "rOut": 53.413, "stackMode": "single", "startAngleDeg": 125.693, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.291, "turns": 3},
+            "rho0": 0.81937952702865
+          },
+          {
+            "output": 25.47,
+            "params": {"boardGap": 0.5, "clearance": 0.285, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0.371, "endWidthOuter": 0.298, "filletMax": true, "filletRadius": 0.002, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 1, "poles": 16, "rIn": 34.528, "rOut": 60.732, "stackMode": "perPhase", "startAngleDeg": 142.127, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.294, "turns": 1},
+            "rho0": 0.7854101489647292
+          },
+          {
+            "output": 15.221499999999999,
+            "params": {"boardGap": 0.5, "clearance": 0.234, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.227, "filletMax": false, "filletRadius": 1.118, "interconnect": false, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 1, "poles": 8, "rIn": 31.909, "rOut": 47.407, "stackMode": "single", "startAngleDeg": -104.389, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.407, "turns": 2},
+            "rho0": 1.9352735457825474
+          },
+          {
+            "output": 25.227645515194446,
+            "params": {"boardGap": 0.1, "clearance": 0.252, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.932, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 12, "rIn": 20.171, "rOut": 48.35, "stackMode": "single", "startAngleDeg": 161.33, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.492, "turns": 1},
+            "rho0": 1.4894745465717278
+          },
+          {
+            "output": 21.843999999999998,
+            "params": {"boardGap": 0.1, "clearance": 0.26, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0.292, "endWidthOuter": 0, "filletMax": true, "filletRadius": 1.357, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 16, "rIn": 31.806, "rOut": 53.826, "stackMode": "single", "startAngleDeg": -123.558, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.336, "turns": 2},
+            "rho0": 0
+          },
+          {
+            "output": 20.045000000000005,
+            "params": {"boardGap": 0.1, "clearance": 0.221, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": true, "filletRadius": 0.179, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "series", "phases": 2, "poles": 10, "rIn": 23.604, "rOut": 43.011, "stackMode": "single", "startAngleDeg": 39.602, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.478, "turns": 3},
+            "rho0": 1.1633223450742662
+          },
+          {
+            "output": 24.552969115293855,
+            "params": {"boardGap": 0.5, "clearance": 0.2, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0.675, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.246, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 2, "poles": 8, "rIn": 25.336, "rOut": 51.911, "stackMode": "perPhase", "startAngleDeg": -106.158, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.328, "turns": 2},
+            "rho0": 1.018546823807992
+          },
+          {
+            "output": 12.863000000000003,
+            "params": {"boardGap": 0.1, "clearance": 0.28, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0.252, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.309, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 2, "poles": 8, "rIn": 22.697, "rOut": 35.194, "stackMode": "single", "startAngleDeg": -117.861, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.236, "turns": 3},
+            "rho0": 1.8490459840395488
+          },
+          {
+            "output": 23.430756015908617,
+            "params": {"boardGap": 0.1, "clearance": 0.256, "connection": "star", "cornerStyle": "round", "endWidthInner": 0.667, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.125, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "series", "phases": 3, "poles": 8, "rIn": 26.728, "rOut": 51.704, "stackMode": "single", "startAngleDeg": 153.064, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.274, "turns": 2},
+            "rho0": 0.6488363656331785
+          },
+          {
+            "output": 9.383284865682985,
+            "params": {"boardGap": 0.5, "clearance": 0.254, "connection": "star", "cornerStyle": "round", "endWidthInner": 0.207, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.095, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 12, "rIn": 28.491, "rOut": 40.802, "stackMode": "single", "startAngleDeg": 104.957, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.29, "turns": 3},
+            "rho0": 1.3730433138087392
+          },
+          {
+            "output": 20.387485943260057,
+            "params": {"boardGap": 0.5, "clearance": 0.233, "connection": "open", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.812, "interconnect": false, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "parallel", "phases": 3, "poles": 12, "rIn": 15.025, "rOut": 39.322, "stackMode": "single", "startAngleDeg": 91.023, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.466, "turns": 2},
+            "rho0": 1.9991659993072972
+          },
+          {
+            "output": 16.956500000000002,
+            "params": {"boardGap": 0.5, "clearance": 0.296, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.269, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 1, "pairConnection": "parallel", "phases": 2, "poles": 8, "rIn": 14.081, "rOut": 31.792, "stackMode": "perPhase", "startAngleDeg": -35.103, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.317, "turns": 1},
+            "rho0": 0
+          },
+          {
+            "output": 21.969620518163495,
+            "params": {"boardGap": 0.1, "clearance": 0.166, "connection": "star", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.883, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 12, "rIn": 14.057, "rOut": 37.016, "stackMode": "single", "startAngleDeg": 38.709, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.425, "turns": 1},
+            "rho0": 0.30957401862833644
+          },
+          {
+            "output": 21.085702911576515,
+            "params": {"boardGap": 0.5, "clearance": 0.27, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": true, "filletRadius": 0.254, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 8, "rIn": 29.546, "rOut": 51.702, "stackMode": "single", "startAngleDeg": 30.589, "strands": 2, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.323, "turns": 1},
+            "rho0": 0.33635023640235884
+          },
+          {
+            "output": 23.309021655686752,
+            "params": {"boardGap": 0.5, "clearance": 0.16, "connection": "open", "cornerStyle": "round", "endWidthInner": 0.229, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.414, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 1, "poles": 10, "rIn": 21.469, "rOut": 46.367, "stackMode": "single", "startAngleDeg": 116.78, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.231, "turns": 3},
+            "rho0": 0.7946421321830712
+          },
+          {
+            "output": 16.2805,
+            "params": {"boardGap": 0.5, "clearance": 0.248, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.611, "filletMax": false, "filletRadius": 0.644, "interconnect": false, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 1, "poles": 8, "rIn": 15.559, "rOut": 29.723, "stackMode": "single", "startAngleDeg": -61.802, "strands": 2, "style": "radial", "terminalSide": "outer", "traceWidth": 0.247, "turns": 4},
+            "rho0": 1.7513530845753849
+          },
+          {
+            "output": 15.123000000000001,
+            "params": {"boardGap": 0.1, "clearance": 0.26, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0.69, "endWidthOuter": 0.325, "filletMax": false, "filletRadius": 1.1, "interconnect": false, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "series", "phases": 3, "poles": 12, "rIn": 23.743, "rOut": 37.431, "stackMode": "single", "startAngleDeg": 33.49, "strands": 2, "style": "radial", "terminalSide": "inner", "traceWidth": 0.342, "turns": 3},
+            "rho0": 0.20655186161166056
+          },
+          {
+            "output": 17.336577674401273,
+            "params": {"boardGap": 0.1, "clearance": 0.222, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.187, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 3, "poles": 8, "rIn": 22.923, "rOut": 39.627, "stackMode": "single", "startAngleDeg": -176.358, "strands": 2, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.473, "turns": 2},
+            "rho0": 0.6094086231430993
+          },
+          {
+            "output": 14.700500000000002,
+            "params": {"boardGap": 0.1, "clearance": 0.262, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0.61, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.101, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 12, "rIn": 21.316, "rOut": 35.02, "stackMode": "perPhase", "startAngleDeg": -100.724, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.371, "turns": 3},
+            "rho0": 0.1821342424140312
+          },
+          {
+            "output": 26.078485866969,
+            "params": {"boardGap": 0.1, "clearance": 0.159, "connection": "open", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.585, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "series", "phases": 2, "poles": 12, "rIn": 18.406, "rOut": 46.539, "stackMode": "single", "startAngleDeg": -174.874, "strands": 2, "style": "radial", "terminalSide": "inner", "traceWidth": 0.467, "turns": 1},
+            "rho0": 1.0258124983171
+          },
+          {
+            "output": 25.418929479209837,
+            "params": {"boardGap": 0.5, "clearance": 0.297, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.093, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 16, "rIn": 21.53, "rOut": 47.562, "stackMode": "single", "startAngleDeg": -20.248, "strands": 2, "style": "radial", "terminalSide": "outer", "traceWidth": 0.282, "turns": 3},
+            "rho0": 0
+          },
+          {
+            "output": 26.42491255401699,
+            "params": {"boardGap": 0.5, "clearance": 0.243, "connection": "open", "cornerStyle": "round", "endWidthInner": 0.252, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.806, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "series", "phases": 1, "poles": 10, "rIn": 26.266, "rOut": 53.67, "stackMode": "perPhase", "startAngleDeg": -129.863, "strands": 2, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.248, "turns": 2},
+            "rho0": 0.30111843552440404
+          },
+          {
+            "output": 25.3576174165996,
+            "params": {"boardGap": 0.1, "clearance": 0.197, "connection": "open", "cornerStyle": "round", "endWidthInner": 0.476, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.583, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 16, "rIn": 23.984, "rOut": 52.714, "stackMode": "perPhase", "startAngleDeg": 21.023, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.373, "turns": 1},
+            "rho0": 1.7001886621816085
+          },
+          {
+            "output": 14.047490353178837,
+            "params": {"boardGap": 0.5, "clearance": 0.198, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0.468, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.371, "interconnect": false, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "series", "phases": 1, "poles": 16, "rIn": 31.482, "rOut": 47.491, "stackMode": "perPhase", "startAngleDeg": -142.27, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.464, "turns": 2},
+            "rho0": 0.9736759256455116
+          },
+          {
+            "output": 26.254,
+            "params": {"boardGap": 0.1, "clearance": 0.298, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.709, "interconnect": false, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 2, "poles": 10, "rIn": 25.4, "rOut": 50.318, "stackMode": "single", "startAngleDeg": 41.113, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.416, "turns": 4},
+            "rho0": 1.4309024704270996
+          },
+          {
+            "output": 20.321499999999997,
+            "params": {"boardGap": 0.1, "clearance": 0.271, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.216, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 1, "pairConnection": "series", "phases": 3, "poles": 10, "rIn": 19.481, "rOut": 39.302, "stackMode": "perPhase", "startAngleDeg": 81.244, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.353, "turns": 3},
+            "rho0": 0.42607425785390657
+          },
+          {
+            "output": 19.877499999999998,
+            "params": {"boardGap": 0.5, "clearance": 0.248, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0.383, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.759, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 10, "rIn": 32.252, "rOut": 50.325, "stackMode": "perPhase", "startAngleDeg": -17.396, "strands": 2, "style": "radial", "terminalSide": "inner", "traceWidth": 0.388, "turns": 3},
+            "rho0": 0.40477747238473966
+          },
+          {
+            "output": 18.31999854739636,
+            "params": {"boardGap": 0.5, "clearance": 0.231, "connection": "open", "cornerStyle": "round", "endWidthInner": 0.261, "endWidthOuter": 0.207, "filletMax": true, "filletRadius": 1.232, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "series", "phases": 3, "poles": 12, "rIn": 26.196, "rOut": 45.259, "stackMode": "single", "startAngleDeg": 40.807, "strands": 2, "style": "radial", "terminalSide": "inner", "traceWidth": 0.204, "turns": 4},
+            "rho0": 0
+          },
+          {
+            "output": 28.50186912835226,
+            "params": {"boardGap": 0.1, "clearance": 0.16, "connection": "star", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.795, "interconnect": false, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 8, "rIn": 19.564, "rOut": 49.335, "stackMode": "perPhase", "startAngleDeg": 117.025, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.476, "turns": 3},
+            "rho0": 0.6051999390125274
+          },
+          {
+            "output": 15.23233567216597,
+            "params": {"boardGap": 0.5, "clearance": 0.237, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0.613, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.445, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "series", "phases": 1, "poles": 8, "rIn": 22.211, "rOut": 36.785, "stackMode": "perPhase", "startAngleDeg": 34.006, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.262, "turns": 4},
+            "rho0": 0
+          },
+          {
+            "output": 22.14183585394949,
+            "params": {"boardGap": 0.1, "clearance": 0.246, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.045, "interconnect": false, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "series", "phases": 3, "poles": 16, "rIn": 22.77, "rOut": 45.836, "stackMode": "single", "startAngleDeg": 43.751, "strands": 2, "style": "radial", "terminalSide": "outer", "traceWidth": 0.5, "turns": 1},
+            "rho0": 0.1285248410073109
+          },
+          {
+            "output": 14.3838066441702,
+            "params": {"boardGap": 0.1, "clearance": 0.278, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0.244, "endWidthOuter": 0.289, "filletMax": false, "filletRadius": 1.275, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 10, "rIn": 25.696, "rOut": 39.754, "stackMode": "single", "startAngleDeg": -73.559, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.481, "turns": 3},
+            "rho0": 1.9254647032241337
+          },
+          {
+            "output": 17.764694474315842,
+            "params": {"boardGap": 0.5, "clearance": 0.252, "connection": "open", "cornerStyle": "round", "endWidthInner": 0.305, "endWidthOuter": 0, "filletMax": true, "filletRadius": 0.402, "interconnect": false, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "parallel", "phases": 2, "poles": 16, "rIn": 18.113, "rOut": 39.619, "stackMode": "single", "startAngleDeg": 132.687, "strands": 2, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.451, "turns": 1},
+            "rho0": 1.8254419532604516
+          },
+          {
+            "output": 20.663000000000004,
+            "params": {"boardGap": 0.1, "clearance": 0.29, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.522, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 10, "rIn": 34.161, "rOut": 52.749, "stackMode": "perPhase", "startAngleDeg": -102.617, "strands": 2, "style": "radial", "terminalSide": "inner", "traceWidth": 0.43, "turns": 3},
+            "rho0": 0
+          },
+          {
+            "output": 22.151240561066523,
+            "params": {"boardGap": 0.1, "clearance": 0.238, "connection": "open", "cornerStyle": "round", "endWidthInner": 0.367, "endWidthOuter": 0.608, "filletMax": true, "filletRadius": 0.815, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "series", "phases": 3, "poles": 12, "rIn": 34.451, "rOut": 59.296, "stackMode": "single", "startAngleDeg": -132.674, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.287, "turns": 2},
+            "rho0": 1.3942225394886918
+          },
+          {
+            "output": 26.508359606987977,
+            "params": {"boardGap": 0.5, "clearance": 0.237, "connection": "open", "cornerStyle": "round", "endWidthInner": 0.638, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.868, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 2, "poles": 12, "rIn": 28.031, "rOut": 56.57, "stackMode": "single", "startAngleDeg": 110.304, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.499, "turns": 4},
+            "rho0": 1.0341081002959982
+          },
+          {
+            "output": 22.283881249562327,
+            "params": {"boardGap": 0.5, "clearance": 0.229, "connection": "open", "cornerStyle": "round", "endWidthInner": 0.563, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.73, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "series", "phases": 3, "poles": 12, "rIn": 26.61, "rOut": 49.044, "stackMode": "single", "startAngleDeg": -7.062, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.249, "turns": 3},
+            "rho0": 0.07636966215213761
+          },
+          {
+            "output": 30.432170570633087,
+            "params": {"boardGap": 0.1, "clearance": 0.267, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.225, "interconnect": false, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 8, "rIn": 23.815, "rOut": 53.71, "stackMode": "single", "startAngleDeg": 72.38, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.377, "turns": 3},
+            "rho0": 1.109412212332245
+          },
+          {
+            "output": 13.677,
+            "params": {"boardGap": 0.5, "clearance": 0.154, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0.486, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.009, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 2, "poles": 16, "rIn": 31.88, "rOut": 42.418, "stackMode": "single", "startAngleDeg": -120.18, "strands": 2, "style": "radial", "terminalSide": "outer", "traceWidth": 0.494, "turns": 4},
+            "rho0": 0.6773470392101445
+          },
+          {
+            "output": 21.71451925024197,
+            "params": {"boardGap": 0.5, "clearance": 0.2, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": true, "filletRadius": 0.058, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 16, "rIn": 25.553, "rOut": 47.955, "stackMode": "single", "startAngleDeg": 144.18, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.389, "turns": 4},
+            "rho0": 0
+          },
+          {
+            "output": 16.365077760462334,
+            "params": {"boardGap": 0.1, "clearance": 0.287, "connection": "open", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.408, "filletMax": false, "filletRadius": 1.136, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "series", "phases": 2, "poles": 8, "rIn": 14.165, "rOut": 31.906, "stackMode": "perPhase", "startAngleDeg": -48.606, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.399, "turns": 3},
+            "rho0": 0.5968888817471453
+          },
+          {
+            "output": 20.601378043946706,
+            "params": {"boardGap": 0.1, "clearance": 0.269, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.025, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 2, "poles": 8, "rIn": 28.502, "rOut": 48.709, "stackMode": "perPhase", "startAngleDeg": 75.237, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.282, "turns": 3},
+            "rho0": 0
+          },
+          {
+            "output": 31.047670490210326,
+            "params": {"boardGap": 0.1, "clearance": 0.259, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.534, "interconnect": false, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 1, "poles": 12, "rIn": 20.287, "rOut": 48.011, "stackMode": "perPhase", "startAngleDeg": -81.732, "strands": 2, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.413, "turns": 4},
+            "rho0": 1.5927455082302913
+          },
+          {
+            "output": 17.823000000000004,
+            "params": {"boardGap": 0.1, "clearance": 0.242, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.605, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 1, "poles": 8, "rIn": 30.698, "rOut": 48.216, "stackMode": "perPhase", "startAngleDeg": 163.55, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.242, "turns": 3},
+            "rho0": 1.3425358740612865
+          },
+          {
+            "output": 13.485012418540421,
+            "params": {"boardGap": 0.1, "clearance": 0.199, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.215, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "series", "phases": 3, "poles": 12, "rIn": 26.845, "rOut": 40.436, "stackMode": "perPhase", "startAngleDeg": -41.07, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.387, "turns": 2},
+            "rho0": 1.586322140705306
+          },
+          {
+            "output": 18.171067063662463,
+            "params": {"boardGap": 0.1, "clearance": 0.193, "connection": "star", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.533, "filletMax": false, "filletRadius": 1.147, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 3, "poles": 8, "rIn": 31.862, "rOut": 49.999, "stackMode": "single", "startAngleDeg": 6.07, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.298, "turns": 4},
+            "rho0": 0
+          },
+          {
+            "output": 29.685464568557297,
+            "params": {"boardGap": 0.5, "clearance": 0.162, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.23, "filletMax": false, "filletRadius": 1.005, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 1, "pairConnection": "parallel", "phases": 1, "poles": 10, "rIn": 20.93, "rOut": 49.477, "stackMode": "perPhase", "startAngleDeg": 84.137, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.406, "turns": 4},
+            "rho0": 0
+          },
+          {
+            "output": 23.323,
+            "params": {"boardGap": 0.1, "clearance": 0.243, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.111, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 12, "rIn": 29.962, "rOut": 54.049, "stackMode": "single", "startAngleDeg": 155.933, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.442, "turns": 1},
+            "rho0": 0.8427123123314232
+          },
+          {
+            "output": 16.005234739237093,
+            "params": {"boardGap": 0.5, "clearance": 0.265, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": true, "filletRadius": 0.078, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 12, "rIn": 20.142, "rOut": 39.443, "stackMode": "perPhase", "startAngleDeg": 88.906, "strands": 2, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.249, "turns": 3},
+            "rho0": 1.6429245878942311
+          },
+          {
+            "output": 12.695352964890457,
+            "params": {"boardGap": 0.1, "clearance": 0.179, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.361, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 3, "poles": 10, "rIn": 28.435, "rOut": 40.777, "stackMode": "single", "startAngleDeg": -176.178, "strands": 2, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.316, "turns": 2},
+            "rho0": 0.15361402670387178
+          },
+          {
+            "output": 23.924027308342545,
+            "params": {"boardGap": 0.1, "clearance": 0.257, "connection": "open", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.35, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 1, "pairConnection": "series", "phases": 2, "poles": 16, "rIn": 32.262, "rOut": 59.165, "stackMode": "single", "startAngleDeg": 52.525, "strands": 2, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.225, "turns": 4},
+            "rho0": 1.5106123293284326
+          },
+          {
+            "output": 25.458437065108193,
+            "params": {"boardGap": 0.1, "clearance": 0.199, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.201, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "series", "phases": 3, "poles": 16, "rIn": 15.276, "rOut": 41.879, "stackMode": "single", "startAngleDeg": -121.638, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.217, "turns": 3},
+            "rho0": 0.5151208904571831
+          },
+          {
+            "output": 23.79571818676967,
+            "params": {"boardGap": 0.5, "clearance": 0.239, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0.234, "endWidthOuter": 0, "filletMax": true, "filletRadius": 0.395, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 12, "rIn": 19.313, "rOut": 41.963, "stackMode": "single", "startAngleDeg": -88.776, "strands": 2, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.45, "turns": 3},
+            "rho0": 1.4469201194006018
+          },
+          {
+            "output": 22.163999999999994,
+            "params": {"boardGap": 0.1, "clearance": 0.259, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.23, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 1, "pairConnection": "parallel", "phases": 2, "poles": 12, "rIn": 14.78, "rOut": 36.538, "stackMode": "single", "startAngleDeg": -130.895, "strands": 2, "style": "radial", "terminalSide": "inner", "traceWidth": 0.298, "turns": 2},
+            "rho0": 0.5230777918826789
+          },
+          {
+            "output": 28.4025,
+            "params": {"boardGap": 0.5, "clearance": 0.272, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.147, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "series", "phases": 3, "poles": 16, "rIn": 25.095, "rOut": 53.194, "stackMode": "perPhase", "startAngleDeg": -80.591, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.221, "turns": 3},
+            "rho0": 0
+          },
+          {
+            "output": 15.17534371001237,
+            "params": {"boardGap": 0.5, "clearance": 0.27, "connection": "open", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": true, "filletRadius": 0.633, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "series", "phases": 3, "poles": 12, "rIn": 27.493, "rOut": 43.432, "stackMode": "perPhase", "startAngleDeg": -137.343, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.393, "turns": 3},
+            "rho0": 0
+          },
+          {
+            "output": 21.830419138818392,
+            "params": {"boardGap": 0.5, "clearance": 0.255, "connection": "open", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.54, "filletMax": false, "filletRadius": 0.424, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 8, "rIn": 34.736, "rOut": 58.18, "stackMode": "single", "startAngleDeg": 159.635, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.257, "turns": 2},
+            "rho0": 0.8162974883802235
+          },
+          {
+            "output": 14.30440464282086,
+            "params": {"boardGap": 0.1, "clearance": 0.194, "connection": "open", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.569, "filletMax": false, "filletRadius": 1.328, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "series", "phases": 1, "poles": 16, "rIn": 31.39, "rOut": 46.471, "stackMode": "single", "startAngleDeg": 105.06, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.218, "turns": 4},
+            "rho0": 0
+          },
+          {
+            "output": 18.129752909298336,
+            "params": {"boardGap": 0.5, "clearance": 0.189, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.436, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 10, "rIn": 16.45, "rOut": 35.492, "stackMode": "single", "startAngleDeg": 2.081, "strands": 2, "style": "radial", "terminalSide": "inner", "traceWidth": 0.438, "turns": 3},
+            "rho0": 0.05991060155211017
+          },
+          {
+            "output": 29.380117076804286,
+            "params": {"boardGap": 0.5, "clearance": 0.151, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0.503, "endWidthOuter": 0, "filletMax": true, "filletRadius": 0.272, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 12, "rIn": 27.184, "rOut": 56.748, "stackMode": "perPhase", "startAngleDeg": 44.829, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.367, "turns": 2},
+            "rho0": 0.4005154708982445
+          },
+          {
+            "output": 11.770445919831534,
+            "params": {"boardGap": 0.5, "clearance": 0.278, "connection": "star", "cornerStyle": "round", "endWidthInner": 0.485, "endWidthOuter": 0.601, "filletMax": false, "filletRadius": 1.277, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "series", "phases": 1, "poles": 16, "rIn": 14.372, "rOut": 28.157, "stackMode": "single", "startAngleDeg": 11.321, "strands": 2, "style": "radial", "terminalSide": "inner", "traceWidth": 0.386, "turns": 4},
+            "rho0": 1.4589047907968051
+          },
+          {
+            "output": 8.129026034189643,
+            "params": {"boardGap": 0.5, "clearance": 0.241, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.281, "filletMax": false, "filletRadius": 1.494, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 12, "rIn": 20.099, "rOut": 32.376, "stackMode": "single", "startAngleDeg": 110.075, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.497, "turns": 2},
+            "rho0": 1.949277409655042
+          },
+          {
+            "output": 17.862708329353527,
+            "params": {"boardGap": 0.5, "clearance": 0.273, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0.253, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.126, "interconnect": false, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 1, "poles": 10, "rIn": 28.158, "rOut": 45.175, "stackMode": "single", "startAngleDeg": -0.447, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.331, "turns": 4},
+            "rho0": 0.07768000221112743
+          },
+          {
+            "output": 15.777499999999993,
+            "params": {"boardGap": 0.5, "clearance": 0.277, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.219, "filletMax": true, "filletRadius": 1.318, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "series", "phases": 2, "poles": 10, "rIn": 19.132, "rOut": 35.596, "stackMode": "perPhase", "startAngleDeg": 62.306, "strands": 2, "style": "radial", "terminalSide": "outer", "traceWidth": 0.351, "turns": 1},
+            "rho0": 1.7590239544631914
+          },
+          {
+            "output": 21.40882128810577,
+            "params": {"boardGap": 0.5, "clearance": 0.188, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.382, "interconnect": false, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "series", "phases": 2, "poles": 10, "rIn": 15.569, "rOut": 37.155, "stackMode": "single", "startAngleDeg": 166.897, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.244, "turns": 2},
+            "rho0": 1.4854805620270781
+          },
+          {
+            "output": 12.884555574326058,
+            "params": {"boardGap": 0.5, "clearance": 0.289, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0.336, "endWidthOuter": 0, "filletMax": true, "filletRadius": 0.231, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "series", "phases": 3, "poles": 12, "rIn": 24.534, "rOut": 38.968, "stackMode": "single", "startAngleDeg": 51.833, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.246, "turns": 1},
+            "rho0": 0.7767329883296042
+          },
+          {
+            "output": 20.828000000000003,
+            "params": {"boardGap": 0.1, "clearance": 0.236, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.631, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 8, "rIn": 14.548, "rOut": 34.389, "stackMode": "perPhase", "startAngleDeg": -162.014, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.326, "turns": 4},
+            "rho0": 1.862782014394179
+          },
+          {
+            "output": 14.129274428483257,
+            "params": {"boardGap": 0.5, "clearance": 0.226, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0.481, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.002, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 2, "poles": 16, "rIn": 32.095, "rOut": 47.315, "stackMode": "perPhase", "startAngleDeg": -149.878, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.288, "turns": 4},
+            "rho0": 0.2885827988968231
+          },
+          {
+            "output": 23.85587355993304,
+            "params": {"boardGap": 0.1, "clearance": 0.222, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.984, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 8, "rIn": 18.16, "rOut": 45.192, "stackMode": "perPhase", "startAngleDeg": -18.477, "strands": 2, "style": "radial", "terminalSide": "inner", "traceWidth": 0.403, "turns": 4},
+            "rho0": 1.421152404358145
+          },
+          {
+            "output": 24.632086013206994,
+            "params": {"boardGap": 0.5, "clearance": 0.184, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.198, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "series", "phases": 3, "poles": 16, "rIn": 35.868, "rOut": 63.168, "stackMode": "single", "startAngleDeg": 146.572, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.486, "turns": 3},
+            "rho0": 1.3448291564476675
+          },
+          {
+            "output": 11.402611342105377,
+            "params": {"boardGap": 0.1, "clearance": 0.293, "connection": "open", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.317, "filletMax": false, "filletRadius": 0.469, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 16, "rIn": 21.819, "rOut": 36.896, "stackMode": "single", "startAngleDeg": 9.323, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.424, "turns": 4},
+            "rho0": 1.70360900684027
+          },
+          {
+            "output": 27.06365375357634,
+            "params": {"boardGap": 0.1, "clearance": 0.195, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.379, "filletMax": false, "filletRadius": 1.491, "interconnect": false, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 1, "poles": 12, "rIn": 16.047, "rOut": 42.719, "stackMode": "single", "startAngleDeg": 162.117, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.34, "turns": 3},
+            "rho0": 0.8061822869116441
+          },
+          {
+            "output": 14.303130428573658,
+            "params": {"boardGap": 0.5, "clearance": 0.238, "connection": "open", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.557, "filletMax": false, "filletRadius": 1.422, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "series", "phases": 1, "poles": 8, "rIn": 14.338, "rOut": 29.098, "stackMode": "perPhase", "startAngleDeg": -120.578, "strands": 2, "style": "radial", "terminalSide": "inner", "traceWidth": 0.402, "turns": 2},
+            "rho0": 0
+          },
+          {
+            "output": 26.555661477045458,
+            "params": {"boardGap": 0.5, "clearance": 0.276, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.083, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "series", "phases": 3, "poles": 8, "rIn": 27.305, "rOut": 53.47, "stackMode": "single", "startAngleDeg": -164.811, "strands": 2, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.276, "turns": 2},
+            "rho0": 0.8542204963508994
+          },
+          {
+            "output": 15.874500000000005,
+            "params": {"boardGap": 0.5, "clearance": 0.191, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.565, "filletMax": false, "filletRadius": 1.484, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 1, "poles": 10, "rIn": 23.778, "rOut": 40.353, "stackMode": "single", "startAngleDeg": 47.409, "strands": 2, "style": "radial", "terminalSide": "inner", "traceWidth": 0.419, "turns": 1},
+            "rho0": 1.0828859260771424
+          },
+          {
+            "output": 13.60844666512471,
+            "params": {"boardGap": 0.1, "clearance": 0.273, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.445, "interconnect": false, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 3, "poles": 16, "rIn": 27.296, "rOut": 40.212, "stackMode": "single", "startAngleDeg": -8.418, "strands": 2, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.479, "turns": 2},
+            "rho0": 1.1919932726421394
+          },
+          {
+            "output": 16.77121656969309,
+            "params": {"boardGap": 0.1, "clearance": 0.212, "connection": "open", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.025, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "parallel", "phases": 3, "poles": 8, "rIn": 29.921, "rOut": 47.622, "stackMode": "single", "startAngleDeg": 48.816, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.468, "turns": 4},
+            "rho0": 0.1972945749643259
+          },
+          {
+            "output": 16.947000000000003,
+            "params": {"boardGap": 0.1, "clearance": 0.191, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.01, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 10, "rIn": 34.313, "rOut": 51.045, "stackMode": "perPhase", "startAngleDeg": -16.172, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.216, "turns": 3},
+            "rho0": 0
+          },
+          {
+            "output": 26.25900584882853,
+            "params": {"boardGap": 0.1, "clearance": 0.197, "connection": "star", "cornerStyle": "round", "endWidthInner": 0.474, "endWidthOuter": 0.408, "filletMax": false, "filletRadius": 0.646, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 1, "pairConnection": "parallel", "phases": 2, "poles": 16, "rIn": 27.756, "rOut": 56.742, "stackMode": "perPhase", "startAngleDeg": 148.414, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.392, "turns": 4},
+            "rho0": 1.3592552868416532
+          },
+          {
+            "output": 28.707679103519425,
+            "params": {"boardGap": 0.5, "clearance": 0.236, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": true, "filletRadius": 0.794, "interconnect": false, "layerOrder": "interleaved", "layersPerPhase": 1, "pairConnection": "series", "phases": 2, "poles": 16, "rIn": 30.739, "rOut": 59.185, "stackMode": "single", "startAngleDeg": 48.847, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.216, "turns": 3},
+            "rho0": 0
+          },
+          {
+            "output": 15.934265990277865,
+            "params": {"boardGap": 0.5, "clearance": 0.258, "connection": "star", "cornerStyle": "round", "endWidthInner": 0.662, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.236, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 3, "poles": 16, "rIn": 32.782, "rOut": 50.199, "stackMode": "single", "startAngleDeg": -116.295, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.469, "turns": 1},
+            "rho0": 0.6975005430052988
+          },
+          {
+            "output": 12.533499999999997,
+            "params": {"boardGap": 0.1, "clearance": 0.204, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0.621, "endWidthOuter": 0.61, "filletMax": false, "filletRadius": 1.441, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 3, "poles": 10, "rIn": 19.651, "rOut": 31.371, "stackMode": "single", "startAngleDeg": 142.923, "strands": 2, "style": "radial", "terminalSide": "inner", "traceWidth": 0.349, "turns": 2},
+            "rho0": 1.1154794867150486
+          },
+          {
+            "output": 15.459567471659504,
+            "params": {"boardGap": 0.5, "clearance": 0.267, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0.348, "endWidthOuter": 0.432, "filletMax": false, "filletRadius": 1.021, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 16, "rIn": 32.645, "rOut": 47.447, "stackMode": "perPhase", "startAngleDeg": 47.18, "strands": 2, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.425, "turns": 2},
+            "rho0": 0.7698581267613918
+          },
+          {
+            "output": 16.436727662291368,
+            "params": {"boardGap": 0.5, "clearance": 0.166, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": true, "filletRadius": 0.505, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 16, "rIn": 19.547, "rOut": 38.858, "stackMode": "single", "startAngleDeg": -157.693, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.256, "turns": 4},
+            "rho0": 1.4469019368174485
+          },
+          {
+            "output": 17.203154911982914,
+            "params": {"boardGap": 0.1, "clearance": 0.27, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.883, "interconnect": false, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 16, "rIn": 27.538, "rOut": 45.612, "stackMode": "perPhase", "startAngleDeg": 162.528, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.246, "turns": 2},
+            "rho0": 0.1867530335090123
+          },
+          {
+            "output": 22.005963444527037,
+            "params": {"boardGap": 0.1, "clearance": 0.218, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0.455, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.046, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 3, "poles": 16, "rIn": 28.896, "rOut": 54.064, "stackMode": "single", "startAngleDeg": 66.296, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.365, "turns": 4},
+            "rho0": 1.602135191578418
+          },
+          {
+            "output": 24.955714637622265,
+            "params": {"boardGap": 0.5, "clearance": 0.17, "connection": "star", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.201, "filletMax": true, "filletRadius": 0.942, "interconnect": false, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "series", "phases": 1, "poles": 16, "rIn": 18.974, "rOut": 46.921, "stackMode": "single", "startAngleDeg": 17.672, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.443, "turns": 3},
+            "rho0": 1.2390134208719246
+          },
+          {
+            "output": 24.46482572514162,
+            "params": {"boardGap": 0.5, "clearance": 0.186, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": true, "filletRadius": 0.885, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 8, "rIn": 29.416, "rOut": 56.669, "stackMode": "single", "startAngleDeg": 165.573, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.464, "turns": 1},
+            "rho0": 1.4011397374910302
+          },
+          {
+            "output": 12.871854144693032,
+            "params": {"boardGap": 0.1, "clearance": 0.223, "connection": "open", "cornerStyle": "round", "endWidthInner": 0.611, "endWidthOuter": 0.473, "filletMax": false, "filletRadius": 0.923, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 1, "poles": 12, "rIn": 35.485, "rOut": 49.018, "stackMode": "perPhase", "startAngleDeg": 111.432, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.39, "turns": 3},
+            "rho0": 0
+          },
+          {
+            "output": 26.794843224633034,
+            "params": {"boardGap": 0.1, "clearance": 0.264, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.408, "interconnect": false, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 1, "poles": 8, "rIn": 15.029, "rOut": 44.25, "stackMode": "single", "startAngleDeg": -81.514, "strands": 2, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.324, "turns": 4},
+            "rho0": 1.2888454460189678
+          },
+          {
+            "output": 23.3555,
+            "params": {"boardGap": 0.5, "clearance": 0.269, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 1.479, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 16, "rIn": 27.242, "rOut": 48.806, "stackMode": "perPhase", "startAngleDeg": 154.683, "strands": 2, "style": "radial", "terminalSide": "outer", "traceWidth": 0.367, "turns": 3},
+            "rho0": 1.208579039259348
+          },
+          {
+            "output": 19.70906106194016,
+            "params": {"boardGap": 0.1, "clearance": 0.199, "connection": "star", "cornerStyle": "round", "endWidthInner": 0.408, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.875, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 2, "poles": 16, "rIn": 30.805, "rOut": 51.972, "stackMode": "single", "startAngleDeg": -29.286, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.295, "turns": 1},
+            "rho0": 0.7305972065660171
+          },
+          {
+            "output": 27.02702381451025,
+            "params": {"boardGap": 0.1, "clearance": 0.289, "connection": "star", "cornerStyle": "sharp", "endWidthInner": 0.532, "endWidthOuter": 0.287, "filletMax": false, "filletRadius": 0.391, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 1, "poles": 8, "rIn": 15.148, "rOut": 41.875, "stackMode": "single", "startAngleDeg": -154.206, "strands": 2, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.496, "turns": 2},
+            "rho0": 0.9781990075600334
+          },
+          {
+            "output": 24.7777717329921,
+            "params": {"boardGap": 0.5, "clearance": 0.253, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.255, "filletMax": false, "filletRadius": 1.479, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "series", "phases": 1, "poles": 12, "rIn": 31.575, "rOut": 58.189, "stackMode": "perPhase", "startAngleDeg": -5.6, "strands": 2, "style": "radial", "terminalSide": "inner", "traceWidth": 0.27, "turns": 1},
+            "rho0": 0.9080196603084915
+          },
+          {
+            "output": 13.022118458314768,
+            "params": {"boardGap": 0.1, "clearance": 0.168, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.203, "filletMax": false, "filletRadius": 1.191, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "series", "phases": 1, "poles": 10, "rIn": 24.427, "rOut": 37.44, "stackMode": "perPhase", "startAngleDeg": 119.128, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.41, "turns": 2},
+            "rho0": 0.8117561498773285
+          },
+          {
+            "output": 19.17421189936993,
+            "params": {"boardGap": 0.5, "clearance": 0.236, "connection": "delta", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.537, "filletMax": true, "filletRadius": 1.173, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 3, "poles": 10, "rIn": 28.269, "rOut": 49.249, "stackMode": "perPhase", "startAngleDeg": -81.225, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.377, "turns": 4},
+            "rho0": 0.965481461561285
+          },
+          {
+            "output": 24.51886911986902,
+            "params": {"boardGap": 0.5, "clearance": 0.273, "connection": "star", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.25, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 2, "poles": 12, "rIn": 30.441, "rOut": 56.195, "stackMode": "single", "startAngleDeg": -164.971, "strands": 1, "style": "radial", "terminalSide": "outer", "traceWidth": 0.324, "turns": 2},
+            "rho0": 0.5202973485691473
+          },
+          {
+            "output": 22.609500000000004,
+            "params": {"boardGap": 0.1, "clearance": 0.155, "connection": "open", "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": true, "filletRadius": 0.725, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 2, "pairConnection": "parallel", "phases": 2, "poles": 8, "rIn": 16.509, "rOut": 38.548, "stackMode": "perPhase", "startAngleDeg": -29.767, "strands": 1, "style": "radial", "terminalSide": "inner", "traceWidth": 0.477, "turns": 3},
+            "rho0": 1.3932605519890786
+          },
+          {
+            "output": 15.084873880245222,
+            "params": {"boardGap": 0.1, "clearance": 0.248, "connection": "star", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": true, "filletRadius": 0.269, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 4, "pairConnection": "series", "phases": 3, "poles": 16, "rIn": 15.712, "rOut": 32.8, "stackMode": "single", "startAngleDeg": -124.975, "strands": 2, "style": "radial", "terminalSide": "inner", "traceWidth": 0.259, "turns": 3},
+            "rho0": 0.9203975968062877
+          },
+          {
+            "output": 13.196378162274492,
+            "params": {"boardGap": 0.1, "clearance": 0.254, "connection": "star", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.088, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 12, "rIn": 18.883, "rOut": 32.945, "stackMode": "single", "startAngleDeg": -96.075, "strands": 2, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.201, "turns": 3},
+            "rho0": 0.24081466764910148
+          },
+          {
+            "output": 29.295442536893162,
+            "params": {"boardGap": 0.5, "clearance": 0.155, "connection": "delta", "cornerStyle": "sharp", "endWidthInner": 0.425, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.571, "interconnect": true, "layerOrder": "grouped", "layersPerPhase": 4, "pairConnection": "parallel", "phases": 2, "poles": 8, "rIn": 24.171, "rOut": 52.782, "stackMode": "single", "startAngleDeg": -176.573, "strands": 1, "style": "parallel", "terminalSide": "inner", "traceWidth": 0.294, "turns": 4},
+            "rho0": 1.171905521804001
+          },
+          {
+            "output": 16.89960425811192,
+            "params": {"boardGap": 0.5, "clearance": 0.194, "connection": "star", "cornerStyle": "round", "endWidthInner": 0.486, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.197, "interconnect": true, "layerOrder": "interleaved", "layersPerPhase": 2, "pairConnection": "series", "phases": 3, "poles": 8, "rIn": 24.583, "rOut": 43.631, "stackMode": "single", "startAngleDeg": -31.214, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.246, "turns": 2},
+            "rho0": 1.0807471339008772
+          },
+          {
+            "output": 19.932,
+            "params": {"boardGap": 0.1, "clearance": 0.243, "connection": "open", "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletMax": false, "filletRadius": 0.251, "interconnect": false, "layerOrder": "grouped", "layersPerPhase": 1, "pairConnection": "series", "phases": 1, "poles": 12, "rIn": 28.072, "rOut": 48.655, "stackMode": "perPhase", "startAngleDeg": 22.484, "strands": 1, "style": "parallel", "terminalSide": "outer", "traceWidth": 0.216, "turns": 1},
+            "rho0": 0
+          }
+        ]
+      }
+    }
+  ],
+  "case_id": "gr23-minstraight-seeded",
+  "eq_ids": [],
+  "fn": "gr23MinStraight",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "Xcoil minStraight",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["gr23", "seeded"]
+}
