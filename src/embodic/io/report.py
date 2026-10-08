@@ -32,7 +32,7 @@ from embodic.model.fields import field_for
 from embodic.model.schema import design_values
 from embodic.model.vocabulary import Phase
 from embodic.outcome import ComputeOutcome
-from embodic.results import AnalysisResult
+from embodic.results import QUANTITY_LABELS, AnalysisResult
 from embodic.results.formatting import format_quantity
 from embodic.results.traceable import Traceable
 from embodic.units import Unit
@@ -54,10 +54,10 @@ def value_text(value: float, unit: Unit, *, significant: int = 3) -> str:
     return text if unit.display() else f"{text} {DIMENSIONLESS}"
 
 
-def key_results(analysis: AnalysisResult) -> tuple[Traceable[float], ...]:
-    """Return every scalar result of an analysis in field order."""
-    values = (getattr(analysis, f.name) for f in dataclasses.fields(analysis))
-    return tuple(v for v in values if isinstance(v, Traceable) and isinstance(v.value, float))
+def key_results(analysis: AnalysisResult) -> tuple[tuple[str, Traceable[float]], ...]:
+    """Return every scalar result of an analysis in field order, each with its AnalysisResult field name."""
+    named = ((f.name, getattr(analysis, f.name)) for f in dataclasses.fields(analysis))
+    return tuple((name, v) for name, v in named if isinstance(v, Traceable) and isinstance(v.value, float))
 
 
 @dataclass(slots=True)
@@ -101,11 +101,11 @@ def _key_results(flow: _Flow, analysis: AnalysisResult | None) -> None:
         flow.row([(MARGIN, "No analysis result: physics did not run for this design.")])
         return
     flow.row([(MARGIN, "Quantity"), (MARGIN + 200, "Value"), (MARGIN + 330, "Status")], bold=True)
-    for t in key_results(analysis):
+    for name, t in key_results(analysis):
         status = t.status.value + (f" ({t.label})" if t.label else "")
         flow.row(
             [
-                (MARGIN, t.quantity.replace("_", " ")),
+                (MARGIN, QUANTITY_LABELS[name]),
                 (MARGIN + 200, value_text(t.value, t.unit)),
                 (MARGIN + 330, status),
             ]

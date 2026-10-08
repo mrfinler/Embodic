@@ -2,6 +2,7 @@
 
 from embodic.results.analysis_result import AnalysisResult, LayerResult, PhaseResult, TorqueSpeedEstimate
 from embodic.results.formatting import format_quantity, format_value
+from embodic.results.labels import QUANTITY_LABELS
 from embodic.results.registry import (
     Assumption,
     EquationEntry,
@@ -25,6 +26,7 @@ from embodic.results.status import (
 from embodic.results.traceable import AssumedInput, InputRef, Traceable, evaluate_validity, traced
 
 __all__ = [
+    "QUANTITY_LABELS",
     "STATUS_ORDER_WEAKEST_FIRST",
     "AnalysisResult",
     "AssumedInput",

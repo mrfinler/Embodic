@@ -26,7 +26,7 @@ from harness import (
 from harness.codec import DATA_DIR
 
 from embodic.generators.wave import generate_wave
-from embodic.geometry.circuit import NeutralLead, PhaseLink
+from embodic.geometry.circuit import LineLead, NeutralLead, PhaseLink
 from embodic.geometry.discretise import piece_ratios
 from embodic.geometry.layout import BoardStack
 from embodic.physics import analyse
@@ -143,13 +143,10 @@ def test_gr22_phase_resistance_differs_from_xcoil_only_by_the_via_barrel_length(
 
 
 INTERCONNECT_CASES = [
-    a
-    for a, c in ANALYSES.items()
-    if len(c.calls[0].output["phaseKe"]) == 3
-    and not a.endswith("-open")
-    and not ("overlap" in a and a.endswith("-delta"))
+    a for a, c in ANALYSES.items() if len(c.calls[0].output["phaseKe"]) == 3 and not a.endswith("-open")
 ]
 OVERLAP_STAR = "wave-analysis-overlap-l2-m3-p16-t2"
+OVERLAP_DELTA = "wave-analysis-overlap-l2-m3-p16-t2-delta"
 ALLOW = load_allow_list(EXPECTED_DIFFS_DIR / "wave.toml")
 
 
@@ -157,33 +154,36 @@ ALLOW = load_allow_list(EXPECTED_DIFFS_DIR / "wave.toml")
 def test_gr22_interconnect_loss_matches_xcoil_for_star_and_delta(analysis_id: str, golden_report: Any) -> None:
     """Catches DEF-U-M3b-01: a star item of stubs and ring in one path, which counted 0.24 of Xcoil's loss.
 
-    The overlap star is compared too (D-036 e): embodic counts its tap stubs and Xcoil does not, and XD-WAVE-001
-    admits exactly that. The overlap delta stays out: Xcoil leaves its interconnect bookkeeping unset there
-    (engine.js l.2155-2172), which D-036 does not rule on.
+    The overlap star and delta are compared too: embodic counts the tap stubs (star) or the line leads (delta) and
+    Xcoil counts neither (engine.js l.2154-2172), and XD-WAVE-001 and XD-WAVE-002 admit exactly that.
     """
     xcoil, r, _ = _run(analysis_id)
     comparison = compare_scalar(xcoil["pInterconnect"], r.loss_interconnect_w.value, INTEGRATED)
     golden_report.check(analysis_id, apply_allow_list(comparison, analysis_id, ALLOW))
 
 
-def test_gr22_overlap_star_difference_is_the_tap_stub_copper_and_nothing_else() -> None:
-    """Catches an allow-list entry that hides more than XD-WAVE-001 says: it is the three PhaseLink tap stubs.
+@pytest.mark.parametrize(
+    ("analysis_id", "uncounted"), [(OVERLAP_STAR, PhaseLink), (OVERLAP_DELTA, LineLead)], ids=["star", "delta"]
+)
+def test_gr22_overlap_difference_is_the_uncounted_copper_and_nothing_else(
+    analysis_id: str, uncounted: type[PhaseLink | LineLead]
+) -> None:
+    """Catches an allow-list entry that hides more than it says: three PhaseLink stubs (XD-WAVE-001) or LineLead leads.
 
-    Reclassifying them as NeutralLead copper (no current, as in Xcoil's `link: [0, 0, 0]`, engine.js l.2172) makes
-    embodic's interconnect loss equal Xcoil's, so no other copper differs.
+    Reclassifying them as NeutralLead copper (no current, as in Xcoil's `link: [0, 0, 0]`, engine.js l.2172, and its
+    unset `icR`, l.2154) makes embodic's interconnect loss equal Xcoil's, so no other copper differs.
     """
-    xcoil, r, stack = _run(OVERLAP_STAR)
+    xcoil, r, stack = _run(analysis_id)
     board = stack.boards[0]
-    stubs = [role for role in board.circuit.interconnect_roles if isinstance(role, PhaseLink)]
-    assert len(stubs) == 3
+    assert sum(isinstance(role, uncounted) for role in board.circuit.interconnect_roles) == 3
     roles = tuple(
-        NeutralLead(path_id=x.path_id) if isinstance(x, PhaseLink) else x for x in board.circuit.interconnect_roles
+        NeutralLead(path_id=x.path_id) if isinstance(x, uncounted) else x for x in board.circuit.interconnect_roles
     )
-    uncounted = dataclasses.replace(board, circuit=dataclasses.replace(board.circuit, interconnect_roles=roles))
-    params = _layout_case(OVERLAP_STAR).calls[0].output["params"]
+    stripped = dataclasses.replace(board, circuit=dataclasses.replace(board.circuit, interconnect_roles=roles))
+    params = _layout_case(analysis_id).calls[0].output["params"]
     again = analyse(
         design_from_xcoil(params),
-        dataclasses.replace(stack, boards=(uncounted,)),
+        dataclasses.replace(stack, boards=(stripped,)),
         {},
         _xcoil_registry(xcoil, params["tempC"]),
     )

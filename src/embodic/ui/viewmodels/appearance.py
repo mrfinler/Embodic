@@ -1,19 +1,10 @@
 """Theme choice and phase render mode, persisted through an injected store (QSettings in the app)."""
 
-from enum import StrEnum
 from typing import Protocol
 
+from embodic.io.exporters import PhaseRenderMode as PhaseRenderMode  # geometry_view still imports it from here
 from embodic.ui.theme import ThemeName
 from embodic.ui.viewmodels.observable import Observable
-
-
-# Interim copy of interfaces.md section 9.3 until U-M4a's exporters merge into embodic.io; then import it from there.
-class PhaseRenderMode(StrEnum):
-    """How phases are drawn."""
-
-    COLOUR = "colour"  # red / blue / green plus labels and line style (D-011)
-    GREYSCALE_HATCH = "greyscale_hatch"  # lightness + hatch + labels (REQ-N-23)
-
 
 THEME_CYCLE: dict[ThemeName, ThemeName] = {
     ThemeName.LIGHT: ThemeName.DARK,
