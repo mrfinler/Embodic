@@ -1,0 +1,2319 @@
+{
+  "calls": [
+    {
+      "inputs": {"count": 200, "seed": 2107},
+      "output": [
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6212661317782476, "rb": 3.5595927305312025, "rv": 14.958694972263146, "spacing": 0.6212661317782476, "wEnd": 0.3807870379649103},
+            "outer": {"need": 0.6212661317782476, "rb": 3.5595927305312025, "rv": 36.972021537418655, "spacing": 0.6212661317782476, "wEnd": 0.3807870379649103},
+            "rVi": 14.958694972263146,
+            "rVo": 36.972021537418655
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.7683445675298571, "clearance": 0.1744478792301379, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.7859092735918239, "phases": 1, "poles": 12, "rIn": 15.916427504271269, "rOut": 36.03565914928913, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.3807870379649103, "turns": 3, "viaDrill": 0.3, "viaPad": 0.5128494671313092, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6111734502308537, "rb": 6.225361644209206, "rv": 15.10329275760214, "spacing": 0.6111734502308537, "wEnd": 0.3369276826852001},
+            "outer": {"need": 0.5521545439958573, "rb": 5.624200001765893, "rv": 38.28740988444592, "spacing": 0.5521545439958573, "wEnd": 0.21888987021520734},
+            "rVi": 15.10329275760214,
+            "rVo": 38.28740988444592
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.1697495836764573, "clearance": 0.1613245197571814, "cornerStyle": "sharp", "endWidthInner": 0.3369276826852001, "endWidthOuter": 0, "filletRadius": 0.10227590671274811, "phases": 2, "poles": 16, "rIn": 16.433942772448063, "rOut": 37.170620024204254, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.21888987021520734, "turns": 2, "viaDrill": 0.3, "viaPad": 0.5627701782621444, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5580038836225867, "rv": 12.754980894032403, "spacing": 0.7389462800358976, "wEnd": 0.26492962788324803},
+            "outer": {"need": 0.6056504542240873, "rv": 40.15477012222805, "spacing": 0.6056504532240887, "wEnd": 0.3125761984847486},
+            "rVi": 12.754980894032403,
+            "rVo": 40.15477012222805
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.6422272246330977, "clearance": 0.29307425573933865, "cornerStyle": "round", "endWidthInner": 0.26492962788324803, "endWidthOuter": 0.3125761984847486, "filletRadius": 0.22901739191729578, "phases": 2, "poles": 12, "rIn": 14.857060436159372, "rOut": 38.20344725623727, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.3536138301715255, "turns": 2, "viaDrill": 0.3, "viaPad": 0.6268144227098673, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5119909836677834, "rv": 18.323123758193105, "spacing": 0.8532148342409883, "wEnd": 0.32531950825359673},
+            "outer": {"need": 0.5119909836677834, "rv": 32.669449164066464, "spacing": 0.85321483424099, "wEnd": 0.32531950825359673},
+            "rTrackMin": 18.323123758193105,
+            "rVi": 18.323123758193105,
+            "rVo": 32.669449164066464
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.6858315410092473, "clearance": 0.18667147541418672, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.3710000193445012, "phases": 2, "poles": 16, "rIn": 18.614077769219875, "rOut": 32.378495153039694, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.32531950825359673, "turns": 3, "viaDrill": 0.3, "viaPad": 0.5819080220535398, "waveStyle": "chord"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 1,
+          "params": {"busWidth": 1.064670661278069, "clearance": 0.16369111348176374, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.680034810374491, "phases": 3, "poles": 20, "rIn": 16.468101430684328, "rOut": 28.57445615530014, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.2638476558495313, "turns": 3, "viaDrill": 0.3, "viaPad": 0.7242877716664226, "waveStyle": "jog"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_SLOT_PITCH", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 3,
+          "params": {"busWidth": 0.5299780981615185, "clearance": 0.24287613986525686, "cornerStyle": "sharp", "endWidthInner": 0.46783676603809, "endWidthOuter": 0, "filletRadius": 0.4601724613225088, "phases": 2, "poles": 8, "rIn": 19.43584433197975, "rOut": 39.653649024665356, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.3616566035663709, "turns": 4, "viaDrill": 0.3, "viaPad": 0.5099218792980537, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7213945580180735, "rb": 13.777621179380338, "rv": 22.243508920164842, "spacing": 0.7213945580180735, "wEnd": 0.21009294940158726},
+            "outer": {"need": 0.7213945580180735, "rb": 13.777621179380338, "rv": 42.7787754858154, "spacing": 0.7213945580180735, "wEnd": 0.21009294940158726},
+            "rVi": 22.243508920164842,
+            "rVo": 42.7787754858154
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.6938363811001181, "clearance": 0.2718000136432238, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.3410726133966819, "phases": 2, "poles": 20, "rIn": 24.912978261709213, "rOut": 40.48525218293071, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.21009294940158726, "turns": 3, "viaDrill": 0.3, "viaPad": 0.6890961393481121, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6730405391077511, "rv": 27.167929056549063, "spacing": 0.703525867372527, "wEnd": 0.4728126988047734},
+            "outer": {"need": 0.4675396080361679, "rv": 39.36649553038637, "spacing": 0.4675396070361687, "wEnd": 0.2673117677331902},
+            "rVi": 27.167929056549063,
+            "rVo": 39.36649553038637
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.7970035700127482, "clearance": 0.2002278403029777, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.2673117677331902, "filletRadius": 0.7002136660041288, "phases": 3, "poles": 16, "rIn": 28.46244589239359, "rOut": 38.396722964942455, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.4728126988047734, "turns": 1, "viaDrill": 0.3, "viaPad": 0.5337833573343232, "waveStyle": "jog"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 2,
+          "params": {"busWidth": 0.8905368732288479, "clearance": 0.16572153348242863, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.3979799281223677, "filletRadius": 0.3362742978613824, "phases": 2, "poles": 20, "rIn": 21.240966215729713, "rOut": 37.210050098598, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.26546284328214825, "turns": 4, "viaDrill": 0.3, "viaPad": 0.7484531049383805, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.4879494982189499, "rv": 25.677649270172697, "spacing": 0.9322534562146881, "wEnd": 0.33543694419786335},
+            "outer": {"need": 0.4879494982189499, "rv": 36.62973751929822, "spacing": 0.9322534562146856, "wEnd": 0.33543694419786335},
+            "rTrackMin": 25.677649270172697,
+            "rVi": 25.677649270172697,
+            "rVo": 36.62973751929822
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.102802174538374, "clearance": 0.15251255402108654, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.41040195955429226, "filletRadius": 0.7421177728101611, "phases": 3, "poles": 8, "rIn": 25.98089036345482, "rOut": 36.32649642601609, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.33543694419786335, "turns": 1, "viaDrill": 0.3, "viaPad": 0.6064821865642444, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.698396819352638, "rv": 24.34015135343652, "spacing": 0.7330572182300514, "wEnd": 0.49574683597311375},
+            "outer": {"need": 0.698396819352638, "rv": 41.39488681901712, "spacing": 0.7330572182300501, "wEnd": 0.49574683597311375},
+            "rTrackMin": 24.34015135343652,
+            "rVi": 24.34015135343652,
+            "rVo": 41.39488681901712
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.4627637948840857, "clearance": 0.2026499833795242, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.5954287834931166, "phases": 2, "poles": 8, "rIn": 24.618129637092352, "rOut": 41.11690853536129, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.49574683597311375, "turns": 3, "viaDrill": 0.3, "viaPad": 0.5559565673116594, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6190908122458495, "rv": 28.598051868204493, "spacing": 1.6995030696487938, "wEnd": 0.33737931433133783},
+            "outer": {"need": 0.6190908122458495, "rv": 43.92990815656958, "spacing": 1.6995030696487938, "wEnd": 0.33737931433133783},
+            "rTrackMin": 28.598051868204493,
+            "rVi": 28.598051868204493,
+            "rVo": 43.92990815656958
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.44761499725282194, "clearance": 0.28171149791451167, "cornerStyle": "sharp", "endWidthInner": 0.4651627553976141, "endWidthOuter": 0.40159234986640513, "filletRadius": 0.20324070758651944, "phases": 1, "poles": 12, "rIn": 28.850680757313967, "rOut": 43.67727926746011, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.33737931433133783, "turns": 4, "viaDrill": 0.3, "viaPad": 0.5052577782189474, "waveStyle": "chord"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_SLOT_PITCH", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 1,
+          "params": {"busWidth": 1.1348744686692953, "clearance": 0.23457329148659484, "cornerStyle": "sharp", "endWidthInner": 0.2974601009627804, "endWidthOuter": 0, "filletRadius": 0.7307596114929766, "phases": 3, "poles": 20, "rIn": 15.020334150642157, "rOut": 23.093923311680555, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.33015401377342646, "turns": 4, "viaDrill": 0.3, "viaPad": 0.610694243432954, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6223870273097418, "rv": 16.381862981733864, "spacing": 0.6223870273097418, "wEnd": 0.2908613973064348},
+            "outer": {"need": 0.6207397430145647, "rv": 37.801797765382794, "spacing": 0.6207397430145647, "wEnd": 0.28756682871608064},
+            "pitchIn": 0.6223870273097418,
+            "pitchOut": 0.6207397430145647,
+            "rVi": 16.381862981733864,
+            "rVo": 37.801797765382794,
+            "rhoIn0": 21.3609592002118,
+            "rhoInTop": 16.381862981733864,
+            "rhoOut0": 32.835879821266275,
+            "rhoOutTop": 37.801797765382794
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.8986654868349433, "clearance": 0.21248229844495653, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.28756682871608064, "filletRadius": 0.2203757457667962, "phases": 3, "poles": 12, "rIn": 21.864302895963192, "rOut": 32.334183409810066, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.2908613973064348, "turns": 3, "viaDrill": 0.3, "viaPad": 0.5289480604231358, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_SLOT_PITCH", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 2,
+          "params": {"busWidth": 0.8419831663370132, "clearance": 0.19638525818008928, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.33893464375287297, "phases": 3, "poles": 16, "rIn": 17.721847750246525, "rOut": 26.203982148319483, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.29719163975678387, "turns": 3, "viaDrill": 0.3, "viaPad": 0.6041221478022635, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7199125502374955, "rv": 24.49539546656888, "spacing": 0.7199125502374955, "wEnd": 0.3848944123601541},
+            "outer": {"need": 0.6694038646179251, "rv": 52.15246879567858, "spacing": 0.6694038646179251, "wEnd": 0.2838770411210135},
+            "pitchIn": 0.7199125502374955,
+            "pitchOut": 0.6694038646179251,
+            "rVi": 24.49539546656888,
+            "rVo": 52.15246879567858,
+            "rhoIn0": 28.094958217756357,
+            "rhoInTop": 24.49539546656888,
+            "rhoOut0": 48.805449472588954,
+            "rhoOutTop": 52.15246879567858
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.6543036390095949, "clearance": 0.19966262384550645, "cornerStyle": "round", "endWidthInner": 0.3848944123601541, "endWidthOuter": 0, "filletRadius": 0.3542899813735858, "phases": 3, "poles": 20, "rIn": 28.629006568342447, "rOut": 48.32190980762243, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.2838770411210135, "turns": 2, "viaDrill": 0.3, "viaPad": 0.6556054404238238, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7580537288624327, "rb": 7.238879884661973, "rv": 25.301776258873637, "spacing": 0.7580537288624327, "wEnd": 0.44598763558315113},
+            "outer": {"need": 0.6690809807856568, "rb": 6.389252725248644, "rv": 36.778160449004616, "spacing": 0.6690809807856568, "wEnd": 0.26804213942959904},
+            "rVi": 25.301776258873637,
+            "rVo": 36.778160449004616
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.7291590135544539, "clearance": 0.16046488769352435, "cornerStyle": "sharp", "endWidthInner": 0.44598763558315113, "endWidthOuter": 0, "filletRadius": 0.45544828246347613, "phases": 1, "poles": 20, "rIn": 26.486103624105453, "rOut": 35.758590180426836, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.26804213942959904, "turns": 3, "viaDrill": 0.3, "viaPad": 0.7491900467546657, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5541153242462314, "rv": 29.135723944051804, "spacing": 4.617856329477535, "wEnd": 0.3200340191135183},
+            "outer": {"need": 0.5541153242462314, "rv": 48.548693841154076, "spacing": 7.594714639148282, "wEnd": 0.3200340191135183},
+            "rVi": 29.135723944051804,
+            "rVo": 48.548693841154076
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.9861346259713173, "clearance": 0.23408130513271316, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.6905916039599106, "phases": 1, "poles": 20, "rIn": 29.519153710454702, "rOut": 47.93122509121895, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.3200340191135183, "turns": 1, "viaDrill": 0.3, "viaPad": 0.5065568724879995, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.8264949146425352, "rb": 1.0523260088453887, "rv": 16.2919229919209, "spacing": 0.8264949146425352, "wEnd": 0.48441401512827725},
+            "outer": {"need": 0.8264949146425352, "rb": 1.0523260088453887, "rv": 40.68023643668275, "spacing": 0.8264949146425352, "wEnd": 0.48441401512827725},
+            "rVi": 16.2919229919209,
+            "rVo": 40.68023643668275
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.8629587918519974, "clearance": 0.224755433073733, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.6987529263366015, "phases": 1, "poles": 8, "rIn": 16.706013713032007, "rOut": 40.26684922352433, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.48441401512827725, "turns": 1, "viaDrill": 0.3, "viaPad": 0.7190649480093271, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7301680717384442, "rv": 24.597634184046182, "spacing": 1.7503779832803457, "wEnd": 0.45993815127294513},
+            "outer": {"need": 0.7301680717384442, "rv": 48.33617432148894, "spacing": 1.7503779832803468, "wEnd": 0.45993815127294513},
+            "rTrackMin": 24.597634184046182,
+            "rVi": 24.597634184046182,
+            "rVo": 48.33617432148894
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.7186416763812303, "clearance": 0.27022992046549915, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.22007728435564788, "phases": 2, "poles": 8, "rIn": 24.901329297572374, "rOut": 48.03247920796275, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.45993815127294513, "turns": 2, "viaDrill": 0.3, "viaPad": 0.6073902270523831, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7177840441465378, "rb": 2.741733088761906, "rv": 22.2252985601435, "spacing": 0.7177840441465378, "wEnd": 0.4357677391264588},
+            "outer": {"need": 0.7177840441465378, "rb": 2.741733088761906, "rv": 36.33672233915274, "spacing": 0.7177840441465378, "wEnd": 0.4357677391264588},
+            "rVi": 22.2252985601435,
+            "rVo": 36.33672233915274
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.0805057745426891, "clearance": 0.21170998199377208, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.48794496662449094, "phases": 3, "poles": 8, "rIn": 23.309871897101402, "rOut": 35.25687354803085, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.4357677391264588, "turns": 1, "viaDrill": 0.3, "viaPad": 0.5763803851790726, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7567830917891115, "rv": 17.7858976805117, "spacing": 0.7567830917891115, "wEnd": 0.26602472548838707},
+            "outer": {"need": 0.7716681730118581, "rv": 32.94298277804628, "spacing": 0.7716681730118581, "wEnd": 0.2957948879338801},
+            "pitchIn": 0.7567830917891115,
+            "pitchOut": 0.7716681730118581,
+            "rVi": 17.7858976805117,
+            "rVo": 32.94298277804628,
+            "rhoIn0": 20.056246955879033,
+            "rhoInTop": 17.7858976805117,
+            "rhoOut0": 30.627978259010707,
+            "rhoOutTop": 32.94298277804628
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.7773613654077053, "clearance": 0.25767291805241255, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.2957948879338801, "filletRadius": 0.32694805513601755, "phases": 2, "poles": 12, "rIn": 20.579944599419832, "rOut": 30.08939553424716, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.26602472548838707, "turns": 2, "viaDrill": 0.3, "viaPad": 0.7321956219850109, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6906836341833695, "rb": 3.5176228637746445, "rv": 16.380635071050172, "spacing": 0.6906836341833695, "wEnd": 0.2503380330745131},
+            "outer": {"need": 0.6794696792494506, "rb": 3.46051066027567, "rv": 29.65060201034025, "spacing": 0.6794696792494506, "wEnd": 0.22791012320667506},
+            "rVi": 16.380635071050172,
+            "rVo": 29.65060201034025
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.5482280347496271, "clearance": 0.2721378300106153, "cornerStyle": "round", "endWidthInner": 0.2503380330745131, "endWidthOuter": 0, "filletRadius": 0.5630996731109917, "phases": 1, "poles": 16, "rIn": 17.087111212313175, "rOut": 28.966345321387053, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.22791012320667506, "turns": 2, "viaDrill": 0.3, "viaPad": 0.5867535752709955, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5126295597292483, "rv": 22.483983269820303, "spacing": 0.7693462620035388, "wEnd": 0.2837435190798715},
+            "outer": {"need": 0.5126295597292483, "rv": 41.130535860916716, "spacing": 0.5126295587292495, "wEnd": 0.2837435190798715},
+            "rVi": 22.483983269820303,
+            "rVo": 41.130535860916716
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.6527071885764599, "clearance": 0.2288860406493768, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.15742114908061922, "phases": 1, "poles": 16, "rIn": 23.88363143801689, "rOut": 40.07944801077247, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.2837435190798715, "turns": 3, "viaDrill": 0.3, "viaPad": 0.7971769256284461, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6044747394393198, "rb": 2.3089234261428775, "rv": 13.366735917922082, "spacing": 0.6044747394393198, "wEnd": 0.25792229047510773},
+            "outer": {"need": 0.6044747394393198, "rb": 2.3089234261428775, "rv": 39.190692861532526, "spacing": 0.6044747394393198, "wEnd": 0.25792229047510773},
+            "rVi": 13.366735917922082,
+            "rVo": 39.190692861532526
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.02072631418705, "clearance": 0.16918266067514195, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.5023408363573254, "phases": 1, "poles": 8, "rIn": 14.286375910043716, "rOut": 38.28236551582813, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.25792229047510773, "turns": 3, "viaDrill": 0.3, "viaPad": 0.612661867053248, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6142710063490086, "rb": 6.256913091742575, "rv": 28.637360826271603, "spacing": 0.6142710063490086, "wEnd": 0.28302768401335926},
+            "outer": {"need": 0.6142710063490086, "rb": 6.256913091742575, "rv": 48.68253107103598, "spacing": 0.6142710063490086, "wEnd": 0.28302768401335926},
+            "rVi": 28.637360826271603,
+            "rVo": 48.68253107103598
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.7567115180194377, "clearance": 0.20206859393510967, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.1036825996125117, "phases": 2, "poles": 16, "rIn": 29.894994497299194, "rOut": 47.44344286620617, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.28302768401335926, "turns": 2, "viaDrill": 0.3, "viaPad": 0.5413771408144384, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7270065727876499, "rb": 4.628267588778091, "rv": 18.2707058215137, "spacing": 0.7270065727876499, "wEnd": 0.20837781720329077},
+            "outer": {"need": 0.7654550933628342, "rb": 4.8730384729425325, "rv": 42.12828633944069, "spacing": 0.7654550933628342, "wEnd": 0.2852748583536595},
+            "rVi": 18.2707058215137,
+            "rVo": 42.12828633944069
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.6565368123352527, "clearance": 0.227162593009416, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.2852748583536595, "filletRadius": 0.5976413860917091, "phases": 1, "poles": 20, "rIn": 19.021209958940744, "rOut": 41.3575610332191, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.20837781720329077, "turns": 2, "viaDrill": 0.3, "viaPad": 0.7913101423531771, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7898436384624801, "rb": 2.0113203092958654, "rv": 18.572848798101262, "spacing": 0.7898436384624802, "wEnd": 0.3589780489215627},
+            "outer": {"need": 0.7898436384624801, "rb": 2.0113203092958654, "rv": 42.325786633395225, "spacing": 0.7898436384624802, "wEnd": 0.3589780489215627},
+            "rVi": 18.572848798101262,
+            "rVo": 42.325786633395225
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.4303710553795099, "clearance": 0.2534405937069096, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.7963157986057923, "phases": 1, "poles": 16, "rIn": 18.97005756571889, "rOut": 41.93041394278407, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.3589780489215627, "turns": 1, "viaDrill": 0.3, "viaPad": 0.7138280405895785, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6993942956556566, "rv": 24.51657629288842, "spacing": 0.7864276912075101, "wEnd": 0.49161209538578987},
+            "outer": {"need": 0.6993942956556566, "rv": 39.19796323109554, "spacing": 0.6993942946556625, "wEnd": 0.49161209538578987},
+            "rVi": 24.51657629288842,
+            "rVo": 39.19796323109554
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.1227248188108205, "clearance": 0.2077822002698667, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.7704495078884066, "phases": 1, "poles": 12, "rIn": 26.700344394892454, "rOut": 37.05564625188708, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.49161209538578987, "turns": 4, "viaDrill": 0.3, "viaPad": 0.6656788884894922, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6705609737779014, "rv": 20.872984776191878, "spacing": 1.2827077628435817, "wEnd": 0.44742107200436293},
+            "outer": {"need": 0.6705609737779014, "rv": 38.05621381298406, "spacing": 1.2827077628435808, "wEnd": 0.44742107200436293},
+            "rTrackMin": 20.872984776191878,
+            "rVi": 20.872984776191878,
+            "rVo": 38.05621381298406
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.5604412501677871, "clearance": 0.22313990177353843, "cornerStyle": "round", "endWidthInner": 0.2515282885869965, "endWidthOuter": 0, "filletRadius": 0.7053355168318376, "phases": 2, "poles": 8, "rIn": 21.2443720549345, "rOut": 37.68482653424144, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.44742107200436293, "turns": 2, "viaDrill": 0.3, "viaPad": 0.7427745574852452, "waveStyle": "chord"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 2,
+          "params": {"busWidth": 0.8196421720087528, "clearance": 0.17405086846556514, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.20973315711598844, "phases": 2, "poles": 20, "rIn": 15.598710753023624, "rOut": 29.864511370658875, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.21120193204842508, "turns": 3, "viaDrill": 0.3, "viaPad": 0.7966263032518328, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7524262711755, "rb": 11.496226595499238, "rv": 24.07657401409167, "spacing": 0.7524262711755, "wEnd": 0.4042194071225822},
+            "outer": {"need": 0.6634087877580896, "rb": 10.136139634780996, "rv": 43.28573230120902, "spacing": 0.6634087877580896, "wEnd": 0.2261844402877614},
+            "rVi": 24.07657401409167,
+            "rVo": 43.28573230120902
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.9037325086072087, "clearance": 0.27982535714982076, "cornerStyle": "round", "endWidthInner": 0.4042194071225822, "endWidthOuter": 0, "filletRadius": 0.253219888615422, "phases": 3, "poles": 8, "rIn": 29.08915262296796, "rOut": 39.17892886325717, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.2261844402877614, "turns": 4, "viaDrill": 0.3, "viaPad": 0.5409824209287762, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.8741999994497747, "rv": 25.27311520501971, "spacing": 0.8741999994497747, "wEnd": 0.4744675043504685},
+            "outer": {"need": 0.7819268370396458, "rv": 46.68290488997009, "spacing": 0.7819268370396458, "wEnd": 0.2899211795302108},
+            "pitchIn": 0.8741999994497747,
+            "pitchOut": 0.7819268370396458,
+            "rVi": 25.27311520501971,
+            "rVo": 46.68290488997009,
+            "rhoIn0": 26.147315204469486,
+            "rhoInTop": 25.27311520501971,
+            "rhoOut0": 45.90097805293044,
+            "rhoOutTop": 46.68290488997009
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.41190548557788137, "clearance": 0.2569157556630671, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.2899211795302108, "filletRadius": 0.6785922054899857, "phases": 1, "poles": 16, "rIn": 26.878698464483023, "rOut": 45.261867955327034, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.4744675043504685, "turns": 2, "viaDrill": 0.3, "viaPad": 0.7601009832229466, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 1,
+          "params": {"busWidth": 0.9030455879867076, "clearance": 0.1522480146610178, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.3919295617379248, "filletRadius": 0.11012704719323665, "phases": 3, "poles": 20, "rIn": 17.44216461852193, "rOut": 33.70528096705675, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.3204032714245841, "turns": 2, "viaDrill": 0.3, "viaPad": 0.7210615511517973, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 3,
+          "params": {"busWidth": 0.5377308130264282, "clearance": 0.18295694247353822, "cornerStyle": "round", "endWidthInner": 0.30360431666485965, "endWidthOuter": 0, "filletRadius": 0.32875327256042514, "phases": 3, "poles": 8, "rIn": 19.223123017698526, "rOut": 31.621454119682312, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.24780389165971428, "turns": 4, "viaDrill": 0.3, "viaPad": 0.7511179840890692, "waveStyle": "involute"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 2,
+          "params": {"busWidth": 0.6167128076776862, "clearance": 0.25825379008892924, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.4849760634358973, "phases": 3, "poles": 12, "rIn": 21.488748230040073, "rOut": 34.37150276824832, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.42716662215534595, "turns": 4, "viaDrill": 0.3, "viaPad": 0.7385189291788266, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.41553121093893425, "rv": 20.62444508195343, "spacing": 0.6407030707353338, "wEnd": 0.22221897733397783},
+            "outer": {"need": 0.6710388856008649, "rv": 45.15861122809628, "spacing": 0.6710388846008652, "wEnd": 0.47772665199590847},
+            "rVi": 20.62444508195343,
+            "rVo": 45.15861122809628
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.7193234985694289, "clearance": 0.19331223360495642, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.47772665199590847, "filletRadius": 0.6705240504816175, "phases": 3, "poles": 16, "rIn": 21.791923850774765, "rOut": 43.833667796105146, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.22221897733397783, "turns": 1, "viaDrill": 0.3, "viaPad": 0.6725626989267767, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6912925844895653, "rv": 17.96815198678523, "spacing": 0.6912925844895653, "wEnd": 0.44779479927383364},
+            "outer": {"need": 0.6912925844895653, "rv": 35.54496095683426, "spacing": 0.6912925844895653, "wEnd": 0.44779479927383364},
+            "pitchIn": 0.6912925844895653,
+            "pitchOut": 0.6912925844895653,
+            "rVi": 17.96815198678523,
+            "rVo": 35.54496095683426,
+            "rhoIn0": 21.424614909233057,
+            "rhoInTop": 17.96815198678523,
+            "rhoOut0": 32.08849803438643,
+            "rhoOutTop": 35.54496095683426
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.9319394700229168, "clearance": 0.2022809538175352, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.42955917564686397, "phases": 2, "poles": 12, "rIn": 22.07469066232443, "rOut": 31.43842228129506, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.44779479927383364, "turns": 3, "viaDrill": 0.3, "viaPad": 0.5302284620702267, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_SLOT_PITCH", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 2,
+          "params": {"busWidth": 0.49896677769720554, "clearance": 0.22978239274816586, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.18181278314441446, "phases": 3, "poles": 16, "rIn": 22.049766421318054, "rOut": 36.187447894364595, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.20229634852148592, "turns": 3, "viaDrill": 0.3, "viaPad": 0.7893470017239452, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.49105842035496605, "rv": 14.495339592818636, "spacing": 0.6458647958363951, "wEnd": 0.2677378880791366},
+            "outer": {"need": 0.5901975546497852, "rv": 38.662502830968506, "spacing": 0.6946827508867531, "wEnd": 0.3668770223739557},
+            "rVi": 14.495339592818636,
+            "rVo": 38.662502830968506
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.4326586473733187, "clearance": 0.22332053227582946, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.3668770223739557, "filletRadius": 0.5494049251312391, "phases": 2, "poles": 8, "rIn": 16.59620936587453, "rOut": 35.70101745054126, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.2677378880791366, "turns": 2, "viaDrill": 0.3, "viaPad": 0.5773506410419941, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.701406411814969, "rv": 26.778491306409705, "spacing": 8.599878106055861, "wEnd": 0.47292132303118706},
+            "outer": {"need": 0.701406411814969, "rv": 48.4710980138625, "spacing": 8.599878106055863, "wEnd": 0.47292132303118706},
+            "rTrackMin": 26.778491306409705,
+            "rVi": 26.778491306409705,
+            "rVo": 48.4710980138625
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.4420325309038162, "clearance": 0.228485088783782, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.4576455680071376, "filletRadius": 0.2445780710084364, "phases": 1, "poles": 16, "rIn": 27.070052430033684, "rOut": 48.17953689023852, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.47292132303118706, "turns": 1, "viaDrill": 0.3, "viaPad": 0.5831222472479567, "waveStyle": "chord"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 2,
+          "params": {"busWidth": 0.8574778981506824, "clearance": 0.2014628876117058, "cornerStyle": "round", "endWidthInner": 0.47275206848280504, "endWidthOuter": 0.3347969098831527, "filletRadius": 0.2283635131083429, "phases": 3, "poles": 16, "rIn": 26.350916162133217, "rOut": 45.81803732737899, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.2135938520077616, "turns": 4, "viaDrill": 0.3, "viaPad": 0.6399447001516819, "waveStyle": "jog"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 2,
+          "params": {"busWidth": 0.6995299467816949, "clearance": 0.2969359336537309, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.6033937482628972, "phases": 3, "poles": 20, "rIn": 28.627336859703064, "rOut": 39.83419377356768, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.2983151542488486, "turns": 4, "viaDrill": 0.3, "viaPad": 0.5451589288888499, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7204735380480997, "rb": 1.8346707991561888, "rv": 22.412316840020416, "spacing": 0.7204735380480997, "wEnd": 0.40111607341095806},
+            "outer": {"need": 0.6851831967826001, "rb": 1.7448046830633224, "rv": 34.43247302838644, "spacing": 0.6851831967826001, "wEnd": 0.33053539087995887},
+            "rVi": 22.412316840020416,
+            "rVo": 34.43247302838644
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.4989900199696422, "clearance": 0.18716024053283034, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.33053539087995887, "filletRadius": 0.41974885747767987, "phases": 2, "poles": 8, "rIn": 23.135140370577574, "rOut": 33.74639048054814, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.40111607341095806, "turns": 1, "viaDrill": 0.3, "viaPad": 0.6655105216195807, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6879044817294926, "rv": 23.161076685844453, "spacing": 0.6879044817294926, "wEnd": 0.39370717774145303},
+            "outer": {"need": 0.6879044817294926, "rv": 55.151200746686655, "spacing": 0.6879044817294926, "wEnd": 0.39370717774145303},
+            "pitchIn": 0.6879044817294926,
+            "pitchOut": 0.6879044817294926,
+            "rVi": 23.161076685844453,
+            "rVo": 55.151200746686655,
+            "rhoIn0": 26.600599094491916,
+            "rhoInTop": 23.161076685844453,
+            "rhoOut0": 51.71167833803919,
+            "rhoOutTop": 55.151200746686655
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.6051726454868913, "clearance": 0.23605288717662914, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.39001832937356085, "phases": 2, "poles": 16, "rIn": 27.23035915941, "rOut": 51.08191827312112, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.39370717774145303, "turns": 3, "viaDrill": 0.3, "viaPad": 0.5099960113642737, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 1,
+          "params": {"busWidth": 0.49864246733486656, "clearance": 0.21637883096700533, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.17076938333921135, "phases": 3, "poles": 16, "rIn": 14.91361603140831, "rOut": 29.942260771989822, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.24969198575709017, "turns": 2, "viaDrill": 0.3, "viaPad": 0.7491540330694989, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.733725416753441, "rb": 3.736832862351075, "rv": 20.744763978896373, "spacing": 0.733725416753441, "wEnd": 0.41844764975830917},
+            "outer": {"need": 0.769495755591197, "rb": 3.919009702098303, "rv": 41.432739949267244, "spacing": 0.769495755591197, "wEnd": 0.4899883274338208},
+            "rVi": 20.744763978896373,
+            "rVo": 41.432739949267244
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.1506338039413095, "clearance": 0.20134996629785745, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.4899883274338208, "filletRadius": 0.48300826647318906, "phases": 2, "poles": 8, "rIn": 22.234944954514503, "rOut": 39.886546831578016, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.41844764975830917, "turns": 2, "viaDrill": 0.3, "viaPad": 0.6463032511528581, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7775724204198923, "rb": 0.9900359545740421, "rv": 29.357684466160812, "spacing": 0.7775724204198923, "wEnd": 0.4127128193504177},
+            "outer": {"need": 0.762012812111061, "rb": 0.9702248459746484, "rv": 51.859820788564505, "spacing": 0.762012812111061, "wEnd": 0.3815936027327552},
+            "rVi": 29.357684466160812,
+            "rVo": 51.859820788564505
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.8457035658881068, "clearance": 0.27265396305592726, "cornerStyle": "round", "endWidthInner": 0.4127128193504177, "endWidthOuter": 0, "filletRadius": 0.515085318707861, "phases": 1, "poles": 8, "rIn": 29.746689043939114, "rOut": 51.47874719277024, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.3815936027327552, "turns": 1, "viaDrill": 0.3, "viaPad": 0.5971240953775123, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6535922642622609, "rb": 1.6643590339834105, "rv": 17.553937818093715, "spacing": 0.6535922642622609, "wEnd": 0.30497651413315907},
+            "outer": {"need": 0.725354234664701, "rb": 1.8470993910324125, "rv": 38.23486320204225, "spacing": 0.725354234664701, "wEnd": 0.4485004549380392},
+            "rVi": 17.553937818093715,
+            "rVo": 38.23486320204225
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.1045223761349916, "clearance": 0.18170270629925653, "cornerStyle": "sharp", "endWidthInner": 0.30497651413315907, "endWidthOuter": 0, "filletRadius": 0.7490022205980496, "phases": 1, "poles": 8, "rIn": 18.210380520671606, "rOut": 37.50864462554455, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.4485004549380392, "turns": 2, "viaDrill": 0.3, "viaPad": 0.6388026017928496, "waveStyle": "involute"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_SLOT_PITCH", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 2,
+          "params": {"busWidth": 0.6713108219206333, "clearance": 0.17145470743998883, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.5268993107834832, "phases": 2, "poles": 8, "rIn": 28.232551641762257, "rOut": 42.324346013367176, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.34498535327147695, "turns": 4, "viaDrill": 0.3, "viaPad": 0.720309224841185, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.3880295490496792, "rv": 19.30206996120978, "spacing": 2.220123031839525, "wEnd": 0.20981150730513037},
+            "outer": {"need": 0.3880295490496792, "rv": 28.959332124213688, "spacing": 2.220123031839525, "wEnd": 0.20981150730513037},
+            "rTrackMin": 19.30206996120978,
+            "rVi": 19.30206996120978,
+            "rVo": 28.959332124213688
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.825709174387157, "clearance": 0.1782180417445488, "cornerStyle": "round", "endWidthInner": 0.43228537519462407, "endWidthOuter": 0.26578489638632163, "filletRadius": 0.7799493780126796, "phases": 1, "poles": 20, "rIn": 19.67769978567958, "rOut": 28.58370229974389, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.20981150730513037, "turns": 2, "viaDrill": 0.3, "viaPad": 0.7512596489395946, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6818754319800064, "rv": 23.074884273414497, "spacing": 0.6818754319800064, "wEnd": 0.38680756743997335},
+            "outer": {"need": 0.6332467517466285, "rv": 41.46965922827366, "spacing": 0.6332467517466285, "wEnd": 0.2895502069732174},
+            "pitchIn": 0.6818754319800064,
+            "pitchOut": 0.6332467517466285,
+            "rVi": 23.074884273414497,
+            "rVo": 41.46965922827366,
+            "rhoIn0": 25.12051056935452,
+            "rhoInTop": 23.074884273414497,
+            "rhoOut0": 39.56991897303378,
+            "rhoOutTop": 41.46965922827366
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.6958543008193374, "clearance": 0.17403507070848717, "cornerStyle": "sharp", "endWidthInner": 0.38680756743997335, "endWidthOuter": 0, "filletRadius": 0.19609976692590864, "phases": 2, "poles": 12, "rIn": 25.632724527269602, "rOut": 39.10633369535208, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.2895502069732174, "turns": 2, "viaDrill": 0.3, "viaPad": 0.6288731551030651, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.8609642027702649, "rv": 20.85542917844723, "spacing": 0.8609642027702649, "wEnd": 0.48073238629149273},
+            "outer": {"need": 0.8366286271600984, "rv": 44.20016768228961, "spacing": 0.8366286271600984, "wEnd": 0.4320612350711599},
+            "pitchIn": 0.8609642027702649,
+            "pitchOut": 0.8366286271600984,
+            "rVi": 20.85542917844723,
+            "rVo": 44.20016768228961,
+            "rhoIn0": 20.85542917844723,
+            "rhoInTop": 20.85542917844723,
+            "rhoOut0": 44.20016768228961,
+            "rhoOutTop": 44.20016768228961
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.142558665946126, "clearance": 0.22188659539679065, "cornerStyle": "round", "endWidthInner": 0.48073238629149273, "endWidthOuter": 0, "filletRadius": 0.7724079347215593, "phases": 1, "poles": 16, "rIn": 21.533712584525347, "rOut": 43.54621985182166, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.4320612350711599, "turns": 1, "viaDrill": 0.3, "viaPad": 0.7974228284554556, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7464178458205424, "rv": 23.91879290658981, "spacing": 0.7464178458205424, "wEnd": 0.3812839231221006},
+            "outer": {"need": 0.7464178458205424, "rv": 45.57300315480679, "spacing": 0.7464178458205424, "wEnd": 0.3812839231221006},
+            "pitchIn": 0.7464178458205424,
+            "pitchOut": 0.7464178458205424,
+            "rVi": 23.91879290658981,
+            "rVo": 45.57300315480679,
+            "rhoIn0": 25.411628598230894,
+            "rhoInTop": 23.91879290658981,
+            "rhoOut0": 44.08016746316571,
+            "rhoOutTop": 45.57300315480679
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.7075560679659247, "clearance": 0.22678780839778484, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.5769293594639748, "phases": 3, "poles": 20, "rIn": 26.019700329750776, "rOut": 43.47209573164582, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.3812839231221006, "turns": 1, "viaDrill": 0.3, "viaPad": 0.6579761517234146, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6709374853759074, "rv": 15.63060303097591, "spacing": 0.6709374853759074, "wEnd": 0.29111929826904087},
+            "outer": {"need": 0.6709374853759074, "rv": 35.662485881987955, "spacing": 0.6709374853759074, "wEnd": 0.29111929826904087},
+            "pitchIn": 0.6709374853759074,
+            "pitchOut": 0.6709374853759074,
+            "rVi": 15.63060303097591,
+            "rVo": 35.662485881987955,
+            "rhoIn0": 16.301540516351817,
+            "rhoInTop": 15.63060303097591,
+            "rhoOut0": 34.991548396612046,
+            "rhoOutTop": 35.662485881987955
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.6398751435801386, "clearance": 0.1537265047780238, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.3422384084668011, "phases": 2, "poles": 12, "rIn": 16.74638631939888, "rOut": 34.54670259356499, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.29111929826904087, "turns": 1, "viaDrill": 0.3, "viaPad": 0.7433026629267261, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5793951998464764, "rv": 17.992726489362624, "spacing": 1.3880668393502267, "wEnd": 0.4126088484888897},
+            "outer": {"need": 0.5793951998464764, "rv": 29.852450742300174, "spacing": 2.1150580289336234, "wEnd": 0.4126088484888897},
+            "rVi": 17.992726489362624,
+            "rVo": 29.852450742300174
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.4217498986050487, "clearance": 0.16678635135758668, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.516182359890081, "phases": 1, "poles": 8, "rIn": 19.4968346580863, "rOut": 27.561590645462275, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.4126088484888897, "turns": 2, "viaDrill": 0.3, "viaPad": 0.7955991679336876, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.38142682660836724, "rv": 28.911681565770415, "spacing": 1.2766024664099755, "wEnd": 0.20351057797670366},
+            "outer": {"need": 0.38142682660836724, "rv": 38.13202975752065, "spacing": 1.276602466409974, "wEnd": 0.20351057797670366},
+            "rTrackMin": 28.911681565770415,
+            "rVi": 28.911681565770415,
+            "rVo": 38.13202975752065
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.1429720001295207, "clearance": 0.1779162486316636, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.18670619004406036, "phases": 1, "poles": 20, "rIn": 29.16699730977416, "rOut": 37.8767140135169, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.20351057797670366, "turns": 4, "viaDrill": 0.3, "viaPad": 0.5106314880074934, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6673418859136291, "rv": 12.335934190626721, "spacing": 0.6673418859136291, "wEnd": 0.3600237355567515},
+            "outer": {"need": 0.6673418859136291, "rv": 38.57487336305203, "spacing": 0.6673418859136291, "wEnd": 0.3600237355567515},
+            "pitchIn": 0.6673418859136291,
+            "pitchOut": 0.6673418859136291,
+            "rVi": 12.335934190626721,
+            "rVo": 38.57487336305203,
+            "rhoIn0": 14.337959848367609,
+            "rhoInTop": 12.335934190626721,
+            "rhoOut0": 36.57284770531114,
+            "rhoOutTop": 38.57487336305203
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.7051912074908614, "clearance": 0.1941956928698346, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.7861874930327759, "phases": 1, "poles": 8, "rIn": 14.892179276794195, "rOut": 36.018628276884556, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.3600237355567515, "turns": 4, "viaDrill": 0.3, "viaPad": 0.5862686505308374, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7944754162977916, "rb": 6.069345104101675, "rv": 24.838857455724416, "spacing": 0.7944754162977916, "wEnd": 0.4868965352070518},
+            "outer": {"need": 0.7971593128750101, "rb": 6.089848563638238, "rv": 50.39301113780081, "spacing": 0.7971593128750101, "wEnd": 0.49226432836148887},
+            "rVi": 24.838857455724416,
+            "rVo": 50.39301113780081
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.0627354122698307, "clearance": 0.23481155284680427, "cornerStyle": "sharp", "endWidthInner": 0.4868965352070518, "endWidthOuter": 0, "filletRadius": 0.7291385274147615, "phases": 3, "poles": 8, "rIn": 27.289814233779907, "rOut": 47.98297975957394, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.49226432836148887, "turns": 2, "viaDrill": 0.3, "viaPad": 0.6324311916949228, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5089997646864504, "rv": 17.598855560939977, "spacing": 0.7210053759988031, "wEnd": 0.2097130249720067},
+            "outer": {"need": 0.5089997646864504, "rv": 32.98973321248132, "spacing": 1.1037830466172929, "wEnd": 0.2097130249720067},
+            "rVi": 17.598855560939977,
+            "rVo": 32.98973321248132
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.0928390763700007, "clearance": 0.29928673971444364, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.7021412565838546, "phases": 2, "poles": 12, "rIn": 18.350940871983767, "rOut": 31.846316795796156, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.2097130249720067, "turns": 1, "viaDrill": 0.3, "viaPad": 0.6337242495967075, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7093907067377586, "rb": 5.419345802916835, "rv": 15.368477009645641, "spacing": 0.7093907067377586, "wEnd": 0.2757133953855373},
+            "outer": {"need": 0.7466564934118651, "rb": 5.704035442471658, "rv": 36.72795258906889, "spacing": 0.7466564934118651, "wEnd": 0.35024496873375033},
+            "rVi": 15.368477009645641,
+            "rVo": 36.72795258906889
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.6638496672734618, "clearance": 0.19971388557460157, "cornerStyle": "round", "endWidthInner": 0.2757133953855373, "endWidthOuter": 0, "filletRadius": 0.45958332689479, "phases": 1, "poles": 12, "rIn": 16.87513967603445, "rOut": 35.21549500897527, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.35024496873375033, "turns": 4, "viaDrill": 0.3, "viaPad": 0.7436402469407768, "waveStyle": "involute"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 3,
+          "params": {"busWidth": 0.6148220406845212, "clearance": 0.15582644997630268, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.34701711961533876, "phases": 2, "poles": 16, "rIn": 17.12674667313695, "rOut": 29.12290859222412, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.2666464691516012, "turns": 4, "viaDrill": 0.3, "viaPad": 0.5511229645228013, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5539075595675967, "rv": 26.239233438065277, "spacing": 6.27657177991884, "wEnd": 0.39906837097369136},
+            "outer": {"need": 0.5539075595675967, "rv": 38.379141326854004, "spacing": 6.27657177991884, "wEnd": 0.39906837097369136},
+            "rTrackMin": 26.239233438065277,
+            "rVi": 26.239233438065277,
+            "rVo": 38.379141326854004
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.7454128069803119, "clearance": 0.1548391885939054, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.17112938752397897, "phases": 1, "poles": 20, "rIn": 26.502927254885435, "rOut": 38.115447510033846, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.39906837097369136, "turns": 1, "viaDrill": 0.3, "viaPad": 0.5273876336403192, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6022569277789444, "rv": 20.012752753216773, "spacing": 1.4519089703133636, "wEnd": 0.3826302421512082},
+            "outer": {"need": 0.6022569277789444, "rv": 29.275690722744912, "spacing": 1.4519089703133636, "wEnd": 0.3826302421512082},
+            "rTrackMin": 20.012752753216773,
+            "rVi": 20.012752753216773,
+            "rVo": 29.275690722744912
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.0919656699523328, "clearance": 0.21962668562773613, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.33312888140790164, "filletRadius": 0.6347263796254993, "phases": 1, "poles": 20, "rIn": 20.397805895656347, "rOut": 28.890637580305338, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.3826302421512082, "turns": 3, "viaDrill": 0.3, "viaPad": 0.770106284879148, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6741614855767694, "rb": 8.583690629737468, "rv": 20.819398824057643, "spacing": 0.6741614855767694, "wEnd": 0.424784526869189},
+            "outer": {"need": 0.6350909060216509, "rb": 8.086228560484487, "rv": 46.668741781636655, "spacing": 0.6350909060216509, "wEnd": 0.3466433677589521},
+            "rVi": 20.819398824057643,
+            "rVo": 46.668741781636655
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.0848062604665756, "clearance": 0.15947409780928865, "cornerStyle": "sharp", "endWidthInner": 0.424784526869189, "endWidthOuter": 0, "filletRadius": 0.6496825041249394, "phases": 1, "poles": 20, "rIn": 22.28947775810957, "rOut": 45.37848500534892, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.3466433677589521, "turns": 4, "viaDrill": 0.3, "viaPad": 0.6045902486657724, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5268554675509222, "rv": 18.407172066242996, "spacing": 0.6460606848949195, "wEnd": 0.3314845950109884},
+            "outer": {"need": 0.5268554675509222, "rv": 42.53138016505814, "spacing": 0.5268554665509225, "wEnd": 0.3314845950109884},
+            "rVi": 18.407172066242996,
+            "rVo": 42.53138016505814
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.5635604238137603, "clearance": 0.19537087253993377, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.5762155543314293, "phases": 2, "poles": 16, "rIn": 23.277381345629692, "rOut": 39.59559754282236, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.3314845950109884, "turns": 4, "viaDrill": 0.3, "viaPad": 0.5698950316989795, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5718615669989958, "rv": 24.09293725315947, "spacing": 3.8220379183705697, "wEnd": 0.4123270727228373},
+            "outer": {"need": 0.5718615669989958, "rv": 44.02649440269452, "spacing": 3.8220379183705693, "wEnd": 0.4123270727228373},
+            "rTrackMin": 24.09293725315947,
+            "rVi": 24.09293725315947,
+            "rVo": 44.02649440269452
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.4840295147150755, "clearance": 0.1595344942761585, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.47201349784154445, "filletRadius": 0.6613814749754966, "phases": 1, "poles": 8, "rIn": 24.417337264865637, "rOut": 43.70209439098835, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.4123270727228373, "turns": 2, "viaDrill": 0.3, "viaPad": 0.6488000234123319, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.506064957974013, "rv": 21.64253033504614, "spacing": 0.7719737439311665, "wEnd": 0.25614998454693705},
+            "outer": {"need": 0.506064957974013, "rv": 43.23004075483876, "spacing": 0.5060649569740197, "wEnd": 0.25614998454693705},
+            "rVi": 21.64253033504614,
+            "rVo": 43.23004075483876
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.6624719565734267, "clearance": 0.2499149734270759, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.31618526522070173, "phases": 1, "poles": 20, "rIn": 23.639834847301245, "rOut": 41.915937922894955, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.25614998454693705, "turns": 4, "viaDrill": 0.3, "viaPad": 0.7879675584612414, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7039210036513396, "rv": 13.427196605701464, "spacing": 0.7039210036513396, "wEnd": 0.387671545566991},
+            "outer": {"need": 0.7480642469890881, "rv": 29.995382195920683, "spacing": 0.7480642469890881, "wEnd": 0.4759580322424881},
+            "pitchIn": 0.7039210036513396,
+            "pitchOut": 0.7480642469890881,
+            "rVi": 13.427196605701464,
+            "rVo": 29.995382195920683,
+            "rhoIn0": 14.131117609352804,
+            "rhoInTop": 13.427196605701464,
+            "rhoOut0": 29.247317948931595,
+            "rhoOutTop": 29.995382195920683
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.5703588053584099, "clearance": 0.24844434347469357, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.4759580322424881, "filletRadius": 0.3349859319394455, "phases": 2, "poles": 8, "rIn": 14.76723349839449, "rOut": 28.567058816552162, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.387671545566991, "turns": 1, "viaDrill": 0.3, "viaPad": 0.523281774786301, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.8321139490231872, "rv": 20.740766765084118, "spacing": 0.8321139490231872, "wEnd": 0.34624115901533514},
+            "outer": {"need": 0.8043891802779399, "rv": 39.72225776263513, "spacing": 0.8043891802779399, "wEnd": 0.2907916215248406},
+            "pitchIn": 0.8321139490231872,
+            "pitchOut": 0.8043891802779399,
+            "rVi": 20.740766765084118,
+            "rVo": 39.72225776263513,
+            "rhoIn0": 23.23710861215368,
+            "rhoInTop": 20.740766765084118,
+            "rhoOut0": 37.30909022180131,
+            "rhoOutTop": 39.72225776263513
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.9787934826686978, "clearance": 0.29883028980111703, "cornerStyle": "round", "endWidthInner": 0.34624115901533514, "endWidthOuter": 0, "filletRadius": 0.10967532536014915, "phases": 2, "poles": 16, "rIn": 23.854455292224884, "rOut": 36.71946831047535, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.2907916215248406, "turns": 2, "viaDrill": 0.3, "viaPad": 0.7203261594288052, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.773719006543979, "rv": 16.829180432832796, "spacing": 0.773719006543979, "wEnd": 0.23277480169199408},
+            "outer": {"need": 0.773719006543979, "rv": 37.101518233888775, "spacing": 0.773719006543979, "wEnd": 0.23277480169199408},
+            "pitchIn": 0.773719006543979,
+            "pitchOut": 0.773719006543979,
+            "rVi": 16.829180432832796,
+            "rVo": 37.101518233888775,
+            "rhoIn0": 18.376618445920755,
+            "rhoInTop": 16.829180432832796,
+            "rhoOut0": 35.55408022080082,
+            "rhoOutTop": 37.101518233888775
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.8532194839790463, "clearance": 0.2821820813929662, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.15245025476906449, "phases": 1, "poles": 12, "rIn": 18.89157532900572, "rOut": 35.039123337715864, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.23277480169199408, "turns": 3, "viaDrill": 0.3, "viaPad": 0.7502990486100316, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6702910389751195, "rv": 13.543653640318908, "spacing": 0.7521807822294158, "wEnd": 0.38128413492813706},
+            "outer": {"need": 0.7119730591541156, "rv": 27.032064513792115, "spacing": 0.8618871543028145, "wEnd": 0.4229661551071331},
+            "rVi": 13.543653640318908,
+            "rVo": 27.032064513792115
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.8946844846010208, "clearance": 0.2890069040469825, "cornerStyle": "round", "endWidthInner": 0.38128413492813706, "endWidthOuter": 0.4229661551071331, "filletRadius": 0.4166775126243011, "phases": 3, "poles": 8, "rIn": 15.185896091163158, "rOut": 24.95589353516698, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.4379970069974661, "turns": 1, "viaDrill": 0.3, "viaPad": 0.5450636234367267, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.8419169679167681, "rb": 17.151391630962472, "rv": 25.65661630180336, "spacing": 0.8419169679167682, "wEnd": 0.4803317410405725},
+            "outer": {"need": 0.7175464294152334, "rb": 14.617735825839894, "rv": 50.54942526848464, "spacing": 0.7175464294152334, "wEnd": 0.2315906640375033},
+            "rVi": 25.65661630180336,
+            "rVo": 50.54942526848464
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.4793483417481184, "clearance": 0.2824265926843509, "cornerStyle": "sharp", "endWidthInner": 0.4803317410405725, "endWidthOuter": 0, "filletRadius": 0.5774200363084674, "phases": 2, "poles": 16, "rIn": 29.945212461054325, "rOut": 47.542444940656424, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.2315906640375033, "turns": 4, "viaDrill": 0.3, "viaPad": 0.6386490094242618, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6584350993391126, "rv": 17.36182949931606, "spacing": 0.723690716492719, "wEnd": 0.49911691278684883},
+            "outer": {"need": 0.6584350993391126, "rv": 50.63436645614937, "spacing": 0.6584350983391194, "wEnd": 0.49911691278684883},
+            "rVi": 17.36182949931606,
+            "rVo": 50.63436645614937
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.053004167228937, "clearance": 0.1593181865522638, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.5373513860162348, "phases": 2, "poles": 8, "rIn": 22.643228247761726, "rOut": 44.81236557289958, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.49911691278684883, "turns": 4, "viaDrill": 0.3, "viaPad": 0.6296281490940601, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.42786502478411426, "rv": 15.463357970991638, "spacing": 1.4421080869083887, "wEnd": 0.2749644750496373},
+            "outer": {"need": 0.42786502478411426, "rv": 26.54171891795704, "spacing": 1.442108086908389, "wEnd": 0.2749644750496373},
+            "rTrackMin": 15.463357970991638,
+            "rVi": 15.463357970991638,
+            "rVo": 26.54171891795704
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.7544943463057279, "clearance": 0.15290054973447695, "cornerStyle": "round", "endWidthInner": 0.34190667944494635, "endWidthOuter": 0, "filletRadius": 0.36004376246128234, "phases": 3, "poles": 16, "rIn": 15.80481929704547, "rOut": 26.20025759190321, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.2749644750496373, "turns": 1, "viaDrill": 0.3, "viaPad": 0.6829226521076635, "waveStyle": "chord"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 2,
+          "params": {"busWidth": 0.665397560223937, "clearance": 0.16775178364478052, "cornerStyle": "round", "endWidthInner": 0.29811301990412176, "endWidthOuter": 0, "filletRadius": 0.428022674866952, "phases": 3, "poles": 12, "rIn": 18.316036213189363, "rOut": 36.35052887350321, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.20506906413938852, "turns": 4, "viaDrill": 0.3, "viaPad": 0.7654670680640265, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5958745467360131, "rv": 26.71586895559341, "spacing": 0.6991378355142754, "wEnd": 0.37259359733434394},
+            "outer": {"need": 0.6487163038691506, "rv": 44.93939131939507, "spacing": 0.6487163028691576, "wEnd": 0.4254353544674814},
+            "rVi": 26.71586895559341,
+            "rVo": 44.93939131939507
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.0167091732844709, "clearance": 0.2232809494016692, "cornerStyle": "sharp", "endWidthInner": 0.37259359733434394, "endWidthOuter": 0.4254353544674814, "filletRadius": 0.6513407347723842, "phases": 2, "poles": 12, "rIn": 28.710832241922617, "rOut": 42.818691816180944, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.4748742652591318, "turns": 2, "viaDrill": 0.3, "viaPad": 0.5791201768908649, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.43036146180238577, "rv": 25.775567100872287, "spacing": 0.9127091418324926, "wEnd": 0.2223090946674347},
+            "outer": {"need": 0.43036146180238577, "rv": 47.35570771105122, "spacing": 0.9127091418324926, "wEnd": 0.2223090946674347},
+            "rTrackMin": 25.775567100872287,
+            "rVi": 25.775567100872287,
+            "rVo": 47.35570771105122
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.40023401454091073, "clearance": 0.20805236713495104, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.42260160639416433, "phases": 2, "poles": 16, "rIn": 26.047952014952898, "rOut": 47.083322796970606, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.2223090946674347, "turns": 4, "viaDrill": 0.3, "viaPad": 0.5447698281612248, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.695595833088737, "rv": 15.928930501932996, "spacing": 0.8057321925077199, "wEnd": 0.4602201075758785},
+            "outer": {"need": 0.7214643305283971, "rv": 41.0356186244156, "spacing": 0.7214643295283992, "wEnd": 0.48608860501553863},
+            "rVi": 15.928930501932996,
+            "rVo": 41.0356186244156
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.7251651663333177, "clearance": 0.23537572551285846, "cornerStyle": "round", "endWidthInner": 0.4602201075758785, "endWidthOuter": 0.48608860501553863, "filletRadius": 0.2947795222280547, "phases": 3, "poles": 12, "rIn": 19.954948984086514, "rOut": 37.734030079096556, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.42586529089603575, "turns": 2, "viaDrill": 0.3, "viaPad": 0.6804928284138442, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6202315576549153, "rb": 5.922775095741939, "rv": 25.544762029127895, "spacing": 0.6202315576549153, "wEnd": 0.30371334560913965},
+            "outer": {"need": 0.6303315644792746, "rb": 6.019223056423459, "rv": 43.579775892357134, "spacing": 0.6303315644792746, "wEnd": 0.32391335925785825},
+            "rVi": 25.544762029127895,
+            "rVo": 43.579775892357134
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.9057727348059416, "clearance": 0.16723768251249566, "cornerStyle": "sharp", "endWidthInner": 0.30371334560913965, "endWidthOuter": 0.32391335925785825, "filletRadius": 0.3110006140545011, "phases": 1, "poles": 20, "rIn": 26.500194188207388, "rOut": 42.62492075189948, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.44054898736067116, "turns": 3, "viaDrill": 0.3, "viaPad": 0.6022744046756998, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6908551608677953, "rb": 10.555489326014992, "rv": 16.44765429065889, "spacing": 0.6908551608677953, "wEnd": 0.22038975772447886},
+            "outer": {"need": 0.6908551608677953, "rb": 10.555489326014992, "rv": 45.00090834288622, "spacing": 0.6908551608677953, "wEnd": 0.22038975772447886},
+            "rVi": 16.44765429065889,
+            "rVo": 45.00090834288622
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.0439930954948067, "clearance": 0.18935331122484056, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.3018162184860558, "phases": 2, "poles": 12, "rIn": 19.853655505925417, "rOut": 42.15256856754422, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.22038975772447886, "turns": 4, "viaDrill": 0.3, "viaPad": 0.7826139415614307, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7649894350557589, "rb": 3.896059200070415, "rv": 21.495982734122812, "spacing": 0.7649894350557589, "wEnd": 0.3277137161232531},
+            "outer": {"need": 0.7649894350557589, "rb": 3.896059200070415, "rv": 43.19825072412979, "spacing": 0.7649894350557589, "wEnd": 0.3277137161232531},
+            "rVi": 21.495982734122812,
+            "rVo": 43.19825072412979
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.42572508454322816, "clearance": 0.2826776176923886, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.6880897011375056, "phases": 1, "poles": 16, "rIn": 22.27339481189847, "rOut": 42.4300738312304, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.3277137161232531, "turns": 2, "viaDrill": 0.3, "viaPad": 0.6369099186034873, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.614769984781742, "rv": 18.546187320440136, "spacing": 0.710968677374775, "wEnd": 0.401184763526544},
+            "outer": {"need": 0.669369559828192, "rv": 40.41378560334819, "spacing": 0.6693695588281989, "wEnd": 0.4557843385729939},
+            "rVi": 18.546187320440136,
+            "rVo": 40.41378560334819
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.8199182290583849, "clearance": 0.21358522125519813, "cornerStyle": "round", "endWidthInner": 0.401184763526544, "endWidthOuter": 0, "filletRadius": 0.623563805827871, "phases": 2, "poles": 12, "rIn": 23.433405864983797, "rOut": 36.336426354944706, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.4557843385729939, "turns": 4, "viaDrill": 0.3, "viaPad": 0.5935821507126093, "waveStyle": "jog"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_SLOT_PITCH", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 2,
+          "params": {"busWidth": 0.643055422976613, "clearance": 0.18458896275842562, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.4045313578331844, "phases": 3, "poles": 8, "rIn": 20.728657610714436, "rOut": 38.21235232800245, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.4186146815307439, "turns": 4, "viaDrill": 0.3, "viaPad": 0.6513731974177063, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6701405343017541, "rv": 21.887949901435057, "spacing": 2.995498699044959, "wEnd": 0.45875199483707546},
+            "outer": {"need": 0.6701405343017541, "rv": 44.73415735104354, "spacing": 2.995498699044959, "wEnd": 0.45875199483707546},
+            "rTrackMin": 21.887949901435057,
+            "rVi": 21.887949901435057,
+            "rVo": 44.73415735104354
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.8764347804710269, "clearance": 0.21138853946467862, "cornerStyle": "round", "endWidthInner": 0.28126666467869654, "endWidthOuter": 0, "filletRadius": 0.16939204959198834, "phases": 1, "poles": 20, "rIn": 22.186230931431055, "rOut": 44.435876321047544, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.45875199483707546, "turns": 2, "viaDrill": 0.3, "viaPad": 0.596562059991993, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7145671600708737, "rv": 29.049612836679444, "spacing": 0.7145671600708737, "wEnd": 0.2724837848218158},
+            "outer": {"need": 0.7854561415850184, "rv": 48.468037060054485, "spacing": 0.7854561415850184, "wEnd": 0.41426174785010517},
+            "pitchIn": 0.7145671600708737,
+            "pitchOut": 0.7854561415850184,
+            "rVi": 29.049612836679444,
+            "rVo": 48.468037060054485,
+            "rhoIn0": 29.049612836679444,
+            "rhoInTop": 29.049612836679444,
+            "rhoOut0": 48.468037060054485,
+            "rhoOutTop": 48.468037060054485
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.9456026375293731, "clearance": 0.1901786016183905, "cornerStyle": "round", "endWidthInner": 0.2724837848218158, "endWidthOuter": 0.41426174785010517, "filletRadius": 0.15944193473551424, "phases": 1, "poles": 8, "rIn": 29.611430030316114, "rOut": 47.83533088490367, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.47079339921474456, "turns": 1, "viaDrill": 0.3, "viaPad": 0.7762933320831508, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5345371315139346, "rb": 13.611876279456837, "rv": 23.248127948897597, "spacing": 0.5345371315139346, "wEnd": 0.25075869895517827},
+            "outer": {"need": 0.5345371315139346, "rb": 13.611876279456837, "rv": 36.179513951840775, "spacing": 0.5345371315139346, "wEnd": 0.25075869895517827},
+            "rVi": 23.248127948897597,
+            "rVo": 36.179513951840775
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.7831077499315142, "clearance": 0.15773296417901292, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.6378184829372913, "phases": 2, "poles": 20, "rIn": 25.81991333886981, "rOut": 33.858641639351845, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.25075869895517827, "turns": 4, "viaDrill": 0.3, "viaPad": 0.502849635714665, "waveStyle": "involute"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 3,
+          "params": {"busWidth": 0.8093737721443176, "clearance": 0.2865955654531717, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.5583055302267894, "phases": 3, "poles": 12, "rIn": 29.144887149333954, "rOut": 40.05421491712332, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.4228607086464763, "turns": 4, "viaDrill": 0.3, "viaPad": 0.7935753457481042, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.79527312219725, "rv": 22.78951162615558, "spacing": 0.79527312219725, "wEnd": 0.40051367558771744},
+            "outer": {"need": 0.8131921814871022, "rv": 52.048751238815015, "spacing": 0.8131921814871022, "wEnd": 0.43635179416742176},
+            "pitchIn": 0.79527312219725,
+            "pitchOut": 0.8131921814871022,
+            "rVi": 22.78951162615558,
+            "rVo": 52.048751238815015,
+            "rhoIn0": 25.17533099274733,
+            "rhoInTop": 22.78951162615558,
+            "rhoOut0": 49.60917469435371,
+            "rhoOutTop": 52.048751238815015
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.1728052459657192, "clearance": 0.27787513624643906, "cornerStyle": "round", "endWidthInner": 0.40051367558771744, "endWidthOuter": 0.43635179416742176, "filletRadius": 0.4736179780680687, "phases": 2, "poles": 12, "rIn": 25.808826729655266, "rOut": 48.95775989815593, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.31072752573527396, "turns": 2, "viaDrill": 0.3, "viaPad": 0.6342822963139043, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.47375615758355705, "rv": 24.56551420080941, "spacing": 4.2703528158924335, "wEnd": 0.20671822922304273},
+            "outer": {"need": 0.47375615758355705, "rv": 47.70946262266953, "spacing": 4.270352815892434, "wEnd": 0.20671822922304273},
+            "rTrackMin": 24.56551420080941,
+            "rVi": 24.56551420080941,
+            "rVo": 47.70946262266953
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.172687069699168, "clearance": 0.2670379283605143, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.10383386400062591, "phases": 2, "poles": 8, "rIn": 24.852712769061327, "rOut": 47.42226405441761, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.20671822922304273, "turns": 1, "viaDrill": 0.3, "viaPad": 0.5743971365038305, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.8574878559098579, "rb": 4.367149789098393, "rv": 15.124665262412996, "spacing": 0.8574878559098579, "wEnd": 0.43774692208971827},
+            "outer": {"need": 0.8574878559098579, "rb": 4.367149789098393, "rv": 41.46773593276983, "spacing": 0.8574878559098579, "wEnd": 0.43774692208971827},
+            "rVi": 15.124665262412996,
+            "rVo": 41.46773593276983
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.4042737962678075, "clearance": 0.2836723752203397, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.5908925051335245, "phases": 1, "poles": 8, "rIn": 16.907415200024843, "rOut": 39.74274994060397, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.43774692208971827, "turns": 4, "viaDrill": 0.3, "viaPad": 0.7098840392893181, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7888089064508677, "rb": 15.065140393988166, "rv": 17.757395880984454, "spacing": 0.7888089064508677, "wEnd": 0.4971017614006996},
+            "outer": {"need": 0.7888089064508677, "rb": 15.065140393988166, "rv": 45.29519679618052, "spacing": 0.7888089064508677, "wEnd": 0.4971017614006996},
+            "rVi": 17.757395880984454,
+            "rVo": 45.29519679618052
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.1138144090771673, "clearance": 0.2762319491012022, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.3160648357821629, "phases": 3, "poles": 20, "rIn": 21.487619537860155, "rOut": 42.77666758745909, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.4971017614006996, "turns": 2, "viaDrill": 0.3, "viaPad": 0.5280521532986313, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5482660876004957, "rv": 27.853948611723006, "spacing": 7.468828798385956, "wEnd": 0.31304909294703975},
+            "outer": {"need": 0.6434701941441745, "rv": 50.85759749534688, "spacing": 13.162928996330796, "wEnd": 0.4082531994907186},
+            "rVi": 27.853948611723006,
+            "rVo": 50.85759749534688
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.6458247030153871, "clearance": 0.2352169946534559, "cornerStyle": "sharp", "endWidthInner": 0.31304909294703975, "endWidthOuter": 0, "filletRadius": 0.726064494997263, "phases": 1, "poles": 12, "rIn": 28.857235051691532, "rOut": 49.105348367244005, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.4082531994907186, "turns": 1, "viaDrill": 0.3, "viaPad": 0.7813679320504889, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.685574870603159, "rb": 3.4916041445145374, "rv": 26.113600809543037, "spacing": 0.685574870603159, "wEnd": 0.3390679963864386},
+            "outer": {"need": 0.685574870603159, "rb": 3.4916041445145374, "rv": 47.185175356420444, "spacing": 0.685574870603159, "wEnd": 0.3390679963864386},
+            "rVi": 26.113600809543037,
+            "rVo": 47.185175356420444
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.6428531056270004, "clearance": 0.19103762760059906, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.45717704968992623, "phases": 1, "poles": 16, "rIn": 26.805225018411875, "rOut": 46.49768776074052, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.3390679963864386, "turns": 2, "viaDrill": 0.3, "viaPad": 0.6500064896186815, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.8672272943542338, "rb": 8.833504683563934, "rv": 13.154637700099652, "spacing": 0.867227294354234, "wEnd": 0.4742270552087575},
+            "outer": {"need": 0.815625964681385, "rb": 8.307897855560837, "rv": 29.715392776678037, "spacing": 0.815625964681385, "wEnd": 0.3710243958630599},
+            "rVi": 13.154637700099652,
+            "rVo": 29.715392776678037
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.1140606099739672, "clearance": 0.27007246973225846, "cornerStyle": "sharp", "endWidthInner": 0.4742270552087575, "endWidthOuter": 0.3710243958630599, "filletRadius": 0.24512331420555714, "phases": 2, "poles": 8, "rIn": 17.42948566004634, "rOut": 26.29848788306117, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.34376534142065795, "turns": 4, "viaDrill": 0.3, "viaPad": 0.7200825940351934, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.76901889013825, "rb": 11.749743138868388, "rv": 22.163483964516075, "spacing": 0.76901889013825, "wEnd": 0.3939953375142068},
+            "outer": {"need": 0.7360981444537174, "rb": 11.24675119589579, "rv": 46.78659251693401, "spacing": 0.7360981444537174, "wEnd": 0.32815384614514187},
+            "rVi": 22.163483964516075,
+            "rVo": 46.78659251693401
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.7781163826584816, "clearance": 0.1869326733984053, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.32815384614514187, "filletRadius": 0.5738498865626753, "phases": 2, "poles": 16, "rIn": 24.829159278422594, "rOut": 44.50800930708647, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.3939953375142068, "turns": 3, "viaDrill": 0.3, "viaPad": 0.7701770959654823, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.632493915152736, "rb": 2.415948793730491, "rv": 13.159656409385786, "spacing": 0.632493915152736, "wEnd": 0.31234746892005205},
+            "outer": {"need": 0.7035586726968176, "rb": 2.6873961723569146, "rv": 24.652082357093477, "spacing": 0.7035586726968177, "wEnd": 0.45447698400821535},
+            "rVi": 13.159656409385786,
+            "rVo": 24.652082357093477
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.1166095547378063, "clearance": 0.18297412006650118, "cornerStyle": "round", "endWidthInner": 0.31234746892005205, "endWidthOuter": 0, "filletRadius": 0.3791145779425279, "phases": 1, "poles": 8, "rIn": 14.123654894530773, "rOut": 23.590129647403955, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.45447698400821535, "turns": 3, "viaDrill": 0.3, "viaPad": 0.5866921212524175, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6867182775866241, "rb": 13.115353006735626, "rv": 23.900746988336245, "spacing": 0.6867182775866241, "wEnd": 0.25742353678215296},
+            "outer": {"need": 0.6867182775866241, "rb": 13.115353006735626, "rv": 49.88730243190048, "spacing": 0.6867182775866241, "wEnd": 0.25742353678215296},
+            "rVi": 23.900746988336245,
+            "rVo": 49.88730243190048
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.4877857176586986, "clearance": 0.1634444002644159, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.18540317518636584, "phases": 2, "poles": 20, "rIn": 26.317847728729248, "rOut": 47.74847503751516, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.25742353678215296, "turns": 3, "viaDrill": 0.3, "viaPad": 0.7891242178622634, "waveStyle": "involute"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_SLOT_PITCH", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 1,
+          "params": {"busWidth": 0.8358011966571212, "clearance": 0.1737805279204622, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.461107402399648, "filletRadius": 0.678359096380882, "phases": 3, "poles": 16, "rIn": 15.857521384954453, "rOut": 35.323515933007, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.4666492956923321, "turns": 4, "viaDrill": 0.3, "viaPad": 0.6189038196345791, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6174421350471675, "rv": 29.112387027743615, "spacing": 4.614160159743205, "wEnd": 0.39232586411526427},
+            "outer": {"need": 0.5893277407507412, "rv": 39.64467502066451, "spacing": 6.201824988024571, "wEnd": 0.36421146981883795},
+            "rVi": 29.112387027743615,
+            "rVo": 39.64467502066451
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.0015374902635812, "clearance": 0.22511627093190328, "cornerStyle": "sharp", "endWidthInner": 0.39232586411526427, "endWidthOuter": 0, "filletRadius": 0.6562273693038151, "phases": 1, "poles": 20, "rIn": 29.495525896549225, "rOut": 39.136829517781734, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.36421146981883795, "turns": 1, "viaDrill": 0.3, "viaPad": 0.6972326853545383, "waveStyle": "jog"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_SLOT_PITCH", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 2,
+          "params": {"busWidth": 1.1518537547439336, "clearance": 0.264512010931503, "cornerStyle": "round", "endWidthInner": 0.47180040943203494, "endWidthOuter": 0, "filletRadius": 0.1624651883263141, "phases": 3, "poles": 16, "rIn": 18.309874579310417, "rOut": 38.05467749387026, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.43788039600476625, "turns": 3, "viaDrill": 0.3, "viaPad": 0.5775607282062992, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5837147883954459, "rv": 20.203166032151785, "spacing": 2.598427637513732, "wEnd": 0.3934031789656729},
+            "outer": {"need": 0.5837147883954459, "rv": 33.24111353798071, "spacing": 2.5984276375137325, "wEnd": 0.3934031789656729},
+            "rTrackMin": 20.203166032151785,
+            "rVi": 20.203166032151785,
+            "rVo": 33.24111353798071
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.7461411958560347, "clearance": 0.19031160942977293, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.18421101949643345, "phases": 1, "poles": 8, "rIn": 20.469402853399515, "rOut": 32.97487671673298, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.3934031789656729, "turns": 2, "viaDrill": 0.3, "viaPad": 0.5324736424954608, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6622123558074235, "rb": 2.5294648752787308, "rv": 18.853242375900294, "spacing": 0.6622123558074235, "wEnd": 0.39393735968042165},
+            "outer": {"need": 0.6622123558074235, "rb": 2.5294648752787308, "rv": 29.205443708718157, "spacing": 0.6622123558074235, "wEnd": 0.39393735968042165},
+            "rVi": 18.853242375900294,
+            "rVo": 29.205443708718157
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.8127703221514821, "clearance": 0.17147228362737224, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.13198796526994558, "phases": 2, "poles": 12, "rIn": 19.52128702029586, "rOut": 28.540675088763237, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.39393735968042165, "turns": 1, "viaDrill": 0.3, "viaPad": 0.587542784679681, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.4369277589721605, "rv": 25.249682163528632, "spacing": 1.319642278087855, "wEnd": 0.21684395424090327},
+            "outer": {"need": 0.4369277589721605, "rv": 36.25176176271634, "spacing": 1.319642278087857, "wEnd": 0.21684395424090327},
+            "rTrackMin": 25.249682163528632,
+            "rVi": 25.249682163528632,
+            "rVo": 36.25176176271634
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.5688626384362578, "clearance": 0.22008380473125727, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.31498927087523043, "filletRadius": 0.20809622879605744, "phases": 1, "poles": 20, "rIn": 25.59212551265955, "rOut": 35.909318413585424, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.21684395424090327, "turns": 4, "viaDrill": 0.3, "viaPad": 0.6848866982618347, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.4864920594496652, "rv": 17.839459721985342, "spacing": 0.6484416719479578, "wEnd": 0.3089481542701833},
+            "outer": {"need": 0.5751042145420797, "rv": 47.05016321702117, "spacing": 0.8435821208135976, "wEnd": 0.3975603093625978},
+            "rVi": 17.839459721985342,
+            "rVo": 47.05016321702117
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.4969315515831113, "clearance": 0.17754390517948196, "cornerStyle": "sharp", "endWidthInner": 0.3089481542701833, "endWidthOuter": 0, "filletRadius": 0.4637131593422965, "phases": 1, "poles": 8, "rIn": 20.044540781527758, "rOut": 43.45020520687103, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.3975603093625978, "turns": 4, "viaDrill": 0.3, "viaPad": 0.6328473812667653, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.451039815612603, "rv": 25.89830182556578, "spacing": 0.6332935286813963, "wEnd": 0.29717128025367856},
+            "outer": {"need": 0.577449471980799, "rv": 50.16955188887915, "spacing": 0.5774494709808023, "wEnd": 0.42358093662187457},
+            "rVi": 25.89830182556578,
+            "rVo": 50.16955188887915
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.0476993903517724, "clearance": 0.15386853535892442, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.42358093662187457, "filletRadius": 0.43849842217750856, "phases": 3, "poles": 12, "rIn": 28.697501990944147, "rOut": 47.195510383695364, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.29717128025367856, "turns": 2, "viaDrill": 0.3, "viaPad": 0.6616787083912641, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.8055009950650855, "rb": 6.153574321442341, "rv": 22.934305601471827, "spacing": 0.8055009950650855, "wEnd": 0.45485750229563565},
+            "outer": {"need": 0.8055009950650855, "rb": 6.153574321442341, "rv": 42.82611412525105, "spacing": 0.8055009950650855, "wEnd": 0.45485750229563565},
+            "rVi": 22.934305601471827,
+            "rVo": 42.82611412525105
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.4176965478807688, "clearance": 0.28928316148230804, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.5837273390730844, "phases": 3, "poles": 8, "rIn": 25.433289617300034, "rOut": 40.38271343335509, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.45485750229563565, "turns": 2, "viaDrill": 0.3, "viaPad": 0.5775781648699194, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6441865108557977, "rb": 4.921222438839413, "rv": 24.072865824904753, "spacing": 0.6441865108557977, "wEnd": 0.293828444625251},
+            "outer": {"need": 0.6441865108557977, "rb": 4.921222438839413, "rv": 37.13364719680733, "spacing": 0.6441865108557977, "wEnd": 0.293828444625251},
+            "rVi": 24.072865824904753,
+            "rVo": 37.13364719680733
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.0355037663131952, "clearance": 0.1541626594145782, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.3420546315610409, "phases": 2, "poles": 12, "rIn": 25.387551303952932, "rOut": 35.833386924117804, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.293828444625251, "turns": 2, "viaDrill": 0.3, "viaPad": 0.686219258257188, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6243027503602206, "rb": 1.5897738992911146, "rv": 28.749837385154727, "spacing": 0.6243027503602206, "wEnd": 0.3046348804142326},
+            "outer": {"need": 0.6243027503602206, "rb": 1.5897738992911146, "rv": 46.11927524523155, "spacing": 0.6243027503602206, "wEnd": 0.3046348804142326},
+            "rVi": 28.749837385154727,
+            "rVo": 46.11927524523155
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.050777088664472, "clearance": 0.21409827814204618, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.7621436960995198, "phases": 1, "poles": 8, "rIn": 29.37507639825344, "rOut": 45.494596149772406, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.3046348804142326, "turns": 2, "viaDrill": 0.3, "viaPad": 0.5157740640221163, "waveStyle": "involute"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 2,
+          "params": {"busWidth": 0.7991254657506943, "clearance": 0.266647613234818, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.3532934101531282, "filletRadius": 0.6100863205967472, "phases": 3, "poles": 8, "rIn": 14.626857485622168, "rOut": 35.29200340807438, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.4971813495270908, "turns": 4, "viaDrill": 0.3, "viaPad": 0.581768968445249, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5477320885751397, "rv": 28.070817958097905, "spacing": 1.7869406522139417, "wEnd": 0.32864495373796676},
+            "outer": {"need": 0.5477320885751397, "rv": 50.423084658104926, "spacing": 1.786940652213941, "wEnd": 0.32864495373796676},
+            "rTrackMin": 28.070817958097905,
+            "rVi": 28.070817958097905,
+            "rVo": 50.423084658104926
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.40977859385311605, "clearance": 0.2190871348371729, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.4320066591259093, "phases": 1, "poles": 20, "rIn": 28.346798453480005, "rOut": 50.147104162722826, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.32864495373796676, "turns": 4, "viaDrill": 0.3, "viaPad": 0.5519609907642007, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6740825728396885, "rv": 27.868540790176485, "spacing": 1.3628921961578542, "wEnd": 0.41109522723127156},
+            "outer": {"need": 0.6740825728396885, "rv": 49.901381961756854, "spacing": 1.3628921961578535, "wEnd": 0.41109522723127156},
+            "rTrackMin": 27.868540790176485,
+            "rVi": 27.868540790176485,
+            "rVo": 49.901381961756854
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.0129667649045586, "clearance": 0.26298734560841697, "cornerStyle": "sharp", "endWidthInner": 0.3378899855306372, "endWidthOuter": 0, "filletRadius": 0.5784708702936769, "phases": 2, "poles": 12, "rIn": 28.191477943211794, "rOut": 49.57844480872154, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.41109522723127156, "turns": 3, "viaDrill": 0.3, "viaPad": 0.6458743060706184, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5748279593768529, "rv": 25.65216779667844, "spacing": 0.7351402579585661, "wEnd": 0.4007511947769672},
+            "outer": {"need": 0.5327181618078611, "rv": 40.93615069996712, "spacing": 0.6129399752391775, "wEnd": 0.3586413972079754},
+            "rVi": 25.65216779667844,
+            "rVo": 40.93615069996712
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.8310971660539508, "clearance": 0.17407676459988577, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.3586413972079754, "filletRadius": 0.1422374110436067, "phases": 1, "poles": 12, "rIn": 27.12432786077261, "rOut": 39.52196667343378, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.4007511947769672, "turns": 3, "viaDrill": 0.3, "viaPad": 0.7213757939403878, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6260547869256697, "rb": 3.1884708475380363, "rv": 21.591335656564908, "spacing": 0.6260547869256697, "wEnd": 0.2260003442876041},
+            "outer": {"need": 0.7019604875938966, "rb": 3.5750554065845033, "rv": 45.90645924478484, "spacing": 0.7019604875938966, "wEnd": 0.37781174562405795},
+            "rVi": 21.591335656564908,
+            "rVo": 45.90645924478484
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.0407642709091305, "clearance": 0.17341808133060113, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.37781174562405795, "filletRadius": 0.28251448860391976, "phases": 2, "poles": 8, "rIn": 22.856545004993677, "rOut": 44.49812554568052, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.2260003442876041, "turns": 2, "viaDrill": 0.3, "viaPad": 0.6792730669025332, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5778627804247662, "rv": 22.38920303948183, "spacing": 0.7095494017016714, "wEnd": 0.3768048763740808},
+            "outer": {"need": 0.5778627804247662, "rv": 53.980701537200666, "spacing": 0.5778627794247694, "wEnd": 0.3768048763740808},
+            "rVi": 22.38920303948183,
+            "rVo": 53.980701537200666
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.5066449794918298, "clearance": 0.20105790405068547, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.3438743642764166, "phases": 3, "poles": 8, "rIn": 28.212450996041298, "rOut": 47.901316933333874, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.3768048763740808, "turns": 3, "viaDrill": 0.3, "viaPad": 0.6401781209278852, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.40247484639985487, "rv": 18.56874704025558, "spacing": 3.6975857701415293, "wEnd": 0.2512322299880907},
+            "outer": {"need": 0.5023584106122143, "rv": 41.712944783408496, "spacing": 8.137815471298763, "wEnd": 0.3511157942004502},
+            "rVi": 18.56874704025558,
+            "rVo": 41.712944783408496
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.9154490672051906, "clearance": 0.15124261641176417, "cornerStyle": "sharp", "endWidthInner": 0.2512322299880907, "endWidthOuter": 0, "filletRadius": 0.1379813553299755, "phases": 1, "poles": 16, "rIn": 18.952922124415636, "rOut": 40.891826540231705, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.3511157942004502, "turns": 1, "viaDrill": 0.3, "viaPad": 0.613935537962243, "waveStyle": "jog"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_SLOT_PITCH", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 3,
+          "params": {"busWidth": 0.8888897251337766, "clearance": 0.21382353688823058, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.12742394094821066, "phases": 3, "poles": 16, "rIn": 25.756480306386948, "rOut": 49.45361378788948, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.4659059275407344, "turns": 4, "viaDrill": 0.3, "viaPad": 0.622796173603274, "waveStyle": "chord"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 2,
+          "params": {"busWidth": 0.6096862094476819, "clearance": 0.2334789649466984, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.6123693543253467, "phases": 3, "poles": 8, "rIn": 16.36901281774044, "rOut": 27.199699837714434, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.2153860030695796, "turns": 4, "viaDrill": 0.3, "viaPad": 0.5868861147435382, "waveStyle": "jog"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 2,
+          "params": {"busWidth": 0.8125284746289253, "clearance": 0.18192531606182455, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.3774177614832297, "filletRadius": 0.18664387653116138, "phases": 3, "poles": 16, "rIn": 20.15830308198929, "rOut": 30.446295004338026, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.24855942956637592, "turns": 3, "viaDrill": 0.3, "viaPad": 0.6083556888857856, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_SLOT_PITCH", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 1,
+          "params": {"busWidth": 1.00898762345314, "clearance": 0.23387082366971298, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.41463441122323275, "filletRadius": 0.3994999563321472, "phases": 3, "poles": 20, "rIn": 19.703249871730804, "rOut": 35.13734317198396, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.47764391149394214, "turns": 4, "viaDrill": 0.3, "viaPad": 0.6330972629133612, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_SLOT_PITCH", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 3,
+          "params": {"busWidth": 0.6635572411119938, "clearance": 0.15574444716330618, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.41361042007338256, "filletRadius": 0.23913940216880294, "phases": 3, "poles": 16, "rIn": 23.105843652039766, "rOut": 39.968397967517376, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.3780594486277551, "turns": 4, "viaDrill": 0.3, "viaPad": 0.5481365983141586, "waveStyle": "chord"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 2,
+          "params": {"busWidth": 0.49960055481642485, "clearance": 0.2495301380753517, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.6330012157559395, "phases": 3, "poles": 12, "rIn": 21.341337848454714, "rOut": 40.558692291378975, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.30582888978533446, "turns": 3, "viaDrill": 0.3, "viaPad": 0.7145347775192932, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.621035210415721, "rb": 5.930449414306639, "rv": 22.42531454582418, "spacing": 0.621035210415721, "wEnd": 0.24891867737751455},
+            "outer": {"need": 0.6690507120336406, "rb": 6.388963679958368, "rv": 46.68042934856646, "spacing": 0.6690507120336406, "wEnd": 0.34494968061335385},
+            "rVi": 22.42531454582418,
+            "rVo": 46.68042934856646
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.8406401343643666, "clearance": 0.21563833497930318, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.34494968061335385, "filletRadius": 0.38145913570187984, "phases": 1, "poles": 20, "rIn": 23.389762725681067, "rOut": 45.667104832828045, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.24891867737751455, "turns": 3, "viaDrill": 0.3, "viaPad": 0.561875073495321, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6109233708586543, "rv": 20.084066133433954, "spacing": 0.6109233708586543, "wEnd": 0.2147628881270066},
+            "outer": {"need": 0.6109233708586543, "rv": 44.35652181557381, "spacing": 0.6109233708586543, "wEnd": 0.2147628881270066},
+            "pitchIn": 0.6109233708586543,
+            "pitchOut": 0.6109233708586543,
+            "rVi": 20.084066133433954,
+            "rVo": 44.35652181557381,
+            "rhoIn0": 21.916836246009918,
+            "rhoInTop": 20.084066133433954,
+            "rhoOut0": 42.52375170299784,
+            "rhoOutTop": 44.35652181557381
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.5868805967271328, "clearance": 0.21516068063210697, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.45476949356962004, "phases": 2, "poles": 20, "rIn": 22.34675981476903, "rOut": 42.09382813423872, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.2147628881270066, "turns": 2, "viaDrill": 0.3, "viaPad": 0.5767624923260882, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 3,
+          "params": {"busWidth": 0.9968306774273514, "clearance": 0.20426888196961954, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.3900479946169071, "filletRadius": 0.7024236765457318, "phases": 3, "poles": 16, "rIn": 25.276191014796495, "rOut": 33.90281381830573, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.3834234144538641, "turns": 4, "viaDrill": 0.3, "viaPad": 0.5231318211415783, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7745742765604519, "rv": 15.687797808693725, "spacing": 0.7745742765604519, "wEnd": 0.49029279821552335},
+            "outer": {"need": 0.7678170780418441, "rv": 28.9122645864496, "spacing": 0.7678170780418441, "wEnd": 0.47677840117830783},
+            "pitchIn": 0.7745742765604519,
+            "pitchOut": 0.7678170780418441,
+            "rVi": 15.687797808693725,
+            "rVo": 28.9122645864496,
+            "rhoIn0": 16.462372085254177,
+            "rhoInTop": 15.687797808693725,
+            "rhoOut0": 28.144447508407755,
+            "rhoOutTop": 28.9122645864496
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.8430734043940902, "clearance": 0.18223051201784982, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.47677840117830783, "filletRadius": 0.35852921071928, "phases": 1, "poles": 16, "rIn": 17.134895395487547, "rOut": 27.47868139669299, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.49029279821552335, "turns": 2, "viaDrill": 0.3, "viaPad": 0.6943947308696807, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5357016482506878, "rv": 29.593993791530373, "spacing": 7.658660817754658, "wEnd": 0.3371880074497312},
+            "outer": {"need": 0.5357016482506878, "rv": 47.586443315108774, "spacing": 7.658660817754659, "wEnd": 0.3371880074497312},
+            "rTrackMin": 29.593993791530373,
+            "rVi": 29.593993791530373,
+            "rVo": 47.586443315108774
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.5316905956715345, "clearance": 0.19851364080095663, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.5231642086524517, "phases": 1, "poles": 20, "rIn": 29.86017657443881, "rOut": 47.32026053220034, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.3371880074497312, "turns": 1, "viaDrill": 0.3, "viaPad": 0.5323655658168718, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.44027229961939157, "rv": 29.464434885268567, "spacing": 3.6976819816688886, "wEnd": 0.2763361833523959},
+            "outer": {"need": 0.44027229961939157, "rv": 44.373889605666044, "spacing": 3.6976819816688886, "wEnd": 0.2763361833523959},
+            "rTrackMin": 29.464434885268567,
+            "rVi": 29.464434885268567,
+            "rVo": 44.373889605666044
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.6458454743027687, "clearance": 0.16393611626699567, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.35235943068983033, "filletRadius": 0.5450169812422246, "phases": 2, "poles": 16, "rIn": 29.747035801410675, "rOut": 44.091288689523935, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.2763361833523959, "turns": 1, "viaDrill": 0.3, "viaPad": 0.5652018322842196, "waveStyle": "chord"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_SLOT_PITCH", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 1,
+          "params": {"busWidth": 0.9629862125962972, "clearance": 0.16947724308120085, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.47981452103704214, "filletRadius": 0.25040789435151967, "phases": 2, "poles": 8, "rIn": 27.98551505804062, "rOut": 39.72485435381532, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.39964211322367194, "turns": 2, "viaDrill": 0.3, "viaPad": 0.6459738339763135, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5118709014495835, "rv": 18.98173255256403, "spacing": 0.6993398558709394, "wEnd": 0.3187345510115847},
+            "outer": {"need": 0.5118709014495835, "rv": 48.1246719937365, "spacing": 1.5258958938457656, "wEnd": 0.3187345510115847},
+            "rVi": 18.98173255256403,
+            "rVo": 48.1246719937365
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.504514373652637, "clearance": 0.19313635043799876, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.292027798993513, "phases": 3, "poles": 8, "rIn": 20.637189853936434, "rOut": 44.44292187318206, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.3187345510115847, "turns": 1, "viaDrill": 0.3, "viaPad": 0.693672461854294, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5572753270156682, "rv": 25.246266198224536, "spacing": 0.7960776085453215, "wEnd": 0.305645571264904},
+            "outer": {"need": 0.6839556428370998, "rv": 54.35097973346045, "spacing": 0.973187401743616, "wEnd": 0.43232588708633557},
+            "rVi": 25.246266198224536,
+            "rVo": 54.35097973346045
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.42414592225104575, "clearance": 0.2516297557507642, "cornerStyle": "round", "endWidthInner": 0.305645571264904, "endWidthOuter": 0.43232588708633557, "filletRadius": 0.27054107231087987, "phases": 1, "poles": 8, "rIn": 28.06410053744912, "rOut": 50.19528015702963, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.21499744807370008, "turns": 4, "viaDrill": 0.3, "viaPad": 0.7832501363242046, "waveStyle": "jog"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 3,
+          "params": {"busWidth": 0.9128667365759611, "clearance": 0.16322814255254342, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.1817400218686089, "phases": 3, "poles": 8, "rIn": 20.332593020051718, "rOut": 39.71620366722345, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.35323874552268536, "turns": 4, "viaDrill": 0.3, "viaPad": 0.6712702586315573, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7385091438307427, "rv": 24.955217960535084, "spacing": 0.7385091438307427, "wEnd": 0.34447844824753704},
+            "outer": {"need": 0.7750055714219344, "rv": 41.0836707255512, "spacing": 0.7750055714219344, "wEnd": 0.4174713034299202},
+            "pitchIn": 0.7385091438307427,
+            "pitchOut": 0.7750055714219344,
+            "rVi": 24.955217960535084,
+            "rVo": 41.0836707255512,
+            "rhoIn0": 24.955217960535084,
+            "rhoInTop": 24.955217960535084,
+            "rhoOut0": 41.0836707255512,
+            "rhoOutTop": 41.0836707255512
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.743092742189765, "clearance": 0.26413631754694505, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.4174713034299202, "filletRadius": 0.22115500343497846, "phases": 1, "poles": 20, "rIn": 25.563832726329565, "rOut": 40.43855953216553, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.34447844824753704, "turns": 1, "viaDrill": 0.3, "viaPad": 0.6042672043200582, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5471011050860397, "rv": 18.820611434138847, "spacing": 2.2286355151150663, "wEnd": 0.3377174109686166},
+            "outer": {"need": 0.5471011050860397, "rv": 29.068228343420195, "spacing": 2.228635515115067, "wEnd": 0.3377174109686166},
+            "rTrackMin": 18.820611434138847,
+            "rVi": 18.820611434138847,
+            "rVo": 29.068228343420195
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.5962510509416461, "clearance": 0.20938369411742314, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.35108323576860134, "phases": 2, "poles": 20, "rIn": 19.14361961185932, "rOut": 28.74522016569972, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.3377174109686166, "turns": 1, "viaDrill": 0.3, "viaPad": 0.6460163554409519, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.3725672319647856, "rv": 20.001852225582116, "spacing": 1.0974633083666567, "wEnd": 0.2055248035816476},
+            "outer": {"need": 0.3725672319647856, "rv": 40.29204054914881, "spacing": 1.0974633083666545, "wEnd": 0.2055248035816476},
+            "rTrackMin": 20.001852225582116,
+            "rVi": 20.001852225582116,
+            "rVo": 40.29204054914881
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.5855961510911584, "clearance": 0.16704242838313801, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.2786955178482458, "phases": 3, "poles": 12, "rIn": 20.339032020419836, "rOut": 39.954860754311085, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.2055248035816476, "turns": 2, "viaDrill": 0.3, "viaPad": 0.6743595896754414, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.8265952734742313, "rb": 6.314722738071406, "rv": 21.70999840047721, "spacing": 0.8265952734742313, "wEnd": 0.4748172702034935},
+            "outer": {"need": 0.8265952734742313, "rb": 6.314722738071406, "rv": 38.6437376373042, "spacing": 0.8265952734742313, "wEnd": 0.4748172702034935},
+            "rVi": 21.70999840047721,
+            "rVo": 38.6437376373042
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.650464840978384, "clearance": 0.2334859203197993, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.6224202767945827, "phases": 1, "poles": 16, "rIn": 23.002571780234575, "rOut": 37.386371333152056, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.4748172702034935, "turns": 3, "viaDrill": 0.3, "viaPad": 0.7114014361053705, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7229647311381996, "rv": 14.605560250673445, "spacing": 0.7229647311381996, "wEnd": 0.30378257350530474},
+            "outer": {"need": 0.7316531670221593, "rv": 39.31172310176771, "spacing": 0.7316531670221593, "wEnd": 0.32115944527322426},
+            "pitchIn": 0.7229647311381996,
+            "pitchOut": 0.7316531670221593,
+            "rVi": 14.605560250673445,
+            "rVo": 39.31172310176771,
+            "rhoIn0": 16.774454444088043,
+            "rhoInTop": 14.605560250673445,
+            "rhoOut0": 37.11676360070123,
+            "rhoOutTop": 39.31172310176771
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.004360513575375, "clearance": 0.22805427575949577, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.32115944527322426, "filletRadius": 0.7083099706796929, "phases": 1, "poles": 20, "rIn": 17.306291293352842, "rOut": 36.57623831555247, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.30378257350530474, "turns": 4, "viaDrill": 0.3, "viaPad": 0.6860383372521028, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7957442761748097, "rv": 15.068641540617683, "spacing": 0.7957442761748097, "wEnd": 0.46474417648278177},
+            "outer": {"need": 0.7957442761748097, "rv": 30.82749189713504, "spacing": 0.7957442761748097, "wEnd": 0.46474417648278177},
+            "pitchIn": 0.7957442761748097,
+            "pitchOut": 0.7957442761748097,
+            "rVi": 15.068641540617683,
+            "rVo": 30.82749189713504,
+            "rhoIn0": 17.455874369142112,
+            "rhoInTop": 15.068641540617683,
+            "rhoOut0": 28.44025906861061,
+            "rhoOutTop": 30.82749189713504
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.0105932673439382, "clearance": 0.26909680628450583, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.6240532278781757, "phases": 1, "poles": 20, "rIn": 18.1897153519094, "rOut": 27.706418085843325, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.46474417648278177, "turns": 4, "viaDrill": 0.3, "viaPad": 0.5885507632978261, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5474757511168719, "rv": 19.357330483093392, "spacing": 1.845394631785832, "wEnd": 0.38945517963729803},
+            "outer": {"need": 0.5474757511168719, "rv": 34.16636929969536, "spacing": 1.8453946317858307, "wEnd": 0.38945517963729803},
+            "rTrackMin": 19.357330483093392,
+            "rVi": 19.357330483093392,
+            "rVo": 34.16636929969536
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.9548271296545863, "clearance": 0.15802057147957385, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.48132334667025134, "filletRadius": 0.2895566665800289, "phases": 3, "poles": 16, "rIn": 19.752333167940378, "rOut": 33.771366614848375, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.38945517963729803, "turns": 1, "viaDrill": 0.3, "viaPad": 0.7900053696939722, "waveStyle": "chord"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 1,
+          "params": {"busWidth": 0.9148661604151129, "clearance": 0.1806999100022949, "cornerStyle": "round", "endWidthInner": 0.3006590943550691, "endWidthOuter": 0, "filletRadius": 0.21842200416140262, "phases": 3, "poles": 20, "rIn": 16.010376285761595, "rOut": 30.439880337566137, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.47888577783014624, "turns": 2, "viaDrill": 0.3, "viaPad": 0.6451820997986943, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.8863107470679098, "rv": 17.521747053996663, "spacing": 0.8863107470679098, "wEnd": 0.4532331260619685},
+            "outer": {"need": 0.8863107470679098, "rv": 45.27389943466988, "spacing": 0.8863107470679098, "wEnd": 0.4532331260619685},
+            "pitchIn": 0.8863107470679098,
+            "pitchOut": 0.8863107470679098,
+            "rVi": 17.521747053996663,
+            "rVo": 45.27389943466988,
+            "rhoIn0": 19.294368548132482,
+            "rhoInTop": 17.521747053996663,
+            "rhoOut0": 43.50127794053406,
+            "rhoOutTop": 45.27389943466988
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.0220736119896174, "clearance": 0.29519701630342754, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.4102798156207428, "phases": 1, "poles": 8, "rIn": 20.042798690497875, "rOut": 42.75284779816866, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.4532331260619685, "turns": 3, "viaDrill": 0.3, "viaPad": 0.7289943354669959, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5518130233511329, "rv": 15.222315006016288, "spacing": 0.948921347479043, "wEnd": 0.28496692650951444},
+            "outer": {"need": 0.5518130233511329, "rv": 38.24569204816362, "spacing": 0.9489213474790444, "wEnd": 0.28496692650951444},
+            "rTrackMin": 15.222315006016288,
+            "rVi": 15.222315006016288,
+            "rVo": 38.24569204816362
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.137677926570177, "clearance": 0.2668460968416184, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.4797628570231609, "filletRadius": 0.5216409522341565, "phases": 2, "poles": 12, "rIn": 15.613619111478329, "rOut": 37.85438794270158, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.28496692650951444, "turns": 3, "viaDrill": 0.3, "viaPad": 0.7826082109240815, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.8200662776071113, "rv": 22.353093155601528, "spacing": 0.8200662776071113, "wEnd": 0.4015901638776995},
+            "outer": {"need": 0.7560476776445284, "rv": 49.52502522366122, "spacing": 0.7560476776445284, "wEnd": 0.2735529639525339},
+            "pitchIn": 0.8200662776071113,
+            "pitchOut": 0.7560476776445284,
+            "rVi": 22.353093155601528,
+            "rVo": 49.52502522366122,
+            "rhoIn0": 26.453424543637084,
+            "rhoInTop": 22.353093155601528,
+            "rhoOut0": 45.744786835438575,
+            "rhoOutTop": 49.52502522366122
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.7014347871765494, "clearance": 0.24725383585318922, "cornerStyle": "round", "endWidthInner": 0.4015901638776995, "endWidthOuter": 0, "filletRadius": 0.7893813265953213, "phases": 3, "poles": 16, "rIn": 27.03824994340539, "rOut": 45.22398003563285, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.2735529639525339, "turns": 2, "viaDrill": 0.3, "viaPad": 0.7440347196301446, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.4412242075661197, "rv": 19.433003052463754, "spacing": 3.744774210586327, "wEnd": 0.27929120012558994},
+            "outer": {"need": 0.4412242075661197, "rv": 41.117071953276174, "spacing": 3.7447742105863253, "wEnd": 0.27929120012558994},
+            "rTrackMin": 19.433003052463754,
+            "rVi": 19.433003052463754,
+            "rVo": 41.117071953276174
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.6529583465307951, "clearance": 0.16193300744052977, "cornerStyle": "round", "endWidthInner": 0.45755841612117365, "endWidthOuter": 0, "filletRadius": 0.42290725121274597, "phases": 2, "poles": 8, "rIn": 19.694276336580515, "rOut": 40.85579866915941, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.27929120012558994, "turns": 1, "viaDrill": 0.3, "viaPad": 0.5225465682335197, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7213872589869424, "rv": 22.59326533372514, "spacing": 0.7213872589869424, "wEnd": 0.34700630207080396},
+            "outer": {"need": 0.7460581225517671, "rv": 39.26764616606524, "spacing": 0.7460581225517671, "wEnd": 0.3963480292004533},
+            "pitchIn": 0.7213872589869424,
+            "pitchOut": 0.7460581225517671,
+            "rVi": 22.59326533372514,
+            "rVo": 39.26764616606524,
+            "rhoIn0": 23.314652592712083,
+            "rhoInTop": 22.59326533372514,
+            "rhoOut0": 38.521588043513475,
+            "rhoOutTop": 39.26764616606524
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.155250832810998, "clearance": 0.25009302743710576, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.3963480292004533, "filletRadius": 0.32214882641565057, "phases": 2, "poles": 8, "rIn": 23.91175192221999, "rOut": 37.89981785044074, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.34700630207080396, "turns": 1, "viaDrill": 0.3, "viaPad": 0.5955821610288694, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6292137788492255, "rb": 18.02564696976928, "rv": 21.56058841635695, "spacing": 0.6292137788492254, "wEnd": 0.346477359556593},
+            "outer": {"need": 0.6292137788492255, "rb": 18.02564696976928, "rv": 49.31581299337495, "spacing": 0.6292137788492254, "wEnd": 0.346477359556593},
+            "rVi": 21.56058841635695,
+            "rVo": 49.31581299337495
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.5078617412596941, "clearance": 0.1852752006263472, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.7837052371352912, "phases": 3, "poles": 20, "rIn": 25.946326803416014, "rOut": 46.25822887569666, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.346477359556593, "turns": 3, "viaDrill": 0.3, "viaPad": 0.5413997968891635, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.682456140749855, "rv": 16.313876150274883, "spacing": 0.682456140749855, "wEnd": 0.3042336603975855},
+            "outer": {"need": 0.6691389169951435, "rv": 36.415255193383196, "spacing": 0.6691389169951435, "wEnd": 0.2775992128881626},
+            "pitchIn": 0.682456140749855,
+            "pitchOut": 0.6691389169951435,
+            "rVi": 16.313876150274883,
+            "rVo": 36.415255193383196,
+            "rhoIn0": 21.773525276273723,
+            "rhoInTop": 16.313876150274883,
+            "rhoOut0": 31.06214385742205,
+            "rhoOutTop": 36.415255193383196
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.1582095090299844, "clearance": 0.2741609184304252, "cornerStyle": "round", "endWidthInner": 0.3042336603975855, "endWidthOuter": 0.2775992128881626, "filletRadius": 0.31095117053482685, "phases": 3, "poles": 12, "rIn": 22.40789718925953, "rOut": 30.441089168190956, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.4161883287131787, "turns": 3, "viaDrill": 0.3, "viaPad": 0.512356784241274, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6886803049768787, "rb": 2.6305649939305025, "rv": 17.584047350645697, "spacing": 0.6886803049768787, "wEnd": 0.37919675634475425},
+            "outer": {"need": 0.6998942293925211, "rb": 2.6733990299835035, "rv": 35.11655964332759, "spacing": 0.6998942293925211, "wEnd": 0.40162460517603904},
+            "rVi": 17.584047350645697,
+            "rVo": 35.11655964332759
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.6009035188704729, "clearance": 0.19034527929034084, "cornerStyle": "sharp", "endWidthInner": 0.37919675634475425, "endWidthOuter": 0.40162460517603904, "filletRadius": 0.4481948158238084, "phases": 2, "poles": 12, "rIn": 18.280262388288975, "rOut": 34.41458664089441, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.37584052290767433, "turns": 1, "viaDrill": 0.3, "viaPad": 0.6174732950283215, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7879472400294617, "rb": 4.012982340681759, "rv": 27.395193101414044, "spacing": 0.7879472400294617, "wEnd": 0.4772094521671534},
+            "outer": {"need": 0.7879472400294617, "rb": 4.012982340681759, "rv": 40.40695770324095, "spacing": 0.7879472400294617, "wEnd": 0.4772094521671534},
+            "rVi": 27.395193101414044,
+            "rVo": 40.40695770324095
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.46004798971116545, "clearance": 0.1665230377111584, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.31118276033084846, "phases": 1, "poles": 8, "rIn": 28.987313874065876, "rOut": 38.8229115344584, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.4772094521671534, "turns": 4, "viaDrill": 0.3, "viaPad": 0.7656389524694532, "waveStyle": "involute"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 3,
+          "params": {"busWidth": 1.146879390068352, "clearance": 0.28727842551888894, "cornerStyle": "round", "endWidthInner": 0.35730916360625997, "endWidthOuter": 0, "filletRadius": 0.3107157376362011, "phases": 2, "poles": 12, "rIn": 20.939651895314455, "rOut": 40.67072902992368, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.20264898503664883, "turns": 4, "viaDrill": 0.3, "viaPad": 0.7723349212436006, "waveStyle": "involute"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 2,
+          "params": {"busWidth": 0.5117599319666624, "clearance": 0.2928681748802774, "cornerStyle": "sharp", "endWidthInner": 0.35458457231288776, "endWidthOuter": 0.37130569259170443, "filletRadius": 0.37323993437457836, "phases": 2, "poles": 20, "rIn": 20.18680874630809, "rOut": 40.63168543577194, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.30485141193494203, "turns": 3, "viaDrill": 0.3, "viaPad": 0.7648377504432574, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.676804794126656, "rb": 3.8778058257677954, "rv": 16.916455147519102, "spacing": 0.676804794126656, "wEnd": 0.366150092612952},
+            "outer": {"need": 0.676804794126656, "rb": 3.8778058257677954, "rv": 33.158283083218606, "spacing": 0.676804794126656, "wEnd": 0.366150092612952},
+            "rVi": 16.916455147519102,
+            "rVo": 33.158283083218606
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.8624275771901011, "clearance": 0.19422565503045916, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.17969401630107315, "phases": 1, "poles": 12, "rIn": 17.957762509584427, "rOut": 32.13583583012223, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.366150092612952, "turns": 3, "viaDrill": 0.3, "viaPad": 0.5990081855794415, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.45037436207057907, "rv": 19.909884411632085, "spacing": 1.0496367340340338, "wEnd": 0.23819481499958783},
+            "outer": {"need": 0.45037436207057907, "rv": 29.113871850282884, "spacing": 1.0496367340340316, "wEnd": 0.23819481499958783},
+            "rTrackMin": 19.909884411632085,
+            "rVi": 19.909884411632085,
+            "rVo": 29.113871850282884
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.5231472240760923, "clearance": 0.21217954707099124, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.4790735628339462, "filletRadius": 0.3541889079380781, "phases": 1, "poles": 12, "rIn": 20.24202834814787, "rOut": 28.7817279137671, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.23819481499958783, "turns": 4, "viaDrill": 0.3, "viaPad": 0.6642878730315716, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.8709156564087607, "rv": 15.336154175573029, "spacing": 0.8709156564087607, "wEnd": 0.4206922878045589},
+            "outer": {"need": 0.8709156564087607, "rv": 27.623081310070116, "spacing": 0.8709156564087607, "wEnd": 0.4206922878045589},
+            "pitchIn": 0.8709156564087607,
+            "pitchOut": 0.8709156564087607,
+            "rVi": 15.336154175573029,
+            "rVo": 27.623081310070116,
+            "rhoIn0": 15.336154175573029,
+            "rhoInTop": 15.336154175573029,
+            "rhoOut0": 27.623081310070116,
+            "rhoOutTop": 27.623081310070116
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.17711202185601, "clearance": 0.29960214898455884, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.49813663922250273, "phases": 1, "poles": 20, "rIn": 16.056448612362146, "rOut": 26.902786873281002, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.4206922878045589, "turns": 1, "viaDrill": 0.3, "viaPad": 0.7219347270438448, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5810226674657315, "rv": 15.802762288500572, "spacing": 0.7962633515603454, "wEnd": 0.36657246921677145},
+            "outer": {"need": 0.5810226674657315, "rv": 30.260447928654244, "spacing": 0.6119657448356075, "wEnd": 0.36657246921677145},
+            "rVi": 15.802762288500572,
+            "rVo": 30.260447928654244
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.8243284160271287, "clearance": 0.21445019824896006, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.17508323097135875, "phases": 1, "poles": 20, "rIn": 17.32481886073947, "rOut": 29.175364404916763, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.36657246921677145, "turns": 3, "viaDrill": 0.3, "viaPad": 0.7970538394059986, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.506531290570274, "rv": 28.086337296001147, "spacing": 1.1393158385962012, "wEnd": 0.26281573104206474},
+            "outer": {"need": 0.506531290570274, "rv": 44.535943987139035, "spacing": 1.1393158385962017, "wEnd": 0.26281573104206474},
+            "rTrackMin": 28.086337296001147,
+            "rVi": 28.086337296001147,
+            "rVo": 44.535943987139035
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.5643778890371323, "clearance": 0.24371555952820928, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.6995828578714282, "phases": 3, "poles": 12, "rIn": 28.47595638781786, "rOut": 44.14632489532232, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.26281573104206474, "turns": 2, "viaDrill": 0.3, "viaPad": 0.7792381836334243, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7993296382599511, "rv": 17.864737670286555, "spacing": 0.7993296382599511, "wEnd": 0.4445337692042813},
+            "outer": {"need": 0.7993296382599511, "rv": 40.606538806692704, "spacing": 0.7993296382599511, "wEnd": 0.4445337692042813},
+            "pitchIn": 0.7993296382599511,
+            "pitchOut": 0.7993296382599511,
+            "rVi": 17.864737670286555,
+            "rVo": 40.606538806692704,
+            "rhoIn0": 23.460045138106214,
+            "rhoInTop": 17.864737670286555,
+            "rhoOut0": 35.011231338873046,
+            "rhoOutTop": 40.606538806692704
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.7678394131362438, "clearance": 0.251799004257191, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.6097516549751163, "phases": 2, "poles": 8, "rIn": 24.156377911567688, "rOut": 34.31489856541157, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.4445337692042813, "turns": 4, "viaDrill": 0.3, "viaPad": 0.6505274988012388, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_SLOT_PITCH", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 1,
+          "params": {"busWidth": 0.4237432295456529, "clearance": 0.22443757066503167, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.2905161690199748, "phases": 3, "poles": 16, "rIn": 17.74030587822199, "rOut": 39.7802459448576, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.45684313541278243, "turns": 4, "viaDrill": 0.3, "viaPad": 0.5770524516236037, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7098827631445601, "rb": 7.230806449292152, "rv": 17.186212679180123, "spacing": 0.7098827631445601, "wEnd": 0.23455581292510033},
+            "outer": {"need": 0.8302717761311215, "rb": 8.457078865981153, "rv": 36.97619082324958, "spacing": 0.8302717761311215, "wEnd": 0.4753338388982229},
+            "rVi": 17.186212679180123,
+            "rVo": 36.97619082324958
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.4305063148960471, "clearance": 0.25585346517618746, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.4753338388982229, "filletRadius": 0.17562800967134537, "phases": 2, "poles": 8, "rIn": 20.266429111361504, "rOut": 33.55502901598811, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.23455581292510033, "turns": 4, "viaDrill": 0.3, "viaPad": 0.6735027830116451, "waveStyle": "involute"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 3,
+          "params": {"busWidth": 0.42486261893063787, "clearance": 0.2584944161586463, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.2635363719891757, "filletRadius": 0.2601314167492092, "phases": 3, "poles": 8, "rIn": 21.246630735695362, "rOut": 31.03629418462515, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.48138213329948487, "turns": 4, "viaDrill": 0.3, "viaPad": 0.7448198994388804, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7569177934783511, "rv": 21.71681618795264, "spacing": 0.7569177934783511, "wEnd": 0.4672339858254418},
+            "outer": {"need": 0.7569177934783511, "rv": 42.874149906332605, "spacing": 0.7569177934783511, "wEnd": 0.4672339858254418},
+            "pitchIn": 0.7569177934783511,
+            "pitchOut": 0.7569177934783511,
+            "rVi": 21.71681618795264,
+            "rVo": 42.874149906332605,
+            "rhoIn0": 23.230651774909344,
+            "rhoInTop": 21.71681618795264,
+            "rhoOut0": 41.3603143193759,
+            "rhoOutTop": 42.874149906332605
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.9172703804448247, "clearance": 0.18476950221229343, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.6472014089813456, "phases": 3, "poles": 12, "rIn": 23.882655262947083, "rOut": 40.70831083133817, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.4672339858254418, "turns": 1, "viaDrill": 0.3, "viaPad": 0.6770625967066736, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7011487739335279, "rb": 4.463651728573713, "rv": 25.261822241552636, "spacing": 0.7011487739335279, "wEnd": 0.403990559221711},
+            "outer": {"need": 0.7301043360959738, "rb": 4.6479885625000295, "rv": 47.43914498606118, "spacing": 0.7301043360959738, "wEnd": 0.4619016835466027},
+            "rVi": 25.261822241552636,
+            "rVo": 47.43914498606118
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.145305767469108, "clearance": 0.18575001605786381, "cornerStyle": "round", "endWidthInner": 0.403990559221711, "endWidthOuter": 0, "filletRadius": 0.3777143671410158, "phases": 1, "poles": 20, "rIn": 25.973865117877722, "rOut": 46.70545497536659, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.4619016835466027, "turns": 2, "viaDrill": 0.3, "viaPad": 0.6268069565296173, "waveStyle": "involute"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_SLOT_PITCH", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 1,
+          "params": {"busWidth": 0.8451153488829732, "clearance": 0.2268568107392639, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.678159077395685, "phases": 3, "poles": 8, "rIn": 27.84468124434352, "rOut": 39.75096744298935, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.22860053372569383, "turns": 4, "viaDrill": 0.3, "viaPad": 0.5722725921310484, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6493784836260601, "rv": 21.852860224107282, "spacing": 0.6493784836260601, "wEnd": 0.23984156630467623},
+            "outer": {"need": 0.7549042471277062, "rv": 44.98729776367545, "spacing": 0.7549042471277062, "wEnd": 0.45089309330796823},
+            "pitchIn": 0.6493784836260601,
+            "pitchOut": 0.7549042471277062,
+            "rVi": 21.852860224107282,
+            "rVo": 44.98729776367545,
+            "rhoIn0": 26.3985096094897,
+            "rhoInTop": 21.852860224107282,
+            "rhoOut0": 39.70296803378151,
+            "rhoOutTop": 44.98729776367545
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.7872404880821704, "clearance": 0.2348528021480888, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.45089309330796823, "filletRadius": 0.7472535151988269, "phases": 2, "poles": 8, "rIn": 26.873203977942467, "rOut": 39.1227479018271, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.23984156630467623, "turns": 4, "viaDrill": 0.3, "viaPad": 0.5892097966512665, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 2,
+          "params": {"busWidth": 0.6863984819501638, "clearance": 0.17386259684571995, "cornerStyle": "round", "endWidthInner": 0.2728042457601987, "endWidthOuter": 0, "filletRadius": 0.4956588726490736, "phases": 3, "poles": 20, "rIn": 26.17494175583124, "rOut": 41.10423344373703, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.3563280124450102, "turns": 3, "viaDrill": 0.3, "viaPad": 0.7630984912160784, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5927091155666858, "rb": 6.791946160180572, "rv": 15.091468189542177, "spacing": 0.5927091155666858, "wEnd": 0.3280123225413263},
+            "outer": {"need": 0.5927091155666858, "rb": 6.791946160180572, "rv": 37.84210631925647, "spacing": 0.5927091155666858, "wEnd": 0.3280123225413263},
+            "rVi": 15.091468189542177,
+            "rVo": 37.84210631925647
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.0288510294631124, "clearance": 0.17798931626603007, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.32228994341567163, "phases": 2, "poles": 12, "rIn": 17.05422554537654, "rOut": 36.03311574459076, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.3280123225413263, "turns": 3, "viaDrill": 0.3, "viaPad": 0.5014272760599852, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6790946696535685, "rv": 26.94329183269292, "spacing": 1.0325359689316025, "wEnd": 0.4031098079169169},
+            "outer": {"need": 0.6790946696535685, "rv": 50.92095152195543, "spacing": 1.0325359689316016, "wEnd": 0.4031098079169169},
+            "rTrackMin": 26.94329183269292,
+            "rVi": 26.94329183269292,
+            "rVo": 50.92095152195543
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.0496360123157502, "clearance": 0.2759848617366515, "cornerStyle": "round", "endWidthInner": 0.47202227218076587, "endWidthOuter": 0, "filletRadius": 0.49973881093319505, "phases": 2, "poles": 12, "rIn": 27.301866102963686, "rOut": 50.562377251684666, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.4031098079169169, "turns": 4, "viaDrill": 0.3, "viaPad": 0.7171485405415297, "waveStyle": "chord"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 1,
+          "params": {"busWidth": 0.8785741560161113, "clearance": 0.20685388252604753, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.5927894384134561, "phases": 3, "poles": 20, "rIn": 14.4145069681108, "rOut": 28.866492182016373, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.28257499327883123, "turns": 3, "viaDrill": 0.3, "viaPad": 0.5273708231747151, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6552663108916021, "rv": 18.164389823959212, "spacing": 0.6552663108916021, "wEnd": 0.20039665673393758},
+            "outer": {"need": 0.7652501950215083, "rv": 49.53419377721148, "spacing": 0.7652501950215083, "wEnd": 0.4203644249937497},
+            "pitchIn": 0.6552663108916021,
+            "pitchOut": 0.7652501950215083,
+            "rVi": 18.164389823959212,
+            "rVo": 49.53419377721148,
+            "rhoIn0": 21.440721378417223,
+            "rhoInTop": 18.164389823959212,
+            "rhoOut0": 45.707942802103936,
+            "rhoOutTop": 49.53419377721148
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.6795600388199091, "clearance": 0.2861989844008349, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.4203644249937497, "filletRadius": 0.43780602205079056, "phases": 3, "poles": 8, "rIn": 21.927317019551992, "rOut": 45.111363276839256, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.20039665673393758, "turns": 2, "viaDrill": 0.3, "viaPad": 0.537737996247597, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6900234710483346, "rb": 3.5142606805366334, "rv": 19.482643167957747, "spacing": 0.6900234710483346, "wEnd": 0.3576928527909331},
+            "outer": {"need": 0.6935646260157228, "rb": 3.532295634690689, "rv": 37.865849160729056, "spacing": 0.6935646260157228, "wEnd": 0.3647751627257094},
+            "rVi": 19.482643167957747,
+            "rVo": 37.865849160729056
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.0327920569106936, "clearance": 0.25020859149517494, "cornerStyle": "round", "endWidthInner": 0.3576928527909331, "endWidthOuter": 0, "filletRadius": 0.2918356388108805, "phases": 2, "poles": 16, "rIn": 20.183764345943928, "rOut": 37.169189684093, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.3647751627257094, "turns": 1, "viaDrill": 0.3, "viaPad": 0.5219369063153863, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7538491017883644, "rv": 20.233446522837042, "spacing": 0.7538491017883644, "wEnd": 0.3888014018069953},
+            "outer": {"need": 0.7180363727908116, "rv": 40.23713915704284, "spacing": 0.7180363727908116, "wEnd": 0.31717594381188974},
+            "pitchIn": 0.7538491017883644,
+            "pitchOut": 0.7180363727908116,
+            "rVi": 20.233446522837042,
+            "rVo": 40.23713915704284,
+            "rhoIn0": 24.002692031778864,
+            "rhoInTop": 20.233446522837042,
+            "rhoOut0": 36.64695729308878,
+            "rhoOutTop": 40.23713915704284
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.04702834431082, "clearance": 0.1700737872510217, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.31717594381188974, "filletRadius": 0.7353000853210688, "phases": 2, "poles": 16, "rIn": 24.561567220836878, "rOut": 36.12389483302832, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.3888014018069953, "turns": 3, "viaDrill": 0.3, "viaPad": 0.77874922726769, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5751753383781761, "rv": 13.378372001217212, "spacing": 0.5751753383781761, "wEnd": 0.2675270074978471},
+            "outer": {"need": 0.6150992666254751, "rv": 32.08877340320032, "spacing": 0.6150992666254751, "wEnd": 0.3473748639924452},
+            "pitchIn": 0.5751753383781761,
+            "pitchOut": 0.6150992666254751,
+            "rVi": 13.378372001217212,
+            "rVo": 32.08877340320032,
+            "rhoIn0": 14.528722677973564,
+            "rhoInTop": 13.378372001217212,
+            "rhoOut0": 30.85857486994937,
+            "rhoOutTop": 32.08877340320032
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.8028515215963126, "clearance": 0.17934212351683526, "cornerStyle": "sharp", "endWidthInner": 0.2675270074978471, "endWidthOuter": 0, "filletRadius": 0.42288339252118023, "phases": 3, "poles": 12, "rIn": 15.015515737235546, "rOut": 30.33185788244009, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.3473748639924452, "turns": 1, "viaDrill": 0.3, "viaPad": 0.5241394222248346, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7189954616478644, "rb": 2.7463603627655253, "rv": 23.818971368143288, "spacing": 0.7189954616478644, "wEnd": 0.416939057293348},
+            "outer": {"need": 0.7189954616478644, "rb": 2.7463603627655253, "rv": 42.13236329013216, "spacing": 0.7189954616478644, "wEnd": 0.416939057293348},
+            "rVi": 23.818971368143288,
+            "rVo": 42.13236329013216
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.0354465689510106, "clearance": 0.2523662089370191, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.11313306712545455, "phases": 1, "poles": 12, "rIn": 24.54265059158206, "rOut": 41.41180869936943, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.416939057293348, "turns": 2, "viaDrill": 0.3, "viaPad": 0.5163194481283426, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5664756499114446, "rv": 15.590330094513838, "spacing": 0.7204875809617886, "wEnd": 0.34608359541743994},
+            "outer": {"need": 0.5664756499114446, "rv": 36.37408835851944, "spacing": 1.15598064802616, "wEnd": 0.34608359541743994},
+            "rVi": 15.590330094513838,
+            "rVo": 36.37408835851944
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.4384549891576171, "clearance": 0.22039205449400467, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.5835534564452246, "phases": 1, "poles": 8, "rIn": 17.210633762180805, "rOut": 33.586798157542944, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.34608359541743994, "turns": 3, "viaDrill": 0.3, "viaPad": 0.6541074595181271, "waveStyle": "jog"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 2,
+          "params": {"busWidth": 1.013236224465072, "clearance": 0.2862763126264326, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.4693968076026067, "filletRadius": 0.44685274686198684, "phases": 3, "poles": 16, "rIn": 20.819415114820004, "rOut": 40.01135364174843, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.34548514485359194, "turns": 4, "viaDrill": 0.3, "viaPad": 0.536000479478389, "waveStyle": "involute"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_SLOT_PITCH", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 1,
+          "params": {"busWidth": 0.691521374322474, "clearance": 0.20865275590913368, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.27805735419970007, "phases": 3, "poles": 20, "rIn": 17.96081844344735, "rOut": 37.74285002052784, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.29571498311124744, "turns": 4, "viaDrill": 0.3, "viaPad": 0.7489168379921467, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6942126595880835, "rv": 24.46645439057611, "spacing": 0.6942126595880835, "wEnd": 0.27727768174372613},
+            "outer": {"need": 0.6942126595880835, "rv": 43.42941189915873, "spacing": 0.6942126595880835, "wEnd": 0.27727768174372613},
+            "pitchIn": 0.6942126595880835,
+            "pitchOut": 0.6942126595880835,
+            "rVi": 24.46645439057611,
+            "rVo": 43.42941189915873,
+            "rhoIn0": 29.325943007692693,
+            "rhoInTop": 24.46645439057611,
+            "rhoOut0": 38.56992328204215,
+            "rhoOutTop": 43.42941189915873
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.8550573211163282, "clearance": 0.2905153265688568, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.6006644124863669, "phases": 2, "poles": 12, "rIn": 29.893736016005278, "rOut": 38.00213027372956, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.27727768174372613, "turns": 4, "viaDrill": 0.3, "viaPad": 0.5301169842947274, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.416827687015757, "rv": 22.571607406367548, "spacing": 0.6445646124429822, "wEnd": 0.2398028079653159},
+            "outer": {"need": 0.416827687015757, "rv": 31.25552141747903, "spacing": 0.6445646124429819, "wEnd": 0.2398028079653159},
+            "rTrackMin": 22.56649182271117,
+            "rVi": 22.571607406367548,
+            "rVo": 31.25552141747903
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.05361833460629, "clearance": 0.1770248790504411, "cornerStyle": "round", "endWidthInner": 0.454604463709984, "endWidthOuter": 0, "filletRadius": 0.5151053730864078, "phases": 1, "poles": 8, "rIn": 22.88919436186552, "rOut": 30.937934461981058, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.2398028079653159, "turns": 3, "viaDrill": 0.3, "viaPad": 0.6351739109959453, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.8367251596937422, "rb": 14.382246078858376, "rv": 19.869143691538675, "spacing": 0.8367251596937422, "wEnd": 0.4254671065718867},
+            "outer": {"need": 0.8012123733526095, "rb": 13.771826246029354, "rv": 36.85433139219292, "spacing": 0.8012123733526095, "wEnd": 0.3544415338896215},
+            "rVi": 19.869143691538675,
+            "rVo": 36.85433139219292
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.8826733909547329, "clearance": 0.2571118724299595, "cornerStyle": "round", "endWidthInner": 0.4254671065718867, "endWidthOuter": 0, "filletRadius": 0.32606001810636376, "phases": 3, "poles": 12, "rIn": 24.81648474559188, "rOut": 32.92905742302537, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.3544415338896215, "turns": 3, "viaDrill": 0.3, "viaPad": 0.7337594679556787, "waveStyle": "involute"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 3,
+          "params": {"busWidth": 1.1934282800182698, "clearance": 0.17330264408374205, "cornerStyle": "round", "endWidthInner": 0.34773424587910995, "endWidthOuter": 0.2533192891860381, "filletRadius": 0.5637550920946524, "phases": 2, "poles": 16, "rIn": 20.630500070750713, "rOut": 35.538821302354336, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.4770637340378016, "turns": 4, "viaDrill": 0.3, "viaPad": 0.6277855054475368, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5800395213882439, "rv": 29.16464233014267, "spacing": 1.0972969994056996, "wEnd": 0.3922407839680091},
+            "outer": {"need": 0.5800395213882439, "rv": 43.31910406064708, "spacing": 1.0972969994056991, "wEnd": 0.3922407839680091},
+            "rTrackMin": 29.16464233014267,
+            "rVi": 29.16464233014267,
+            "rVo": 43.31910406064708
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.619516352377832, "clearance": 0.1877987374202348, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.5874883695971221, "phases": 2, "poles": 16, "rIn": 29.524674605578184, "rOut": 42.95907178521156, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.3922407839680091, "turns": 3, "viaDrill": 0.3, "viaPad": 0.7200645508710295, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.39977493348997084, "rv": 21.085932958637386, "spacing": 1.6235269070602356, "wEnd": 0.2173765634885058},
+            "outer": {"need": 0.5736338254064322, "rv": 35.29530197154672, "spacing": 2.4978349499012182, "wEnd": 0.39123545540496707},
+            "rVi": 21.085932958637386,
+            "rVo": 35.29530197154672
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.8259514514356852, "clearance": 0.18239837000146508, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0.39123545540496707, "filletRadius": 0.5295093250693754, "phases": 2, "poles": 8, "rIn": 22.844897214323282, "rOut": 32.59012949466705, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.2173765634885058, "turns": 1, "viaDrill": 0.3, "viaPad": 0.783968947455287, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7451718794298358, "rb": 1.8975646090293794, "rv": 16.185603897718543, "spacing": 0.7451718794298358, "wEnd": 0.3142332718707621},
+            "outer": {"need": 0.7450867263949476, "rb": 1.8973477686066316, "rv": 35.91783457086969, "spacing": 0.7450867263949476, "wEnd": 0.3140629658009857},
+            "rVi": 16.185603897718543,
+            "rVo": 35.91783457086969
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.5430646719411015, "clearance": 0.2692822632263414, "cornerStyle": "round", "endWidthInner": 0.3142332718707621, "endWidthOuter": 0, "filletRadius": 0.7134321085177362, "phases": 1, "poles": 16, "rIn": 16.56071788072586, "rOut": 35.54476485773921, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.3140629658009857, "turns": 1, "viaDrill": 0.3, "viaPad": 0.6375459605362266, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.684431863174541, "rb": 2.6143371416117756, "rv": 22.96593217082114, "spacing": 0.684431863174541, "wEnd": 0.2871555623714812},
+            "outer": {"need": 0.7092225279309787, "rb": 2.709030505736282, "rv": 47.11459527330037, "spacing": 0.7092225279309787, "wEnd": 0.33673689188435674},
+            "rVi": 22.96593217082114,
+            "rVo": 47.11459527330037
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.0121682548895476, "clearance": 0.2695907629095018, "cornerStyle": "round", "endWidthInner": 0.2871555623714812, "endWidthOuter": 0, "filletRadius": 0.2586635342566297, "phases": 1, "poles": 12, "rIn": 23.654710575938225, "rOut": 46.40417940914631, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.33673689188435674, "turns": 2, "viaDrill": 0.3, "viaPad": 0.542526638158597, "waveStyle": "involute"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_SLOT_PITCH", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 2,
+          "params": {"busWidth": 1.1369318952783942, "clearance": 0.29622719044564294, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.46427759889047593, "filletRadius": 0.5777244703378529, "phases": 2, "poles": 8, "rIn": 17.458304077386856, "rOut": 29.649805441498756, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.3988754884339869, "turns": 4, "viaDrill": 0.3, "viaPad": 0.6362602259032428, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.637115758343134, "rb": 4.05600489048205, "rv": 21.45791901310278, "spacing": 0.637115758343134, "wEnd": 0.3793385335477069},
+            "outer": {"need": 0.6708756726584397, "rb": 4.270927180147639, "rv": 40.34001979090624, "spacing": 0.6708756726584397, "wEnd": 0.4468583621783182},
+            "rVi": 21.45791901310278,
+            "rVo": 40.34001979090624
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.4928198525682092, "clearance": 0.19197894176468253, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.4468583621783182, "filletRadius": 0.3596722392365337, "phases": 2, "poles": 20, "rIn": 22.10637864097953, "rOut": 39.66528718173504, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.3793385335477069, "turns": 1, "viaDrill": 0.3, "viaPad": 0.5109350996091961, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7213379587978125, "rv": 22.857010253868065, "spacing": 0.7213379587978125, "wEnd": 0.3688527343329042},
+            "outer": {"need": 0.7213379587978125, "rv": 37.15710379446391, "spacing": 0.7213379587978125, "wEnd": 0.3688527343329042},
+            "pitchIn": 0.7213379587978125,
+            "pitchOut": 0.7213379587978125,
+            "rVi": 22.857010253868065,
+            "rVo": 37.15710379446391,
+            "rhoIn0": 24.29968617146369,
+            "rhoInTop": 22.857010253868065,
+            "rhoOut0": 35.714427876868285,
+            "rhoOutTop": 37.15710379446391
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.7477128585800528, "clearance": 0.22061213466804475, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.5397269762586803, "phases": 3, "poles": 16, "rIn": 24.88915104046464, "rOut": 35.124963007867336, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.3688527343329042, "turns": 1, "viaDrill": 0.3, "viaPad": 0.6325989139266313, "waveStyle": "overlap"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7689581356011331, "rv": 21.470609235833468, "spacing": 0.8468652815511534, "wEnd": 0.49635407043388113},
+            "outer": {"need": 0.7012540037161671, "rv": 42.32113256324688, "spacing": 0.7012540027161722, "wEnd": 0.4286499385489151},
+            "rVi": 21.470609235833468,
+            "rVo": 42.32113256324688
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.5846762409433722, "clearance": 0.272604065167252, "cornerStyle": "round", "endWidthInner": 0.49635407043388113, "endWidthOuter": 0.4286499385489151, "filletRadius": 0.7569130593910813, "phases": 3, "poles": 16, "rIn": 25.46313700452447, "rOut": 39.467781096696854, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.4778885375475511, "turns": 2, "viaDrill": 0.3, "viaPad": 0.6521683643339202, "waveStyle": "jog"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 3,
+          "params": {"busWidth": 0.9500270837917923, "clearance": 0.28126068975543606, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.6700367879355327, "phases": 2, "poles": 12, "rIn": 19.04811915382743, "rOut": 27.763033151626587, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.42673225635662676, "turns": 4, "viaDrill": 0.3, "viaPad": 0.6238305193837732, "waveStyle": "jog"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_INNER_TIGHT", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 2,
+          "params": {"busWidth": 0.7455946834757924, "clearance": 0.26463194147218017, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.31727462698472664, "filletRadius": 0.43369259629398593, "phases": 2, "poles": 20, "rIn": 19.652416370809078, "rOut": 28.226684875786304, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.4126534305745736, "turns": 4, "viaDrill": 0.3, "viaPad": 0.6957681270083413, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.40879136146977546, "rv": 20.301504994902746, "spacing": 0.5587054923770562, "wEnd": 0.2137764111859724},
+            "outer": {"need": 0.40879136146977546, "rv": 37.39169509475054, "spacing": 0.40879136046977593, "wEnd": 0.2137764111859724},
+            "rVi": 20.301504994902746,
+            "rVo": 37.39169509475054
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.1176708491519092, "clearance": 0.19501495028380303, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.24192970115691426, "phases": 2, "poles": 12, "rIn": 23.714162185788155, "rOut": 34.67033399268985, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.2137764111859724, "turns": 4, "viaDrill": 0.3, "viaPad": 0.5136046750005334, "waveStyle": "jog"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_SLOT_PITCH", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 2,
+          "params": {"busWidth": 1.1865816868841648, "clearance": 0.22859919655602423, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.20990075811278075, "phases": 3, "poles": 12, "rIn": 14.066397350281477, "rOut": 26.367375820875168, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.4895610885927454, "turns": 4, "viaDrill": 0.3, "viaPad": 0.5644283263711258, "waveStyle": "involute"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7440114064491354, "rv": 16.468537771434058, "spacing": 0.8431149999178157, "wEnd": 0.47664274226408454},
+            "outer": {"need": 0.7440114064491354, "rv": 30.7295425037737, "spacing": 0.8431149999178128, "wEnd": 0.47664274226408454},
+            "rTrackMin": 16.468537771434058,
+            "rVi": 16.468537771434058,
+            "rVo": 30.7295425037737
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.5431860238313675, "clearance": 0.2673686641850509, "cornerStyle": "sharp", "endWidthInner": 0.34565002733143046, "endWidthOuter": 0, "filletRadius": 0.45358027496840814, "phases": 3, "poles": 12, "rIn": 16.727295003831387, "rOut": 30.47078527137637, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.47664274226408454, "turns": 2, "viaDrill": 0.3, "viaPad": 0.5175144647946581, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.8608106715139002, "rb": 4.384072750006112, "rv": 17.389366542607434, "spacing": 0.8608106715139002, "wEnd": 0.4585340728517622},
+            "outer": {"need": 0.8055277445120738, "rb": 4.102519114776381, "rv": 35.284769152662605, "spacing": 0.8055277445120738, "wEnd": 0.34796821884810925},
+            "rVi": 17.389366542607434,
+            "rVo": 35.284769152662605
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.7924748115241527, "clearance": 0.2400504375924356, "cornerStyle": "sharp", "endWidthInner": 0.4585340728517622, "endWidthOuter": 0.34796821884810925, "filletRadius": 0.31510853967629376, "phases": 1, "poles": 16, "rIn": 18.27744845300913, "rOut": 34.473610043525696, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.226655714889057, "turns": 2, "viaDrill": 0.3, "viaPad": 0.782986394991167, "waveStyle": "involute"}
+        },
+        {
+          "errors": [
+            {"code": "WAVE_SLOT_PITCH", "field": "turns"}
+          ],
+          "frame": null,
+          "maxTurns": 1,
+          "params": {"busWidth": 0.6800065241754055, "clearance": 0.2787251583533361, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.3441673286492005, "phases": 3, "poles": 8, "rIn": 19.602488420903683, "rOut": 32.82272765785456, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.49506420057732614, "turns": 3, "viaDrill": 0.3, "viaPad": 0.7791255603311584, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7391305174329319, "rv": 26.655364121147432, "spacing": 8.372156125587146, "wEnd": 0.4417301001260057},
+            "outer": {"need": 0.7391305174329319, "rv": 46.361386255524124, "spacing": 8.372156125587148, "wEnd": 0.4417301001260057},
+            "rTrackMin": 26.655364121147432,
+            "rVi": 26.655364121147432,
+            "rVo": 46.361386255524124
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.1243389967828987, "clearance": 0.2974004173069261, "cornerStyle": "round", "endWidthInner": 0.27238215086981654, "endWidthOuter": 0, "filletRadius": 0.6948690298013389, "phases": 1, "poles": 16, "rIn": 26.99423750117421, "rOut": 46.02251287549734, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.4417301001260057, "turns": 1, "viaDrill": 0.3, "viaPad": 0.6777467600535602, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.6353814754867926, "rv": 24.811583626934, "spacing": 0.7668345984199655, "wEnd": 0.3866223414661363},
+            "outer": {"need": 0.6353814754867926, "rv": 43.839849447964234, "spacing": 0.6353814744867928, "wEnd": 0.3866223414661363},
+            "rVi": 24.811583626934,
+            "rVo": 43.839849447964234
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.6537295365706086, "clearance": 0.24875913402065636, "cornerStyle": "sharp", "endWidthInner": 0, "endWidthOuter": 0, "filletRadius": 0.30777576267719275, "phases": 2, "poles": 16, "rIn": 26.779357340186834, "rOut": 42.09318555146456, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.3866223414661363, "turns": 2, "viaDrill": 0.3, "viaPad": 0.6495285893324763, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.5606887108297087, "rv": 22.973168096342125, "spacing": 1.6146426103781057, "wEnd": 0.29953235655557364},
+            "outer": {"need": 0.5606887108297087, "rv": 32.85618607809302, "spacing": 1.6146426103781057, "wEnd": 0.29953235655557364},
+            "rTrackMin": 22.973168096342125,
+            "rVi": 22.973168096342125,
+            "rVo": 32.85618607809302
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 1.1537817725911736, "clearance": 0.2611563542741351, "cornerStyle": "round", "endWidthInner": 0.27663220412796363, "endWidthOuter": 0, "filletRadius": 0.7647272821282969, "phases": 3, "poles": 20, "rIn": 23.262927424162626, "rOut": 32.56642675027251, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.29953235655557364, "turns": 1, "viaDrill": 0.3, "viaPad": 0.5795186556410045, "waveStyle": "chord"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.7397101160138846, "rv": 23.838924494035, "spacing": 0.843242562155947, "wEnd": 0.474776352616027},
+            "outer": {"need": 0.544464535289444, "rv": 46.18452148104493, "spacing": 1.5380688028593716, "wEnd": 0.2795307718915865},
+            "rVi": 23.838924494035,
+            "rVo": 46.18452148104493
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.5388676654547453, "clearance": 0.26493376339785757, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.2795307718915865, "filletRadius": 0.37261567125096917, "phases": 2, "poles": 12, "rIn": 24.71309983730316, "rOut": 44.59150355681777, "startAngleDeg": 0, "topology": "wave", "traceWidth": 0.474776352616027, "turns": 1, "viaDrill": 0.3, "viaPad": 0.6818412469001487, "waveStyle": "jog"}
+        },
+        {
+          "errors": [],
+          "frame": {
+            "inner": {"need": 0.662341932556592, "rv": 17.552800249122082, "spacing": 2.559304217463244, "wEnd": 0.42030172708909963},
+            "outer": {"need": 0.662341932556592, "rv": 28.437922112829984, "spacing": 2.559304217463245, "wEnd": 0.42030172708909963},
+            "rTrackMin": 17.552800249122082,
+            "rVi": 17.552800249122082,
+            "rVo": 28.437922112829984
+          },
+          "maxTurns": null,
+          "params": {"busWidth": 0.7850266808643938, "clearance": 0.24204020546749233, "cornerStyle": "round", "endWidthInner": 0, "endWidthOuter": 0.2567814429057762, "filletRadius": 0.43616992868483073, "phases": 1, "poles": 12, "rIn": 17.85005732253194, "rOut": 28.140665039420128, "startAngleDeg": 17, "topology": "wave", "traceWidth": 0.42030172708909963, "turns": 2, "viaDrill": 0.3, "viaPad": 0.5945141468197107, "waveStyle": "chord"}
+        }
+      ]
+    }
+  ],
+  "case_id": "wave-helper-derive",
+  "eq_ids": [],
+  "fn": "waveDerive",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "deriveWave frame or refusal over random parameters, all four styles",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["helper", "seeded"]
+}

@@ -1,0 +1,2089 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "params": {"phases": 1, "poles": 8, "topology": "wave", "turns": 3, "waveLayers": 6, "waveStyle": "chord"}
+      },
+      "output": {
+        "frame": {
+          "inner": {"need": 0.6000000000000001, "rv": 21.7, "spacing": 2.022198413257563, "wEnd": 0.4},
+          "outer": {"need": 0.6000000000000001, "rv": 40.3, "spacing": 2.022198413257565, "wEnd": 0.4},
+          "rTrackMin": 21.7,
+          "rVi": 21.7,
+          "rVo": 40.3
+        },
+        "layers": [
+          {
+            "board": 0,
+            "copperT": 0.0696,
+            "index": 0,
+            "indexInBoard": 0,
+            "kicadName": "F.Cu",
+            "length": 641.936104980278,
+            "name": "F.Cu",
+            "objs": [
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 20.04818585549492, "x2": 39.95522791336455, "y1": -8.304230482322447, "y2": 5.260205546468079}
+                ],
+                "sign": 1,
+                "slot": 1,
+                "special": "shift",
+                "type": "T",
+                "viaIn": 1,
+                "viaOut": 0
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 21.514353491811686, "x2": 37.23234516020485, "y1": -2.8324183711751196, "y2": 15.422142324313116}
+                ],
+                "sign": 1,
+                "slot": 2,
+                "special": "shift",
+                "type": "T",
+                "viaIn": 2,
+                "viaOut": 1
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 24.53308558905144, "x2": 20.04818585549492, "y1": 31.97213961373677, "y2": 8.304230482322446}
+                ],
+                "sign": -1,
+                "slot": 4,
+                "special": "shift",
+                "type": "T",
+                "viaIn": 4,
+                "viaOut": 3
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 15.422142324313118, "x2": 17.215767484319805, "y1": 37.23234516020485, "y2": 13.210123009489235}
+                ],
+                "sign": -1,
+                "slot": 5,
+                "special": "shift",
+                "type": "T",
+                "viaIn": 5,
+                "viaOut": 4
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 13.21012300948924, "x2": -5.260205546468072, "y1": 17.215767484319798, "y2": 39.95522791336456}
+                ],
+                "sign": 1,
+                "slot": 6,
+                "special": null,
+                "type": "T",
+                "viaIn": 6,
+                "viaOut": 6
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 8.304230482322449, "x2": -15.422142324313116, "y1": 20.04818585549492, "y2": 37.23234516020485}
+                ],
+                "sign": 1,
+                "slot": 7,
+                "special": null,
+                "type": "T",
+                "viaIn": 7,
+                "viaOut": 7
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 2.8324183711751223, "x2": -24.533085589051435, "y1": 21.514353491811683, "y2": 31.972139613736772}
+                ],
+                "sign": 1,
+                "slot": 8,
+                "special": null,
+                "type": "T",
+                "viaIn": 8,
+                "viaOut": 8
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -31.97213961373677, "x2": -2.8324183711751134, "y1": 24.53308558905144, "y2": 21.514353491811686}
+                ],
+                "sign": -1,
+                "slot": 9,
+                "special": null,
+                "type": "T",
+                "viaIn": 9,
+                "viaOut": 9
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -37.23234516020485, "x2": -8.304230482322446, "y1": 15.422142324313118, "y2": 20.04818585549492}
+                ],
+                "sign": -1,
+                "slot": 10,
+                "special": null,
+                "type": "T",
+                "viaIn": 10,
+                "viaOut": 10
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -39.95522791336455, "x2": -13.21012300948923, "y1": 5.2602055464680895, "y2": 17.21576748431981}
+                ],
+                "sign": -1,
+                "slot": 11,
+                "special": null,
+                "type": "T",
+                "viaIn": 11,
+                "viaOut": 11
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -17.215767484319798, "x2": -39.95522791336456, "y1": 13.21012300948924, "y2": -5.26020554646807}
+                ],
+                "sign": 1,
+                "slot": 12,
+                "special": null,
+                "type": "T",
+                "viaIn": 12,
+                "viaOut": 12
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -20.04818585549492, "x2": -37.23234516020485, "y1": 8.304230482322449, "y2": -15.422142324313112}
+                ],
+                "sign": 1,
+                "slot": 13,
+                "special": null,
+                "type": "T",
+                "viaIn": 13,
+                "viaOut": 13
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -21.514353491811686, "x2": -31.972139613736786, "y1": 2.8324183711751276, "y2": -24.533085589051424}
+                ],
+                "sign": 1,
+                "slot": 14,
+                "special": null,
+                "type": "T",
+                "viaIn": 14,
+                "viaOut": 14
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -24.53308558905145, "x2": -21.514353491811683, "y1": -31.972139613736765, "y2": -2.8324183711751125}
+                ],
+                "sign": -1,
+                "slot": 15,
+                "special": null,
+                "type": "T",
+                "viaIn": 15,
+                "viaOut": 15
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -15.422142324313134, "x2": -20.048185855494925, "y1": -37.232345160204844, "y2": -8.304230482322437}
+                ],
+                "sign": -1,
+                "slot": 16,
+                "special": null,
+                "type": "T",
+                "viaIn": 16,
+                "viaOut": 16
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -5.260205546468097, "x2": -17.21576748431981, "y1": -39.95522791336455, "y2": -13.21012300948923}
+                ],
+                "sign": -1,
+                "slot": 17,
+                "special": null,
+                "type": "T",
+                "viaIn": 17,
+                "viaOut": 17
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -13.210123009489251, "x2": 5.260205546468049, "y1": -17.21576748431979, "y2": -39.95522791336456}
+                ],
+                "sign": 1,
+                "slot": 18,
+                "special": null,
+                "type": "T",
+                "viaIn": 18,
+                "viaOut": 18
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -8.30423048232245, "x2": 15.42214232431311, "y1": -20.04818585549492, "y2": -37.23234516020485}
+                ],
+                "sign": 1,
+                "slot": 19,
+                "special": null,
+                "type": "T",
+                "viaIn": 19,
+                "viaOut": 19
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -2.8324183711751294, "x2": 24.533085589051424, "y1": -21.514353491811686, "y2": -31.972139613736786}
+                ],
+                "sign": 1,
+                "slot": 20,
+                "special": null,
+                "type": "T",
+                "viaIn": 20,
+                "viaOut": 20
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 31.972139613736758, "x2": 2.832418371175102, "y1": -24.53308558905146, "y2": -21.514353491811686}
+                ],
+                "sign": -1,
+                "slot": 21,
+                "special": null,
+                "type": "T",
+                "viaIn": 21,
+                "viaOut": 21
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 37.232345160204844, "x2": 8.304230482322444, "y1": -15.422142324313123, "y2": -20.04818585549492}
+                ],
+                "sign": -1,
+                "slot": 22,
+                "special": null,
+                "type": "T",
+                "viaIn": 22,
+                "viaOut": 22
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 39.95522791336455, "x2": 13.21012300948923, "y1": -5.260205546468098, "y2": -17.21576748431981}
+                ],
+                "sign": -1,
+                "slot": 23,
+                "special": null,
+                "type": "T",
+                "viaIn": 23,
+                "viaOut": 23
+              },
+              {
+                "kind": "link",
+                "net": "L0",
+                "phase": 0,
+                "prims": [
+                  {"kind": "stub", "type": "line", "width": 0.6, "x1": 17.2157674843198, "x2": 16.42241414402857, "y1": -13.210123009489235, "y2": -12.601361580480514},
+                  {"a1": -0.6544984694978735, "a2": 0.1308996938995748, "cx": 0, "cy": 0, "kind": "ring", "r": 20.7, "type": "arc", "width": 1},
+                  {"kind": "stub", "type": "line", "width": 0.6, "x1": 20.522908630437875, "x2": 21.514353491811686, "y1": 2.7018921789550694, "y2": 2.832418371175121}
+                ]
+              }
+            ],
+            "outer": true,
+            "pair": 0,
+            "phase": -1,
+            "role": "T",
+            "z": 0.0348
+          },
+          {
+            "board": 0,
+            "copperT": 0.0696,
+            "index": 1,
+            "indexInBoard": 1,
+            "kicadName": "In1.Cu",
+            "length": 703.0960049664654,
+            "name": "In1.Cu",
+            "objs": [
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 21.514353491811686, "x2": 31.972139613736772, "y1": 2.8324183711751196, "y2": -24.53308558905144}
+                ],
+                "sign": 1,
+                "slot": 0,
+                "special": null,
+                "type": "B",
+                "viaIn": 3,
+                "viaOut": 21
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 20.04818585549492, "x2": 37.23234516020485, "y1": 8.304230482322447, "y2": -15.422142324313118}
+                ],
+                "sign": 1,
+                "slot": 1,
+                "special": null,
+                "type": "B",
+                "viaIn": 4,
+                "viaOut": 22
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 17.2157674843198, "x2": 39.95522791336455, "y1": 13.210123009489237, "y2": -5.260205546468081}
+                ],
+                "sign": 1,
+                "slot": 2,
+                "special": null,
+                "type": "B",
+                "viaIn": 5,
+                "viaOut": 23
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 39.95522791336455, "x2": 13.21012300948924, "y1": 5.260205546468072, "y2": 17.2157674843198}
+                ],
+                "sign": -1,
+                "slot": 3,
+                "special": null,
+                "type": "B",
+                "viaIn": 6,
+                "viaOut": 0
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 37.23234516020486, "x2": 8.304230482322449, "y1": 15.422142324313112, "y2": 20.04818585549492}
+                ],
+                "sign": -1,
+                "slot": 4,
+                "special": null,
+                "type": "B",
+                "viaIn": 7,
+                "viaOut": 1
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 31.97213961373678, "x2": 2.8324183711751214, "y1": 24.533085589051435, "y2": 21.514353491811683}
+                ],
+                "sign": -1,
+                "slot": 5,
+                "special": null,
+                "type": "B",
+                "viaIn": 8,
+                "viaOut": 2
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -2.8324183711751134, "x2": 24.533085589051446, "y1": 21.514353491811683, "y2": 31.97213961373677}
+                ],
+                "sign": 1,
+                "slot": 6,
+                "special": null,
+                "type": "B",
+                "viaIn": 9,
+                "viaOut": 3
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -8.304230482322446, "x2": 15.42214232431312, "y1": 20.04818585549492, "y2": 37.23234516020485}
+                ],
+                "sign": 1,
+                "slot": 7,
+                "special": null,
+                "type": "B",
+                "viaIn": 10,
+                "viaOut": 4
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -13.210123009489234, "x2": 5.260205546468086, "y1": 17.215767484319805, "y2": 39.95522791336455}
+                ],
+                "sign": 1,
+                "slot": 8,
+                "special": null,
+                "type": "B",
+                "viaIn": 11,
+                "viaOut": 5
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -5.260205546468068, "x2": -17.215767484319798, "y1": 39.95522791336455, "y2": 13.21012300948924}
+                ],
+                "sign": -1,
+                "slot": 9,
+                "special": null,
+                "type": "B",
+                "viaIn": 12,
+                "viaOut": 6
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -15.422142324313112, "x2": -20.04818585549492, "y1": 37.23234516020486, "y2": 8.304230482322449}
+                ],
+                "sign": -1,
+                "slot": 10,
+                "special": null,
+                "type": "B",
+                "viaIn": 13,
+                "viaOut": 7
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -24.533085589051424, "x2": -21.514353491811683, "y1": 31.972139613736783, "y2": 2.8324183711751276}
+                ],
+                "sign": -1,
+                "slot": 11,
+                "special": null,
+                "type": "B",
+                "viaIn": 14,
+                "viaOut": 8
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -21.514353491811683, "x2": -31.97213961373677, "y1": -2.8324183711751125, "y2": 24.533085589051446}
+                ],
+                "sign": 1,
+                "slot": 12,
+                "special": null,
+                "type": "B",
+                "viaIn": 15,
+                "viaOut": 9
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -20.04818585549492, "x2": -37.23234516020485, "y1": -8.304230482322446, "y2": 15.422142324313123}
+                ],
+                "sign": 1,
+                "slot": 13,
+                "special": null,
+                "type": "B",
+                "viaIn": 16,
+                "viaOut": 10
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -17.21576748431981, "x2": -39.95522791336455, "y1": -13.21012300948923, "y2": 5.260205546468098}
+                ],
+                "sign": 1,
+                "slot": 14,
+                "special": null,
+                "type": "B",
+                "viaIn": 17,
+                "viaOut": 11
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -39.95522791336456, "x2": -13.210123009489243, "y1": -5.260205546468063, "y2": -17.215767484319798}
+                ],
+                "sign": -1,
+                "slot": 15,
+                "special": null,
+                "type": "B",
+                "viaIn": 18,
+                "viaOut": 12
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -37.23234516020486, "x2": -8.30423048232246, "y1": -15.422142324313093, "y2": -20.048185855494914}
+                ],
+                "sign": -1,
+                "slot": 16,
+                "special": null,
+                "type": "B",
+                "viaIn": 19,
+                "viaOut": 13
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -31.97213961373679, "x2": -2.8324183711751294, "y1": -24.533085589051424, "y2": -21.514353491811683}
+                ],
+                "sign": -1,
+                "slot": 17,
+                "special": null,
+                "type": "B",
+                "viaIn": 20,
+                "viaOut": 14
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 2.8324183711751028, "x2": -24.533085589051467, "y1": -21.51435349181169, "y2": -31.97213961373675}
+                ],
+                "sign": 1,
+                "slot": 18,
+                "special": null,
+                "type": "B",
+                "viaIn": 21,
+                "viaOut": 15
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 8.304230482322444, "x2": -15.422142324313125, "y1": -20.04818585549492, "y2": -37.23234516020485}
+                ],
+                "sign": 1,
+                "slot": 19,
+                "special": null,
+                "type": "B",
+                "viaIn": 22,
+                "viaOut": 16
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 13.210123009489227, "x2": -5.2602055464681, "y1": -17.21576748431981, "y2": -39.95522791336455}
+                ],
+                "sign": 1,
+                "slot": 20,
+                "special": null,
+                "type": "B",
+                "viaIn": 23,
+                "viaOut": 17
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 5.260205546468045, "x2": 17.21576748431979, "y1": -39.95522791336456, "y2": -13.210123009489248}
+                ],
+                "sign": -1,
+                "slot": 21,
+                "special": null,
+                "type": "B",
+                "viaIn": 0,
+                "viaOut": 18
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 15.422142324313104, "x2": 20.04818585549492, "y1": -37.23234516020486, "y2": -8.304230482322453}
+                ],
+                "sign": -1,
+                "slot": 22,
+                "special": null,
+                "type": "B",
+                "viaIn": 1,
+                "viaOut": 19
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 24.533085589051424, "x2": 21.514353491811683, "y1": -31.972139613736786, "y2": -2.8324183711751303}
+                ],
+                "sign": -1,
+                "slot": 23,
+                "special": null,
+                "type": "B",
+                "viaIn": 2,
+                "viaOut": 20
+              }
+            ],
+            "outer": false,
+            "pair": 0,
+            "phase": -1,
+            "role": "B",
+            "z": 0.34088
+          },
+          {
+            "board": 0,
+            "copperT": 0.0696,
+            "index": 2,
+            "indexInBoard": 2,
+            "kicadName": "In2.Cu",
+            "length": 623.6783629979508,
+            "name": "In2.Cu",
+            "objs": [
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 20.04818585549492, "x2": 39.95522791336455, "y1": -8.304230482322447, "y2": 5.260205546468079}
+                ],
+                "sign": 1,
+                "slot": 1,
+                "special": "shift",
+                "type": "T",
+                "viaIn": 1,
+                "viaOut": 0
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 21.514353491811686, "x2": 37.23234516020485, "y1": -2.8324183711751196, "y2": 15.422142324313116}
+                ],
+                "sign": 1,
+                "slot": 2,
+                "special": "shift",
+                "type": "T",
+                "viaIn": 2,
+                "viaOut": 1
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 24.53308558905144, "x2": 20.04818585549492, "y1": 31.97213961373677, "y2": 8.304230482322446}
+                ],
+                "sign": -1,
+                "slot": 4,
+                "special": "shift",
+                "type": "T",
+                "viaIn": 4,
+                "viaOut": 3
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 15.422142324313118, "x2": 17.215767484319805, "y1": 37.23234516020485, "y2": 13.210123009489235}
+                ],
+                "sign": -1,
+                "slot": 5,
+                "special": "shift",
+                "type": "T",
+                "viaIn": 5,
+                "viaOut": 4
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 13.21012300948924, "x2": -5.260205546468072, "y1": 17.215767484319798, "y2": 39.95522791336456}
+                ],
+                "sign": 1,
+                "slot": 6,
+                "special": null,
+                "type": "T",
+                "viaIn": 6,
+                "viaOut": 6
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 8.304230482322449, "x2": -15.422142324313116, "y1": 20.04818585549492, "y2": 37.23234516020485}
+                ],
+                "sign": 1,
+                "slot": 7,
+                "special": null,
+                "type": "T",
+                "viaIn": 7,
+                "viaOut": 7
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 2.8324183711751223, "x2": -24.533085589051435, "y1": 21.514353491811683, "y2": 31.972139613736772}
+                ],
+                "sign": 1,
+                "slot": 8,
+                "special": null,
+                "type": "T",
+                "viaIn": 8,
+                "viaOut": 8
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -31.97213961373677, "x2": -2.8324183711751134, "y1": 24.53308558905144, "y2": 21.514353491811686}
+                ],
+                "sign": -1,
+                "slot": 9,
+                "special": null,
+                "type": "T",
+                "viaIn": 9,
+                "viaOut": 9
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -37.23234516020485, "x2": -8.304230482322446, "y1": 15.422142324313118, "y2": 20.04818585549492}
+                ],
+                "sign": -1,
+                "slot": 10,
+                "special": null,
+                "type": "T",
+                "viaIn": 10,
+                "viaOut": 10
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -39.95522791336455, "x2": -13.21012300948923, "y1": 5.2602055464680895, "y2": 17.21576748431981}
+                ],
+                "sign": -1,
+                "slot": 11,
+                "special": null,
+                "type": "T",
+                "viaIn": 11,
+                "viaOut": 11
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -17.215767484319798, "x2": -39.95522791336456, "y1": 13.21012300948924, "y2": -5.26020554646807}
+                ],
+                "sign": 1,
+                "slot": 12,
+                "special": null,
+                "type": "T",
+                "viaIn": 12,
+                "viaOut": 12
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -20.04818585549492, "x2": -37.23234516020485, "y1": 8.304230482322449, "y2": -15.422142324313112}
+                ],
+                "sign": 1,
+                "slot": 13,
+                "special": null,
+                "type": "T",
+                "viaIn": 13,
+                "viaOut": 13
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -21.514353491811686, "x2": -31.972139613736786, "y1": 2.8324183711751276, "y2": -24.533085589051424}
+                ],
+                "sign": 1,
+                "slot": 14,
+                "special": null,
+                "type": "T",
+                "viaIn": 14,
+                "viaOut": 14
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -24.53308558905145, "x2": -21.514353491811683, "y1": -31.972139613736765, "y2": -2.8324183711751125}
+                ],
+                "sign": -1,
+                "slot": 15,
+                "special": null,
+                "type": "T",
+                "viaIn": 15,
+                "viaOut": 15
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -15.422142324313134, "x2": -20.048185855494925, "y1": -37.232345160204844, "y2": -8.304230482322437}
+                ],
+                "sign": -1,
+                "slot": 16,
+                "special": null,
+                "type": "T",
+                "viaIn": 16,
+                "viaOut": 16
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -5.260205546468097, "x2": -17.21576748431981, "y1": -39.95522791336455, "y2": -13.21012300948923}
+                ],
+                "sign": -1,
+                "slot": 17,
+                "special": null,
+                "type": "T",
+                "viaIn": 17,
+                "viaOut": 17
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -13.210123009489251, "x2": 5.260205546468049, "y1": -17.21576748431979, "y2": -39.95522791336456}
+                ],
+                "sign": 1,
+                "slot": 18,
+                "special": null,
+                "type": "T",
+                "viaIn": 18,
+                "viaOut": 18
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -8.30423048232245, "x2": 15.42214232431311, "y1": -20.04818585549492, "y2": -37.23234516020485}
+                ],
+                "sign": 1,
+                "slot": 19,
+                "special": null,
+                "type": "T",
+                "viaIn": 19,
+                "viaOut": 19
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -2.8324183711751294, "x2": 24.533085589051424, "y1": -21.514353491811686, "y2": -31.972139613736786}
+                ],
+                "sign": 1,
+                "slot": 20,
+                "special": null,
+                "type": "T",
+                "viaIn": 20,
+                "viaOut": 20
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 31.972139613736758, "x2": 2.832418371175102, "y1": -24.53308558905146, "y2": -21.514353491811686}
+                ],
+                "sign": -1,
+                "slot": 21,
+                "special": null,
+                "type": "T",
+                "viaIn": 21,
+                "viaOut": 21
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 37.232345160204844, "x2": 8.304230482322444, "y1": -15.422142324313123, "y2": -20.04818585549492}
+                ],
+                "sign": -1,
+                "slot": 22,
+                "special": null,
+                "type": "T",
+                "viaIn": 22,
+                "viaOut": 22
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 39.95522791336455, "x2": 13.21012300948923, "y1": -5.260205546468098, "y2": -17.21576748431981}
+                ],
+                "sign": -1,
+                "slot": 23,
+                "special": null,
+                "type": "T",
+                "viaIn": 23,
+                "viaOut": 23
+              }
+            ],
+            "outer": false,
+            "pair": 1,
+            "phase": -1,
+            "role": "T",
+            "z": 0.64696
+          },
+          {
+            "board": 0,
+            "copperT": 0.0696,
+            "index": 3,
+            "indexInBoard": 3,
+            "kicadName": "In3.Cu",
+            "length": 703.0960049664654,
+            "name": "In3.Cu",
+            "objs": [
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 21.514353491811686, "x2": 31.972139613736772, "y1": 2.8324183711751196, "y2": -24.53308558905144}
+                ],
+                "sign": 1,
+                "slot": 0,
+                "special": null,
+                "type": "B",
+                "viaIn": 3,
+                "viaOut": 21
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 20.04818585549492, "x2": 37.23234516020485, "y1": 8.304230482322447, "y2": -15.422142324313118}
+                ],
+                "sign": 1,
+                "slot": 1,
+                "special": null,
+                "type": "B",
+                "viaIn": 4,
+                "viaOut": 22
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 17.2157674843198, "x2": 39.95522791336455, "y1": 13.210123009489237, "y2": -5.260205546468081}
+                ],
+                "sign": 1,
+                "slot": 2,
+                "special": null,
+                "type": "B",
+                "viaIn": 5,
+                "viaOut": 23
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 39.95522791336455, "x2": 13.21012300948924, "y1": 5.260205546468072, "y2": 17.2157674843198}
+                ],
+                "sign": -1,
+                "slot": 3,
+                "special": null,
+                "type": "B",
+                "viaIn": 6,
+                "viaOut": 0
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 37.23234516020486, "x2": 8.304230482322449, "y1": 15.422142324313112, "y2": 20.04818585549492}
+                ],
+                "sign": -1,
+                "slot": 4,
+                "special": null,
+                "type": "B",
+                "viaIn": 7,
+                "viaOut": 1
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 31.97213961373678, "x2": 2.8324183711751214, "y1": 24.533085589051435, "y2": 21.514353491811683}
+                ],
+                "sign": -1,
+                "slot": 5,
+                "special": null,
+                "type": "B",
+                "viaIn": 8,
+                "viaOut": 2
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -2.8324183711751134, "x2": 24.533085589051446, "y1": 21.514353491811683, "y2": 31.97213961373677}
+                ],
+                "sign": 1,
+                "slot": 6,
+                "special": null,
+                "type": "B",
+                "viaIn": 9,
+                "viaOut": 3
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -8.304230482322446, "x2": 15.42214232431312, "y1": 20.04818585549492, "y2": 37.23234516020485}
+                ],
+                "sign": 1,
+                "slot": 7,
+                "special": null,
+                "type": "B",
+                "viaIn": 10,
+                "viaOut": 4
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -13.210123009489234, "x2": 5.260205546468086, "y1": 17.215767484319805, "y2": 39.95522791336455}
+                ],
+                "sign": 1,
+                "slot": 8,
+                "special": null,
+                "type": "B",
+                "viaIn": 11,
+                "viaOut": 5
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -5.260205546468068, "x2": -17.215767484319798, "y1": 39.95522791336455, "y2": 13.21012300948924}
+                ],
+                "sign": -1,
+                "slot": 9,
+                "special": null,
+                "type": "B",
+                "viaIn": 12,
+                "viaOut": 6
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -15.422142324313112, "x2": -20.04818585549492, "y1": 37.23234516020486, "y2": 8.304230482322449}
+                ],
+                "sign": -1,
+                "slot": 10,
+                "special": null,
+                "type": "B",
+                "viaIn": 13,
+                "viaOut": 7
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -24.533085589051424, "x2": -21.514353491811683, "y1": 31.972139613736783, "y2": 2.8324183711751276}
+                ],
+                "sign": -1,
+                "slot": 11,
+                "special": null,
+                "type": "B",
+                "viaIn": 14,
+                "viaOut": 8
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -21.514353491811683, "x2": -31.97213961373677, "y1": -2.8324183711751125, "y2": 24.533085589051446}
+                ],
+                "sign": 1,
+                "slot": 12,
+                "special": null,
+                "type": "B",
+                "viaIn": 15,
+                "viaOut": 9
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -20.04818585549492, "x2": -37.23234516020485, "y1": -8.304230482322446, "y2": 15.422142324313123}
+                ],
+                "sign": 1,
+                "slot": 13,
+                "special": null,
+                "type": "B",
+                "viaIn": 16,
+                "viaOut": 10
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -17.21576748431981, "x2": -39.95522791336455, "y1": -13.21012300948923, "y2": 5.260205546468098}
+                ],
+                "sign": 1,
+                "slot": 14,
+                "special": null,
+                "type": "B",
+                "viaIn": 17,
+                "viaOut": 11
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -39.95522791336456, "x2": -13.210123009489243, "y1": -5.260205546468063, "y2": -17.215767484319798}
+                ],
+                "sign": -1,
+                "slot": 15,
+                "special": null,
+                "type": "B",
+                "viaIn": 18,
+                "viaOut": 12
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -37.23234516020486, "x2": -8.30423048232246, "y1": -15.422142324313093, "y2": -20.048185855494914}
+                ],
+                "sign": -1,
+                "slot": 16,
+                "special": null,
+                "type": "B",
+                "viaIn": 19,
+                "viaOut": 13
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -31.97213961373679, "x2": -2.8324183711751294, "y1": -24.533085589051424, "y2": -21.514353491811683}
+                ],
+                "sign": -1,
+                "slot": 17,
+                "special": null,
+                "type": "B",
+                "viaIn": 20,
+                "viaOut": 14
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 2.8324183711751028, "x2": -24.533085589051467, "y1": -21.51435349181169, "y2": -31.97213961373675}
+                ],
+                "sign": 1,
+                "slot": 18,
+                "special": null,
+                "type": "B",
+                "viaIn": 21,
+                "viaOut": 15
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 8.304230482322444, "x2": -15.422142324313125, "y1": -20.04818585549492, "y2": -37.23234516020485}
+                ],
+                "sign": 1,
+                "slot": 19,
+                "special": null,
+                "type": "B",
+                "viaIn": 22,
+                "viaOut": 16
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 13.210123009489227, "x2": -5.2602055464681, "y1": -17.21576748431981, "y2": -39.95522791336455}
+                ],
+                "sign": 1,
+                "slot": 20,
+                "special": null,
+                "type": "B",
+                "viaIn": 23,
+                "viaOut": 17
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 5.260205546468045, "x2": 17.21576748431979, "y1": -39.95522791336456, "y2": -13.210123009489248}
+                ],
+                "sign": -1,
+                "slot": 21,
+                "special": null,
+                "type": "B",
+                "viaIn": 0,
+                "viaOut": 18
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 15.422142324313104, "x2": 20.04818585549492, "y1": -37.23234516020486, "y2": -8.304230482322453}
+                ],
+                "sign": -1,
+                "slot": 22,
+                "special": null,
+                "type": "B",
+                "viaIn": 1,
+                "viaOut": 19
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 24.533085589051424, "x2": 21.514353491811683, "y1": -31.972139613736786, "y2": -2.8324183711751303}
+                ],
+                "sign": -1,
+                "slot": 23,
+                "special": null,
+                "type": "B",
+                "viaIn": 2,
+                "viaOut": 20
+              }
+            ],
+            "outer": false,
+            "pair": 1,
+            "phase": -1,
+            "role": "B",
+            "z": 0.9530400000000001
+          },
+          {
+            "board": 0,
+            "copperT": 0.0696,
+            "index": 4,
+            "indexInBoard": 4,
+            "kicadName": "In4.Cu",
+            "length": 623.6783629979508,
+            "name": "In4.Cu",
+            "objs": [
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 20.04818585549492, "x2": 39.95522791336455, "y1": -8.304230482322447, "y2": 5.260205546468079}
+                ],
+                "sign": 1,
+                "slot": 1,
+                "special": "shift",
+                "type": "T",
+                "viaIn": 1,
+                "viaOut": 0
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 21.514353491811686, "x2": 37.23234516020485, "y1": -2.8324183711751196, "y2": 15.422142324313116}
+                ],
+                "sign": 1,
+                "slot": 2,
+                "special": "shift",
+                "type": "T",
+                "viaIn": 2,
+                "viaOut": 1
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 24.53308558905144, "x2": 20.04818585549492, "y1": 31.97213961373677, "y2": 8.304230482322446}
+                ],
+                "sign": -1,
+                "slot": 4,
+                "special": "shift",
+                "type": "T",
+                "viaIn": 4,
+                "viaOut": 3
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 15.422142324313118, "x2": 17.215767484319805, "y1": 37.23234516020485, "y2": 13.210123009489235}
+                ],
+                "sign": -1,
+                "slot": 5,
+                "special": "shift",
+                "type": "T",
+                "viaIn": 5,
+                "viaOut": 4
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 13.21012300948924, "x2": -5.260205546468072, "y1": 17.215767484319798, "y2": 39.95522791336456}
+                ],
+                "sign": 1,
+                "slot": 6,
+                "special": null,
+                "type": "T",
+                "viaIn": 6,
+                "viaOut": 6
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 8.304230482322449, "x2": -15.422142324313116, "y1": 20.04818585549492, "y2": 37.23234516020485}
+                ],
+                "sign": 1,
+                "slot": 7,
+                "special": null,
+                "type": "T",
+                "viaIn": 7,
+                "viaOut": 7
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 2.8324183711751223, "x2": -24.533085589051435, "y1": 21.514353491811683, "y2": 31.972139613736772}
+                ],
+                "sign": 1,
+                "slot": 8,
+                "special": null,
+                "type": "T",
+                "viaIn": 8,
+                "viaOut": 8
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -31.97213961373677, "x2": -2.8324183711751134, "y1": 24.53308558905144, "y2": 21.514353491811686}
+                ],
+                "sign": -1,
+                "slot": 9,
+                "special": null,
+                "type": "T",
+                "viaIn": 9,
+                "viaOut": 9
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -37.23234516020485, "x2": -8.304230482322446, "y1": 15.422142324313118, "y2": 20.04818585549492}
+                ],
+                "sign": -1,
+                "slot": 10,
+                "special": null,
+                "type": "T",
+                "viaIn": 10,
+                "viaOut": 10
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -39.95522791336455, "x2": -13.21012300948923, "y1": 5.2602055464680895, "y2": 17.21576748431981}
+                ],
+                "sign": -1,
+                "slot": 11,
+                "special": null,
+                "type": "T",
+                "viaIn": 11,
+                "viaOut": 11
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -17.215767484319798, "x2": -39.95522791336456, "y1": 13.21012300948924, "y2": -5.26020554646807}
+                ],
+                "sign": 1,
+                "slot": 12,
+                "special": null,
+                "type": "T",
+                "viaIn": 12,
+                "viaOut": 12
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -20.04818585549492, "x2": -37.23234516020485, "y1": 8.304230482322449, "y2": -15.422142324313112}
+                ],
+                "sign": 1,
+                "slot": 13,
+                "special": null,
+                "type": "T",
+                "viaIn": 13,
+                "viaOut": 13
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -21.514353491811686, "x2": -31.972139613736786, "y1": 2.8324183711751276, "y2": -24.533085589051424}
+                ],
+                "sign": 1,
+                "slot": 14,
+                "special": null,
+                "type": "T",
+                "viaIn": 14,
+                "viaOut": 14
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -24.53308558905145, "x2": -21.514353491811683, "y1": -31.972139613736765, "y2": -2.8324183711751125}
+                ],
+                "sign": -1,
+                "slot": 15,
+                "special": null,
+                "type": "T",
+                "viaIn": 15,
+                "viaOut": 15
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -15.422142324313134, "x2": -20.048185855494925, "y1": -37.232345160204844, "y2": -8.304230482322437}
+                ],
+                "sign": -1,
+                "slot": 16,
+                "special": null,
+                "type": "T",
+                "viaIn": 16,
+                "viaOut": 16
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -5.260205546468097, "x2": -17.21576748431981, "y1": -39.95522791336455, "y2": -13.21012300948923}
+                ],
+                "sign": -1,
+                "slot": 17,
+                "special": null,
+                "type": "T",
+                "viaIn": 17,
+                "viaOut": 17
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -13.210123009489251, "x2": 5.260205546468049, "y1": -17.21576748431979, "y2": -39.95522791336456}
+                ],
+                "sign": 1,
+                "slot": 18,
+                "special": null,
+                "type": "T",
+                "viaIn": 18,
+                "viaOut": 18
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -8.30423048232245, "x2": 15.42214232431311, "y1": -20.04818585549492, "y2": -37.23234516020485}
+                ],
+                "sign": 1,
+                "slot": 19,
+                "special": null,
+                "type": "T",
+                "viaIn": 19,
+                "viaOut": 19
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -2.8324183711751294, "x2": 24.533085589051424, "y1": -21.514353491811686, "y2": -31.972139613736786}
+                ],
+                "sign": 1,
+                "slot": 20,
+                "special": null,
+                "type": "T",
+                "viaIn": 20,
+                "viaOut": 20
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 31.972139613736758, "x2": 2.832418371175102, "y1": -24.53308558905146, "y2": -21.514353491811686}
+                ],
+                "sign": -1,
+                "slot": 21,
+                "special": null,
+                "type": "T",
+                "viaIn": 21,
+                "viaOut": 21
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 37.232345160204844, "x2": 8.304230482322444, "y1": -15.422142324313123, "y2": -20.04818585549492}
+                ],
+                "sign": -1,
+                "slot": 22,
+                "special": null,
+                "type": "T",
+                "viaIn": 22,
+                "viaOut": 22
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 39.95522791336455, "x2": 13.21012300948923, "y1": -5.260205546468098, "y2": -17.21576748431981}
+                ],
+                "sign": -1,
+                "slot": 23,
+                "special": null,
+                "type": "T",
+                "viaIn": 23,
+                "viaOut": 23
+              }
+            ],
+            "outer": false,
+            "pair": 2,
+            "phase": -1,
+            "role": "T",
+            "z": 1.25912
+          },
+          {
+            "board": 0,
+            "copperT": 0.0696,
+            "index": 5,
+            "indexInBoard": 5,
+            "kicadName": "B.Cu",
+            "length": 703.0960049664654,
+            "name": "B.Cu",
+            "objs": [
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 21.514353491811686, "x2": 31.972139613736772, "y1": 2.8324183711751196, "y2": -24.53308558905144}
+                ],
+                "sign": 1,
+                "slot": 0,
+                "special": null,
+                "type": "B",
+                "viaIn": 3,
+                "viaOut": 21
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 20.04818585549492, "x2": 37.23234516020485, "y1": 8.304230482322447, "y2": -15.422142324313118}
+                ],
+                "sign": 1,
+                "slot": 1,
+                "special": null,
+                "type": "B",
+                "viaIn": 4,
+                "viaOut": 22
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 17.2157674843198, "x2": 39.95522791336455, "y1": 13.210123009489237, "y2": -5.260205546468081}
+                ],
+                "sign": 1,
+                "slot": 2,
+                "special": null,
+                "type": "B",
+                "viaIn": 5,
+                "viaOut": 23
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 39.95522791336455, "x2": 13.21012300948924, "y1": 5.260205546468072, "y2": 17.2157674843198}
+                ],
+                "sign": -1,
+                "slot": 3,
+                "special": null,
+                "type": "B",
+                "viaIn": 6,
+                "viaOut": 0
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 37.23234516020486, "x2": 8.304230482322449, "y1": 15.422142324313112, "y2": 20.04818585549492}
+                ],
+                "sign": -1,
+                "slot": 4,
+                "special": null,
+                "type": "B",
+                "viaIn": 7,
+                "viaOut": 1
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 31.97213961373678, "x2": 2.8324183711751214, "y1": 24.533085589051435, "y2": 21.514353491811683}
+                ],
+                "sign": -1,
+                "slot": 5,
+                "special": null,
+                "type": "B",
+                "viaIn": 8,
+                "viaOut": 2
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -2.8324183711751134, "x2": 24.533085589051446, "y1": 21.514353491811683, "y2": 31.97213961373677}
+                ],
+                "sign": 1,
+                "slot": 6,
+                "special": null,
+                "type": "B",
+                "viaIn": 9,
+                "viaOut": 3
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -8.304230482322446, "x2": 15.42214232431312, "y1": 20.04818585549492, "y2": 37.23234516020485}
+                ],
+                "sign": 1,
+                "slot": 7,
+                "special": null,
+                "type": "B",
+                "viaIn": 10,
+                "viaOut": 4
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -13.210123009489234, "x2": 5.260205546468086, "y1": 17.215767484319805, "y2": 39.95522791336455}
+                ],
+                "sign": 1,
+                "slot": 8,
+                "special": null,
+                "type": "B",
+                "viaIn": 11,
+                "viaOut": 5
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -5.260205546468068, "x2": -17.215767484319798, "y1": 39.95522791336455, "y2": 13.21012300948924}
+                ],
+                "sign": -1,
+                "slot": 9,
+                "special": null,
+                "type": "B",
+                "viaIn": 12,
+                "viaOut": 6
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -15.422142324313112, "x2": -20.04818585549492, "y1": 37.23234516020486, "y2": 8.304230482322449}
+                ],
+                "sign": -1,
+                "slot": 10,
+                "special": null,
+                "type": "B",
+                "viaIn": 13,
+                "viaOut": 7
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -24.533085589051424, "x2": -21.514353491811683, "y1": 31.972139613736783, "y2": 2.8324183711751276}
+                ],
+                "sign": -1,
+                "slot": 11,
+                "special": null,
+                "type": "B",
+                "viaIn": 14,
+                "viaOut": 8
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -21.514353491811683, "x2": -31.97213961373677, "y1": -2.8324183711751125, "y2": 24.533085589051446}
+                ],
+                "sign": 1,
+                "slot": 12,
+                "special": null,
+                "type": "B",
+                "viaIn": 15,
+                "viaOut": 9
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -20.04818585549492, "x2": -37.23234516020485, "y1": -8.304230482322446, "y2": 15.422142324313123}
+                ],
+                "sign": 1,
+                "slot": 13,
+                "special": null,
+                "type": "B",
+                "viaIn": 16,
+                "viaOut": 10
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -17.21576748431981, "x2": -39.95522791336455, "y1": -13.21012300948923, "y2": 5.260205546468098}
+                ],
+                "sign": 1,
+                "slot": 14,
+                "special": null,
+                "type": "B",
+                "viaIn": 17,
+                "viaOut": 11
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -39.95522791336456, "x2": -13.210123009489243, "y1": -5.260205546468063, "y2": -17.215767484319798}
+                ],
+                "sign": -1,
+                "slot": 15,
+                "special": null,
+                "type": "B",
+                "viaIn": 18,
+                "viaOut": 12
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -37.23234516020486, "x2": -8.30423048232246, "y1": -15.422142324313093, "y2": -20.048185855494914}
+                ],
+                "sign": -1,
+                "slot": 16,
+                "special": null,
+                "type": "B",
+                "viaIn": 19,
+                "viaOut": 13
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": -31.97213961373679, "x2": -2.8324183711751294, "y1": -24.533085589051424, "y2": -21.514353491811683}
+                ],
+                "sign": -1,
+                "slot": 17,
+                "special": null,
+                "type": "B",
+                "viaIn": 20,
+                "viaOut": 14
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 2.8324183711751028, "x2": -24.533085589051467, "y1": -21.51435349181169, "y2": -31.97213961373675}
+                ],
+                "sign": 1,
+                "slot": 18,
+                "special": null,
+                "type": "B",
+                "viaIn": 21,
+                "viaOut": 15
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 8.304230482322444, "x2": -15.422142324313125, "y1": -20.04818585549492, "y2": -37.23234516020485}
+                ],
+                "sign": 1,
+                "slot": 19,
+                "special": null,
+                "type": "B",
+                "viaIn": 22,
+                "viaOut": 16
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 13.210123009489227, "x2": -5.2602055464681, "y1": -17.21576748431981, "y2": -39.95522791336455}
+                ],
+                "sign": 1,
+                "slot": 20,
+                "special": null,
+                "type": "B",
+                "viaIn": 23,
+                "viaOut": 17
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 5.260205546468045, "x2": 17.21576748431979, "y1": -39.95522791336456, "y2": -13.210123009489248}
+                ],
+                "sign": -1,
+                "slot": 21,
+                "special": null,
+                "type": "B",
+                "viaIn": 0,
+                "viaOut": 18
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 15.422142324313104, "x2": 20.04818585549492, "y1": -37.23234516020486, "y2": -8.304230482322453}
+                ],
+                "sign": -1,
+                "slot": 22,
+                "special": null,
+                "type": "B",
+                "viaIn": 1,
+                "viaOut": 19
+              },
+              {
+                "kind": "track",
+                "phase": 0,
+                "prims": [
+                  {"kind": "side", "type": "line", "width": 0.4, "x1": 24.533085589051424, "x2": 21.514353491811683, "y1": -31.972139613736786, "y2": -2.8324183711751303}
+                ],
+                "sign": -1,
+                "slot": 23,
+                "special": null,
+                "type": "B",
+                "viaIn": 2,
+                "viaOut": 20
+              }
+            ],
+            "outer": true,
+            "pair": 2,
+            "phase": -1,
+            "role": "B",
+            "z": 1.5652000000000001
+          }
+        ],
+        "mech": {
+          "borePrims": [
+            {"a1": 0, "a2": 6.283185307179586, "cx": 0, "cy": 0, "kind": "bore", "r": 17.169999999999998, "type": "arc", "width": 0}
+          ],
+          "holes": [
+            {"dia": 3.4, "head": 5.5, "phi": 0, "r": 45.21999999999999, "ring": "outer", "size": "M3", "x": 45.21999999999999, "y": 0},
+            {"dia": 3.4, "head": 5.5, "phi": 0.7853981633974483, "r": 45.21999999999999, "ring": "outer", "size": "M3", "x": 31.975368645255674, "y": 31.97536864525567},
+            {"dia": 3.4, "head": 5.5, "phi": 1.5707963267948966, "r": 45.21999999999999, "ring": "outer", "size": "M3", "x": 2.768926412872165e-15, "y": 45.21999999999999},
+            {"dia": 3.4, "head": 5.5, "phi": 2.356194490192345, "r": 45.21999999999999, "ring": "outer", "size": "M3", "x": -31.97536864525567, "y": 31.975368645255674},
+            {"dia": 3.4, "head": 5.5, "phi": 3.141592653589793, "r": 45.21999999999999, "ring": "outer", "size": "M3", "x": -45.21999999999999, "y": 5.53785282574433e-15},
+            {"dia": 3.4, "head": 5.5, "phi": 3.9269908169872414, "r": 45.21999999999999, "ring": "outer", "size": "M3", "x": -31.97536864525568, "y": -31.97536864525567},
+            {"dia": 3.4, "head": 5.5, "phi": 4.71238898038469, "r": 45.21999999999999, "ring": "outer", "size": "M3", "x": -8.306779238616495e-15, "y": -45.21999999999999},
+            {"dia": 3.4, "head": 5.5, "phi": 5.497787143782138, "r": 45.21999999999999, "ring": "outer", "size": "M3", "x": 31.975368645255667, "y": -31.97536864525568}
+          ],
+          "prims": [
+            {"a1": 0, "a2": 6.283185307179586, "cx": 0, "cy": 0, "kind": "outline", "r": 48.71999999999999, "type": "arc", "width": 0}
+          ]
+        },
+        "pads": [],
+        "params": {
+          "Br": 1.3,
+          "airgap": 0.8,
+          "ambientC": 25,
+          "boardGap": 0.1,
+          "boardThickness": 1.6,
+          "busWidth": 1,
+          "clearance": 0.2,
+          "coilEnds": "arc",
+          "coilGap": 0.5,
+          "coilLayers": 2,
+          "coilSides": "parallel",
+          "connection": "star",
+          "copperOzInner": 2,
+          "copperOzOuter": 2,
+          "cornerStyle": "round",
+          "currentRms": 0.8,
+          "dielectricEr": 0,
+          "dielectricMaterial": "FR-4",
+          "endWidthInner": 0,
+          "endWidthOuter": 0,
+          "filletMax": false,
+          "filletRadius": 0.4,
+          "hConv": 30,
+          "iMax": 0,
+          "innerCornerRadius": 0,
+          "innerHole": true,
+          "innerRotationDeg": 0,
+          "innerScale": 0.85,
+          "innerShape": "circle",
+          "innerSides": 6,
+          "interconnect": true,
+          "layerOrder": "grouped",
+          "layersPerPhase": 2,
+          "magnetArcRatio": 0.85,
+          "magnetAuto": true,
+          "magnetRIn": 22,
+          "magnetROut": 40,
+          "magnetThickness": 3,
+          "modulation": "svpwm",
+          "muR": 1.05,
+          "outlineCornerRadius": 0,
+          "outlineRotationDeg": 0,
+          "outlineScale": 1.2,
+          "outlineShape": "circle",
+          "outlineSides": 8,
+          "padHeight": 0,
+          "padShape": "round",
+          "pairConnection": "series",
+          "phases": 1,
+          "poles": 8,
+          "rIn": 22,
+          "rOut": 40,
+          "rotorInertia": 0,
+          "rotorType": "double",
+          "rpm": 1500,
+          "screwFit": "normal",
+          "screwInnerAngleDeg": 0,
+          "screwInnerCount": 4,
+          "screwInnerInset": 3,
+          "screwInnerOn": false,
+          "screwInnerSize": "M2.5",
+          "screwOuterAngleDeg": 0,
+          "screwOuterCount": 8,
+          "screwOuterInset": 3.5,
+          "screwOuterOn": true,
+          "screwOuterSize": "M3",
+          "sectors": 12,
+          "stackMode": "single",
+          "stackup": [],
+          "stackupMode": "auto",
+          "startAngleDeg": 0,
+          "strands": 1,
+          "style": "parallel",
+          "tempC": 60,
+          "tempRise": 30,
+          "terminalDrill": 1.2,
+          "terminalPad": 2.4,
+          "terminalSide": "outer",
+          "topology": "wave",
+          "traceWidth": 0.4,
+          "turns": 3,
+          "vDc": 24,
+          "viaDrill": 0.3,
+          "viaPad": 0.6,
+          "waveLayers": 6,
+          "waveStyle": "chord"
+        },
+        "rMaxAll": 40.599999999999994,
+        "rMaxCu": 40.599999999999994,
+        "rMinAll": 20.2,
+        "rMinCu": 20.2,
+        "vias": [
+          {"idx": 0, "label": "", "pair": 0, "phase": 0, "ring": "outer", "terminal": false, "type": "W", "x": 39.95522791336455, "y": 5.260205546468079},
+          {"idx": 0, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "E", "x": 17.2157674843198, "y": -13.210123009489235},
+          {"idx": 1, "label": "", "pair": 0, "phase": 0, "ring": "outer", "terminal": false, "type": "W", "x": 37.23234516020485, "y": 15.422142324313118},
+          {"idx": 1, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "W", "x": 20.04818585549492, "y": -8.304230482322447},
+          {"idx": 2, "label": "A+", "pair": 0, "phase": 0, "ring": "outer", "terminal": true, "type": "T1", "x": 31.972139613736775, "y": 24.533085589051435},
+          {"idx": 2, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "W", "x": 21.514353491811686, "y": -2.8324183711751196},
+          {"idx": 3, "label": "", "pair": 0, "phase": 0, "ring": "outer", "terminal": false, "type": "W", "x": 24.533085589051442, "y": 31.972139613736775},
+          {"idx": 3, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "E", "x": 21.514353491811686, "y": 2.8324183711751183},
+          {"idx": 4, "label": "", "pair": 0, "phase": 0, "ring": "outer", "terminal": false, "type": "W", "x": 15.42214232431312, "y": 37.23234516020485},
+          {"idx": 4, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "W", "x": 20.04818585549492, "y": 8.304230482322447},
+          {"idx": 5, "label": "A−", "pair": 0, "phase": 0, "ring": "outer", "terminal": true, "type": "T2", "x": 5.260205546468083, "y": 39.95522791336455},
+          {"idx": 5, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "W", "x": 17.2157674843198, "y": 13.210123009489235},
+          {"idx": 6, "label": "", "pair": 0, "phase": 0, "ring": "outer", "terminal": false, "type": "W", "x": -5.26020554646807, "y": 39.95522791336456},
+          {"idx": 6, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "W", "x": 13.21012300948924, "y": 17.2157674843198},
+          {"idx": 7, "label": "", "pair": 0, "phase": 0, "ring": "outer", "terminal": false, "type": "W", "x": -15.422142324313114, "y": 37.23234516020485},
+          {"idx": 7, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "W", "x": 8.304230482322449, "y": 20.04818585549492},
+          {"idx": 8, "label": "", "pair": 0, "phase": 0, "ring": "outer", "terminal": false, "type": "W", "x": -24.533085589051442, "y": 31.972139613736775},
+          {"idx": 8, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "W", "x": 2.832418371175122, "y": 21.514353491811686},
+          {"idx": 9, "label": "", "pair": 0, "phase": 0, "ring": "outer", "terminal": false, "type": "W", "x": -31.972139613736772, "y": 24.53308558905145},
+          {"idx": 9, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "W", "x": -2.8324183711751147, "y": 21.514353491811686},
+          {"idx": 10, "label": "", "pair": 0, "phase": 0, "ring": "outer", "terminal": false, "type": "W", "x": -37.23234516020485, "y": 15.422142324313121},
+          {"idx": 10, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "W", "x": -8.304230482322447, "y": 20.04818585549492},
+          {"idx": 11, "label": "", "pair": 0, "phase": 0, "ring": "outer", "terminal": false, "type": "W", "x": -39.95522791336455, "y": 5.260205546468095},
+          {"idx": 11, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "W", "x": -13.21012300948923, "y": 17.21576748431981},
+          {"idx": 12, "label": "", "pair": 0, "phase": 0, "ring": "outer", "terminal": false, "type": "W", "x": -39.95522791336456, "y": -5.260205546468068},
+          {"idx": 12, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "W", "x": -17.2157674843198, "y": 13.210123009489243},
+          {"idx": 13, "label": "", "pair": 0, "phase": 0, "ring": "outer", "terminal": false, "type": "W", "x": -37.23234516020486, "y": -15.422142324313112},
+          {"idx": 13, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "W", "x": -20.04818585549492, "y": 8.30423048232245},
+          {"idx": 14, "label": "", "pair": 0, "phase": 0, "ring": "outer", "terminal": false, "type": "W", "x": -31.972139613736783, "y": -24.533085589051428},
+          {"idx": 14, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "W", "x": -21.514353491811686, "y": 2.832418371175128},
+          {"idx": 15, "label": "", "pair": 0, "phase": 0, "ring": "outer", "terminal": false, "type": "W", "x": -24.53308558905145, "y": -31.972139613736765},
+          {"idx": 15, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "W", "x": -21.514353491811686, "y": -2.8324183711751134},
+          {"idx": 16, "label": "", "pair": 0, "phase": 0, "ring": "outer", "terminal": false, "type": "W", "x": -15.422142324313139, "y": -37.232345160204844},
+          {"idx": 16, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "W", "x": -20.048185855494925, "y": -8.304230482322437},
+          {"idx": 17, "label": "", "pair": 0, "phase": 0, "ring": "outer", "terminal": false, "type": "W", "x": -5.260205546468115, "y": -39.95522791336455},
+          {"idx": 17, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "W", "x": -17.21576748431981, "y": -13.21012300948923},
+          {"idx": 18, "label": "", "pair": 0, "phase": 0, "ring": "outer", "terminal": false, "type": "W", "x": 5.26020554646803, "y": -39.95522791336457},
+          {"idx": 18, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "W", "x": -13.210123009489243, "y": -17.215767484319798},
+          {"idx": 19, "label": "", "pair": 0, "phase": 0, "ring": "outer", "terminal": false, "type": "W", "x": 15.422142324313127, "y": -37.23234516020485},
+          {"idx": 19, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "W", "x": -8.30423048232246, "y": -20.048185855494918},
+          {"idx": 20, "label": "", "pair": 0, "phase": 0, "ring": "outer", "terminal": false, "type": "W", "x": 24.533085589051435, "y": -31.972139613736775},
+          {"idx": 20, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "W", "x": -2.8324183711751387, "y": -21.514353491811683},
+          {"idx": 21, "label": "", "pair": 0, "phase": 0, "ring": "outer", "terminal": false, "type": "W", "x": 31.972139613736765, "y": -24.53308558905145},
+          {"idx": 21, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "W", "x": 2.832418371175093, "y": -21.51435349181169},
+          {"idx": 22, "label": "", "pair": 0, "phase": 0, "ring": "outer", "terminal": false, "type": "W", "x": 37.232345160204844, "y": -15.422142324313143},
+          {"idx": 22, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "W", "x": 8.304230482322453, "y": -20.048185855494918},
+          {"idx": 23, "label": "", "pair": 0, "phase": 0, "ring": "outer", "terminal": false, "type": "W", "x": 39.95522791336455, "y": -5.260205546468118},
+          {"idx": 23, "label": "", "pair": 0, "phase": 0, "ring": "inner", "terminal": false, "type": "W", "x": 13.210123009489235, "y": -17.2157674843198}
+        ]
+      }
+    }
+  ],
+  "case_id": "wave-chord-l6-m1-p8-t3",
+  "eq_ids": [],
+  "fn": "waveRawLayout",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "chord: 6 layers, 1 phase, 8 poles, turns 3",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["layout", "chord", "l6", "m1"]
+}

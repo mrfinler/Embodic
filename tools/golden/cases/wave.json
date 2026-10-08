@@ -1,0 +1,568 @@
+{
+ "format": "embodic.golden-cases",
+ "format_version": 1,
+ "area": "wave",
+ "cases": [
+  {
+   "id": "wave-involute-l2-m3-p16-t2",
+   "fn": "waveRawLayout",
+   "note": "involute: Xcoil default wave, 2 layers, 3 phases, 16 poles, turns 2, star",
+   "tags": [
+    "layout",
+    "involute",
+    "default-params",
+    "l2",
+    "m3",
+    "star"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "involute",
+     "turns": 2
+    }
+   }
+  },
+  {
+   "id": "wave-involute-l4-m2-p8-t2",
+   "fn": "waveRawLayout",
+   "note": "involute: 4 layers, 2 phases, 8 poles, turns 2",
+   "tags": [
+    "layout",
+    "involute",
+    "l4",
+    "m2"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "involute",
+     "turns": 2,
+     "waveLayers": 4,
+     "phases": 2,
+     "poles": 8
+    }
+   }
+  },
+  {
+   "id": "wave-involute-l6-m1-p8-t3",
+   "fn": "waveRawLayout",
+   "note": "involute: 6 layers, 1 phase, 8 poles, turns 3",
+   "tags": [
+    "layout",
+    "involute",
+    "l6",
+    "m1"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "involute",
+     "turns": 3,
+     "waveLayers": 6,
+     "phases": 1,
+     "poles": 8
+    }
+   }
+  },
+  {
+   "id": "wave-involute-l2-m3-p16-t2-delta",
+   "fn": "waveRawLayout",
+   "note": "involute: delta links instead of the star ring",
+   "tags": [
+    "layout",
+    "involute",
+    "l2",
+    "m3",
+    "delta"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "involute",
+     "turns": 2,
+     "connection": "delta"
+    }
+   }
+  },
+  {
+   "id": "wave-jog-l2-m3-p16-t2",
+   "fn": "waveRawLayout",
+   "note": "jog: Xcoil default wave, 2 layers, 3 phases, 16 poles, turns 2, star",
+   "tags": [
+    "layout",
+    "jog",
+    "default-params",
+    "l2",
+    "m3",
+    "star"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "jog",
+     "turns": 2
+    }
+   }
+  },
+  {
+   "id": "wave-jog-l4-m2-p8-t2",
+   "fn": "waveRawLayout",
+   "note": "jog: 4 layers, 2 phases, 8 poles, turns 2",
+   "tags": [
+    "layout",
+    "jog",
+    "l4",
+    "m2"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "jog",
+     "turns": 2,
+     "waveLayers": 4,
+     "phases": 2,
+     "poles": 8
+    }
+   }
+  },
+  {
+   "id": "wave-jog-l6-m1-p8-t3",
+   "fn": "waveRawLayout",
+   "note": "jog: 6 layers, 1 phase, 8 poles, turns 3",
+   "tags": [
+    "layout",
+    "jog",
+    "l6",
+    "m1"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "jog",
+     "turns": 3,
+     "waveLayers": 6,
+     "phases": 1,
+     "poles": 8
+    }
+   }
+  },
+  {
+   "id": "wave-jog-l2-m3-p16-t2-delta",
+   "fn": "waveRawLayout",
+   "note": "jog: delta links instead of the star ring",
+   "tags": [
+    "layout",
+    "jog",
+    "l2",
+    "m3",
+    "delta"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "jog",
+     "turns": 2,
+     "connection": "delta"
+    }
+   }
+  },
+  {
+   "id": "wave-chord-l2-m3-p16-t2",
+   "fn": "waveRawLayout",
+   "note": "chord: Xcoil default wave, 2 layers, 3 phases, 16 poles, turns 2, star",
+   "tags": [
+    "layout",
+    "chord",
+    "default-params",
+    "l2",
+    "m3",
+    "star"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "chord",
+     "turns": 2
+    }
+   }
+  },
+  {
+   "id": "wave-chord-l4-m2-p8-t2",
+   "fn": "waveRawLayout",
+   "note": "chord: 4 layers, 2 phases, 8 poles, turns 2",
+   "tags": [
+    "layout",
+    "chord",
+    "l4",
+    "m2"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "chord",
+     "turns": 2,
+     "waveLayers": 4,
+     "phases": 2,
+     "poles": 8
+    }
+   }
+  },
+  {
+   "id": "wave-chord-l6-m1-p8-t3",
+   "fn": "waveRawLayout",
+   "note": "chord: 6 layers, 1 phase, 8 poles, turns 3",
+   "tags": [
+    "layout",
+    "chord",
+    "l6",
+    "m1"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "chord",
+     "turns": 3,
+     "waveLayers": 6,
+     "phases": 1,
+     "poles": 8
+    }
+   }
+  },
+  {
+   "id": "wave-chord-l2-m3-p16-t2-delta",
+   "fn": "waveRawLayout",
+   "note": "chord: delta links instead of the star ring",
+   "tags": [
+    "layout",
+    "chord",
+    "l2",
+    "m3",
+    "delta"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "chord",
+     "turns": 2,
+     "connection": "delta"
+    }
+   }
+  },
+  {
+   "id": "wave-overlap-l2-m3-p16-t2",
+   "fn": "waveRawLayout",
+   "note": "overlap: Xcoil default wave, 2 layers, 3 phases, 16 poles, turns 2, star",
+   "tags": [
+    "layout",
+    "overlap",
+    "default-params",
+    "l2",
+    "m3",
+    "star"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "overlap",
+     "turns": 2
+    }
+   }
+  },
+  {
+   "id": "wave-overlap-l4-m2-p8-t2",
+   "fn": "waveRawLayout",
+   "note": "overlap: 4 layers, 2 phases, 8 poles, turns 2",
+   "tags": [
+    "layout",
+    "overlap",
+    "l4",
+    "m2"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "overlap",
+     "turns": 2,
+     "waveLayers": 4,
+     "phases": 2,
+     "poles": 8
+    }
+   }
+  },
+  {
+   "id": "wave-overlap-l6-m1-p8-t3",
+   "fn": "waveRawLayout",
+   "note": "overlap: 6 layers, 1 phase, 8 poles, turns 3",
+   "tags": [
+    "layout",
+    "overlap",
+    "l6",
+    "m1"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "overlap",
+     "turns": 3,
+     "waveLayers": 6,
+     "phases": 1,
+     "poles": 8
+    }
+   }
+  },
+  {
+   "id": "wave-overlap-l2-m3-p16-t2-delta",
+   "fn": "waveRawLayout",
+   "note": "overlap: delta links instead of the star ring",
+   "tags": [
+    "layout",
+    "overlap",
+    "l2",
+    "m3",
+    "delta"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "overlap",
+     "turns": 2,
+     "connection": "delta"
+    }
+   }
+  },
+  {
+   "id": "wave-involute-l2-m3-p16-t2-open",
+   "fn": "waveRawLayout",
+   "note": "involute: open phases, no on-board interconnect",
+   "tags": [
+    "layout",
+    "involute",
+    "l2",
+    "m3",
+    "open"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "involute",
+     "turns": 2,
+     "connection": "open"
+    }
+   }
+  },
+  {
+   "id": "wave-overlap-l2-m3-p16-t2-open",
+   "fn": "waveRawLayout",
+   "note": "overlap: open phases, no on-board interconnect",
+   "tags": [
+    "layout",
+    "overlap",
+    "l2",
+    "m3",
+    "open"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "overlap",
+     "turns": 2,
+     "connection": "open"
+    }
+   }
+  },
+  {
+   "id": "wave-helper-invol",
+   "fn": "waveInvol",
+   "note": "involute function tan(a) - a",
+   "tags": [
+    "helper",
+    "seeded"
+   ],
+   "inputs": {
+    "seed": 2101,
+    "count": 200
+   }
+  },
+  {
+   "id": "wave-helper-involute-point",
+   "fn": "waveInvolutePoint",
+   "note": "point of an involute",
+   "tags": [
+    "helper",
+    "seeded"
+   ],
+   "inputs": {
+    "seed": 2102,
+    "count": 200
+   }
+  },
+  {
+   "id": "wave-helper-biarc",
+   "fn": "waveBiarc",
+   "note": "two tangent-continuous arcs between two oriented points",
+   "tags": [
+    "helper",
+    "seeded"
+   ],
+   "inputs": {
+    "seed": 2103,
+    "count": 200
+   }
+  },
+  {
+   "id": "wave-helper-involute-prims",
+   "fn": "waveInvolutePrims",
+   "note": "arc spline along an involute",
+   "tags": [
+    "helper",
+    "seeded"
+   ],
+   "inputs": {
+    "seed": 2104,
+    "count": 200
+   }
+  },
+  {
+   "id": "wave-helper-fillet-path",
+   "fn": "waveFilletPath",
+   "note": "fillets on line-line and line-arc corners",
+   "tags": [
+    "helper",
+    "seeded"
+   ],
+   "inputs": {
+    "seed": 2105,
+    "count": 200
+   }
+  },
+  {
+   "id": "wave-helper-taper-junctions",
+   "fn": "waveTaperJunctions",
+   "note": "tapers where a wide primitive meets a narrow one",
+   "tags": [
+    "helper",
+    "seeded"
+   ],
+   "inputs": {
+    "seed": 2106,
+    "count": 200
+   }
+  },
+  {
+   "id": "wave-helper-derive",
+   "fn": "waveDerive",
+   "note": "deriveWave frame or refusal over random parameters, all four styles",
+   "tags": [
+    "helper",
+    "seeded"
+   ],
+   "inputs": {
+    "seed": 2107,
+    "count": 200
+   }
+  },
+  {
+   "id": "wave-helper-track",
+   "fn": "waveTrack",
+   "note": "canonical track and shifted track, involute, jog and chord",
+   "tags": [
+    "helper",
+    "seeded"
+   ],
+   "inputs": {
+    "seed": 2108,
+    "count": 100
+   }
+  },
+  {
+   "id": "wave-helper-belts",
+   "fn": "waveBelts",
+   "note": "belt phase, belt sign and slot angle",
+   "tags": [
+    "helper",
+    "seeded"
+   ],
+   "inputs": {
+    "seed": 2109,
+    "count": 200
+   }
+  },
+  {
+   "id": "wave-refusal-min-poles",
+   "fn": "waveRefusal",
+   "note": "poles 2 with 3 phases",
+   "tags": [
+    "refusal"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "poles": 2,
+     "turns": 2
+    }
+   }
+  },
+  {
+   "id": "wave-refusal-slot-pitch",
+   "fn": "waveRefusal",
+   "note": "too many turns for the inner radius",
+   "tags": [
+    "refusal"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "turns": 40
+    }
+   }
+  },
+  {
+   "id": "wave-refusal-chord-slot-pitch",
+   "fn": "waveRefusal",
+   "note": "chord with too many turns",
+   "tags": [
+    "refusal"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "turns": 9,
+     "waveStyle": "chord"
+    }
+   }
+  },
+  {
+   "id": "wave-refusal-jog-inner-tight",
+   "fn": "waveRefusal",
+   "note": "jog with too many turns",
+   "tags": [
+    "refusal"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "turns": 9,
+     "waveStyle": "jog"
+    }
+   }
+  },
+  {
+   "id": "wave-refusal-overlap-inner-tight",
+   "fn": "waveRefusal",
+   "note": "overlap with a small inner radius",
+   "tags": [
+    "refusal"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "turns": 8,
+     "waveStyle": "overlap",
+     "rIn": 8,
+     "rOut": 30
+    }
+   }
+  }
+ ]
+}

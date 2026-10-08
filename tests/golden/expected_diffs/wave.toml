@@ -1,0 +1,3 @@
+# Intentional deviations of the wave generator from Xcoil (U-M3b). None so far: every GR-21 case agrees with Xcoil
+# within the tests' own tolerances (1e-9 mm per primitive, 1e-9 relative per layer length), see test_gr21_layouts.py.
+schema_version = 1
