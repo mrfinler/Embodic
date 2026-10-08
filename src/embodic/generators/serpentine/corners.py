@@ -44,7 +44,7 @@ def side_line(d: Frame, ju: int, i: int) -> SideLine:
     c = i - (d.n - 1) / 2
     if d.p.style is SideStyle.RADIAL:
         return SideLine(phi=d.theta0 + ju * d.tau + sgn * c * d.d_alpha, d=0.0)
-    return SideLine(phi=d.theta0 + ju * d.tau, d=sgn * c * d.pitch)
+    return SideLine(phi=d.theta0 + ju * d.tau, d=sgn * c * d.pitch_mm)
 
 
 def make_corner(line: SideLine, r: float, u: int, kind: CornerType, rho: float) -> Corner | None:
@@ -92,7 +92,7 @@ def make_corner(line: SideLine, r: float, u: int, kind: CornerType, rho: float) 
 
 def rho_at(d: Frame, rho0: float, level: int) -> float:
     """Fillet radius at a nesting level: it grows by one pitch per level (Xcoil ``rhoAt``)."""
-    return 0.0 if d.p.corner_style is CornerStyle.SHARP else rho0 + level * d.pitch
+    return 0.0 if d.p.corner_style is CornerStyle.SHARP else rho0 + level * d.pitch_mm
 
 
 def _arc_end(q: Arc) -> float:
@@ -117,16 +117,16 @@ def end_direction(q: Primitive) -> float:
     return _arc_end(q) + _direction_sign(q) * math.pi / 2
 
 
-def _split_head(q: Primitive, length: float, width: float) -> tuple[Primitive, Primitive]:
-    """First ``length`` mm of ``q`` at ``width`` (a taper) and the rest (Xcoil ``splitHead``)."""
+def _split_head(q: Primitive, length_mm: float, width_mm: float) -> tuple[Primitive, Primitive]:
+    """First ``length_mm`` of ``q`` at ``width_mm`` (a taper) and the rest (Xcoil ``splitHead``)."""
     if isinstance(q, Line):
-        f = length / primitive_length_mm(q)
+        f = length_mm / primitive_length_mm(q)
         x = q.x1_mm + (q.x2_mm - q.x1_mm) * f
         y = q.y1_mm + (q.y2_mm - q.y1_mm) * f
-        head = replace(q, x2_mm=x, y2_mm=y, width_mm=width, role=PrimitiveRole.TAPER)
+        head = replace(q, x2_mm=x, y2_mm=y, width_mm=width_mm, role=PrimitiveRole.TAPER)
         return head, replace(q, x1_mm=x, y1_mm=y)
-    mid = q.start_rad + (1 if _arc_end(q) > q.start_rad else -1) * length / q.r_mm
-    arc_head = replace(q, sweep_rad=mid - q.start_rad, width_mm=width, role=PrimitiveRole.TAPER)
+    mid = q.start_rad + (1 if _arc_end(q) > q.start_rad else -1) * length_mm / q.r_mm
+    arc_head = replace(q, sweep_rad=mid - q.start_rad, width_mm=width_mm, role=PrimitiveRole.TAPER)
     return arc_head, replace(q, start_rad=mid, sweep_rad=_arc_end(q) - mid)
 
 

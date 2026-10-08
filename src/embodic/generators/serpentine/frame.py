@@ -28,13 +28,13 @@ class Params:
     r_out: float
     turns: int
     strands: int
-    trace_width: float
-    clearance: float
-    end_width_outer: float
-    end_width_inner: float
+    trace_width_mm: float
+    clearance_mm: float
+    end_width_outer_mm: float
+    end_width_inner_mm: float
     style: SideStyle
     corner_style: CornerStyle
-    fillet_radius: float
+    fillet_radius_mm: float
     fillet_max: bool
     terminal_side: TerminalSide
     start_angle_rad: float
@@ -57,7 +57,7 @@ class Frame:
     nt: int
     w: float
     s: float
-    pitch: float
+    pitch_mm: float
     w_out: float
     w_in: float
     bundle: float
@@ -91,11 +91,11 @@ def derive(p: Params) -> Frame:
     pp = p.poles // 2
     tau = math.pi / pp
     n = p.turns * p.strands
-    w = p.trace_width
-    s = p.clearance
-    pitch = w + s
-    w_out = p.end_width_outer if p.end_width_outer > 0 else w
-    w_in = p.end_width_inner if p.end_width_inner > 0 else w
+    w = p.trace_width_mm
+    s = p.clearance_mm
+    pitch_mm = w + s
+    w_out = p.end_width_outer_mm if p.end_width_outer_mm > 0 else w
+    w_in = p.end_width_inner_mm if p.end_width_inner_mm > 0 else w
     outer = p.terminal_side is TerminalSide.OUTER
     w_near, w_far = (w_out, w_in) if outer else (w_in, w_out)
     p_near, p_far = w_near + s, w_far + s
@@ -117,10 +117,10 @@ def derive(p: Params) -> Frame:
         nt=p.turns,
         w=w,
         s=s,
-        pitch=pitch,
+        pitch_mm=pitch_mm,
         w_out=w_out,
         w_in=w_in,
-        bundle=(n - 1) * pitch,
+        bundle=(n - 1) * pitch_mm,
         theta0=p.start_angle_rad,
         theta_g=p.start_angle_rad - tau / 2,
         outer=outer,
@@ -138,7 +138,7 @@ def derive(p: Params) -> Frame:
         series=series,
         phase_shift=tau / 2 if p.phases == 2 else 2 * tau / p.phases,
         bus_step=bus_step,
-        d_alpha=math.asin(pitch / r_ref) if radial and r_ref > pitch else 0.0,
+        d_alpha=math.asin(pitch_mm / r_ref) if radial and r_ref > pitch_mm else 0.0,
         r_ref=r_ref,
     )
 

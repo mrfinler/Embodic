@@ -50,7 +50,6 @@ class Link:
     taps: tuple[Terminal, ...]
     level: int = 0
     layer_idx: int = 0
-    unroutable: bool = False
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -65,7 +64,7 @@ class RingItem:
     link: Link
     stubs: tuple[Line, ...]
     arcs: tuple[Arc, ...]
-    radius: float
+    radius_mm: float
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -97,7 +96,7 @@ class PadSite:
     y: float
     net: str
     phase: int
-    angle: float
+    angle_rad: float
     layer: int
 
 
@@ -111,11 +110,6 @@ class Interconnect:
     r_pad: float
     r_edge: float
     n_levels: int
-
-    @property
-    def unroutable(self) -> bool:
-        """True when a delta link had no layer without a partial overlap."""
-        return any(lk.unroutable for lk in self.links)
 
 
 def _norm(a: float) -> float:
@@ -182,22 +176,30 @@ def _place_delta(links: list[Link], layers: int, margin: float) -> list[Link]:
             level = max((o.level + 1 for o, r in zip(on_layer, relations, strict=True) if r == "encloses"), default=0)
             chosen = replace(link, layer_idx=c, level=level)
             break
-        placed.append(chosen if chosen is not None else replace(link, layer_idx=0, level=len(placed), unroutable=True))
+        placed.append(chosen if chosen is not None else replace(link, layer_idx=0, level=len(placed)))
     return placed
 
 
-def _ring_arcs(link: Link, radius: float, width: float) -> tuple[Arc, ...]:
+def _ring_arcs(link: Link, radius_mm: float, width_mm: float) -> tuple[Arc, ...]:
     """Return the ring arc from ``a1`` to ``a2`` cut at the taps between its ends (angles as Xcoil l.1366)."""
     cuts = [link.a1, *(link.a1 + _norm(t.angle - link.a1) for t in link.taps[1:-1]), link.a2]
     return tuple(
-        Arc(cx_mm=0.0, cy_mm=0.0, r_mm=radius, start_rad=a, sweep_rad=b - a, width_mm=width, role=PrimitiveRole.RING)
+        Arc(
+            cx_mm=0.0,
+            cy_mm=0.0,
+            r_mm=radius_mm,
+            start_rad=a,
+            sweep_rad=b - a,
+            width_mm=width_mm,
+            role=PrimitiveRole.RING,
+        )
         for a, b in pairwise(cuts)
     )
 
 
 def build_interconnect(
     connection: ConnectionSpec,
-    clearance: float,
+    clearance_mm: float,
     via_pad: float,
     terms: tuple[Terminal, ...],
     base: float,
@@ -210,7 +212,7 @@ def build_interconnect(
     ``terms`` are the terminal vias of all three phases; ``link_layers`` are the layers that may carry link rings,
     first choice first.
     """
-    bw, s = connection.ring_width_mm, clearance
+    bw, s = connection.ring_width_mm, clearance_mm
     if connection.topology is ConnectionTopology.STAR:
         links = [_star_link(terms)]
     else:
@@ -239,7 +241,7 @@ def build_interconnect(
                 link=lk,
                 stubs=tuple(stub(t, r) for t in lk.taps),
                 arcs=_ring_arcs(lk, r, bw),
-                radius=r,
+                radius_mm=r,
             )
         )
     pads: list[PadSite] = []
@@ -247,14 +249,14 @@ def build_interconnect(
         t = _terminal(terms, k, 1)
         x, y = _polar(r_pad, t.angle)
         items.append(LeadItem(layer=layer_lines, net=LINE_NETS[k], phase=k, stub=stub(t, r_pad)))
-        pads.append(PadSite(x=x, y=y, net=LINE_NETS[k], phase=k, angle=t.angle, layer=layer_lines))
+        pads.append(PadSite(x=x, y=y, net=LINE_NETS[k], phase=k, angle_rad=t.angle, layer=layer_lines))
     if connection.topology is ConnectionTopology.STAR and connection.neutral_pad:
         t = links[0].taps[2]
         start = _polar(ring_radius(0), t.angle)
         end = _polar(r_pad, t.angle)
         neutral = Line(x1_mm=start[0], y1_mm=start[1], x2_mm=end[0], y2_mm=end[1], width_mm=bw, role=PrimitiveRole.STUB)
         items.append(NeutralLeadItem(layer=link_layers[0], stub=neutral))
-        pads.append(PadSite(x=end[0], y=end[1], net="N", phase=-1, angle=t.angle, layer=link_layers[0]))
+        pads.append(PadSite(x=end[0], y=end[1], net="N", phase=-1, angle_rad=t.angle, layer=link_layers[0]))
     return Interconnect(
         items=tuple(items),
         pads=tuple(pads),

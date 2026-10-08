@@ -127,7 +127,12 @@ def test_gr23_fit_status_and_max_fillet_match_xcoil(golden_report: Any) -> None:
         assert fit.ok is golden["ok"], item
         assert (fit.reason.value if fit.reason else None) == golden["reason"], item
         reasons.add(golden["reason"])
-        pairs = [("rho0", fit.rho0), ("legGap", fit.leg_gap), ("backGap", fit.back_gap), ("endGap", fit.end_gap)]
+        pairs = [
+            ("rho0", fit.rho0),
+            ("legGap", fit.leg_gap_mm),
+            ("backGap", fit.back_gap_mm),
+            ("endGap", fit.end_gap_mm),
+        ]
         pairs += [("rho0max", fit.rho0_max)] if "rho0max" in golden else []
         for key, actual in pairs:
             if key in golden:

@@ -78,7 +78,7 @@ class Canon:
     objs: tuple[CanonObject, ...]
     rho0: float
     rho0_max: float
-    min_main_sweep: float
+    min_main_sweep_rad: float
     bus_level: int
     r_bus: float
     r_v: float
@@ -121,22 +121,19 @@ class _StrandBuild:
     prims: list[Primitive]
     v_junction: Junction | None = None
     t_junction: Junction | None = None
-    min_sweep: float = math.inf
+    min_sweep_rad: float = math.inf
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class _Pending:
     """The end-turn arc that waits for the next side's entry angle."""
 
-    radius: float
+    radius_mm: float
     start: float
-    role: PrimitiveRole
-    width: float
+    width_mm: float
 
 
-def _side_corners(
-    d: Frame, rho0: float, line_index: int, i: int, k: int, j: int
-) -> tuple[Corner | None, Corner | None]:
+def _side_corners(d: Frame, rho0: float, line_index: int, i: int, j: int) -> tuple[Corner | None, Corner | None]:
     """Entry and exit corner of one side that is neither the first nor the last of the strand."""
     poles = d.p.poles
     near_lv = i + d.j if j == poles - 1 else i
@@ -151,14 +148,14 @@ def _side_corners(
     return entry, exit_
 
 
-def _fillet_arc(corner: Corner, a1: float, a2: float, width: float) -> Arc:
+def _fillet_arc(corner: Corner, a1: float, a2: float, width_mm: float) -> Arc:
     return Arc(
         cx_mm=corner.cf[0],
         cy_mm=corner.cf[1],
         r_mm=corner.rho,
         start_rad=a1,
         sweep_rad=a2 - a1,
-        width_mm=width,
+        width_mm=width_mm,
         role=PrimitiveRole.FILLET,
     )
 
@@ -173,7 +170,7 @@ def _build_strand(d: Frame, s: int, rho0: float, r_v: float, r_bus: float) -> _S
             ju = k * poles + j
             is_start, is_end = k == 0 and j == 0, k == d.nt - 1 and j == poles - 1
             even = j % 2 == 0
-            entry, exit_ = _side_corners(d, rho0, ju, i, k, j)
+            entry, exit_ = _side_corners(d, rho0, ju, i, j)
             if is_start:
                 junction = _on_line(d, ju, i, r_v)
                 entry = None if junction is None else _on_line_corner(junction)
@@ -185,16 +182,16 @@ def _build_strand(d: Frame, s: int, rho0: float, r_v: float, r_bus: float) -> _S
             if entry is None or exit_ is None:
                 return None
             if pending is not None:
-                out.min_sweep = min(out.min_sweep, entry.ang_c - pending.start)
+                out.min_sweep_rad = min(out.min_sweep_rad, entry.ang_c - pending.start)
                 out.prims.append(
                     Arc(
                         cx_mm=0.0,
                         cy_mm=0.0,
-                        r_mm=pending.radius,
+                        r_mm=pending.radius_mm,
                         start_rad=pending.start,
                         sweep_rad=entry.ang_c - pending.start,
-                        width_mm=pending.width,
-                        role=pending.role,
+                        width_mm=pending.width_mm,
+                        role=PrimitiveRole.END_TURN,
                     )
                 )
                 pending = None
@@ -216,16 +213,15 @@ def _build_strand(d: Frame, s: int, rho0: float, r_v: float, r_bus: float) -> _S
             if not is_end:
                 near_lv, far_lv = (i + d.j if j == poles - 1 else i), d.n - 1 - i
                 pending = _Pending(
-                    radius=far_r(d, far_lv) if even else near_r(d, near_lv),
+                    radius_mm=far_r(d, far_lv) if even else near_r(d, near_lv),
                     start=exit_.ang_c,
-                    role=PrimitiveRole.END_TURN,
-                    width=w_exit,
+                    width_mm=w_exit,
                 )
     return out
 
 
-def _bus_arc(r: float, a1: float, a2: float, width: float) -> Arc:
-    return Arc(cx_mm=0.0, cy_mm=0.0, r_mm=r, start_rad=a1, sweep_rad=a2 - a1, width_mm=width, role=PrimitiveRole.BUS)
+def _bus_arc(r: float, a1: float, a2: float, width_mm: float) -> Arc:
+    return Arc(cx_mm=0.0, cy_mm=0.0, r_mm=r, start_rad=a1, sweep_rad=a2 - a1, width_mm=width_mm, role=PrimitiveRole.BUS)
 
 
 def _precondition(d: Frame, fit: Fit, bus_level: int) -> CanonFailure | tuple[float, float]:
@@ -265,8 +261,8 @@ def build_canonical(d: Frame, bus_level_extra: int = 0) -> Canon | CanonFailure:
             return CanonFailure(reasons=(BuildFailure.GEOMETRY,), rho0=rho0, rho0_max=rho0_max)
         strands.append(built)
     reasons: list[BuildFailure] = []
-    min_main_sweep = min(b.min_sweep for b in strands)
-    if min_main_sweep < SWEEP_TOLERANCE:
+    min_main_sweep_rad = min(b.min_sweep_rad for b in strands)
+    if min_main_sweep_rad < SWEEP_TOLERANCE:
         reasons.append(BuildFailure.BUNDLE_TOO_WIDE)
     tapered = d.w_near != d.w or d.w_far != d.w
     objs = [
@@ -292,7 +288,7 @@ def build_canonical(d: Frame, bus_level_extra: int = 0) -> Canon | CanonFailure:
         objs=tuple(objs),
         rho0=rho0,
         rho0_max=rho0_max,
-        min_main_sweep=min_main_sweep,
+        min_main_sweep_rad=min_main_sweep_rad,
         bus_level=bus_level,
         r_bus=r_bus,
         r_v=r_v,

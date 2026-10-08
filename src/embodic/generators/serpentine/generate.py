@@ -92,13 +92,13 @@ def params_from_design(design: DesignParameters, spec: SerpentineWindingSpec) ->
         r_out=spec.r_outer_mm,
         turns=spec.turns,
         strands=spec.strands,
-        trace_width=spec.trace_width_mm,
-        clearance=spec.clearance_mm,
-        end_width_outer=spec.end_width_outer_mm or 0.0,
-        end_width_inner=spec.end_width_inner_mm or 0.0,
+        trace_width_mm=spec.trace_width_mm,
+        clearance_mm=spec.clearance_mm,
+        end_width_outer_mm=spec.end_width_outer_mm or 0.0,
+        end_width_inner_mm=spec.end_width_inner_mm or 0.0,
         style=spec.side_style,
         corner_style=spec.corner_style,
-        fillet_radius=spec.fillet_radius_mm,
+        fillet_radius_mm=spec.fillet_radius_mm,
         fillet_max=spec.fillet_max,
         terminal_side=spec.terminal_side,
         start_angle_rad=spec.start_angle_rad,
@@ -260,7 +260,7 @@ def _phase_circuit(d: Frame, k: int, ids: _BoardIds) -> PhaseCircuit:
     return PhaseCircuit(phase=PHASES[k], groups=tuple(groups), terminal_net=LINE_NET[PHASES[k]])
 
 
-def _vias(design: DesignParameters, d: Frame, plans: Sequence[ViaPlan], first: str, last: str) -> tuple[Via, ...]:
+def _vias(design: DesignParameters, plans: Sequence[ViaPlan], first: str, last: str) -> tuple[Via, ...]:
     def role(v: ViaPlan) -> ViaRole:
         if v.terminal:
             return ViaRole.TERMINAL
@@ -308,7 +308,7 @@ def _pads(design: DesignParameters, ic: Interconnect | None, names: Sequence[str
 
 def _board(
     design: DesignParameters, spec: SerpentineWindingSpec, d: Frame, plan: StackPlan, ic: Interconnect | None,
-    board: int, names: Sequence[str], z_mm: Mapping[str, float], derived_args: tuple[int, Registry],
+    board: int, names: Sequence[str], z_mm: Mapping[str, float], traces_fit: int, registry: Registry,
 ) -> Layout:  # fmt: skip
     layers = [lp for lp in plan.layers if lp.board == board]
     paths, roles = _board_paths(layers, names)
@@ -316,16 +316,15 @@ def _board(
     plans = [v for v in plan.vias if v.phase in phases]
     ids = _board_ids(layers, paths, plans)
     pitch = design.stackup.board_thickness_mm() + spec.board_gap_mm
-    r_min = min(plan.r_min_cu, ic.r_edge) if ic and not d.outer else plan.r_min_cu
-    r_max = max(plan.r_max_cu, ic.r_edge) if ic and d.outer else plan.r_max_cu
+    r_min = min(plan.r_min_cu, ic.r_edge) if ic else plan.r_min_cu
+    r_max = max(plan.r_max_cu, ic.r_edge) if ic else plan.r_max_cu
     envelope = (r_min, r_max)
-    traces_fit, registry = derived_args
     return Layout(
         topology=TopologyKind.SERPENTINE,
         copper_layers=tuple(names),
         copper_z_mm=MappingProxyType({n: board * pitch + z_mm[n] for n in names}),
         paths=tuple(paths),
-        vias=_vias(design, d, plans, names[0], names[-1]),
+        vias=_vias(design, plans, names[0], names[-1]),
         pads=_pads(design, ic, names),
         outline=build_outline(design.outline, envelope),
         circuit=Circuit(
@@ -360,8 +359,10 @@ def generate_serpentine(design: DesignParameters, registry: Registry) -> BoardSt
     ic = _add_interconnect(design, spec, d, plan)
     names = [layer.name for layer in copper]
     z_mm = design.stackup.copper_z_mm()
-    fit = (max_traces_fit(d.p), registry)
-    boards = tuple(_board(design, spec, d, plan, ic, b, names, z_mm, fit) for b in range(plan.n_boards))
+    traces_fit = max_traces_fit(d.p)
+    boards = tuple(
+        _board(design, spec, d, plan, ic, b, names, z_mm, traces_fit, registry) for b in range(plan.n_boards)
+    )
     return BoardStack(
         boards=boards,
         board_thickness_mm=design.stackup.board_thickness_mm(),

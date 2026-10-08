@@ -33,9 +33,9 @@ class Fit:
     reason: FitFailure | None
     rho0: float = 0.0
     rho0_max: float | None = None
-    leg_gap: float = 0.0
-    back_gap: float = 0.0
-    end_gap: float = math.inf
+    leg_gap_mm: float = 0.0
+    back_gap_mm: float = 0.0
+    end_gap_mm: float = math.inf
 
 
 def _sweep_between(line_a: Corner | None, line_b: Corner | None) -> float:
@@ -49,10 +49,10 @@ def min_sweep(d: Frame, rho0: float) -> float:
     n, j = d.n, d.j
     smallest = math.inf
 
-    def between(ja: int, jb: int, i_a: int, i_b: int, radius: float, kind: CornerType, level: int) -> float:
+    def between(ja: int, jb: int, i_a: int, i_b: int, radius_mm: float, kind: CornerType, level: int) -> float:
         rho = rho_at(d, rho0, level)
-        ca = make_corner(side_line(d, ja, i_a), radius, 1, kind, rho)
-        cb = make_corner(side_line(d, jb, i_b), radius, -1, kind, rho)
+        ca = make_corner(side_line(d, ja, i_a), radius_mm, 1, kind, rho)
+        cb = make_corner(side_line(d, jb, i_b), radius_mm, -1, kind, rho)
         return _sweep_between(ca, cb)
 
     for lv in (0, n - 1):
@@ -77,7 +77,7 @@ def start_radius(d: Frame, rho0: float) -> float:
         c_j = make_corner(side_line(d, 0, d.j), near_r(d, d.j), -1, d.type_near, rho_j)
         if c_j is None:
             return math.nan
-        o0 = (d.n - 1) / 2 * d.pitch
+        o0 = (d.n - 1) / 2 * d.pitch_mm
         if d.outer:
             return min(r_v, c_j.x_l)
         return max(r_v, c_j.x_l if p.style is SideStyle.RADIAL else math.sqrt(c_j.x_l * c_j.x_l + o0 * o0))
@@ -148,12 +148,13 @@ def _innermost_corners(d: Frame, rho0: float) -> tuple[Corner | None, ...]:
     n = d.n
     if d.outer:  # the inner end is the far end
         specs = ((0, n - 1, 0, 1), (1, n - 1, 0, -1), (1, 0, n - 1, -1), (2, 0, n - 1, 1))
-        radius, kind = far_r, d.type_far
+        radius_of, kind = far_r, d.type_far
     else:  # the inner end is the near end
         specs = ((1, 0, 0, 1), (2, 0, 0, -1), (2, n - 1, n - 1, -1), (3, n - 1, n - 1, 1))
-        radius, kind = near_r, d.type_near
+        radius_of, kind = near_r, d.type_near
     return tuple(
-        make_corner(side_line(d, ju, i), radius(d, level), u, kind, rho_at(d, rho0, level)) for ju, i, level, u in specs
+        make_corner(side_line(d, ju, i), radius_of(d, level), u, kind, rho_at(d, rho0, level))
+        for ju, i, level, u in specs
     )
 
 
@@ -202,20 +203,20 @@ def _gaps(d: Frame, rho0: float) -> tuple[float, float, float] | None:
         legs = -legs  # the two legs have crossed over
     if e.ang_l - c.ang_l <= 0:
         back = -back  # neighbouring bundles overlap at the inner end
-    end_gap = math.inf
+    end_gap_mm = math.inf
     if not d.outer:
         measured = _inner_terminal_gap(d, rho0)
         if measured is None:
             return None
-        end_gap = measured
-    return legs, back, end_gap
+        end_gap_mm = measured
+    return legs, back, end_gap_mm
 
 
 def _level0_fillet(d: Frame, rho0_max: float) -> float:
     p = d.p
     if p.corner_style is CornerStyle.SHARP:
         return 0.0
-    return rho0_max if p.fillet_max else min(p.fillet_radius, rho0_max)
+    return rho0_max if p.fillet_max else min(p.fillet_radius_mm, rho0_max)
 
 
 def fit_status(d: Frame) -> Fit:
@@ -225,7 +226,7 @@ def fit_status(d: Frame) -> Fit:
     legs of neighbouring U-turns stay one pitch apart at their deepest point, and the inner-terminal gap.
     """
     p, n = d.p, d.n
-    if p.style is SideStyle.RADIAL and not d.r_ref > d.pitch:
+    if p.style is SideStyle.RADIAL and not d.r_ref > d.pitch_mm:
         return Fit(ok=False, reason=FitFailure.R_TOO_SMALL)
     if p.r_in - (n - 1) * (d.p_far if d.outer else d.p_near) <= d.bundle / 2 + 0.2:
         return Fit(ok=False, reason=FitFailure.R_TOO_SMALL)
@@ -239,16 +240,20 @@ def fit_status(d: Frame) -> Fit:
     gaps = _gaps(d, rho0)
     if gaps is None:
         return too_wide
-    legs, back, end_gap = gaps
-    ok = legs >= d.pitch - FIT_TOLERANCE and back >= d.pitch - FIT_TOLERANCE and end_gap >= d.pitch - FIT_TOLERANCE
+    legs, back, end_gap_mm = gaps
+    ok = (
+        legs >= d.pitch_mm - FIT_TOLERANCE
+        and back >= d.pitch_mm - FIT_TOLERANCE
+        and end_gap_mm >= d.pitch_mm - FIT_TOLERANCE
+    )
     return Fit(
         ok=ok,
         reason=None if ok else FitFailure.BUNDLE_TOO_WIDE,
         rho0=rho0,
         rho0_max=rho0_max,
-        leg_gap=legs,
-        back_gap=back,
-        end_gap=end_gap,
+        leg_gap_mm=legs,
+        back_gap_mm=back,
+        end_gap_mm=end_gap_mm,
     )
 
 
