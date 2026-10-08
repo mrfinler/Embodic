@@ -5,11 +5,12 @@ every copper layer. A via, a round pad or a hole is a disc: a zero-length ``Line
 edge piece has width 0. The sweep checks every pair of items that share a layer, except pairs of two every-layer items
 inside a layer pass (they are checked once, in the every-layer pass).
 
-Exemptions. ``contract_exemptions`` is interfaces.md section 7 as D-022 and D-022c amend it, coded here from the text
-and labelled with the rule that exempts each pair: rule 1 neighbours in one path (a fillet or taper belongs to the main
-before and after it), rule 2 a path end on a land, rule 3 path ends at one node, rule 4 a via inside a pad, each with
-the same-net test, and the interconnect waiver that drops the net test between an interconnect path and the lands its
-ends or its centreline touch.
+Exemptions. ``contract_exemptions`` is interfaces.md section 7 as D-022, D-022c, D-035b, D-036a and D-037a amend it,
+coded here from the text and labelled with the rule that exempts each pair: rule 1 neighbours in one path (a fillet or
+taper belongs to the main before and after it), rule 2 a path end on a land, rule 2b a via on a primitive's centreline,
+rule 3 path ends at one node, rule 4 a via inside a pad, rule 5 a path end on another path's centreline, each with the
+same-net test, and the interconnect waiver that drops the net test between an interconnect path and the lands its ends
+or its centreline touch.
 """
 
 import math
