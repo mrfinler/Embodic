@@ -196,3 +196,67 @@ def test_ut_io_07_measured_entry_without_source_is_invalid_provenance(tmp_path: 
         ("INVALID_PROVENANCE", ("/provenance/rotor/poles",)),
         ("INVALID_PROVENANCE", (f"/provenance{BR}",)),
     ]
+
+
+@pytest.mark.req("REQ-T-06")
+def test_def_u_d6_01_origin_that_is_not_packaged_gives_measured_and_user_only(tmp_path: Path) -> None:
+    """Catches DEF-U-D6-01: a design with a non-blank origin that is not packaged got 30 `default` entries.
+
+    Interfaces.md 9.1 question 1: every field is `measured` where a measurement names it and `user` everywhere else, and
+    the origin travels unchanged so an app that packages that hash derives `example` again.
+    """
+    project = _measured_project()
+    foreign = dataclasses.replace(project, origin=dataclasses.replace(project.origin, example_sha256="sha256:0"))
+    path = tmp_path / "foreign.embodic.json"
+    save_project(path, foreign)
+    stored = json.loads(path.read_text())["provenance"]
+    assert {entry["provenance"] for entry in stored.values()} == {"measured", "user"}
+    assert stored[BR] == {"provenance": "measured", "source": SOURCE}
+    loaded, issues = load_project(path)
+    assert isinstance(loaded, ProjectFile)
+    assert [i.code for i in issues] == ["INFO_EXAMPLE_NOT_PACKAGED"]
+    assert loaded.origin == foreign.origin
+    assert project_provenance(loaded) == project_provenance(foreign)
+    assert {type(p) for p in project_provenance(loaded).values()} == {MeasuredValue, UserValue}
+    again = tmp_path / "again.embodic.json"
+    save_project(again, loaded)
+    assert again.read_bytes() == path.read_bytes()
+
+
+@pytest.mark.req("REQ-F-15")
+@pytest.mark.parametrize(
+    ("edit", "pointers"),
+    [
+        (lambda d: d.update(extra_top=1), ["/extra_top"]),
+        (lambda d: d["design"]["rotor"].update(polez=16), ["/design/rotor/polez"]),
+        (lambda d: d["origin_example"].update(note="x"), ["/origin_example/note"]),
+        (
+            lambda d: d["design"]["rotor"].update(polez=16) or d.update(extra_top=1),
+            ["/extra_top", "/design/rotor/polez"],
+        ),
+    ],
+)
+def test_def_u_d6_02_unknown_keys_are_refused_with_their_pointer(edit, pointers) -> None:
+    """Catches DEF-U-D6-02: a misspelt key was ignored and its value silently dropped (D-014).
+
+    The project schema refuses these keys (additionalProperties false), and the loader must refuse what it refuses.
+    """
+    project = _cf11_project()
+    document = json.loads(
+        json.dumps(project_module.project_document(project, project_provenance(project), saved_utc="t"))
+    )
+    edit(document)
+    loaded, issues = parse_project(json.dumps(document))
+    assert loaded is None
+    assert [(i.code, i.pointers) for i in issues] == [("INVALID_PROJECT_FILE", (p,)) for p in pointers]
+
+
+@pytest.mark.req("REQ-F-15")
+def test_def_u_d6_02_ui_stays_free_form_and_every_packaged_example_still_loads() -> None:
+    """Catches an unknown-key check that rejects the free-form `ui` object or a key the writer itself emits."""
+    project = _cf11_project()
+    document = project_module.project_document(project, project_provenance(project), saved_utc="t")
+    assert set(document) == project_module.TOP_LEVEL_KEYS
+    document["ui"] = {"anything": {"nested": [1, 2]}}
+    loaded, issues = parse_project(json.dumps(document))
+    assert isinstance(loaded, ProjectFile) and issues == ()

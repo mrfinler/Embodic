@@ -27,7 +27,7 @@ from embodic.io.examples import packaged_example
 from embodic.io.migrations import PROJECT_SCHEMA_VERSION, migrate
 from embodic.model.design import DesignParameters
 from embodic.model.draft import DesignDraft, parse_draft
-from embodic.model.fields import FieldKind, field_for
+from embodic.model.fields import FIELDS, FieldKind, field_for
 from embodic.model.provenance import (
     DefaultValue,
     ExampleRef,
@@ -40,10 +40,26 @@ from embodic.model.provenance import (
     UserValue,
     derive_provenance,
 )
-from embodic.model.schema import JsonValue, ValueType
+from embodic.model.schema import JsonValue, ValueType, flatten, pattern_of
 
 PROJECT_FORMAT = "embodic-project"
 PROJECT_SUFFIX = ".embodic.json"
+TOP_LEVEL_KEYS = frozenset(
+    {
+        "format",
+        "schema_version",
+        "app_version",
+        "saved_utc",
+        "design_hash",
+        "origin_example",
+        "design",
+        "provenance",
+        "ui",
+    }
+)
+_ORIGIN_KEYS = frozenset({"example_id", "example_sha256"})
+_CONSTANT_POINTERS = frozenset({"/winding/kind", "/analysis/edge_correction"})  # written by the file, not in FIELDS
+_DESIGN_PATTERNS = frozenset({*(file_pointer(spec.pointer) for spec in FIELDS), *_CONSTANT_POINTERS})
 
 _CATEGORY_BY_PREFIX = {
     "INVALID_": IssueCategory.INVALID,
@@ -106,9 +122,15 @@ def _origin_pair(origin: ExampleRef | None) -> tuple[ExampleRef, DesignParameter
 def project_provenance(project: ProjectFile) -> dict[str, FieldProvenance]:
     """Provenance of every design pointer, derived from the values, the packaged origin and the measurements.
 
-    An origin that is not packaged with the same hash gives no `example` entries (open question O1 of U-M2f).
+    An origin that is not packaged with the same hash gives no `example` entries, and since its values are not blank
+    defaults either (interfaces.md 9.1, question 1), every field is `measured` where a measurement names it and `user`
+    elsewhere.
     """
-    return derive_provenance(project.design, _origin_pair(project.origin), project.measurements)
+    pair = _origin_pair(project.origin)
+    derived = derive_provenance(project.design, pair, project.measurements)
+    if project.origin is None or pair is not None:
+        return derived
+    return {pointer: UserValue() if isinstance(kind, DefaultValue) else kind for pointer, kind in derived.items()}
 
 
 def _utc_now() -> str:
@@ -241,6 +263,20 @@ def _refuse(pointer: str) -> tuple[None, tuple[ValidationIssue, ...]]:
     return None, (_issue("INVALID_PROJECT_FILE", (pointer,)),)
 
 
+def _unknown_keys(document: Mapping[str, Any]) -> list[str]:
+    """Return the pointer of every key the project schema refuses; `ui` is free-form, `provenance` is checked apart."""
+    unknown = [f"/{key}" for key in sorted(document.keys() - TOP_LEVEL_KEYS)]
+    origin = document.get("origin_example")
+    if isinstance(origin, dict):
+        unknown += [f"/origin_example/{key}" for key in sorted(origin.keys() - _ORIGIN_KEYS)]
+    unknown += [
+        f"/design{pointer}"
+        for pointer in sorted(flatten(document["design"]))
+        if pattern_of(pointer) not in _DESIGN_PATTERNS
+    ]
+    return unknown
+
+
 def _malformed(document: object) -> str | None:
     """Return the pointer of the first top-level key that breaks the v1 file shape, or None."""
     if not isinstance(document, dict) or document.get("format") != PROJECT_FORMAT:
@@ -266,6 +302,8 @@ def parse_project(text: str) -> tuple[ProjectFile | LoadedDraft | None, tuple[Va
     migrated, issues = migrate(document)
     if migrated is None:
         return None, issues
+    if unknown := _unknown_keys(migrated):
+        return None, tuple(_issue("INVALID_PROJECT_FILE", (pointer,)) for pointer in unknown)
     origin = _origin(migrated.get("origin_example"))
     if isinstance(origin, ValidationIssue):
         return None, (origin,)
