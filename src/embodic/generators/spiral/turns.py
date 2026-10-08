@@ -1,7 +1,11 @@
 """Canonical coil frame, turns and closing of one spiral coil (spiral_generator_spec.md G1, G3, G5; U-E3, U-E3b).
 
 Canonical coil: centred on the +x axis, half-angle h = pi/Q, left sector edge at +h, right edge at -h. A side line at
-offset d lies d inside its sector edge. Both sides of turn t lie on d_t; the pitch advance is the outer-end jog.
+offset d lies d inside its sector edge (parallel sides) or is the ray at h - asin(d/R_i0) (radial sides, G2). Both
+sides of turn t lie on d_t; the pitch advance is the outer-end jog.
+
+An end's level is where it crosses the coil centre line: the radius of an arc end, the x of a straight end. The loop
+rule, the eye and the half closing compare levels on the centre line, so they hold for both end styles.
 """
 
 import math
@@ -9,7 +13,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from embodic.geometry.details import TurnClosing
-from embodic.model.winding_specs import SpiralCoilSpec
+from embodic.model.winding_specs import EndStyle, SideStyle, SpiralCoilSpec
 
 Point = tuple[float, float]
 
@@ -23,8 +27,10 @@ MAX_TURNS_PER_LAYER = 100
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class CoilFrame:
-    """G1 derived quantities of one coil; the coil gap is already max(gap, s)."""
+    """G1 derived quantities of one coil; the coil gap is already max(gap, s). Radii named here are end levels."""
 
+    side_style: SideStyle
+    end_style: EndStyle  # ARC or STRAIGHT; the stadium end has no jog construction yet
     half_angle_rad: float
     trace_width_mm: float
     clearance_mm: float
@@ -44,8 +50,14 @@ class CoilFrame:
         w = coil.trace_width_mm
         w_out = coil.end_width_outer_mm or w
         w_in = coil.end_width_inner_mm or w
+        h = math.pi / coil.coil_count
+        # Straight ends (G2): the outermost chord at x = R_o0 cos h; the innermost touches R_i0 on the centre line, so
+        # its middle keeps the r_inner rim (G9). Chords step by one end pitch in x, which keeps s between them.
+        outer_scale = math.cos(h) if coil.end_style is EndStyle.STRAIGHT else 1.0
         return cls(
-            half_angle_rad=math.pi / coil.coil_count,
+            side_style=coil.side_style,
+            end_style=coil.end_style,
+            half_angle_rad=h,
             trace_width_mm=w,
             clearance_mm=coil.clearance_mm,
             gap_mm=max(coil.coil_gap_mm, coil.clearance_mm),
@@ -53,7 +65,7 @@ class CoilFrame:
             end_width_inner_mm=w_in,
             r_inner_mm=coil.r_inner_mm,
             r_outer_mm=coil.r_outer_mm,
-            centre_outer_mm=coil.r_outer_mm - w_out / 2,
+            centre_outer_mm=(coil.r_outer_mm - w_out / 2) * outer_scale,
             centre_inner_mm=coil.r_inner_mm + w_in / 2,
             via_pad_mm=via_pad_mm,
             min_side_mm=2 * w if coil.min_side_length_mm is None else coil.min_side_length_mm,
@@ -77,14 +89,25 @@ class CoilFrame:
         return self.centre_inner_mm + t * (self.end_width_inner_mm + self.clearance_mm)
 
     def apex_limit_radius_mm(self, d_mm: float) -> float:
-        """rho_t: the radius where the two side lines at offset ``d_mm`` are w_d apart (G3, triangular inner end)."""
+        """rho_t: level where the two side lines at offset ``d_mm`` are w_d apart (G3); 0 for radial sides (G2)."""
+        if self.side_style is SideStyle.RADIAL:
+            return 0.0
         h, half = self.half_angle_rad, self.side_pitch_mm / 2
         x_c = (d_mm + half * math.cos(h)) / math.sin(h)
-        return math.hypot(x_c, half)
+        return x_c if self.end_style is EndStyle.STRAIGHT else math.hypot(x_c, half)
+
+    def ray_angle_rad(self, d_mm: float) -> float:
+        """Angle below the coil axis of the radial right side at offset ``d_mm``: h - asin(d/R_i0) (G2)."""
+        return self.half_angle_rad - math.asin(d_mm / self.centre_inner_mm)
 
     def on_right(self, d_mm: float, r_mm: float) -> Point:
-        """Point of the right side line at offset ``d_mm`` and radius ``r_mm``."""
-        h, lam = self.half_angle_rad, math.sqrt(r_mm * r_mm - d_mm * d_mm)
+        """Point of the right side line at offset ``d_mm`` on the end at level ``r_mm``."""
+        h = self.half_angle_rad
+        straight = self.end_style is EndStyle.STRAIGHT
+        if self.side_style is SideStyle.RADIAL:
+            a = self.ray_angle_rad(d_mm)
+            return (r_mm, -r_mm * math.tan(a)) if straight else (r_mm * math.cos(a), -r_mm * math.sin(a))
+        lam = (r_mm - d_mm * math.sin(h)) / math.cos(h) if straight else math.sqrt(r_mm * r_mm - d_mm * d_mm)
         return (lam * math.cos(h) + d_mm * math.sin(h), -lam * math.sin(h) + d_mm * math.cos(h))
 
     def on_left(self, d_mm: float, r_mm: float) -> Point:
@@ -93,8 +116,15 @@ class CoilFrame:
         return (x, -y)
 
     def outer_arc_exists(self, t: int) -> bool:
-        """G3 loop rule 1: the outer arc of turn t lies between its side lines, d_t < R_out,t sin h."""
-        return self.offset_mm(t) < self.outer_radius_mm(t) * math.sin(self.half_angle_rad)
+        """G3 loop rule 1: the outer end of turn t lies between its side lines, d_t < R_out,t sin h (radial: R_i0)."""
+        level = self.centre_inner_mm if self.side_style is SideStyle.RADIAL else self.outer_radius_mm(t)
+        return self.offset_mm(t) < level * math.sin(self.half_angle_rad)
+
+    def side_clearance_level_mm(self, d_mm: float, margin_mm: float) -> float:
+        """Lowest level on the centre line at ``margin_mm`` from the side lines at offset ``d_mm`` (G5 r_lo)."""
+        if self.side_style is SideStyle.RADIAL:
+            return margin_mm / math.sin(self.ray_angle_rad(d_mm))
+        return (d_mm + margin_mm) / math.sin(self.half_angle_rad)
 
     def jog_start(self, t: int) -> Point:
         """J_t: start of the outer arc of turn t; A_0 for t = 0, else on the left line d_t-1 at R_out,t."""
@@ -220,14 +250,14 @@ def eye(frame: CoilFrame, turns: tuple[LoopTurn, ...], n: int) -> Eye:
     """Window of one centre via inside turn n - 1; via pad and lead-arc end share V, so m = max(pad, w)/2."""
     last, s, w = turns[n - 1], frame.clearance_mm, frame.trace_width_mm
     m = max(frame.via_pad_mm, w) / 2
-    side_lo = (frame.offset_mm(n - 1) + w / 2 + s + m) / math.sin(frame.half_angle_rad)
+    side_lo = frame.side_clearance_level_mm(frame.offset_mm(n - 1), w / 2 + s + m)
     inner_lo = last.end_radius_mm + frame.end_width_inner_mm / 2 + s + m
     return Eye(r_lo_mm=max(side_lo, inner_lo), r_hi_mm=last.outer_radius_mm - frame.end_width_outer_mm / 2 - s - m)
 
 
 def half_turn(frame: CoilFrame, t: int) -> HalfTurn | None:
-    """Return closing half turn t, or None when its outer arc does not exist."""
-    if not frame.outer_arc_exists(t):
+    """Return closing half turn t, or None when its outer arc does not exist or the sides never meet (radial)."""
+    if frame.side_style is SideStyle.RADIAL or not frame.outer_arc_exists(t):
         return None
     d, r_out = frame.offset_mm(t), frame.outer_radius_mm(t)
     return HalfTurn(

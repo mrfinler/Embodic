@@ -3,10 +3,12 @@
 import math
 from collections.abc import Mapping
 from dataclasses import dataclass
+from functools import partial
 
 from embodic.generators.spiral.fillets import Corner, CornerKind, arc_ordered, ordered
 from embodic.generators.spiral.turns import Closing, CoilFrame, FullClosing, Point, left_side_tops
 from embodic.geometry.primitives import Arc, Line, Primitive, PrimitiveRole
+from embodic.model.winding_specs import EndStyle
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -64,8 +66,15 @@ def _build(
         if c.fillet is not None:
             prims.append(c.fillet)
 
+    straight = frame.end_style is EndStyle.STRAIGHT
+
     def arc(r_mm: float, start: Point, end: Point, sharp: tuple[Point, Point], width_mm: float) -> None:
+        """End turn at level ``r_mm``: an arc about the origin, or a chord for straight ends (G2)."""
         nonlocal fits
+        if straight:
+            fits = fits and ordered(start, end, (sharp[1][0] - sharp[0][0], sharp[1][1] - sharp[0][1]))
+            prims.append(_line(start, end, width_mm, PrimitiveRole.END_TURN))
+            return
         clockwise = _angle(sharp[1]) <= _angle(sharp[0])
         fits = fits and arc_ordered(start, end, clockwise)
         prims.append(_arc(r_mm, start, end, width_mm, PrimitiveRole.END_TURN))
@@ -91,7 +100,8 @@ def _build(
         start = j_next.start_out
     if isinstance(closing, FullClosing):
         r_v = closing.eye.via_radius_mm
-        prims.append(_arc(r_v, closing.lead_point, closing.centre_via, w, PrimitiveRole.LEAD))
+        lead = _line if straight else partial(_arc, r_v)
+        prims.append(lead(closing.lead_point, closing.centre_via, w, PrimitiveRole.LEAD))
     else:
         half = closing.half
         b = corner(CornerKind.B, half.index, half.b)

@@ -1,12 +1,13 @@
 """Spiral stator of one layer pair: Q rotated copies of the canonical coil (spiral_generator_spec.md, Full stator).
 
-Built: G1 to G7 for one layer pair with parallel sides, arc ends, sharp or G9 concentric filleted corners, the outer-end jog and the full
-(lead arc) or half closing of G5 (revision 2026-10-05, U-E3 and U-E3b); G8 series chains of each phase on the bus
-rings (legs on layer Y, ring arcs on layer X, net PHASE_x), the star or delta links and the U/V/W(/N) leads with
-their pads.
-Not built yet (returned as Unbuildable, never ignored): several pairs, pair rotation, phase per pair, radial sides,
-straight and stadium ends, tapers (G9), the straight lead, custom terminal offset, parallel paths, screw holes, and
-polygon corner radii. Open phases end on the ring vias of their first and last coil, without pads.
+Built: G1 to G7 for one layer pair with parallel or radial sides, arc or straight ends, sharp corners or G9 concentric
+fillets (parallel sides with arc ends), the outer-end jog and the full (lead arc) or half closing of G5 (revision
+2026-10-05, U-E3 and U-E3b); G8 series chains of each phase on the bus rings (legs on layer Y, ring arcs on layer X,
+net PHASE_x), the star or delta links and the U/V/W(/N) leads with their pads.
+Not built yet (returned as Unbuildable, never ignored): several pairs, pair rotation, phase per pair, stadium ends
+(G2 gives no jog for an end arc tangent to its sides), tapers (G9), the straight lead, custom terminal offset,
+parallel paths, screw holes, and polygon corner radii. Open phases end on the ring vias of their first and last coil,
+without pads.
 """
 
 import dataclasses
@@ -46,7 +47,7 @@ from embodic.geometry.transforms import Transform, mirror, reverse_path, rotate,
 from embodic.model.design import DesignParameters
 from embodic.model.layers import LayerPair
 from embodic.model.vocabulary import ConnectionTopology, Phase, TopologyKind, ViaSpan
-from embodic.model.winding_specs import EndStyle, InnerTurnMode, LeadStyle, Sense, SideStyle, SpiralWindingSpec
+from embodic.model.winding_specs import EndStyle, InnerTurnMode, LeadStyle, Sense, SpiralWindingSpec
 from embodic.results import Registry
 from embodic.winding import SpiralWindingPlan, plan_spiral_winding
 
@@ -67,8 +68,7 @@ def _unsupported(design: DesignParameters, spec: SpiralWindingSpec) -> tuple[str
     coil, pairs = spec.coil, spec.layers.pairs
     checks = {
         "/winding/layers/pairs": len(pairs) != 1 or pairs[0].rotation_rad != 0.0 or pairs[0].phases is not None,
-        "/winding/coil/side_style": coil.side_style is not SideStyle.PARALLEL,
-        "/winding/coil/end_style": coil.end_style is not EndStyle.ARC,
+        "/winding/coil/end_style": coil.end_style is EndStyle.STADIUM,
         "/winding/coil/lead_style": coil.lead_style is not LeadStyle.RADIAL_THEN_ARC,
         "/winding/coil/terminal_offset_mm": coil.terminal_offset_mm is not None,
         "/winding/coil/x_inward_sense": coil.x_inward_sense is not Sense.CW,

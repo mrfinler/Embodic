@@ -11,6 +11,7 @@ from enum import StrEnum
 
 from embodic.generators.spiral.turns import Closing, CoilFrame, FullClosing, Point, TurnKind
 from embodic.geometry.primitives import Arc, PrimitiveRole
+from embodic.model.winding_specs import EndStyle, SideStyle
 
 # G9: shrink factor and retry count when a fillet does not fit.
 SHRINK = 0.7
@@ -104,9 +105,13 @@ def corners(frame: CoilFrame, closing: Closing, rho_mm: float) -> dict[tuple[Cor
 
 
 def concentric_allowed(frame: CoilFrame) -> bool:
-    """G9: concentric fillets keep s only when the end pitch equals the side pitch (w_out = w_in = w)."""
+    """G9: concentric fillets keep s only when the end pitch equals the side pitch (w_out = w_in = w).
+
+    Built for parallel sides and arc ends; radial sides are not parallel, so their corners do not nest by one pitch.
+    """
     w = frame.trace_width_mm
-    return frame.end_width_outer_mm == w and frame.end_width_inner_mm == w
+    shape = frame.side_style is SideStyle.PARALLEL and frame.end_style is EndStyle.ARC
+    return shape and frame.end_width_outer_mm == w and frame.end_width_inner_mm == w
 
 
 def radius_sequence(rho_mm: float) -> tuple[float, ...]:
