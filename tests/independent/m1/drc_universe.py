@@ -199,6 +199,12 @@ def _on_centreline(land: Item, path: Sequence[Item]) -> bool:
     return any(point_to_centreline(disc_centre(land), it.prim) <= land.prim.width / 2 for it in path)
 
 
+def _box_gap(p: Prim, q: Prim) -> float:
+    """Distance between the centreline boxes of two primitives (tests/unit/property/t_junctions.py imports it)."""
+    a, b = bounding_boxes([p, q])
+    return math.hypot(max(0.0, a[0] - b[2], b[0] - a[2]), max(0.0, a[1] - b[3], b[1] - a[3]))
+
+
 @dataclass(frozen=True, slots=True)
 class _Traces:
     """Every trace primitive with its centreline box, for point queries."""
