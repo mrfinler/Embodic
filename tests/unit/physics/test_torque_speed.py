@@ -11,6 +11,7 @@ import numpy as np
 import pytest
 
 from embodic.model.operating import Modulation
+from embodic.model.vocabulary import ConnectionTopology
 from embodic.physics import base_speed_rpm, inverter_phase_voltage_v, no_load_speed_rpm, torque_speed_envelope
 
 pytestmark = pytest.mark.req("REQ-F-20")
@@ -24,17 +25,20 @@ V_PHASE = V_DC / math.sqrt(6.0)  # SVPWM: V_LL,rms = V_dc / sqrt(2), V_ph = V_LL
 KE_RMS = KE / math.sqrt(2.0)
 KT = 3.0 * KE / math.sqrt(2.0)  # N*m per line ampere rms, m = 3
 RPM_PER_RAD_S = 60.0 / (2.0 * math.pi)
+STAR = ConnectionTopology.STAR
 
 
 def _curve(inductance_h: float = 0.0) -> tuple[np.ndarray, np.ndarray]:
-    return torque_speed_envelope(R_OHM, inductance_h, KE, V_DC, Modulation.SVPWM, I_MAX, POLES, POINTS)
+    return torque_speed_envelope(
+        R_OHM, inductance_h, KE, V_DC, Modulation.SVPWM, I_MAX, POLES, POINTS, phases=3, connection=STAR
+    )
 
 
 def test_inverter_limit_per_modulation() -> None:
     """Defect caught: a modulation mapped to another one's voltage limit (SVPWM, sine PWM and six-step differ)."""
-    assert inverter_phase_voltage_v(V_DC, Modulation.SVPWM) == pytest.approx(V_DC / math.sqrt(6.0), rel=1e-14)
-    assert inverter_phase_voltage_v(V_DC, Modulation.SPWM) == pytest.approx(V_DC / math.sqrt(8.0), rel=1e-14)
-    assert inverter_phase_voltage_v(V_DC, Modulation.SIX_STEP) == pytest.approx(
+    assert inverter_phase_voltage_v(V_DC, Modulation.SVPWM, STAR) == pytest.approx(V_DC / math.sqrt(6.0), rel=1e-14)
+    assert inverter_phase_voltage_v(V_DC, Modulation.SPWM, STAR) == pytest.approx(V_DC / math.sqrt(8.0), rel=1e-14)
+    assert inverter_phase_voltage_v(V_DC, Modulation.SIX_STEP, STAR) == pytest.approx(
         V_DC * math.sqrt(2.0) / math.pi, rel=1e-14
     )
 
@@ -42,7 +46,7 @@ def test_inverter_limit_per_modulation() -> None:
 def test_no_load_speed_is_v_dc_over_ke_line_for_svpwm() -> None:
     """Defect caught: a no-load speed from the phase constant instead of V_dc / Ke_LL with Ke_LL = sqrt(3) Ke."""
     expected = V_DC / (math.sqrt(3.0) * KE) * RPM_PER_RAD_S
-    assert no_load_speed_rpm(KE, V_DC, Modulation.SVPWM) == pytest.approx(expected, rel=1e-13)
+    assert no_load_speed_rpm(KE, V_DC, Modulation.SVPWM, STAR) == pytest.approx(expected, rel=1e-13)
 
 
 def test_curve_runs_from_standstill_to_115_percent_of_the_no_load_speed() -> None:
@@ -117,7 +121,37 @@ def test_invalid_inputs_raise_instead_of_returning_nan(kwargs: dict[str, float])
         "current_limit_a": I_MAX,
         "poles": POLES,
         "points": POINTS,
+        "phases": 3,
+        "connection": STAR,
     }
     args.update(kwargs)
     with pytest.raises(ValueError):
         torque_speed_envelope(**args)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("phases", [1, 2, 5])
+def test_open_winding_uses_a_full_bridge_per_phase_and_m_phases(phases: int) -> None:
+    """Defect caught: an open winding run as a three-phase star equivalent (wrong voltage limit or Kt).
+
+    Open connection (Xcoil l.2681, l.2693): V_ph = V_dc / sqrt(2) for SVPWM, Kt = m Ke / sqrt(2), and with L = 0 the
+    plateau is Kt I_max up to (V_ph - R I_max) / Ke_rms and the curve ends at 1.15 V_ph / Ke_rms.
+    """
+    v_open = V_DC / math.sqrt(2.0)
+    assert inverter_phase_voltage_v(V_DC, Modulation.SVPWM, ConnectionTopology.OPEN) == pytest.approx(v_open, rel=1e-14)
+    assert inverter_phase_voltage_v(V_DC, Modulation.SIX_STEP, ConnectionTopology.OPEN) == pytest.approx(
+        4.0 * V_DC / (math.pi * math.sqrt(2.0)), rel=1e-14
+    )
+    speed, torque = torque_speed_envelope(
+        R_OHM, 0.0, KE, V_DC, Modulation.SVPWM, I_MAX, POLES, POINTS, phases=phases, connection=ConnectionTopology.OPEN
+    )
+    assert torque[0] == pytest.approx(phases * KE / math.sqrt(2.0) * I_MAX, rel=1e-13)
+    assert speed[-1] == pytest.approx(1.15 * v_open / KE_RMS * RPM_PER_RAD_S, rel=1e-13)
+
+
+@pytest.mark.parametrize("connection", [ConnectionTopology.STAR, ConnectionTopology.DELTA])
+def test_star_and_delta_refuse_a_phase_count_other_than_three(connection: ConnectionTopology) -> None:
+    """Defect caught: a two-phase winding silently run as a three-phase star equivalent."""
+    with pytest.raises(ValueError, match="three phases"):
+        torque_speed_envelope(
+            R_OHM, 0.0, KE, V_DC, Modulation.SVPWM, I_MAX, POLES, POINTS, phases=2, connection=connection
+        )

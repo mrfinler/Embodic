@@ -16,6 +16,7 @@ function analysisOf(E, params) {
   );
   const copperT = r.layout.layers.map((layer) => layer.copperT);
   const ic = E.interconnectResistance(r.params, r.layout.interconnect, copperT);
+  const icItems = r.layout.interconnect.items.map(icItemOf);
   const phaseWaveform = E.emfWaveform(a, SAMPLES)[0].v;
   const lineWaveform = E.lineWaveform(a, SAMPLES)[0].v;
   return {
@@ -32,6 +33,7 @@ function analysisOf(E, params) {
     phaseRextra: a.phases.map((ph) => ph.Rextra),
     phaseR: a.phases.map((ph) => ph.R),
     interconnect: { lineStub: ic.lineStub, link: ic.link, neutralRing: ic.neutralRing },
+    icItems,
     rLineLine: a.rLineLine,
     rLineLineWindingOnly: windingOnly.rLineLine,
     pEddy: a.pEddy,
@@ -48,12 +50,32 @@ function analysisOf(E, params) {
   };
 }
 
+// What interconnectResistance (engine.js l.1361-1372) reads to sort one interconnect item into lineStub, link or
+// neutralRing. `first` is the first primitive, so a reader can find the item among the layout's objects of its layer.
+function icItemOf(it) {
+  return {
+    layer: it.layer,
+    net: it.net,
+    first: it.prims[0],
+    line: it.line ?? null,
+    tapOf: it.tapOf ?? null,
+    tapPhase: it.tap ? it.tap.phase : null,
+    linkNet: it.link ? it.link.net : null,
+    ringTapVias: it.link ? it.link.taps.map((t) => t.via) : null,
+    neutralPad: !!it.neutralPad,
+    primKinds: it.prims.map((q) => q.kind),
+    primTapPhase: it.prims.map((q) => (q.tap ? q.tap.phase : null)),
+  };
+}
+
 // EQ-20 on compute()'s own drive analysis: the star-equivalent inputs torqueSpeed saw and the curve it returned.
 function driveOf(E, params) {
   const r = E.compute(params);
   const ts = r.ok && r.analysis ? r.analysis.torqueSpeed : null;
   if (!ts) throw new Error(`Xcoil drive analysis failed: ${JSON.stringify(r.errors)} ${r.analysis && r.analysis.driveError}`);
   return curveOf(ts, {
+    phases: r.params.phases,
+    connection: r.analysis.connection,
     poles: r.params.poles,
     vDc: r.params.vDc,
     modulation: r.params.modulation,
@@ -104,6 +126,8 @@ export const FUNCTIONS = {
     run: (E, x) => {
       const ts = E.torqueSpeed(x.p, x.an, x.ind);
       return curveOf(ts, {
+        phases: x.p.phases,
+        connection: x.an.connection,
         poles: x.p.poles,
         vDc: x.p.vDc,
         modulation: x.p.modulation,

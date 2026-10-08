@@ -26,12 +26,12 @@ from embodic.physics.circuit import (
     CircuitSolution,
     add_phasors,
     delta_circulating_loss_w,
+    efficiency,
     line_resistance_ohm,
     solve_phase_circuit,
 )
 from embodic.physics.constants import phase_constants
 from embodic.physics.drive import (
-    PHASES,
     XCOIL_CURVE_POINTS,
     base_speed_rpm,
     no_load_speed_rpm,
@@ -48,6 +48,13 @@ from embodic.physics.emf import (
 )
 from embodic.physics.estimates import inductance_estimate_h, mass_g
 from embodic.physics.field import field_harmonic, symmetry_plane_mm
+from embodic.physics.interconnect import (
+    InterconnectResistance,
+    interconnect_loss_w,
+    interconnect_resistance,
+    is_unclassified,
+    sum_boards,
+)
 from embodic.physics.losses import current_density_a_per_mm2, ipc2221_current_a, skin_depth_mm, thd
 from embodic.physics.resistance import copper_resistivity_ohm_m, path_resistance_ohm, via_resistance_ohm
 from embodic.physics.thermal import temperature_rise_k
@@ -72,6 +79,12 @@ from embodic.units import Unit, rpm_to_rad_per_s
 EDGE_CHECK_ID = "EC-05"
 SKIN_DEPTH_FRACTION = 1.0 / 3.0  # REQ-T-08: w above delta / 3 raises RANGE_SKIN_DEPTH
 IDEAL_INTEGRAL_STEPS = 200  # Xcoil analyzeElements `ideal` integral (EQ-27)
+UNCLASSIFIED_INTERCONNECT = ValidityFlag(
+    code="INTERNAL_INTERCONNECT_UNCLASSIFIED",
+    message="interconnect copper not classified",
+    eq_id="EQ-23",
+    effect=ValidityEffect.CAP,
+)
 
 
 class CancelToken(Protocol):
@@ -241,6 +254,7 @@ def analyse(
     board_fields: list[_BoardFields] = []
     solutions: list[CircuitSolution] = []
     r20_by_board: list[Mapping[Phase, float]] = []
+    r_op_by_board: list[Mapping[int, float]] = []
     for k, layout in enumerate(boards.boards):
         if cancel is not None and cancel.cancelled:
             return None
@@ -262,6 +276,7 @@ def analyse(
         r_20 = dict(enumerate(path_resistance_ohm(arrays, thickness, rho20).tolist()))
         via_op = _via_resistance(layout, design.vias.plating_um, boards.board_thickness_mm, rho_op)
         via_20 = _via_resistance(layout, design.vias.plating_um, boards.board_thickness_mm, rho20)
+        r_op_by_board.append(r_op)
         solutions.append(solve_phase_circuit(layout.circuit, lam, r_op, via_op, omega_m))
         r20_by_board.append(solve_phase_circuit(layout.circuit, lam, r_20, via_20, omega_m).phase_resistance_ohm)
 
@@ -279,6 +294,18 @@ def analyse(
     constants = phase_constants(ke1, topology, design.phases, rotor.poles)
     i_line = op.line_current_rms_a
     i_ph = i_line / math.sqrt(3.0) if connection is ConnectionTopology.DELTA else i_line
+    unclassified = any(is_unclassified(b) for b in boards.boards)
+    ic_validity: tuple[ValidityFlag, ...] = (UNCLASSIFIED_INTERCONNECT,) if unclassified else ()
+    ic = (
+        InterconnectResistance(line_stub_ohm=(0.0,) * m, link_ohm=(0.0,) * m, neutral_ring_ohm=())
+        if unclassified
+        else sum_boards(
+            [
+                interconnect_resistance(b, phases, r, thickness, rho_op)
+                for b, r in zip(boards.boards, r_op_by_board, strict=True)
+            ]
+        )
+    )
 
     # Inputs per chain, so every tag lists what its result used.
     field_refs = [
@@ -325,13 +352,17 @@ def analyse(
     p_circ = math.fsum(circ_ph.values())
     phase_emf_v = [emf[ph] * omega_m for ph in phases]
     p_delta = (
-        delta_circulating_loss_w(phase_emf_v, math.fsum(r_op_ph.values()))
+        delta_circulating_loss_w(phase_emf_v, math.fsum([*r_op_ph.values(), *ic.link_ohm]))
         if connection is ConnectionTopology.DELTA
         else 0.0
     )
     torque = (m / 2.0) * ke1 * i_ph * math.sqrt(2.0)
-    loss_total = p_cu + p_eddy + p_circ + p_delta
-    r_line = line_resistance_ohm([r_op_ph[ph] for ph in phases], connection)
+    p_ic = interconnect_loss_w(ic, connection, i_line)
+    loss_total = p_cu + p_eddy + p_circ + p_delta + p_ic
+    p_out = torque * omega_m
+    r_line = line_resistance_ohm(
+        [r_op_ph[ph] for ph in phases], connection, ic.line_stub_ohm, ic.link_ohm, ic.neutral_ring_ohm
+    )
 
     first = phases[0]
     amplitudes = {n: float(abs(e)) for n, e in zip(harmonics, emf[first], strict=True)}
@@ -383,6 +414,9 @@ def analyse(
         registry.constant("laminate_density_g_per_cm3").value,
     )
     cooling = inputs.field("/operating/convection_h_w_m2k")
+    sum_eq = ("EQ-26", "EQ-10", "EQ-11", "EQ-12", "EQ-07", "EQ-19", "EQ-23", "EQ-09", "EQ-06")
+    sum_refs = [*emf_refs, *loss_refs, speed]
+    sum_validity = (*emf_validity, *skin_validity, *ic_validity)
     d_t = temperature_rise_k(loss_total, board_area * len(boards.boards), op.convection_h_w_m2k)
 
     ke_t = tr("ke_phase_v_s_per_rad", ke1, Unit.V_S_PER_RAD, ("EQ-06", "EQ-07", "EQ-05"), emf_refs, emf_validity)
@@ -429,13 +463,15 @@ def analyse(
         for ph in phases
     )
     torque_speed = None
-    if op.dc_link_v is not None and design.phases == PHASES and ke1 > 0.0:
+    if op.dc_link_v is not None and ke1 > 0.0:
         drive_refs = [*emf_refs, *r_refs, current, inputs.field("/operating/dc_link_v")]
         drive_refs.append(inputs.field("/operating/modulation"))
         drive_eq = ("EQ-20", "EQ-14", "EQ-09", "EQ-23")
-        ke_equivalent = constants.ke_line_v_s_per_rad / math.sqrt(3.0)
+        drive_validity = (*emf_validity, *ic_validity)
+        is_open = connection is ConnectionTopology.OPEN
+        ke_equivalent = ke1 if is_open else constants.ke_line_v_s_per_rad / math.sqrt(3.0)
         speed_rpm, curve_torque_n_m = torque_speed_envelope(
-            r_line / 2.0,
+            r_line if is_open else r_line / 2.0,
             inductance / 3.0 if connection is ConnectionTopology.DELTA else inductance,
             ke_equivalent,
             op.dc_link_v,
@@ -443,21 +479,23 @@ def analyse(
             i_line,
             rotor.poles,
             XCOIL_CURVE_POINTS,
+            phases=design.phases,
+            connection=connection,
         )
         power_w = curve_torque_n_m * speed_rpm * (2.0 * math.pi / 60.0)
         torque_speed = TorqueSpeedEstimate(
-            speed_rpm=tr("torque_speed_rpm", tuple(speed_rpm.tolist()), Unit.RPM, drive_eq, drive_refs, emf_validity),
+            speed_rpm=tr("torque_speed_rpm", tuple(speed_rpm.tolist()), Unit.RPM, drive_eq, drive_refs, drive_validity),
             torque_n_m=tr(
-                "torque_speed_torque", tuple(curve_torque_n_m.tolist()), Unit.N_M, drive_eq, drive_refs, emf_validity
+                "torque_speed_torque", tuple(curve_torque_n_m.tolist()), Unit.N_M, drive_eq, drive_refs, drive_validity
             ),
-            power_w=tr("torque_speed_power", tuple(power_w.tolist()), Unit.W, drive_eq, drive_refs, emf_validity),
+            power_w=tr("torque_speed_power", tuple(power_w.tolist()), Unit.W, drive_eq, drive_refs, drive_validity),
             no_load_speed_rpm=tr(
                 "no_load_speed",
-                no_load_speed_rpm(ke_equivalent, op.dc_link_v, op.modulation),
+                no_load_speed_rpm(ke_equivalent, op.dc_link_v, op.modulation, connection),
                 Unit.RPM,
                 drive_eq,
                 drive_refs,
-                emf_validity,
+                drive_validity,
             ),
             base_speed_rpm=tr(
                 "base_speed",
@@ -465,7 +503,7 @@ def analyse(
                 Unit.RPM,
                 drive_eq,
                 drive_refs,
-                emf_validity,
+                drive_validity,
             ),
         )
     return AnalysisResult(
@@ -490,7 +528,9 @@ def analyse(
             r_refs,
             skin_validity,
         ),
-        resistance_line_ohm=tr("resistance_line", r_line, Unit.OHM, ("EQ-23", "EQ-10", "EQ-11"), r_refs, skin_validity),
+        resistance_line_ohm=tr(
+            "resistance_line", r_line, Unit.OHM, ("EQ-23", "EQ-10", "EQ-11"), r_refs, (*skin_validity, *ic_validity)
+        ),
         emf_phase_rms_v=tr(
             "emf_phase_rms",
             ke1 * omega_m / math.sqrt(2.0),
@@ -506,6 +546,10 @@ def analyse(
         loss_delta_circulating_w=tr(
             "loss_delta_circulating", p_delta, Unit.W, ("EQ-19", "EQ-06"), [*emf_refs, *r_refs, speed], emf_validity
         ),
+        loss_interconnect_w=tr("loss_interconnect", p_ic, Unit.W, ("EQ-23", "EQ-10"), loss_refs, ic_validity),
+        loss_total_w=tr("loss_total", loss_total, Unit.W, sum_eq, sum_refs, sum_validity),
+        output_power_w=tr("output_power", p_out, Unit.W, ("EQ-26", "EQ-09", "EQ-06"), [*emf_refs, current, speed]),
+        efficiency=tr("efficiency", efficiency(p_out, loss_total), Unit.ONE, sum_eq, sum_refs, sum_validity),
         thd_phase=tr("thd_phase", thd(amplitudes), Unit.ONE, ("EQ-18", "EQ-06"), emf_refs),
         thd_line=tr("thd_line", thd(line_amplitudes), Unit.ONE, ("EQ-18", "EQ-06"), emf_refs),
         current_density_a_per_mm2=tr("current_density", density, Unit.A_PER_MM2, ("EQ-22",), [*copper_t, current]),
@@ -522,9 +566,7 @@ def analyse(
             ("EQ-16",),
             [*copper_t, inputs.constant("laminate_density_g_per_cm3")],
         ),
-        temperature_rise_k=tr(
-            "temperature_rise", d_t, Unit.K, ("EQ-17", "EQ-26"), [*loss_refs, cooling], skin_validity
-        ),
+        temperature_rise_k=tr("temperature_rise", d_t, Unit.K, ("EQ-17", *sum_eq), [*sum_refs, cooling], sum_validity),
         edge_leakage_fraction=edge_t,
         layers=layer_results,
         phases=phase_results,

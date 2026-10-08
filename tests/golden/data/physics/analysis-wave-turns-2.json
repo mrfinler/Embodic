@@ -8,6 +8,109 @@
         "Ke1": 0.0308795907787231,
         "Rphase": 1.463644476705099,
         "efficiency": 0.7412703511660095,
+        "icItems": [
+          {
+            "first": {
+              "kind": "stub",
+              "t": "L",
+              "tap": {"phase": 0, "sign": -1, "via": 14, "x": 34.281837326039096, "y": 24.56601721897936},
+              "w": 0.6,
+              "x1": 34.281837326039096,
+              "x2": 35.09468401063071,
+              "y1": 24.56601721897936,
+              "y2": 25.148494915847163
+            },
+            "layer": 1,
+            "line": null,
+            "linkNet": "N",
+            "net": "N",
+            "neutralPad": false,
+            "primKinds": ["stub", "stub", "stub", "ring"],
+            "primTapPhase": [0, 2, 1, null],
+            "ringTapVias": [14, 30, 46],
+            "tapOf": null,
+            "tapPhase": null
+          },
+          {
+            "first": {
+              "kind": "stub",
+              "t": "L",
+              "tap": {"phase": 0, "sign": 1, "via": 2, "x": 41.07329563130789, "y": 9.57694932822458},
+              "w": 0.6,
+              "x1": 41.07329563130789,
+              "x2": 42.04717261058523,
+              "y1": 9.57694932822458,
+              "y2": 9.804025591258956
+            },
+            "layer": 0,
+            "line": 0,
+            "linkNet": null,
+            "net": "U",
+            "neutralPad": false,
+            "primKinds": ["stub", "stub"],
+            "primTapPhase": [0, 0],
+            "ringTapVias": null,
+            "tapOf": null,
+            "tapPhase": null
+          },
+          {
+            "first": {
+              "kind": "stub",
+              "t": "L",
+              "tap": {"phase": 1, "sign": 1, "via": 34, "x": 12.242766406655154, "y": 40.35899209797333},
+              "w": 0.6,
+              "x1": 12.242766406655154,
+              "x2": 12.533051083909616,
+              "y1": 40.35899209797333,
+              "y2": 41.31593243370554
+            },
+            "layer": 0,
+            "line": 1,
+            "linkNet": null,
+            "net": "V",
+            "neutralPad": false,
+            "primKinds": ["stub", "stub"],
+            "primTapPhase": [1, 1],
+            "ringTapVias": null,
+            "tapOf": null,
+            "tapPhase": null
+          },
+          {
+            "first": {
+              "kind": "stub",
+              "t": "L",
+              "tap": {"phase": 2, "sign": 1, "via": 18, "x": 30.782042769748752, "y": 28.830529224652746},
+              "w": 0.6,
+              "x1": 30.782042769748752,
+              "x2": 31.51190684244659,
+              "y1": 28.830529224652746,
+              "y2": 29.51412152667562
+            },
+            "layer": 0,
+            "line": 2,
+            "linkNet": null,
+            "net": "W",
+            "neutralPad": false,
+            "primKinds": ["stub", "stub"],
+            "primTapPhase": [2, 2],
+            "ringTapVias": null,
+            "tapOf": null,
+            "tapPhase": null
+          },
+          {
+            "first": {"kind": "stub", "t": "L", "w": 1, "x1": -4.2318934587520785, "x2": -4.4181260253782435, "y1": 42.967135348917324, "y2": 44.857986329594496},
+            "layer": 1,
+            "line": null,
+            "linkNet": null,
+            "net": "N",
+            "neutralPad": true,
+            "primKinds": ["stub"],
+            "primTapPhase": [null],
+            "ringTapVias": null,
+            "tapOf": null,
+            "tapPhase": null
+          }
+        ],
         "interconnect": {
           "lineStub": [0.001022348513409963, 0.001022348513409963, 0.0010223485134099623],
           "link": [0.00047773295019156966, 0.000477732950191569, 0.0004777329501915724],
