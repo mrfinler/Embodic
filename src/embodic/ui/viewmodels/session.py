@@ -137,7 +137,7 @@ class OptionRule:
     widget_id: str
     topologies: frozenset[TopologyKind]
     pointer: str  # the option it depends on
-    values: frozenset[JsonValue]  # option values that trigger the effect
+    values: frozenset[JsonValue]  # option values that trigger the effect; empty means always in these topologies
     effect: Literal["hide", "disable"]
     hint_key: str | None = None
 

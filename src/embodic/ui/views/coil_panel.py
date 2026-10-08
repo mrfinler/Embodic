@@ -4,7 +4,7 @@ A row binds to one `FieldSpec` through its `widget_id` and shows label, input, u
 What a row shows comes from `DesignSession.rows()`; a row only parses the typed text and calls `DesignSession.edit`.
 """
 
-from collections.abc import Callable
+from collections.abc import Mapping
 
 from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtWidgets import (
@@ -25,18 +25,28 @@ from embodic.model.fields import FieldGroup, FieldSpec
 from embodic.model.provenance import MeasuredValue
 from embodic.model.schema import JsonValue, ValueType
 from embodic.ui.strings import STRINGS, text
-from embodic.ui.viewmodels.session import DesignSession, FieldRow, display_text, feasibility_hints, parse_text
+from embodic.ui.viewmodels.session import (
+    DesignSession,
+    FieldRow,
+    SessionComputed,
+    display_text,
+    feasibility_hints,
+    parse_text,
+)
 
-GROUP_TITLES = {
-    FieldGroup.OUTLINE: "Outline",
-    FieldGroup.FASTENERS: "Fasteners",
-    FieldGroup.STACKUP: "Stack-up and manufacturing",
-    FieldGroup.MANUFACTURING: "Stack-up and manufacturing",
-    FieldGroup.ROTOR: "Rotor and magnets",
-    FieldGroup.OPERATING: "Operating point",
-    FieldGroup.DRIVE: "Drive",
-    FieldGroup.COOLING: "Cooling",
-}
+MIN_INPUT_PX = 72
+TITLED_GROUPS = frozenset(
+    {
+        FieldGroup.OUTLINE,
+        FieldGroup.FASTENERS,
+        FieldGroup.STACKUP,
+        FieldGroup.MANUFACTURING,
+        FieldGroup.ROTOR,
+        FieldGroup.OPERATING,
+        FieldGroup.DRIVE,
+        FieldGroup.COOLING,
+    }
+)
 
 
 def repolish(widget: QWidget) -> None:
@@ -83,6 +93,7 @@ class FieldEditor(QWidget):
         self._shown = ""
         self.label = QLabel()
         self.label.setObjectName(f"{widget_id}-label")
+        self.label.setWordWrap(True)
         self.input = self._make_input(spec)
         self.input.setObjectName(widget_id)
         self.label.setBuddy(self.input)
@@ -116,6 +127,8 @@ class FieldEditor(QWidget):
     def _make_input(self, spec: FieldSpec) -> QWidget:
         if spec.value_type is ValueType.CHOICE:
             box = QComboBox()
+            box.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+            box.setMinimumContentsLength(8)
             box.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
             box.installEventFilter(_WHEEL_GUARD)
             for choice in spec.choices:
@@ -127,6 +140,7 @@ class FieldEditor(QWidget):
             check.clicked.connect(lambda checked: self._commit(bool(checked)))
             return check
         edit = QLineEdit()
+        edit.setMinimumWidth(MIN_INPUT_PX)
         edit.editingFinished.connect(self._commit_text)
         return edit
 
@@ -210,6 +224,7 @@ class FieldPanel(QScrollArea):
         self.setWidgetResizable(True)
         self.setFrameShape(QScrollArea.Shape.NoFrame)
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)  # the inputs inside take focus, the scroll area does not
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.editors: dict[str, FieldEditor] = {}
         self.helpers: dict[str, QWidget] = {}
         self._topology: str | None = None
@@ -262,7 +277,7 @@ class FieldPanel(QScrollArea):
         for row in self.session.rows():
             if row.tab != self.tab:
                 continue
-            title = GROUP_TITLES.get(row.spec.group, "")
+            title = text(f"design.group.{row.spec.group.value}") if row.spec.group in TITLED_GROUPS else ""
             if title not in sections:
                 box = QGroupBox(title) if title else QWidget()
                 box.setObjectName(f"{self.tab}-group-{row.spec.group.value}")
@@ -312,24 +327,20 @@ class CoilPanel(FieldPanel):
     def build(self) -> None:
         """Add the coil rows and the feasibility hints under them."""
         super().build()
-        for name in ("hint-combination", "param-turns-hint"):
-            self.helpers[name] = hint_label(name)
-            self._layout.addWidget(self.helpers[name])
+        self.hints = {name: hint_label(name) for name in ("hint-combination", "param-turns-hint")}
+        for label in self.hints.values():
+            self._layout.addWidget(label)
 
     def refresh_helpers(self) -> None:
         """Show the hints that follow the winding plan of the last compute."""
-        show_hints(self.helpers, self.session)
+        show_hints(self.hints, self.session)
 
 
-def show_hints(labels: dict[str, QWidget], session: DesignSession) -> None:
-    """Fill the hint labels a tab owns from the outcome of the current design; hide them without one."""
+def show_hints(labels: Mapping[str, QLabel], session: DesignSession) -> None:
+    """Fill hint labels from the outcome of the current design; hide them while there is none or it is stale."""
     state = session.state.value
-    outcome = getattr(state, "outcome", None)
-    hints = feasibility_hints(outcome) if outcome is not None and not state.stale else {}
+    outcome = state.outcome if isinstance(state, SessionComputed) and not state.stale else None
+    hints = feasibility_hints(outcome) if outcome is not None else {}
     for name, label in labels.items():
-        if isinstance(label, QLabel) and name in ("hint-combination", "param-turns-hint", "phase-pattern-string"):
-            label.setText(hints.get(name, ""))
-            label.setVisible(name in hints)
-
-
-PanelFactory = Callable[[DesignSession], FieldPanel]
+        label.setText(hints.get(name, ""))
+        label.setVisible(name in hints)

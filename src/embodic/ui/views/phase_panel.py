@@ -33,8 +33,8 @@ class PhasePanel(FieldPanel):
     def build(self) -> None:
         """Add the phase rows and the pattern string under them."""
         super().build()
-        self.helpers["phase-pattern-string"] = hint_label("phase-pattern-string")
-        self._layout.addWidget(self.helpers["phase-pattern-string"])
+        self.pattern = hint_label("phase-pattern-string")
+        self._layout.addWidget(self.pattern)
 
     def refresh_helpers(self) -> None:
         """Show the assignment mode of the draft and the pattern of the last compute."""
@@ -45,4 +45,4 @@ class PhasePanel(FieldPanel):
                 p.startswith(ASSIGNMENT_POINTER + "/") for p in document.draft.values
             )
             mode.setCurrentIndex(1 if manual else 0)
-        show_hints(self.helpers, self.session)
+        show_hints({"phase-pattern-string": self.pattern}, self.session)

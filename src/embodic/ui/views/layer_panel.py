@@ -28,7 +28,11 @@ class LayerPanel(FieldPanel):
         count.setObjectName(name)
         count.setPlaceholderText(text("design.required.hint"))
         for copper in COPPER_COUNTS:
-            label = f"{copper} ({copper // 2} in parallel)" if wave and copper > 2 else str(copper)
+            label = (
+                text("param-wave-layers.parallel", count=copper, pairs=copper // 2)
+                if wave and copper > 2
+                else str(copper)
+            )
             count.addItem(label, copper)
         count.activated.connect(lambda index: self.session.set_stackup_input(copper_count=count.itemData(index)))
         count.setAccessibleName(text(f"{name}.label"))

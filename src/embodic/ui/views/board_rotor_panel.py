@@ -51,7 +51,7 @@ class BoardRotorPanel(FieldPanel):
                 form.rowCount(),
             )
             form.insertRow(first_bore, *self._pending_bore)
-        fasteners = QGroupBox("Fasteners")
+        fasteners = QGroupBox(text("design.group.fasteners"))
         fasteners.setObjectName("tab-board-group-fasteners")
         screws = QLabel(text("screw-table.empty"))
         screws.setObjectName("screw-table")
