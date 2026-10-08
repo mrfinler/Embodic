@@ -1,0 +1,38 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "params": {"phases": 2, "poles": 8, "topology": "wave", "turns": 2, "waveLayers": 4, "waveStyle": "jog"}
+      },
+      "output": {
+        "Ke1": 0.01546518010946131,
+        "Rphase": 0.466818643935123,
+        "efficiency": 0.8183599478917103,
+        "keLinePeakWaveform": 0.01394631973359333,
+        "keLinePk": 0.01546518010946131,
+        "lossTotal": 0.6100242446885805,
+        "motorConstant": 0.02263502017207498,
+        "omegaM": 157.07963267948966,
+        "pCirc": 0.0000749058446443375,
+        "pCu": 0.5975278642369576,
+        "pEddy": 0.012421474606978638,
+        "pOut": 2.748399393754872,
+        "phaseKe": [0.015465180109461312, 0.015465180109461308],
+        "phaseR": [0.466818643935123, 0.466818643935123],
+        "phaseRextra": [0.012212732631313656, 0.012212732631313655],
+        "phaseRtrace": [0.46167393623321173, 0.46167393623321173],
+        "rho": 1.9950128e-8,
+        "thd": 0.09298832907772,
+        "torque": 0.01749685396427425
+      }
+    }
+  ],
+  "case_id": "wave-analysis-jog-l4-m2-p8-t2",
+  "eq_ids": [],
+  "fn": "waveAnalysis",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "Xcoil compute().analysis of wave-jog-l4-m2-p8-t2: Ke, R, eddy, interconnect, losses (GR-22)",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["analysis", "jog", "l4", "m2"]
+}

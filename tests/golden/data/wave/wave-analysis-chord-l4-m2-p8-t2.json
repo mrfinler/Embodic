@@ -1,0 +1,38 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "params": {"phases": 2, "poles": 8, "topology": "wave", "turns": 2, "waveLayers": 4, "waveStyle": "chord"}
+      },
+      "output": {
+        "Ke1": 0.00878308740278846,
+        "Rphase": 0.32472814696760827,
+        "efficiency": 0.782421524371494,
+        "keLinePeakWaveform": 0.009299923686007298,
+        "keLinePk": 0.00878308740278846,
+        "lossTotal": 0.4340574420893529,
+        "motorConstant": 0.015413002093999298,
+        "omegaM": 157.07963267948966,
+        "pCirc": 0.000058857042564942154,
+        "pCu": 0.4156520281185387,
+        "pEddy": 0.018346556928249273,
+        "pOut": 1.5608891666481013,
+        "phaseKe": [0.008783087402788464, 0.008783087402788459],
+        "phaseR": [0.32472814696760827, 0.32472814696760827],
+        "phaseRextra": [0.01268360625418783, 0.01268360625418783],
+        "phaseRtrace": [0.3191125656428228, 0.3191125656428228],
+        "rho": 1.9950128e-8,
+        "thd": 0.06022954094703058,
+        "torque": 0.00993692905962538
+      }
+    }
+  ],
+  "case_id": "wave-analysis-chord-l4-m2-p8-t2",
+  "eq_ids": [],
+  "fn": "waveAnalysis",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "Xcoil compute().analysis of wave-chord-l4-m2-p8-t2: Ke, R, eddy, interconnect, losses (GR-22)",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["analysis", "chord", "l4", "m2"]
+}

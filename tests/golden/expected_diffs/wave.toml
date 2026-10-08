@@ -1,0 +1,8 @@
+# Intentional deviations of the wave generator from Xcoil (U-M3b). None is allow-listed.
+# GR-21 compares every primitive within 1e-9 mm (tighter than the 1e-6 mm of test_plan.md GR-20/GR-21); GR-22 compares
+# Ke, eddy loss and the three-phase line quantities within 1e-9 relative; the phase resistance differs from Xcoil only by
+# the via barrel length, and test_gr22_results.py proves that by removing it. Two limits are logged in the reports, not
+# allowed here: V8 and glibc differ by one ulp in 3 to 18 percent of sin/cos/tan/atan/acos calls, which moves arc
+# spline centres by 1e-11 mm (GR-23 compares those curves, not their parameters) and flips a chord count in the
+# overlap l6 m1 case (logged as indeterminate).
+schema_version = 1

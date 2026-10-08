@@ -1,0 +1,202 @@
+{
+  "format": "embodic.golden-param-map",
+  "format_version": 1,
+  "topology": "wave",
+  "note": "Format defined by U-M3b because no U-M3a map was on main (2952b63); Fable reconciles the two. Each entry maps one embodic pointer to the Xcoil parameter it reads; 'transform' names a reader in tests/golden/m3_wave/param_map.py. A pointer listed under 'unmapped' has no Xcoil parameter or no embodic field.",
+  "fields": [
+    {
+      "pointer": "/rotor/poles",
+      "xcoil": "poles",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/phases",
+      "xcoil": "phases",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/winding/r_inner_mm",
+      "xcoil": "rIn",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/winding/r_outer_mm",
+      "xcoil": "rOut",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/winding/turns",
+      "xcoil": "turns",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/winding/trace_width_mm",
+      "xcoil": "traceWidth",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/winding/clearance_mm",
+      "xcoil": "clearance",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/winding/end_width_outer_mm",
+      "xcoil": "endWidthOuter",
+      "transform": "zero_is_none"
+    },
+    {
+      "pointer": "/winding/end_width_inner_mm",
+      "xcoil": "endWidthInner",
+      "transform": "zero_is_none"
+    },
+    {
+      "pointer": "/winding/corner_style",
+      "xcoil": "cornerStyle",
+      "transform": "corner_style"
+    },
+    {
+      "pointer": "/winding/fillet_radius_mm",
+      "xcoil": "filletRadius",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/winding/wave_style",
+      "xcoil": "waveStyle",
+      "transform": "wave_style"
+    },
+    {
+      "pointer": "/winding/bus_width_mm",
+      "xcoil": "busWidth",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/connection/ring_width_mm",
+      "xcoil": "busWidth",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/connection/topology",
+      "xcoil": "connection",
+      "transform": "connection_topology"
+    },
+    {
+      "pointer": "/connection/draw_interconnect",
+      "xcoil": "interconnect",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/connection/terminal_pad_mm",
+      "xcoil": "terminalPad",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/connection/terminal_drill_mm",
+      "xcoil": "terminalDrill",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/vias/pad_mm",
+      "xcoil": "viaPad",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/vias/drill_mm",
+      "xcoil": "viaDrill",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/stackup",
+      "xcoil": [
+        "waveLayers",
+        "copperOzOuter",
+        "copperOzInner",
+        "boardThickness"
+      ],
+      "transform": "even_stackup"
+    },
+    {
+      "pointer": "/rotor/rotor_type",
+      "xcoil": "rotorType",
+      "transform": "rotor_type"
+    },
+    {
+      "pointer": "/rotor/magnet",
+      "xcoil": [
+        "magnetArcRatio",
+        "magnetRIn",
+        "magnetROut",
+        "magnetThickness"
+      ],
+      "transform": "arc_magnet"
+    },
+    {
+      "pointer": "/rotor/remanence_t",
+      "xcoil": "Br",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/rotor/recoil_permeability",
+      "xcoil": "muR",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/rotor/air_gap_mm",
+      "xcoil": "airgap",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/rotor/back_iron_thickness_mm",
+      "xcoil": "magnetThickness",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/operating/speed_rpm",
+      "xcoil": "rpm",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/operating/line_current_rms_a",
+      "xcoil": "currentRms",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/operating/winding_temperature_degc",
+      "xcoil": "tempC",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/operating/ambient_temperature_degc",
+      "xcoil": "ambientC",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/operating/convection_h_w_m2k",
+      "xcoil": "hConv",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/operating/dc_link_v",
+      "xcoil": "vDc",
+      "transform": "identity"
+    },
+    {
+      "pointer": "/operating/modulation",
+      "xcoil": "modulation",
+      "transform": "modulation"
+    }
+  ],
+  "unmapped": [
+    {
+      "xcoil": "startAngleDeg",
+      "reason": "WaveWindingSpec has no start angle; generate_wave builds with 0 (Xcoil default). Open question Q-1."
+    },
+    {
+      "pointer": "/winding/bus_width_mm and /connection/ring_width_mm",
+      "reason": "Xcoil has one busWidth for the group links and the interconnect; embodic has two fields, both set from busWidth. Open question Q-2."
+    },
+    {
+      "xcoil": "outlineShape, outlineScale, innerScale, screw*",
+      "reason": "embodic takes the board outline as explicit input; the outline is not compared in GR-21."
+    }
+  ]
+}
