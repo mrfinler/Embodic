@@ -116,13 +116,8 @@ def test_radial_sides_with_straight_ends_pass_drc(registry: Registry) -> None:
 
 
 @pytest.mark.req("REQ-F-05")
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEF-M2d3-01: drc.kernels._line_line reports a false crossing for nearly collinear disjoint segments "
-    "(entry leg on layer Y against the mirrored right side 0, real gap 0.2 mm)",
-)
 def test_radial_sides_with_arc_ends_pass_drc(registry: Registry) -> None:
-    """G2: CF-11 with radial sides and arc ends has no violation (blocked by a DRC kernel defect, not by the copper)."""
+    """G2: CF-11 with radial sides and arc ends has no violation (DEF-M2d3-01 was a DRC kernel false crossing)."""
     design = _styled(default_design(), SideStyle.RADIAL, EndStyle.ARC)
     _clean(_board(design, registry), design)
 
