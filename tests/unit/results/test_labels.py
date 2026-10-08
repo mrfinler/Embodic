@@ -2,8 +2,12 @@
 
 import dataclasses
 
+import pytest
+
 from embodic.results import QUANTITY_LABELS, AnalysisResult
 from embodic.ui.strings.shell import STRINGS
+
+pytestmark = pytest.mark.req("REQ-T-02")
 
 FIELDS = [f.name for f in dataclasses.fields(AnalysisResult)]
 

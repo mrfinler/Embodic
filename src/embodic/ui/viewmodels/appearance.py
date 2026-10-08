@@ -2,7 +2,7 @@
 
 from typing import Protocol
 
-from embodic.io.exporters import PhaseRenderMode
+from embodic.io.exporters import PhaseRenderMode as PhaseRenderMode  # geometry_view still imports it from here
 from embodic.ui.theme import ThemeName
 from embodic.ui.viewmodels.observable import Observable
 

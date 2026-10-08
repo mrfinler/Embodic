@@ -1,7 +1,11 @@
 """The phase render mode is one enum shared by the view-model and the writers (D-038a)."""
 
+import pytest
+
 from embodic.io.exporters import PhaseRenderMode
 from embodic.ui.viewmodels.appearance import AppearanceViewModel
+
+pytestmark = pytest.mark.req("REQ-N-23")
 
 
 class _MemoryStore:
