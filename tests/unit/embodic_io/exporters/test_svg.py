@@ -72,7 +72,7 @@ def test_ut_io_06_svg_metadata_holds_the_stamp(
     stamp = root.find(f"{SVG}metadata/{EMBODIC}export")
     assert stamp is not None
     assert stamp.get("embodic_version") == outcome.versions.embodic
-    assert outcome.versions.numpy in stamp.get("engine_version", "")
+    assert stamp.get("engine_version") == outcome.versions.embodic
     assert stamp.get("registry_version") == outcome.versions.registry
     assert stamp.get("design_hash") == outcome.design_hash
     assert re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ", stamp.get("generated_utc", ""))

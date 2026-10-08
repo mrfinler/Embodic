@@ -82,13 +82,13 @@ def drc_passed(outcome: ComputeOutcome) -> bool:
 def export_metadata(outcome: ComputeOutcome) -> ExportMetadata:
     """Return the stamp of an export generated now.
 
-    ``engine_version`` is an assumption: VersionInfo names no engine, so it records the runtime that computed the
-    geometry and physics (the embodic package on its Python and NumPy).
+    ``engine_version`` is the embodic version: there is no separate engine (D-038d). The Python and NumPy versions
+    stay in ``VersionInfo``.
     """
     versions = outcome.versions
     return ExportMetadata(
         embodic_version=versions.embodic,
-        engine_version=f"embodic {versions.embodic} (CPython {versions.python}, numpy {versions.numpy})",
+        engine_version=versions.embodic,
         registry_version=versions.registry,
         design_hash=outcome.design_hash,
         generated_utc=datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),

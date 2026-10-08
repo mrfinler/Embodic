@@ -115,5 +115,5 @@ def test_ut_io_06_dxf_header_comment_holds_the_stamp(
     assert f"registry_version={outcome.versions.registry}" in comments
     assert f"design_hash={outcome.design_hash}" in comments
     assert "drc_passed=true" in comments
-    assert any(c.startswith("engine_version=") for c in comments)
+    assert f"engine_version={outcome.versions.embodic}" in comments
     assert any(c.startswith("generated_utc=") for c in comments)
