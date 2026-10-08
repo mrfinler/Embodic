@@ -1,1 +1,1 @@
-"""Shell view-models, theme, toolstrip and strings."""
+"""Bundled font files and their registration."""

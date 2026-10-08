@@ -8,7 +8,7 @@ signature, so it never refuses for DRC; it states the DRC result instead.
 import dataclasses
 import json
 import math
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -83,9 +83,9 @@ class _Flow:
         self.doc.text(MARGIN, self.y, text, size=11, bold=True)
         self.y -= 1.5 * ROW
 
-    def row(self, cells: Sequence[tuple[float, str]], *, bold: bool = False) -> None:
+    def row(self, cells: Sequence[tuple[float, str]], *, bold: bool = False, mono: Collection[int] = ()) -> None:
         self.need(ROW)
-        self.doc.row(self.y, cells, bold=bold)
+        self.doc.row(self.y, cells, bold=bold, mono=mono)
         self.y -= ROW
 
 
@@ -108,7 +108,8 @@ def _key_results(flow: _Flow, analysis: AnalysisResult | None) -> None:
                 (MARGIN, QUANTITY_LABELS[name]),
                 (MARGIN + 200, value_text(t.value, t.unit)),
                 (MARGIN + 330, status),
-            ]
+            ],
+            mono=(1,),
         )
 
 
@@ -135,7 +136,8 @@ def _drc(flow: _Flow, outcome: ComputeOutcome) -> None:
                     (MARGIN + 130, measured),
                     (MARGIN + 240, value_text(s.required_mm, Unit.MM, significant=6)),
                     (MARGIN + 330, str(s.pairs_checked)),
-                ]
+                ],
+                mono=(1, 2, 3),
             )
 
 
@@ -151,7 +153,7 @@ def _inputs(flow: _Flow, outcome: ComputeOutcome) -> None:
             text = f"{text} {unit.display() or DIMENSIONLESS}"
         entry = outcome.provenance.get(pointer)
         provenance = entry.provenance.value if entry is not None else "not recorded"
-        flow.row([(MARGIN, pointer), (MARGIN + 230, text[:60]), (MARGIN + 380, provenance)])
+        flow.row([(MARGIN, pointer), (MARGIN + 230, text[:60]), (MARGIN + 380, provenance)], mono=(0, 1))
 
 
 @dataclass(frozen=True, slots=True)
