@@ -13,6 +13,8 @@ from embodic.api import StageCache, compute
 from embodic.io.examples import load_example
 from embodic.model.provenance import DefaultValue, ExampleValue, MeasuredValue, UserValue
 
+pytestmark = pytest.mark.req("REQ-T-03")
+
 EXAMPLE = "spiral_12c10p_d08"
 PROPERTY, DESIGN = "/rotor/remanence_t", "/rotor/air_gap_mm"
 SOURCES = {

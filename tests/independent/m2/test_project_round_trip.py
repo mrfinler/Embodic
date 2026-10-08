@@ -16,6 +16,8 @@ from embodic.io.examples import list_examples, load_example
 from embodic.io.project import ProjectFile, load_project, project_from_example, save_project
 from embodic.model.provenance import Measurement
 
+pytestmark = pytest.mark.req("REQ-F-15")
+
 SCHEMA = Path(embodic.__file__).parent / "io" / "schema" / "project.v1.schema.json"
 EXAMPLES = [e.example_id for e in list_examples()]
 

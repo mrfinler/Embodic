@@ -8,6 +8,8 @@ Defect caught: a field, z or phase-sum change in embodic that moves Ke_LL by mor
 import or01
 import pytest
 
+pytestmark = pytest.mark.req("REQ-F-11")
+
 EMBODIC_VS_OWN_REL = 1e-4  # 2.6 x the measured gap; the 48-step table alone gives 1.4e-5
 D08_BAND = 0.08  # D08 p.98, OR-01 band lower edge (test_plan.md section 4)
 

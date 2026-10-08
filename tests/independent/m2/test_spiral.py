@@ -19,6 +19,8 @@ from embodic.geometry.primitives import Arc, PrimitiveRole
 from embodic.io.examples import load_example
 from embodic.results import load_registry
 
+pytestmark = pytest.mark.req("REQ-F-01")
+
 OWN = {
     "spiral_12c16p_default": own_spiral.Coil(12, 18.0, 38.0, 0.5, 0.2, 0.2, 0.6, None),
     "spiral_12c10p_d08": own_spiral.Coil(12, 11.47, 45.03, 2.06, 0.8, 0.8, 0.6, 3),

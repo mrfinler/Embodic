@@ -19,6 +19,8 @@ from embodic.model.rotor import ArcMagnet, RotorSpec, RotorType
 from embodic.physics import field_harmonic, integrate_path
 from embodic.physics.emf import FIELD_TABLE_STEPS, FieldTable
 
+pytestmark = pytest.mark.req("REQ-F-11")
+
 
 def _rotor(poles: int, alpha: float) -> RotorSpec:
     return RotorSpec(

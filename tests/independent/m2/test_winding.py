@@ -12,6 +12,8 @@ import pytest
 from embodic.results import load_registry
 from embodic.winding import assign_phases, compute_winding_factors
 
+pytestmark = pytest.mark.req("REQ-F-02")
+
 COMBINATIONS = [(12, 16), (12, 10), (12, 14), (9, 8), (24, 22)]
 # Emetor glossary "Concentrated winding", Fig. 2: double-layer 10-pole 12-slot winding factor 0.933
 # (https://www.emetor.com/glossary/concentrated-winding/, read 2026-10-08). Every tooth wound = double layer.
