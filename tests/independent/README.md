@@ -194,3 +194,68 @@ Defects (U-V2):
 |---|---|---|---|---|---|
 | DEF-UV2-01 | low | `pytest tests/independent/m2/test_xd_m1_002.py -k true_range --runxfail` | the XD-M1-002 reason (tests/golden/expected_diffs/m1.toml l.20), test_plan.md section 3 (l.84) and D-033c state the 19 true distances as 4.0001 to 13.0848 mm; they are 0.528833 to 13.084767 mm (4.000143 is call 18, not the least). The 13.1 mm tolerance still covers all 19 | allow-list owner (Agent 3), test_plan.md (Agent 6), decision log (Fable) | open; strict xfail |
 | DEF-UV2-02 | low | `python tests/independent/m2/def_m2e3_01.py`; read tests/golden/expected_diffs/physics.toml l.49-89 | the wave entries name `_series_circuit` and omitted via barrels and links as the cause; with Xcoil's own members the -6.0 % stays, and it equals the 62 via barrels that Xcoil's wave Rtrace includes (engine.js l.2034, l.2062). The sector cause (rings and legs in the series circuit) is confirmed | golden harness owner (Agent 3) | open; reason text only, tolerances unaffected |
+
+## M3 instruments and verdicts (U-V3, against main 72b3231)
+
+Prepared by: Agent 4 - Independent Verificator - model: claude-opus-5-5
+
+Run `pytest tests/independent/m3 -q` (about 2.5 min with the DRC sweep; the sweep is marked `slow`, so the commit
+gate skips it). Tables: `python tests/independent/m3/layouts.py`, `drc_m3.py`, `gr22_own.py`, `examples_m3.py`,
+`ulp.py` (run from `tests/independent/m3`). Node and `/home/claude/serpentine/src/engine.js` (read-only) are needed.
+
+| File | What it does | What it would catch |
+|---|---|---|
+| `xcoil_dump.cjs` | own Node dump of Xcoil `compute()`: layers with board, z and raw primitives, vias, pads, DRC issue count, analysis scalars, and V8 trig values | - |
+| `cases.py` | 6 serpentine and 6 wave parameter sets, each mixing options the golden lists vary one at a time | - |
+| `own_map.py` | both sides to one `Board` shape (copper per layer with one role vocabulary, z, via and pad discs); exact point-to-primitive distance; sampled distance both ways with ties resolved by role and width | a moved, dropped, re-widened or re-roled primitive; a moved via (self-test seeds each) |
+| `subject.py` | embodic's BoardStack through `build_layout`; inputs through the harness's `design_from_xcoil` (deviation below) | - |
+| `layouts.py` | item 1 table: boards, layers, z, counts and lengths by role, sampled distance, vias, pads, stack thickness | see `test_m3_layouts.py` |
+| `drc_m3.py` | item 2: every board through embodic's dump writer, M1's reader and M1's certified sweep under the section 7 exemptions | a missed or false D-006 violation, an exemption wider or narrower than section 7 |
+| `gr22_own.py` | items 3 and 4: Ke_LL peak from M2's own EQ-05/EQ-06 field on the ported layouts, z from `copper_z_mm` | a field, z or phase-sum change; a doubled board offset |
+| `examples_m3.py` | item 5: the two examples through `embodic.api.compute` against Xcoil `compute()` | - |
+| `ulp.py` | item 6: V8 against glibc on 1000 seeded angles (atan2 on 1000 equal coordinate pairs) | - |
+
+Deviation. The Xcoil-to-design input map is the golden harness's `design_from_xcoil`. It maps inputs only. Every
+expected value comes from the own dump and mapper, so a wrong input map shows as a disagreement. One effect: the wave
+map keeps the base design's outline (bore radius 18.7 mm) while the copper of these sets reaches 17.3 to 17.7 mm, so
+the wave boards carry copper_edge and copper_hole overlaps that Xcoil's own outline would not. Both checks report them
+alike. The D-035 b T-junction rule is not modelled (in flight, U-M3-fix).
+
+| Item | Verdict | Evidence (`verified` = reproduced by running) |
+|---|---|---|
+| 1 Object-by-object layouts | pass | 12 cases, 14 boards: board and layer counts equal; z within 8.9e-16 mm; counts by role equal except +1 ring arc on the two star serpentine cases (U-M3a deviation D-1, ring cut at the middle tap; lengths equal within 4.5e-13 mm); length by role within 1.0e-11 mm; sampled distance at most 1.5e-13 mm both ways over 201 k samples; 0 width and 0 role mismatches; vias 942/942 and pads 24/24 within 7.9e-15 mm |
+| 2 Brute DRC vs run_drc | pass with defect | 13 of 14 boards: violation sets equal (serpentine 0; wave 250, 484, 0, 572, 216). w-overlap-p12-l4-m1: engine 53, brute 51; DEF-UV3-01 |
+| 3 Per-phase stack (D-016) | pass with defect | board k holds only phase k; z = k (1.6 + 0.3) + local z within 1e-12; stack 5.4 mm on both sides. DEF-M3a-01 still present on 72b3231: own Ke 0.08409251, embodic 0.08840266 (+5.13 %); own with board k moved a further k x 1.90 mm gives 0.08840354 (1.0e-5 from embodic) |
+| 4 GR-22 own field | pass | Ke_LL peak, own vs embodic: s-radial-t4 0.1080441 / 0.1080331 (-1.02e-4); w-involute-p20-l2-m3 0.06328063 / 0.06327935 (-2.0e-5). Limiter not isolated (own chords vs embodic table, `unresolved`) |
+| 5 Examples vs Xcoil compute() | pass with defect | see table below; DEF-UV3-02 |
+| 6 V8 vs glibc | pass (report) | node v22.22.2, CPython 3.11.15, glibc 2.39: worst 1 ulp for sin, cos, atan2, tan; differing calls 33, 40, 160, 27 of 1000; worst absolute 4.4e-16 |
+| 7 Gate stability | pass (report) | see the line below the examples table |
+
+Examples (item 5). Xcoil's `Ke1` and `keLinePk` are fundamentals; embodic's `ke_line_peak` is the waveform peak.
+
+| Quantity | serpentine embodic / Xcoil | wave embodic / Xcoil | Named difference |
+|---|---|---|---|
+| DRC violations | 0 / 0 | 191 / 0 | wave: Xcoil's 4 um slack (D-035) and interconnect copper (in flight); none outside those two classes |
+| Ke phase fundamental | 0.06426724 / 0.06426724 | 0.03087959 / 0.03087959 | none (rel 2e-15) |
+| Ke line fundamental | 0.1113141 / 0.1113141 | 0.05348502 / 0.05348502 | none |
+| Ke line waveform peak | 0.1093881 (-1.73 %) | 0.05300629 (-0.90 %) | fundamental vs peak |
+| R phase, operating | 2.823589 / 2.81246 (+0.396 %) | 1.467715 / 1.463644 (+0.278 %) | serpentine: vbus copper (XD-PHY-003), `inferred`; wave: via length (D-035 e) |
+| P_ic | 0.006104918 / 0.006104564 (+5.8e-5) | 0.002574557 / 0.01117442 (-77 %) | wave: none, DEF-UV3-02 |
+
+Gate (`python tools/ci.py --profile commit`, 2 cores). Runs 1 and 2 on a `git archive` of 72b3231: 415.45 s and
+425.80 s wall, 6 of 6, 2006 passed, 4 xfailed; load at start 0.61 and 1.88; both overlapped Agent 4's own sweeps.
+Run 3 on the branch at 010c4f5: 427.24 s wall, 6 of 6, 2068 passed, 87 deselected, 6 xfailed (the 4 existing
+plus DEF-M3a-01 and DEF-UV3-02; the DEF-UV3-01 sweep is `slow`), load 1.09 at start, run alone. pytest is the limiter
+(409.69 s of run 1, 418.88 s of run 3).
+
+Defects (U-V3):
+
+| ID | Severity | Reproduce | Expected vs actual | Owner | Status |
+|---|---|---|---|---|---|
+| DEF-UV3-01 | low | `pytest tests/independent/m3/test_drc_m3.py -k overlap-p12 --runxfail` | rule 2 exempts a via and the end group of a path ending on it, and the end group holds the fillet before the terminating main (section 7 rules 1 and 2). `_path_ends` (src/embodic/drc/items.py l.173-180) takes the items whose main index equals the last main's, and a fillet carries the index of the main before it, so at a path's last end the preceding fillet is left out. w-overlap-p12-l4-m1: paths 0 and 25 end on stitch via 2 through a 0.302 mm leg; fillet 5 is reported at -0.198 mm. The first end is not affected (`inferred` from the code) | Agent 3 (DRC) | open; strict xfail |
+| DEF-UV3-02 | medium | `cd tests/independent/m3 && python examples_m3.py`; `pytest tests/independent/m3/test_m3_physics.py -k wave_example_interconnect --runxfail` | wave example P_ic: Xcoil 0.01117442 W (star: line stubs, links and two neutral-ring segments at `busWidth`, engine.js l.1361-1374, l.1423), embodic 0.002574557 W. The serpentine example agrees within 5.8e-5. Cause `unresolved`; it may share the root of the wave star item (U-M3b Q3, in flight) | Agent 3 (physics, wave port) | open; strict xfail |
+| DEF-M3a-01 | medium | `pytest tests/independent/m3/test_m3_physics.py -k board_z --runxfail` | confirmed on 72b3231 with the own field (item 3 row) | U-M3-fix | open; in flight |
+
+Open question. `embodic.api.compute_project` on `resources/examples/serpentine_16p_example.embodic.json` returns
+`INVALID_PROJECT_FILE`. The examples load through `embodic.io.examples.load_example`. Is a packaged example file meant
+to open as a project?
