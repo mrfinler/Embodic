@@ -19,13 +19,13 @@ from embodic.generators.wave.interconnect import IcPad, PadSpec, build_interconn
 from embodic.generators.wave.overlap import build_overlap
 from embodic.geometry.layout import BoardStack
 from embodic.model.design import DesignParameters
+from embodic.model.validate import WAVE_LAYERS_MAX
 from embodic.model.vocabulary import ConnectionTopology
 from embodic.model.winding_specs import CornerStyle, WaveWindingSpec
 from embodic.results import Registry
 
 MAX_POLES = 200  # Xcoil normalizeParams ranges (l.114-120)
 MAX_TURNS = 200
-MAX_LAYERS = 16
 MAX_SLOTS = 2400  # assumption: no wave winding approaches it (Xcoil's defaults use 96); bounds time and memory
 _REFUSAL_CODES = {
     "WAVE_MIN_POLES": ("UNBUILDABLE_WAVE_MIN_POLES", "/rotor/poles"),
@@ -191,7 +191,7 @@ def generate_wave_rotated(
     if pointers := _out_of_range(design, spec):
         return _unbuildable("UNBUILDABLE_WAVE_INPUT_OUT_OF_RANGE", pointers)
     layers = len(design.stackup.copper_layers())
-    if layers < 2 or layers % 2 != 0 or layers > MAX_LAYERS:
+    if layers < 2 or layers % 2 != 0 or layers > WAVE_LAYERS_MAX:
         return _unbuildable("UNBUILDABLE_WAVE_LAYER_COUNT", ("/stackup/layers",))
     params = wave_params(design, spec, start_angle_deg)
     frame = derive_wave(params)

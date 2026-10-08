@@ -28,6 +28,7 @@ RADIAL_SPAN_MIN_MM = 0.5  # Xcoil R_ORDER: rOut > rIn + 0.5
 VIA_RING_MIN_MM = 0.1  # Xcoil VIA_RING: viaPad >= viaDrill + 0.1
 TERMINAL_RING_MIN_MM = 0.3  # Xcoil PAD_RING: terminalPad >= terminalDrill + 0.3 when drilled
 TRACES_MAX = 400  # Xcoil TOO_MANY: turns x strands <= 400
+WAVE_LAYERS_MAX = 16  # Xcoil num('waveLayers', 2, 16)
 SPIRAL_PHASES = 3
 
 _CATEGORY_BY_PREFIX = {"INVALID_": IssueCategory.INVALID, "RANGE_": IssueCategory.UNSUPPORTED_RANGE}
@@ -206,6 +207,14 @@ def _serpentine_layers(design: DesignParameters) -> Iterator[ValidationIssue]:
         )
 
 
+def _wave_layers(design: DesignParameters) -> Iterator[ValidationIssue]:
+    if not isinstance(design.winding, WaveWindingSpec):
+        return
+    copper = len(design.stackup.copper_layers())
+    if copper < 2 or copper % 2 or copper > WAVE_LAYERS_MAX:
+        yield issue("INVALID_WAVE_COPPER_COUNT", ["/stackup/layers"], value=copper, limit=WAVE_LAYERS_MAX)
+
+
 def _via_rings(design: DesignParameters) -> Iterator[ValidationIssue]:
     vias, connection = design.vias, design.connection
     if vias.pad_mm < vias.drill_mm + VIA_RING_MIN_MM:
@@ -337,6 +346,7 @@ CROSS_FIELD_RULES: tuple[Callable[[DesignParameters], Iterator[ValidationIssue]]
     _magnet_order,
     _magnet_faces_winding,
     _serpentine_layers,
+    _wave_layers,
     _via_rings,
     _spiral_inputs,
     _stackup,

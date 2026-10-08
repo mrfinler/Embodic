@@ -21,6 +21,9 @@ MESSAGES: Mapping[str, str] = {
         "bus width or the via pad."
     ),
     "UNBUILDABLE_WAVE_LAYER_COUNT": "The wave winding needs an even number of copper layers, at least 2 (T/B pairs).",
+    "INVALID_WAVE_COPPER_COUNT": (
+        "The wave winding needs an even number of copper layers, from 2 to {limit} (T/B pairs)."
+    ),
     "UNBUILDABLE_WAVE_INPUT_OUT_OF_RANGE": "A wave winding input is outside the range the geometry can use.",
     "UNBUILDABLE_WAVE_INTERCONNECT_CROSSING": "The delta links cross, and the ring layers cannot carry crossing links.",
 }
