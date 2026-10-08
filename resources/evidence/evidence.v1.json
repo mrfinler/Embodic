@@ -1,5 +1,5 @@
 {
- "prepared_by": "Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5 (rows EV-01 to EV-83); claude-sonnet-5-5 (rows EV-84 to EV-93, unit U-S3b; rows EV-94 to EV-105, unit U-S3c)",
+ "prepared_by": "Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5 (rows EV-01 to EV-83); claude-sonnet-5-5 (rows EV-84 to EV-93, unit U-S3b; rows EV-94 to EV-105, unit U-S3c; rows EV-106 to EV-108, unit U-S5a)",
  "schema": "embodic evidence register",
  "schema_version": 1,
  "generated_by": "docs/phase2/evidence/tools/build_evidence_register.py",
@@ -10,7 +10,7 @@
   },
   {
    "path": "docs/phase2/evidence/evidence_register.md",
-   "sha256": "63b64dcb538bd268872c62e217649d3b52619c38c0f85df93a463a70df491d8f"
+   "sha256": "ce91aca4d76418d395239972837f96da95db13275201566668bbd1de154cd63b"
   },
   {
    "path": "docs/phase1/engineering/equation_registry_draft.json",
@@ -742,6 +742,39 @@
    "kind": "web_page",
    "path": null,
    "url": "https://mathworld.wolfram.com/CircleInvolute.html"
+  },
+  {
+   "id": "LIC-INTER-OFL-4.1",
+   "title": "Inter v4.1 LICENSE.txt (SIL Open Font License 1.1)",
+   "authors": "The Inter Project Authors",
+   "year": 2016,
+   "year_text": "2016",
+   "venue": "rsms/inter, release tag v4.1; copy in the embodic repository",
+   "kind": "licence",
+   "path": "resources/fonts/Inter/LICENSE.txt",
+   "url": "https://raw.githubusercontent.com/rsms/inter/v4.1/LICENSE.txt"
+  },
+  {
+   "id": "LIC-JETBRAINSMONO-OFL-2.304",
+   "title": "JetBrains Mono v2.304 OFL.txt (SIL Open Font License 1.1)",
+   "authors": "The JetBrains Mono Project Authors",
+   "year": 2020,
+   "year_text": "2020",
+   "venue": "JetBrains/JetBrainsMono, release tag v2.304; copy in the embodic repository",
+   "kind": "licence",
+   "path": "resources/fonts/JetBrainsMono/OFL.txt",
+   "url": "https://raw.githubusercontent.com/JetBrains/JetBrainsMono/v2.304/OFL.txt"
+  },
+  {
+   "id": "PYPI-fonttools",
+   "title": "fonttools 4.66.1 (PyPI metadata and licence files)",
+   "authors": "fontTools project",
+   "year": null,
+   "year_text": null,
+   "venue": "PyPI",
+   "kind": "package",
+   "path": null,
+   "url": "https://pypi.org/project/fonttools/4.66.1/"
   }
  ],
  "entries": [
@@ -5390,6 +5423,129 @@
    ],
    "register_origin": "phase2",
    "accessed": "2026-10-08"
+  },
+  {
+   "id": "EV-106",
+   "claim": "The licence text shipped beside Inter Variable v4.1 is the SIL Open Font License, Version 1.1. Its first line is \"Copyright (c) 2016 The Inter Project Authors (https://github.com/rsms/inter)\", followed by \"This Font Software is licensed under the SIL Open Font License, Version 1.1.\" No reserved font name follows the copyright line. Condition 2 reads \"Original or Modified Versions of the Font Software may be bundled, redistributed and/or sold with any software, provided that each copy contains the above copyright notice and this license. These can be included either as stand-alone text files, human-readable headers or in the appropriate machine-readable metadata fields within text or binary files as long as those fields can be easily viewed by the user.\" Condition 1: \"Neither the Font Software nor any of its individual components, in Original or Modified Versions, may be sold by itself.\" The preamble: \"The requirement for fonts to remain under this license does not apply to any document created using the fonts or their derivatives.\"",
+   "kind": "source_claim",
+   "source": {
+    "document": "LIC-INTER-OFL-4.1",
+    "title": "Inter v4.1 LICENSE.txt (SIL Open Font License 1.1)",
+    "authors": "The Inter Project Authors",
+    "year": 2016,
+    "year_text": "2016"
+   },
+   "documents": [
+    "LIC-INTER-OFL-4.1"
+   ],
+   "location": {
+    "text": "resources/fonts/Inter/LICENSE.txt, 4380 bytes, SHA-256 262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a; upstream https://raw.githubusercontent.com/rsms/inter/v4.1/LICENSE.txt has the same SHA-256. The font file is resources/fonts/Inter/InterVariable.ttf, SHA-256 4989b125924991b90d05b2d16e0e388c48f7d5bb8b30539bbf9c755278d0ccaf",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://raw.githubusercontent.com/rsms/inter/v4.1/LICENSE.txt"
+    ]
+   },
+   "read_method": "source_read",
+   "applies": {
+    "judgement": "yes",
+    "note": "yes (D-039 a bundles Inter Variable under this licence and ships the text beside the font; the wheel and the PyInstaller folder must carry the same file; reading condition 2 for a PDF that embeds the font is inferred and open, see dependency_licences.md section Fonts)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (source read)",
+   "topology_tags": [
+    "non_engineering"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [],
+   "register_origin": "phase2",
+   "accessed": "2026-10-09"
+  },
+  {
+   "id": "EV-107",
+   "claim": "The licence text shipped beside JetBrains Mono v2.304 is the SIL Open Font License, Version 1.1. Its first line is \"Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/JetBrainsMono)\", followed by \"This Font Software is licensed under the SIL Open Font License, Version 1.1.\" No reserved font name follows the copyright line. Conditions 1, 2 and 5 and the preamble sentence on documents read as in EV-106. The text differs from EV-106 in the copyright line, the URL (https://scripts.sil.org/OFL), the heading \"PERMISSION & CONDITIONS\" and whitespace",
+   "kind": "source_claim",
+   "source": {
+    "document": "LIC-JETBRAINSMONO-OFL-2.304",
+    "title": "JetBrains Mono v2.304 OFL.txt (SIL Open Font License 1.1)",
+    "authors": "The JetBrains Mono Project Authors",
+    "year": 2020,
+    "year_text": "2020"
+   },
+   "documents": [
+    "LIC-JETBRAINSMONO-OFL-2.304"
+   ],
+   "location": {
+    "text": "resources/fonts/JetBrainsMono/OFL.txt, 4399 bytes, SHA-256 30f0c136e3c88e422d0791acd97238870f9054a9729bc34cf2ff0d4ed8cac4ad; upstream https://raw.githubusercontent.com/JetBrains/JetBrainsMono/v2.304/OFL.txt has the same SHA-256. The font files are resources/fonts/JetBrainsMono/JetBrainsMono-Regular.ttf, SHA-256 a0bf60ef0f83c5ed4d7a75d45838548b1f6873372dfac88f71804491898d138f, and JetBrainsMono-Medium.ttf, SHA-256 31c92d01a8a08528b718a43addf0ad3df0af2ca4b7b3290a452f70f358e14d3d",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://raw.githubusercontent.com/JetBrains/JetBrainsMono/v2.304/OFL.txt"
+    ]
+   },
+   "read_method": "source_read",
+   "applies": {
+    "judgement": "yes",
+    "note": "yes (D-039 a; the shipped file replaces the master-branch reading in EV-75)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (source read)",
+   "topology_tags": [
+    "non_engineering"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [],
+   "register_origin": "phase2",
+   "accessed": "2026-10-09"
+  },
+  {
+   "id": "EV-108",
+   "claim": "fontTools 4.66.1 declares the licence \"MIT\" in the PyPI JSON field license (no license_expression, no licence classifier). The wheel metadata lists License-File: LICENSE and License-File: LICENSE.external. LICENSE begins \"MIT License\" and \"Copyright (c) 2017 Just van Rossum\" and requires \"The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\" LICENSE.external lists parts under other licences: test fonts under SIL OFL 1.1, Adobe AGL under a three-clause BSD licence, cu2qu under the Apache License 2.0, and code derived from PyFilesystem2 under the MIT License",
+   "kind": "source_claim",
+   "source": {
+    "document": "PYPI-fonttools",
+    "title": "fonttools 4.66.1 (PyPI metadata and licence files)",
+    "authors": "fontTools project",
+    "year": null,
+    "year_text": null
+   },
+   "documents": [
+    "PYPI-fonttools"
+   ],
+   "location": {
+    "text": "https://pypi.org/pypi/fonttools/4.66.1/json (info.license); wheel fonttools-4.66.1-cp311-cp311-win_amd64.whl .metadata; installed copy .venv/lib/python3.11/site-packages/fonttools-4.66.1.dist-info/licenses/LICENSE, 1072 bytes, SHA-256 6787208f83f659ccbc2223b2fde952ffa6f7e8aca62f1a8a2bf5bc51bb1b2383, and LICENSE.external, 20022 bytes, SHA-256 94a83aaee0729a0f302d34acc4acecbd9d58366f262429075fe557e4a54b2e69. The Windows wheel files have CRLF line endings (1093 and 20410 bytes, SHA-256 22bef80697ecfaa17f97e62b9a26dfa12820be05583e8dd12ad169b241274c99 and b082a5f86775b2641f01bccb8b9c82908481de5f502bb254b1e13bfc2a9f303d) and equal the installed files after CRLF to LF",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://pypi.org/pypi/fonttools/4.66.1/json"
+    ]
+   },
+   "read_method": "source_read",
+   "applies": {
+    "judgement": "yes",
+    "note": "yes (dev only: pyproject.toml extra dev, imported by tests, not by src; adds no distribution obligation, inferred)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (source read)",
+   "topology_tags": [
+    "non_engineering"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [],
+   "register_origin": "phase2",
+   "accessed": "2026-10-09"
   }
  ]
 }
