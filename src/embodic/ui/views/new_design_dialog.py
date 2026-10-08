@@ -72,14 +72,14 @@ class NewDesignDialog(QDialog):
         for info in self.examples:
             self.example_picker.addItem(info.title, info.example_id)
         self.example_picker.currentIndexChanged.connect(self._example_chosen)
-        self.create = QPushButton(text("btn-create-design.label"))
-        self.create.setObjectName("btn-create-design")
-        self.create.setProperty("class", "primary")
-        self.create.setDefault(True)
-        self.create.clicked.connect(self.create_design)
-        self.cancel = QPushButton(text("btn-cancel-new.label"))
-        self.cancel.setObjectName("btn-cancel-new")
-        self.cancel.clicked.connect(self.reject)
+        self.create_button = QPushButton(text("btn-create-design.label"))
+        self.create_button.setObjectName("btn-create-design")
+        self.create_button.setProperty("class", "primary")
+        self.create_button.setDefault(True)
+        self.create_button.clicked.connect(self.create_design)
+        self.cancel_button = QPushButton(text("btn-cancel-new.label"))
+        self.cancel_button.setObjectName("btn-cancel-new")
+        self.cancel_button.clicked.connect(self.reject)
         form = QFormLayout()
         form.addRow(QLabel(text("param-design-name.label")), self.name)
         form.addRow(QLabel(text("param-topology.label")), self.topology_box)
@@ -87,8 +87,8 @@ class NewDesignDialog(QDialog):
         form.addRow(QLabel(text("example-picker.label")), self.example_picker)
         actions = QHBoxLayout()
         actions.addStretch(1)
-        actions.addWidget(self.cancel)
-        actions.addWidget(self.create)
+        actions.addWidget(self.cancel_button)
+        actions.addWidget(self.create_button)
         layout = QVBoxLayout(self)
         layout.addWidget(intro)
         layout.addLayout(form)
@@ -113,7 +113,7 @@ class NewDesignDialog(QDialog):
     def _update(self) -> None:
         topology = self.chosen_topology()
         self.topology_hint.setVisible(topology is None)
-        self.create.setEnabled(bool(self.name.text().strip()) and topology is not None)
+        self.create_button.setEnabled(bool(self.name.text().strip()) and topology is not None)
 
     def _ask_replace(self) -> bool:
         answer = QMessageBox.question(

@@ -1,13 +1,17 @@
 """The Board and rotor tab (`tab-board`, screens.md section 5): outline, bore, stack-up, rules, rotor, operation."""
 
-from PySide6.QtWidgets import QComboBox, QFormLayout, QGroupBox, QLabel, QLineEdit, QVBoxLayout
+from PySide6.QtWidgets import QComboBox, QFormLayout, QGroupBox, QLabel, QLineEdit, QVBoxLayout, QWidget
 
 from embodic.model.fields import FieldGroup
 from embodic.ui.strings import text
-from embodic.ui.viewmodels.session import BORE_POINTER, DesignSession, bore_choice
+from embodic.ui.viewmodels.session import BORE_POINTER, DesignSession, StackupInput, bore_choice
 from embodic.ui.views.coil_panel import FieldPanel, choice_text
 
 BORE_CHOICES = ("none", "circle", "polygon")
+
+
+def _name(widget: QWidget | None) -> str:
+    return "" if widget is None else widget.objectName()
 
 
 class BoardRotorPanel(FieldPanel):
@@ -29,7 +33,11 @@ class BoardRotorPanel(FieldPanel):
             self.helpers["param-bore"] = bore
             self._pending_bore = (QLabel(text("param-bore.label")), bore)
         if group is FieldGroup.MANUFACTURING:
-            for name, field in (("param-copper-weight", "copper_oz"), ("param-board-thickness", "board_thickness_mm")):
+            fields: tuple[tuple[str, StackupInput], ...] = (
+                ("param-copper-weight", "copper_oz"),
+                ("param-board-thickness", "board_thickness_mm"),
+            )
+            for name, field in fields:
                 edit = QLineEdit()
                 edit.setObjectName(name)
                 edit.setPlaceholderText(text("design.unit.oz") if field == "copper_oz" else text("design.unit.mm"))
@@ -47,7 +55,7 @@ class BoardRotorPanel(FieldPanel):
             assert isinstance(form, QFormLayout)
             names = [form.itemAt(i, QFormLayout.ItemRole.SpanningRole) for i in range(form.rowCount())]
             first_bore = next(
-                (i for i, item in enumerate(names) if item and item.widget().objectName().startswith("param-bore-")),
+                (i for i, item in enumerate(names) if item and _name(item.widget()).startswith("param-bore-")),
                 form.rowCount(),
             )
             form.insertRow(first_bore, *self._pending_bore)
@@ -69,14 +77,14 @@ class BoardRotorPanel(FieldPanel):
         else:
             self.session.edit(BORE_POINTER, {"shape": choice})
 
-    def _stackup_input(self, edit: QLineEdit, field: str) -> None:
+    def _stackup_input(self, edit: QLineEdit, field: StackupInput) -> None:
         try:
             value = float(edit.text()) if edit.text().strip() else None
         except ValueError:
             return
         current = getattr(self.session.stackup_inputs(), field)
         if value != current:
-            self.session.set_stackup_input(**{field: value})
+            self.session.set_stackup_input(field, value)
 
     def refresh_helpers(self) -> None:
         """Show the bore choice and the stack-up generator inputs."""

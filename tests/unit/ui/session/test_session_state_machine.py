@@ -269,10 +269,10 @@ def test_the_stackup_generator_writes_layers_and_pairs_in_one_undoable_edit(rig)
     """Catches a generator that writes the stack-up without its layer pairs (D-024) or as several undo steps."""
     session, _, _ = rig
     session.new_design(TopologyKind.SPIRAL)
-    session.set_stackup_input(copper_count=4)
-    session.set_stackup_input(copper_oz=1.0)
+    session.set_stackup_input("copper_count", 4)
+    session.set_stackup_input("copper_oz", 1.0)
     assert "/stackup/layers" in session.state.value.missing
-    session.set_stackup_input(board_thickness_mm=1.6)
+    session.set_stackup_input("board_thickness_mm", 1.6)
     values = session.document.draft.values
     assert [values[f"/stackup/layers/{i}/name"] for i in range(7)] == ["L1", "D1", "L2", "D2", "L3", "D3", "L4"]
     assert values["/stackup/layers/0/thickness_mm"] == pytest.approx(0.0348)

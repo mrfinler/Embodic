@@ -7,6 +7,7 @@ export views (U-M4d) fill their regions later; their toolstrip commands stay dis
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 
 from PySide6.QtCore import QPoint, Qt
@@ -187,8 +188,8 @@ class MainWindow(QMainWindow):
             "new_design": self.show_new_design,
             "undo": session.undo,
             "redo": session.redo,
-            **{f"set_topology_{t.value}": (lambda t=t: session.set_topology(t)) for t in TopologyKind},
-            **{f"set_connection_{c}": (lambda c=c: session.edit("/connection/topology", c)) for c in ("star", "delta")},
+            **{f"set_topology_{t.value}": partial(session.set_topology, t) for t in TopologyKind},
+            **{f"set_connection_{c}": partial(session.edit, "/connection/topology", c) for c in ("star", "delta")},
             "save_project": self.save_project_dialog,
             "show_examples": self.show_examples,
             "compute_now": self.compute_now,
@@ -308,7 +309,7 @@ class MainWindow(QMainWindow):
         return page
 
     def _required_bar(self) -> QWidget:
-        bar = QWidget()
+        bar = self.required_bar = QWidget()
         bar.setObjectName("required-bar")
         layout = QHBoxLayout(bar)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -343,11 +344,11 @@ class MainWindow(QMainWindow):
         for panel in self.panels.values():
             panel.refresh()
         drafting = isinstance(state, SessionDrafting)
-        missing = len(state.missing) if drafting else 0
+        missing = len(state.missing) if isinstance(state, SessionDrafting) else 0
         self.required_count.setText(
             text("new-required-count.one") if missing == 1 else text("new-required-count.text", count=missing)
         )
-        self.required_count.parentWidget().setVisible(drafting)
+        self.required_bar.setVisible(drafting)
         compute = self.toolstrip.actions_by_id["act-compute"]
         compute.setEnabled(not drafting)
         head = text("act-compute.label") + f" ({compute.shortcut().toString()})."

@@ -255,7 +255,7 @@ class FieldPanel(QScrollArea):
         self._topology = topology
         while self._layout.count():
             item = self._layout.takeAt(0)
-            if (widget := item.widget()) is not None and widget is not self.empty:
+            if item is not None and (widget := item.widget()) is not None and widget is not self.empty:
                 widget.setParent(None)
                 widget.deleteLater()
         self.editors, self.helpers = {}, {}
@@ -267,7 +267,8 @@ class FieldPanel(QScrollArea):
         # A widget added to a shown layout appears only after a queued show; show the new sections now so focus
         # and visibility queries see them at once.
         for index in range(self._layout.count()):
-            widget = self._layout.itemAt(index).widget()
+            item = self._layout.itemAt(index)
+            widget = None if item is None else item.widget()
             if widget is not None and widget is not self.empty:
                 widget.show()
 

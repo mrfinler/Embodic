@@ -34,7 +34,7 @@ class LayerPanel(FieldPanel):
                 else str(copper)
             )
             count.addItem(label, copper)
-        count.activated.connect(lambda index: self.session.set_stackup_input(copper_count=count.itemData(index)))
+        count.activated.connect(lambda index: self.session.set_stackup_input("copper_count", count.itemData(index)))
         count.setAccessibleName(text(f"{name}.label"))
         form.addRow(QLabel(text(f"{name}.label")), count)
         self.helpers["copper-count"] = count

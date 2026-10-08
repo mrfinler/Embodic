@@ -103,6 +103,9 @@ class EditNotice:
     text: str
 
 
+StackupInput: TypeAlias = Literal["copper_count", "copper_oz", "board_thickness_mm"]
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class StackupInputs:
     """The three inputs of the stack-up generator (screens.md section 4, R3); None while not entered."""
@@ -497,7 +500,7 @@ class DesignSession:
         self._redo: list[SessionDocument | None] = []
         self._drawn: OutcomeReady | None = None
         self._origins: dict[ExampleRef, DesignParameters | None] = {}
-        self._stackup_pending = StackupInputs()
+        self._stackup_pending: dict[StackupInput, float | None] = {}
         outcome.state.subscribe(self._on_outcome)
 
     def new_design(self, topology: TopologyKind) -> None:
@@ -614,17 +617,18 @@ class DesignSession:
             return StackupInputs()
         derived = stackup_from_values(self.document.draft.values)
         pending = self._stackup_pending
+        count = pending["copper_count"] if "copper_count" in pending else derived.copper_count
         return StackupInputs(
-            copper_count=pending.copper_count if pending.copper_count is not None else derived.copper_count,
-            copper_oz=pending.copper_oz if pending.copper_oz is not None else derived.copper_oz,
-            board_thickness_mm=pending.board_thickness_mm
-            if pending.board_thickness_mm is not None
+            copper_count=None if count is None else int(count),
+            copper_oz=pending["copper_oz"] if "copper_oz" in pending else derived.copper_oz,
+            board_thickness_mm=pending["board_thickness_mm"]
+            if "board_thickness_mm" in pending
             else derived.board_thickness_mm,
         )
 
-    def set_stackup_input(self, **change: float | int | None) -> None:
+    def set_stackup_input(self, name: StackupInput, value: float | None) -> None:
         """Enter one generator input; once all three hold a value, write `/stackup/layers` as one undoable edit."""
-        self._stackup_pending = dataclasses.replace(self._stackup_pending, **change)
+        self._stackup_pending[name] = value
         inputs = self.stackup_inputs()
         if inputs.copper_count is None or inputs.copper_oz is None or inputs.board_thickness_mm is None:
             return
@@ -633,7 +637,7 @@ class DesignSession:
         )
         data = to_json(stackup)
         assert isinstance(data, dict)
-        self._stackup_pending = StackupInputs()
+        self._stackup_pending = {}
         self.edit(STACKUP_POINTER, data["layers"])
 
     def chips(self) -> Mapping[str, FieldProvenance]:
@@ -703,7 +707,7 @@ class DesignSession:
             self._undo = [*self._undo, self.document][-UNDO_LIMIT:]
             self._redo = []
         if document is None or self.document is None or document.draft.topology is not self.document.draft.topology:
-            self._stackup_pending = StackupInputs()
+            self._stackup_pending = {}
         self.document = document
         self.notice.set(None)
         self.can_undo.set(bool(self._undo))

@@ -1,5 +1,6 @@
 """The Phases tab (`tab-phases`, screens.md section 3): connection, sequence, terminals and the phase pattern."""
 
+from PySide6.QtGui import QStandardItemModel
 from PySide6.QtWidgets import QComboBox, QFormLayout, QLabel
 
 from embodic.model.fields import FieldGroup
@@ -24,7 +25,11 @@ class PhasePanel(FieldPanel):
         mode.setObjectName("param-phase-assign-mode")
         mode.addItem(choice_text("auto"), "auto")
         mode.addItem(choice_text("manual"), "manual")
-        mode.model().item(1).setEnabled(False)
+        items = mode.model()
+        assert isinstance(items, QStandardItemModel)
+        manual = items.item(1)
+        assert manual is not None
+        manual.setEnabled(False)
         mode.setToolTip(text("design.hint.manual-assignment"))
         mode.setAccessibleName(text("param-phase-assign-mode.label"))
         form.addRow(QLabel(text("param-phase-assign-mode.label")), mode)
