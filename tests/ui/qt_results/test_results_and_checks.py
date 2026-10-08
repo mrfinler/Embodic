@@ -131,7 +131,7 @@ def test_drc_tab_lists_the_wave_failures_and_locate_marks_the_first_on_the_canva
 @pytest.mark.req("REQ-F-33")
 @pytest.mark.parametrize("size", [(1280, 800), (960, 540)])
 def test_drc_table_shows_the_whole_catalogue_message_in_a_stretched_column(make_window, load, qtbot, size):
-    """Catches a message cut to "A trace is ..." by a narrow column, and a row too short for the wrapped message."""
+    """Catches a message cut to "A trace is ..." or a word cut at the column edge, and a row too short for the text."""
     window = load(make_window(), WAVE)
     window.resize(*size)
     window.show_results_tab("tab-drc")
@@ -141,10 +141,12 @@ def test_drc_table_shows_the_whole_catalogue_message_in_a_stretched_column(make_
     assert table.textElideMode() == Qt.TextElideMode.ElideNone
     fonts = table.fontMetrics()
     inner = table.columnWidth(message) - 2 * CELL_MARGIN_PX
+    assert table.columnWidth(message) >= 240
     for row in range(table.model().rowCount()):
         text = table.model().index(row, message).data()
         needed = fonts.boundingRect(QRect(0, 0, inner, 10_000), Qt.TextFlag.TextWordWrap, text).height()
         assert table.rowHeight(row) >= needed, (size, row, text)
+        assert max(fonts.horizontalAdvance(word) for word in text.split()) <= inner, (size, row, text)
     assert table.model().index(0, message).data(Qt.ItemDataRole.ToolTipRole) == table.model().index(0, message).data()
 
 
