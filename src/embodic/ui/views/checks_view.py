@@ -88,7 +88,6 @@ class DrcTab(QWidget):
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)
         self.table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        self.table.setWordWrap(True)
         self.table.setTextElideMode(Qt.TextElideMode.ElideNone)
         self.table.horizontalHeader().setSectionResizeMode(COLUMNS.index("message"), QHeaderView.ResizeMode.Stretch)
         self.table.doubleClicked.connect(lambda _: self.locate_selected())
