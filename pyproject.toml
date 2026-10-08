@@ -35,6 +35,9 @@ dev = [
 ]
 desktop-dev = ["embodic[desktop,dev]", "pytest-qt>=4.5,<5"]
 
+[project.scripts]
+embodic = "embodic.ui.app:main"
+
 [tool.hatch.version]
 path = "src/embodic/__init__.py"
 
