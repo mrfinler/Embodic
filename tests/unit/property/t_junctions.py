@@ -1,12 +1,13 @@
-"""Brute-force T-junction exemption (D-035 b, interfaces.md section 7 rule 5), coded from the decision text.
+"""Brute-force T-junction and same-net via tap exemptions (D-035 b, D-036 a), coded from the decision texts.
 
-Agent 4's ``drc_universe.contract_exemptions`` predates rule 5, so the PR-13 sweeps add these pairs to its result.
+Agent 4's ``drc_universe.contract_exemptions`` predates rule 5 and rule 2b, so the PR-13 sweeps add these pairs to
+its result.
 """
 
 from collections.abc import Sequence
 
 from brute_clearance import centreline_bracket
-from drc_universe import COINCIDENT_MM, Item, Pair, _box_gap, _ends, _owners, _pairs, _paths
+from drc_universe import COINCIDENT_MM, Cls, Item, Pair, _box_gap, _ends, _on_centreline, _owners, _pairs, _paths
 from records import Line
 
 
@@ -28,3 +29,16 @@ def t_junction_pairs(items: Sequence[Item]) -> set[Pair]:
                 if any(on_centreline):
                     pairs.update(_pairs(end.group, other))
     return pairs
+
+
+def same_net_via_tap_pairs(items: Sequence[Item]) -> set[Pair]:
+    """Return the pairs of a via and every primitive of a same-net path whose centreline passes within pad / 2 of it."""
+    paths = _paths(items)
+    return {
+        pair
+        for via in items
+        if via.cls is Cls.VIA
+        for path in paths.values()
+        if path[0].net == via.net and _on_centreline(via, path)
+        for pair in _pairs([via], path)
+    }
