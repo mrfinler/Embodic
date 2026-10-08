@@ -190,6 +190,54 @@ def test_ut_drc_04_via_on_a_non_interconnect_path_of_another_net_is_reported() -
     }
 
 
+def _trunk_with_via_on_its_centreline(shape: str, via_net: str) -> tuple[CopperPath, Via]:
+    """Return a net A path and a via of ``via_net`` whose centre lies on the centreline of its first primitive.
+
+    The path turns 0.4 mm past the via, so its second primitive also comes within the via's clearance but no path end
+    lies on the via.
+    """
+    if shape == "line":
+        return path(0, [line(-5, 0, 0.4, 0), line(0.4, 0, 0.4, -5)], net="A"), via(0, 0, 0, net=via_net)
+    q = math.pi / 2 - 0.08
+    return path(0, [arc(0, 0, 5, 0, math.pi / 2), line(0, 5, -3, 5)], net="A"), via(
+        0, 5 * math.cos(q), 5 * math.sin(q), net=via_net
+    )
+
+
+@pytest.mark.parametrize("shape", ["line", "arc"])
+def test_ut_drc_04_same_net_via_on_a_path_centreline_is_exempt_from_the_whole_path(shape: str) -> None:
+    """Catches D-036 a missing: a terminal via mid-bus is reported against the bus and the strand sides next to it."""
+    trunk, tap = _trunk_with_via_on_its_centreline(shape, via_net="A")
+    report = run_drc(layout(paths=[trunk], vias=[tap]), RULES)
+    assert report is not None
+    assert report.passed, report.violations
+
+
+@pytest.mark.parametrize("shape", ["line", "arc"])
+def test_ut_drc_04_via_of_another_net_on_a_path_centreline_is_reported(shape: str) -> None:
+    """Catches a tap exemption that drops the net test: the same geometry on net B is a short."""
+    trunk, tap = _trunk_with_via_on_its_centreline(shape, via_net="B")
+    report = run_drc(layout(paths=[trunk], vias=[tap]), RULES)
+    assert report is not None
+    assert {(v.kind, v.objects) for v in report.violations} == {
+        (DrcCheckKind.TRACE_VIA, ("path:0/prim:0", "via:0")),
+        (DrcCheckKind.TRACE_VIA, ("path:0/prim:1", "via:0")),
+    }
+
+
+@pytest.mark.parametrize(
+    ("offset_mm", "reported"), [(0.29, False), (0.31, True)], ids=["inside the band", "0.01 mm outside the band"]
+)
+def test_ut_drc_04_same_net_via_tap_band_is_half_the_via_pad(offset_mm: float, reported: bool) -> None:
+    """Catches a tap band that grows into slack: with pad_mm = 0.6 a via 0.31 mm off the centreline overlaps."""
+    trunk = path(0, [line(-5, 0, 5, 0)], net="A")
+    report = run_drc(layout(paths=[trunk], vias=[via(0, 0, offset_mm, net="A")]), RULES)
+    assert report is not None
+    assert [(v.kind, v.objects) for v in report.violations] == (
+        [(DrcCheckKind.TRACE_VIA, ("path:0/prim:0", "via:0"))] if reported else []
+    )
+
+
 def _junction_violations(branch: CopperPath, trunk: CopperPath) -> set[tuple[DrcCheckKind, tuple[str, ...]]]:
     report = run_drc(layout(paths=[trunk, branch]), RULES)
     assert report is not None
