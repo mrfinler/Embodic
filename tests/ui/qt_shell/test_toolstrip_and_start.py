@@ -60,7 +60,6 @@ def test_ui25_a_command_no_view_model_offers_is_a_startup_error(qapp):
 
 
 @pytest.mark.req("REQ-F-39")
-@pytest.mark.xfail(strict=True, reason="U-M4r pending")
 def test_ui25_every_toolstrip_action_has_its_icon_file():
     """Catches a TOOLSTRIP icon stem with no SVG in resources/icons."""
     assert [row.icon for row in TOOLSTRIP if not (icons_dir() / f"{row.icon}.svg").is_file()] == []
