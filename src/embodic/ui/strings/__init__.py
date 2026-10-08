@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 
-from embodic.ui.strings import shell
+from embodic.ui.strings import design, shell
 
 
 def merge(*tables: Mapping[str, str]) -> dict[str, str]:
@@ -16,7 +16,7 @@ def merge(*tables: Mapping[str, str]) -> dict[str, str]:
     return merged
 
 
-STRINGS: Mapping[str, str] = merge(shell.STRINGS)
+STRINGS: Mapping[str, str] = merge(shell.STRINGS, design.STRINGS)
 
 
 def text(key: str, **fields: object) -> str:
