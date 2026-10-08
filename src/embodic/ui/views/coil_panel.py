@@ -26,6 +26,7 @@ from embodic.model.provenance import MeasuredValue
 from embodic.model.schema import JsonValue, ValueType
 from embodic.ui.strings import STRINGS, text
 from embodic.ui.viewmodels.session import (
+    TAB_OF_GROUP,
     DesignSession,
     FieldRow,
     SessionComputed,
@@ -273,18 +274,23 @@ class FieldPanel(QScrollArea):
                 widget.show()
 
     def build(self) -> None:
-        """Add the field rows of this tab, one group box per form group where the tab has several."""
+        """Add the field rows of this tab, one group box per form group where the tab has several.
+
+        A field placed on another tab than its group's (Poles on the Coil tab) joins that tab's untitled section.
+        """
         sections: dict[str, QFormLayout] = {}
         for row in self.session.rows():
             if row.tab != self.tab:
                 continue
-            title = text(f"design.group.{row.spec.group.value}") if row.spec.group in TITLED_GROUPS else ""
+            group = row.spec.group
+            titled = group in TITLED_GROUPS and TAB_OF_GROUP.get(group) == self.tab
+            title = text(f"design.group.{group.value}") if titled else ""
             if title not in sections:
                 box = QGroupBox(title) if title else QWidget()
-                box.setObjectName(f"{self.tab}-group-{row.spec.group.value}")
+                box.setObjectName(f"{self.tab}-group-{group.value}")
                 sections[title] = QFormLayout(box)
                 self._layout.addWidget(box)
-                self.add_helpers(row.spec.group, sections[title])
+                self.add_helpers(group, sections[title])
             editor = FieldEditor(row.widget_id, row.spec, self.session)
             self.editors[row.widget_id] = editor
             sections[title].addRow(editor)

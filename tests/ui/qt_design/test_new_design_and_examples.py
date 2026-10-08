@@ -4,7 +4,7 @@ import itertools
 
 import pytest
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QDialog, QLabel, QLineEdit
+from PySide6.QtWidgets import QDialog, QGroupBox, QLabel, QLineEdit
 from tests.ui.qt_design.conftest import enter, find
 
 from embodic.errors import Severity
@@ -159,6 +159,16 @@ def test_ui28_an_option_blocked_by_a_sibling_is_disabled_with_the_reason(make_sh
     window.session.edit("/winding/coil/end_style", "straight")
     assert corner.isVisibleTo(window.panels["tab-coil"]) and not corner.isEnabled()
     assert find(window, "param-corner-radius-hint").text() == "Not used with straight ends."
+
+
+@pytest.mark.req("REQ-F-32")
+def test_the_coil_tab_shows_poles_under_no_rotor_heading(make_shell):
+    """Catches DEF-3: the rotor group of Poles put a "Rotor and magnets" heading on the untitled Coil tab."""
+    window = make_shell().window
+    window.session.load_example(D08)
+    coil = window.panels["tab-coil"]
+    assert "param-poles" in coil.visible_inputs()
+    assert [box.title() for box in coil.findChildren(QGroupBox) if box.title()] == []
 
 
 def visible_chips(window):
