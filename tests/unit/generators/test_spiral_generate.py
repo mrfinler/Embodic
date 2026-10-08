@@ -16,12 +16,13 @@ from tests.unit.model.designs import serpentine_design
 from embodic.drc import run_drc
 from embodic.errors import Unbuildable
 from embodic.generators import GENERATORS, build_layout, generate_spiral, generate_wave
-from embodic.geometry.details import SpiralDetail, TurnLimitReason
+from embodic.geometry.details import SpiralDetail, TurnClosing, TurnLimitReason
 from embodic.geometry.discretise import discretise
 from embodic.geometry.layout import BoardStack, Layout, ViaRole
 from embodic.geometry.paths import CopperPath, is_continuous
 from embodic.geometry.primitives import PrimitiveRole
 from embodic.geometry.transforms import mirror, reverse_path, rotate
+from embodic.model.design import DesignParameters
 from embodic.model.drc_rules import DrcRules
 from embodic.model.vocabulary import TopologyKind
 from embodic.model.winding_specs import SpiralWindingSpec
@@ -313,3 +314,38 @@ def test_d08_example_passes_drc_at_its_own_clearance(registry: Registry) -> None
     least = _drc_summary(stack.boards[0], design.drc_rules)
     assert least["trace_trace"] == pytest.approx(0.8, abs=1e-6)
     assert least["trace_via"] == pytest.approx(0.8, abs=1e-6)
+
+
+def _with_coil(design: DesignParameters, **changes: object) -> DesignParameters:
+    assert isinstance(design.winding, SpiralWindingSpec)
+    coil = dataclasses.replace(design.winding.coil, **changes)  # type: ignore[arg-type]
+    return dataclasses.replace(design, winding=dataclasses.replace(design.winding, coil=coil))
+
+
+@pytest.mark.req("REQ-F-06")
+def test_turn_limit_reports_the_closing(board: Layout, registry: Registry) -> None:
+    """D-031b: CF-11 closes with the lead arc (full), D08 with the half turn; catches a closing left unreported."""
+    assert isinstance(board.detail, SpiralDetail) and board.detail.turn_limit.closing is TurnClosing.FULL
+    d08 = generate_spiral(d08_design(), registry)
+    assert isinstance(d08, BoardStack) and isinstance(d08.boards[0].detail, SpiralDetail)
+    assert d08.boards[0].detail.turn_limit.closing is TurnClosing.HALF
+
+
+@pytest.mark.req("REQ-F-01")
+@pytest.mark.parametrize("turns_offset", [-1, 3])
+def test_first_coil_angle_any_finite_value_is_normalised(turns_offset: int, board: Layout, registry: Registry) -> None:
+    """D-031c: pi/2 + 2 pi k builds the same copper as pi/2 (within 1e-9 mm); a negative angle is no longer refused."""
+    shifted = _with_coil(default_design(), first_coil_angle_rad=math.pi / 2 + turns_offset * 2 * math.pi)
+    stack = generate_spiral(shifted, registry)
+    assert isinstance(stack, BoardStack)
+    for a, b in zip(stack.boards[0].vias, board.vias, strict=True):
+        assert math.dist((a.x_mm, a.y_mm), (b.x_mm, b.y_mm)) <= 1e-9
+
+
+@pytest.mark.req("REQ-F-19")
+@pytest.mark.parametrize("angle", [math.nan, math.inf])
+def test_non_finite_first_coil_angle_is_unbuildable(angle: float, registry: Registry) -> None:
+    """D-031c: only a finite angle can be normalised; NaN or inf returns Unbuildable naming the input."""
+    refused = generate_spiral(_with_coil(default_design(), first_coil_angle_rad=angle), registry)
+    assert isinstance(refused, Unbuildable)
+    assert refused.issues[0].pointers == ("/winding/coil/first_coil_angle_rad",)

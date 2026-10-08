@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from tests.unit.generators.d08_example import D08_OUTLINE
 from tests.unit.model.designs import spiral_design
 
 from embodic.errors import Unbuildable
@@ -82,6 +83,7 @@ def _d08_design() -> DesignParameters:
         winding=dataclasses.replace(base.winding, coil=coil),
         stackup=generate_even_stackup(v["copper_layers"], v["copper_thickness_mm"], v["board_thickness_mm"]),
         connection=dataclasses.replace(base.connection, topology=ConnectionTopology(v["connection"])),
+        outline=D08_OUTLINE,
     )
 
 
