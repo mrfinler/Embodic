@@ -19,10 +19,14 @@ OUT = ROOT / "docs/phase2/evidence/evidence_register.json"
 
 PREPARED_BY = (
     "Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5 (rows EV-01 to EV-83); "
-    "claude-sonnet-5-5 (rows EV-84 to EV-93, unit U-S3b; rows EV-94 to EV-105, unit U-S3c)"
+    "claude-sonnet-5-5 (rows EV-84 to EV-93, unit U-S3b; rows EV-94 to EV-105, unit U-S3c; "
+    "rows EV-106 to EV-108, unit U-S5a)"
 )
 ACCESSED_DEFAULT = "2026-10-04"
-ACCESSED = {f"EV-{n}": "2026-10-08" for n in range(84, 106)}  # U-S3b and U-S3c lookups
+ACCESSED = {
+    **{f"EV-{n}": "2026-10-08" for n in range(84, 106)},  # U-S3b and U-S3c lookups
+    **{f"EV-{n}": "2026-10-09" for n in range(106, 109)},  # U-S5a
+}
 STATUS_WEAKEST_FIRST = ["unresolved", "not tested", "assumption", "inferred", "verified"]
 # Phase 1 status cells carry qualifiers; these phrases reduce to a vocabulary word.
 STATUS_SYNONYMS = {"not accessed": "unresolved", "marketing": "unresolved"}
@@ -68,6 +72,7 @@ T = {  # topology tags, one explicit entry per row so a new row cannot be silent
     "EV-93": ["general"], "EV-94": ["general"], "EV-95": ["general"], "EV-96": ["general"], "EV-97": ["general"],
     "EV-98": ["general"], "EV-99": ["general"], "EV-100": ["general"], "EV-101": ["general"], "EV-102": ["general"],
     "EV-103": ["general"], "EV-104": ["wave"], "EV-105": ["wave"],
+    "EV-106": ["non_engineering"], "EV-107": ["non_engineering"], "EV-108": ["non_engineering"],
 }
 KIND = {  # rows that are not plain source claims
     "EV-60": "bibliographic_record", "EV-61": "bibliographic_record", "EV-63": "bibliographic_record",
@@ -102,7 +107,8 @@ DOCS_FOR_ROW = {  # rows whose Source column names no D-number
     "EV-96": ["MFR-ISOLA-370HR"], "EV-97": ["MFR-ACCURATE-G10FR4"], "EV-98": ["MFR-BGM-FR4"],
     "EV-99": ["MFR-PLASTICSINTL-PTFE"], "EV-100": ["MFR-ELGIN-1018"], "EV-101": ["APN-ADI-MT003"],
     "EV-102": ["WEB-WIKI-THD"], "EV-103": ["WEB-MATHWORKS-THD"], "EV-104": ["GEARTECH-INVOLUTE2013"],
-    "EV-105": ["WEB-MATHWORLD-CIRCLEINVOLUTE"],
+    "EV-105": ["WEB-MATHWORLD-CIRCLEINVOLUTE"], "EV-106": ["LIC-INTER-OFL-4.1"],
+    "EV-107": ["LIC-JETBRAINSMONO-OFL-2.304"], "EV-108": ["PYPI-fonttools"],
 }
 
 
@@ -244,6 +250,16 @@ OTHER_DOCS = [
         "magazine", "https://ik.imagekit.io/agmamedia/gt/issues/0113x/involute_curve_basics.pdf"),
     doc("WEB-MATHWORLD-CIRCLEINVOLUTE", "Circle Involute", "Wolfram MathWorld", None, None, "mathworld.wolfram.com",
         "web_page", "https://mathworld.wolfram.com/CircleInvolute.html"),
+    doc("LIC-INTER-OFL-4.1", "Inter v4.1 LICENSE.txt (SIL Open Font License 1.1)", "The Inter Project Authors", 2016,
+        "2016", "rsms/inter, release tag v4.1; copy in the embodic repository", "licence",
+        "https://raw.githubusercontent.com/rsms/inter/v4.1/LICENSE.txt", "resources/fonts/Inter/LICENSE.txt"),
+    doc("LIC-JETBRAINSMONO-OFL-2.304", "JetBrains Mono v2.304 OFL.txt (SIL Open Font License 1.1)",
+        "The JetBrains Mono Project Authors", 2020, "2020",
+        "JetBrains/JetBrainsMono, release tag v2.304; copy in the embodic repository", "licence",
+        "https://raw.githubusercontent.com/JetBrains/JetBrainsMono/v2.304/OFL.txt",
+        "resources/fonts/JetBrainsMono/OFL.txt"),
+    doc("PYPI-fonttools", "fonttools 4.66.1 (PyPI metadata and licence files)", "fontTools project", None, None,
+        "PyPI", "package", "https://pypi.org/project/fonttools/4.66.1/"),
 ]
 
 
