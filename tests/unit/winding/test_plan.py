@@ -125,13 +125,34 @@ def test_ut_wnd_07_no_triplen_warning(coils: int, poles: int, topology: Connecti
 
 
 @pytest.mark.req("REQ-F-02")
-def test_ut_wnd_08_parallel_paths_up_to_t(registry: Registry) -> None:
-    """Catches an off-by-one limit: 12/16 has t = 4, so a = 4 builds and a = 5 is refused with the limit t."""
-    assert isinstance(_plan(_design(12, 16, parallel_paths=4), registry), SpiralWindingPlan)
-    result = _plan(_design(12, 16, parallel_paths=5), registry)
-    assert _codes(result) == ["UNBUILDABLE_PARALLEL_PATHS_EXCEED_T"]
+@pytest.mark.parametrize(
+    ("coils", "poles", "paths", "periodicity", "buildable"),
+    [
+        (12, 16, 1, 4, True),
+        (12, 16, 2, 4, True),
+        (12, 16, 4, 4, True),
+        (12, 16, 3, 4, False),
+        (12, 16, 5, 4, False),
+        (9, 6, 1, 3, True),
+        (9, 6, 3, 3, True),
+        (9, 6, 2, 3, False),
+    ],
+)
+def test_ut_wnd_08_parallel_paths_must_divide_the_periodicity(
+    coils: int, poles: int, paths: int, periodicity: int, buildable: bool, registry: Registry
+) -> None:
+    """D-032a, D-033d. Catches `a <= t`: Q = 9, 2p = 6 has t = 3 and a = 2 passes that rule, but 3 mod 2 = 1.
+
+    The expected verdicts are the divisors of t written out by hand. A refusal carries the requested paths and t.
+    """
+    result = _plan(_design(coils, poles, parallel_paths=paths), registry)
+    if buildable:
+        assert isinstance(result, SpiralWindingPlan)
+        return
+    assert _codes(result) == ["UNBUILDABLE_PARALLEL_PATHS_NOT_DIVISOR"]
     assert isinstance(result, Unbuildable)
-    assert (result.issues[0].value, result.issues[0].limit) == (5, 4)
+    assert (result.issues[0].value, result.issues[0].limit) == (paths, periodicity)
+    assert result.issues[0].pointers == ("/winding/parallel_paths",)
 
 
 @pytest.mark.req("REQ-F-02")

@@ -63,13 +63,13 @@ def plan_spiral_winding(
         assignment = _manual(spec.assignment, coils, poles)
         if not phase_per_pair:
             feasibility = replace(feasibility, balanced=is_balanced(assignment, coils, spec.phase_sequence))
-    if spec.parallel_paths > feasibility.max_parallel_paths:
+    if not feasibility.allows_parallel_paths(spec.parallel_paths):
         issues.append(
             _issue(
-                "UNBUILDABLE_PARALLEL_PATHS_EXCEED_T",
+                "UNBUILDABLE_PARALLEL_PATHS_NOT_DIVISOR",
                 ["/winding/parallel_paths"],
                 value=spec.parallel_paths,
-                limit=feasibility.max_parallel_paths,
+                limit=feasibility.periodicity,
             )
         )
     if issues:
