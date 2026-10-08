@@ -23,6 +23,10 @@ class ArcMagnet:
     r_outer_mm: float
     thickness_mm: float
 
+    def radial_span_mm(self) -> tuple[float, float]:
+        """Return the inner and outer magnet radius in mm."""
+        return self.r_inner_mm, self.r_outer_mm
+
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class BlockMagnet:
@@ -33,6 +37,10 @@ class BlockMagnet:
     length_mm: float
     r_center_mm: float
     thickness_mm: float
+
+    def radial_span_mm(self) -> tuple[float, float]:
+        """Return the inner and outer magnet radius in mm; the length runs radially."""
+        return self.r_center_mm - self.length_mm / 2.0, self.r_center_mm + self.length_mm / 2.0
 
 
 MagnetGeometry: TypeAlias = ArcMagnet | BlockMagnet

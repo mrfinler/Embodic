@@ -23,27 +23,6 @@ FIELD_TABLE_STEPS = 48  # Xcoil NR in analyzeElements
 _RADIAL_EPS_MM = 1.0 / MM_PER_M**3  # Xcoil analyzeElements radial tolerance, 1e-9 mm (engine.js l.1861-1862)
 
 
-def magnet_span_mm(rotor: RotorSpec) -> tuple[float, float]:
-    """Return (r_A, r_B), the radial extent of the magnets.
-
-    References: EQ-05 (magnet span) and EC-05 (r_A, r_B).
-
-    Parameters
-    ----------
-    rotor : RotorSpec
-        Arc magnet radii, or block centre radius and radial length, in mm.
-
-    Returns
-    -------
-    tuple[float, float]
-        Inner and outer magnet radius in mm.
-    """
-    magnet = rotor.magnet
-    if isinstance(magnet, ArcMagnet):
-        return magnet.r_inner_mm, magnet.r_outer_mm
-    return magnet.r_center_mm - magnet.length_mm / 2.0, magnet.r_center_mm + magnet.length_mm / 2.0
-
-
 def pole_arc_ratio_mm(rotor: RotorSpec, radius_mm: FloatArray) -> FloatArray:
     """Return alpha_p at each radius: constant for an arc magnet, EQ-04 for a block magnet.
 
@@ -108,7 +87,7 @@ def field_table(
     FieldTable
         Peak B_z and B_t in T on FIELD_TABLE_STEPS + 1 radii.
     """
-    r_a, r_b = magnet_span_mm(rotor)
+    r_a, r_b = rotor.magnet.radial_span_mm()
     radii = r_a + (r_b - r_a) * np.arange(FIELD_TABLE_STEPS + 1) / FIELD_TABLE_STEPS
     z = np.full_like(radii, z_from_magnet_mm)
     alpha = pole_arc_ratio_mm(rotor, radii)

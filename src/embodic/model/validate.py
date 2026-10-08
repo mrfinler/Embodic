@@ -5,13 +5,14 @@ l.107-160) for serpentine and wave and the spiral input rules of `spiral_generat
 turn feasibility are the generators' job (UNBUILDABLE), not checked here.
 """
 
+import dataclasses
 import math
 import types
 from collections.abc import Callable, Iterator, Mapping, Sequence
 
 from embodic.errors import IssueCategory, Severity, Suggestion, ValidationIssue, message_for
 from embodic.model.design import DesignParameters
-from embodic.model.fields import FieldSpec, Sign, field_for
+from embodic.model.fields import FieldSpec, Limits, Sign, field_for
 from embodic.model.schema import JsonValue, ValueType, design_values
 from embodic.model.stackup import CopperLayer
 from embodic.model.winding_specs import (
@@ -152,6 +153,26 @@ def _magnet_order(design: DesignParameters) -> Iterator[ValidationIssue]:
         yield issue("INVALID_MAGNET_ORDER", ["/rotor/magnet/r_inner_mm", "/rotor/magnet/r_outer_mm"])
 
 
+def _winding_span_mm(design: DesignParameters) -> tuple[float, float]:
+    match design.winding:
+        case SpiralWindingSpec(coil=coil):
+            return coil.r_inner_mm, coil.r_outer_mm
+        case SerpentineWindingSpec() | WaveWindingSpec() as spec:
+            return spec.r_inner_mm, spec.r_outer_mm
+
+
+def _magnet_faces_winding(design: DesignParameters) -> Iterator[ValidationIssue]:
+    magnet = design.rotor.magnet
+    r_in, r_out = magnet.radial_span_mm()
+    if magnet.kind == "block" and not r_in > 0:
+        yield issue("INVALID_MAGNET_CROSSES_AXIS", ["/rotor/magnet/r_center_mm", "/rotor/magnet/length_mm"])
+        return
+    coil_in, coil_out = _winding_span_mm(design)
+    if coil_in < coil_out and not (r_in < coil_out and r_out > coil_in):
+        # No magnet radius faces the copper, so Ke is 0 and kv and THD divide by it (DEF-M2f-01).
+        yield issue("RANGE_MAGNET_OUTSIDE_WINDING", ["/rotor/magnet"], value=r_in, limit=coil_out, unit=Unit.MM)
+
+
 def _serpentine_layers(design: DesignParameters) -> Iterator[ValidationIssue]:
     spec = design.winding
     if not isinstance(spec, SerpentineWindingSpec):
@@ -251,6 +272,54 @@ def _stackup(design: DesignParameters) -> Iterator[ValidationIssue]:
             yield issue("INVALID_LAYER_NAME_DUPLICATE", [f"/stackup/layers/{position}/name"], value=name)
 
 
+# Supported ranges the field table does not hold yet (assumption unless a source is named). Each one bounds the work
+# of a stage or keeps a formula finite; the values come from timing CF-11 (U-M2-fix3 report).
+OUTLINE_MAX_MM = 2000.0  # the arc-magnet radius maximum of the field table
+SUPPORTED_RANGES: Mapping[str, Limits] = types.MappingProxyType(
+    {
+        # Physics cuts each path into length / max_segment chords; 0.1 mm keeps a CF-11 compute near 2 s.
+        "/analysis/max_segment_mm": Limits(low=0.1),
+        # The DRC broad phase keeps every item pair closer than the rule; 5 mm keeps a CF-11 compute near 2 s.
+        "/drc_rules/trace_clearance_mm": Limits(high=5.0),
+        "/drc_rules/via_clearance_mm": Limits(high=5.0),
+        "/drc_rules/edge_clearance_mm": Limits(high=5.0),
+        "/drc_rules/hole_clearance_mm": Limits(high=5.0),
+        "/vias/plating_um": Limits(low=1.0),
+        # Xcoil magnet sizes 0.1 to 100 mm (field table, rotor rows); the centre radius follows the arc radii.
+        "/rotor/magnet/width_mm": Limits(low=0.1, high=100.0),
+        "/rotor/magnet/length_mm": Limits(low=0.1, high=100.0),
+        "/rotor/magnet/r_center_mm": Limits(low=0.5, high=OUTLINE_MAX_MM),
+        "/winding/coil/r_inner_mm": Limits(high=OUTLINE_MAX_MM),
+        "/winding/coil/r_outer_mm": Limits(high=OUTLINE_MAX_MM),
+        "/outline/board/radius_mm": Limits(high=OUTLINE_MAX_MM),
+        "/outline/board/across_flats_mm": Limits(high=OUTLINE_MAX_MM),
+        "/outline/bore/radius_mm": Limits(high=OUTLINE_MAX_MM),
+        "/outline/bore/across_flats_mm": Limits(high=OUTLINE_MAX_MM),
+    }
+)
+
+
+def _supported_ranges(design: DesignParameters) -> Iterator[ValidationIssue]:
+    values = design_values(design)
+    for pointer, limits in SUPPORTED_RANGES.items():
+        value = values.get(pointer)
+        if _is_number(value) and isinstance(value, int | float):
+            yield from _check_limits(dataclasses.replace(field_for(pointer, values), limits=limits), pointer, value)
+
+
+def _winding_above_ambient(design: DesignParameters) -> Iterator[ValidationIssue]:
+    operating = design.operating
+    if operating.winding_temperature_degc < operating.ambient_temperature_degc:
+        pointers = ["/operating/winding_temperature_degc", "/operating/ambient_temperature_degc"]
+        yield issue(
+            "RANGE_WINDING_BELOW_AMBIENT",
+            pointers,
+            value=operating.winding_temperature_degc,
+            limit=operating.ambient_temperature_degc,
+            unit=Unit.DEGC,
+        )
+
+
 def _harmonics(design: DesignParameters) -> Iterator[ValidationIssue]:
     for position, order in enumerate(design.analysis.harmonics):
         if order < 1 or order % 2 == 0:
@@ -261,11 +330,14 @@ CROSS_FIELD_RULES: tuple[Callable[[DesignParameters], Iterator[ValidationIssue]]
     _poles_even,
     _radial_order,
     _magnet_order,
+    _magnet_faces_winding,
     _serpentine_layers,
     _via_rings,
     _spiral_inputs,
     _stackup,
     _harmonics,
+    _supported_ranges,
+    _winding_above_ambient,
 )
 
 

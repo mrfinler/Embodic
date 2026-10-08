@@ -7,7 +7,7 @@ from collections.abc import Iterator
 from typing import Any
 
 import pytest
-from hypothesis import assume, given, settings
+from hypothesis import assume, example, given, settings
 from hypothesis import strategies as st
 
 from embodic.api import ComputeOptions, StageCache, compute, outcome_to_json
@@ -22,9 +22,11 @@ from embodic.model.provenance import ExampleRef, UserValue, derive_provenance
 from embodic.model.winding_specs import SpiralWindingSpec
 from embodic.outcome import ComputeOutcome
 from embodic.results import load_registry
+from embodic.results.status import Status
+from embodic.results.traceable import Traceable
 from embodic.winding import SpiralWindingPlan, plan_spiral_winding
 
-from .strategies import COMPUTE_EXAMPLES, cf11, mutated_drafts, spiral_designs
+from .strategies import COMPUTE_EXAMPLES, cf11, cf11_draft_with, mutated_drafts, spiral_designs
 
 REGISTRY = load_registry()
 NO_DRC = ComputeOptions(run_drc=False)
@@ -75,6 +77,14 @@ def test_pr_03_every_built_path_is_continuous(design: DesignParameters) -> None:
 @pytest.mark.req("REQ-F-14")
 @settings(max_examples=max(20, COMPUTE_EXAMPLES * 4))
 @given(draft=mutated_drafts())
+# DEF-M2f-03: physics chords of 0.001 mm and a 64 mm DRC rule each ran for minutes before the supported ranges.
+@example(draft=cf11_draft_with({"/analysis/max_segment_mm": 0.001}))
+@example(draft=cf11_draft_with({"/drc_rules/trace_clearance_mm": 64}))
+# DEF-M2f-02 and the U-M2-fix3 leaf scan: each raised inside physics or DRC.
+@example(draft=cf11_draft_with({"/rotor/magnet/length_mm": 1.5e-164}))
+@example(draft=cf11_draft_with({"/operating/winding_temperature_degc": 3}))
+@example(draft=cf11_draft_with({"/vias/plating_um": 5e-324}))
+@example(draft=cf11_draft_with({"/outline/bore/radius_mm": 1e300}))
 def test_pr_05_arbitrary_values_never_raise_and_invalid_values_return_issues(draft: Any) -> None:
     """PR-05 (exception part). Catches an uncaught exception or an invalid input that returns no issue."""
     parsed = parse_draft(draft)
@@ -89,15 +99,44 @@ def test_pr_05_arbitrary_values_never_raise_and_invalid_values_return_issues(dra
 
 
 @pytest.mark.req("REQ-F-14")
-@pytest.mark.xfail(strict=True, reason="DEF-M2f-01: valid input gives kv_rpm_per_v and THD of +inf (physics owner)")
-def test_pr_05_valid_input_gives_finite_results() -> None:
-    """PR-05 (finite part), found by the random search: CF-11 with the block magnet centred at r 5 mm."""
+def test_pr_05_magnet_outside_the_winding_is_refused_not_infinite() -> None:
+    """PR-05 (finite part, DEF-M2f-01). Catches kv and THD of +inf from CF-11 with its block magnet at r 5 mm."""
     design = cf11()
     magnet = dataclasses.replace(design.rotor.magnet, r_center_mm=5.0)
-    design = dataclasses.replace(design, rotor=dataclasses.replace(design.rotor, magnet=magnet))
-    outcome = _outcome(design)
-    assert [i for i in outcome.issues if i.severity is Severity.ERROR] == []
+    outcome = _outcome(dataclasses.replace(design, rotor=dataclasses.replace(design.rotor, magnet=magnet)))
+    assert "INVALID_MAGNET_CROSSES_AXIS" in [i.code for i in outcome.issues]
     assert list(_nonfinite_tags(outcome_to_json(outcome))) == []
+
+
+def _traceables(value: object) -> Iterator[Traceable[object]]:
+    if isinstance(value, Traceable):
+        yield value
+    elif dataclasses.is_dataclass(value) and not isinstance(value, type):
+        for f in dataclasses.fields(value):
+            yield from _traceables(getattr(value, f.name))
+    elif isinstance(value, tuple):
+        for item in value:
+            yield from _traceables(item)
+
+
+def _is_finite(value: object) -> bool:
+    numbers = value if isinstance(value, tuple) else (value,)
+    return all(math.isfinite(n) for n in numbers if isinstance(n, float))
+
+
+@pytest.mark.req("REQ-F-14")
+def test_pr_05_a_non_finite_result_is_unresolved_and_named_by_an_issue() -> None:
+    """PR-05 (finite part). Catches a non-finite result without an issue or with a badge stronger than unresolved.
+
+    CF-11 at 0 rpm is a valid input whose skin depth at 0 Hz is infinite.
+    """
+    outcome = _outcome(_with_operating(cf11(), speed_rpm=0.0))
+    assert outcome.analysis is not None
+    non_finite = [t for t in _traceables(outcome.analysis) if not _is_finite(t.value)]
+    flagged = [i.value for i in outcome.issues if i.code == "RANGE_NON_FINITE_RESULT"]
+    assert sorted(t.quantity for t in non_finite) == sorted(flagged)
+    assert "skin_depth" in flagged
+    assert {t.status for t in non_finite} == {Status.UNRESOLVED}
 
 
 def _with_br(design: DesignParameters, remanence_t: float) -> DesignParameters:
