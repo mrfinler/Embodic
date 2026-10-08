@@ -754,7 +754,7 @@ closes DEF-U-D4-02 (§13 point 7).
 
 Revision 2026-10-09 (U-D8, D-035e, D-036e, D-037d; `tests/golden/expected_diffs/wave.toml` and
 `tests/golden/m3_wave/test_gr22_results.py` on main 8a297a0, `verified` by reading). XD-WAVE text. `wave.toml` holds one
-entry, XD-WAVE-001: in the overlap wave with a star connection embodic counts the three tap stubs as phase link copper,
+entry, XD-WAVE-001. In the overlap wave with a star connection embodic counts the three tap stubs as phase link copper,
 and Xcoil sets its link sum to zero (`engine.js` l.2172). Its status is `assumption` until Agent 2 decides (U-E8), and
 it does not cover the overlap wave with a delta connection (Xcoil 0 W, embodic 0.00196 W; U-M3-fix2 report, not
 re-measured here). The via-length difference above has no XD-WAVE entry. Instead
@@ -1990,7 +1990,7 @@ Revision 2026-10-09 (U-D8, D-037a; U-V3b report; `tests/independent/README.md` o
 reading). Rule 5 reading. `_junctions` (`items.py` l.272-287) measures the distance from a path end to the centreline of
 every primitive of the other same-net paths on its layer, end points included, and exempts the end group from every
 primitive of each path within `COINCIDENCE_MM`. Agent 4's independent model reads rule 5 the same way. One pair on
-each GR-19 layout depends on that reading: the start of path 16 (wave: 193) is the end of path 15 (wave: 192) and
+each GR-19 layout depends on that reading. The start of path 16 (wave: 193) is the end of path 15 (wave: 192) and
 also lies on its primitive 2, both net `N`. Only rule 5 exempts that primitive, and `run_drc` exempts it too.
 
 Net test. Rules 2 to 5 (rule 5 added 2026-10-08, U-D7) apply only when both objects carry the same net, with one waiver (D-022 a, as revised by
@@ -2900,8 +2900,8 @@ both.
 | §2.2: U-M3-fix records the via-length difference as an XD-WAVE entry | D-035e, D-036e | `wave.toml` holds XD-WAVE-001 (overlap star) only. The via-length difference is checked by a GR-22 test, not by an XD-WAVE entry. The code differs from D-035e here; Fable rules whether an entry is still owed |
 | DEF-U-D4-02 (point 6): `validate_design` checks only `one_board_per_phase` | D-032c (U-M2-fix, work_breakdown.md §8) | both stack modes checked (`model/validate.py` l.196-200) |
 
-8. Recorded limitation (revision 2026-10-09, U-D8, D-037b). Per-phase stack: interconnect between boards not
-   modelled; Ke/P_ic status `unresolved`. The serpentine example built one board per phase gives three boards, each
+8. Recorded limitation (revision 2026-10-09, U-D8, D-037b): "per-phase stack: interconnect between boards not
+   modelled; Ke/P_ic status `unresolved`". The serpentine example built one board per phase gives three boards, each
    DRC-clean, and the `RANGE_SERPENTINE_INTERCONNECT_BOARDS` warning (§6). Its Ke is finite (0.0707654 V·s/rad,
    Fable's acceptance probe), and D-037b states that this is not a claim of accuracy. The status here is the decision's
    label. Whether the `Traceable` status fields of that outcome say `unresolved` is not checked by U-D8 (`unresolved`).
