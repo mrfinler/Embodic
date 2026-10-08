@@ -37,6 +37,77 @@ def test_ut_drc_02_line_line_closed_forms(a: list[float], b: list[float], expect
     assert min_distance_line_line(_rows(a), _rows(b))[0] == pytest.approx(expected, abs=1e-15)
 
 
+# DEF-M2d3-01: CF-11 with radial sides and arc ends, leg on layer L2 against the mirrored right side. The cross product
+# of the two direction vectors is -2.7e-15 mm^2, which is rounding noise on lengths of 19 mm and 1 mm, not a crossing.
+_CF11_SIDE = _line(4.384504814773052, -17.715490891568088, 9.069318178503163, -36.64437157022988)
+_CF11_LEG = _line(9.489750147043045, -38.34311727216107, 9.249503307877399, -37.372405442486105)
+
+
+def test_ut_drc_02_nearly_collinear_disjoint_pair_reports_its_gap() -> None:
+    """Catches DEF-M2d3-01: an absolute cross-product threshold turns rounding noise into a crossing (distance 0).
+
+    The real centre distance is 0.75 mm: half widths 0.25 and 0.30 plus the 0.2 mm design gap.
+    """
+    a, b = np.array(_CF11_SIDE), np.array(_CF11_LEG)
+    exact = min_distance_line_line(a[None, :], b[None, :])[0]
+    pa, pb = _samples(a, False, 20001), _samples(b, False, 20001)
+    sampled = min(
+        float(np.sqrt(((chunk[:, None, :] - pb[None, :, :]) ** 2).sum(-1)).min()) for chunk in np.array_split(pa, 40)
+    )
+    assert sampled == pytest.approx(0.75, abs=1e-6)
+    assert exact == pytest.approx(0.75, abs=1e-9)
+
+
+def _collinear_rows(gap_mm: float, overlap_mm: float) -> tuple[np.ndarray, np.ndarray]:
+    """Two 20 mm segments on one line in each of 720 directions: ``gap_mm`` apart, or b ``overlap_mm`` over a."""
+    angle_rad = np.deg2rad(np.arange(0.0, 360.0, 0.5)) + 0.01
+    ux, uy = np.cos(angle_rad), np.sin(angle_rad)
+    ox, oy = np.full_like(ux, 9.1), np.full_like(uy, -36.6)
+    start_b_mm = 20.0 + gap_mm - overlap_mm
+    a = np.stack([ox, oy, ox + 20.0 * ux, oy + 20.0 * uy, 0 * ux], axis=1)
+    b = np.stack(
+        [
+            ox + start_b_mm * ux,
+            oy + start_b_mm * uy,
+            ox + (start_b_mm + 20.0) * ux,
+            oy + (start_b_mm + 20.0) * uy,
+            0 * ux,
+        ],
+        axis=1,
+    )
+    return a, b
+
+
+def test_ut_drc_02_collinear_disjoint_segments_measure_the_gap_in_every_direction() -> None:
+    """Catches DEF-M2d3-01 at its root: collinear segments in any direction must fall back to the end-point distance.
+
+    Collinear means exactly collinear in the real numbers, so the closed form is the 0.2 mm gap along the shared line.
+    """
+    a, b = _collinear_rows(gap_mm=0.2, overlap_mm=0.0)
+    wrong = np.flatnonzero(np.abs(min_distance_line_line(a, b) - 0.2) > 1e-9)
+    assert wrong.size == 0, f"{wrong.size} of {len(a)} directions report a false crossing, first at row {wrong[0]}"
+
+
+def test_ut_drc_02_antiparallel_overlap_is_zero_in_every_direction() -> None:
+    """Catches a fix that drops collinear pairs without the end-point path: b runs backwards over 1 mm of a."""
+    a, b = _collinear_rows(gap_mm=0.0, overlap_mm=1.0)
+    b = b[:, [2, 3, 0, 1, 4]]
+    assert np.all(min_distance_line_line(a, b) <= 1e-12)
+
+
+def test_ut_drc_02_collinear_ends_touching_is_zero_in_every_direction() -> None:
+    """Catches a fix that loses the shared end point: the end of a is the start of b."""
+    a, b = _collinear_rows(gap_mm=0.0, overlap_mm=0.0)
+    assert np.all(min_distance_line_line(a, b) <= 1e-12)
+
+
+def test_ut_drc_02_shallow_true_crossing_is_exactly_zero() -> None:
+    """Catches a parallel tolerance so wide that a real crossing at 2e-7 rad is measured by its end points (5e-6 mm)."""
+    a = _rows(_line(0, 0, 10, 0))
+    b = _rows(_line(0, -1e-6, 10, 1e-6))
+    assert min_distance_line_line(a, b)[0] == 0.0
+
+
 @pytest.mark.parametrize(
     ("line", "arc", "expected"),
     [

@@ -19,8 +19,10 @@ from numpy.typing import NDArray
 from embodic.geometry.layout import Pad
 from embodic.units import FloatArray
 
-# Xcoil segSegDist (engine.js l.565): below this cross product the intersection test is skipped as parallel.
-_PARALLEL_CROSS_MM2 = 1e-15
+# Parallel test: |d1 x d2| <= eps |d1| |d2|, i.e. sin(angle) <= eps (D-032e). Xcoil's absolute 1e-15 mm^2 (engine.js
+# l.565) mistakes rounding noise on long segments for a crossing (DEF-M2d3-01). A real crossing missed below eps is
+# measured by its end points instead, at most eps times the longer segment (1e-10 mm for 100 mm).
+_PARALLEL_SINE = 1e-12
 _TWO_PI = 2 * math.pi
 
 BoolArray = NDArray[np.bool_]
@@ -93,7 +95,7 @@ def _line_line(a: FloatArray, b: FloatArray) -> FloatArray:
     best = _better(best, _swap(_point_segment(b[:, 0], b[:, 1], a)))
     best = _better(best, _swap(_point_segment(b[:, 2], b[:, 3], a)))
     den = d1x * d2y - d1y * d2x
-    skew = np.abs(den) > _PARALLEL_CROSS_MM2
+    skew = np.abs(den) > _PARALLEL_SINE * _hypot(d1x, d1y) * _hypot(d2x, d2y)
     safe = np.where(skew, den, 1.0)
     ex, ey = b[:, 0] - a[:, 0], b[:, 1] - a[:, 1]
     t = (ex * d2y - ey * d2x) / safe
@@ -176,7 +178,7 @@ def closest_pairs(a: FloatArray, a_is_arc: bool, b: FloatArray, b_is_arc: bool) 
 
 
 def min_distance_line_line(a: FloatArray, b: FloatArray) -> FloatArray:
-    """Centreline distance of each line pair (mm); equals Xcoil segSegDist (GR-18)."""
+    """Centreline distance of each line pair (mm); equals Xcoil segSegDist (GR-18) except its false crossings."""
     result: FloatArray = closest_pairs(a, False, b, False)[D]
     return result
 
