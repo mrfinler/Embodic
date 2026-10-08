@@ -191,6 +191,9 @@ def _stored_provenance(
         if kind not in known:
             issues.append(_issue("INVALID_PROVENANCE", (f"/provenance{pointer_in_file}",)))
             continue
+        if kind == Provenance.EXAMPLE and not isinstance(entry.get("example_id"), str):
+            issues.append(_issue("INVALID_PROVENANCE", (f"/provenance{pointer_in_file}",)))
+            continue
         if kind == Provenance.MEASURED:
             source = entry.get("source")
             if not (isinstance(source, str) and source.strip() and _measurable(pointer, values)):
