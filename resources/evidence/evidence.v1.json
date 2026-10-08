@@ -1,5 +1,5 @@
 {
- "prepared_by": "Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5 (rows EV-01 to EV-83); claude-sonnet-5-5 (rows EV-84 to EV-93, unit U-S3b)",
+ "prepared_by": "Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5 (rows EV-01 to EV-83); claude-sonnet-5-5 (rows EV-84 to EV-93, unit U-S3b; rows EV-94 to EV-105, unit U-S3c)",
  "schema": "embodic evidence register",
  "schema_version": 1,
  "generated_by": "docs/phase2/evidence/tools/build_evidence_register.py",
@@ -10,7 +10,7 @@
   },
   {
    "path": "docs/phase2/evidence/evidence_register.md",
-   "sha256": "95f5c2f9a2222bef04322d3e215ead24b087d30d4dd9e34518125a09beeb307b"
+   "sha256": "63b64dcb538bd268872c62e217649d3b52619c38c0f85df93a463a70df491d8f"
   },
   {
    "path": "docs/phase1/engineering/equation_registry_draft.json",
@@ -610,6 +610,138 @@
    "kind": "application_note",
    "path": null,
    "url": "https://mikrocontroller.net/attachment/337300/AN955.pdf"
+  },
+  {
+   "id": "MFR-ROGERS-RO4000",
+   "title": "RO4000 Series High Frequency Circuit Materials, data sheet (Revised 1592 080322, PUB# 92-004)",
+   "authors": "Rogers Corporation",
+   "year": 2022,
+   "year_text": "2022 (copyright line)",
+   "venue": "manufacturer data sheet",
+   "kind": "datasheet",
+   "path": null,
+   "url": "https://www.rogerscorp.com/-/media/project/rogerscorp/documents/advanced-electronics-solutions/english/data-sheets/ro4000-laminates-ro4003c-and-ro4350b---data-sheet.pdf"
+  },
+  {
+   "id": "MFR-DUPONT-KAPTONHN",
+   "title": "Kapton HN polyimide film data sheet, K-15345-2 (12/16)",
+   "authors": "DuPont",
+   "year": 2016,
+   "year_text": "2016",
+   "venue": "manufacturer data sheet (copy hosted at epectec.com)",
+   "kind": "datasheet",
+   "path": null,
+   "url": "https://www.epectec.com/downloads/DuPont-Kapton-HN-Polyimide-Film.pdf"
+  },
+  {
+   "id": "MFR-ISOLA-370HR",
+   "title": "370HR Industry Leading, Standard Loss, Thermally Robust Epoxy Laminate and Prepreg",
+   "authors": "Isola Group",
+   "year": 2021,
+   "year_text": "2021 (footer: Revision C, Last Updated April 15, 2021)",
+   "venue": "manufacturer data sheet",
+   "kind": "datasheet",
+   "path": null,
+   "url": "https://www.isola-group.com/wp-content/uploads/data-sheets/370hr.pdf"
+  },
+  {
+   "id": "MFR-ACCURATE-G10FR4",
+   "title": "Acculam Epoxyglas G10, FR4, Product Data Sheet",
+   "authors": "Accurate Plastics (distributed by Polymershapes)",
+   "year": null,
+   "year_text": null,
+   "venue": "manufacturer data sheet (no date printed)",
+   "kind": "datasheet",
+   "path": null,
+   "url": "https://www.polymershapes.com/wp-content/uploads/2020/04/Polymershapes_Accurate_DataSheet-Acculam-Epoxyglas-G10-FR4.pdf"
+  },
+  {
+   "id": "MFR-BGM-FR4",
+   "title": "G10/FR4 Data Sheet",
+   "authors": "BGM International LLC",
+   "year": null,
+   "year_text": null,
+   "venue": "manufacturer data sheet (copy hosted at curbellplastics.com; no date printed)",
+   "kind": "datasheet",
+   "path": null,
+   "url": "https://www.curbellplastics.com/wp-content/uploads/2024/04/BGM-International-FR4-Data-Sheet.pdf"
+  },
+  {
+   "id": "MFR-PLASTICSINTL-PTFE",
+   "title": "PTFE data sheet",
+   "authors": "Plastics International (the document names no issuer)",
+   "year": null,
+   "year_text": null,
+   "venue": "distributor data sheet (no date printed)",
+   "kind": "datasheet",
+   "path": null,
+   "url": "https://www.plasticsintl.com/media/trshlm53/ptfe-data-sheet.pdf"
+  },
+  {
+   "id": "MFR-ELGIN-1018",
+   "title": "Carbon Steel Grade 1018 Data Sheet",
+   "authors": "Elgin (from the file name; the page names no issuer)",
+   "year": null,
+   "year_text": null,
+   "venue": "distributor data sheet (copy hosted at mwcomponents.com)",
+   "kind": "datasheet",
+   "path": null,
+   "url": "https://www.mwcomponents.com/uploads/Resource-Center/Elgin-Material-Sheets/Carbon-Steel-Grade-1018-Data-Sheet_Elgin.pdf"
+  },
+  {
+   "id": "APN-ADI-MT003",
+   "title": "Understand SINAD, ENOB, SNR, THD, THD + N, and SFDR so You Don't Get Lost in the Noise Floor, MT-003 Rev. A 10/08",
+   "authors": "W. Kester (Analog Devices)",
+   "year": 2009,
+   "year_text": "2009 (copyright line)",
+   "venue": "manufacturer tutorial",
+   "kind": "application_note",
+   "path": null,
+   "url": "https://www.analog.com/media/en/training-seminars/tutorials/MT-003.pdf"
+  },
+  {
+   "id": "WEB-WIKI-THD",
+   "title": "Total harmonic distortion",
+   "authors": "Wikipedia contributors",
+   "year": null,
+   "year_text": null,
+   "venue": "Wikipedia",
+   "kind": "web_page",
+   "path": null,
+   "url": "https://en.wikipedia.org/wiki/Total_harmonic_distortion"
+  },
+  {
+   "id": "WEB-MATHWORKS-THD",
+   "title": "thd - Total harmonic distortion - MATLAB",
+   "authors": "MathWorks",
+   "year": null,
+   "year_text": null,
+   "venue": "MATLAB Signal Processing Toolbox documentation",
+   "kind": "documentation",
+   "path": null,
+   "url": "https://www.mathworks.com/help/signal/ref/thd.html"
+  },
+  {
+   "id": "GEARTECH-INVOLUTE2013",
+   "title": "Involute (Back to Basics)",
+   "authors": "Gear Technology (adapted from U. Hindhede 1989 and H. W. Van Gerpen, C. K. Reece 1988)",
+   "year": 2013,
+   "year_text": "2013",
+   "venue": "Gear Technology, January/February 2013, p. 88",
+   "kind": "magazine",
+   "path": null,
+   "url": "https://ik.imagekit.io/agmamedia/gt/issues/0113x/involute_curve_basics.pdf"
+  },
+  {
+   "id": "WEB-MATHWORLD-CIRCLEINVOLUTE",
+   "title": "Circle Involute",
+   "authors": "Wolfram MathWorld",
+   "year": null,
+   "year_text": null,
+   "venue": "mathworld.wolfram.com",
+   "kind": "web_page",
+   "path": null,
+   "url": "https://mathworld.wolfram.com/CircleInvolute.html"
   }
  ],
  "entries": [
@@ -4733,6 +4865,528 @@
    "related_equations": [],
    "related_gaps": [
     "G34"
+   ],
+   "register_origin": "phase2",
+   "accessed": "2026-10-08"
+  },
+  {
+   "id": "EV-94",
+   "claim": "RO4350B dielectric constant \"3.48 ± 0.05\" (process value, \"Z - 10 GHz/23°C\", IPC-TM-650 2.5.5.5 clamped stripline) and \"3.66\" (design value, 8 to 40 GHz, differential phase length method); density \"1.86\" g/cm3 at 23°C (ASTM D792)",
+   "kind": "source_claim",
+   "source": {
+    "document": "MFR-ROGERS-RO4000",
+    "title": "RO4000 Series High Frequency Circuit Materials, data sheet (Revised 1592 080322, PUB# 92-004)",
+    "authors": "Rogers Corporation",
+    "year": 2022,
+    "year_text": "2022 (copyright line)"
+   },
+   "documents": [
+    "MFR-ROGERS-RO4000"
+   ],
+   "location": {
+    "text": "https://www.rogerscorp.com/-/media/project/rogerscorp/documents/advanced-electronics-solutions/english/data-sheets/ro4000-laminates-ro4003c-and-ro4350b---data-sheet.pdf property table (page not checked)",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://www.rogerscorp.com/-/media/project/rogerscorp/documents/advanced-electronics-solutions/english/data-sheets/ro4000-laminates-ro4003c-and-ro4350b---data-sheet.pdf"
+    ]
+   },
+   "read_method": "webfetch_extract",
+   "applies": {
+    "judgement": "yes",
+    "note": "yes (ε_r and density of the \"Rogers 4350B\" dielectric entry; the Xcoil table holds 3.48 and 1.86; the 3.48 value is a 10 GHz value and the app uses it for a quasi-static capacitance, G35)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (extract)",
+   "topology_tags": [
+    "general"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [
+    "G35"
+   ],
+   "register_origin": "phase2",
+   "accessed": "2026-10-08"
+  },
+  {
+   "id": "EV-95",
+   "claim": "Kapton HN dielectric constant 3.4 (25 and 50 µm) and 3.5 (75 and 125 µm) at 1 kHz, ASTM D-150-92, 23°C and 50 % RH; density 1.42 g/cc, ASTM D-1505-90, all four gages",
+   "kind": "source_claim",
+   "source": {
+    "document": "MFR-DUPONT-KAPTONHN",
+    "title": "Kapton HN polyimide film data sheet, K-15345-2 (12/16)",
+    "authors": "DuPont",
+    "year": 2016,
+    "year_text": "2016"
+   },
+   "documents": [
+    "MFR-DUPONT-KAPTONHN"
+   ],
+   "location": {
+    "text": "https://www.epectec.com/downloads/DuPont-Kapton-HN-Polyimide-Film.pdf Table 1 (density), Table 3 (dielectric constant)",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://www.epectec.com/downloads/DuPont-Kapton-HN-Polyimide-Film.pdf"
+    ]
+   },
+   "read_method": "webfetch_extract",
+   "applies": {
+    "judgement": "partly",
+    "note": "partly (supports the \"Polyimide\" entry, Xcoil 3.5 and 1.42, for the film grade HN; a flex-circuit adhesive or coverlay layer is a different material; G35, G36)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (extract)",
+   "topology_tags": [
+    "general"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [
+    "G35",
+    "G36"
+   ],
+   "register_origin": "phase2",
+   "accessed": "2026-10-08"
+  },
+  {
+   "id": "EV-96",
+   "claim": "370HR laminate dielectric constant listed as 4.24 (100 MHz), 4.17 (1 GHz), 4.04 (2 GHz), 3.92 (5 GHz), 3.92 (10 GHz), test methods IPC-TM-650 2.5.5.3, 2.5.5.9 and Bereskin stripline; Tg 180°C by DSC (2.4.25C). The data sheet states no density or specific gravity. The footer reads \"Revision No: C\", \"Last Updated April 15, 2021\" and the revision history lists a later entry D",
+   "kind": "source_claim",
+   "source": {
+    "document": "MFR-ISOLA-370HR",
+    "title": "370HR Industry Leading, Standard Loss, Thermally Robust Epoxy Laminate and Prepreg",
+    "authors": "Isola Group",
+    "year": 2021,
+    "year_text": "2021 (footer: Revision C, Last Updated April 15, 2021)"
+   },
+   "documents": [
+    "MFR-ISOLA-370HR"
+   ],
+   "location": {
+    "text": "https://www.isola-group.com/wp-content/uploads/data-sheets/370hr.pdf Dk table (page not checked; the extract did not pair each method with a frequency)",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://www.isola-group.com/wp-content/uploads/data-sheets/370hr.pdf"
+    ]
+   },
+   "read_method": "webfetch_extract",
+   "applies": {
+    "judgement": "partly",
+    "note": "partly (ε_r of a high-Tg FR-4 class laminate, Xcoil \"FR-4 high-Tg\" 4.2; one product, not the user's board; no density, so EV-96 does not close G36)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (extract)",
+   "topology_tags": [
+    "general"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [
+    "G36"
+   ],
+   "register_origin": "phase2",
+   "accessed": "2026-10-08"
+  },
+  {
+   "id": "EV-97",
+   "claim": "Acculam Epoxyglas G10, FR4 sheet stock: \"Specific Gravity 1.85\" (no unit, no test method) and \"Permittivity-A 4.8\", \"Permativity-D24/23 4.8\" (sic; no frequency, no test method)",
+   "kind": "source_claim",
+   "source": {
+    "document": "MFR-ACCURATE-G10FR4",
+    "title": "Acculam Epoxyglas G10, FR4, Product Data Sheet",
+    "authors": "Accurate Plastics (distributed by Polymershapes)",
+    "year": null,
+    "year_text": null
+   },
+   "documents": [
+    "MFR-ACCURATE-G10FR4"
+   ],
+   "location": {
+    "text": "https://www.polymershapes.com/wp-content/uploads/2020/04/Polymershapes_Accurate_DataSheet-Acculam-Epoxyglas-G10-FR4.pdf property table (page not checked)",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://www.polymershapes.com/wp-content/uploads/2020/04/Polymershapes_Accurate_DataSheet-Acculam-Epoxyglas-G10-FR4.pdf"
+    ]
+   },
+   "read_method": "webfetch_extract",
+   "applies": {
+    "judgement": "partly",
+    "note": "partly (laminate density for EQ-16: 1.85 equals the registry value, but this is NEMA G10/FR4 sheet stock, not PCB core or prepreg, and a specific gravity is dimensionless; reading it as g/cm3 is inferred; G36)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (extract)",
+   "topology_tags": [
+    "general"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [
+    "G10",
+    "G36"
+   ],
+   "register_origin": "phase2",
+   "accessed": "2026-10-08"
+  },
+  {
+   "id": "EV-98",
+   "claim": "G10/FR4 sheet stock: \"Specific Gravity - 1.89\" (no unit, no test method) and \"Permittivity A - 4.8\", \"Permittivity D24/23 - 4.8\" (no frequency, no test method); page says \"Certifiable to NEMA G10/FR4 & Mil Spec MIL-I-24768/27\"",
+   "kind": "source_claim",
+   "source": {
+    "document": "MFR-BGM-FR4",
+    "title": "G10/FR4 Data Sheet",
+    "authors": "BGM International LLC",
+    "year": null,
+    "year_text": null
+   },
+   "documents": [
+    "MFR-BGM-FR4"
+   ],
+   "location": {
+    "text": "https://www.curbellplastics.com/wp-content/uploads/2024/04/BGM-International-FR4-Data-Sheet.pdf typical physical and electrical properties (page not checked)",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://www.curbellplastics.com/wp-content/uploads/2024/04/BGM-International-FR4-Data-Sheet.pdf"
+    ]
+   },
+   "read_method": "webfetch_extract",
+   "applies": {
+    "judgement": "partly",
+    "note": "partly (second FR-4 sheet-stock density, 2 % above EV-97; the pair shows a spread of at least 0.04 between two vendors; G36)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (extract)",
+   "topology_tags": [
+    "general"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [
+    "G10",
+    "G36"
+   ],
+   "register_origin": "phase2",
+   "accessed": "2026-10-08"
+  },
+  {
+   "id": "EV-99",
+   "claim": "Teflon PTFE: table row \"Specific Gravity D792 2.13-2.22\" (no unit), text \"Density is 2.13 to 2.19 gm/cc\", \"Its dielectric constant (2.1)\" with no frequency or method",
+   "kind": "source_claim",
+   "source": {
+    "document": "MFR-PLASTICSINTL-PTFE",
+    "title": "PTFE data sheet",
+    "authors": "Plastics International (the document names no issuer)",
+    "year": null,
+    "year_text": null
+   },
+   "documents": [
+    "MFR-PLASTICSINTL-PTFE"
+   ],
+   "location": {
+    "text": "https://www.plasticsintl.com/media/trshlm53/ptfe-data-sheet.pdf property table (page not checked)",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://www.plasticsintl.com/media/trshlm53/ptfe-data-sheet.pdf"
+    ]
+   },
+   "read_method": "webfetch_extract",
+   "applies": {
+    "judgement": "partly",
+    "note": "partly (supports the \"PTFE\" entry, Xcoil 2.1 and 2.20; the table and the text give different upper bounds, 2.22 and 2.19; G35, G36)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (extract)",
+   "topology_tags": [
+    "general"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [
+    "G35",
+    "G36"
+   ],
+   "register_origin": "phase2",
+   "accessed": "2026-10-08"
+  },
+  {
+   "id": "EV-100",
+   "claim": "\"Density 7.87 g/cc 0.284 lb/in³\" for \"AISI 1018 Steel, cold drawn\" (UNS G10180), no temperature given",
+   "kind": "source_claim",
+   "source": {
+    "document": "MFR-ELGIN-1018",
+    "title": "Carbon Steel Grade 1018 Data Sheet",
+    "authors": "Elgin (from the file name; the page names no issuer)",
+    "year": null,
+    "year_text": null
+   },
+   "documents": [
+    "MFR-ELGIN-1018"
+   ],
+   "location": {
+    "text": "https://www.mwcomponents.com/uploads/Resource-Center/Elgin-Material-Sheets/Carbon-Steel-Grade-1018-Data-Sheet_Elgin.pdf property table (page not checked)",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://www.mwcomponents.com/uploads/Resource-Center/Elgin-Material-Sheets/Carbon-Steel-Grade-1018-Data-Sheet_Elgin.pdf"
+    ]
+   },
+   "read_method": "webfetch_extract",
+   "applies": {
+    "judgement": "partly",
+    "note": "partly (density of one low-carbon steel for EQ-28; the registry holds 7.85, which differs by -0.25 % from 7.87, computed here; the user's rotor steel grade is not known; G34)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (extract)",
+   "topology_tags": [
+    "general"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [
+    "G34"
+   ],
+   "register_origin": "phase2",
+   "accessed": "2026-10-08"
+  },
+  {
+   "id": "EV-101",
+   "claim": "Tutorial MT-003 defines THD as \"the ratio of the rms value of the fundamental signal to the mean value of the root-sum-square of its harmonics (generally, only the first 5 harmonics are significant)\". The fundamental sits in the numerator, the inverse of the form EQ-18 uses",
+   "kind": "source_claim",
+   "source": {
+    "document": "APN-ADI-MT003",
+    "title": "Understand SINAD, ENOB, SNR, THD, THD + N, and SFDR so You Don't Get Lost in the Noise Floor, MT-003 Rev. A 10/08",
+    "authors": "W. Kester (Analog Devices)",
+    "year": 2009,
+    "year_text": "2009 (copyright line)"
+   },
+   "documents": [
+    "APN-ADI-MT003"
+   ],
+   "location": {
+    "text": "https://www.analog.com/media/en/training-seminars/tutorials/MT-003.pdf THD definition (page not checked)",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://www.analog.com/media/en/training-seminars/tutorials/MT-003.pdf"
+    ]
+   },
+   "read_method": "webfetch_extract",
+   "applies": {
+    "judgement": "partly",
+    "note": "partly (a first-party definition from the data-converter field with the reciprocal convention; shows that \"THD\" is not one formula across fields, so EQ-18 must state its own; G31)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (extract)",
+   "topology_tags": [
+    "general"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [
+    "G31"
+   ],
+   "register_origin": "phase2",
+   "accessed": "2026-10-08"
+  },
+  {
+   "id": "EV-102",
+   "claim": "Wikipedia: THD is \"the ratio of the RMS amplitude of a set of higher harmonic frequencies to the RMS amplitude of the first harmonic\" with Vn the RMS of the nth harmonic and V1 the RMS of the fundamental. A variant (THDR) uses the fundamental plus harmonics as the reference and cannot exceed 100 %. The page quotes an older IEEE draft calling \"distortion factor\" the ratio of the RMS of the harmonic content to the RMS of the fundamental and \"also referred to as total harmonic distortion\", and says the IEC \"total harmonic factor\" is a different quantity. The formulas did not survive extraction; the words are quoted",
+   "kind": "source_claim",
+   "source": {
+    "document": "WEB-WIKI-THD",
+    "title": "Total harmonic distortion",
+    "authors": "Wikipedia contributors",
+    "year": null,
+    "year_text": null
+   },
+   "documents": [
+    "WEB-WIKI-THD"
+   ],
+   "location": {
+    "text": "https://en.wikipedia.org/wiki/Total_harmonic_distortion definition and \"Reference\" passages (page not checked)",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://en.wikipedia.org/wiki/Total_harmonic_distortion"
+    ]
+   },
+   "read_method": "webfetch_extract",
+   "applies": {
+    "judgement": "partly",
+    "note": "partly (secondary page; its wording matches EQ-18, √(Σ_{n>1} Ke_n²)/Ke_1, because a ratio of RMS values equals the ratio of peak amplitudes; IEEE 519 and IEC texts were not opened; the basis of the D09 values, EV-91, stays unresolved; G31)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (extract)",
+   "topology_tags": [
+    "general"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [
+    "G31"
+   ],
+   "register_origin": "phase2",
+   "accessed": "2026-10-08"
+  },
+  {
+   "id": "EV-103",
+   "claim": "MATLAB thd returns THD in dBc \"determined from the fundamental frequency and the first five harmonics\"; the example computes pow2db(sum(a(2:end).^2)/a(1)^2), harmonic power over fundamental power; default is the fundamental plus five harmonics, set by argument n",
+   "kind": "source_claim",
+   "source": {
+    "document": "WEB-MATHWORKS-THD",
+    "title": "thd - Total harmonic distortion - MATLAB",
+    "authors": "MathWorks",
+    "year": null,
+    "year_text": null
+   },
+   "documents": [
+    "WEB-MATHWORKS-THD"
+   ],
+   "location": {
+    "text": "https://www.mathworks.com/help/signal/ref/thd.html description and first example (page not checked)",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://www.mathworks.com/help/signal/ref/thd.html"
+    ]
+   },
+   "read_method": "webfetch_extract",
+   "applies": {
+    "judgement": "partly",
+    "note": "partly (a tool's definition: harmonics over fundamental, default five harmonics; it is a power ratio in dB, so it agrees with EQ-18 only after conversion; G31)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (extract)",
+   "topology_tags": [
+    "general"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [
+    "G31"
+   ],
+   "register_origin": "phase2",
+   "accessed": "2026-10-08"
+  },
+  {
+   "id": "EV-104",
+   "claim": "\"A perpendicular to the involute surface is always tangent to the base circle.\" and \"The simplest way to generate an involute curve is to unwrap a taut cord from a fixed cylinder or circle\". The page gives no parametric equation",
+   "kind": "source_claim",
+   "source": {
+    "document": "GEARTECH-INVOLUTE2013",
+    "title": "Involute (Back to Basics)",
+    "authors": "Gear Technology (adapted from U. Hindhede 1989 and H. W. Van Gerpen, C. K. Reece 1988)",
+    "year": 2013,
+    "year_text": "2013"
+   },
+   "documents": [
+    "GEARTECH-INVOLUTE2013"
+   ],
+   "location": {
+    "text": "https://ik.imagekit.io/agmamedia/gt/issues/0113x/involute_curve_basics.pdf p.88 per the extract",
+    "pages_pdf": [
+     88
+    ],
+    "pages_printed": null,
+    "urls": [
+     "https://ik.imagekit.io/agmamedia/gt/issues/0113x/involute_curve_basics.pdf"
+    ]
+   },
+   "read_method": "webfetch_extract",
+   "applies": {
+    "judgement": "yes",
+    "note": "yes (the property EQ-24 cites, \"normal is tangent to the base circle\"; a trade-magazine brief, not a textbook; G37)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (extract)",
+   "topology_tags": [
+    "wave"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [
+    "G37"
+   ],
+   "register_origin": "phase2",
+   "accessed": "2026-10-08"
+  },
+  {
+   "id": "EV-105",
+   "claim": "For a circle x = a cos t, y = a sin t, the involute is x_i = a(cos t + t sin t), y_i = a(sin t − t cos t) (equations 3 and 4); the page gives no definition and no normal/tangent statement. It cites Beyer (CRC Tables, 1987), Gray (1997), Hilbert and Cohn-Vossen, and Lawrence (Dover, 1972), none opened",
+   "kind": "source_claim",
+   "source": {
+    "document": "WEB-MATHWORLD-CIRCLEINVOLUTE",
+    "title": "Circle Involute",
+    "authors": "Wolfram MathWorld",
+    "year": null,
+    "year_text": null
+   },
+   "documents": [
+    "WEB-MATHWORLD-CIRCLEINVOLUTE"
+   ],
+   "location": {
+    "text": "https://mathworld.wolfram.com/CircleInvolute.html equations (3) and (4)",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://mathworld.wolfram.com/CircleInvolute.html"
+    ]
+   },
+   "read_method": "webfetch_extract",
+   "applies": {
+    "judgement": "yes",
+    "note": "yes (the EQ-24 point P(t) with φ₀ = 0 and r_b = a has the same two components, compared by reading; the rotated-copy spacing r_b Δφ is not on the page and stays a derivation; G37)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (extract)",
+   "topology_tags": [
+    "wave"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [
+    "G37"
    ],
    "register_origin": "phase2",
    "accessed": "2026-10-08"
