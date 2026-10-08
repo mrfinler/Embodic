@@ -29,10 +29,10 @@ from embodic.ui.viewmodels.session import (
     pair_number,
     rotation_mode,
 )
-from embodic.ui.views.coil_panel import FieldEditor, FieldPanel, Segment
+from embodic.ui.views.coil_panel import FieldEditor, FieldPanel, Segment, fit_rows
 
 COPPER_COUNTS = (2, 4, 6, 8)
-LAYER_COLUMNS = ("layer", "kind", "pair", "rotation", "thickness")
+LAYER_COLUMNS = ("layer", "kind", "thickness", "pair", "rotation")
 PAIR_COLUMNS = frozenset({"pair", "rotation"})  # spiral only (screens.md section 4)
 ROTATION_WIDGET = "param-pair-rotation"
 
@@ -152,7 +152,7 @@ class LayerPanel(FieldPanel):
             rotation = display_text(rotation_spec, pair.rotation_rad) if pair is not None else ""
             if pair is not None:
                 pair_rows[len(rows)] = pair.position
-            rows.append((str(name), text(f"layer-list.{kind}"), label, rotation, micrometres))
+            rows.append((str(name), text(f"layer-list.{kind}"), micrometres, label, rotation))
             position += 1
         selected = table.currentRow()
         table.blockSignals(True)
@@ -163,6 +163,7 @@ class LayerPanel(FieldPanel):
         if 0 <= selected < len(rows):
             table.selectRow(selected)
         table.blockSignals(False)
+        fit_rows(table)
         for c, column in enumerate(LAYER_COLUMNS):
             table.setColumnHidden(c, column in PAIR_COLUMNS and not spiral)
         self._show_rotation(table, pair_rows)

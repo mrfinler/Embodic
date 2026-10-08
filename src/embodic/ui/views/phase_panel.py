@@ -15,7 +15,7 @@ from embodic.model.fields import FieldGroup
 from embodic.model.vocabulary import TopologyKind
 from embodic.ui.strings import text
 from embodic.ui.viewmodels.session import ASSIGNMENT_POINTER, DesignSession, assignment_mode
-from embodic.ui.views.coil_panel import FieldPanel, Segment, hint_label, repolish, show_hints
+from embodic.ui.views.coil_panel import FieldPanel, Segment, fit_rows, hint_label, repolish, show_hints
 
 PHASE_COLUMNS = ("coil_index", "phase", "polarity")
 _EDIT_TRIGGERS = QAbstractItemView.EditTrigger.EditKeyPressed | QAbstractItemView.EditTrigger.DoubleClicked
@@ -88,6 +88,7 @@ class PhasePanel(FieldPanel):
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                 table.setItem(r, c, item)
         table.blockSignals(False)
+        fit_rows(table)
 
     def _edit_cell(self, item: QTableWidgetItem) -> None:
         leaf = PHASE_COLUMNS[item.column()]

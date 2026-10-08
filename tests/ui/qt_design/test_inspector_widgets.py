@@ -48,14 +48,17 @@ def test_segment_fields_are_exclusive_tool_buttons_that_write_their_binding_key(
 
 @pytest.mark.req("REQ-F-32")
 def test_the_layer_list_header_shows_every_column_title_in_full(make_shell):
-    """Catches a truncated header such as "Thickness (µ..." (U-M4c screenshot finding)."""
+    """Catches a truncated header such as "Thickness (µ..." (U-M4c screenshot finding), or one past the visible edge."""
     window = make_shell(compute_fn=no_compute).window
     window.session.load_example(D08)
     window.inspector_tabs.setCurrentWidget(window.panels["tab-layers"])
-    header = find(window, "layer-list").horizontalHeader()
+    table = find(window, "layer-list")
+    header = table.horizontalHeader()
     shown = [c for c in range(header.count()) if not header.isSectionHidden(c)]
     assert len(shown) == 5
     assert all(header.sectionSize(c) >= header.sectionSizeHint(c) for c in shown)
+    thickness = [table.horizontalHeaderItem(c).text() for c in shown].index("Thickness (µm)")
+    assert header.sectionViewportPosition(thickness) + header.sectionSize(thickness) <= table.viewport().width()
 
 
 @pytest.mark.req("REQ-F-23")
@@ -75,7 +78,7 @@ def test_pair_rotation_mode_and_the_selected_pair_field_edit_the_pair_rotations(
     )
     enter(qtbot, window, "param-rotation-mode", "alternate")
     table: QTableWidget = find(window, "layer-list")
-    rotation_column = 3
+    rotation_column = 4
     copper_rows = [r for r in range(table.rowCount()) if table.item(r, 1).text() == "Copper"]
     assert [table.item(r, rotation_column).text() for r in copper_rows] == ["0", "0", "15", "15", "0", "0"]
     assert not notice.isVisibleTo(window.panels["tab-layers"])

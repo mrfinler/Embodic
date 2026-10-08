@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMenu,
     QScrollArea,
+    QTableWidget,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -171,15 +172,19 @@ class FieldEditor(QWidget):
         self.hint.setObjectName(f"{widget_id}-hint")
         self.hint.setProperty("class", "hint")
         self.hint.setWordWrap(True)
+        head = QHBoxLayout()
+        head.setContentsMargins(0, 0, 0, 0)
+        head.addWidget(self.label, 1)
         line = QHBoxLayout()
         line.setContentsMargins(0, 0, 0, 0)
         line.addWidget(self.input, 1)
         line.addWidget(self.unit)
-        line.addWidget(self.chip)
+        # A segment needs the row's full width ("Single board", "One board per phase"), so its chip moves up a line.
+        (head if isinstance(self.input, Segment) else line).addWidget(self.chip)
         column = QVBoxLayout(self)
         column.setContentsMargins(0, 0, 0, 0)
         column.setSpacing(2)
-        column.addWidget(self.label)
+        column.addLayout(head)
         column.addLayout(line)
         column.addWidget(self.error)
         column.addWidget(self.hint)
@@ -407,6 +412,12 @@ class FieldPanel(QScrollArea):
     def visible_inputs(self) -> set[str]:
         """Return the objectNames of the field inputs this tab shows (UI-28)."""
         return {widget_id for widget_id, editor in self.editors.items() if editor.isVisibleTo(self)}
+
+
+def fit_rows(table: QTableWidget) -> None:
+    """Size a table to its rows, so the inspector scrolls instead of the table showing empty space."""
+    chrome = table.horizontalHeader().sizeHint().height() + table.horizontalScrollBar().sizeHint().height()
+    table.setFixedHeight(chrome + table.verticalHeader().length() + 2 * table.frameWidth())
 
 
 def hint_label(name: str) -> QLabel:

@@ -1,4 +1,4 @@
-"""Save the U-M4c screenshots: New design dialog, Examples gallery and every inspector tab per example and theme.
+"""Save the inspector screenshots: New design dialog, Examples gallery and every inspector tab per example and theme.
 
 Run from the repository root: ``QT_QPA_PLATFORM=offscreen python tests/ui/qt_design/capture_screens.py build/screens``.
 Names follow ``<screen>_<example>_<theme>.png``.
@@ -78,6 +78,13 @@ def main(out_dir: Path) -> int:
                     app.processEvents()
                     window.grab().save(str(out_dir / f"inspector-{tab.removeprefix('tab-')}_{short}_{theme.value}.png"))
         window.appearance.set_theme(ThemeName.LIGHT)
+        window.session.load_example(EXAMPLES["serpentine"])
+        window.session.edit("/winding/stack_mode", "one_board_per_phase")
+        window.session.set_stackup_input("copper_count", 2)  # one board holds one phase: 2 layers per phase
+        settle(app, window)
+        window.inspector_tabs.setCurrentWidget(window.panels["tab-layers"])
+        app.processEvents()
+        window.grab().save(str(out_dir / "inspector-layers_serpentine-one-board-per-phase_light.png"))
         window.session.new_design(TopologyKind.SPIRAL)
         window.inspector_tabs.setCurrentWidget(window.panels["tab-coil"])
         app.processEvents()

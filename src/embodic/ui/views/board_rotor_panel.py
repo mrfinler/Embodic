@@ -32,7 +32,7 @@ from embodic.ui.viewmodels.session import (
     parse_text,
     screw_patterns,
 )
-from embodic.ui.views.coil_panel import FieldEditor, FieldPanel, choice_text
+from embodic.ui.views.coil_panel import FieldEditor, FieldPanel, choice_text, fit_rows
 
 BORE_CHOICES = ("none", "circle", "polygon")
 HOLE_WIDGET = "param-screw-hole-diameter"
@@ -214,6 +214,7 @@ class BoardRotorPanel(FieldPanel):
         if patterns:
             table.selectRow(selected)
         table.blockSignals(False)
+        fit_rows(table)
         remove.setEnabled(bool(patterns))
         if patterns:
             row = self.session.item_row(HOLE_WIDGET, f"{SCREWS_POINTER}/{selected}/hole_diameter_mm")
