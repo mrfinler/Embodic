@@ -1,4 +1,4 @@
-Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5
+Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5. Revised 2026-10-08 (U-S3c) by Agent 5, model: claude-sonnet-5-5.
 
 # Dependency licences (Phase 2)
 
@@ -29,28 +29,41 @@ Python licence text. Status: `not accessed` this session. Source to read is http
 ## Package register
 
 <!-- BEGIN GENERATED: tools/check_dependency_licences.py -->
-PyPI JSON API and wheel `.metadata` files, accessed 2026-10-04. Pin = newest final release whose `Requires-Python` admits 3.11.0 (the user's minimum).
+PyPI JSON API and wheel `.metadata` files, accessed 2026-10-08. Pin = newest final release whose `Requires-Python` admits 3.11.0 (the user's minimum) and that lies inside the version range `pyproject.toml` declares.
 
 | Package | Pin (3.11 floor) | Newest overall | Declared licence (PyPI metadata) | `License-File` entries | Scope | Shipped | Status |
 |---|---|---|---|---|---|---|---|
 | [numpy](https://pypi.org/project/numpy/2.4.6/) | 2.4.6 | 2.5.3 | BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0 | 17 files (snapshot JSON) | runtime (core) | yes | verified (PyPI metadata) |
-| [PySide6-Essentials](https://pypi.org/project/PySide6-Essentials/6.11.2/) | 6.11.2 | 6.11.2 | LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only | `LicenseRef-Qt-Commercial.txt` | runtime (desktop extra) | yes | verified (PyPI metadata) |
-| [shiboken6](https://pypi.org/project/shiboken6/6.11.2/) | 6.11.2 | 6.11.2 | LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only | `LicenseRef-Qt-Commercial.txt` | runtime (required by PySide6-Essentials) | yes | verified (PyPI metadata) |
+| [PySide6-Essentials](https://pypi.org/project/PySide6-Essentials/6.11.2/) | 6.11.2 | 6.12.0 | LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only | `LicenseRef-Qt-Commercial.txt` | runtime (desktop extra) | yes | verified (PyPI metadata) |
+| [shiboken6](https://pypi.org/project/shiboken6/6.11.2/) | 6.11.2 | 6.12.0 | LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only | `LicenseRef-Qt-Commercial.txt` | runtime (required by PySide6-Essentials) | yes | verified (PyPI metadata) |
 | [pyinstaller](https://pypi.org/project/pyinstaller/6.22.3/) | 6.22.3 | 6.22.3 | GNU General Public License v2 (GPLv2) | `COPYING.txt` | build (D-015 stretch goal) | bootloader only | verified (PyPI metadata) |
 | [pyinstaller-hooks-contrib](https://pypi.org/project/pyinstaller-hooks-contrib/2026.8/) | 2026.8 | 2026.8 | Apache Software License; GNU General Public License v2 (GPLv2) | `LICENSE` | build (required by pyinstaller) | no | verified (PyPI metadata) |
 | [pytest](https://pypi.org/project/pytest/9.1.1/) | 9.1.1 | 9.1.1 | MIT | `LICENSE` | test | no | verified (PyPI metadata) |
 | [pytest-qt](https://pypi.org/project/pytest-qt/4.5.0/) | 4.5.0 | 4.5.0 | MIT | `LICENSE` | test (desktop) | no | verified (PyPI metadata) |
 | [pytest-cov](https://pypi.org/project/pytest-cov/7.1.0/) | 7.1.0 | 7.1.0 | MIT | `AUTHORS.rst`, `LICENSE` | test (ADR-0008) | no | verified (PyPI metadata) |
-| [hypothesis](https://pypi.org/project/hypothesis/6.168.3/) | 6.168.3 | 6.168.3 | MPL-2.0 | `LICENSE.txt` | test (ADR-0008) | no | verified (PyPI metadata) |
+| [pytest-timeout](https://pypi.org/project/pytest-timeout/2.4.0/) | 2.4.0 | 2.4.0 | MIT | `LICENSE` | test (pyproject dev, hang guard) | no | verified (PyPI metadata) |
+| [hypothesis](https://pypi.org/project/hypothesis/6.168.5/) | 6.168.5 | 6.168.5 | MPL-2.0 | `LICENSE.txt` | test (ADR-0008) | no | verified (PyPI metadata) |
 | [jsonschema](https://pypi.org/project/jsonschema/4.26.0/) | 4.26.0 | 4.26.0 | MIT | `COPYING` | test (ADR-0008) | no | verified (PyPI metadata) |
 | [ezdxf](https://pypi.org/project/ezdxf/1.4.4/) | 1.4.4 | 1.4.4 | MIT License | `LICENSE` | test (ADR-0008, DXF parser) | no | verified (PyPI metadata) |
 | [pypdf](https://pypi.org/project/pypdf/6.19.0/) | 6.19.0 | 6.19.0 | BSD-3-Clause | `LICENSE` | test (ADR-0008, PDF parser) | no | verified (PyPI metadata) |
 | [ruff](https://pypi.org/project/ruff/0.16.10/) | 0.16.10 | 0.16.10 | MIT | `LICENSE` | dev | no | verified (PyPI metadata) |
 | [import-linter](https://pypi.org/project/import-linter/2.15/) | 2.15 | 2.15 | BSD 2-Clause License | `LICENSE` | dev | no | verified (PyPI metadata) |
 | [mypy](https://pypi.org/project/mypy/2.4.0/) | 2.4.0 | 2.4.0 | MIT | `LICENSE`, `mypy/typeshed/LICENSE` | dev (ADR-0008) | no | verified (PyPI metadata) |
+| [hatchling](https://pypi.org/project/hatchling/1.32.4/) | 1.32.4 | 1.32.4 | MIT | `LICENSE.txt` | build backend (pyproject build-system and dev) | no | verified (PyPI metadata) |
 | [pip-licenses](https://pypi.org/project/pip-licenses/5.5.5/) | 5.5.5 | 5.5.5 | MIT | `LICENSE` | dev (ADR-0008 licence gate) | no | verified (PyPI metadata) |
 | [pip-audit](https://pypi.org/project/pip-audit/2.10.1/) | 2.10.1 | 2.10.1 | Apache Software License | `LICENSE` | dev (ADR-0008 CVE gate) | no | verified (PyPI metadata) |
 <!-- END GENERATED -->
+
+## Installed-package check (U-S3c)
+
+The script reads PyPI. These two rows were also read from the installed copies in the project venv (`verified`):
+
+| Package | Installed file | Licence string | Licence file |
+|---|---|---|---|
+| pytest-timeout 2.4.0 | `.venv/lib/python3.11/site-packages/pytest_timeout-2.4.0.dist-info/METADATA` | `License: MIT`, classifier `License :: OSI Approved :: MIT License` | `licenses/LICENSE`, 1085 bytes, begins "The MIT License", "Copyright (C) 2012, 2014 Floris Bruynooghe" |
+| hatchling 1.32.4 | `.venv/lib/python3.11/site-packages/hatchling-1.32.4.dist-info/METADATA` | `License-Expression: MIT` | `licenses/LICENSE.txt`, 1088 bytes, begins "MIT License", "Copyright (c) 2021-present Ofek Lev" |
+
+Every requirement in `pyproject.toml` (build-system, `dependencies` and every extra) now has a row. The script fails before any network call when one is missing, and `check_dependency_licences.py --coverage` runs only that check. The pin follows the range in `pyproject.toml`, so PySide6-Essentials and shiboken6 stay at 6.11.2 although 6.12.0 exists.
 
 ## Licence text locations
 
@@ -115,7 +128,7 @@ unit must read that page for the modules actually bundled.
 
 ### Test and dev tools
 
-pytest, pytest-qt, pytest-cov, jsonschema, ezdxf, pypdf, ruff, mypy, pip-licenses (MIT), import-linter (BSD-2-Clause),
+pytest, pytest-qt, pytest-cov, pytest-timeout (MIT), hatchling (MIT), jsonschema, ezdxf, pypdf, ruff, mypy, pip-licenses (MIT), import-linter (BSD-2-Clause),
 pip-audit and pyinstaller-hooks-contrib (Apache-2.0, hooks also GPL-2.0), and hypothesis (MPL-2.0) run only on
 developer machines and in CI. embodic does not distribute them, so their licences add no distribution obligation
 (`inferred`). import-linter's declared licence is BSD 2-Clause. ADR-0008 records it as "BSD" without the variant.

@@ -1,4 +1,4 @@
-Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5. Revision 2026-10-08 (U-S3b) by Agent 5, model: claude-sonnet-5-5.
+Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5. Revisions 2026-10-08 (U-S3b, U-S3c) by Agent 5, model: claude-sonnet-5-5.
 
 # Source gaps that still affect Phase 2 results
 
@@ -82,3 +82,17 @@ Source: the "Source and unit gaps" table in `docs/phase2/engineering/equation_sp
 - Any text of ISO 273. The ISO page shows the scope and a preview link, not the table.
 - A textbook statement that the parallel paths of a concentrated winding divide t = gcd(Q, p).
 - Searches that were not run: THD definition, rotor steel density, ε_r datasheets, FR-4 density, involute property. Each has a gap row above. They ran past the 30-minute timebox.
+
+## Revision 2026-10-08 (U-S3c): gaps G31 and G34 to G37
+
+New entries are EV-94 to EV-105 in `evidence_register.json`. Web pages were read through WebFetch extracts, so each row is `verified (extract)`. No EQ entry in the equation registry cites the new ids yet. The engineering owner decides which constants and `sources` lists change.
+
+| Gap | Result | EV ids | Label now | What remains |
+|---|---|---|---|---|
+| G31: THD definition | Four definitions read. Wikipedia and the MATLAB `thd` page put harmonics over the fundamental, as EQ-18 does. The Analog Devices tutorial MT-003 puts the fundamental over the harmonics. None is IEEE 519 or IEC. None of the 12 local papers or the thesis defines THD | EV-101, EV-102, EV-103 (basis of the D09 numbers: EV-91) | The form √(Σ_{n>1} Ke_n²)/Ke_1 is `verified (extract)` as a common definition from a secondary page. The D09 basis stays `unresolved` | IEEE 519-2022 or IEC 61000-4-7 text, and the D09 authors' basis (harmonic range, phase or line voltage) |
+| G34: rotor steel density | One datasheet read: AISI 1018 cold drawn, 7.87 g/cc. The registry holds 7.85, which is -0.25 % from it | EV-100 | `assumption` stays for the rotor steel. The 1018 value is `verified (extract)` for that grade only | The user's rotor steel grade, or a source that states 7.85 |
+| G35: ε_r per dielectric | Read: RO4350B 3.48 at 10 GHz (EV-94), Kapton HN 3.4 to 3.5 at 1 kHz (EV-95), 370HR 4.04 to 4.24 across 100 MHz to 10 GHz (EV-96), G10/FR4 sheet 4.8 with no frequency (EV-97, EV-98), PTFE 2.1 with no frequency (EV-99). The Xcoil values are FR-4 4.4, FR-4 high-Tg 4.2, polyimide 3.5, RO4350B 3.48, PTFE 2.1 | EV-94 to EV-99 | `assumption` stays for plain FR-4 (4.4): no PCB-laminate datasheet read states 4.4, and ε_r depends on frequency and resin content. The other four entries have a datasheet value near the Xcoil value | A datasheet for the user's chosen FR-4 grade, and the frequency at which ε_r applies to the inter-layer capacitance |
+| G36: laminate density | Read: FR-4 sheet stock specific gravity 1.85 (EV-97) and 1.89 (EV-98), no unit given. The Isola 370HR PCB laminate sheet states no density (EV-96). Related: RO4350B 1.86 g/cm3 (EV-94), Kapton HN 1.42 g/cc (EV-95), PTFE 2.13 to 2.22 (EV-99) | EV-94, EV-95, EV-97, EV-98, EV-99 | `assumption` stays for FR-4. The registry value 1.85 equals EV-97, but that is sheet stock and the two vendors differ by 0.04 | A PCB-laminate datasheet that states density for the stack-up material |
+| G37: involute property | The property is read ("A perpendicular to the involute surface is always tangent to the base circle") and the parametric form is read (MathWorld). No textbook was opened. The rotated-copy normal spacing r_b Δφ is on neither page | EV-104, EV-105 | The property and the equation of P(t) are `verified (extract)`. The r_b Δφ spacing stays a derivation (CF-08 reproduces it) | A textbook entry (Beyer, Gray, Lawrence are cited by MathWorld and were not opened) |
+
+Searches that did not give evidence: no PCB-laminate datasheet with a density was opened (370HR has none). A search for a PTFE manufacturer sheet returned distributors only. A search for a rotor-steel density of 7.85 returned the 1018 sheet at 7.87.

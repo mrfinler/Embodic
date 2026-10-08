@@ -1,6 +1,7 @@
 """Query PyPI for every planned dependency and regenerate the table in dependency_licences.md.
 
 Rerun: python3 docs/phase2/evidence/tools/check_dependency_licences.py
+Fails before any network call when pyproject.toml declares a requirement that PACKAGES lacks; `--coverage` runs only that check.
 Writes dependency_licences.snapshot.json and rewrites the block between the GENERATED markers.
 """
 
@@ -10,14 +11,18 @@ import datetime as dt
 import io
 import json
 import re
+import sys
+import tomllib
 import urllib.request
 import zipfile
 from pathlib import Path
 
+from packaging.requirements import Requirement
 from packaging.specifiers import SpecifierSet
 from packaging.version import InvalidVersion, Version
 
 HERE = Path(__file__).resolve().parent.parent
+PYPROJECT = HERE.parents[2] / "pyproject.toml"
 SNAPSHOT = HERE / "dependency_licences.snapshot.json"
 DOC = HERE / "dependency_licences.md"
 PYTHON_FLOOR = "3.11.0"
@@ -35,6 +40,7 @@ PACKAGES: list[tuple[str, str, str]] = [
     ("pytest", "test", "no"),
     ("pytest-qt", "test (desktop)", "no"),
     ("pytest-cov", "test (ADR-0008)", "no"),
+    ("pytest-timeout", "test (pyproject dev, hang guard)", "no"),
     ("hypothesis", "test (ADR-0008)", "no"),
     ("jsonschema", "test (ADR-0008)", "no"),
     ("ezdxf", "test (ADR-0008, DXF parser)", "no"),
@@ -42,9 +48,30 @@ PACKAGES: list[tuple[str, str, str]] = [
     ("ruff", "dev", "no"),
     ("import-linter", "dev", "no"),
     ("mypy", "dev (ADR-0008)", "no"),
+    ("hatchling", "build backend (pyproject build-system and dev)", "no"),
     ("pip-licenses", "dev (ADR-0008 licence gate)", "no"),
     ("pip-audit", "dev (ADR-0008 CVE gate)", "no"),
 ]
+
+
+def norm(name: str) -> str:
+    return re.sub(r"[-_.]+", "-", name).lower()
+
+
+def pyproject_requirements() -> dict[str, SpecifierSet]:
+    """Version range pyproject.toml gives each requirement (build, runtime and every extra), by normalised name."""
+    data = tomllib.loads(PYPROJECT.read_text())
+    specs = [*data["build-system"]["requires"], *data["project"].get("dependencies", [])]
+    for extra in data["project"].get("optional-dependencies", {}).values():
+        specs.extend(extra)
+    parsed = [Requirement(spec) for spec in specs]
+    return {norm(r.name): r.specifier for r in parsed}
+
+
+def undocumented_requirements() -> list[str]:
+    """Requirements in pyproject.toml that PACKAGES does not list. The `embodic` self-reference is skipped."""
+    listed = {norm(name) for name, _, _ in PACKAGES}
+    return sorted(set(pyproject_requirements()) - listed - {"embodic"})
 
 
 def get_json(url: str) -> dict:
@@ -66,8 +93,8 @@ def admits_floor(requires_python: str | None) -> bool:
         return False
 
 
-def newest_for_floor(project: dict) -> tuple[str, str]:
-    """Return (newest final version admitting the floor, newest final version overall)."""
+def newest_for_floor(project: dict, allowed: SpecifierSet) -> tuple[str, str]:
+    """Return (newest final version admitting the floor and inside the pyproject range, newest final overall)."""
     finals: list[tuple[Version, str, str | None]] = []
     for ver, files in project["releases"].items():
         try:
@@ -81,7 +108,7 @@ def newest_for_floor(project: dict) -> tuple[str, str]:
     finals.sort()
     newest = finals[-1][1]
     for v, ver, req in reversed(finals):
-        if admits_floor(req):
+        if admits_floor(req) and allowed.contains(v):
             return ver, newest
     return "none", newest
 
@@ -159,9 +186,22 @@ def wheel_metadata(release: dict) -> dict:
             "license_expression": expr[0] if expr else None, "license_files": files}
 
 
-def check(name: str) -> dict:
+def allowed_range(name: str, earlier: list[dict]) -> SpecifierSet:
+    """The pyproject range, else the range an already-checked package pins it to (shiboken6 follows PySide6)."""
+    declared = pyproject_requirements()
+    if norm(name) in declared:
+        return declared[norm(name)]
+    for row in earlier:
+        for dist in row["requires_dist"]:
+            req = Requirement(dist)
+            if norm(req.name) == norm(name) and req.marker is None:
+                return req.specifier
+    return SpecifierSet()
+
+
+def check(name: str, earlier: list[dict]) -> dict:
     project = get_json(f"https://pypi.org/pypi/{name}/json")
-    pin, newest = newest_for_floor(project)
+    pin, newest = newest_for_floor(project, allowed_range(name, earlier))
     release = get_json(f"https://pypi.org/pypi/{name}/{pin}/json")
     info = release["info"]
     licence_classifiers = [c.split(" :: ", 2)[-1] for c in info.get("classifiers", []) if c.startswith("License ::")]
@@ -191,7 +231,8 @@ def declared_licence(row: dict) -> str:
 def table(rows: list[dict], scopes: dict[str, tuple[str, str]], accessed: str) -> str:
     lines = [
         f"PyPI JSON API and wheel `.metadata` files, accessed {accessed}. Pin = newest final release whose "
-        f"`Requires-Python` admits {PYTHON_FLOOR} (the user's minimum).",
+        f"`Requires-Python` admits {PYTHON_FLOOR} (the user's minimum) and that lies inside the version range "
+        f"`pyproject.toml` declares.",
         "",
         "| Package | Pin (3.11 floor) | Newest overall | Declared licence (PyPI metadata) | `License-File` entries | Scope | Shipped | Status |",
         "|---|---|---|---|---|---|---|---|",
@@ -209,8 +250,16 @@ def table(rows: list[dict], scopes: dict[str, tuple[str, str]], accessed: str) -
 
 
 def main() -> None:
+    missing = undocumented_requirements()
+    if missing:
+        raise SystemExit(f"pyproject.toml requirements missing from PACKAGES: {missing}")
+    if "--coverage" in sys.argv:
+        print("every pyproject.toml requirement is listed in PACKAGES")
+        return
     accessed = dt.date.today().isoformat()
-    rows = [check(name) for name, _, _ in PACKAGES]
+    rows: list[dict] = []
+    for name, _, _ in PACKAGES:
+        rows.append(check(name, rows))
     scopes = {name.lower(): (scope, shipped) for name, scope, shipped in PACKAGES}
     for r in rows:
         if scopes[r["name"].lower()][1] != "no" and r.get("wheel_url"):

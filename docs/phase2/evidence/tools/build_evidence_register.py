@@ -19,10 +19,10 @@ OUT = ROOT / "docs/phase2/evidence/evidence_register.json"
 
 PREPARED_BY = (
     "Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5 (rows EV-01 to EV-83); "
-    "claude-sonnet-5-5 (rows EV-84 to EV-93, unit U-S3b)"
+    "claude-sonnet-5-5 (rows EV-84 to EV-93, unit U-S3b; rows EV-94 to EV-105, unit U-S3c)"
 )
 ACCESSED_DEFAULT = "2026-10-04"
-ACCESSED = {f"EV-{n}": "2026-10-08" for n in range(84, 94)}  # U-S3b lookups
+ACCESSED = {f"EV-{n}": "2026-10-08" for n in range(84, 106)}  # U-S3b and U-S3c lookups
 STATUS_WEAKEST_FIRST = ["unresolved", "not tested", "assumption", "inferred", "verified"]
 # Phase 1 status cells carry qualifiers; these phrases reduce to a vocabulary word.
 STATUS_SYNONYMS = {"not accessed": "unresolved", "marketing": "unresolved"}
@@ -65,7 +65,9 @@ T = {  # topology tags, one explicit entry per row so a new row cannot be silent
     "EV-80": ["general"], "EV-81": ["general"], "EV-82": ["general"], "EV-83": ["general"],
     "EV-84": ["general"], "EV-85": ["general"], "EV-86": ["general"], "EV-87": ["general"], "EV-88": ["general"],
     "EV-89": ["spiral", "wave"], "EV-90": ["spiral", "wave"], "EV-91": ["spiral"], "EV-92": ["general"],
-    "EV-93": ["general"],
+    "EV-93": ["general"], "EV-94": ["general"], "EV-95": ["general"], "EV-96": ["general"], "EV-97": ["general"],
+    "EV-98": ["general"], "EV-99": ["general"], "EV-100": ["general"], "EV-101": ["general"], "EV-102": ["general"],
+    "EV-103": ["general"], "EV-104": ["wave"], "EV-105": ["wave"],
 }
 KIND = {  # rows that are not plain source claims
     "EV-60": "bibliographic_record", "EV-61": "bibliographic_record", "EV-63": "bibliographic_record",
@@ -96,7 +98,11 @@ DOCS_FOR_ROW = {  # rows whose Source column names no D-number
     "EV-84": ["NIST-CODATA2022"], "EV-85": ["NIST-CODATA2022"], "EV-86": ["BIPM-SI-BROCHURE-9"],
     "EV-87": ["WEB-NBK-JISB1001"], "EV-88": ["WEB-AMESWEB-B1828"], "EV-89": ["BIB-TESSAROLO2019"],
     "EV-90": ["CONF-ALBERTI-MULTILAYER"], "EV-91": ["D09"], "EV-92": ["APN-MICROCHIP-AN955"],
-    "EV-93": ["MFR-HGT-NDFEB"],
+    "EV-93": ["MFR-HGT-NDFEB"], "EV-94": ["MFR-ROGERS-RO4000"], "EV-95": ["MFR-DUPONT-KAPTONHN"],
+    "EV-96": ["MFR-ISOLA-370HR"], "EV-97": ["MFR-ACCURATE-G10FR4"], "EV-98": ["MFR-BGM-FR4"],
+    "EV-99": ["MFR-PLASTICSINTL-PTFE"], "EV-100": ["MFR-ELGIN-1018"], "EV-101": ["APN-ADI-MT003"],
+    "EV-102": ["WEB-WIKI-THD"], "EV-103": ["WEB-MATHWORKS-THD"], "EV-104": ["GEARTECH-INVOLUTE2013"],
+    "EV-105": ["WEB-MATHWORLD-CIRCLEINVOLUTE"],
 }
 
 
@@ -200,6 +206,44 @@ OTHER_DOCS = [
         "(DS00955A)", "R. Parekh (Microchip Technology)", 2005, "2005",
         "application note (copy hosted on mikrocontroller.net)", "application_note",
         "https://mikrocontroller.net/attachment/337300/AN955.pdf"),
+    doc("MFR-ROGERS-RO4000", "RO4000 Series High Frequency Circuit Materials, data sheet (Revised 1592 080322, "
+        "PUB# 92-004)", "Rogers Corporation", 2022, "2022 (copyright line)", "manufacturer data sheet", "datasheet",
+        "https://www.rogerscorp.com/-/media/project/rogerscorp/documents/advanced-electronics-solutions/english/"
+        "data-sheets/ro4000-laminates-ro4003c-and-ro4350b---data-sheet.pdf"),
+    doc("MFR-DUPONT-KAPTONHN", "Kapton HN polyimide film data sheet, K-15345-2 (12/16)", "DuPont", 2016, "2016",
+        "manufacturer data sheet (copy hosted at epectec.com)", "datasheet",
+        "https://www.epectec.com/downloads/DuPont-Kapton-HN-Polyimide-Film.pdf"),
+    doc("MFR-ISOLA-370HR", "370HR Industry Leading, Standard Loss, Thermally Robust Epoxy Laminate and Prepreg",
+        "Isola Group", 2021, "2021 (footer: Revision C, Last Updated April 15, 2021)", "manufacturer data sheet",
+        "datasheet", "https://www.isola-group.com/wp-content/uploads/data-sheets/370hr.pdf"),
+    doc("MFR-ACCURATE-G10FR4", "Acculam Epoxyglas G10, FR4, Product Data Sheet", "Accurate Plastics "
+        "(distributed by Polymershapes)", None, None, "manufacturer data sheet (no date printed)", "datasheet",
+        "https://www.polymershapes.com/wp-content/uploads/2020/04/"
+        "Polymershapes_Accurate_DataSheet-Acculam-Epoxyglas-G10-FR4.pdf"),
+    doc("MFR-BGM-FR4", "G10/FR4 Data Sheet", "BGM International LLC", None, None,
+        "manufacturer data sheet (copy hosted at curbellplastics.com; no date printed)", "datasheet",
+        "https://www.curbellplastics.com/wp-content/uploads/2024/04/BGM-International-FR4-Data-Sheet.pdf"),
+    doc("MFR-PLASTICSINTL-PTFE", "PTFE data sheet", "Plastics International (the document names no issuer)", None,
+        None, "distributor data sheet (no date printed)", "datasheet",
+        "https://www.plasticsintl.com/media/trshlm53/ptfe-data-sheet.pdf"),
+    doc("MFR-ELGIN-1018", "Carbon Steel Grade 1018 Data Sheet", "Elgin (from the file name; the page names no "
+        "issuer)", None, None, "distributor data sheet (copy hosted at mwcomponents.com)", "datasheet",
+        "https://www.mwcomponents.com/uploads/Resource-Center/Elgin-Material-Sheets/"
+        "Carbon-Steel-Grade-1018-Data-Sheet_Elgin.pdf"),
+    doc("APN-ADI-MT003", "Understand SINAD, ENOB, SNR, THD, THD + N, and SFDR so You Don't Get Lost in the Noise "
+        "Floor, MT-003 Rev. A 10/08", "W. Kester (Analog Devices)", 2009, "2009 (copyright line)",
+        "manufacturer tutorial", "application_note",
+        "https://www.analog.com/media/en/training-seminars/tutorials/MT-003.pdf"),
+    doc("WEB-WIKI-THD", "Total harmonic distortion", "Wikipedia contributors", None, None, "Wikipedia", "web_page",
+        "https://en.wikipedia.org/wiki/Total_harmonic_distortion"),
+    doc("WEB-MATHWORKS-THD", "thd - Total harmonic distortion - MATLAB", "MathWorks", None, None,
+        "MATLAB Signal Processing Toolbox documentation", "documentation",
+        "https://www.mathworks.com/help/signal/ref/thd.html"),
+    doc("GEARTECH-INVOLUTE2013", "Involute (Back to Basics)", "Gear Technology (adapted from U. Hindhede 1989 and "
+        "H. W. Van Gerpen, C. K. Reece 1988)", 2013, "2013", "Gear Technology, January/February 2013, p. 88",
+        "magazine", "https://ik.imagekit.io/agmamedia/gt/issues/0113x/involute_curve_basics.pdf"),
+    doc("WEB-MATHWORLD-CIRCLEINVOLUTE", "Circle Involute", "Wolfram MathWorld", None, None, "mathworld.wolfram.com",
+        "web_page", "https://mathworld.wolfram.com/CircleInvolute.html"),
 ]
 
 
