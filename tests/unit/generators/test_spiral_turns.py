@@ -13,7 +13,6 @@ from pathlib import Path
 import pytest
 
 from embodic.generators.spiral.turns import (
-    ClosingKind,
     CoilFrame,
     FullClosing,
     HalfClosing,
@@ -25,6 +24,7 @@ from embodic.generators.spiral.turns import (
     radial_bound,
     turn_table,
 )
+from embodic.geometry.details import TurnClosing
 from embodic.model.winding_specs import SpiralCoilSpec
 
 GOLDEN = json.loads((Path(__file__).parent / "fixtures" / "spiral_r2_turns.json").read_text())
@@ -107,7 +107,7 @@ def test_or_04_d08_builds_three_turns_with_the_half_closing(pad: float) -> None:
     assert [t.kind for t in turns] == [TurnKind.TRAPEZOID, TurnKind.TRIANGLE, TurnKind.TRIANGLE]
     assert not eye(frame, turns, 3).fits and eye(frame, turns, 2).fits
     closing = max_closing(frame, turns)
-    assert isinstance(closing, HalfClosing) and closing.kind is ClosingKind.HALF and closing.n == 3
+    assert isinstance(closing, HalfClosing) and closing.kind is TurnClosing.HALF and closing.n == 3
     assert closing.centre_via[0] == pytest.approx(7.15 / math.sin(math.pi / 12), abs=1e-9)
     assert closing.centre_via[0] == pytest.approx(27.6255, abs=5e-5)
     assert radial_bound(frame) == pytest.approx(6.006993006993007, rel=1e-9)

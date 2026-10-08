@@ -97,10 +97,11 @@ def _out_of_range(design: DesignParameters, spec: SpiralWindingSpec) -> tuple[st
         bad.append("/winding/coil/trace_width_mm")
     non_negative = {
         "/winding/coil/coil_gap_mm": coil.coil_gap_mm,
-        "/winding/coil/first_coil_angle_rad": coil.first_coil_angle_rad,
         "/winding/coil/min_side_length_mm": 0.0 if coil.min_side_length_mm is None else coil.min_side_length_mm,
     }
     bad += [p for p, v in non_negative.items() if not (math.isfinite(v) and v >= 0)]
+    if not math.isfinite(coil.first_coil_angle_rad):
+        bad.append("/winding/coil/first_coil_angle_rad")
     if not (math.isfinite(coil.r_outer_mm) and coil.r_outer_mm > coil.r_inner_mm):
         bad.append("/winding/coil/r_outer_mm")
     if coil.coil_count < 3:
@@ -244,7 +245,7 @@ def _coil_copper(
     terminal_rad = math.atan2(art.terminal[1], art.terminal[0])
     for assignment in plan.assignment:
         k, sign = assignment.coil_index, assignment.polarity
-        angle = coil.first_coil_angle_rad + k * 2 * math.pi / coil.coil_count
+        angle = coil.first_coil_angle_rad % (2 * math.pi) + k * 2 * math.pi / coil.coil_count
         net = f"PHASE_{assignment.phase.value}"
         x_prims, y_prims = rotate(x_canonical, angle), rotate(y_canonical, angle)
         if sign == 1:
@@ -377,6 +378,7 @@ def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack 
             loops_triangular=sum(t.kind is TurnKind.TRIANGLE for t in loops),
             eye_limit=best.n,
             limiting_reason=reason,
+            closing=closing.kind,
         ),
         track_length_per_coil_layer_mm=MappingProxyType({"X": length_mm, "Y": length_mm}),
     )

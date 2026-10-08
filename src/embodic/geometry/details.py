@@ -18,6 +18,13 @@ class TurnLimitReason(StrEnum):
     USER = "user"
 
 
+class TurnClosing(StrEnum):
+    """How the last turn reaches the centre via (spiral_generator_spec.md G5, D-031b)."""
+
+    FULL = "full"  # last left side to L, one lead arc at r_v to the via
+    HALF = "half"  # last turn is a half turn whose right side ends on the via
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class TurnLimit:
     """Turn bounds of one spiral coil (spiral_generator_spec.md G3 and G5)."""
@@ -27,6 +34,7 @@ class TurnLimit:
     loops_triangular: int
     eye_limit: int | None
     limiting_reason: TurnLimitReason
+    closing: TurnClosing
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

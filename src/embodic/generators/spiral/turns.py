@@ -8,6 +8,7 @@ import math
 from dataclasses import dataclass
 from enum import StrEnum
 
+from embodic.geometry.details import TurnClosing
 from embodic.model.winding_specs import SpiralCoilSpec
 
 Point = tuple[float, float]
@@ -257,13 +258,6 @@ def _half_closing_turn(frame: CoilFrame, turns: tuple[LoopTurn, ...], n: int) ->
     return half if fits else None
 
 
-class ClosingKind(StrEnum):
-    """How the last turn reaches the centre via (G5)."""
-
-    FULL = "full"  # last left side to L, one lead arc at r_v to the via
-    HALF = "half"  # last turn is a half turn whose right side ends on the via
-
-
 @dataclass(frozen=True, slots=True, kw_only=True)
 class FullClosing:
     """N full turns; the last left side ends at L on the line d_N-1 at r_v, the lead arc runs from L to (r_v, 0)."""
@@ -273,9 +267,9 @@ class FullClosing:
     lead_point: Point  # L
 
     @property
-    def kind(self) -> ClosingKind:
+    def kind(self) -> TurnClosing:
         """Always FULL."""
-        return ClosingKind.FULL
+        return TurnClosing.FULL
 
     @property
     def n(self) -> int:
@@ -301,9 +295,9 @@ class HalfClosing:
     half: HalfTurn
 
     @property
-    def kind(self) -> ClosingKind:
+    def kind(self) -> TurnClosing:
         """Always HALF."""
-        return ClosingKind.HALF
+        return TurnClosing.HALF
 
     @property
     def n(self) -> int:
