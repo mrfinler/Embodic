@@ -1,6 +1,7 @@
-"""Several layer pairs of the spiral generator (spiral_generator_spec.md G6, D-020): parallel pairs (option M1)."""
+"""Layer pairs of the spiral generator (spiral_generator_spec.md G5, G6, D-020): parallel (M1) and series (M2)."""
 
 import dataclasses
+import math
 
 import pytest
 from tests.unit.generators.default_example import default_design
@@ -8,7 +9,10 @@ from tests.unit.generators.default_example import default_design
 from embodic.drc import run_drc
 from embodic.errors import Unbuildable
 from embodic.generators import generate_spiral
+from embodic.generators.spiral.series import SeriesCoil, series_coil
+from embodic.generators.spiral.turns import CoilFrame, FullClosing, loop_turns, max_closing
 from embodic.geometry.layout import BoardStack, Layout, ViaRole
+from embodic.geometry.primitives import PrimitiveRole
 from embodic.model.design import DesignParameters
 from embodic.model.layers import LayerConfig, LayerPair
 from embodic.model.stackup import generate_even_stackup
@@ -82,10 +86,63 @@ def test_parallel_pairs_pass_drc(m1: Layout) -> None:
     assert least["trace_via"] == pytest.approx(0.2, abs=1e-6)
 
 
+def _series_coil(groups: int) -> tuple[SeriesCoil, FullClosing]:
+    """Canonical CF-11 coil of ``groups`` series groups with sharp corners."""
+    design = default_design()
+    assert isinstance(design.winding, SpiralWindingSpec)
+    frame = CoilFrame.of(design.winding.coil, design.vias.pad_mm)
+    closing = max_closing(frame, loop_turns(frame)[0], vias=groups)
+    assert isinstance(closing, FullClosing)
+    coil = series_coil(frame, closing, design.connection.ring_width_mm, groups, {})
+    assert coil is not None
+    return coil, closing
+
+
 @pytest.mark.req("REQ-F-03")
-def test_series_groups_are_refused_until_the_via_fan_is_built(registry: Registry) -> None:
-    """D-020 series pairs (M2) need the terminal via fan, not built yet; the generator refuses with the pointer."""
+def test_ut_geo_19_series_groups_get_their_own_centre_via_one_pitch_apart() -> None:
+    """UT-GEO-19 (M2, G5 k centre vias): CF-11 with three series groups keeps 10 turns and r_v 30.7, 29.9, 29.1 mm.
+
+    Spec worked example: eye 28.5914 to 30.7 mm, via pitch max(pad, w)/2 + pad/2 + s = 0.8 mm. Catches groups sharing
+    one centre via (a short across a group) or the half closing's single P.
+    """
+    coil, closing = _series_coil(3)
+    assert closing.n == 10
+    assert [group.centre_via[0] for group in coil.groups] == pytest.approx([30.7, 29.9, 29.1], abs=1e-9)
+    assert [group.centre_via[1] for group in coil.groups] == [0.0, 0.0, 0.0]
+
+
+@pytest.mark.req("REQ-F-03")
+def test_ut_geo_19_each_group_runs_from_its_ring_via_to_its_centre_and_out_to_the_next() -> None:
+    """UT-GEO-19 (M2, G6): group g's X joins ring via g to its centre via, its Y the centre to ring via g + 1.
+
+    Ring vias alternate CCW and CW sides of the coil; two on one side sit pad + s = 0.8 mm apart (terminal fan).
+    Catches a transfer via on the wrong side, two groups landing on one ring via, or an odd group that keeps the first
+    outer arc (it enters at the right side of turn 0).
+    """
+    coil, _ = _series_coil(3)
+    rings = coil.ring_vias
+    assert [math.copysign(1.0, p[1]) for p in rings] == [1.0, -1.0, 1.0, -1.0]
+    assert math.dist(rings[0], rings[2]) == pytest.approx(0.8, abs=1e-9)
+    assert math.dist(rings[1], rings[3]) == pytest.approx(0.8, abs=1e-9)
+    for g, group in enumerate(coil.groups):
+        assert math.dist(group.x[0].start_point(), rings[g]) <= 1e-9
+        assert math.dist(group.x[-1].end_point(), group.centre_via) <= 1e-9
+        assert math.dist(group.y[0].start_point(), group.centre_via) <= 1e-9
+        assert math.dist(group.y[-1].end_point(), rings[g + 1]) <= 1e-9
+        for before, after in zip(group.x, group.x[1:], strict=False):
+            assert math.dist(before.end_point(), after.start_point()) <= 1e-9
+    outer_arcs = [sum(p.role is PrimitiveRole.END_TURN for p in group.x) for group in coil.groups]
+    assert outer_arcs[0] - outer_arcs[1] == 1 and outer_arcs[2] == outer_arcs[0]
+
+
+@pytest.mark.req("REQ-F-03")
+def test_ut_geo_19_series_pairs_whose_via_fan_breaks_drc_are_refused(registry: Registry) -> None:
+    """D-020: CF-11 series pairs fail DRC at the fan (stub to fan level 1 passes the level-0 via), so: Unbuildable.
+
+    Catches a series board returned with DRC violations, or one silently changed to parallel pairs.
+    """
     refused = generate_spiral(_three_pairs(((0,), (1,), (2,))), registry)
     assert isinstance(refused, Unbuildable)
-    assert refused.issues[0].code == "UNBUILDABLE_SPIRAL_OPTION_NOT_IMPLEMENTED"
-    assert refused.issues[0].pointers == ("/winding/layers/series_groups",)
+    assert [(i.code, i.pointers) for i in refused.issues] == [
+        ("UNBUILDABLE_SERIES_VIA_FAN_DRC", ("/winding/layers/series_groups",))
+    ]

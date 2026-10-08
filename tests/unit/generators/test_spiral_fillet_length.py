@@ -148,6 +148,7 @@ def test_def_m2d3_02_track_length_changes_only_at_the_corners(
     assert filleted_mm == pytest.approx(sharp_mm + closed_form_mm, abs=1e-9)
 
 
+@pytest.mark.req("REQ-F-06")
 def test_def_m2d3_02_closed_form_tends_to_the_line_line_form() -> None:
     """For r_arc much larger than r the line-arc form reaches r (pi - phi) - 2 r cot(phi / 2) at phi = pi / 2."""
     r = 0.5

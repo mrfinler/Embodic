@@ -1,13 +1,13 @@
-"""Spiral stator of one layer pair: Q rotated copies of the canonical coil (spiral_generator_spec.md, Full stator).
+"""Spiral stator of one layer stack: Q rotated copies of the canonical coil (spiral_generator_spec.md, Full stator).
 
-Built: G1 to G7 for one layer pair with parallel or radial sides, arc or straight ends, sharp corners or G9 concentric
-fillets (parallel sides with arc ends), the outer-end jog and the full (lead arc) or half closing of G5 (revision
-2026-10-05, U-E3 and U-E3b); G8 series chains of each phase on the bus rings (legs on layer Y, ring arcs on layer X,
-net PHASE_x), the star or delta links and the U/V/W(/N) leads with their pads.
-Not built yet (returned as Unbuildable, never ignored): several pairs, pair rotation, phase per pair, stadium ends
-(G2 gives no jog for an end arc tangent to its sides), tapers (G9), the straight lead, custom terminal offset,
-parallel paths, screw holes, and polygon corner radii. Open phases end on the ring vias of their first and last coil,
-without pads.
+Built: G1 to G7 with parallel or radial sides, arc or straight ends, sharp corners or G9 concentric fillets (parallel
+sides with arc ends), the outer-end jog and the full (lead arc) or half closing of G5 (revision 2026-10-05, U-E3 and
+U-E3b); layer pairs in parallel (one shared centre via) and in series groups (G5 k centre vias, G6 transfer via fan,
+DRC-checked and refused when a rule fails, D-020); G8 series chains of each phase on the bus rings (legs on layer Y,
+ring arcs on layer X, net PHASE_x), the star or delta links and the U/V/W(/N) leads with their pads.
+Not built yet (returned as Unbuildable, never ignored): pair rotation, phase per pair, stadium ends (G2 gives no jog
+for an end arc tangent to its sides), tapers (G9), the straight lead, custom terminal offset, parallel paths, screw
+holes, and polygon corner radii. Open phases end on the ring vias of their first and last coil, without pads.
 """
 
 import dataclasses
@@ -22,12 +22,14 @@ from embodic.errors import IssueCategory, Severity, Unbuildable, ValidationIssue
 from embodic.generators.spiral.artwork import CoilArtwork, coil_artwork, sharp_artwork
 from embodic.generators.spiral.chain import BusRings, CoilEnds, End, PhaseChain, chain_coils, norm_angle
 from embodic.generators.spiral.derived import spiral_derived
-from embodic.generators.spiral.fillets import concentric_allowed, corners, radius_sequence
+from embodic.generators.spiral.fillets import Corner, CornerKind, concentric_allowed, corners, radius_sequence
 from embodic.generators.spiral.interconnect import LINE_NET, Interconnect, PhaseEnd, build_interconnect, plan_links
+from embodic.generators.spiral.series import GroupCopper, SeriesCoil, series_coil
 from embodic.generators.spiral.turns import (
     MAX_TURNS_PER_LAYER,
     Closing,
     CoilFrame,
+    FullClosing,
     LoopStop,
     LoopTurn,
     Point,
@@ -68,8 +70,8 @@ def _unsupported(design: DesignParameters, spec: SpiralWindingSpec) -> tuple[str
     coil, pairs = spec.coil, spec.layers.pairs
     checks = {
         "/winding/layers/pairs": any(p.rotation_rad != 0.0 or p.phases is not None for p in pairs),
-        "/winding/layers/series_groups": len(spec.layers.series_groups) != 1
-        or sorted(spec.layers.series_groups[0]) != sorted(p.index for p in pairs),
+        "/winding/layers/series_groups": not all(spec.layers.series_groups)
+        or sorted(i for group in spec.layers.series_groups for i in group) != sorted(p.index for p in pairs),
         "/winding/coil/end_style": coil.end_style is EndStyle.STADIUM,
         "/winding/coil/lead_style": coil.lead_style is not LeadStyle.RADIAL_THEN_ARC,
         "/winding/coil/terminal_offset_mm": coil.terminal_offset_mm is not None,
@@ -136,11 +138,16 @@ def _limiting_reason(requested: int | None, closing_limit: int, loops: int, stop
 
 
 def _coil_vias(
-    design: DesignParameters, span: tuple[str, str], points: tuple[Point, Point, Point], angle_rad: float, net: str,
+    design: DesignParameters, span: tuple[str, str], points: tuple[Point, ...], angle_rad: float, net: str,
     first_id: int,
 ) -> list[Via]:  # fmt: skip
-    """Entry terminal, centre and exit terminal vias of the canonical coil, rotated to ``angle_rad``."""
-    roles = (ViaRole.TERMINAL, ViaRole.CENTRE, ViaRole.TERMINAL)
+    """Ring and centre vias of the canonical coil in current order, rotated to ``angle_rad``.
+
+    Ring vias and centre vias alternate: entry terminal, centre 0, transfer 1, ..., centre k - 1, exit terminal.
+    """
+    k = len(points) // 2
+    roles = [ViaRole.TERMINAL if i in (0, 2 * k) else ViaRole.CENTRE if i % 2 else ViaRole.TRANSFER
+             for i in range(2 * k + 1)]  # fmt: skip
     vias = []
     for k, (point, role) in enumerate(zip(points, roles, strict=True)):
         x_mm, y_mm = transform_point(Transform(rotation_rad=angle_rad), *point)
@@ -192,7 +199,7 @@ def _coil_violations(design: DesignParameters, pair: LayerPair, art: CoilArtwork
 
 def _artwork(
     design: DesignParameters, frame: CoilFrame, closing: Closing, pair: LayerPair, rho_mm: float
-) -> tuple[CoilArtwork, float]:
+) -> tuple[CoilArtwork, float, Mapping[tuple[CornerKind, int], Corner]]:
     """G9: fillet at rho, shrinking by 0.7 up to 12 times until the fillets fit; sharp corners (rho 0) otherwise.
 
     A fillet fits when every primitive it trims keeps its direction and the coil has no DRC violation its sharp
@@ -201,14 +208,14 @@ def _artwork(
     bus_mm = design.connection.ring_width_mm
     sharp = sharp_artwork(frame, closing, bus_mm)
     if rho_mm <= 0.0 or not concentric_allowed(frame):
-        return sharp, 0.0
+        return sharp, 0.0, {}
     baseline = _coil_violations(design, pair, sharp)
     for r_mm in radius_sequence(rho_mm):
         filleted = corners(frame, closing, r_mm)
         art = None if filleted is None else coil_artwork(frame, closing, bus_mm, filleted)
-        if art is not None and _coil_violations(design, pair, art) <= baseline:
-            return art, r_mm
-    return sharp, 0.0
+        if art is not None and filleted is not None and _coil_violations(design, pair, art) <= baseline:
+            return art, r_mm, filleted
+    return sharp, 0.0, {}
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -262,22 +269,26 @@ def _chain_copper(
     return _ChainCopper(legs=legs, ring_vias=ring_vias, links=links)
 
 
-def _with_chain(members: tuple[Member, ...], coil: int, chained: _ChainCopper) -> list[ParallelGroup]:
-    """Series groups of one coil: entry leg, the coil's parallel layer-pair routes, exit leg and ring arc.
+def _with_chain(groups: tuple[tuple[Member, ...], ...], coil: int, chained: _ChainCopper) -> list[ParallelGroup]:
+    """Series groups of one coil: entry leg, each series group's parallel layer-pair routes, exit leg and ring arc.
 
-    One pair gives one member, the three groups joined in series, as a single route needs no parallel node.
+    When every series group has one pair, the whole coil is one member: a single route needs no parallel node.
     """
     link = (chained.links[coil],) if coil in chained.links else ()
     entry = Member(path_ids=(chained.legs[(coil, End.ENTRY)],), via_ids=(chained.ring_vias[(coil, End.ENTRY)],))
     exit_ = Member(path_ids=(chained.legs[(coil, End.EXIT)], *link), via_ids=(chained.ring_vias[(coil, End.EXIT)],))
-    if len(members) == 1:
-        (route,) = members
+    if all(len(group) == 1 for group in groups):
+        routes = (entry, *(group[0] for group in groups), exit_)
         joined = Member(
-            path_ids=(*entry.path_ids, *route.path_ids, *exit_.path_ids),
-            via_ids=(*entry.via_ids, *route.via_ids, *exit_.via_ids),
+            path_ids=tuple(i for route in routes for i in route.path_ids),
+            via_ids=tuple(i for route in routes for i in route.via_ids),
         )
         return [ParallelGroup(members=(joined,))]
-    return [ParallelGroup(members=(entry,)), ParallelGroup(members=members), ParallelGroup(members=(exit_,))]
+    return [
+        ParallelGroup(members=(entry,)),
+        *(ParallelGroup(members=group) for group in groups),
+        ParallelGroup(members=(exit_,)),
+    ]
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -286,57 +297,67 @@ class _CoilCopper:
 
     paths: tuple[CopperPath, ...]
     vias: tuple[Via, ...]
-    members: Mapping[int, tuple[Member, ...]]  # one route per parallel layer pair
+    members: Mapping[int, tuple[tuple[Member, ...], ...]]  # per series group in current order, one route per pair
     terminal_vias: Mapping[tuple[int, End], Via]
     ends: Mapping[Phase, list[CoilEnds]]
 
 
 def _coil_copper(
-    design: DesignParameters, plan: SpiralWindingPlan, spec: SpiralWindingSpec, art: CoilArtwork,
+    design: DesignParameters, plan: SpiralWindingPlan, spec: SpiralWindingSpec, coil_art: SeriesCoil,
     span: tuple[str, str],
 ) -> _CoilCopper:  # fmt: skip
-    """Rotate the canonical X and mirrored Y artwork to every coil on every parallel pair, in current direction."""
+    """Rotate the canonical X and Y artwork of every series group to every coil, in current direction (G6, G8)."""
     paths: list[CopperPath] = []
     vias: list[Via] = []
-    coil_members: dict[int, tuple[Member, ...]] = {}
+    coil_members: dict[int, tuple[tuple[Member, ...], ...]] = {}
     terminal_vias: dict[tuple[int, End], Via] = {}
     coil_ends: dict[Phase, list[CoilEnds]] = {phase: [] for phase in Phase}
     coil = spec.coil
-    x_canonical = art.primitives
-    y_canonical = reverse_path(mirror(x_canonical, 0.0))  # mirror about the coil axis, traversed outward
-    via_points = _canonical_vias(art)
-    terminal_rad = math.atan2(art.terminal[1], art.terminal[0])
+    rings = coil_art.ring_vias
+    via_points = tuple(p for g, group in enumerate(coil_art.groups) for p in (rings[g], group.centre_via)) + rings[-1:]
+    pair_groups = [tuple(p for p in spec.layers.pairs if p.index in group) for group in spec.layers.series_groups]
     for assignment in plan.assignment:
         k, sign = assignment.coil_index, assignment.polarity
         angle = coil.first_coil_angle_rad % (2 * math.pi) + k * 2 * math.pi / coil.coil_count
         net = f"PHASE_{assignment.phase.value}"
-        x_prims, y_prims = rotate(x_canonical, angle), rotate(y_canonical, angle)
         coil_vias = _coil_vias(design, span, via_points, angle, net, first_id=len(vias))
         vias += coil_vias
         in_order = coil_vias if sign == 1 else coil_vias[::-1]
         terminal_vias[(k, End.ENTRY)], terminal_vias[(k, End.EXIT)] = in_order[0], in_order[-1]
-        routes = []
-        for pair in spec.layers.pairs:
-            if sign == 1:
-                layers_in_order = ((pair.layer_in, x_prims), (pair.layer_out, y_prims))
-            else:  # a negative coil is the same copper entered at its CW-side terminal (G8)
-                layers_in_order = ((pair.layer_out, reverse_path(y_prims)), (pair.layer_in, reverse_path(x_prims)))
-            path_ids = []
-            for layer, prims in layers_in_order:
-                path_ids.append(len(paths))
-                paths.append(
-                    CopperPath(
-                        id=len(paths), layer=layer, net=net, primitives=prims, phase=assignment.phase, element=k,
-                        polarity=sign,
-                    )
-                )  # fmt: skip
-            routes.append(Member(path_ids=tuple(path_ids), via_ids=tuple(v.id for v in in_order)))
-        coil_members[k] = tuple(routes)
+        groups = []
+        for g, (pairs, copper) in enumerate(zip(pair_groups, coil_art.groups, strict=True)):
+            x_prims, y_prims = rotate(copper.x, angle), rotate(copper.y, angle)
+            own = coil_vias[2 * g : 2 * g + 3]
+            routes = []
+            for pair in pairs:
+                if sign == 1:
+                    layers_in_order = ((pair.layer_in, x_prims), (pair.layer_out, y_prims))
+                else:  # a negative coil is the same copper entered at its other end (G8)
+                    layers_in_order = ((pair.layer_out, reverse_path(y_prims)), (pair.layer_in, reverse_path(x_prims)))
+                path_ids = []
+                for layer, prims in layers_in_order:
+                    path_ids.append(len(paths))
+                    paths.append(
+                        CopperPath(
+                            id=len(paths), layer=layer, net=net, primitives=prims, phase=assignment.phase, element=k,
+                            polarity=sign,
+                        )
+                    )  # fmt: skip
+                routes.append((tuple(path_ids), tuple(v.id for v in (own if sign == 1 else own[::-1]))))
+            groups.append(routes)
+        if sign == -1:
+            groups.reverse()
+        # Each ring via joins two groups; the later group in current order drops its entry so a via counts once.
+        coil_members[k] = tuple(
+            tuple(Member(path_ids=p, via_ids=v if j == 0 else v[1:]) for p, v in routes)
+            for j, routes in enumerate(groups)
+        )
+        entry_point, exit_point = (rings[0], rings[-1]) if sign == 1 else (rings[-1], rings[0])
         coil_ends[assignment.phase].append(
             CoilEnds(
                 coil=k,
-                entry_rad=norm_angle(angle + sign * terminal_rad),
-                exit_rad=norm_angle(angle - sign * terminal_rad),
+                entry_rad=norm_angle(angle + math.atan2(entry_point[1], entry_point[0])),
+                exit_rad=norm_angle(angle + math.atan2(exit_point[1], exit_point[0])),
             )
         )
 
@@ -346,17 +367,17 @@ def _coil_copper(
 
 
 def _closings(
-    frame: CoilFrame, loops: tuple[LoopTurn, ...], stop: LoopStop, requested: int | None
+    frame: CoilFrame, loops: tuple[LoopTurn, ...], stop: LoopStop, requested: int | None, vias: int
 ) -> tuple[Closing, Closing] | Unbuildable:
-    """Return the closing to build and the one with the most turns (G5), or why none fits."""
+    """Return the closing to build and the one with the most turns (G5) for ``vias`` centre vias, or why none fits."""
     if stop is LoopStop.CAP:
         return _turns_exceed_limit()
-    best = max_closing(frame, loops)
+    best = max_closing(frame, loops, vias)
     if best is None:
         return Unbuildable(issues=(_issue("UNBUILDABLE_ZERO_TURNS", ("/winding/coil/turns",)),))
     if best.n > MAX_TURNS_PER_LAYER:
         return _turns_exceed_limit()
-    closing = best if requested is None else closing_for(frame, loops, requested)
+    closing = best if requested is None else closing_for(frame, loops, requested, vias)
     if closing is None or closing.n > best.n:
         return Unbuildable(issues=(_issue("UNBUILDABLE_TURNS_EXCEED_LIMIT", ("/winding/coil/turns",), best.n),))
     return closing, best
@@ -379,6 +400,26 @@ def _interconnect(
     )  # fmt: skip
 
 
+def _series_coil(
+    frame: CoilFrame, closing: Closing, bus_width_mm: float, groups: int, art: CoilArtwork,
+    filleted: Mapping[tuple[CornerKind, int], Corner],
+) -> SeriesCoil | None:  # fmt: skip
+    """Return the canonical coil as series groups; one group is the single-pair artwork and its mirror."""
+    if groups == 1:
+        mirrored = (art.terminal[0], -art.terminal[1])
+        copper = GroupCopper(x=art.primitives, y=reverse_path(mirror(art.primitives, 0.0)), centre_via=art.centre_via)
+        return SeriesCoil(groups=(copper,), ring_vias=(art.terminal, mirrored))
+    assert isinstance(closing, FullClosing)  # closing_for gives k > 1 vias only the full closing
+    return series_coil(frame, closing, bus_width_mm, groups, filleted)
+
+
+def _series_fails_drc(design: DesignParameters, layout: Layout) -> bool:
+    """D-020: series pairs are DRC-checked before they are returned, so a via fan that breaks a rule is refused."""
+    report = run_drc(layout, design.drc_rules)
+    assert report is not None  # None only when cancelled, and no token is passed
+    return report.violation_count > 0
+
+
 def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack | Unbuildable:
     """Build one board; a winding other than SpiralWindingSpec raises TypeError (a dispatch bug, not user input)."""
     spec = design.winding
@@ -393,16 +434,21 @@ def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack 
     coil, pair = spec.coil, spec.layers.pairs[0]
     frame = CoilFrame.of(coil, design.vias.pad_mm)
     loops, stop = loop_turns(frame)
-    closings = _closings(frame, loops, stop, coil.turns)
+    k = len(spec.layers.series_groups)
+    closings = _closings(frame, loops, stop, coil.turns, k)
     if isinstance(closings, Unbuildable):
         return closings
     closing, best = closings
     n = closing.n
     reason = _limiting_reason(coil.turns, best.n, len(loops), stop)
-    art, rho_used_mm = _artwork(design, frame, closing, pair, coil.corner_radius_mm)
+    art, rho_used_mm, filleted = _artwork(design, frame, closing, pair, coil.corner_radius_mm)
+    coil_art = _series_coil(frame, closing, design.connection.ring_width_mm, k, art, filleted)
+    if coil_art is None:  # a lower group's lead cuts into the fillet of its last inner corner
+        pointers = ("/winding/layers/series_groups", "/winding/coil/corner_radius_mm")
+        return Unbuildable(issues=(_issue("UNBUILDABLE_SPIRAL_INPUT_OUT_OF_RANGE", pointers),))
     copper_z = design.stackup.copper_z_mm()
     layers = tuple(sorted({n for p in spec.layers.pairs for n in (p.layer_in, p.layer_out)}, key=copper_z.__getitem__))
-    copper = _coil_copper(design, plan, spec, art, (layers[0], layers[-1]))
+    copper = _coil_copper(design, plan, spec, coil_art, (layers[0], layers[-1]))
     paths, vias = list(copper.paths), list(copper.vias)
     coil_members, terminal_vias, coil_ends = copper.members, copper.terminal_vias, copper.ends
 
@@ -467,4 +513,6 @@ def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack 
         detail=detail,
         derived=spiral_derived(design, coil, n, best.n, length_mm, envelope, registry),
     )
+    if k > 1 and _series_fails_drc(design, layout):
+        return Unbuildable(issues=(_issue("UNBUILDABLE_SERIES_VIA_FAN_DRC", ("/winding/layers/series_groups",)),))
     return BoardStack(boards=(layout,), board_thickness_mm=design.stackup.board_thickness_mm(), board_gap_mm=0.0)
