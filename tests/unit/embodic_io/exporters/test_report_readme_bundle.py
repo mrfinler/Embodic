@@ -12,8 +12,8 @@ import pytest
 from embodic.api import ComputeOutcome
 from embodic.io.bundle import write_bundle
 from embodic.io.dxf_writer import write_dxf
-from embodic.io.exporters import ExportKind, ExportRefused, ExportSummary
-from embodic.io.pdf_writer import winansi
+from embodic.io.exporters import ExportKind, ExportRefused, ExportSummary, PhaseRenderMode
+from embodic.io.pdf_writer import MissingGlyphError, PdfDocument
 from embodic.io.readme_writer import write_readme
 from embodic.io.report import write_report_pdf
 from embodic.io.svg_writer import write_svg
@@ -27,7 +27,7 @@ from .conftest import WAVE
 pytestmark = pytest.mark.req("REQ-F-16", "REQ-F-33", "REQ-T-07", "REQ-T-14")
 
 STATUS = "|".join(re.escape(s.value) for s in Status)
-UNITS = {winansi(u.display()).decode("cp1252") for u in Unit if u.display()} | {"(dimensionless)"}
+UNITS = {u.display() for u in Unit if u.display()} | {"(dimensionless)"}
 DRAWINGS = (ExportKind.SVG, ExportKind.DXF_COMPLETE, ExportKind.DXF_OUTLINE, ExportKind.PDF_REPORT)
 
 
@@ -64,7 +64,61 @@ def test_report_key_results_are_named_with_display_labels_not_ids(
     section = text.split("Key results", 1)[1].split("DRC summary", 1)[0].strip().splitlines()[1:]
     scalar = [f.name for f in dataclasses.fields(AnalysisResult) if f.type == Traceable[float]]
     for row, name in zip(section, scalar, strict=True):
-        assert row.startswith(winansi(QUANTITY_LABELS[name]).decode("cp1252") + " "), (name, row)
+        assert row.startswith(QUANTITY_LABELS[name] + " "), (name, row)
+
+
+def test_ut_exp_03_report_prints_units_as_the_ui_does(
+    outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path
+) -> None:
+    """UT-EXP-03, D-039 b. Catches a dropped or spelt-out unit glyph ("1.34  H", "502 mohm", "mV s/rad")."""
+    summary = write_report_pdf(outcome_of("spiral_12c10p_d08"), tmp_path / "report.pdf")
+    assert isinstance(summary, ExportSummary), summary
+    reader, text = _pdf_text(summary.path)
+    # D08 values from compute on main c4c9e8f (verified by running the summary strip test): 502 mΩ, 30.9 mV·s/rad.
+    assert "502 mΩ" in text and "30.9 mV·s/rad" in text
+    assert re.search(r"\d µH ", text), "no inductance in µH"
+    assert not re.search(r"\bohm\b", text) and "Helvetica" not in str(reader.pages[0]["/Resources"])
+    fonts = {f["/BaseFont"]: f for f in (ref.get_object() for ref in reader.pages[0]["/Resources"]["/Font"].values())}
+    assert set(fonts) == {"/InterVariable", "/JetBrainsMono-Regular"}
+    for font in fonts.values():
+        (descendant,) = font["/DescendantFonts"]
+        descriptor = descendant.get_object()["/FontDescriptor"]
+        assert (font["/Subtype"], font["/Encoding"], descendant.get_object()["/Subtype"]) == (
+            "/Type0",
+            "/Identity-H",
+            "/CIDFontType2",
+        )
+        assert "/FontFile2" in descriptor and "/ToUnicode" in font
+
+
+@pytest.mark.parametrize("mode", list(PhaseRenderMode))
+def test_report_drawing_labels_every_coil_and_never_dashes(
+    mode: PhaseRenderMode, outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path
+) -> None:
+    """Ruling a (F1, F2). Catches a printed drawing whose phases rest on the legend alone, or a dashed line."""
+    summary = write_report_pdf(outcome_of("spiral_12c10p_d08"), tmp_path / "report.pdf", mode=mode)
+    assert isinstance(summary, ExportSummary), summary
+    reader = pypdf.PdfReader(summary.path)
+    drawing = reader.pages[-1]
+    text = drawing.extract_text()
+    # D08 coil polarities from compute on main c4c9e8f (verified by running geometry_scene)
+    for label in "A1+ A2− A3− A4+ B1− B2+ B3+ B4− C1+ C2− C3− C4+".split():
+        assert label in text, (mode, label)
+    assert all(f"Phase {p}" in text for p in "ABC")
+    content = drawing.get_contents().get_data()
+    assert not re.search(rb"\[[\d. ]+\] [\d.]+ d", content), "dash pattern in the drawing"
+    assert content.count(b" W n ") == 8 + 2  # B and C eyes of D08 plus the B and C legend swatches, all clipped
+
+
+def test_ut_exp_03_a_character_without_a_glyph_fails_instead_of_vanishing() -> None:
+    """D-039 b, ruling g 7. Catches a writer that drops or substitutes a character its font cannot show."""
+    doc = PdfDocument()
+    doc.new_page()
+    thai_ko_kai = chr(0x0E01)
+    with pytest.raises(MissingGlyphError) as failure:
+        doc.text(50, 50, f"Stator {thai_ko_kai}")
+    assert failure.value.issue.code == "INVALID_EXPORT_GLYPH_MISSING"
+    assert failure.value.issue.value == "U+0E01"
 
 
 def test_ut_io_06_report_carries_the_stamp(outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path) -> None:

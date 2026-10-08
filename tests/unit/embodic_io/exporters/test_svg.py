@@ -1,12 +1,14 @@
 """UT-EXP-01 and UT-IO-06 for SVG: the drawing parses and holds exactly the Layout's copper, vias, pads and holes."""
 
 import json
+import math
 import re
 import xml.etree.ElementTree as ET
 from collections.abc import Callable
 from pathlib import Path
 
 import pytest
+from fontTools.ttLib import TTFont
 
 from embodic.api import ComputeOutcome
 from embodic.geometry.primitives import Arc, Line
@@ -97,8 +99,74 @@ def test_ut_exp_01_phases_carry_class_label_and_mode_ink(
             assert group.get("data-label") == f"Phase {phase}"
             key = f"phase-{phase.lower()}" + ("" if mode is PhaseRenderMode.COLOUR else "-grey")
             assert group.get("stroke") == colours[key]
-        hatches = {p.get("patternTransform") for p in root.iter(f"{SVG}pattern")}
-        if mode is PhaseRenderMode.GREYSCALE_HATCH:
-            assert hatches == {"rotate(45)", "rotate(135)"}
+        swatches = {g.get("data-phase"): g for g in _classes(root, "legend-eye")}
+        assert [swatches[p].find(f"{SVG}path") is not None for p in "ABC"] == [False, True, True], mode
+        assert swatches["A"].find(f"{SVG}circle") is not None, mode
         legend = " ".join(t.text or "" for t in root.iter(f"{SVG}text"))
         assert all(f"Phase {p}" in legend for p in "ABC")
+
+
+def _clip_discs(root: ET.Element) -> dict[str, tuple[float, float, float]]:
+    return {
+        clip.get("id", ""): tuple(float(clip[0].get(k, "nan")) for k in ("cx", "cy", "r"))
+        for clip in root.iter(f"{SVG}clipPath")
+    }
+
+
+@pytest.mark.parametrize("mode", list(PhaseRenderMode))
+def test_d08_drawing_labels_every_coil_and_fills_every_eye_clipped(
+    mode: PhaseRenderMode, outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path
+) -> None:
+    """Ruling a 1-2 (F1). Catches a drawing whose phases and polarities rest on the legend alone, in either mode."""
+    _, root = _written(outcome_of("spiral_12c10p_d08"), tmp_path, mode)
+    labels = [t.text for t in _classes(root, "coil-label")]
+    # D08 coil polarities from compute on main c4c9e8f (verified by running geometry_scene)
+    assert sorted(labels) == sorted("A1+ A2− A3− A4+ B1− B2+ B3+ B4− C1+ C2− C3− C4+".split())
+    eyes = _classes(root, "eye")
+    discs = _clip_discs(root)
+    assert len(eyes) == 12
+    for eye in eyes:
+        clip = re.fullmatch(r"url\(#(.+)\)", eye.get("clip-path", ""))
+        assert clip is not None and clip.group(1) in discs
+        hatch = eye.find(f"{SVG}path")
+        assert (hatch is None) == (eye.get("data-phase") == "A")
+        if hatch is not None:
+            cx, cy, r = discs[clip.group(1)]
+            points = [float(v) for v in re.findall(r"-?\d+(?:\.\d+)?", hatch.get("d", ""))]
+            for x, y in zip(points[::2], points[1::2], strict=True):
+                assert math.hypot(x - cx, y - cy) <= r + 1e-5  # chords end on the circle; the file rounds to 1e-6 mm
+
+
+def test_d08_hatch_pitch_is_0_4_mm_at_1_to_1(outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path) -> None:
+    """Design_spec 3.3. Catches the screen pitch (4 px) or the old 0.8 mm pattern leaking into the file."""
+    _, root = _written(outcome_of("spiral_12c10p_d08"), tmp_path, PhaseRenderMode.GREYSCALE_HATCH)
+    hatch = next(e for e in _classes(root, "eye") if e.get("data-phase") == "B").find(f"{SVG}path")
+    assert hatch is not None
+    starts = [tuple(map(float, m)) for m in re.findall(r"M (-?[\d.]+) (-?[\d.]+)", hatch.get("d", ""))]
+    (x0, y0), (x1, y1) = starts[0], starts[1]
+    # chords at 45 degrees: neighbouring chords are offset along (-sin 45, cos 45)
+    offset = abs(-(x1 - x0) * math.sin(math.pi / 4) + (y1 - y0) * math.cos(math.pi / 4))
+    assert offset == pytest.approx(0.4, abs=1e-6)
+
+
+def test_drawings_never_dash_copper_or_legend_bars(
+    example_id: str, outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path
+) -> None:
+    """Design_spec 3.3 and F2. Catches a dashed or dotted line, which reads as an open circuit."""
+    for mode in PhaseRenderMode:
+        _, root = _written(outcome_of(example_id), tmp_path, mode)
+        assert not [e for e in root.iter() if e.get("stroke-dasharray")], mode
+
+
+def test_footer_fits_inside_the_drawing(
+    example_id: str, outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path
+) -> None:
+    """F3. Catches a footer cut at the right edge ("DRC FAILE"); measured with fontTools, not the writer's reader."""
+    _, root = _written(outcome_of(example_id), tmp_path, PhaseRenderMode.COLOUR)
+    x_min, _, width, _ = map(float, root.get("viewBox", "").split())
+    (stamp,) = _classes(root, "stamp")
+    font = TTFont(resource_root() / "fonts" / "Inter" / "InterVariable.ttf")
+    cmap, hmtx = font.getBestCmap(), font["hmtx"]
+    size = float(root.find(f"{SVG}g[@id='legend']").get("font-size"))
+    text_mm = sum(hmtx[cmap[ord(c)]][0] for c in stamp.text or "") * size / font["head"].unitsPerEm
+    assert float(stamp.get("x", "nan")) + text_mm <= x_min + width

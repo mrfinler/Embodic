@@ -30,6 +30,7 @@ dev = [
     "mypy>=2.4,<3",
     "ezdxf>=1.4,<2",
     "pypdf>=6,<7",
+    "fonttools>=4.60,<5",
     "jsonschema>=4.23,<5",
     "hatchling>=1.27,<2",
 ]

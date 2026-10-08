@@ -8,11 +8,13 @@ signature, so it never refuses for DRC; it states the DRC result instead.
 import dataclasses
 import json
 import math
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
+from embodic.geometry.labels import Viewport, label_anchors, pad_boxes, place_labels
 from embodic.geometry.layout import Layout
+from embodic.geometry.marks import eye_marks, hatch_chords
 from embodic.geometry.primitives import Arc, Line, Primitive
 from embodic.io.exporters import (
     ExportKind,
@@ -27,7 +29,7 @@ from embodic.io.exporters import (
     pad_outline,
     phase_inks,
 )
-from embodic.io.pdf_writer import PAGE_H, PAGE_W, PdfDocument, arc_bezier
+from embodic.io.pdf_writer import PAGE_H, PAGE_W, PdfDocument, arc_bezier, circle_ops, rgb
 from embodic.model.fields import field_for
 from embodic.model.schema import design_values
 from embodic.model.vocabulary import Phase
@@ -43,6 +45,13 @@ DIMENSIONLESS = "(dimensionless)"
 INK = "#141414"
 LAND = "#666666"
 DRILL = "#ffffff"
+PAPER = "#ffffff"  # the drawing leaves the board unfilled, so label halos take the paper's colour
+LABEL_PT = 6.5
+LABEL_HALO_PT = 1.6
+HATCH_PITCH_PT = 0.4 * 72 / 25.4  # 0.4 mm on paper (design_spec.md section 3.3)
+HATCH_STROKE_PT = 0.3
+EYE_TINT = 0.1
+SWATCH_R_PT = 4.0
 
 
 def value_text(value: float, unit: Unit, *, significant: int = 3) -> str:
@@ -83,9 +92,9 @@ class _Flow:
         self.doc.text(MARGIN, self.y, text, size=11, bold=True)
         self.y -= 1.5 * ROW
 
-    def row(self, cells: Sequence[tuple[float, str]], *, bold: bool = False) -> None:
+    def row(self, cells: Sequence[tuple[float, str]], *, bold: bool = False, mono: Collection[int] = ()) -> None:
         self.need(ROW)
-        self.doc.row(self.y, cells, bold=bold)
+        self.doc.row(self.y, cells, bold=bold, mono=mono)
         self.y -= ROW
 
 
@@ -108,7 +117,8 @@ def _key_results(flow: _Flow, analysis: AnalysisResult | None) -> None:
                 (MARGIN, QUANTITY_LABELS[name]),
                 (MARGIN + 200, value_text(t.value, t.unit)),
                 (MARGIN + 330, status),
-            ]
+            ],
+            mono=(1,),
         )
 
 
@@ -135,7 +145,8 @@ def _drc(flow: _Flow, outcome: ComputeOutcome) -> None:
                     (MARGIN + 130, measured),
                     (MARGIN + 240, value_text(s.required_mm, Unit.MM, significant=6)),
                     (MARGIN + 330, str(s.pairs_checked)),
-                ]
+                ],
+                mono=(1, 2, 3),
             )
 
 
@@ -151,7 +162,7 @@ def _inputs(flow: _Flow, outcome: ComputeOutcome) -> None:
             text = f"{text} {unit.display() or DIMENSIONLESS}"
         entry = outcome.provenance.get(pointer)
         provenance = entry.provenance.value if entry is not None else "not recorded"
-        flow.row([(MARGIN, pointer), (MARGIN + 230, text[:60]), (MARGIN + 380, provenance)])
+        flow.row([(MARGIN, pointer), (MARGIN + 230, text[:60]), (MARGIN + 380, provenance)], mono=(0, 1))
 
 
 @dataclass(frozen=True, slots=True)
@@ -187,6 +198,23 @@ def _segments(prims: Sequence[Primitive], frame: _Frame) -> list[str]:
     return ops
 
 
+def tint_hex(colour_hex: str, fraction: float) -> str:
+    """Return ``colour_hex`` laid over white paper at ``fraction`` coverage (the 10 % eye tint, opaque)."""
+    channels = (int(colour_hex[i : i + 2], 16) for i in (1, 3, 5))
+    return "#" + "".join(f"{round(255 - fraction * (255 - c)):02x}" for c in channels)
+
+
+def _eye(doc: PdfDocument, x: float, y: float, r: float, colour: str, hatch_deg: int) -> None:
+    """Fill an eye disc in page points: the phase A tint, or the B / C hatch clipped to the disc."""
+    if hatch_deg == 0:
+        doc.circle(x, y, r, fill_hex=tint_hex(colour, EYE_TINT))
+        return
+    chords = [
+        f"{a[0]:.3f} {a[1]:.3f} m {b[0]:.3f} {b[1]:.3f} l" for a, b in hatch_chords(x, y, r, hatch_deg, HATCH_PITCH_PT)
+    ]
+    doc.op(f"q {circle_ops(x, y, r)} W n {rgb(colour)} RG {HATCH_STROKE_PT} w 0 J {' '.join(chords)} S Q")
+
+
 def _drawing(doc: PdfDocument, index: int, board: Layout, inks: dict[Phase | None, PhaseInk], grey: bool) -> None:
     doc.new_page()
     doc.text(MARGIN, PAGE_H - 30, f"Board {index} drawing (mm, y up, centred on the shaft axis)", size=10, bold=True)
@@ -219,26 +247,49 @@ def _drawing(doc: PdfDocument, index: int, board: Layout, inks: dict[Phase | Non
             doc.stroke_path([*_segments(pad_outline(pad), frame), "h"], width=0.6, colour_hex=LAND)
         if pad.drill_mm > 0:
             doc.circle(frame.x(pad.x_mm), frame.y(pad.y_mm), pad.drill_mm / 2 * frame.scale, fill_hex=DRILL)
+    for mark in eye_marks(board):
+        ink = inks[mark.phase]
+        x, y, r = frame.x(mark.cx_mm), frame.y(mark.cy_mm), mark.eye_radius_mm * frame.scale
+        _eye(doc, x, y, r, ink.grey_hex if grey else ink.colour_hex, ink.hatch_deg)
+    _labels(doc, board, frame, reach * 1.04)
     _legend(doc, inks, grey)
 
 
+def _labels(doc: PdfDocument, board: Layout, frame: _Frame, half_mm: float) -> None:
+    """Coil labels of ruling b at the page scale (one point per viewport pixel), each over a paper halo."""
+    view = Viewport(x_min_mm=-half_mm, y_min_mm=-half_mm, x_max_mm=half_mm, y_max_mm=half_mm, px_per_mm=frame.scale)
+    placed = place_labels(
+        label_anchors(board),
+        view=view,
+        text_size=lambda text: (doc.width(text, LABEL_PT), LABEL_PT),
+        obstacles=pad_boxes(board),
+        ring_outer_mm=board.envelope_mm[1],
+    )
+    for label in placed:
+        if label.leader is not None:
+            (ax, ay), (bx, by) = label.leader
+            ops = [f"{frame.x(ax):.3f} {frame.y(ay):.3f} m", f"{frame.x(bx):.3f} {frame.y(by):.3f} l"]
+            doc.stroke_path(ops, width=0.4, colour_hex=INK)
+        doc.haloed_text(
+            frame.x(label.x_mm),
+            frame.y(label.y_mm),
+            label.text,
+            size=LABEL_PT,
+            fill_hex=INK,
+            halo_hex=PAPER,
+            halo=LABEL_HALO_PT,
+        )
+
+
 def _legend(doc: PdfDocument, inks: dict[Phase | None, PhaseInk], grey: bool) -> None:
-    """Phase key: line sample, hatch swatch (greyscale mode) and the label; hatch angles per REQ-N-23."""
+    """Phase key: a solid copper bar in the phase ink, the eye swatch and "Phase A" (copper is never dashed)."""
     y = MARGIN + 60
     for phase in Phase:
         ink = inks[phase]
         colour = ink.grey_hex if grey else ink.colour_hex
         doc.stroke_path([f"{MARGIN:.1f} {y:.1f} m", f"{MARGIN + 30:.1f} {y:.1f} l"], width=2.0, colour_hex=colour)
-        if grey and ink.hatch_deg:
-            x, step = MARGIN + 38, 3.0
-            dx = math.cos(math.radians(ink.hatch_deg)) * 20
-            dy = math.sin(math.radians(ink.hatch_deg)) * 20
-            lines = [
-                f"{x + i * step - dx:.2f} {y - dy:.2f} m {x + i * step + dx:.2f} {y + dy:.2f} l" for i in range(-3, 7)
-            ]
-            doc.op(f"q {x:.1f} {y - 5:.1f} 10 10 re W n")
-            doc.stroke_path(lines, width=0.5, colour_hex=colour)
-            doc.op("Q")
+        _eye(doc, MARGIN + 42, y, SWATCH_R_PT, colour, ink.hatch_deg)
+        doc.circle(MARGIN + 42, y, SWATCH_R_PT, fill_hex=None, stroke_hex=colour)
         doc.text(MARGIN + 54, y - 3, ink.label, size=9)
         y -= 16
 
