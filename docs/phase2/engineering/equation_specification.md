@@ -133,6 +133,26 @@ w trace width; t copper thickness; s clearance; w_d = w + s; N turns per coil pe
 - Dominant assumptions: B_r, µ_r, l_m, g, back iron, α_p. Applies to: spiral, serpentine, wave.
   Tests: EQT-05-GR, EQT-05-CF01, EQT-05-CF03, EQT-05-EC, EQT-05-O1, EQT-05-O2.
 
+#### Back-plate saturation and Ke (revision 2026-10-08 (U-E4))
+
+This note adds no input and leaves the registry status of EQ-05 unchanged.
+
+- What D08 did (`verified`, read). D08's analytical model has no saturation. D08 ran FEM per plate thickness and lowered
+  B_rem in the analytical model until the field plots matched by NRMSE (PDF p.58, printed 53). D08 itself calls this
+  "an approximation and is not the best method", because saturation also distorts the waveform. Table 4.8 (PDF p.60,
+  printed 55) lists the fitted B_rem per plate thickness: 0.727 T at 0.5 mm, 1.2 T at 3 mm, 1.38 T at 5 mm, 1.385 T at
+  6 mm. D08 chose a 3 mm plate (PDF p.61 to 62, printed 56 to 57). That the built prototype uses 3 mm is `inferred`.
+- Predicted OR-01 shift (`verified by computation`). EQ-05 is linear in B_r, so Ke scales by 1.2 / 1.38 = 0.8696. The
+  D08 design of `tests/unit/physics/test_oracles.py` gives `ke_line_peak` 0.030877 V·s/rad at B_r 1.38 T (−0.40 % vs
+  0.031) and 0.026849 V·s/rad at B_r 1.2 T (−13.39 %). The second value is outside the OR-01 band [−8 %, +8 % + e_edge].
+  The good match without saturation therefore rests on other inputs that are `assumption` or `unresolved` (G 1.4 mm,
+  α_p 0.72, via 0.3/0.6 mm, D-030). It is not evidence that the plate does not saturate.
+- Recommendation (`inferred`). Add no `back_iron_remanence_factor` input now. The only factor values on record are
+  D08's fitted values for one rotor, and they are not a model. A user who has an FEM-fitted effective remanence for a
+  design can already enter it in `/rotor/remanence_t`, where it carries its own provenance (D-007). Revisit when a
+  back-iron model with plate thickness and steel B-H data exists. Until then the back-iron assumption of EQ-05 stays in
+  `dominant_assumptions`, and OR-01 keeps the infinite back iron assumption D-030 lists.
+
 ### EQ-06 Back-EMF and flux linkage of a copper path
 
 - Formula: Ke_n = |Σ_seg B_z,n(r_m, z_L) r_m Δr e^{−jnpθ_m}| × 1e-6 [V·s/rad, peak per mechanical rad/s]; Δr signed
@@ -215,11 +235,60 @@ w trace width; t copper thickness; s clearance; w_d = w + s; N turns per coil pe
 - Variables: L, w, t [mm]; T [°C]; R [Ω].
 - Validity: DC, w and t below δ/3 (EQ-13). Limitations: finished copper thickness is supplier dependent.
 - Reference: CF-04 1000 × 0.5 mm × 34.8 µm: 0.990862069 Ω (20 °C), 1.146625586 Ω (60 °C); Xcoil constant gives
-  0.990804598 Ω (−5.8e-5). CF-10 D08 coil-layer 0.039155 Ω at 50 °C; CF-11 default coil-layer 0.396502 Ω at 20 °C.
+  0.990804598 Ω (−5.8e-5). CF-10 version 3 D08 coil-layer 0.043091 Ω at 50 °C; CF-11 default coil-layer 0.396502 Ω at
+  20 °C.
 - Tolerance: 1e-12 vs CF-04; ±8 % vs a measured R at a known temperature (D10 +7.5 %, D09 +2.9 %).
 - Gate: `reuse` (`copperResistivity`, `traceResistance`, `primsResistance`, `interconnectResistance`). Status: verified.
 - Dominant assumptions: copper thickness, temperature, PCB copper = IACS. Applies to: spiral, serpentine, wave.
   Tests: EQT-10-GR, EQT-10-CF04, EQT-10-O2.
+
+#### What D08's 0.39 Ω phase resistance includes (revision 2026-10-08 (U-E4))
+
+- D08's basis (`verified`, read). D08 eq. 3.27 to 3.38 (PDF p.44 to 45, printed 39 to 40) split each coil into
+  concentric loops of two radial sides, an outer arc and an inner arc, sum the loop lengths into L_tot, and set
+  R_phase = ρ_T L_tot / (w_tr t_tr). The equations have no term for leads, vias, inter-coil connections or the star
+  ring. The inputs are w_tr 2.06 mm (Table 4.6, PDF p.57), t_tr 34.8 µm and a track temperature of 50 °C (Table 4.5,
+  PDF p.54). The two PCB sides are in series (PDF p.53). D08 does not state ρ₂₀ or α_c (`unresolved`), and does not
+  write how L_tot spans the coils of a phase. Eight coil-layers (4 coils × 2 sides) is `inferred`, because it gives
+  0.381 Ω and EQ-22's 1.849 A against D08's 1.84 A.
+- What embodic sums (`verified`, read and reproduced). `resistance_phase_*` is the series sum of every phase member's
+  copper primitives (EQ-10, own width each) and via barrels (EQ-11), `circuit.solve_phase_circuit`. The neutral ring
+  (`Circuit.interconnect_path_ids`) is not in it.
+- Decomposition (`verified by computation`). Run
+  `.venv/bin/python docs/phase2/engineering/checks/d08_resistance_decomposition.py`. It asserts that its per-role sums
+  equal `analyse()` per phase within 1e-12. Phase mean at 20 °C, `tests/unit/generators/d08_example.py`:
+
+| Role | Width mm | Count per phase | Length per phase mm | R mean Ω (20 °C) | Share |
+|---|---|---|---|---|---|
+| coil sides | 2.06 | 40 | 856.4925 | 0.205987 | 47.5 % |
+| coil end-turns (outer and inner arcs) | 2.06 | 40 | 408.6674 | 0.098285 | 22.6 % |
+| chain bus-ring arcs (A, B, C differ) | 1.0 | 3 | 161.1639 | 0.079846 | 18.4 % |
+| chain legs | 0.6 | 8 | 43.8400 | 0.036199 | 8.3 % |
+| coil terminal stubs | 2.06 | 8 | 17.0400 | 0.004098 | 0.9 % |
+| vias (ring 8, terminal 8, centre 4) | drill 0.3 | 20 | barrel 0.6 | 0.009580 | 2.2 % |
+| R_phase (A 0.419244, B 0.433994, C 0.448744) | | | 1487.2038 | 0.433994 | 100 % |
+| neutral ring, not in R_phase | 1.0 | 7 segments | 276.1277 | 0.136802 | |
+
+  Jogs and leads have no row. The pitch-advance jog has zero length (G3: the left side stops w_d short, and no primitive
+  is added), and in the half closing the last side ends on the centre via, so no lead primitive exists.
+- Bridge at 50 °C from D08's 0.39 Ω to embodic's 0.485162 Ω (+24.40 %), same script:
+
+| Step | ΔR Ω | Share of 0.39 | Status |
+|---|---|---|---|
+| D08 0.39 → loop model, span 2π/Q, 8 coil-layers (0.381201) | −0.008799 | −2.26 % | `unresolved` (ρ₂₀, α_c, rounding of 0.39) |
+| loop model → generated coil body, 158.145 vs 177.2331 mm per coil-layer (0.340145) | −0.041055 | −10.53 % | `verified by computation` (jogs and half closing) |
+| + terminal stubs | +0.004581 | +1.17 % | `verified by computation` |
+| + series chain, bus-ring arcs and legs | +0.129727 | +33.26 % | `verified by computation`; widths are example values, `assumption` |
+| + via barrels | +0.010708 | +2.75 % | `verified by computation`; plating 25 µm and barrel 0.6 mm, `assumption` |
+
+  The π/p span variant gives 0.439424 Ω (+12.67 %). The 2π/Q variant fits the stated 50 °C better (Phase 1 DEF-15).
+- Reading. The +24 % is not an error in either model. D08's number counts loop copper only. embodic's counts the whole
+  phase path. The largest addition is the series chain, and it depends on the bus width (1.0 mm) and leg width
+  (min(bus, via pad) = 0.6 mm, `chain.py` `leg_width_mm`) of the example design. D08 says its outer rim routes the
+  "individual coil connections" and the star connection (PDF p.55), but it states no width or length for them
+  (`unresolved`). Only the −2.26 % loop-model residual stays unexplained.
+- Oracle expectation. O1-D08 version 4 compares 0.39 Ω on the `loop_only` basis (EQ-03 closed form, tolerance
+  ±3 %, information only). The `full_phase` row has no D08 value and is a regression reference only.
 
 ### EQ-11 Via barrel resistance
 
@@ -602,8 +671,11 @@ evidence entry exists. Its status already states what the evidence supports.
 | EQ-28 | assumption | datasheet densities for sintered NdFeB and rotor steel |
 | EQ-29 | assumption | ε_r per dielectric (datasheets); ε_0 |
 | EQ-16 | assumption | laminate density (FR-4 datasheet) |
-| μ_0 (EQ-13, EQ-14), ε_0 (EQ-29) | assumption | revision 2026-10-05 (U-E3): registry constants added with the values the code ports from Xcoil (4π×10⁻⁷ H/m, 8.854×10⁻¹² F/m) and `source: null`; an evidence entry (SI or CODATA) is missing |
-| Screw clearance holes (U-M2d) | unresolved | revision 2026-10-05 (U-E3): no ISO 273 or other entry in the evidence register; `/outline/screws/*/size` and `fit` point at a `screw-table` with no source, and FIELDS has no hole-diameter input. Proposal: the user enters the hole diameter in mm per screw group |
+| μ_0 (EQ-13, EQ-14), ε_0 (EQ-29) | assumption | revision 2026-10-05 (U-E3): registry constants added with the values the code ports from Xcoil (4π×10⁻⁷ H/m, 8.854×10⁻¹² F/m) and `source: null`; an evidence entry (SI or CODATA) is missing. Revision 2026-10-08 (U-E4): requested from Agent 5 in U-S3b (CODATA 2018 or the SI brochure); the status changes only when an EV id exists |
+| Screw clearance holes (U-M2d) | unresolved | revision 2026-10-05 (U-E3): no ISO 273 or other entry in the evidence register. Revision 2026-10-08 (U-E4): D-031 (a) adds `hole_diameter_mm` per screw pattern (user entry, no default). ISO 273 fine, medium and coarse values for M2 to M6 are requested in U-S3b and ship only as labelled example values with an EV id |
+| EQ-08 answers (U-M2c Q1, Q2) | inferred | revision 2026-10-08 (U-E4): a textbook source for the balanced concentrated-winding condition (Q/(m·t) integer) and for parallel paths dividing the periodicity; requested in U-S3b |
+| EQ-10, O1-D08 phase resistance | unresolved | revision 2026-10-08 (U-E4): D08 states neither ρ₂₀ nor α_c (eq. 3.37, PDF p.45), nor the width and length of its inter-coil and star connections (PDF p.55). The loop-only residual −2.26 % and the chain part of the full-phase R stay open until those values are found |
+| EQ-05, back-plate saturation | assumption | revision 2026-10-08 (U-E4): steel B-H data and a back-iron model; D08 Table 4.8 (PDF p.60) gives fitted B_rem for one rotor only, not a model |
 
 ## Defects found in this unit
 

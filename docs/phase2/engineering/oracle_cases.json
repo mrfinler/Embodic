@@ -43,12 +43,16 @@
   {
    "check": "CF-08 involute spacing max deviation from rb*dphi [mm]",
    "value": 2.2854256674920137e-06
+  },
+  {
+   "check": "O1 loop-only R_phase 50 degC vs D08 Table 4.6 0.39 ohm (rel)",
+   "value": -0.022562138780845124
   }
  ],
  "cases": [
   {
    "case_id": "O1-D08",
-   "version": 3,
+   "version": 4,
    "title": "Collijs & Vereecken (UGent thesis 2020-21): 12-coil/10-pole concentrated spiral PCB stator, double rotor",
    "document": "D08 B2/799354017-Pcb-stator-thesis.pdf",
    "topology": "FSCW spiral, all phases on each layer",
@@ -239,13 +243,24 @@
      "tolerance": "+/-8 %"
     },
     {
-     "quantity": "phase resistance",
+     "quantity": "phase resistance, loop-only basis",
      "value": 0.39,
      "unit": "ohm",
-     "kind": "calculated (D08 loop model, 50 degC)",
-     "source": "D08 Table 4.6 p.57",
-     "comparison": "EQ-03 closed form reproduces 0.381 ohm; a true spiral gives ~0.31 ohm -> not a validation target (no measured R)",
-     "tolerance": "information only"
+     "kind": "calculated (D08 loop model eq. 3.27-3.38: three concentric loops per coil-layer, 8 coil-layers in series, w 2.06 mm, t 34.8 um, 50 degC; no leads, vias, inter-coil connections or star ring)",
+     "source": "D08 Table 4.6 PDF p.57 (printed 52); eq. 3.36-3.38 PDF p.45 (printed 40); Table 4.5 PDF p.54 (printed 49); two sides in series PDF p.53 (printed 48)",
+     "comparison_basis": "loop_only",
+     "comparison": "EQ-03 concentric closed form (span 2 pi/Q) x 8 coil-layers at 50 degC with the registry rho_20 and alpha: 0.381201 ohm (-2.26%). Not compared with AnalysisResult.resistance_phase_*, which is the full_phase basis below.",
+     "tolerance": "information only (no measured R). Loop-only reproduction within +-3 %; the residual is unresolved (D08 does not state rho_20 or alpha_c; 0.39 is printed to two digits)"
+    },
+    {
+     "quantity": "phase resistance, full-phase basis",
+     "value": null,
+     "unit": "ohm",
+     "kind": "no D08 value (D08 publishes neither a full-phase nor a measured R)",
+     "source": "checks/d08_resistance_decomposition.py on tests/unit/generators/d08_example.py",
+     "comparison_basis": "full_phase",
+     "comparison": "AnalysisResult.resistance_phase_20c x (1 + alpha 30 K). Its coil body (sides + end-turns, CF-10 body 158.145 mm per coil-layer) gives 0.340145 ohm at 50 degC; terminal stubs, the series chain (bus ring arcs and legs) and via barrels add to it. The chain widths (bus 1.0 mm, leg 0.6 mm) are example values (tests/unit/model/designs.py), not D08 values. The neutral ring is not in resistance_phase.",
+     "tolerance": "none (regression reference only; rerun the decomposition script)"
     },
     {
      "quantity": "turns that fit",
@@ -258,7 +273,7 @@
     }
    ],
    "pre_registration": "run the primary case with the 'assumed' values first and report it; sweeps are sensitivity runs, not tuning; any change of a frozen value creates version 2",
-   "version_note": "version 3 (revision 2026-10-05, U-E3b): 'turns that fit' uses the G5 half closing of spiral_generator_spec.md (3 turns at via pad 0.6 and 1.2 mm, D08 via pad unresolved); Ke comparison names the result field ke_line_peak. Version 2: Phase 2 centre-via rule; EC-05 add-on labelled per DEF-23. Inputs unchanged.",
+   "version_note": "version 4 (revision 2026-10-08, U-E4): the phase-resistance row states its comparison basis (loop_only) and a full_phase row with no D08 value records what embodic's resistance_phase adds. Version 3 (U-E3b): 'turns that fit' uses the G5 half closing of spiral_generator_spec.md (3 turns at via pad 0.6 and 1.2 mm, D08 via pad unresolved); Ke comparison names the result field ke_line_peak. Version 2: Phase 2 centre-via rule; EC-05 add-on labelled per DEF-23. Inputs unchanged.",
    "runnable": true
   },
   {

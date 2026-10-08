@@ -119,6 +119,29 @@ eq. 3.24 N_c < ½((R_o0 − R_i0)/w_d + 1); eq. 3.25 N_c1 < R_i0 sin(θ_cs/2)/(w
 N_c2 < (1/(1 + csc(θ_cs/2)))((R_o0 − R_i0)/w_d − csc(θ_cs/2) − 2N_c1 + 2), with θ_cs = θ_cp. D08's split into
 trapezoids and triangles uses its own trapezoid test, so only the total is compared (worked examples).
 
+Turn-limit refusal (revision 2026-10-08 (U-E4)). D-030 caps the turns per coil layer at `MAX_TURNS_PER_LAYER = 100`
+(`assumption`). The generator returns `UNBUILDABLE_TURNS_EXCEED_LIMIT` with `{limit}` in four cases (read in
+`generators/spiral/generate.py`, `_refusal` and `_closings`):
+
+| Case | Requested turns | Cause | `{limit}` |
+|---|---|---|---|
+| 1 | above the cap | the request | the cap |
+| 2 | any, or none | the loop-rule scan reaches the cap | the cap |
+| 3 | any, or none | the best closing has more turns than the cap | the cap |
+| 4 | above the turns that fit | the geometry | turns that fit (best closing) |
+
+The current text, "The requested turn count exceeds the largest buildable count {limit}.", is false in cases 2 and 3
+when the user asked for fewer turns or for none. Proposed catalogue text for Agent 3 (`errors/catalogue/generators.py`,
+English, same code and placeholder):
+
+"The requested turns, or the turns that fit between the radii, exceed the limit of {limit} per coil layer. Lower the
+turn count, or change the trace width or clearance."
+
+The text names both causes, so it is true in all four cases, and it gives a remedy that applies to each. Follow-up
+(`inferred`, for Fable): in case 2 a request at or below the cap is refused only because the scan runs to the cap
+before it reads the request (U-M2d-fix deviation). Scanning to min(request, cap) + 1 would build that request. This
+is a generator change and needs its own unit and test.
+
 ### G4 Path of layer X (revision 2026-10-05 (U-E3))
 
 Append the terminal stub (G6), then for t = 0 to N − 1 the four primitives of G3, then the lead of G5. Record per turn:
@@ -371,7 +394,9 @@ the same turns. Numbers from `.venv/bin/python checks/spiral_reference.py` and `
   (outer arc 1 to left side 1); smallest trace-to-via 0.8000 mm (outer arc 0 to its own terminal via). No exemption
   beyond the existing connectivity rule.
 - EQ-10: 0.043091 Ω per coil-layer at 50 °C; 4 coils × 2 layers = 0.344727 Ω per phase before links. D08 prints 0.39 Ω
-  from the loop model (Table 4.6 p.57, calculated, not measured), so this is no validation.
+  from the loop model (Table 4.6 p.57, calculated, not measured), so this is no validation. Revision 2026-10-08 (U-E4):
+  the full generated phase is 0.485162 Ω at 50 °C, because the series chain and vias add 0.140435 Ω. The comparison
+  basis is in equation_specification.md EQ-10, "What D08's 0.39 Ω phase resistance includes".
 
 ## Acceptance checks for the implementation
 

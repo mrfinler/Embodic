@@ -296,10 +296,42 @@ cases.append({
 p1 = json.load(open(PHASE1))
 lit = {c["case_id"]: copy.deepcopy(c) for c in p1["cases"]}
 o1 = lit["O1-D08"]
-o1["version"] = 3
-o1["version_note"] = ("version 3 (revision 2026-10-05, U-E3b): 'turns that fit' uses the G5 half closing of spiral_generator_spec.md "
+o1["version"] = 4
+o1["version_note"] = ("version 4 (revision 2026-10-08, U-E4): the phase-resistance row states its comparison basis (loop_only) and "
+                      "a full_phase row with no D08 value records what embodic's resistance_phase adds. "
+                      "Version 3 (U-E3b): 'turns that fit' uses the G5 half closing of spiral_generator_spec.md "
                       "(3 turns at via pad 0.6 and 1.2 mm, D08 via pad unresolved); Ke comparison names the result field ke_line_peak. "
                       "Version 2: Phase 2 centre-via rule; EC-05 add-on labelled per DEF-23. Inputs unchanged.")
+# D08 eq. 3.38: R = rho_T L_tot / (w t), L_tot = concentric loops only; 4 coils x 2 layers in series per phase
+D08_COIL_LAYERS = 8
+r_loop_50 = R_track(D08_COIL_LAYERS * d08["closed_form_eq03_mm"], 2.06, 0.0348, 50)
+r_body_50 = R_track(D08_COIL_LAYERS * d08["path_mm"]["body"], 2.06, 0.0348, 50)
+checks.append(("O1 loop-only R_phase 50 degC vs D08 Table 4.6 0.39 ohm (rel)", rel(r_loop_50, 0.39)))
+o1["expected"] = [e for e in o1["expected"] if e["quantity"] != "phase resistance"]
+o1["expected"].insert(2, {
+    "quantity": "phase resistance, loop-only basis", "value": 0.39, "unit": "ohm",
+    "kind": "calculated (D08 loop model eq. 3.27-3.38: three concentric loops per coil-layer, 8 coil-layers in series, "
+            "w 2.06 mm, t 34.8 um, 50 degC; no leads, vias, inter-coil connections or star ring)",
+    "source": "D08 Table 4.6 PDF p.57 (printed 52); eq. 3.36-3.38 PDF p.45 (printed 40); Table 4.5 PDF p.54 (printed 49); "
+              "two sides in series PDF p.53 (printed 48)",
+    "comparison_basis": "loop_only",
+    "comparison": (f"EQ-03 concentric closed form (span 2 pi/Q) x 8 coil-layers at 50 degC with the registry rho_20 and alpha: "
+                   f"{r_loop_50:.6f} ohm ({rel(r_loop_50, 0.39):+.2%}). Not compared with AnalysisResult.resistance_phase_*, "
+                   "which is the full_phase basis below."),
+    "tolerance": ("information only (no measured R). Loop-only reproduction within +-3 %; the residual is unresolved "
+                  "(D08 does not state rho_20 or alpha_c; 0.39 is printed to two digits)"),
+})
+o1["expected"].insert(3, {
+    "quantity": "phase resistance, full-phase basis", "value": None, "unit": "ohm",
+    "kind": "no D08 value (D08 publishes neither a full-phase nor a measured R)",
+    "source": "checks/d08_resistance_decomposition.py on tests/unit/generators/d08_example.py",
+    "comparison_basis": "full_phase",
+    "comparison": (f"AnalysisResult.resistance_phase_20c x (1 + alpha 30 K). Its coil body (sides + end-turns, CF-10 body "
+                   f"{d08['path_mm']['body']} mm per coil-layer) gives {r_body_50:.6f} ohm at 50 degC; terminal stubs, the series "
+                   "chain (bus ring arcs and legs) and via barrels add to it. The chain widths (bus 1.0 mm, leg 0.6 mm) are "
+                   "example values (tests/unit/model/designs.py), not D08 values. The neutral ring is not in resistance_phase."),
+    "tolerance": "none (regression reference only; rerun the decomposition script)",
+})
 for e in o1["expected"]:
     if e["quantity"] == "turns that fit":
         e["comparison"] = ("EQ-02 / EQ-25: concentric loop rule 3 (1 trapezoid + 2 triangles); generator turns_achieved 3 at via pad 0.6 and 1.2 mm "
