@@ -12,9 +12,10 @@ from PySide6.QtWidgets import (
 )
 
 from embodic.model.fields import FieldGroup
+from embodic.model.schema import JsonValue
 from embodic.model.vocabulary import TopologyKind
 from embodic.ui.strings import text
-from embodic.ui.viewmodels.session import ASSIGNMENT_POINTER, DesignSession, assignment_mode
+from embodic.ui.viewmodels.session import ASSIGNMENT_MODES, ASSIGNMENT_POINTER, DesignSession, assignment_mode
 from embodic.ui.views.coil_panel import FieldPanel, Segment, fit_rows, hint_label, repolish, show_hints
 
 PHASE_COLUMNS = ("coil_index", "phase", "polarity")
@@ -32,7 +33,11 @@ class PhasePanel(FieldPanel):
         document = self.session.document
         if group is not FieldGroup.PHASES or document is None or document.draft.topology is not TopologyKind.SPIRAL:
             return
-        mode = Segment("param-phase-assign-mode", ("auto", "manual"), self.session.set_assignment_mode)
+        mode = Segment(
+            "param-phase-assign-mode",
+            tuple(ASSIGNMENT_MODES),
+            lambda choice: self.session.set_assignment_mode(ASSIGNMENT_MODES[str(choice)]),
+        )
         mode.setAccessibleName(text("param-phase-assign-mode.label"))
         form.addRow(QLabel(text("param-phase-assign-mode.label")), mode)
         self.helpers["param-phase-assign-mode"] = mode
@@ -94,7 +99,7 @@ class PhasePanel(FieldPanel):
         leaf = PHASE_COLUMNS[item.column()]
         typed = item.text().strip()
         if leaf == "phase":
-            value: object = typed.upper()
+            value: JsonValue = typed.upper()
         else:
             try:
                 value = int(typed)

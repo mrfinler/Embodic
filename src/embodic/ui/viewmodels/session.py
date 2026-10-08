@@ -114,6 +114,8 @@ class EditNotice:
 StackupInput: TypeAlias = Literal["copper_count", "copper_oz", "board_thickness_mm"]
 RotationMode: TypeAlias = Literal["none", "alternate", "custom"]
 AssignmentMode: TypeAlias = Literal["auto", "manual"]
+ROTATION_MODES: Mapping[str, RotationMode] = {"none": "none", "alternate": "alternate", "custom": "custom"}
+ASSIGNMENT_MODES: Mapping[str, AssignmentMode] = {"auto": "auto", "manual": "manual"}
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -483,7 +485,7 @@ def stackup_from_values(values: Mapping[str, JsonValue]) -> StackupInputs:
 
 def layer_pairs(values: Mapping[str, JsonValue]) -> tuple[LayerPair, ...]:
     """Return the pairs a draft lists, in list order."""
-    pairs = []
+    pairs: list[LayerPair] = []
     while (base := f"{PAIRS_POINTER}/{len(pairs)}/") + "layer_in" in values:
         pairs.append(
             LayerPair(
@@ -568,7 +570,7 @@ def assignment_mode(values: Mapping[str, JsonValue]) -> AssignmentMode:
 
 def manual_assignment(values: Mapping[str, JsonValue]) -> tuple[CoilPhase, ...]:
     """Return the assignment rows a manual draft lists, in list order."""
-    rows = []
+    rows: list[CoilPhase] = []
     while (base := f"{ASSIGNMENT_POINTER}/{len(rows)}/") + "coil_index" in values:
         rows.append(
             CoilPhase(
@@ -731,9 +733,9 @@ class DesignSession:
         """Add a screw pattern with its required values empty (screens.md section 5)."""
         if self.document is None:
             return
-        patterns = screw_patterns(self.document.draft.values)
         angle = FIELD_BY_KEY[f"{SCREWS_POINTER}/*/angle_offset_rad"].neutral_value
-        self.edit(SCREWS_POINTER, [*patterns, {"angle_offset_rad": angle}])
+        patterns: list[JsonValue] = [*screw_patterns(self.document.draft.values), {"angle_offset_rad": angle}]
+        self.edit(SCREWS_POINTER, patterns)
 
     def remove_screw_pattern(self, position: int) -> None:
         """Remove one screw pattern; the patterns after it move up."""
@@ -741,7 +743,8 @@ class DesignSession:
             return
         patterns = screw_patterns(self.document.draft.values)
         if 0 <= position < len(patterns):
-            self.edit(SCREWS_POINTER, patterns[:position] + patterns[position + 1 :])
+            kept: list[JsonValue] = [*patterns[:position], *patterns[position + 1 :]]
+            self.edit(SCREWS_POINTER, kept)
 
     def current_outcome(self) -> ComputeOutcome | None:
         """Return the result of the open design, also one that drew no board; None while it computes or is outdated."""

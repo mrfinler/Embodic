@@ -20,6 +20,7 @@ from embodic.model.vocabulary import TopologyKind
 from embodic.ui.strings import text
 from embodic.ui.viewmodels.session import (
     PAIRS_POINTER,
+    ROTATION_MODES,
     STACKUP_POINTER,
     DesignSession,
     RotationMode,
@@ -70,7 +71,11 @@ class LayerPanel(FieldPanel):
         form.addRow(QLabel(text(f"{name}.label")), count)
         self.helpers["copper-count"] = count
         if document.draft.topology is TopologyKind.SPIRAL:
-            mode = Segment("param-rotation-mode", ("none", "alternate", "custom"), self._choose_rotation_mode)
+            mode = Segment(
+                "param-rotation-mode",
+                tuple(ROTATION_MODES),
+                lambda c: self._choose_rotation_mode(ROTATION_MODES[str(c)]),
+            )
             mode.setAccessibleName(text("param-rotation-mode.label"))
             mode_row = QWidget()
             mode_row.setObjectName("param-rotation-mode-row")
