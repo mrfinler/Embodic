@@ -17,7 +17,7 @@ from embodic.io.pdf_writer import winansi
 from embodic.io.readme_writer import write_readme
 from embodic.io.report import write_report_pdf
 from embodic.io.svg_writer import write_svg
-from embodic.results import AnalysisResult
+from embodic.results import QUANTITY_LABELS, AnalysisResult
 from embodic.results.status import Status
 from embodic.results.traceable import Traceable
 from embodic.units import Unit
@@ -52,6 +52,19 @@ def test_ut_exp_03_report_every_value_has_unit_and_status(
         assert re.search(rf"({STATUS})( \(.+\))?$", row), row
         unit_part = re.sub(rf" ({STATUS})( \(.+\))?$", "", row)
         assert any(unit_part.endswith(" " + u) or re.search(rf"\d\s?\S*{re.escape(u)}$", unit_part) for u in UNITS), row
+
+
+def test_report_key_results_are_named_with_display_labels_not_ids(
+    example_id: str, outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path
+) -> None:
+    """Catches a Key results row titled with the raw field id ("ke phase v s per rad") or with another row's label."""
+    summary = write_report_pdf(outcome_of(example_id), tmp_path / "report.pdf")
+    assert isinstance(summary, ExportSummary), summary
+    _, text = _pdf_text(summary.path)
+    section = text.split("Key results", 1)[1].split("DRC summary", 1)[0].strip().splitlines()[1:]
+    scalar = [f.name for f in dataclasses.fields(AnalysisResult) if f.type == Traceable[float]]
+    for row, name in zip(section, scalar, strict=True):
+        assert row.startswith(winansi(QUANTITY_LABELS[name]).decode("cp1252") + " "), (name, row)
 
 
 def test_ut_io_06_report_carries_the_stamp(outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path) -> None:
