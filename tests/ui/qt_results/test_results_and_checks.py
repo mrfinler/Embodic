@@ -3,7 +3,7 @@
 import dataclasses
 
 import pytest
-from PySide6.QtCore import QPropertyAnimation, Qt
+from PySide6.QtCore import QPropertyAnimation, QRect, Qt
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QApplication, QLabel, QListWidget, QPushButton, QWidget
 from tests.ui.qt_results.conftest import find
@@ -13,6 +13,8 @@ from embodic.results.status import Status
 from embodic.ui.views.geometry_view import DATA_KIND
 
 D08, WAVE = "spiral_12c10p_d08", "wave_16p_example"
+DRC_COLUMNS = ("number", "severity", "rule", "message", "measured", "required", "layer")
+CELL_MARGIN_PX = 3  # Fusion item text margin on each side (PM_FocusFrameHMargin + 1)
 
 
 @pytest.mark.req("REQ-T-01", "REQ-T-13", "REQ-F-13")
@@ -124,6 +126,26 @@ def test_drc_tab_lists_the_wave_failures_and_locate_marks_the_first_on_the_canva
     copper = [i for i in window.canvas.scene().items() if i.data(DATA_KIND) == "copper"]
     assert copper and {round(i.opacity(), 2) for i in copper} == {0.35}
     assert window.canvas.zoom_factor() > 5
+
+
+@pytest.mark.req("REQ-F-33")
+@pytest.mark.parametrize("size", [(1280, 800), (960, 540)])
+def test_drc_table_shows_the_whole_catalogue_message_in_a_stretched_column(make_window, load, qtbot, size):
+    """Catches a message cut to "A trace is ..." by a narrow column, and a row too short for the wrapped message."""
+    window = load(make_window(), WAVE)
+    window.resize(*size)
+    window.show_results_tab("tab-drc")
+    for _ in range(5):
+        QApplication.processEvents()
+    table, message = window.drc_tab.table, DRC_COLUMNS.index("message")
+    assert table.textElideMode() == Qt.TextElideMode.ElideNone
+    fonts = table.fontMetrics()
+    inner = table.columnWidth(message) - 2 * CELL_MARGIN_PX
+    for row in range(table.model().rowCount()):
+        text = table.model().index(row, message).data()
+        needed = fonts.boundingRect(QRect(0, 0, inner, 10_000), Qt.TextFlag.TextWordWrap, text).height()
+        assert table.rowHeight(row) >= needed, (size, row, text)
+    assert table.model().index(0, message).data(Qt.ItemDataRole.ToolTipRole) == table.model().index(0, message).data()
 
 
 @pytest.mark.req("REQ-F-33")
