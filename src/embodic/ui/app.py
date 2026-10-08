@@ -21,6 +21,7 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QApplication
 
 from embodic.api import compute
+from embodic.results import load_registry
 from embodic.ui.theme import ThemeName
 from embodic.ui.viewmodels.appearance import AppearanceViewModel
 from embodic.ui.viewmodels.outcome import OutcomeReady, OutcomeViewModel
@@ -106,7 +107,9 @@ def create_shell(
     worker = ComputeWorker(compute_fn)
     outcome = OutcomeViewModel(worker)
     session = DesignSession(outcome, autosave_path=paths.recovery_dir / AUTOSAVE_NAME)
-    window = MainWindow(AppearanceViewModel(store), outcome, session, paths, prefers_dark, worker.shutdown)
+    window = MainWindow(
+        AppearanceViewModel(store), outcome, session, paths, prefers_dark, worker.shutdown, registry=load_registry()
+    )
     worker.setParent(window)
     worker.finished.connect(outcome.on_finished)
     worker.failed.connect(window.on_compute_failed)

@@ -352,6 +352,7 @@ class ChartModel:
     assumed_count: int
     estimate_label: str | None
     note: str | None = None
+    x_ticks: tuple[float, ...] | None = None  # None: round ticks from the data range
     computed: bool = True  # False stamps "Illustrative, not computed" (UI-32)
 
 
@@ -402,6 +403,7 @@ def back_emf_chart(outcome: ComputeOutcome | None) -> ChartModel | None:
         y_label=text("chart.backemf.y"),
         y_unit=Unit.V.display(),
         xs=tuple(360.0 * k / (samples - 1) for k in range(samples)),
+        x_ticks=(0.0, 90.0, 180.0, 270.0, 360.0),
         series=tuple(
             ChartSeries(label=text("chart.legend.phase", phase=phase.value), phase=phase, ys=ys)
             for phase, ys in curves.items()

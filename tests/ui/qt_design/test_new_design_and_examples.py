@@ -174,7 +174,7 @@ def visible_chips(window):
 
 def badges(window):
     """Return the trust badge text of each summary card."""
-    return {key: card.badge.text() for key, card in window.cards.items()}
+    return {key: card.badge.label.text() for key, card in window.rail.cards.items()}
 
 
 @pytest.mark.req("REQ-F-21", "REQ-F-38")
