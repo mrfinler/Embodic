@@ -16,15 +16,15 @@ from embodic.results.status import MetricBound, Status
 from embodic.units import Unit
 
 SRC = Path(__file__).resolve().parents[3] / "src" / "embodic"
-# U-E2 registry: equations still without an EV-ID (registry content, owner Agent 2).
-UNSOURCED = {"EQ-18", "EQ-19", "EQ-23", "EQ-24", "EQ-25", "EQ-26", "EQ-28", "EQ-29", "EQ-30"}
-# U-E2: three constants from EV-53, three labelled `assumption` without a source.
+# Registry content (owner Agent 2): equations still without an EV-ID. EQ-18 was sourced by EV-91 in U-E5 (D-033f).
+UNSOURCED = {"EQ-19", "EQ-23", "EQ-24", "EQ-25", "EQ-26", "EQ-28", "EQ-29", "EQ-30"}
+# Three constants from EV-53, NdFeB density `inferred` from EV-93 (U-E5, D-033f), two `assumption` without a source.
 CONSTANTS = {
     "copper_resistivity_20c_ohm_m": (1.7241e-08, Unit.OHM_M, Status.VERIFIED),
     "copper_temp_coeff_per_k": (0.00393, Unit.PER_K, Status.VERIFIED),
     "copper_density_g_per_cm3": (8.89, Unit.G_PER_CM3, Status.VERIFIED),
     "laminate_density_g_per_cm3": (1.85, Unit.G_PER_CM3, Status.ASSUMPTION),
-    "ndfeb_density_g_per_cm3": (7.5, Unit.G_PER_CM3, Status.ASSUMPTION),
+    "ndfeb_density_g_per_cm3": (7.5, Unit.G_PER_CM3, Status.INFERRED),
     "steel_density_g_per_cm3": (7.85, Unit.G_PER_CM3, Status.ASSUMPTION),
 }
 
