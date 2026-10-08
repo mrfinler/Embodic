@@ -414,7 +414,7 @@ def _interconnect(
     """Star or delta links and leads beyond the bus rings (G8); nothing for open phases or a hidden interconnect."""
     connection = design.connection
     if not connection.draw_interconnect or connection.topology is ConnectionTopology.OPEN:
-        return Interconnect(paths=(), vias=(), pads=(), r_max_mm=0.0)
+        return Interconnect(paths=(), roles=(), vias=(), pads=(), r_max_mm=0.0)
     links = plan_links(connection.topology, phase_ends)
     if links is None:
         return Unbuildable(issues=(_issue("UNBUILDABLE_INTERCONNECT_CROSSING", ("/connection/topology",)),))
@@ -539,6 +539,7 @@ def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack 
             ),
             topology=design.connection.topology,
             interconnect_path_ids=tuple(p.id for p in ic.paths),
+            interconnect_roles=ic.roles,
         ),
         symmetry=None,
         envelope_mm=envelope,

@@ -11,6 +11,8 @@ from embodic.io.project import ProjectFile, project_provenance
 from embodic.model.provenance import ExampleValue
 from embodic.model.validate import validate_design
 from embodic.model.vocabulary import TopologyKind
+from embodic.results.status import Status
+from embodic.units import Unit
 
 from .make_examples import write_examples
 
@@ -42,6 +44,19 @@ def test_ut_io_08_example_validates_and_computes_drc_clean(example_id: str) -> N
     assert [r.passed for r in outcome.drc] == [True]
     assert outcome.analysis is not None
     assert outcome.ok
+
+
+@pytest.mark.req("REQ-F-11")
+@pytest.mark.parametrize("example_id", sorted(SPIRAL_EXAMPLES))
+def test_example_results_carry_interconnect_loss_and_motor_constant(example_id: str) -> None:
+    """Catches P_ic left unresolved for an unclassified interconnect (U-M2-fix4) or a missing K_m with its unit."""
+    ref, design = load_example(example_id)
+    outcome = compute(design, project_provenance(ProjectFile(design=design, origin=ref)))
+    assert outcome is not None and outcome.analysis is not None
+    p_ic, k_m = outcome.analysis.loss_interconnect_w, outcome.analysis.motor_constant_n_m_per_sqrt_w
+    assert p_ic.status is not Status.UNRESOLVED and p_ic.value > 0.0
+    assert "INTERNAL_INTERCONNECT_UNCLASSIFIED" not in {flag.code for flag in p_ic.validity}
+    assert k_m.value > 0.0 and k_m.unit is Unit.N_M_PER_SQRT_W
 
 
 @pytest.mark.req("REQ-F-25")

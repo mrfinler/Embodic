@@ -3,16 +3,18 @@
 Port of Xcoil ``buildInterconnect`` (engine.js l.1225) for the sector layout: tap stubs on layer Y end on a via at
 the link ring, ring arcs on layer X, leads on layer Y from each phase start to its terminal pad. Nets per D-022:
 neutral ``N``, delta links ``D0``..``D2``, leads ``U``/``V``/``W``; every path here goes in
-``Circuit.interconnect_path_ids``.
+``Circuit.interconnect_path_ids``, and each has one ``InterconnectRole`` for physics (interfaces.md section 5).
 """
 
 import math
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
+from functools import partial
 from types import MappingProxyType
 from typing import Literal
 
 from embodic.generators.spiral.chain import norm_angle
+from embodic.geometry.circuit import InterconnectRole, LineLead, NeutralLead, NeutralRing, PhaseLink
 from embodic.geometry.layout import Pad, Via, ViaRole
 from embodic.geometry.paths import CopperPath
 from embodic.geometry.primitives import Arc, Line, Primitive, PrimitiveRole
@@ -50,9 +52,10 @@ class RingLink:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Interconnect:
-    """Paths, vias and pads to append; ``r_max_mm`` is the outermost copper radius (pad edge)."""
+    """Paths, vias and pads to append, one role per path; ``r_max_mm`` is the outermost copper radius (pad edge)."""
 
     paths: tuple[CopperPath, ...]
+    roles: tuple[InterconnectRole, ...]
     vias: tuple[Via, ...]
     pads: tuple[Pad, ...]
     r_max_mm: float
@@ -135,12 +138,15 @@ def build_interconnect(
     pad_reach = connection.terminal_pad_mm / 2
     r_pad = base_mm + s + n_levels * rings.pitch_mm + pad_reach
     paths: list[CopperPath] = []
+    roles: list[InterconnectRole] = []
     vias: list[Via] = []
     stub_of: dict[tuple[Phase, int], tuple[int, Line]] = {}
 
-    def add(layer: str, net: str, prims: tuple[Primitive, ...]) -> int:
-        paths.append(CopperPath(id=first_path_id + len(paths), layer=layer, net=net, primitives=prims, phase=None,
-                                element=None, polarity=0))  # fmt: skip
+    def add(layer: str, net: str, prims: tuple[Primitive, ...], role: Callable[..., InterconnectRole]) -> int:
+        path_id = first_path_id + len(paths)
+        paths.append(CopperPath(id=path_id, layer=layer, net=net, primitives=prims, phase=None, element=None,
+                                polarity=0))  # fmt: skip
+        roles.append(role(path_id=path_id))
         return len(paths) - 1
 
     def radial(end: PhaseEnd, r_end_mm: float) -> Line:
@@ -150,14 +156,24 @@ def build_interconnect(
 
     for link in links:
         r_mm = rings.radius_mm(link.level)
+        star = link.net == "N"
+        tap_via_ids: list[int] = []
         for tap in link.taps:
             stub = radial(tap, r_mm)
-            vias.append(replace(template, id=first_via_id + len(vias), x_mm=stub.x2_mm, y_mm=stub.y2_mm,
+            tap_via_ids.append(first_via_id + len(vias))
+            vias.append(replace(template, id=tap_via_ids[-1], x_mm=stub.x2_mm, y_mm=stub.y2_mm,
                                 role=ViaRole.RING, net=link.net))  # fmt: skip
-            stub_of[(tap.phase, tap.sign)] = (add(stub_layer, link.net, (stub,)), stub)
+            # a delta link belongs to the phase it starts at (Xcoil link[k], l.1366)
+            owner = tap.phase if star else link.taps[0].phase
+            stub_of[(tap.phase, tap.sign)] = (add(stub_layer, link.net, (stub,), partial(PhaseLink, phase=owner)), stub)
         arc = Arc(cx_mm=0.0, cy_mm=0.0, r_mm=r_mm, start_rad=link.start_rad, sweep_rad=link.sweep_rad, width_mm=bw,
                   role=PrimitiveRole.RING)  # fmt: skip
-        add(ring_layer, link.net, (arc,))
+        ring_role = (
+            partial(NeutralRing, tap_via_ids=tuple(tap_via_ids))
+            if star
+            else partial(PhaseLink, phase=link.taps[0].phase)
+        )
+        add(ring_layer, link.net, (arc,), ring_role)
 
     leads = [(ends[(phase, 1)], LINE_NET[phase]) for phase in Phase]
     if connection.topology is ConnectionTopology.STAR and connection.neutral_pad:
@@ -166,13 +182,16 @@ def build_interconnect(
     for end, net in leads:
         a = end.angle_rad
         tapped = stub_of.get((end.phase, end.sign))
+        lead_role = partial(LineLead, phase=end.phase) if net != "N" else NeutralLead
         if tapped is None:
-            add(stub_layer, net, (radial(end, r_pad),))
+            add(stub_layer, net, (radial(end, r_pad),), lead_role)
         else:  # the lead continues the tap stub beyond its ring via, one path (Xcoil: same object)
             index, stub = tapped
             extension = Line(x1_mm=stub.x2_mm, y1_mm=stub.y2_mm, x2_mm=r_pad * math.cos(a), y2_mm=r_pad * math.sin(a),
                              width_mm=bw, role=PrimitiveRole.LINK)  # fmt: skip
             paths[index] = replace(paths[index], net=net, primitives=(stub, extension))
+            if net != "N":  # Xcoil sorts a merged line lead as lineStub; the neutral pad stays in the phase link
+                roles[index] = lead_role(path_id=paths[index].id)
         pads.append(
             Pad(
                 id=first_pad_id + len(pads), x_mm=r_pad * math.cos(a), y_mm=r_pad * math.sin(a), shape="round",
@@ -181,4 +200,6 @@ def build_interconnect(
                 net=net, label=net,
             )
         )  # fmt: skip
-    return Interconnect(paths=tuple(paths), vias=tuple(vias), pads=tuple(pads), r_max_mm=r_pad + pad_reach)
+    return Interconnect(
+        paths=tuple(paths), roles=tuple(roles), vias=tuple(vias), pads=tuple(pads), r_max_mm=r_pad + pad_reach
+    )
