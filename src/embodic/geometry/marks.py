@@ -128,10 +128,11 @@ def top_layer_of_each_phase(layout: Layout) -> dict[Phase, str]:
     a serpentine board with one phase per layer pair names each on its own pair's upper layer.
     """
     carried = {(p.layer, p.phase) for p in layout.paths if p.phase is not None}
+    phases = {phase for _, phase in carried}
     return {
         phase: next(layer for layer in layout.copper_layers if (layer, phase) in carried)
         for phase in Phase
-        if any(phase == q for _, q in carried)
+        if phase in phases
     }
 
 

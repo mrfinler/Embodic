@@ -108,7 +108,7 @@ def test_ut_exp_01_phases_carry_class_label_and_mode_ink(
 
 def _clip_discs(root: ET.Element) -> dict[str, tuple[float, float, float]]:
     return {
-        clip.get("id", ""): tuple(float(clip[0].get(k, "nan")) for k in ("cx", "cy", "r"))  # type: ignore[misc]
+        clip.get("id", ""): tuple(float(clip[0].get(k, "nan")) for k in ("cx", "cy", "r"))
         for clip in root.iter(f"{SVG}clipPath")
     }
 
@@ -167,6 +167,6 @@ def test_footer_fits_inside_the_drawing(
     (stamp,) = _classes(root, "stamp")
     font = TTFont(resource_root() / "fonts" / "Inter" / "InterVariable.ttf")
     cmap, hmtx = font.getBestCmap(), font["hmtx"]
-    size = float(root.find(f"{SVG}g[@id='legend']").get("font-size"))  # type: ignore[union-attr]
+    size = float(root.find(f"{SVG}g[@id='legend']").get("font-size"))
     text_mm = sum(hmtx[cmap[ord(c)]][0] for c in stamp.text or "") * size / font["head"].unitsPerEm
     assert float(stamp.get("x", "nan")) + text_mm <= x_min + width

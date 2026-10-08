@@ -105,7 +105,7 @@ def test_report_drawing_labels_every_coil_and_never_dashes(
     for label in "A1+ A2− A3− A4+ B1− B2+ B3+ B4− C1+ C2− C3− C4+".split():
         assert label in text, (mode, label)
     assert all(f"Phase {p}" in text for p in "ABC")
-    content = drawing.get_contents().get_data()  # type: ignore[union-attr]
+    content = drawing.get_contents().get_data()
     assert not re.search(rb"\[[\d. ]+\] [\d.]+ d", content), "dash pattern in the drawing"
     assert content.count(b" W n ") == 8 + 2  # B and C eyes of D08 plus the B and C legend swatches, all clipped
 

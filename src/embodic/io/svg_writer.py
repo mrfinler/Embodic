@@ -228,7 +228,7 @@ def _text_size_px(text: str) -> tuple[float, float]:
     return bundled_font(SANS_FILE).width_pt(text, LABEL_MM) * CSS_PX_PER_MM, LABEL_MM * CSS_PX_PER_MM
 
 
-def board_labels(board: Layout, view: Viewport) -> tuple[PlacedLabel, ...]:
+def _board_labels(board: Layout, view: Viewport) -> tuple[PlacedLabel, ...]:
     """Return the labels a drawing of ``board`` shows: ruling b's set, placed at the 1:1 page scale."""
     return place_labels(
         label_anchors(board),
@@ -260,7 +260,7 @@ def _labels(placed: Sequence[PlacedLabel]) -> list[str]:
         at = f'x="{_n(label.x_mm)}" y="{_n(-label.y_mm + lift)}"'
         out.append(
             f'<text class="coil-label-halo" {at} fill="none" stroke="{PAPER}" stroke-width="{_n(LABEL_HALO_MM)}" '
-            f'stroke-linejoin="round" style="paint-order: stroke">{label.text}</text>'
+            f'stroke-linejoin="round">{label.text}</text>'
         )
         out.append(f'<text class="coil-label" data-phase="{label.phase.value}" {at}>{label.text}</text>')
     out.append("</g>")
@@ -333,7 +333,7 @@ def svg_document(boards: Sequence[Layout], mode: PhaseRenderMode, metadata: Expo
         _board(svg, index, board, inks, grey)
     svg.out.append("</g>")
     for board in boards:
-        svg.out += _labels(board_labels(board, view))
+        svg.out += _labels(_board_labels(board, view))
     svg.out += _legend(x_min, -(y_min - MARGIN_MM) + LEGEND_ROW_MM, inks, grey, metadata)
     svg.out.append("</svg>")
     return "\n".join(svg.out) + "\n", svg.counts
