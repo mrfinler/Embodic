@@ -190,15 +190,14 @@ def exempt_pairs(layout: Layout, items: Items, first_item: dict[int, int]) -> In
     """Sorted keys ``i * n + j`` (i < j) of item pairs that connectivity exempts.
 
     Exempt: a via or pad and the end group of a same-net path whose end point lies on that via or pad (the end group
-    is the terminating main primitive and the fillets and tapers either side of it); the end groups
-    of different paths that meet at one via, pad or coincident end point (a node); a pad and a same-net via whose
-    centre lies inside it. An interconnect path joins, whatever the nets and the via role, a via or pad its end lies on
-    and every via whose centre lies within ``pad_mm / 2`` of its centreline (D-022 a and c). A via is also exempt from
-    the whole of any same-net path whose centreline passes within ``pad_mm / 2`` of its centre (D-036 a). The end group
-    of a path
-    whose end point lies within COINCIDENCE_MM of another same-net path's centreline on its layer is exempt from that
-    whole path (T-junction, D-035 b). Primitives adjacent in one path are exempted in the engine from ``path`` and
-    ``slot``.
+    is the terminating main primitive and the fillets and tapers either side of it); the end groups of different
+    paths that meet at one via, pad or coincident end point (a node); a pad and a same-net via whose centre lies
+    inside it. An interconnect path joins, whatever the nets and the via role, a via or pad its end lies on and every
+    via whose centre lies within ``pad_mm / 2`` of its centreline (D-022 a and c). A via is also exempt from the whole
+    of any same-net path whose centreline passes within ``pad_mm / 2`` of its centre (D-036 a). The end group of a
+    path whose end point lies within COINCIDENCE_MM of another same-net path's centreline on its layer is exempt from
+    that whole path (T-junction, D-035 b). Primitives adjacent in one path are exempted in the engine from ``path``
+    and ``slot``.
     """
     ends = list(_path_ends(layout, items, first_item))
     via_base = int(np.count_nonzero(items.item_class == ItemClass.TRACE))
