@@ -167,9 +167,10 @@ def _serpentine_layers(design: DesignParameters) -> Iterator[ValidationIssue]:
         pointers = ["/winding/layers_per_phase", "/winding/pair_connection", "/rotor/poles"]
         yield issue("INVALID_SERIES_PAIRS_EXCEED_POLE_PAIRS", pointers, value=pairs, limit=design.rotor.poles // 2)
     copper = len(design.stackup.copper_layers())
-    if spec.stack_mode is StackMode.ONE_BOARD_PER_PHASE and copper != count:
+    expected = count if spec.stack_mode is StackMode.ONE_BOARD_PER_PHASE else design.phases * count
+    if copper != expected:
         pointers = ["/stackup/layers", "/winding/layers_per_phase", "/winding/stack_mode"]
-        yield issue("INVALID_SERPENTINE_COPPER_COUNT", pointers, value=copper, limit=count)
+        yield issue("INVALID_SERPENTINE_COPPER_COUNT", pointers, value=copper, limit=expected)
     if spec.turns * spec.strands > TRACES_MAX:
         yield issue(
             "RANGE_TOO_MANY_TRACES",

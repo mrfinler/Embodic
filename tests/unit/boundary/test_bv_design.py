@@ -12,8 +12,10 @@ from hypothesis import strategies as st
 from embodic.errors import IssueCategory
 from embodic.model.draft import DesignDraft, DraftIncomplete, draft_from_design, parse_draft
 from embodic.model.layers import LayerPair
+from embodic.model.stackup import generate_even_stackup
 from embodic.model.validate import validate_design
 from embodic.model.vocabulary import TopologyKind
+from embodic.model.winding_specs import SerpentineWindingSpec, StackMode
 
 # tests/unit is not a package, so the shared example designs are loaded by path.
 _SPEC = importlib.util.spec_from_file_location("model_designs", Path(__file__).parents[1] / "model" / "designs.py")
@@ -101,15 +103,60 @@ def test_xcoil_via_and_terminal_rings():
     assert _codes(smd) == []
 
 
+def _serpentine_with_layers(layers_per_phase):
+    """Return the serpentine example on a stack-up of phases x layers per phase, so only the layer rules apply."""
+    design = _replace(serpentine_design(), "winding.layers_per_phase", layers_per_phase)
+    stackup = generate_even_stackup(design.phases * layers_per_phase, designs.COPPER_2OZ_MM, 1.6)
+    return dataclasses.replace(design, stackup=stackup)
+
+
 @pytest.mark.req("REQ-F-14")
 def test_xcoil_serpentine_layer_rules():
     """Xcoil LAYERS_ODD, PAIRS_GT_P and TOO_MANY for serpentine."""
-    odd = _replace(serpentine_design(), "winding.layers_per_phase", 3)
+    odd = _serpentine_with_layers(3)
     assert [i.code for i in validate_design(odd)] == ["INVALID_LAYERS_PER_PHASE"]
-    many_pairs = _replace(_replace(serpentine_design(), "rotor.poles", 2), "winding.layers_per_phase", 4)
+    many_pairs = _replace(_serpentine_with_layers(4), "rotor.poles", 2)
     assert [i.code for i in validate_design(many_pairs)] == ["INVALID_SERIES_PAIRS_EXCEED_POLE_PAIRS"]
     traces = _replace(_replace(serpentine_design(), "winding.turns", 200), "winding.strands", 3)
     assert [i.code for i in validate_design(traces)] == ["RANGE_TOO_MANY_TRACES"]
+
+
+@pytest.mark.req("REQ-F-14", "REQ-F-34")
+@pytest.mark.parametrize(
+    ("phases", "layers_per_phase", "copper_count", "valid"),
+    [
+        (3, 2, 6, True),
+        (3, 1, 3, True),
+        (3, 1, 6, False),
+        (3, 2, 2, False),
+        (3, 2, 4, False),
+        (3, 2, 12, False),
+        (2, 2, 4, True),
+        (2, 2, 6, False),
+    ],
+)
+def test_single_stack_copper_count_is_phases_times_layers_per_phase(phases, layers_per_phase, copper_count, valid):
+    """UT-GEN-03, D-031e, DEF-U-D4-02. Defect caught: a single-board stack-up of any size accepted.
+
+    The single board carries every phase, so 3 phases x 1 layer per phase need 3 copper layers, not 6.
+    """
+    design = serpentine_design()
+    assert isinstance(design.winding, SerpentineWindingSpec)
+    winding = dataclasses.replace(design.winding, stack_mode=StackMode.SINGLE, layers_per_phase=layers_per_phase)
+    stackup = generate_even_stackup(copper_count, designs.COPPER_2OZ_MM, 1.6)
+    changed = dataclasses.replace(design, phases=phases, winding=winding, stackup=stackup)
+    found = [i for i in validate_design(changed) if i.code == "INVALID_SERPENTINE_COPPER_COUNT"]
+    if valid:
+        assert found == []
+    else:
+        assert [(i.category, i.pointers, i.value, i.limit) for i in found] == [
+            (
+                IssueCategory.INVALID,
+                ("/stackup/layers", "/winding/layers_per_phase", "/winding/stack_mode"),
+                copper_count,
+                phases * layers_per_phase,
+            )
+        ]
 
 
 @pytest.mark.req("REQ-F-14")

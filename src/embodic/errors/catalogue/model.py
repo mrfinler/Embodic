@@ -25,8 +25,8 @@ MESSAGES: Mapping[str, str] = {
         "Series connection supports at most p layer pairs (p = pole pairs): each pair is rotated by two pole pitches."
     ),
     "INVALID_SERPENTINE_COPPER_COUNT": (
-        "With one board per phase the stack-up describes one board and needs {limit} copper layers "
-        "(the layers per phase)."
+        "The stack-up needs {limit} copper layers: phases x layers per phase on a single board, "
+        "or the layers per phase when each phase has its own board."
     ),
     "RANGE_TOO_MANY_TRACES": "Total traces (turns x strands) exceed {limit}.",
     "INVALID_VIA_RING": "Via pad diameter must exceed the drill by at least {limit} mm (annular ring).",
