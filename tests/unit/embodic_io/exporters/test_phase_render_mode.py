@@ -1,4 +1,4 @@
-"""The phase render mode is one enum shared by the view-model and the writers (D-038a)."""
+"""The phase render mode is one enum shared by the view-model and the writers (D-038)."""
 
 import pytest
 

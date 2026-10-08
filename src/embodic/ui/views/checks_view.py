@@ -1,7 +1,16 @@
 """The DRC tab (screens.md section 7) and Locate: zoom the canvas to a failure, dim copper, draw the ink marker."""
 
 from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QRectF, Qt, Signal
-from PySide6.QtGui import QColor, QKeyEvent, QPainter, QPainterPath, QPen, QStandardItem, QStandardItemModel
+from PySide6.QtGui import (
+    QColor,
+    QKeyEvent,
+    QPainter,
+    QPainterPath,
+    QPen,
+    QResizeEvent,
+    QStandardItem,
+    QStandardItemModel,
+)
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QGraphicsItem,
@@ -31,6 +40,7 @@ LOCATED_COPPER_OPACITY = 0.35
 LOCATE_ZOOM = 12.0
 MARKER_RADIUS_PX = 10
 FAIL_BORDER_PX = 4
+MESSAGE_MIN_PX = 240  # the longest catalogue message wraps to four lines at this width
 
 
 class _FailBorder(QStyledItemDelegate):
@@ -52,6 +62,16 @@ class _DrcTableView(QTableView):
     """The violations table; Enter locates the selected row."""
 
     locate = Signal()
+
+    def fit_message_column(self) -> None:
+        """Stretch the message column over the width the others leave; a table too narrow for MESSAGE_MIN_PX scrolls."""
+        message = COLUMNS.index("message")
+        others = sum(self.columnWidth(c) for c in range(len(COLUMNS)) if c != message)
+        self.setColumnWidth(message, max(MESSAGE_MIN_PX, self.viewport().width() - others))
+
+    def resizeEvent(self, event: QResizeEvent) -> None:  # noqa: N802 (Qt override)
+        super().resizeEvent(event)
+        self.fit_message_column()
 
     def keyPressEvent(self, event: QKeyEvent) -> None:  # noqa: N802 (Qt override)
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
@@ -87,7 +107,8 @@ class DrcTab(QWidget):
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)
-        self.table.horizontalHeader().setSectionResizeMode(COLUMNS.index("message"), QHeaderView.ResizeMode.Stretch)
+        self.table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self.table.setTextElideMode(Qt.TextElideMode.ElideNone)
         self.table.doubleClicked.connect(lambda _: self.locate_selected())
         self.table.locate.connect(self.locate_selected)
         self.locate = QPushButton(text("drc.locate"))
@@ -143,6 +164,7 @@ class DrcTab(QWidget):
             cells[0].setData("fail", Qt.ItemDataRole.UserRole + 1)
             self.model.appendRow(cells)
         self.table.resizeColumnsToContents()
+        self.table.fit_message_column()
         self.locate.setEnabled(False)
 
     def selected_row(self) -> DrcRow | None:

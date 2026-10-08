@@ -2,8 +2,8 @@
 
 from collections.abc import Callable, Mapping
 
-from PySide6.QtCore import QEvent, QObject, QRectF, QSize, Qt
-from PySide6.QtGui import QAction, QColor, QKeySequence, QPainter, QPaintEvent, QPen
+from PySide6.QtCore import QEvent, QObject, QSize, Qt
+from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -25,31 +25,6 @@ from embodic.ui.views.style import themed_icon
 CommandTable = Mapping[str, Callable[[], None] | None]
 
 _MOVE_KEYS = {Qt.Key.Key_Left: -1, Qt.Key.Key_Right: 1, Qt.Key.Key_Up: -1, Qt.Key.Key_Down: 1}
-
-
-class FocusRingTabBar(QTabBar):
-    """A tab bar that rings its current tab while it has focus; style sheets cannot mark a focused tab (AX-03)."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.ring = QColor("black")
-        self.ring_px = 2
-
-    def set_ring(self, tokens: ThemeTokens) -> None:
-        """Take the focus-ring colour and width of a theme."""
-        self.ring, self.ring_px = QColor(tokens.colours["focus-ring"]), tokens.focus_ring_px
-        self.update()
-
-    def paintEvent(self, event: QPaintEvent) -> None:  # noqa: N802 (Qt override)
-        """Paint the tabs, then the ring inside the current tab's edge."""
-        super().paintEvent(event)
-        if not self.hasFocus() or self.currentIndex() < 0:
-            return
-        painter = QPainter(self)
-        painter.setPen(QPen(self.ring, self.ring_px))
-        inset = self.ring_px / 2
-        painter.drawRect(QRectF(self.tabRect(self.currentIndex())).adjusted(inset, inset, -inset, -inset))
-        painter.end()
 
 
 class UnknownCommandError(RuntimeError):
@@ -99,7 +74,7 @@ class ToolstripBar(QToolBar):
         self.actions_by_id: dict[str, QAction] = {}
         self.buttons: dict[str, QToolButton] = {}
         self._filters: list[_ArrowKeys] = []
-        self.tabs = FocusRingTabBar()
+        self.tabs = QTabBar()
         self.tabs.setObjectName("toolstrip-tabs")
         self.tabs.setExpanding(False)
         self.pages = QStackedWidget()
@@ -177,7 +152,6 @@ class ToolstripBar(QToolBar):
 
     def apply_theme(self, tokens: ThemeTokens) -> None:
         """Redraw every icon in the theme's colours; a button whose icon file is missing shows its label only."""
-        self.tabs.set_ring(tokens)
         for row in TOOLSTRIP:
             icon = themed_icon(row.icon, tokens)
             button = self.buttons[row.id]

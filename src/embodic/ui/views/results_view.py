@@ -156,7 +156,7 @@ class ResultCard(QFrame):
         """Show a row; an open disclosure is rebuilt from the new row."""
         self.row = row
         t = row.traceable
-        self.title.setText(row.label)
+        self.title.setText(row.title)
         self.value.setText(row.value_text)
         self.unit.setText(row.unit_text)
         self.unit.setAccessibleName(row.unit_text)

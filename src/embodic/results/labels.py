@@ -1,4 +1,4 @@
-"""English display label of every AnalysisResult field, for result tables (D-038e).
+"""English display label and spec symbol of every AnalysisResult field, for result cards and tables (D-038e, D-039).
 
 Names follow equation_specification.md (equation titles and variable names). The two labels the shell's summary strip
 shows are the same text as ``shell.sum-ke.label`` and ``shell.sum-r-phase.label`` in ``embodic.ui.strings.shell``.
@@ -46,3 +46,39 @@ QUANTITY_LABELS: Mapping[str, str] = MappingProxyType(
         "registry_version": "Equation registry version",
     }
 )
+
+# Symbols exactly as equation_specification.md writes them; "l." is the spec line. A field with no stated symbol has no
+# entry: the peak line constant, the rms phase EMF, THD (an abbreviation) and the IPC current (the bare "I" of EQ-15).
+# Four stated symbols are held back because LG-01 (tests/static ALLOWED_SYMBOLS) rejects Greek letters in source text:
+# eta (l.509), delta (l.326), Delta T (l.373) and P_delta,circ (l.509). They need a ruling on that allowlist.
+QUANTITY_SYMBOLS: Mapping[str, str] = MappingProxyType(
+    {
+        "ke_phase_v_s_per_rad": "Ke_ph",  # l.219
+        "ke_line_v_s_per_rad": "Ke_LL",  # l.219
+        "kt_n_m_per_a": "Kt",  # l.220
+        "kv_rpm_per_v": "K_v",  # l.220
+        "winding_factor_1": "k_w1",  # l.337, EQ-14 (N k_w1)
+        "resistance_phase_20c_ohm": "R_ph",  # l.422
+        "resistance_phase_operating_ohm": "R_ph",  # l.422
+        "resistance_line_ohm": "R_LL",  # l.441
+        "torque_n_m": "T",  # l.511
+        "loss_copper_w": "P_Cu",  # l.509
+        "loss_eddy_w": "P_eddy",  # l.509
+        "loss_circulating_w": "P_circ",  # l.509
+        "loss_interconnect_w": "P_ic",  # l.441
+        "loss_total_w": "P_loss",  # l.509
+        "output_power_w": "P_out",  # l.509
+        "motor_constant_n_m_per_sqrt_w": "K_m",  # l.509
+        "current_density_a_per_mm2": "J",  # l.429
+        "inductance_estimate_h": "L_m",  # l.337, EQ-14 (a): the form `inductance_estimate_h` computes
+        "mass_copper_g": "m_Cu",  # l.362
+        "mass_laminate_g": "m_lam",  # l.362
+        "edge_leakage_fraction": "e_edge",  # l.114
+    }
+)
+
+
+def quantity_title(quantity: str) -> str:
+    """Return the card and report title of a field: its label, then its spec symbol when one is stated."""
+    symbol = QUANTITY_SYMBOLS.get(quantity)
+    return QUANTITY_LABELS[quantity] if symbol is None else f"{QUANTITY_LABELS[quantity]} {symbol}"

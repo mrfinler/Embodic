@@ -3,9 +3,9 @@
 import dataclasses
 
 import pytest
-from PySide6.QtCore import QPropertyAnimation, Qt
+from PySide6.QtCore import QPropertyAnimation, QRect, Qt
 from PySide6.QtGui import QGuiApplication
-from PySide6.QtWidgets import QApplication, QLabel, QPushButton
+from PySide6.QtWidgets import QApplication, QLabel, QListWidget, QPushButton, QWidget
 from tests.ui.qt_results.conftest import find
 
 from embodic.api import compute
@@ -13,6 +13,8 @@ from embodic.results.status import Status
 from embodic.ui.views.geometry_view import DATA_KIND
 
 D08, WAVE = "spiral_12c10p_d08", "wave_16p_example"
+DRC_COLUMNS = ("number", "severity", "rule", "message", "measured", "required", "layer")
+CELL_MARGIN_PX = 3  # Fusion item text margin on each side (PM_FocusFrameHMargin + 1)
 
 
 @pytest.mark.req("REQ-T-01", "REQ-T-13", "REQ-F-13")
@@ -28,7 +30,7 @@ def test_ui06_results_tab_shows_one_card_per_quantity_with_value_unit_badge_eq_a
         name: find(card, QLabel, f"res-r-phase-{name}").text() for name in ("title", "value", "unit", "badge", "eq")
     }
     assert parts == {
-        "title": "Phase resistance at operating temperature",
+        "title": "Phase resistance at operating temperature R_ph",
         "value": "502",
         "unit": "mΩ",
         "badge": "not tested",
@@ -127,14 +129,75 @@ def test_drc_tab_lists_the_wave_failures_and_locate_marks_the_first_on_the_canva
 
 
 @pytest.mark.req("REQ-F-33")
-def test_rail_keeps_the_summary_names_and_links_a_failing_drc_to_its_tab(make_window, load, qtbot):
-    """Catches a rail that lost the U-M4b objectNames or hides why the design shows 'Problems found'."""
+@pytest.mark.parametrize("size", [(1280, 800), (960, 540)])
+def test_drc_table_shows_the_whole_catalogue_message_in_a_stretched_column(make_window, load, qtbot, size):
+    """Catches a message cut to "A trace is ..." or a word cut at the column edge, and a row too short for the text."""
+    window = load(make_window(), WAVE)
+    window.resize(*size)
+    window.show_results_tab("tab-drc")
+    for _ in range(5):
+        QApplication.processEvents()
+    table, message = window.drc_tab.table, DRC_COLUMNS.index("message")
+    assert table.textElideMode() == Qt.TextElideMode.ElideNone
+    fonts = table.fontMetrics()
+    inner = table.columnWidth(message) - 2 * CELL_MARGIN_PX
+    assert table.columnWidth(message) >= 240
+    for row in range(table.model().rowCount()):
+        text = table.model().index(row, message).data()
+        needed = fonts.boundingRect(QRect(0, 0, inner, 10_000), Qt.TextFlag.TextWordWrap, text).height()
+        assert table.rowHeight(row) >= needed, (size, row, text)
+        assert max(fonts.horizontalAdvance(word) for word in text.split()) <= inner, (size, row, text)
+    assert table.model().index(0, message).data(Qt.ItemDataRole.ToolTipRole) == table.model().index(0, message).data()
+
+
+@pytest.mark.req("REQ-F-33")
+def test_rail_heads_with_inputs_and_drc_cards_that_carry_a_glyph_and_a_word(make_window, load, qtbot):
+    """Catches 'Design: Problems found' beside 'No issues.', a state shown by colour alone, no way to the DRC tab."""
     window = load(make_window(), WAVE)
     rail = window.rail
-    assert find(rail, QLabel, "sum-drc-value").text() == "186 failures"
+    assert find(rail, QLabel, "rail-inputs-title").text() == "Inputs"
+    assert find(rail, QLabel, "rail-inputs-value").text() == "No input issues"
+    assert find(rail, QLabel, "rail-inputs-value").property("state") == "pass"
+    assert find(rail, QLabel, "rail-drc-title").text() == "DRC"
+    assert find(rail, QLabel, "rail-drc-value").text() == "186 failures"
+    assert find(rail, QLabel, "rail-drc-value").property("state") == "fail"
+    pass_glyph = find(rail, QLabel, "rail-inputs-icon").pixmap().toImage()
+    fail_glyph = find(rail, QLabel, "rail-drc-icon").pixmap().toImage()
+    assert not pass_glyph.isNull() and not fail_glyph.isNull() and pass_glyph != fail_glyph
+    assert rail.findChild(QWidget, "sum-ok") is None
+    assert "Design" not in [label.text() for label in rail.findChildren(QLabel)]
     assert find(rail, QLabel, "sum-ke-value").text() == window.results.row("ke_line_peak_v_s_per_rad").value_text
     assert find(rail, QLabel, "sum-r-phase-unit").text() == "Ω"
+    assert find(rail, QLabel, "sum-r-phase-title").text() == "Phase resistance at operating temperature R_ph"
     link = find(rail, QPushButton, "btn-rail-drc")
     window.show_results_tab("tab-results")
     qtbot.mouseClick(link, Qt.MouseButton.LeftButton)
     assert window.results_tabs.currentWidget() is window.drc_tab
+
+
+@pytest.mark.req("REQ-F-33")
+def test_rail_drc_card_says_passed_for_a_clean_design_and_hides_the_link(make_window, load):
+    """Catches a pass card with a failure count or with a link to an empty DRC tab."""
+    window = load(make_window(), D08)
+    assert find(window.rail, QLabel, "rail-drc-value").text() == "Passed"
+    assert find(window.rail, QLabel, "rail-drc-value").property("state") == "pass"
+    assert not find(window.rail, QPushButton, "btn-rail-drc").isVisibleTo(window)
+
+
+@pytest.mark.req("REQ-F-14")
+def test_inputs_card_counts_the_issues_of_the_input_issues_list(make_window, load, qtbot):
+    """Catches an Inputs card that stays on 'No input issues' after a bad edit, or that disagrees with the list."""
+    window = load(make_window(), D08)
+    issues = find(window, QListWidget, "issues-list")
+    assert find(window, QLabel, "rail-inputs-value").text() == "No input issues"
+    assert [label.text() for label in window.rail.findChildren(QLabel) if label.property("class") == "section-title"][
+        -1
+    ] == "Input issues"
+    assert issues.item(0).text() == "No input issues."
+    window.session.edit("/winding/coil/r_inner_mm", 50.0)
+    qtbot.waitUntil(lambda: not window.session.state.value.computing)
+    listed = [issues.item(row) for row in range(issues.count()) if issues.item(row).data(Qt.ItemDataRole.UserRole)]
+    assert listed
+    value = find(window, QLabel, "rail-inputs-value")
+    assert value.text() == (f"{len(listed)} input issues" if len(listed) > 1 else "1 input issue")
+    assert value.property("state") == "fail"

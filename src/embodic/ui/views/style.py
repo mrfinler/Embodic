@@ -15,11 +15,6 @@ logger = logging.getLogger(__name__)
 
 ICON_SIZES_PX = (24, 16)
 
-# Agent 1's style sheets ring focused buttons and fields; a check box needs the same ring (AX-03).
-SHELL_QSS = """
-QCheckBox:focus {{ outline: none; border: {width}px solid {ring}; border-radius: 4px; }}
-"""
-
 
 def icons_dir() -> Path:
     """Return the folder of the monochrome toolstrip icons."""
@@ -91,6 +86,4 @@ def apply_theme(app: QApplication, tokens: ThemeTokens) -> None:
     app.setStyle("Fusion")
     QDir.setSearchPaths("theme", [str(themes_dir())])
     app.setPalette(palette_for(tokens))
-    sheet = (themes_dir() / f"{tokens.name}.qss").read_text(encoding="utf-8")
-    ring = tokens.colours["focus-ring"]
-    app.setStyleSheet(sheet + SHELL_QSS.format(width=tokens.focus_ring_px, ring=ring))
+    app.setStyleSheet((themes_dir() / f"{tokens.name}.qss").read_text(encoding="utf-8"))

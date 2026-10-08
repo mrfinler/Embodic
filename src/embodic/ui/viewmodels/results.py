@@ -1,7 +1,7 @@
 """What the results area shows of a computed design: result cards, DRC table, charts, comparison, equation register.
 
 Qt-free (import contracts C2 and C3). Every badge, label and assumption count is read from the `Traceable` (D-007);
-quantity names come from `QUANTITY_LABELS` (D-038e).
+quantity names come from `QUANTITY_LABELS` and card titles from `quantity_title` (D-038e, D-039).
 """
 
 import cmath
@@ -11,12 +11,13 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Literal, TypeAlias
 
-from embodic.errors import IssueCategory, Severity, message_for
+from embodic.errors import IssueCategory, Severity, ValidationIssue, message_for
 from embodic.model.vocabulary import Phase
 from embodic.outcome import ComputeOutcome
 from embodic.physics.waveform import XCOIL_WAVEFORM_SAMPLES, emf_waveform_v
 from embodic.results import QUANTITY_LABELS, AnalysisResult, Registry, Traceable
 from embodic.results.formatting import MINUS, NOT_A_NUMBER, format_quantity
+from embodic.results.labels import quantity_title
 from embodic.results.status import Status, ValidityEffect, ValidityFlag, combine_status
 from embodic.results.traceable import AssumedInput
 from embodic.ui.strings import text
@@ -56,6 +57,7 @@ class ResultRow:
 
     quantity: str
     label: str
+    title: str  # the label, then the symbol the equation specification states
     value_text: str
     unit_text: str
     status: Status
@@ -71,6 +73,7 @@ def result_row(quantity: str, t: Traceable[float]) -> ResultRow:
     return ResultRow(
         quantity=quantity,
         label=QUANTITY_LABELS[quantity],
+        title=quantity_title(quantity),
         value_text=value_text,
         unit_text=unit_text,
         status=t.status,
@@ -318,6 +321,31 @@ def drc_table(outcome: ComputeOutcome | None) -> DrcTable | None:
         summary = text("drc.summary.fail", **counts)
     note = text("drc.truncated", shown=len(rows), total=failures) if len(rows) < failures else None
     return DrcTable(state=state, summary=summary, failure_count=failures, warning_count=warnings, rows=rows, note=note)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class StatusCard:
+    """A verdict card of the results rail: the state picks the glyph, the word says it (never colour alone)."""
+
+    key: str  # objectName of the card
+    title: str
+    state: CheckState
+    word: str
+
+
+def inputs_card(issues: Sequence[ValidationIssue]) -> StatusCard:
+    """Return the Inputs card; it counts the issues the Input issues list shows, so the two never disagree."""
+    word = _count(len(issues), "rail.inputs.one", "rail.inputs.many") if issues else text("rail.inputs.pass")
+    return StatusCard(key="rail-inputs", title=text("rail.inputs.label"), state="fail" if issues else "pass", word=word)
+
+
+def drc_card(table: DrcTable) -> StatusCard:
+    """Return the DRC card: Passed, the failure count, or Not run."""
+    if table.state == "fail":
+        word = _count(table.failure_count, "drc.count.failure-one", "drc.count.failures")
+    else:
+        word = text("shell.sum-drc.pass" if table.state == "pass" else "shell.sum-drc.not-run")
+    return StatusCard(key="rail-drc", title=text("shell.sum-drc.label"), state=table.state, word=word)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
