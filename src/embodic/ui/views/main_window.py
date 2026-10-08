@@ -51,6 +51,7 @@ from embodic.ui.viewmodels.outcome import (
     OutcomeReady,
     OutcomeState,
     OutcomeViewModel,
+    coil_count,
 )
 from embodic.ui.viewmodels.results import (
     CompareViewModel,
@@ -353,8 +354,14 @@ class MainWindow(QMainWindow):
         self.stale_label.setProperty("class", "notice")
         self.stale_label.setWordWrap(True)
         self.stale_label.setVisible(False)
+        self.canvas_blank = QLabel(text("shell.canvas.blank"))
+        self.canvas_blank.setProperty("class", "hint")
+        self.canvas_blank.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.canvas_blank.setWordWrap(True)
+        self.canvas_blank.setVisible(False)
         layout.addWidget(self.layer_bar)
         layout.addWidget(self.stale_label)
+        layout.addWidget(self.canvas_blank)
         layout.addWidget(self.canvas, 1)
         return page
 
@@ -476,7 +483,7 @@ class MainWindow(QMainWindow):
 
     def new_design_dialog(self) -> NewDesignDialog:
         """Return the New design dialog for this window's session."""
-        dialog = NewDesignDialog(self.session, self)
+        dialog = NewDesignDialog(self.session, self, tokens=self.tokens)
         dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         return dialog
 
@@ -570,6 +577,8 @@ class MainWindow(QMainWindow):
         self.rail.show_cards(cards, self.tokens, stale=outdated)
         for action_id in EXPORT_ACTIONS:
             self.toolstrip.actions_by_id[action_id].setEnabled(shown is not None)
+        self.layer_bar.setVisible(shown is not None and shown.scene is not None)
+        self.canvas_blank.setVisible(shown is None and not empty)
         if shown is None:
             self.status["st-drc"].setText(text("shell.st-drc.none"))
             self.status["st-counts"].setText("")
@@ -600,10 +609,9 @@ class MainWindow(QMainWindow):
         if scene is None:
             self.status["st-counts"].setText("")
             return
-        coils = {(m.phase, m.label) for m in scene.marks}
         vias = sum(len(board.vias) for board in scene.boards)
         self.status["st-counts"].setText(
-            text("shell.st-counts.text", layers=len(scene.layers), coils=len(coils), vias=vias)
+            text("shell.st-counts.text", layers=len(scene.layers), coils=coil_count(scene), vias=vias)
         )
 
     def _render_results(
@@ -645,7 +653,7 @@ class MainWindow(QMainWindow):
         for info in list_examples():
             action = QAction(info.title, menu)
             action.setObjectName(f"example-{info.example_id}")
-            action.setToolTip(info.source_note)
+            action.setToolTip(info.display_note)
             action.triggered.connect(lambda _=False, example_id=info.example_id: self.session.load_example(example_id))
             menu.addAction(action)
         return menu

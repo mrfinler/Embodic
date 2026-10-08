@@ -1,7 +1,5 @@
 """Theme switch and persistence; geometry zoom, pan, layers and render modes (UI-03, UI-04, UI-26, UI-27)."""
 
-import math
-
 import pytest
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QColor
@@ -10,6 +8,7 @@ from PySide6.QtWidgets import QApplication, QWidget
 from embodic.model.vocabulary import Phase
 from embodic.ui.theme import ThemeName, load_theme
 from embodic.ui.viewmodels.appearance import PhaseRenderMode
+from embodic.ui.viewmodels.outcome import eyes_shown
 from embodic.ui.views.geometry_view import DATA_KIND, DATA_LAYER, DATA_PHASE, ZOOM_MAX, ZOOM_MIN
 
 # Region objectName -> chrome token of its background (design_spec.md sections 3.1 and 8).
@@ -78,29 +77,28 @@ def test_ui27_both_render_modes_draw_phase_colour_or_grey_and_keep_every_label(d
         pens = {(item.data(DATA_PHASE), item.pen().color().name()) for item in _items(window, "copper")}
         expected = {(s.phase.value, getattr(s, attribute)) for s in tokens.phases}
         assert {pair for pair in pens if pair[0]} == expected, mode
-        labels = sorted(item.text() for item in _items(window, "label"))
-        assert len(labels) == 12 and {label[0] for label in labels} == {"A", "B", "C"}, mode
+        labels = [item.text() for item in _items(window, "label")]
+        assert {label[0] for label in labels} == {"A", "B", "C"} and len(labels) >= 3, mode
+        assert len(_items(window, "eye")) == 4 and len(_items(window, "hatch")) == 8, mode
         assert {item.data(DATA_PHASE) for item in _items(window, "eye")} == {Phase.A.value}
         assert {item.data(DATA_PHASE) for item in _items(window, "hatch")} == {Phase.B.value, Phase.C.value}
 
 
 @pytest.mark.req("REQ-N-23")
-def test_ui27_hatch_lines_stay_inside_their_coil_eye(d08_shell):
-    """Catches hatch drawn past the eye disc (the view-model test proves the disc never reaches copper)."""
+def test_ui27_each_eye_fill_is_its_coil_eye_disc(d08_shell):
+    """Catches a fill drawn past the eye disc (the view-model test proves the disc never reaches copper)."""
     window = d08_shell.window
     shown = window.outcome.state.value.scene
-    top = shown.layers[0]
-    marks = {(m.phase.value, round(m.cx_mm, 6)): m for m in shown.marks if m.layer == top}
-    for item in _items(window, "hatch"):
-        path = item.path()
-        points = [path.elementAt(i) for i in range(path.elementCount())]
-        cx = (min(p.x for p in points) + max(p.x for p in points)) / 2
-        mark = min(
-            (m for (phase, _), m in marks.items() if phase == item.data(DATA_PHASE)),
-            key=lambda m: abs(m.cx_mm - cx),
-        )
-        for p in points:
-            assert math.hypot(p.x - mark.cx_mm, -p.y - mark.cy_mm) <= mark.eye_radius_mm + 1e-9
+    discs = {
+        (m.phase.value, round(m.cx_mm, 9), round(m.cy_mm, 9)): m.eye_radius_mm
+        for m in eyes_shown(shown.boards[0], shown.marks[0], frozenset())
+    }
+    fills = _items(window, "eye") + _items(window, "hatch")
+    assert len(fills) == len(discs) == 12
+    for item in fills:
+        rect = item.rect()
+        key = (item.data(DATA_PHASE), round(rect.center().x(), 9), round(-rect.center().y(), 9))
+        assert rect.width() / 2 == pytest.approx(discs[key]) and rect.height() == pytest.approx(rect.width())
 
 
 @pytest.mark.req("REQ-F-13")
@@ -145,13 +143,14 @@ def test_ui04_a_hidden_layer_is_absent_from_the_scene_and_returns_when_shown(d08
     assert len(_items(window, "copper", "L2")) == before
 
 
-@pytest.mark.req("REQ-F-13")
-def test_ui04_hiding_the_top_layer_moves_the_labels_to_the_next_layer(d08_shell):
-    """Catches labels that vanish with the top layer, leaving coils without phase letters."""
+@pytest.mark.req("REQ-F-13", "REQ-N-23")
+def test_ui04_hiding_the_top_layer_keeps_every_phase_label_and_moves_the_eyes_to_the_next_layer(d08_shell):
+    """Catches labels that vanish with the top layer, or eye fills left over copper that is no longer drawn."""
     window = d08_shell.window
     window.layer_boxes["L1"].setChecked(False)
-    labels = _items(window, "label")
-    assert len(labels) == 12 and {item.data(DATA_LAYER) for item in labels} == {"L2"}
+    assert {item.data(DATA_PHASE) for item in _items(window, "label")} == {"A", "B", "C"}
+    eyes = _items(window, "eye") + _items(window, "hatch")
+    assert len(eyes) == 12 and {item.data(DATA_LAYER) for item in eyes} == {"L2"}
 
 
 @pytest.mark.req("REQ-N-27")

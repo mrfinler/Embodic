@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
+    QHeaderView,
     QInputDialog,
     QLabel,
     QLineEdit,
@@ -40,6 +41,8 @@ from embodic.ui.viewmodels.session import (
 )
 
 MIN_INPUT_PX = 72
+CHIP_COLUMN_PX = 72  # "example" and "default" fit; "measured" grows its row
+CHIP_PX = 20
 TITLED_GROUPS = frozenset(
     {
         FieldGroup.OUTLINE,
@@ -164,6 +167,12 @@ class FieldEditor(QWidget):
         self.chip = QLabel()
         self.chip.setObjectName(f"{widget_id}-prov")
         self.chip.setProperty("class", "prov-chip")
+        self.chip.setFixedHeight(CHIP_PX)
+        self.chip.setMinimumWidth(CHIP_COLUMN_PX)
+        self.chip.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        reserve = self.chip.sizePolicy()
+        reserve.setRetainSizeWhenHidden(True)
+        self.chip.setSizePolicy(reserve)
         self.error = QLabel()
         self.error.setObjectName(f"{widget_id}-error")
         self.error.setProperty("class", "field-error")
@@ -180,7 +189,7 @@ class FieldEditor(QWidget):
         line.addWidget(self.input, 1)
         line.addWidget(self.unit)
         # A segment needs the row's full width ("Single board", "One board per phase"), so its chip moves up a line.
-        (head if isinstance(self.input, Segment) else line).addWidget(self.chip)
+        (head if isinstance(self.input, Segment) else line).addWidget(self.chip, 0, Qt.AlignmentFlag.AlignVCenter)
         column = QVBoxLayout(self)
         column.setContentsMargins(0, 0, 0, 0)
         column.setSpacing(2)
@@ -350,6 +359,14 @@ class FieldPanel(QScrollArea):
             if row.widget_id in self.editors:
                 self.editors[row.widget_id].show_row(row, document.draft.topology.value)
         self.refresh_helpers()
+        self._align_units()
+
+    def _align_units(self) -> None:
+        """Give every unit column of the tab the width of its widest unit, so the input edges align (ruling g 2)."""
+        units = [editor.unit for editor in self.findChildren(FieldEditor)]
+        widest = max((unit.sizeHint().width() for unit in units if unit.text()), default=0)
+        for unit in units:
+            unit.setFixedWidth(widest)
 
     def _rebuild(self, topology: str | None) -> None:
         self._topology = topology
@@ -418,6 +435,72 @@ def fit_rows(table: QTableWidget) -> None:
     """Size a table to its rows, so the inspector scrolls instead of the table showing empty space."""
     chrome = table.horizontalHeader().sizeHint().height() + table.horizontalScrollBar().sizeHint().height()
     table.setFixedHeight(chrome + table.verticalHeader().length() + 2 * table.frameWidth())
+
+
+CELL_PAD_PX = 14  # cell padding of the theme, both sides
+
+
+def _column_widths(table: QTableWidget) -> dict[int, int]:
+    """Return each shown column's width: its widest header line or cell, cut back toward the header to fit.
+
+    The header itself is never cut (ruling g 1).
+    """
+    header, cells = table.horizontalHeader(), table.fontMetrics()
+    shown = [c for c in range(table.columnCount()) if not table.isColumnHidden(c)]
+    floor = {c: header.sectionSizeHint(c) for c in shown}  # the styled header, wrapped at its line breaks
+    texts = {c: [item.text() for r in range(table.rowCount()) if (item := table.item(r, c))] for c in shown}
+    wanted = {c: max([floor[c]] + [cells.horizontalAdvance(t) + CELL_PAD_PX for t in texts[c]]) for c in shown}
+    room = table.viewport().width() - 2 * table.frameWidth()
+    slack = sum(wanted.values()) - room
+    spare = sum(wanted[c] - floor[c] for c in shown)
+    if slack > 0 and spare > 0:
+        keep = max(0.0, 1 - slack / spare)
+        wanted = {c: floor[c] + int((wanted[c] - floor[c]) * keep) for c in shown}
+    return wanted
+
+
+class _FitOnResize(QObject):
+    """Sizes a table's columns again whenever its viewport changes width."""
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802 (Qt override)
+        if event.type() == QEvent.Type.Resize and isinstance(table := watched.parent(), QTableWidget):
+            _apply_widths(table)
+        return False
+
+
+_FIT_ON_RESIZE = _FitOnResize()
+
+
+def _apply_widths(table: QTableWidget) -> None:
+    for c, width in _column_widths(table).items():
+        table.setColumnWidth(c, width)
+
+
+def fit_width(table: QTableWidget) -> None:
+    """Fit a table's columns inside the inspector; each column at least as wide as its header.
+
+    A header that names a unit wraps before it ("Pitch" over "radius" over "(mm)") and cells longer than their share
+    elide, so the table scrolls sideways only when even the headers need more than the inspector width (ruling g 1).
+    """
+    table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+    table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+    table.horizontalHeader().setStretchLastSection(False)
+    table.viewport().removeEventFilter(_FIT_ON_RESIZE)
+    table.viewport().installEventFilter(_FIT_ON_RESIZE)
+    _apply_widths(table)
+
+
+def label_above(caption: str, control: QWidget) -> QWidget:
+    """Return a helper row with its label above the control, as every field row has it (ruling g 2, F17)."""
+    row = QWidget()
+    column = QVBoxLayout(row)
+    column.setContentsMargins(0, 0, 0, 0)
+    column.setSpacing(2)
+    label = QLabel(caption)
+    label.setBuddy(control)
+    column.addWidget(label)
+    column.addWidget(control)
+    return row
 
 
 def hint_label(name: str) -> QLabel:

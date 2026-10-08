@@ -76,6 +76,7 @@ STRINGS: Mapping[str, str] = {
     "shell.results-rail.title": "Key results",
     "shell.results-rail.empty": "Results appear when every required field is valid.",
     "shell.layers.title": "Layers",
+    "shell.canvas.blank": "The drawing appears when every required field is valid.",
     "shell.sum-ok.label": "Design",
     "shell.sum-ok.pass": "OK",
     "shell.sum-ok.fail": "Problems found",
@@ -102,6 +103,7 @@ STRINGS: Mapping[str, str] = {
     "shell.st-units.text": "mm",
     "shell.st-cursor.text": "x {x} mm, y {y} mm",
     "shell.fig-canvas.accessible": "Geometry view of the stator board",
+    "shell.legend.phase": "Phase {phase}",
     "shell.error.title": "Internal error",
     "shell.error.body": (
         "An internal error stopped the computation. The program keeps running.\n\n"

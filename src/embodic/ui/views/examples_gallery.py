@@ -1,6 +1,7 @@
 """The Examples gallery `dlg-examples`: every packaged example with its topology and source note (REQ-F-25, F-38)."""
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QDialog,
     QHBoxLayout,
@@ -17,6 +18,25 @@ from embodic.ui.strings import text
 from embodic.ui.viewmodels.session import DesignSession
 
 MIN_SIZE_PX = (560, 400)
+TITLE_WEIGHT = QFont.Weight.DemiBold  # 600 (ruling g 4)
+
+
+def example_card(title: str, note: str) -> QWidget:
+    """Return one gallery item: the title in text-1 weight 600 over the note in text-3 12 px (the hint style)."""
+    card = QWidget()
+    column = QVBoxLayout(card)
+    column.setContentsMargins(8, 6, 8, 6)
+    column.setSpacing(2)
+    heading = QLabel(title)
+    font = heading.font()
+    font.setWeight(TITLE_WEIGHT)
+    heading.setFont(font)
+    body = QLabel(note)
+    body.setProperty("class", "hint")
+    body.setWordWrap(True)
+    column.addWidget(heading)
+    column.addWidget(body)
+    return card
 
 
 class ExamplesGallery(QDialog):
@@ -37,10 +57,13 @@ class ExamplesGallery(QDialog):
         self.list.setWordWrap(True)
         for info in list_examples():
             topology = text(f"topology.{info.topology.value}")
-            item = QListWidgetItem(f"{info.title}\n{topology}. {info.source_note}")
+            item = QListWidgetItem()
             item.setData(Qt.ItemDataRole.UserRole, info.example_id)
-            item.setToolTip(info.source_note)
+            item.setData(Qt.ItemDataRole.AccessibleTextRole, f"{info.title}. {topology}. {info.display_note}")
+            card = example_card(info.title, f"{topology}. {info.display_note}")
+            item.setSizeHint(card.sizeHint())
             self.list.addItem(item)
+            self.list.setItemWidget(item, card)
         self.list.setCurrentRow(0)
         self.list.itemActivated.connect(lambda _item: self.load_selected())
         self.load = QPushButton(text("dlg-examples.load"))

@@ -252,12 +252,6 @@ def is_inspector_input(spec: FieldSpec) -> bool:
     )
 
 
-def bore_widget_id(spec: FieldSpec) -> str:
-    """Return the objectName of one bore input ("/outline/bore/across_flats_mm" -> "param-bore-across-flats")."""
-    leaf = spec.pointer.rsplit("/", 1)[1].removesuffix("_mm").removesuffix("_rad")
-    return f"param-bore-{leaf.replace('_', '-')}"
-
-
 def _tag_value(spec: FieldSpec, values: Mapping[str, JsonValue]) -> JsonValue:
     parent = spec.pointer.rsplit("/", 1)[0]
     for tag in ("kind", "shape"):
@@ -335,8 +329,8 @@ def form_rows(
     values = draft.values
     for spec in field_specs(draft.topology):
         if spec.pointer.startswith(BORE_POINTER + "/") and spec.pointer != f"{BORE_POINTER}/shape":
-            widget_id = bore_widget_id(spec)
-            rows[widget_id] = _row(spec, widget_id, bore_choice(values) == spec.variant, draft, chips, issues)
+            assert spec.widget_id is not None
+            rows[spec.widget_id] = _row(spec, spec.widget_id, bore_choice(values) == spec.variant, draft, chips, issues)
             continue
         if not is_inspector_input(spec):
             continue
@@ -366,8 +360,6 @@ def widget_for_pointer(pointer: str, draft: DesignDraft) -> str | None:
         spec = field_for(pointer, draft.values)
     except KeyError:
         return None
-    if pointer.startswith(BORE_POINTER + "/"):
-        return bore_widget_id(spec)
     return spec.widget_id
 
 
