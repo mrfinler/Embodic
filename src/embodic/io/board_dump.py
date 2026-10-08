@@ -5,10 +5,10 @@ key with its meaning so a second reader can be written without this module. Numb
 round-trip form; infinity and NaN are ``{"$f": "inf"}``, ``{"$f": "-inf"}``, ``{"$f": "nan"}``; negative zero is
 ``-0.0``. Keys are sorted. Write, read, write gives identical text.
 
-What embodic leaves null, and why: ``params``, ``params_sha256`` and ``drc`` until the design model (U-M2a) and the
-DRC report (U-M1c) exist; layer ``copper_t``, ``role``, ``pair`` and ``phase`` and object ``kind``, which a Layout
-does not carry; circuit ``terminals``, because a PhaseCircuit names only its terminal net. The Phase 1 layer key for
-the PCB-tool layer name is not written (D-009, MT-07).
+What embodic leaves null, and why: ``params`` and ``params_sha256`` when the caller passes no ``design``; ``drc``
+until interfaces.md section 13 point 4 fixes its shape; layer ``copper_t``, ``role``, ``pair`` and ``phase`` and
+object ``kind``, which a Layout does not carry; circuit ``terminals``, because a PhaseCircuit names only its terminal
+net. The Phase 1 layer key for the PCB-tool layer name is not written (D-009, MT-07).
 """
 
 import json
@@ -22,6 +22,8 @@ import embodic
 from embodic.geometry.layout import Layout, Pad, Via, ViaRole
 from embodic.geometry.paths import CopperPath
 from embodic.geometry.primitives import Line, Primitive
+from embodic.io.canonical import design_document, design_hash
+from embodic.model.design import DesignParameters
 from embodic.model.vocabulary import Phase
 
 JsonValue: TypeAlias = bool | int | float | str | list["JsonValue"] | dict[str, "JsonValue"] | None
@@ -36,8 +38,8 @@ BOARD_DUMP_SCHEMA: Mapping[str, str] = {
     "format_version": "1",
     "producer": "{name: 'xcoil-v3' | 'embodic', version, engine_sha256 (Xcoil only, else null), runtime}",
     "case_id": "string naming the case",
-    "params": "input parameters as used (null in embodic until the design model exists)",
-    "params_sha256": "SHA-256 of the canonical params JSON, or null",
+    "params": "the design in its project-file form (interfaces.md 9.1, angles in degrees), or null without a design",
+    "params_sha256": "design hash: 'sha256:' + SHA-256 of the canonical params JSON, or null",
     "units": "{length: 'mm', angle: 'rad'}",
     "frame": "x right, y up, origin on the rotor axis",
     "layers[]": "{index, name, z (mm, copper centre), copper_t, role, pair, phase}",
@@ -154,8 +156,11 @@ def _circuits(layout: Layout, layer_index: Mapping[str, int]) -> list[JsonValue]
     return circuits
 
 
-def dump_layout(layout: Layout, *, case_id: str) -> dict[str, JsonValue]:
-    """Return the board dump of ``layout`` as plain JSON data (non-finite floats still as floats)."""
+def dump_layout(layout: Layout, *, case_id: str, design: DesignParameters | None = None) -> dict[str, JsonValue]:
+    """Return the board dump of ``layout`` as plain JSON data (non-finite floats still as floats).
+
+    With ``design``, ``params`` is the design in its project-file form and ``params_sha256`` its design hash.
+    """
     layer_index = {name: i for i, name in enumerate(layout.copper_layers)}
     objects, primitives = _objects_and_primitives(layout.paths, layer_index)
     outline = layout.outline
@@ -169,8 +174,8 @@ def dump_layout(layout: Layout, *, case_id: str) -> dict[str, JsonValue]:
             "runtime": f"CPython {platform.python_version()}",
         },
         "case_id": case_id,
-        "params": None,
-        "params_sha256": None,
+        "params": None if design is None else design_document(design),
+        "params_sha256": None if design is None else design_hash(design),
         "units": {"length": "mm", "angle": "rad"},
         "frame": BOARD_DUMP_SCHEMA["frame"],
         "layers": [_layer_record(i, name, layout.copper_z_mm[name]) for i, name in enumerate(layout.copper_layers)],
@@ -231,9 +236,9 @@ def decode_board_dump(text: str) -> dict[str, JsonValue]:
     return dump
 
 
-def write_board_dump(layout: Layout, path: Path, *, case_id: str) -> None:
+def write_board_dump(layout: Layout, path: Path, *, case_id: str, design: DesignParameters | None = None) -> None:
     """Write the board dump of ``layout`` to ``path`` as UTF-8 (side effect: one file)."""
-    path.write_text(encode_board_dump(dump_layout(layout, case_id=case_id)), encoding="utf-8")
+    path.write_text(encode_board_dump(dump_layout(layout, case_id=case_id, design=design)), encoding="utf-8")
 
 
 def read_board_dump(path: Path) -> Mapping[str, JsonValue]:
