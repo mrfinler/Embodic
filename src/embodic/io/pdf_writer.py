@@ -317,14 +317,21 @@ class PdfDocument:
     def haloed_text(
         self, x: float, y: float, text: str, *, size: float, fill_hex: str, halo_hex: str, halo: float
     ) -> None:
-        """Show ``text`` centred on (x, y) over a stroked outline ``halo`` points wide in ``halo_hex``."""
+        """Show ``text`` centred on (x, y) over a stroked outline ``halo`` points wide in ``halo_hex``.
+
+        The outline is a second showing of the text, marked as an artifact so tagged readers skip it; pypdf does not
+        read marks and extracts the label twice.
+        """
         sans = self.fonts[SANS]
         left = x - sans.width_pt(text, size) / 2
         base = y - sans.cap_height * size / sans.units_per_em / 2
         shown = self.glyphs(SANS, text)
         start = f"/{SANS} {_f(size)} Tf {_f(left)} {_f(base)} Td ".encode("ascii")
         self.pages[-1].append(
-            f"q BT 1 Tr 1 j {_f(halo)} w {rgb(halo_hex)} RG ".encode("ascii") + start + shown + b" Tj ET Q"
+            f"/Artifact BMC q BT 1 Tr 1 j {_f(halo)} w {rgb(halo_hex)} RG ".encode("ascii")
+            + start
+            + shown
+            + b" Tj ET Q EMC"
         )
         self.pages[-1].append(f"BT 0 Tr {rgb(fill_hex)} rg ".encode("ascii") + start + shown + b" Tj ET")
 

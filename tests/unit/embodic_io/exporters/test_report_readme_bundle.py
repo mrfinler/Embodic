@@ -12,7 +12,7 @@ import pytest
 from embodic.api import ComputeOutcome
 from embodic.io.bundle import write_bundle
 from embodic.io.dxf_writer import write_dxf
-from embodic.io.exporters import ExportKind, ExportRefused, ExportSummary
+from embodic.io.exporters import ExportKind, ExportRefused, ExportSummary, PhaseRenderMode
 from embodic.io.pdf_writer import MissingGlyphError, PdfDocument
 from embodic.io.readme_writer import write_readme
 from embodic.io.report import write_report_pdf
@@ -89,6 +89,25 @@ def test_ut_exp_03_report_prints_units_as_the_ui_does(
             "/CIDFontType2",
         )
         assert "/FontFile2" in descriptor and "/ToUnicode" in font
+
+
+@pytest.mark.parametrize("mode", list(PhaseRenderMode))
+def test_report_drawing_labels_every_coil_and_never_dashes(
+    mode: PhaseRenderMode, outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path
+) -> None:
+    """Ruling a (F1, F2). Catches a printed drawing whose phases rest on the legend alone, or a dashed line."""
+    summary = write_report_pdf(outcome_of("spiral_12c10p_d08"), tmp_path / "report.pdf", mode=mode)
+    assert isinstance(summary, ExportSummary), summary
+    reader = pypdf.PdfReader(summary.path)
+    drawing = reader.pages[-1]
+    text = drawing.extract_text()
+    # D08 coil polarities from compute on main c4c9e8f (verified by running geometry_scene)
+    for label in "A1+ A2− A3− A4+ B1− B2+ B3+ B4− C1+ C2− C3− C4+".split():
+        assert label in text, (mode, label)
+    assert all(f"Phase {p}" in text for p in "ABC")
+    content = drawing.get_contents().get_data()  # type: ignore[union-attr]
+    assert not re.search(rb"\[[\d. ]+\] [\d.]+ d", content), "dash pattern in the drawing"
+    assert content.count(b" W n ") == 8 + 2  # B and C eyes of D08 plus the B and C legend swatches, all clipped
 
 
 def test_ut_exp_03_a_character_without_a_glyph_fails_instead_of_vanishing() -> None:
