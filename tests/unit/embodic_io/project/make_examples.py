@@ -1,0 +1,73 @@
+"""Write the packaged spiral examples to resources/examples; rerunning gives the same bytes.
+
+Run from the repository root: ``python -m tests.unit.embodic_io.project.make_examples``. The parameter sets come from
+CF-11 (tests/unit/generators/default_example.py) and O1-D08 (tests/unit/generators/d08_example.py); every value is an
+example value (D-014), status `assumption` unless the source note says otherwise.
+"""
+
+import dataclasses
+from collections.abc import Callable
+from pathlib import Path
+
+from tests.unit.generators.d08_example import d08_design
+from tests.unit.generators.default_example import default_design
+
+from embodic.io.canonical import design_hash
+from embodic.io.examples import EXAMPLE_SUFFIX, examples_dir
+from embodic.io.project import ProjectFile, encode_project, project_document
+from embodic.model.design import DesignParameters
+from embodic.model.outline import PolygonOutline
+from embodic.model.provenance import ExampleRef, derive_provenance
+
+SAVED_UTC = "2026-10-08T00:00:00Z"  # fixed, so a rerun rewrites identical files
+BOARD_12C14P_ACROSS_FLATS_MM = 104.0  # the 93 mm CF-11 board cuts the 12/14 interconnect ring (copper to r 49.8 mm)
+
+
+def _spiral_12c14p() -> DesignParameters:
+    base = default_design()
+    assert isinstance(base.outline.board, PolygonOutline)
+    board = dataclasses.replace(base.outline.board, across_flats_mm=BOARD_12C14P_ACROSS_FLATS_MM)
+    return dataclasses.replace(
+        base,
+        rotor=dataclasses.replace(base.rotor, poles=14),
+        outline=dataclasses.replace(base.outline, board=board),
+    )
+
+
+EXAMPLES: dict[str, tuple[str, str, Callable[[], DesignParameters]]] = {
+    "spiral_12c16p_default": (
+        "Example: 12-coil 16-pole spiral (default)",
+        "CF-11 default 12/16 spiral, example values (assumption), docs/phase2/engineering/oracle_cases.json CF-11",
+        default_design,
+    ),
+    "spiral_12c10p_d08": (
+        "Example: UGent D08 12-coil 10-pole spiral",
+        "D08 thesis configuration (oracle O1-D08, OR-01); the 66 mm circle board and 10 mm bore are an assumption",
+        d08_design,
+    ),
+    "spiral_12c14p": (
+        "Example: 12-coil 14-pole spiral",
+        "CF-11 copper with 14 poles on a 104 mm board, example values (assumption)",
+        _spiral_12c14p,
+    ),
+}
+
+
+def write_examples(folder: Path) -> list[Path]:
+    """Write every example file into `folder` and return the paths."""
+    written = []
+    for example_id, (title, source_note, build) in EXAMPLES.items():
+        design = dataclasses.replace(build(), name=title)
+        ref = ExampleRef(example_id=example_id, example_sha256=design_hash(design))
+        provenance = derive_provenance(design, (ref, design), ())
+        document = project_document(ProjectFile(design=design, origin=ref), provenance, saved_utc=SAVED_UTC)
+        document["example"] = {"title": title, "source_note": source_note}
+        path = folder / f"{example_id}{EXAMPLE_SUFFIX}"
+        path.write_text(encode_project(document), encoding="utf-8", newline="\n")
+        written.append(path)
+    return written
+
+
+if __name__ == "__main__":
+    for path in write_examples(examples_dir()):
+        print(path)
