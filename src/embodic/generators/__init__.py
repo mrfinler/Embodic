@@ -5,8 +5,9 @@ from types import MappingProxyType
 
 from embodic.errors import Unbuildable
 from embodic.generators.base import Generator
+from embodic.generators.serpentine.generate import generate_serpentine
 from embodic.generators.spiral.generate import generate_spiral
-from embodic.generators.stubs import generate_serpentine, generate_wave
+from embodic.generators.stubs import generate_wave
 from embodic.geometry.layout import BoardStack
 from embodic.model.design import DesignParameters
 from embodic.model.vocabulary import TopologyKind
