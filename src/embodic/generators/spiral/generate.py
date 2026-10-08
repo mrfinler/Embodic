@@ -67,7 +67,9 @@ def _unsupported(design: DesignParameters, spec: SpiralWindingSpec) -> tuple[str
     """Pointers of inputs whose value selects geometry this generator does not build yet."""
     coil, pairs = spec.coil, spec.layers.pairs
     checks = {
-        "/winding/layers/pairs": len(pairs) != 1 or pairs[0].rotation_rad != 0.0 or pairs[0].phases is not None,
+        "/winding/layers/pairs": any(p.rotation_rad != 0.0 or p.phases is not None for p in pairs),
+        "/winding/layers/series_groups": len(spec.layers.series_groups) != 1
+        or sorted(spec.layers.series_groups[0]) != sorted(p.index for p in pairs),
         "/winding/coil/end_style": coil.end_style is EndStyle.STADIUM,
         "/winding/coil/lead_style": coil.lead_style is not LeadStyle.RADIAL_THEN_ARC,
         "/winding/coil/terminal_offset_mm": coil.terminal_offset_mm is not None,
@@ -134,7 +136,7 @@ def _limiting_reason(requested: int | None, closing_limit: int, loops: int, stop
 
 
 def _coil_vias(
-    design: DesignParameters, pair: LayerPair, points: tuple[Point, Point, Point], angle_rad: float, net: str,
+    design: DesignParameters, span: tuple[str, str], points: tuple[Point, Point, Point], angle_rad: float, net: str,
     first_id: int,
 ) -> list[Via]:  # fmt: skip
     """Entry terminal, centre and exit terminal vias of the canonical coil, rotated to ``angle_rad``."""
@@ -151,8 +153,8 @@ def _coil_vias(
                 pad_mm=design.vias.pad_mm,
                 role=role,
                 span=ViaSpan.THROUGH,
-                layer_from=pair.layer_in,
-                layer_to=pair.layer_out,
+                layer_from=span[0],
+                layer_to=span[1],
                 net=net,
             )
         )
@@ -169,13 +171,14 @@ def _coil_violations(design: DesignParameters, pair: LayerPair, art: CoilArtwork
     net = "PHASE_A"
     path = CopperPath(id=0, layer=pair.layer_in, net=net, primitives=art.primitives, phase=Phase.A, element=0,
                       polarity=1)  # fmt: skip
+    layers = (pair.layer_in, pair.layer_out)
     copper_z = design.stackup.copper_z_mm()
     layout = Layout(
         topology=TopologyKind.SPIRAL,
-        copper_layers=(pair.layer_in, pair.layer_out),
-        copper_z_mm=MappingProxyType({name: copper_z[name] for name in (pair.layer_in, pair.layer_out)}),
+        copper_layers=layers,
+        copper_z_mm=MappingProxyType({name: copper_z[name] for name in layers}),
         paths=(path,),
-        vias=tuple(_coil_vias(design, pair, _canonical_vias(art), 0.0, net, first_id=0)),
+        vias=tuple(_coil_vias(design, layers, _canonical_vias(art), 0.0, net, first_id=0)),
         pads=(),
         outline=BoardOutline(outer=(), cutouts=(), holes=()),
         circuit=Circuit(phases=(), topology=design.connection.topology, interconnect_path_ids=()),
@@ -259,13 +262,22 @@ def _chain_copper(
     return _ChainCopper(legs=legs, ring_vias=ring_vias, links=links)
 
 
-def _with_chain(member: Member, coil: int, chained: _ChainCopper) -> Member:
-    """Extend a coil's member by its entry and exit legs, ring vias and the ring arc to the next coil."""
+def _with_chain(members: tuple[Member, ...], coil: int, chained: _ChainCopper) -> list[ParallelGroup]:
+    """Series groups of one coil: entry leg, the coil's parallel layer-pair routes, exit leg and ring arc.
+
+    One pair gives one member, the three groups joined in series, as a single route needs no parallel node.
+    """
     link = (chained.links[coil],) if coil in chained.links else ()
-    return Member(
-        path_ids=(chained.legs[(coil, End.ENTRY)], *member.path_ids, chained.legs[(coil, End.EXIT)], *link),
-        via_ids=(chained.ring_vias[(coil, End.ENTRY)], *member.via_ids, chained.ring_vias[(coil, End.EXIT)]),
-    )
+    entry = Member(path_ids=(chained.legs[(coil, End.ENTRY)],), via_ids=(chained.ring_vias[(coil, End.ENTRY)],))
+    exit_ = Member(path_ids=(chained.legs[(coil, End.EXIT)], *link), via_ids=(chained.ring_vias[(coil, End.EXIT)],))
+    if len(members) == 1:
+        (route,) = members
+        joined = Member(
+            path_ids=(*entry.path_ids, *route.path_ids, *exit_.path_ids),
+            via_ids=(*entry.via_ids, *route.via_ids, *exit_.via_ids),
+        )
+        return [ParallelGroup(members=(joined,))]
+    return [ParallelGroup(members=(entry,)), ParallelGroup(members=members), ParallelGroup(members=(exit_,))]
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -274,21 +286,22 @@ class _CoilCopper:
 
     paths: tuple[CopperPath, ...]
     vias: tuple[Via, ...]
-    members: Mapping[int, Member]
+    members: Mapping[int, tuple[Member, ...]]  # one route per parallel layer pair
     terminal_vias: Mapping[tuple[int, End], Via]
     ends: Mapping[Phase, list[CoilEnds]]
 
 
 def _coil_copper(
-    design: DesignParameters, plan: SpiralWindingPlan, spec: SpiralWindingSpec, art: CoilArtwork
-) -> _CoilCopper:
-    """Rotate the canonical X and mirrored Y artwork to every coil, in current direction per polarity."""
+    design: DesignParameters, plan: SpiralWindingPlan, spec: SpiralWindingSpec, art: CoilArtwork,
+    span: tuple[str, str],
+) -> _CoilCopper:  # fmt: skip
+    """Rotate the canonical X and mirrored Y artwork to every coil on every parallel pair, in current direction."""
     paths: list[CopperPath] = []
     vias: list[Via] = []
-    coil_members: dict[int, Member] = {}
+    coil_members: dict[int, tuple[Member, ...]] = {}
     terminal_vias: dict[tuple[int, End], Via] = {}
     coil_ends: dict[Phase, list[CoilEnds]] = {phase: [] for phase in Phase}
-    coil, pair = spec.coil, spec.layers.pairs[0]
+    coil = spec.coil
     x_canonical = art.primitives
     y_canonical = reverse_path(mirror(x_canonical, 0.0))  # mirror about the coil axis, traversed outward
     via_points = _canonical_vias(art)
@@ -298,29 +311,27 @@ def _coil_copper(
         angle = coil.first_coil_angle_rad % (2 * math.pi) + k * 2 * math.pi / coil.coil_count
         net = f"PHASE_{assignment.phase.value}"
         x_prims, y_prims = rotate(x_canonical, angle), rotate(y_canonical, angle)
-        if sign == 1:
-            layers_in_order = ((pair.layer_in, x_prims), (pair.layer_out, y_prims))
-        else:  # a negative coil is the same copper entered at its CW-side terminal (G8)
-            layers_in_order = ((pair.layer_out, reverse_path(y_prims)), (pair.layer_in, reverse_path(x_prims)))
-        path_ids = []
-        for layer, prims in layers_in_order:
-            path_ids.append(len(paths))
-            paths.append(
-                CopperPath(
-                    id=len(paths),
-                    layer=layer,
-                    net=net,
-                    primitives=prims,
-                    phase=assignment.phase,
-                    element=k,
-                    polarity=sign,
-                )
-            )
-        coil_vias = _coil_vias(design, pair, via_points, angle, net, first_id=len(vias))
+        coil_vias = _coil_vias(design, span, via_points, angle, net, first_id=len(vias))
         vias += coil_vias
         in_order = coil_vias if sign == 1 else coil_vias[::-1]
         terminal_vias[(k, End.ENTRY)], terminal_vias[(k, End.EXIT)] = in_order[0], in_order[-1]
-        coil_members[k] = Member(path_ids=tuple(path_ids), via_ids=tuple(v.id for v in in_order))
+        routes = []
+        for pair in spec.layers.pairs:
+            if sign == 1:
+                layers_in_order = ((pair.layer_in, x_prims), (pair.layer_out, y_prims))
+            else:  # a negative coil is the same copper entered at its CW-side terminal (G8)
+                layers_in_order = ((pair.layer_out, reverse_path(y_prims)), (pair.layer_in, reverse_path(x_prims)))
+            path_ids = []
+            for layer, prims in layers_in_order:
+                path_ids.append(len(paths))
+                paths.append(
+                    CopperPath(
+                        id=len(paths), layer=layer, net=net, primitives=prims, phase=assignment.phase, element=k,
+                        polarity=sign,
+                    )
+                )  # fmt: skip
+            routes.append(Member(path_ids=tuple(path_ids), via_ids=tuple(v.id for v in in_order)))
+        coil_members[k] = tuple(routes)
         coil_ends[assignment.phase].append(
             CoilEnds(
                 coil=k,
@@ -389,7 +400,9 @@ def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack 
     n = closing.n
     reason = _limiting_reason(coil.turns, best.n, len(loops), stop)
     art, rho_used_mm = _artwork(design, frame, closing, pair, coil.corner_radius_mm)
-    copper = _coil_copper(design, plan, spec, art)
+    copper_z = design.stackup.copper_z_mm()
+    layers = tuple(sorted({n for p in spec.layers.pairs for n in (p.layer_in, p.layer_out)}, key=copper_z.__getitem__))
+    copper = _coil_copper(design, plan, spec, art, (layers[0], layers[-1]))
     paths, vias = list(copper.paths), list(copper.vias)
     coil_members, terminal_vias, coil_ends = copper.members, copper.terminal_vias, copper.ends
 
@@ -403,7 +416,7 @@ def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack 
             return Unbuildable(issues=(_issue("UNBUILDABLE_PHASE_CHAIN_UNROUTABLE", ("/connection/ring_width_mm",)),))
         top_level = max(top_level, len(Phase) * chain.n_levels - 1)
         chained = _chain_copper(chain, phase, phase_index, bus, terminal_vias, pair, paths, vias)
-        phase_groups[phase] = [ParallelGroup(members=(_with_chain(coil_members[k], k, chained),)) for k in chain.order]
+        phase_groups[phase] = [g for k in chain.order for g in _with_chain(coil_members[k], k, chained)]
         phase_ends[(phase, 1)] = PhaseEnd(phase=phase, sign=1, via=vias[chained.ring_vias[(chain.order[0], End.ENTRY)]])
         phase_ends[(phase, -1)] = PhaseEnd(
             phase=phase, sign=-1, via=vias[chained.ring_vias[(chain.order[-1], End.EXIT)]]
@@ -433,11 +446,10 @@ def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack 
         track_length_per_coil_layer_mm=MappingProxyType({"X": length_mm, "Y": length_mm}),
         rho_used_mm=rho_used_mm,
     )
-    copper_z = design.stackup.copper_z_mm()
     layout = Layout(
         topology=TopologyKind.SPIRAL,
-        copper_layers=(pair.layer_in, pair.layer_out),
-        copper_z_mm=MappingProxyType({name: copper_z[name] for name in (pair.layer_in, pair.layer_out)}),
+        copper_layers=layers,
+        copper_z_mm=MappingProxyType({name: copper_z[name] for name in layers}),
         paths=tuple(paths),
         vias=tuple(vias),
         pads=ic.pads,
