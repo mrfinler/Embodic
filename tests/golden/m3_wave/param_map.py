@@ -9,6 +9,8 @@ from typing import Any
 from tests.unit.model.designs import wave_design
 
 from embodic.model.design import DesignParameters
+from embodic.model.operating import Modulation
+from embodic.model.rotor import ArcMagnet, RotorType
 from embodic.model.stackup import generate_even_stackup
 from embodic.model.vocabulary import ConnectionTopology
 from embodic.model.winding_specs import CornerStyle, WaveStyle
@@ -22,7 +24,24 @@ def _even_stackup(xcoil: Mapping[str, Any]) -> Any:
     return generate_even_stackup(xcoil["waveLayers"], xcoil["copperOzOuter"] * OZ_TO_MM, xcoil["boardThickness"])
 
 
+def _arc_magnet(xcoil: Mapping[str, Any]) -> ArcMagnet:
+    return ArcMagnet(
+        pole_arc_ratio=xcoil["magnetArcRatio"], r_inner_mm=xcoil["magnetRIn"], r_outer_mm=xcoil["magnetROut"],
+        thickness_mm=xcoil["magnetThickness"],
+    )  # fmt: skip
+
+
+_COMPOSITE: Mapping[str, Callable[[Mapping[str, Any]], Any]] = {
+    "even_stackup": _even_stackup,
+    "arc_magnet": _arc_magnet,
+}
 _SINGLE: Mapping[str, Callable[[Any], Any]] = {
+    "rotor_type": {
+        "double": RotorType.DOUBLE,
+        "singleYoke": RotorType.SINGLE_YOKE,
+        "singleOpen": RotorType.SINGLE_OPEN,
+    }.get,
+    "modulation": {"svpwm": Modulation.SVPWM, "sine": Modulation.SPWM, "sixstep": Modulation.SIX_STEP}.get,
     "identity": lambda v: v,
     "zero_is_none": lambda v: v if v > 0 else None,
     "corner_style": CornerStyle,
@@ -41,10 +60,9 @@ def design_from_xcoil(xcoil: Mapping[str, Any], base: DesignParameters | None = 
     """Apply every entry of the parameter map to ``base`` (default: the Xcoil-defaults wave design)."""
     design = base or wave_design()
     for entry in json.loads(PARAM_MAP.read_text())["fields"]:
-        value = (
-            _even_stackup(xcoil)
-            if entry["transform"] == "even_stackup"
-            else _SINGLE[entry["transform"]](xcoil[entry["xcoil"]])
-        )
+        if entry["transform"] in _COMPOSITE:
+            value = _COMPOSITE[entry["transform"]](xcoil)
+        else:
+            value = _SINGLE[entry["transform"]](xcoil[entry["xcoil"]])
         design = _set(design, entry["pointer"].strip("/").split("/"), value)
     return design

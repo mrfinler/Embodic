@@ -62,10 +62,10 @@ def _params(raw: Mapping[str, Any]) -> WaveParams:
     """Xcoil parameter names to WaveParams; Xcoil's `normalizeParams` keeps these values as given."""
     return WaveParams(
         poles=raw["poles"], phases=raw["phases"], turns=raw["turns"], r_in=raw["rIn"], r_out=raw["rOut"],
-        trace_width=raw["traceWidth"], clearance=raw["clearance"], end_width_outer=raw["endWidthOuter"],
-        end_width_inner=raw["endWidthInner"], via_pad=raw["viaPad"], via_drill=raw["viaDrill"],
+        trace_width_mm=raw["traceWidth"], clearance_mm=raw["clearance"], end_width_outer_mm=raw["endWidthOuter"],
+        end_width_inner_mm=raw["endWidthInner"], via_pad=raw["viaPad"], via_drill_mm=raw["viaDrill"],
         start_angle_deg=raw["startAngleDeg"], wave_style=raw["waveStyle"], rounded=raw["cornerStyle"] != "sharp",
-        fillet_radius=raw["filletRadius"], bus_width=raw["busWidth"],
+        fillet_radius_mm=raw["filletRadius"], bus_width_mm=raw["busWidth"],
     )  # fmt: skip
 
 
@@ -112,7 +112,7 @@ def test_taper_junctions_match_xcoil(golden_report: Any) -> None:
 
 def _summary(frame: WaveFrame) -> dict[str, Any]:
     def end(e: Any) -> dict[str, float]:
-        out = {"rv": e.rv, "spacing": e.spacing, "need": e.need, "wEnd": e.w_end}
+        out = {"rv": e.rv, "spacing": e.spacing_mm, "need": e.need, "wEnd": e.w_end}
         return out | ({} if e.rb is None else {"rb": e.rb})
 
     out: dict[str, Any] = {"rVo": frame.r_vo, "rVi": frame.r_vi, "outer": end(frame.outer), "inner": end(frame.inner)}
@@ -120,7 +120,7 @@ def _summary(frame: WaveFrame) -> dict[str, Any]:
         out["rTrackMin"] = frame.r_track_min
     if frame.style == "overlap":
         top = frame.mq - 1
-        out |= {"pitchOut": frame.pitch_out, "pitchIn": frame.pitch_in, "rhoOut0": frame.rho_out(0),
+        out |= {"pitchOut": frame.pitch_out_mm, "pitchIn": frame.pitch_in_mm, "rhoOut0": frame.rho_out(0),
                 "rhoIn0": frame.rho_in(0), "rhoOutTop": frame.rho_out(top), "rhoInTop": frame.rho_in(top)}  # fmt: skip
     return out
 

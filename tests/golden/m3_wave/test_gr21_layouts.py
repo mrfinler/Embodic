@@ -103,3 +103,23 @@ def test_gr21_vias_pads_envelope_and_layer_heights_match_xcoil(case_id: str, gol
     )
     z = [layout.copper_z_mm[n] for n in layout.copper_layers]
     golden_report.check(f"{case_id}/z", compare_sequence([layer["z"] for layer in raw["layers"]], z, LAYOUT_MM))
+
+
+REFUSALS = {cid: c for cid, c in load_area("wave").items() if c.fn == "waveRefusal"}
+REFUSAL_CODE = {
+    "WAVE_MIN_POLES": "UNBUILDABLE_WAVE_MIN_POLES",
+    "WAVE_SLOT_PITCH": "UNBUILDABLE_WAVE_SLOT_PITCH",
+    "WAVE_OUTER_TIGHT": "UNBUILDABLE_WAVE_OUTER_TIGHT",
+    "WAVE_INNER_TIGHT": "UNBUILDABLE_WAVE_INNER_TIGHT",
+}
+
+
+@pytest.mark.parametrize("case_id", REFUSALS)
+def test_gr21_refuses_where_xcoil_reports_an_error(case_id: str) -> None:
+    """Catches a refusal Xcoil does not make, a missed one, or another cause: same error codes as `compute()`."""
+    (call,) = REFUSALS[case_id].calls
+    assert call.output["ok"] is False and call.output["errors"]
+    defaults = _raw(CASES["wave-involute-l2-m3-p16-t2"])["params"]
+    result = generate_wave(design_from_xcoil({**defaults, **call.inputs["params"]}), load_registry())
+    assert not hasattr(result, "boards"), f"{case_id}: built a board Xcoil refuses"
+    assert [i.code for i in result.issues] == [REFUSAL_CODE[e["code"]] for e in call.output["errors"]]
