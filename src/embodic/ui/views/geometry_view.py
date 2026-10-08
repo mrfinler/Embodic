@@ -7,8 +7,25 @@ millimetres, so stroke widths follow the zoom (UI-03). Copper is never dashed (d
 import math
 
 from PySide6.QtCore import QPointF, QRect, QRectF, Qt, Signal
-from PySide6.QtGui import QBrush, QColor, QKeyEvent, QMouseEvent, QPainter, QPainterPath, QPen, QTransform, QWheelEvent
-from PySide6.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSimpleTextItem, QGraphicsView
+from PySide6.QtGui import (
+    QBrush,
+    QColor,
+    QFontMetricsF,
+    QKeyEvent,
+    QMouseEvent,
+    QPainter,
+    QPainterPath,
+    QPen,
+    QTransform,
+    QWheelEvent,
+)
+from PySide6.QtWidgets import (
+    QGraphicsItem,
+    QGraphicsPathItem,
+    QGraphicsScene,
+    QGraphicsSimpleTextItem,
+    QGraphicsView,
+)
 
 from embodic.geometry.layout import Layout
 from embodic.geometry.primitives import Line, Primitive
@@ -23,9 +40,10 @@ ZOOM_STEP = 1.25
 EYE_TINT_ALPHA = 26  # 10 % of 255: the solid eye tint of phase A
 HATCH_LINES = 4  # per eye radius
 LABEL_PX = 12
+LABEL_HALO_PX = 3  # board-coloured outline that keeps a letter readable over hatch and copper
 DATA_LAYER = 0  # QGraphicsItem.data key: copper layer name ("" for board items)
 DATA_PHASE = 1  # QGraphicsItem.data key: phase letter or ""
-DATA_KIND = 2  # QGraphicsItem.data key: "copper", "eye", "hatch", "label", "via", "pad", "outline"
+DATA_KIND = 2  # QGraphicsItem.data key: "copper", "eye", "hatch", "label", "label-halo", "via", "pad", "outline"
 
 
 def primitive_path(p: Primitive) -> QPainterPath:
@@ -185,12 +203,22 @@ class GeometryView(QGraphicsView):
         font.setPixelSize(LABEL_PX)
         label.setFont(font)
         label.setBrush(QColor(self._tokens.colours["text-1"]))
-        label.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations)
         bounds = label.boundingRect()
-        label.setPos(mark.cx_mm, -mark.cy_mm)
-        label.setTransform(QTransform.fromTranslate(-bounds.width() / 2, -bounds.height() / 2))
-        self.scene().addItem(label)
-        self._tag(label, "label", mark.layer, mark.phase)
+        centre = QTransform.fromTranslate(-bounds.width() / 2, -bounds.height() / 2)
+        outline = QPainterPath()
+        outline.addText(0, QFontMetricsF(font).ascent(), font, mark.label)
+        halo_colour = QColor(self._tokens.colours["board-fill"])
+        halo_pen = QPen(
+            halo_colour, LABEL_HALO_PX, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin
+        )
+        halo = QGraphicsPathItem(outline)
+        halo.setPen(halo_pen)
+        for item, kind in ((halo, "label-halo"), (label, "label")):
+            item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations)
+            item.setPos(mark.cx_mm, -mark.cy_mm)
+            item.setTransform(centre)
+            self.scene().addItem(item)
+            self._tag(item, kind, mark.layer, mark.phase)
 
     def zoom_factor(self) -> float:
         """Return the current scale relative to the fitted view."""
