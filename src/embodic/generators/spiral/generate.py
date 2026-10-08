@@ -80,8 +80,7 @@ def _unsupported(design: DesignParameters, spec: SpiralWindingSpec) -> tuple[str
     """Pointers of inputs whose value selects geometry this generator does not build yet."""
     coil, pairs = spec.coil, spec.layers.pairs
     checks = {
-        # Pairs rotated against each other need a series link between coils at different angles (G6 gives none).
-        "/winding/layers/pairs": len({p.rotation_rad for p in pairs}) > 1 or any(p.phases is not None for p in pairs),
+        "/winding/layers/pairs": any(p.phases is not None for p in pairs),
         "/winding/layers/series_groups": not all(spec.layers.series_groups)
         or sorted(i for group in spec.layers.series_groups for i in group) != sorted(p.index for p in pairs),
         "/winding/coil/lead_style": coil.lead_style is not LeadStyle.RADIAL_THEN_ARC,
@@ -142,6 +141,8 @@ def _refusal(design: DesignParameters, spec: SpiralWindingSpec) -> Unbuildable |
     issues = []
     if spec.coil.end_style is EndStyle.STADIUM:
         issues.append(_issue("UNBUILDABLE_UNSUPPORTED_END_STYLE", ("/winding/coil/end_style",)))
+    if len({p.rotation_rad for p in spec.layers.pairs}) > 1:  # pairs join coil by coil (G6, U-E6)
+        issues.append(_issue("UNBUILDABLE_PAIRS_ROTATED_APART", ("/winding/layers/pairs",)))
     if pointers := _unsupported(design, spec):
         issues.append(_issue("UNBUILDABLE_SPIRAL_OPTION_NOT_IMPLEMENTED", pointers))
     return Unbuildable(issues=tuple(issues)) if issues else None

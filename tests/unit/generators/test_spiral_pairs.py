@@ -187,15 +187,18 @@ def test_m3_a_rotation_every_pair_shares_turns_the_whole_winding(registry: Regis
 
 
 @pytest.mark.req("REQ-F-03")
-def test_ut_geo_11_pairs_rotated_against_each_other_are_refused(registry: Registry) -> None:
-    """UT-GEO-11 is not met yet: a pair at pi/Q among unrotated pairs needs a series link G6 does not specify.
+@pytest.mark.parametrize("series_groups", [((0,), (1,), (2,)), ((0, 1, 2),)], ids=["series", "parallel"])
+def test_ut_geo_11_pairs_rotated_against_each_other_are_refused(
+    registry: Registry, series_groups: tuple[tuple[int, ...], ...]
+) -> None:
+    """UT-GEO-11 (G6 U-E6): a pair at pi/Q among unrotated pairs has no coil at the others' positions, so: refused.
 
-    The generator refuses it with the pointer instead of building the rotation silently wrong or dropping it.
+    Catches the rotation built silently wrong or dropped, in series or in parallel, or the old not-implemented code.
     """
-    design = _three_pairs(((0,), (1,), (2,)))
+    design = _three_pairs(series_groups)
     assert isinstance(design.winding, SpiralWindingSpec)
     refused = generate_spiral(_rotated(design, (0.0, math.pi / design.winding.coil.coil_count, 0.0)), registry)
     assert isinstance(refused, Unbuildable)
     assert [(i.code, i.pointers) for i in refused.issues] == [
-        ("UNBUILDABLE_SPIRAL_OPTION_NOT_IMPLEMENTED", ("/winding/layers/pairs",))
+        ("UNBUILDABLE_PAIRS_ROTATED_APART", ("/winding/layers/pairs",))
     ]
