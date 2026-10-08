@@ -1,0 +1,38 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "params": {"phases": 2, "poles": 8, "topology": "wave", "turns": 2, "waveLayers": 4, "waveStyle": "involute"}
+      },
+      "output": {
+        "Ke1": 0.015465203029632665,
+        "Rphase": 0.4611443796291077,
+        "efficiency": 0.8201434887059612,
+        "keLinePeakWaveform": 0.013946335799354783,
+        "keLinePk": 0.015465203029632665,
+        "lossTotal": 0.6027216773819364,
+        "motorConstant": 0.022773887235831968,
+        "omegaM": 157.07963267948966,
+        "pCirc": 0.00007590710412895237,
+        "pCu": 0.590264805925258,
+        "pEddy": 0.012380964352549456,
+        "pOut": 2.748403467020402,
+        "phaseKe": [0.015465203029632665, 0.015465203029632663],
+        "phaseR": [0.4611443796291077, 0.4611443796291077],
+        "phaseRextra": [0.01243144806273385, 0.01243144806273385],
+        "phaseRtrace": [0.4557809564957762, 0.4557809564957762],
+        "rho": 1.9950128e-8,
+        "thd": 0.09299019227304085,
+        "torque": 0.017496879895487996
+      }
+    }
+  ],
+  "case_id": "wave-analysis-involute-l4-m2-p8-t2",
+  "eq_ids": [],
+  "fn": "waveAnalysis",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "Xcoil compute().analysis of wave-involute-l4-m2-p8-t2: Ke, R, eddy, interconnect, losses (GR-22)",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["analysis", "involute", "l4", "m2"]
+}

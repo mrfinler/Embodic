@@ -563,6 +563,416 @@
      "rOut": 30
     }
    }
+  },
+  {
+   "id": "wave-analysis-involute-l2-m3-p16-t2",
+   "fn": "waveAnalysis",
+   "note": "Xcoil compute().analysis of wave-involute-l2-m3-p16-t2: Ke, R, eddy, interconnect, losses (GR-22)",
+   "tags": [
+    "analysis",
+    "involute",
+    "default-params",
+    "l2",
+    "m3",
+    "star"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "involute",
+     "turns": 2
+    }
+   }
+  },
+  {
+   "id": "wave-analysis-involute-l4-m2-p8-t2",
+   "fn": "waveAnalysis",
+   "note": "Xcoil compute().analysis of wave-involute-l4-m2-p8-t2: Ke, R, eddy, interconnect, losses (GR-22)",
+   "tags": [
+    "analysis",
+    "involute",
+    "l4",
+    "m2"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "involute",
+     "turns": 2,
+     "waveLayers": 4,
+     "phases": 2,
+     "poles": 8
+    }
+   }
+  },
+  {
+   "id": "wave-analysis-involute-l6-m1-p8-t3",
+   "fn": "waveAnalysis",
+   "note": "Xcoil compute().analysis of wave-involute-l6-m1-p8-t3: Ke, R, eddy, interconnect, losses (GR-22)",
+   "tags": [
+    "analysis",
+    "involute",
+    "l6",
+    "m1"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "involute",
+     "turns": 3,
+     "waveLayers": 6,
+     "phases": 1,
+     "poles": 8
+    }
+   }
+  },
+  {
+   "id": "wave-analysis-involute-l2-m3-p16-t2-delta",
+   "fn": "waveAnalysis",
+   "note": "Xcoil compute().analysis of wave-involute-l2-m3-p16-t2-delta: Ke, R, eddy, interconnect, losses (GR-22)",
+   "tags": [
+    "analysis",
+    "involute",
+    "l2",
+    "m3",
+    "delta"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "involute",
+     "turns": 2,
+     "connection": "delta"
+    }
+   }
+  },
+  {
+   "id": "wave-analysis-jog-l2-m3-p16-t2",
+   "fn": "waveAnalysis",
+   "note": "Xcoil compute().analysis of wave-jog-l2-m3-p16-t2: Ke, R, eddy, interconnect, losses (GR-22)",
+   "tags": [
+    "analysis",
+    "jog",
+    "default-params",
+    "l2",
+    "m3",
+    "star"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "jog",
+     "turns": 2
+    }
+   }
+  },
+  {
+   "id": "wave-analysis-jog-l4-m2-p8-t2",
+   "fn": "waveAnalysis",
+   "note": "Xcoil compute().analysis of wave-jog-l4-m2-p8-t2: Ke, R, eddy, interconnect, losses (GR-22)",
+   "tags": [
+    "analysis",
+    "jog",
+    "l4",
+    "m2"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "jog",
+     "turns": 2,
+     "waveLayers": 4,
+     "phases": 2,
+     "poles": 8
+    }
+   }
+  },
+  {
+   "id": "wave-analysis-jog-l6-m1-p8-t3",
+   "fn": "waveAnalysis",
+   "note": "Xcoil compute().analysis of wave-jog-l6-m1-p8-t3: Ke, R, eddy, interconnect, losses (GR-22)",
+   "tags": [
+    "analysis",
+    "jog",
+    "l6",
+    "m1"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "jog",
+     "turns": 3,
+     "waveLayers": 6,
+     "phases": 1,
+     "poles": 8
+    }
+   }
+  },
+  {
+   "id": "wave-analysis-jog-l2-m3-p16-t2-delta",
+   "fn": "waveAnalysis",
+   "note": "Xcoil compute().analysis of wave-jog-l2-m3-p16-t2-delta: Ke, R, eddy, interconnect, losses (GR-22)",
+   "tags": [
+    "analysis",
+    "jog",
+    "l2",
+    "m3",
+    "delta"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "jog",
+     "turns": 2,
+     "connection": "delta"
+    }
+   }
+  },
+  {
+   "id": "wave-analysis-chord-l2-m3-p16-t2",
+   "fn": "waveAnalysis",
+   "note": "Xcoil compute().analysis of wave-chord-l2-m3-p16-t2: Ke, R, eddy, interconnect, losses (GR-22)",
+   "tags": [
+    "analysis",
+    "chord",
+    "default-params",
+    "l2",
+    "m3",
+    "star"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "chord",
+     "turns": 2
+    }
+   }
+  },
+  {
+   "id": "wave-analysis-chord-l4-m2-p8-t2",
+   "fn": "waveAnalysis",
+   "note": "Xcoil compute().analysis of wave-chord-l4-m2-p8-t2: Ke, R, eddy, interconnect, losses (GR-22)",
+   "tags": [
+    "analysis",
+    "chord",
+    "l4",
+    "m2"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "chord",
+     "turns": 2,
+     "waveLayers": 4,
+     "phases": 2,
+     "poles": 8
+    }
+   }
+  },
+  {
+   "id": "wave-analysis-chord-l6-m1-p8-t3",
+   "fn": "waveAnalysis",
+   "note": "Xcoil compute().analysis of wave-chord-l6-m1-p8-t3: Ke, R, eddy, interconnect, losses (GR-22)",
+   "tags": [
+    "analysis",
+    "chord",
+    "l6",
+    "m1"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "chord",
+     "turns": 3,
+     "waveLayers": 6,
+     "phases": 1,
+     "poles": 8
+    }
+   }
+  },
+  {
+   "id": "wave-analysis-chord-l2-m3-p16-t2-delta",
+   "fn": "waveAnalysis",
+   "note": "Xcoil compute().analysis of wave-chord-l2-m3-p16-t2-delta: Ke, R, eddy, interconnect, losses (GR-22)",
+   "tags": [
+    "analysis",
+    "chord",
+    "l2",
+    "m3",
+    "delta"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "chord",
+     "turns": 2,
+     "connection": "delta"
+    }
+   }
+  },
+  {
+   "id": "wave-analysis-overlap-l2-m3-p16-t2",
+   "fn": "waveAnalysis",
+   "note": "Xcoil compute().analysis of wave-overlap-l2-m3-p16-t2: Ke, R, eddy, interconnect, losses (GR-22)",
+   "tags": [
+    "analysis",
+    "overlap",
+    "default-params",
+    "l2",
+    "m3",
+    "star"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "overlap",
+     "turns": 2
+    }
+   }
+  },
+  {
+   "id": "wave-analysis-overlap-l4-m2-p8-t2",
+   "fn": "waveAnalysis",
+   "note": "Xcoil compute().analysis of wave-overlap-l4-m2-p8-t2: Ke, R, eddy, interconnect, losses (GR-22)",
+   "tags": [
+    "analysis",
+    "overlap",
+    "l4",
+    "m2"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "overlap",
+     "turns": 2,
+     "waveLayers": 4,
+     "phases": 2,
+     "poles": 8
+    }
+   }
+  },
+  {
+   "id": "wave-analysis-overlap-l6-m1-p8-t3",
+   "fn": "waveAnalysis",
+   "note": "Xcoil compute().analysis of wave-overlap-l6-m1-p8-t3: Ke, R, eddy, interconnect, losses (GR-22)",
+   "tags": [
+    "analysis",
+    "overlap",
+    "l6",
+    "m1"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "overlap",
+     "turns": 3,
+     "waveLayers": 6,
+     "phases": 1,
+     "poles": 8
+    }
+   }
+  },
+  {
+   "id": "wave-analysis-overlap-l2-m3-p16-t2-delta",
+   "fn": "waveAnalysis",
+   "note": "Xcoil compute().analysis of wave-overlap-l2-m3-p16-t2-delta: Ke, R, eddy, interconnect, losses (GR-22)",
+   "tags": [
+    "analysis",
+    "overlap",
+    "l2",
+    "m3",
+    "delta"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "overlap",
+     "turns": 2,
+     "connection": "delta"
+    }
+   }
+  },
+  {
+   "id": "wave-analysis-involute-l2-m3-p16-t2-open",
+   "fn": "waveAnalysis",
+   "note": "Xcoil compute().analysis of wave-involute-l2-m3-p16-t2-open: Ke, R, eddy, interconnect, losses (GR-22)",
+   "tags": [
+    "analysis",
+    "involute",
+    "l2",
+    "m3",
+    "open"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "involute",
+     "turns": 2,
+     "connection": "open"
+    }
+   }
+  },
+  {
+   "id": "wave-analysis-overlap-l2-m3-p16-t2-open",
+   "fn": "waveAnalysis",
+   "note": "Xcoil compute().analysis of wave-overlap-l2-m3-p16-t2-open: Ke, R, eddy, interconnect, losses (GR-22)",
+   "tags": [
+    "analysis",
+    "overlap",
+    "l2",
+    "m3",
+    "open"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "overlap",
+     "turns": 2,
+     "connection": "open"
+    }
+   }
+  },
+  {
+   "id": "wave-jog-l2-m3-p16-t2-narrow",
+   "fn": "waveRawLayout",
+   "note": "jog: rOut - rIn = 1 mm, so the fillet radius is capped at 0.3 of the radial span",
+   "tags": [
+    "layout",
+    "jog",
+    "l2",
+    "m3",
+    "star",
+    "narrow"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "jog",
+     "turns": 2,
+     "rOut": 23
+    }
+   }
+  },
+  {
+   "id": "wave-analysis-jog-l2-m3-p16-t2-narrow",
+   "fn": "waveAnalysis",
+   "note": "Xcoil compute().analysis of wave-jog-l2-m3-p16-t2-narrow (GR-22)",
+   "tags": [
+    "analysis",
+    "jog",
+    "l2",
+    "m3",
+    "star",
+    "narrow"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "waveStyle": "jog",
+     "turns": 2,
+     "rOut": 23
+    }
+   }
   }
  ]
 }

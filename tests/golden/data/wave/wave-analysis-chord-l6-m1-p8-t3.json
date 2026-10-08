@@ -1,0 +1,38 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "params": {"phases": 1, "poles": 8, "topology": "wave", "turns": 3, "waveLayers": 6, "waveStyle": "chord"}
+      },
+      "output": {
+        "Ke1": 0.010131119925985647,
+        "Rphase": 0.32687255313791747,
+        "efficiency": 0.7964745077327692,
+        "keLinePeakWaveform": 0.009704301561823012,
+        "keLinePk": 0.010131119925985647,
+        "lossTotal": 0.2300378268337433,
+        "motorConstant": 0.012530062314927856,
+        "omegaM": 157.07963267948966,
+        "pCirc": 0.00005599499804224853,
+        "pCu": 0.2091984340082672,
+        "pEddy": 0.02078339782743386,
+        "pOut": 0.9002275972719577,
+        "phaseKe": [0.010131119925985647],
+        "phaseR": [0.32687255313791747],
+        "phaseRextra": [0.00995063661481891],
+        "phaseRtrace": [0.321256971813132],
+        "rho": 1.9950128e-8,
+        "thd": 0.06128378470909701,
+        "torque": 0.005731026880542884
+      }
+    }
+  ],
+  "case_id": "wave-analysis-chord-l6-m1-p8-t3",
+  "eq_ids": [],
+  "fn": "waveAnalysis",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "Xcoil compute().analysis of wave-chord-l6-m1-p8-t3: Ke, R, eddy, interconnect, losses (GR-22)",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["analysis", "chord", "l6", "m1"]
+}

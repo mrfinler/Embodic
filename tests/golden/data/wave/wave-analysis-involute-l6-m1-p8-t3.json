@@ -1,0 +1,38 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "params": {"phases": 1, "poles": 8, "topology": "wave", "turns": 3, "waveLayers": 6, "waveStyle": "involute"}
+      },
+      "output": {
+        "Ke1": 0.01731010156573873,
+        "Rphase": 0.46313697842999463,
+        "efficiency": 0.8319909738063752,
+        "keLinePeakWaveform": 0.0200283280440318,
+        "keLinePk": 0.01731010156573873,
+        "lossTotal": 0.3106050283226986,
+        "motorConstant": 0.017985805362208073,
+        "omegaM": 157.07963267948966,
+        "pCirc": 0.0000714922821351715,
+        "pCu": 0.2964076661951966,
+        "pEddy": 0.014125869845366863,
+        "pOut": 1.5381350980841808,
+        "phaseKe": [0.01731010156573873],
+        "phaseR": [0.46313697842999463],
+        "phaseRextra": [0.009779936183027577],
+        "phaseRtrace": [0.4576920975370005],
+        "rho": 1.9950128e-8,
+        "thd": 0.10799645192765116,
+        "torque": 0.009792072160129386
+      }
+    }
+  ],
+  "case_id": "wave-analysis-involute-l6-m1-p8-t3",
+  "eq_ids": [],
+  "fn": "waveAnalysis",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "Xcoil compute().analysis of wave-involute-l6-m1-p8-t3: Ke, R, eddy, interconnect, losses (GR-22)",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["analysis", "involute", "l6", "m1"]
+}

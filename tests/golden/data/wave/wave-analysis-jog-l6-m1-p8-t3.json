@@ -1,0 +1,38 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "params": {"phases": 1, "poles": 8, "topology": "wave", "turns": 3, "waveLayers": 6, "waveStyle": "jog"}
+      },
+      "output": {
+        "Ke1": 0.017310085418977654,
+        "Rphase": 0.4698598168938478,
+        "efficiency": 0.8300477105558128,
+        "keLinePeakWaveform": 0.020028304587776918,
+        "keLinePk": 0.017310085418977654,
+        "lossTotal": 0.31493290593802126,
+        "motorConstant": 0.01785665305416773,
+        "omegaM": 157.07963267948966,
+        "pCirc": 0.00007037102675699324,
+        "pCu": 0.30071028281206263,
+        "pEddy": 0.014152252099201616,
+        "pOut": 1.538133663320795,
+        "phaseKe": [0.017310085418977654],
+        "phaseR": [0.4698598168938478],
+        "phaseRextra": [0.009636664088074056],
+        "phaseRtrace": [0.4645582080958072],
+        "rho": 1.9950128e-8,
+        "thd": 0.10799648720116634,
+        "torque": 0.009792063026141985
+      }
+    }
+  ],
+  "case_id": "wave-analysis-jog-l6-m1-p8-t3",
+  "eq_ids": [],
+  "fn": "waveAnalysis",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "Xcoil compute().analysis of wave-jog-l6-m1-p8-t3: Ke, R, eddy, interconnect, losses (GR-22)",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["analysis", "jog", "l6", "m1"]
+}

@@ -1,0 +1,38 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "params": {"connection": "open", "topology": "wave", "turns": 2, "waveStyle": "involute"}
+      },
+      "output": {
+        "Ke1": 0.0308795907787231,
+        "Rphase": 1.463644476705099,
+        "efficiency": 0.7420170195429089,
+        "keLinePeakWaveform": 0.027741596629724002,
+        "keLinePk": 0.0308795907787231,
+        "lossTotal": 2.8619684796822744,
+        "motorConstant": 0.03126074809237392,
+        "omegaM": 157.07963267948966,
+        "pCirc": 0,
+        "pCu": 2.8101973952737906,
+        "pEddy": 0.051771084408483735,
+        "pOut": 8.231664420486076,
+        "phaseKe": [0.03087959077872311, 0.03087959077872309, 0.030879590778723102],
+        "phaseR": [1.463644476705099, 1.463644476705099, 1.463644476705099],
+        "phaseRextra": [0.0906868754520227, 0.0906868754520227, 0.0906868754520227],
+        "phaseRtrace": [1.4606011103776657, 1.4606011103776657, 1.4606011103776657],
+        "rho": 1.9950128e-8,
+        "thd": 0.11228604601517174,
+        "torque": 0.052404403295761647
+      }
+    }
+  ],
+  "case_id": "wave-analysis-involute-l2-m3-p16-t2-open",
+  "eq_ids": [],
+  "fn": "waveAnalysis",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "Xcoil compute().analysis of wave-involute-l2-m3-p16-t2-open: Ke, R, eddy, interconnect, losses (GR-22)",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["analysis", "involute", "l2", "m3", "open"]
+}

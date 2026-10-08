@@ -1,7 +1,9 @@
-// GR-21 and GR-23 (U-M3b): Xcoil's wave builders. waveRawLayout dumps a whole layout (the GR-19 raw layout, without the
+// GR-21, GR-22 and GR-23 (U-M3b): Xcoil's wave builders. waveRawLayout dumps a whole layout (the GR-19 raw layout, without the
 // derived start/end points, plus the envelope and the wave frame); the wave* helpers dump one Xcoil helper over seeded
-// inputs (200 per case), written into the fixture so Python needs no PRNG.
+// inputs (200 per case), written into the fixture so Python needs no PRNG. waveAnalysis is the physics area's
+// computeAnalysis on the same input.
 import { FUNCTIONS as M1_LAYOUT } from './m1_layout.mjs';
+import { FUNCTIONS as PHYSICS } from './physics.mjs';
 import { recordFromPrim } from '../lib/codec.mjs';
 
 // mulberry32: integer-only PRNG, as in dump_xcoil.mjs.
@@ -59,8 +61,25 @@ function rawLayout(E, params) {
   };
 }
 
+// The physics area's computeAnalysis needs interconnect copper; a layout without it (phases other than 3, open
+// connection) gets the same fields minus the interconnect ones.
+function analysisOf(E, params) {
+  const r = E.compute(params);
+  if (!r.ok || !r.analysis) throw new Error(`Xcoil compute failed: ${JSON.stringify(r.errors)}`);
+  if (r.layout.interconnect) return PHYSICS.computeAnalysis.run(E, { params });
+  const a = r.analysis;
+  return {
+    omegaM: a.omegaM, rho: E.copperResistivity(r.params.tempC), Ke1: a.Ke1, phaseKe: a.phases.map((ph) => ph.Ke[0]),
+    keLinePk: a.keLinePk, keLinePeakWaveform: Math.max(...E.lineWaveform(a, 181)[0].v.map(Math.abs)) / a.omegaM,
+    thd: a.thd, Rphase: a.Rphase, phaseRtrace: a.phases.map((ph) => ph.Rtrace), phaseRextra: a.phases.map((ph) => ph.Rextra),
+    phaseR: a.phases.map((ph) => ph.R), pEddy: a.pEddy, pCu: a.pCu, pCirc: a.pCirc, torque: a.torque, pOut: a.pOut,
+    lossTotal: a.lossTotal, efficiency: a.efficiency, motorConstant: a.motorConstant,
+  };
+}
+
 export const FUNCTIONS = {
   waveRawLayout: { required: ['params'], run: (E, x) => rawLayout(E, x.params) },
+  waveAnalysis: { required: ['params'], run: (E, x) => analysisOf(E, x.params) },
   waveRefusal: {
     required: ['params'],
     run: (E, x) => { const r = E.compute(x.params); return { ok: r.ok === true, errors: r.errors.map((e) => ({ code: e.code, field: e.field })) }; },
