@@ -1,5 +1,5 @@
 {
- "prepared_by": "Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5",
+ "prepared_by": "Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5 (rows EV-01 to EV-83); claude-sonnet-5-5 (rows EV-84 to EV-93, unit U-S3b)",
  "schema": "embodic evidence register",
  "schema_version": 1,
  "generated_by": "docs/phase2/evidence/tools/build_evidence_register.py",
@@ -10,7 +10,7 @@
   },
   {
    "path": "docs/phase2/evidence/evidence_register.md",
-   "sha256": "d55650056a87ba9d57dc06ddda70cc9420a1dfb858fc97b637ce65a60db6688b"
+   "sha256": "95f5c2f9a2222bef04322d3e215ead24b087d30d4dd9e34518125a09beeb307b"
   },
   {
    "path": "docs/phase1/engineering/equation_registry_draft.json",
@@ -533,6 +533,83 @@
    "kind": "manufacturer_page",
    "path": null,
    "url": "https://www.7pcb.com/trace-width-calculator"
+  },
+  {
+   "id": "NIST-CODATA2022",
+   "title": "Fundamental Physical Constants, Complete Listing (2022 CODATA adjustment)",
+   "authors": "NIST",
+   "year": 2022,
+   "year_text": "2022",
+   "venue": "physics.nist.gov, allascii.txt",
+   "kind": "reference_data",
+   "path": null,
+   "url": "https://physics.nist.gov/cuu/Constants/Table/allascii.txt"
+  },
+  {
+   "id": "BIPM-SI-BROCHURE-9",
+   "title": "SI Brochure, 9th edition (edition number from the file name; title page not read)",
+   "authors": "BIPM (host bipm.org)",
+   "year": null,
+   "year_text": null,
+   "venue": "bipm.org, SI-Brochure-9-EN.pdf",
+   "kind": "standard",
+   "path": null,
+   "url": "https://www.bipm.org/documents/20126/41483022/SI-Brochure-9-EN.pdf"
+  },
+  {
+   "id": "WEB-NBK-JISB1001",
+   "title": "Technical data 20: Diameter of clearance holes and counterbores for bolts and screws (JIS B 1001 table)",
+   "authors": "NBK (manufacturer)",
+   "year": 2015,
+   "year_text": "2015-06-18",
+   "venue": "manufacturer technical page",
+   "kind": "manufacturer_page",
+   "path": null,
+   "url": "https://alb02.internal.nbk1560.com/en/resources/other/article/technical-20-diameter-of-clearance-holes-and-counterbores-for-bolts-and-screws"
+  },
+  {
+   "id": "WEB-AMESWEB-B1828",
+   "title": "Metric Clearance Hole Chart (cites ASME B18.2.8-1999)",
+   "authors": "AmesWeb",
+   "year": null,
+   "year_text": null,
+   "venue": "web page",
+   "kind": "web_page",
+   "path": null,
+   "url": "https://amesweb.info/Screws/Metric-Clearance-Hole-Chart.aspx"
+  },
+  {
+   "id": "BIB-TESSAROLO2019",
+   "title": "Investigation Into Multi-Layer Fractional-Slot Concentrated Windings With Unconventional Slot-Pole Combinations",
+   "authors": "A. Tessarolo, C. Ciriani, M. Bortolozzi, M. Mezzarobba, N. Barbini",
+   "year": 2019,
+   "year_text": "2019",
+   "venue": "IEEE Trans. Energy Convers. 34(4) 1985-1996, doi 10.1109/TEC.2019.2929950",
+   "kind": "journal",
+   "path": null,
+   "url": "https://arts.units.it/bitstream/11368/2958612/4/2958612_IEEE%20TEC%202019-PostPrint.pdf"
+  },
+  {
+   "id": "CONF-ALBERTI-MULTILAYER",
+   "title": "Theory and Design of Fractional-Slot Multilayer Windings",
+   "authors": "L. Alberti, N. Bianchi",
+   "year": null,
+   "year_text": "unresolved",
+   "venue": "Presentation, University of Padova; the extract says ECCE 2011 Phoenix, the file name says ECCE 2010",
+   "kind": "presentation",
+   "path": null,
+   "url": "https://research.unipd.it/bitstream/11577/2514240/1/ECCE_2010_Multilayer_presentation_web.pdf"
+  },
+  {
+   "id": "APN-MICROCHIP-AN955",
+   "title": "VF Control of 3-Phase Induction Motor Using Space Vector Modulation, AN955 (DS00955A)",
+   "authors": "R. Parekh (Microchip Technology)",
+   "year": 2005,
+   "year_text": "2005",
+   "venue": "application note (copy hosted on mikrocontroller.net)",
+   "kind": "application_note",
+   "path": null,
+   "url": "https://mikrocontroller.net/attachment/337300/AN955.pdf"
   }
  ],
  "entries": [
@@ -4234,6 +4311,431 @@
    "related_gaps": [],
    "register_origin": "phase2",
    "accessed": "2026-10-04"
+  },
+  {
+   "id": "EV-84",
+   "claim": "Vacuum magnetic permeability µ0 = 1.256 637 061 27 × 10⁻⁶ N A⁻², standard uncertainty 0.000 000 000 20 × 10⁻⁶ N A⁻² (2022 CODATA adjustment; the table header names the adjustment)",
+   "kind": "source_claim",
+   "source": {
+    "document": "NIST-CODATA2022",
+    "title": "Fundamental Physical Constants, Complete Listing (2022 CODATA adjustment)",
+    "authors": "NIST",
+    "year": 2022,
+    "year_text": "2022"
+   },
+   "documents": [
+    "NIST-CODATA2022"
+   ],
+   "location": {
+    "text": "https://physics.nist.gov/cuu/Constants/Table/allascii.txt row \"vacuum mag. permeability\"",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://physics.nist.gov/cuu/Constants/Table/allascii.txt"
+    ]
+   },
+   "read_method": "webfetch_extract",
+   "applies": {
+    "judgement": "yes",
+    "note": "yes (value for the registry constant vacuum_permeability_h_per_m; the registry holds 4π × 10⁻⁷ H/m, relative difference 1.3e-10, 0.83 standard uncertainties, computed in U-S3b)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (extract)",
+   "topology_tags": [
+    "general"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [],
+   "register_origin": "phase2",
+   "accessed": "2026-10-08"
+  },
+  {
+   "id": "EV-85",
+   "claim": "Vacuum electric permittivity ε0 = 8.854 187 8188 × 10⁻¹² F m⁻¹, standard uncertainty 0.000 000 0014 × 10⁻¹² F m⁻¹ (2022 CODATA adjustment)",
+   "kind": "source_claim",
+   "source": {
+    "document": "NIST-CODATA2022",
+    "title": "Fundamental Physical Constants, Complete Listing (2022 CODATA adjustment)",
+    "authors": "NIST",
+    "year": 2022,
+    "year_text": "2022"
+   },
+   "documents": [
+    "NIST-CODATA2022"
+   ],
+   "location": {
+    "text": "https://physics.nist.gov/cuu/Constants/Table/allascii.txt row \"vacuum electric permittivity\"",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://physics.nist.gov/cuu/Constants/Table/allascii.txt"
+    ]
+   },
+   "read_method": "webfetch_extract",
+   "applies": {
+    "judgement": "yes",
+    "note": "yes (value for the registry constant vacuum_permittivity_f_per_m; the registry holds 8.854e-12 F/m, relative difference -2.1e-5, computed in U-S3b)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (extract)",
+   "topology_tags": [
+    "general"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [],
+   "register_origin": "phase2",
+   "accessed": "2026-10-08"
+  },
+  {
+   "id": "EV-86",
+   "claim": "After the redefinition of the ampere, \"μ0 must be determined experimentally\" (no longer exactly 4π × 10⁻⁷ H m⁻¹), ε0 is likewise determined experimentally, and \"the product ε0μ0 = 1/c² and quotient Z0/μ0 = c remain exact\" (quoted from the extract)",
+   "kind": "source_claim",
+   "source": {
+    "document": "BIPM-SI-BROCHURE-9",
+    "title": "SI Brochure, 9th edition (edition number from the file name; title page not read)",
+    "authors": "BIPM (host bipm.org)",
+    "year": null,
+    "year_text": null
+   },
+   "documents": [
+    "BIPM-SI-BROCHURE-9"
+   ],
+   "location": {
+    "text": "https://www.bipm.org/documents/20126/41483022/SI-Brochure-9-EN.pdf §2.3.1 \"The ampere\" (page number not checked)",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://www.bipm.org/documents/20126/41483022/SI-Brochure-9-EN.pdf"
+    ]
+   },
+   "read_method": "webfetch_extract",
+   "applies": {
+    "judgement": "yes",
+    "note": "yes (why 4π × 10⁻⁷ is an approximation; the passage read gives no numerical value for µ0 or ε0)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (extract)",
+   "topology_tags": [
+    "general"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [],
+   "register_origin": "phase2",
+   "accessed": "2026-10-08"
+  },
+  {
+   "id": "EV-87",
+   "claim": "Clearance-hole table \"Bolt hole diameter dh\" in mm for Grade 1 / 2 / 3, nominal thread diameter 2: 2.2 / 2.4 / 2.6; 3: 3.2 / 3.4 / 3.6; 4: 4.3 / 4.5 / 4.8; 5: 5.3 / 5.5 / 5.8; 6: 6.4 / 6.6 / 7. The page names JIS B 1001 and mentions ISO 273 only to say its Grade 4 sizes are \"not specified in ISO 273\". It has no 2.5 row and does not use the words fine, medium or coarse",
+   "kind": "source_claim",
+   "source": {
+    "document": "WEB-NBK-JISB1001",
+    "title": "Technical data 20: Diameter of clearance holes and counterbores for bolts and screws (JIS B 1001 table)",
+    "authors": "NBK (manufacturer)",
+    "year": 2015,
+    "year_text": "2015-06-18"
+   },
+   "documents": [
+    "WEB-NBK-JISB1001"
+   ],
+   "location": {
+    "text": "https://alb02.internal.nbk1560.com/en/resources/other/article/technical-20-diameter-of-clearance-holes-and-counterbores-for-bolts-and-screws table, rows 2 to 6",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://alb02.internal.nbk1560.com/en/resources/other/article/technical-20-diameter-of-clearance-holes-and-counterbores-for-bolts-and-screws"
+    ]
+   },
+   "read_method": "webfetch_extract",
+   "applies": {
+    "judgement": "partly",
+    "note": "partly (a JIS B 1001 table, not the ISO 273 text; reading Grade 1 / 2 / 3 as fine / medium / coarse is inferred from order only; mounting-hole presets, G28)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (extract)",
+   "topology_tags": [
+    "general"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [
+    "G28"
+   ],
+   "register_origin": "phase2",
+   "accessed": "2026-10-08"
+  },
+  {
+   "id": "EV-88",
+   "claim": "Metric clearance holes \"according to ASME B18.2.8\" as printed on a web page. Nominal drill size equals minimum hole diameter, close / normal / loose in mm: M2 2.2 / 2.4 / 2.6; M2.5 2.7 / 2.9 / 3.1; M3 3.2 / 3.4 / 3.6; M4 4.3 / 4.5 / 4.8; M5 5.3 / 5.5 / 5.8; M6 6.4 / 6.6 / 7. Maximum hole diameter close / normal / loose: M2 2.3 / 2.54 / 2.85; M2.5 2.8 / 3.04 / 3.4; M3 3.32 / 3.58 / 3.9; M4 4.42 / 4.68 / 5.1; M5 5.42 / 5.68 / 6.1; M6 6.55 / 6.82 / 7.36",
+   "kind": "source_claim",
+   "source": {
+    "document": "WEB-AMESWEB-B1828",
+    "title": "Metric Clearance Hole Chart (cites ASME B18.2.8-1999)",
+    "authors": "AmesWeb",
+    "year": null,
+    "year_text": null
+   },
+   "documents": [
+    "WEB-AMESWEB-B1828"
+   ],
+   "location": {
+    "text": "https://amesweb.info/Screws/Metric-Clearance-Hole-Chart.aspx table",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://amesweb.info/Screws/Metric-Clearance-Hole-Chart.aspx"
+    ]
+   },
+   "read_method": "webfetch_extract",
+   "applies": {
+    "judgement": "partly",
+    "note": "partly (ASME B18.2.8 as reproduced by a web page; its drill sizes for M2 to M6 equal the NBK Grade 1 / 2 / 3 values in EV-87; ISO 273 text not read; G28)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (extract)",
+   "topology_tags": [
+    "general"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [
+    "G28"
+   ],
+   "register_origin": "phase2",
+   "accessed": "2026-10-08"
+  },
+  {
+   "id": "EV-89",
+   "claim": "Three-phase symmetry condition of a slot-pole combination: Z / (3 × GCD(Z, p)) must be an integer for a \"conventional\" combination (Eq. 15), where Z is the slot count and the machine has 2p poles. The introduction states the same rule in words (Z is an integer multiple of 3K, K the greatest common divisor of Z and p). The paper's main claim is that multi-layer windings can be symmetrical for unconventional combinations. The paper does not discuss parallel paths",
+   "kind": "source_claim",
+   "source": {
+    "document": "BIB-TESSAROLO2019",
+    "title": "Investigation Into Multi-Layer Fractional-Slot Concentrated Windings With Unconventional Slot-Pole Combinations",
+    "authors": "A. Tessarolo, C. Ciriani, M. Bortolozzi, M. Mezzarobba, N. Barbini",
+    "year": 2019,
+    "year_text": "2019"
+   },
+   "documents": [
+    "BIB-TESSAROLO2019"
+   ],
+   "location": {
+    "text": "https://arts.units.it/bitstream/11368/2958612/4/2958612_IEEE%20TEC%202019-PostPrint.pdf §I; §IV Eq. (15) (page 5 of the post-print per the extract, not checked)",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://arts.units.it/bitstream/11368/2958612/4/2958612_IEEE%20TEC%202019-PostPrint.pdf"
+    ]
+   },
+   "read_method": "webfetch_extract",
+   "applies": {
+    "judgement": "partly",
+    "note": "partly (EQ-08 feasibility Q/(3t) integer with t = gcd(Q, p); a journal paper, not a textbook; three phases only; the parallel-path rule is G30)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (extract)",
+   "topology_tags": [
+    "spiral",
+    "wave"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [
+    "G30"
+   ],
+   "register_origin": "phase2",
+   "accessed": "2026-10-08"
+  },
+  {
+   "id": "EV-90",
+   "claim": "Star of slots review: \"Machine periodicity t = GCD (Q, p)\"; number of spokes Q/t; the star is divided into 2·m sectors of 360/(2m) degrees; angle between spokes αph = 360·t/Q; a four-layer winding needs Q/t > 2m. The slides read give no balance condition and no parallel-path rule",
+   "kind": "source_claim",
+   "source": {
+    "document": "CONF-ALBERTI-MULTILAYER",
+    "title": "Theory and Design of Fractional-Slot Multilayer Windings",
+    "authors": "L. Alberti, N. Bianchi",
+    "year": null,
+    "year_text": "unresolved"
+   },
+   "documents": [
+    "CONF-ALBERTI-MULTILAYER"
+   ],
+   "location": {
+    "text": "https://research.unipd.it/bitstream/11577/2514240/1/ECCE_2010_Multilayer_presentation_web.pdf slide 5, slide 12",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://research.unipd.it/bitstream/11577/2514240/1/ECCE_2010_Multilayer_presentation_web.pdf"
+    ]
+   },
+   "read_method": "webfetch_extract",
+   "applies": {
+    "judgement": "partly",
+    "note": "partly (supports the definition of t in EQ-08; a conference presentation, not a textbook; the extract names ECCE 2011, the file name says ECCE 2010, so the year is unresolved)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (extract)",
+   "topology_tags": [
+    "spiral",
+    "wave"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [],
+   "register_origin": "phase2",
+   "accessed": "2026-10-08"
+  },
+  {
+   "id": "EV-91",
+   "claim": "Table 7 (p.8, \"Test results of the windings under full load\") lists THD in %: concentric 5.7, arc 2.8, parallel 5.2, radial 1.2, unequal width parallel 4.7. The text on p.6 gives 5.7 % (concentric), 1.3 % (radial), 5.2 % (parallel) and 2.9 % (arc) for the induced phase voltages. A search of the text layer of all 10 pages finds no definition of THD (harmonic range, fundamental or RMS reference, phase or line voltage)",
+   "kind": "source_claim",
+   "source": {
+    "document": "D09",
+    "title": "Comparison of PCB winding topologies for axial-flux permanent magnet synchronous machines",
+    "authors": "F. Tokgöz, G. Çakal, O. Keysan",
+    "year": 2020,
+    "year_text": "2020"
+   },
+   "documents": [
+    "D09"
+   ],
+   "location": {
+    "text": "B2/EPA-2020-0622-FINAL.pdf p.8 Table 7; p.6 §3.3 and §4",
+    "pages_pdf": [
+     6,
+     8
+    ],
+    "pages_printed": null,
+    "urls": []
+   },
+   "read_method": "text",
+   "applies": {
+    "judgement": "yes",
+    "note": "yes (oracle value for EQ-18, concentric 5.7 %; the THD basis stays unresolved and the text and the table differ by 0.1 point for radial and arc; G31)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified",
+   "topology_tags": [
+    "spiral"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [
+    "G31"
+   ],
+   "register_origin": "phase2",
+   "accessed": "2026-10-08"
+  },
+  {
+   "id": "EV-92",
+   "claim": "Microchip application note for induction-motor V/f control: for space vector modulation \"Equation 8 shows that it is possible to get line-to-line voltage amplitude as high as VDC\"; the sine PWM linear-range line-to-line maximum is √3/2 × VDC (about 86.6 % of VDC, Appendix B); space vector modulation gives about 15 % more output voltage than sine PWM; six-step \"can generate the line-to-line fundamental voltage more than the VDC\" with no expression given (quoted from the extract)",
+   "kind": "source_claim",
+   "source": {
+    "document": "APN-MICROCHIP-AN955",
+    "title": "VF Control of 3-Phase Induction Motor Using Space Vector Modulation, AN955 (DS00955A)",
+    "authors": "R. Parekh (Microchip Technology)",
+    "year": 2005,
+    "year_text": "2005"
+   },
+   "documents": [
+    "APN-MICROCHIP-AN955"
+   ],
+   "location": {
+    "text": "https://mikrocontroller.net/attachment/337300/AN955.pdf \"Time Calculation\" Eq. 8; Appendix B (page numbers not checked)",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://mikrocontroller.net/attachment/337300/AN955.pdf"
+    ]
+   },
+   "read_method": "webfetch_extract",
+   "applies": {
+    "judgement": "partly",
+    "note": "partly (EQ-20 SPWM and SVPWM linear limits; a manufacturer note on induction motors, not a textbook; the six-step fundamental and PMSM pull-out torque are not covered; G33)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (extract)",
+   "topology_tags": [
+    "general"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [
+    "G33"
+   ],
+   "register_origin": "phase2",
+   "accessed": "2026-10-08"
+  },
+  {
+   "id": "EV-93",
+   "claim": "Row \"Density (ρ) g/cm3 7.4-7.7\" in \"Table IV Some Physical Properties of Sintered NdFeB Magnets\"",
+   "kind": "source_claim",
+   "source": {
+    "document": "MFR-HGT-NDFEB",
+    "title": "Sintered NdFeB Magnets' Specifications",
+    "authors": "HGT Advanced Magnets Co., Ltd",
+    "year": null,
+    "year_text": null
+   },
+   "documents": [
+    "MFR-HGT-NDFEB"
+   ],
+   "location": {
+    "text": "https://www.advancedmagnets.com/wp-content/uploads/2020/07/Sintered-Neodymium-Iron-Boron-NdFeB-Magnets-Specifications.pdf Table IV (PDF page not determined)",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://www.advancedmagnets.com/wp-content/uploads/2020/07/Sintered-Neodymium-Iron-Boron-NdFeB-Magnets-Specifications.pdf"
+    ]
+   },
+   "read_method": "webfetch_extract",
+   "applies": {
+    "judgement": "yes",
+    "note": "yes (EQ-28 NdFeB density; the registry holds 7.5 g/cm³, inside the range; a class range from one manufacturer, not a grade; rotor steel density is G34)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (extract)",
+   "topology_tags": [
+    "general"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [
+    "G34"
+   ],
+   "register_origin": "phase2",
+   "accessed": "2026-10-08"
   }
  ]
 }
