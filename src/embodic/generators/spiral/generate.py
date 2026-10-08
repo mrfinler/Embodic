@@ -2,14 +2,14 @@
 
 Built: G1 to G7 with parallel or radial sides, arc or straight ends, sharp corners or G9 concentric fillets (parallel
 sides with arc ends), the outer-end jog and the full (lead arc) or half closing of G5 (revision 2026-10-05, U-E3 and
-U-E3b); layer pairs in parallel (one shared centre via) and in series groups (G5 k centre vias, G6 transfer via fan,
-DRC-checked and refused when a rule fails, D-020); G8 series chains of each phase on the bus rings (legs on layer Y,
-ring arcs on layer X, net PHASE_x), the star or delta links and the U/V/W(/N) leads with their pads.
-Pair rotation is built when every pair shares it (option M3 with one rotation, D-024 default 0).
-Not built yet (returned as Unbuildable, never ignored): pairs rotated against each other, phase per pair, stadium
-ends (G2 gives no jog for an end arc tangent to its sides), tapers (G9), the straight lead, custom terminal offset,
-parallel paths, screw holes, and polygon corner radii. Open phases end on the ring vias of their first and last coil,
-without pads.
+U-E3b); layer pairs in parallel (one shared centre via) and in series groups (G5 k centre vias, G6 series via fan of
+revision U-E6, DRC-checked and refused when a rule fails, D-020); G8 series chains of each phase on the bus rings (legs
+on layer Y, ring arcs on layer X, net PHASE_x), the star or delta links and the U/V/W(/N) leads with their pads; the
+screw holes of every fastener pattern, refused when one breaks an edge or hole-to-hole keep-out.
+Pair rotation is built when every pair shares it (option M3 with one rotation, D-024 default 0); pairs rotated against
+each other are refused (G6). Not built yet (returned as Unbuildable, never ignored): phase per pair, stadium ends,
+series groups with straight ends, tapers (G9), the straight lead, custom terminal offset, parallel paths, and polygon
+corner radii. Open phases end on the ring vias of their first and last coil, without pads.
 """
 
 import dataclasses
@@ -27,7 +27,7 @@ from embodic.generators.spiral.chain import BusRings, CoilEnds, End, PhaseChain,
 from embodic.generators.spiral.derived import spiral_derived
 from embodic.generators.spiral.fillets import Corner, CornerKind, concentric_allowed, corners, radius_sequence
 from embodic.generators.spiral.interconnect import LINE_NET, Interconnect, PhaseEnd, build_interconnect, plan_links
-from embodic.generators.spiral.series import GroupCopper, SeriesCoil, series_coil
+from embodic.generators.spiral.series import GroupCopper, SeriesCoil, SeriesFailure, series_coil
 from embodic.generators.spiral.turns import (
     MAX_TURNS_PER_LAYER,
     Closing,
@@ -85,6 +85,8 @@ def _unsupported(design: DesignParameters, spec: SpiralWindingSpec) -> tuple[str
         "/winding/layers/series_groups": not all(spec.layers.series_groups)
         or sorted(i for group in spec.layers.series_groups for i in group) != sorted(p.index for p in pairs),
         "/winding/coil/lead_style": coil.lead_style is not LeadStyle.RADIAL_THEN_ARC,
+        # The G6 fan cuts outer arc 0 at the stub angle; straight ends have a chord there, which G6 does not cover.
+        "/winding/coil/end_style": coil.end_style is EndStyle.STRAIGHT and len(spec.layers.series_groups) > 1,
         "/winding/coil/terminal_offset_mm": coil.terminal_offset_mm is not None,
         "/winding/coil/x_inward_sense": coil.x_inward_sense is not Sense.CW,
         "/winding/coil/inner_turn_mode": coil.inner_turn_mode is not InnerTurnMode.MOVING,
@@ -420,7 +422,7 @@ def _interconnect(
 def _series_coil(
     frame: CoilFrame, closing: Closing, bus_width_mm: float, groups: int, art: CoilArtwork,
     filleted: Mapping[tuple[CornerKind, int], Corner],
-) -> SeriesCoil | None:  # fmt: skip
+) -> SeriesCoil | SeriesFailure:  # fmt: skip
     """Return the canonical coil as series groups; one group is the single-pair artwork and its mirror."""
     if groups == 1:
         mirrored = (art.terminal[0], -art.terminal[1])
@@ -428,6 +430,15 @@ def _series_coil(
         return SeriesCoil(groups=(copper,), ring_vias=(art.terminal, mirrored))
     assert isinstance(closing, FullClosing)  # closing_for gives k > 1 vias only the full closing
     return series_coil(frame, closing, bus_width_mm, groups, filleted)
+
+
+_SERIES_FAILURES = {
+    SeriesFailure.FILLET: (
+        "UNBUILDABLE_SPIRAL_INPUT_OUT_OF_RANGE",
+        ("/winding/layers/series_groups", "/winding/coil/corner_radius_mm"),
+    ),
+    SeriesFailure.FAN: ("UNBUILDABLE_SERIES_VIA_FAN_DRC", ("/winding/layers/series_groups",)),
+}
 
 
 def _series_fails_drc(design: DesignParameters, layout: Layout) -> bool:
@@ -460,9 +471,8 @@ def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack 
     reason = _limiting_reason(coil.turns, best.n, len(loops), stop)
     art, rho_used_mm, filleted = _artwork(design, frame, closing, pair, coil.corner_radius_mm)
     coil_art = _series_coil(frame, closing, design.connection.ring_width_mm, k, art, filleted)
-    if coil_art is None:  # a lower group's lead cuts into the fillet of its last inner corner
-        pointers = ("/winding/layers/series_groups", "/winding/coil/corner_radius_mm")
-        return Unbuildable(issues=(_issue("UNBUILDABLE_SPIRAL_INPUT_OUT_OF_RANGE", pointers),))
+    if isinstance(coil_art, SeriesFailure):
+        return Unbuildable(issues=(_issue(*_SERIES_FAILURES[coil_art]),))
     copper_z = design.stackup.copper_z_mm()
     layers = tuple(sorted({n for p in spec.layers.pairs for n in (p.layer_in, p.layer_out)}, key=copper_z.__getitem__))
     copper = _coil_copper(design, plan, spec, coil_art, (layers[0], layers[-1]))
