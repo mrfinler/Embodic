@@ -1,7 +1,7 @@
 """The shell window: toolstrip, inspector with the design form, geometry canvas, key results rail and status bar.
 
-The design session (U-M4c) drives the inspector, the undo history and what the canvas draws. The results, checks and
-export views (U-M4d) fill their regions later; their toolstrip commands stay disabled until those view-models exist.
+The design session (U-M4c) drives the inspector, the undo history and what the canvas draws. Below the canvas the
+results tabs (U-M4d) show the result cards, DRC, charts and the comparison of the same shown outcome.
 """
 
 import logging
@@ -11,7 +11,7 @@ from functools import partial
 from pathlib import Path
 
 from PySide6.QtCore import QPoint, Qt
-from PySide6.QtGui import QAction, QCloseEvent
+from PySide6.QtGui import QAction, QCloseEvent, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -36,10 +36,12 @@ from PySide6.QtWidgets import (
 from embodic.errors import ValidationIssue
 from embodic.io.examples import list_examples
 from embodic.model.vocabulary import TopologyKind
-from embodic.results.status import Status
+from embodic.outcome import ComputeOutcome
+from embodic.results import Registry
 from embodic.ui.strings import text
 from embodic.ui.theme import ThemeName, ThemeTokens, load_theme, resolve_theme
 from embodic.ui.viewmodels.appearance import AppearanceViewModel
+from embodic.ui.viewmodels.export import PRESETS, ExportViewModel
 from embodic.ui.viewmodels.outcome import (
     OutcomeComputing,
     OutcomeEmpty,
@@ -47,7 +49,12 @@ from embodic.ui.viewmodels.outcome import (
     OutcomeReady,
     OutcomeState,
     OutcomeViewModel,
-    SummaryItem,
+)
+from embodic.ui.viewmodels.results import (
+    CompareViewModel,
+    ResultsViewModel,
+    drc_table,
+    topic_for,
 )
 from embodic.ui.viewmodels.session import (
     DesignSession,
@@ -58,12 +65,18 @@ from embodic.ui.viewmodels.session import (
 )
 from embodic.ui.views import style
 from embodic.ui.views.board_rotor_panel import BoardRotorPanel
+from embodic.ui.views.charts import BackEmfTab, TorqueSpeedTab
+from embodic.ui.views.checks_view import DrcTab, locate_on_canvas
 from embodic.ui.views.coil_panel import CoilPanel, FieldPanel
+from embodic.ui.views.equation_view import GuideWindow
 from embodic.ui.views.examples_gallery import ExamplesGallery
+from embodic.ui.views.export_view import ExportDialog
 from embodic.ui.views.geometry_view import GeometryView
 from embodic.ui.views.layer_panel import LayerPanel
 from embodic.ui.views.new_design_dialog import NewDesignDialog
 from embodic.ui.views.phase_panel import PhasePanel
+from embodic.ui.views.results_rail import ResultsRail
+from embodic.ui.views.results_view import CompareTab, ResultsTab, focus_ring_qss
 from embodic.ui.views.toolstrip_bar import CommandTable, FocusRingTabBar, ToolstripBar
 
 logger = logging.getLogger(__name__)
@@ -71,6 +84,7 @@ logger = logging.getLogger(__name__)
 MIN_SIZE_PX = (960, 540)
 THREE_PANE_FROM_PX = 1280
 HOME_PLACEHOLDER = "%USERPROFILE%"
+EXPORT_ACTIONS = ("act-export-svg", "act-export-dxf", "act-export-pdf", "act-export-all")
 
 
 def redact_home(text_with_paths: str) -> str:
@@ -78,61 +92,11 @@ def redact_home(text_with_paths: str) -> str:
     return text_with_paths.replace(str(Path.home()), HOME_PLACEHOLDER)
 
 
-def badge_property(status: Status) -> str:
-    """Return the style sheet's ``status`` property value of a trust badge."""
-    return status.value.replace(" ", "-")
-
-
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ShellPaths:
     """Where the shell writes: recovery copies of the open project after an internal error."""
 
     recovery_dir: Path
-
-
-def _repolish(widget: QWidget) -> None:
-    widget.style().unpolish(widget)
-    widget.style().polish(widget)
-
-
-class _SummaryCard(QFrame):
-    """One summary strip cell: title, value or check word, trust badge, assumption count."""
-
-    def __init__(self, key: str) -> None:
-        super().__init__()
-        self.setObjectName(key)
-        self.setProperty("class", "result-card")
-        layout = QVBoxLayout(self)
-        self.title = QLabel()
-        self.title.setObjectName(f"{key}-title")
-        self.value = QLabel()
-        self.value.setObjectName(f"{key}-value")
-        self.badge = QLabel()
-        self.badge.setObjectName(f"{key}-badge")
-        self.badge.setProperty("class", "badge")
-        self.asm = QLabel()
-        self.asm.setObjectName(f"{key}-asm")
-        line = QHBoxLayout()
-        line.addWidget(self.value)
-        line.addStretch(1)
-        line.addWidget(self.badge)
-        layout.addWidget(self.title)
-        layout.addLayout(line)
-        layout.addWidget(self.asm)
-
-    def show_item(self, item: SummaryItem) -> None:
-        self.title.setText(item.label)
-        self.value.setText(item.value_text)
-        self.value.setProperty("class", "check-state" if item.state else "result-value")
-        self.value.setProperty("state", item.state or "")
-        self.badge.setVisible(item.status is not None)
-        if item.status is not None:
-            self.badge.setText(text(f"shell.badge.{badge_property(item.status)}"))
-            self.badge.setProperty("status", badge_property(item.status))
-        self.asm.setVisible(item.assumed_count is not None)
-        self.asm.setText(text("shell.sum.assumptions", count=item.assumed_count or 0))
-        for widget in (self.value, self.badge):
-            _repolish(widget)
 
 
 class MainWindow(QMainWindow):
@@ -146,9 +110,17 @@ class MainWindow(QMainWindow):
         paths: ShellPaths,
         os_prefers_dark: Callable[[], bool],
         on_close: Callable[[], None],
+        *,
+        registry: Registry,
     ) -> None:
         super().__init__()
         self.appearance, self.outcome, self.session, self.paths = appearance, outcome, session, paths
+        self.registry = registry
+        self.results = ResultsViewModel(registry)
+        self.compare = CompareViewModel()
+        self.export_vm = ExportViewModel(self._export_source)
+        self.guide: GuideWindow | None = None
+        self.export_dialog: ExportDialog | None = None
         self._on_close = on_close
         self._os_prefers_dark = os_prefers_dark
         self.tokens: ThemeTokens = load_theme("light")
@@ -160,7 +132,6 @@ class MainWindow(QMainWindow):
         self.addToolBar(self.toolstrip)
         for action in self.toolstrip.actions_by_id.values():
             self.addAction(action)
-        self.cards: dict[str, _SummaryCard] = {}
         self.layer_boxes: dict[str, QCheckBox] = {}
         self.setCentralWidget(self._work_area())
         self._status_bar()
@@ -176,12 +147,13 @@ class MainWindow(QMainWindow):
         appearance.theme.subscribe(lambda _: self.apply_theme())
         appearance.phase_render_mode.subscribe(lambda _: self._render())
         self.canvas.cursor_moved.connect(self._show_cursor)
+        self._shortcuts()
         self.apply_theme()
         self._show_issues()
         self._on_session()
 
     def _commands(self) -> CommandTable:
-        pending = "open_project show_checks show_equations export_svg export_dxf export_pdf export_bundle".split()
+        pending = ["open_project"]
         session = self.session
         implemented: CommandTable = {
             "new_design": self.show_new_design,
@@ -195,6 +167,9 @@ class MainWindow(QMainWindow):
             "cycle_theme": self.appearance.cycle_theme,
             "toggle_phase_render_mode": self.appearance.toggle_phase_render_mode,
             "fit_view": self.canvas.fit_view,
+            "show_checks": partial(self.show_results_tab, "tab-drc"),
+            "show_equations": self.show_equations,
+            **{command: partial(self.show_export, command) for command in PRESETS},
         }
         return {**dict.fromkeys(pending), **implemented}
 
@@ -222,22 +197,18 @@ class MainWindow(QMainWindow):
         self.centre = QStackedWidget()
         self.centre.setObjectName("centre")
         self.centre.addWidget(self._empty_page())
-        self.centre.addWidget(self._canvas_page())
+        self.centre_split = QSplitter(Qt.Orientation.Vertical)
+        self.centre_split.setObjectName("centre-split")
+        self.centre_split.addWidget(self._canvas_page())
+        self.centre_split.addWidget(self._results_tabs())
+        self.centre_split.setStretchFactor(0, 3)
+        self.centre_split.setStretchFactor(1, 2)
+        self.centre.addWidget(self.centre_split)
 
-        rail = QWidget()
-        rail.setObjectName("results-rail")
-        rail_layout = QVBoxLayout(rail)
-        title = QLabel(text("shell.results-rail.title"))
-        title.setProperty("class", "section-title")
-        self.rail_empty = QLabel(text("shell.results-rail.empty"))
-        self.rail_empty.setObjectName("results-rail-empty")
-        self.rail_empty.setWordWrap(True)
-        self.rail_empty.setProperty("class", "hint")
-        rail_layout.addWidget(title)
-        rail_layout.addWidget(self.rail_empty)
-        for key in ("sum-ok", "sum-drc", "sum-ke", "sum-r-phase"):
-            self.cards[key] = _SummaryCard(key)
-            rail_layout.addWidget(self.cards[key])
+        rail = self.rail = ResultsRail(self.results, self.registry)
+        rail.show_drc.connect(partial(self.show_results_tab, "tab-drc"))
+        rail.open_equation.connect(self.show_equations)
+        rail_layout = rail.body
         issues_title = QLabel(text("design.issues.title"))
         issues_title.setProperty("class", "section-title")
         self.issues_list = QListWidget()
@@ -259,6 +230,76 @@ class MainWindow(QMainWindow):
             self.splitter.addWidget(pane)
         self.splitter.setStretchFactor(1, 1)
         return self.splitter
+
+    def _results_tabs(self) -> QTabWidget:
+        self.results_tabs = QTabWidget()
+        self.results_tabs.setObjectName("results-tabs")
+        self.results_tab_bar = FocusRingTabBar()
+        self.results_tabs.setTabBar(self.results_tab_bar)
+        self.results_tab = ResultsTab(self.results, self.focus_first_missing)
+        self.results_tab.open_equation.connect(self.show_equations)
+        self.drc_tab = DrcTab()
+        self.drc_tab.locate_requested.connect(lambda row: locate_on_canvas(self.canvas, row, self.tokens))
+        self.back_emf_tab = BackEmfTab()
+        self.torque_speed_tab = TorqueSpeedTab()
+        self.compare_tab = CompareTab(self.compare)
+        for tab in (self.results_tab, self.drc_tab, self.back_emf_tab, self.torque_speed_tab, self.compare_tab):
+            self.results_tabs.addTab(tab, text(f"results.{tab.objectName()}.label"))
+        for panel in (*self.back_emf_tab.panels, *self.torque_speed_tab.panels, self.compare_tab.chart):
+            panel.eq.activated.connect(self.show_equations)
+        return self.results_tabs
+
+    def _shortcuts(self) -> None:
+        for keys, slot in (
+            ("F1", self.show_help),
+            ("Alt+5", partial(self.show_results_tab, "tab-results")),
+            ("Alt+6", partial(self.show_results_tab, "tab-drc")),
+        ):
+            shortcut = QShortcut(QKeySequence(keys), self)
+            shortcut.setContext(Qt.ShortcutContext.WindowShortcut)
+            shortcut.activated.connect(slot)
+
+    def show_results_tab(self, tab_id: str) -> None:
+        """Bring a results tab forward (Alt+5 Results, Alt+6 DRC, the DRC command and the status bar link)."""
+        tab = self.results_tabs.findChild(QWidget, tab_id)
+        if tab is not None:
+            self.results_tabs.setCurrentWidget(tab)
+
+    def guide_window(self) -> GuideWindow:
+        """Return the guide window, created on first use."""
+        if self.guide is None:
+            self.guide = GuideWindow(self.registry, self)
+        return self.guide
+
+    def show_equations(self, eq_id: str | None = None) -> None:
+        """Open the equation register at an entry (an EQ chip) or at its first entry (the toolstrip)."""
+        guide = self.guide_window()
+        guide.show_topic(eq_id or next(iter(self.registry.equations)))
+        guide.show()
+        guide.raise_()
+
+    def show_help(self) -> None:
+        """F1: open the guide at the topic of the focused widget (its whatsThis or a parent's)."""
+        widget = QApplication.focusWidget()
+        hint = None
+        while widget is not None and not hint:
+            hint = widget.whatsThis() or None
+            widget = widget.parentWidget()
+        guide = self.guide_window()
+        guide.show_topic(topic_for(hint, self.registry))
+        guide.show()
+        guide.raise_()
+
+    def _export_source(self) -> tuple[ComputeOutcome | None, bool]:
+        shown, outdated = self.session.drawn(self.outcome.state.value)
+        return (None, False) if shown is None else (shown.outcome, outdated)
+
+    def show_export(self, command: str) -> None:
+        """Open the Export dialog with the format of a toolstrip command checked."""
+        dialog = ExportDialog(self.export_vm, PRESETS[command], self.tokens, self)
+        dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        self.export_dialog = dialog
+        dialog.open()
 
     def _empty_page(self) -> QWidget:
         page = QWidget()
@@ -477,6 +518,9 @@ class MainWindow(QMainWindow):
             label = QLabel()
             label.setObjectName(name)
             self.status[name] = label
+            if name == "st-drc":
+                label.setTextFormat(Qt.TextFormat.RichText)
+                label.linkActivated.connect(lambda _: self.show_results_tab("tab-drc"))
             if name == "st-compute":
                 bar.addWidget(label, 1)
             else:
@@ -493,8 +537,11 @@ class MainWindow(QMainWindow):
         style.apply_theme(app, self.tokens)
         self.toolstrip.apply_theme(self.tokens)
         self.inspector_tab_bar.set_ring(self.tokens)
+        self.results_tab_bar.set_ring(self.tokens)
         ring = f"{self.tokens.focus_ring_px}px solid {self.tokens.colours['focus-ring']}"
         self.issues_list.setStyleSheet(f"QListWidget#issues-list:focus {{ border: {ring}; }}")
+        for region in (self.results_tabs, self.rail):
+            region.setStyleSheet(focus_ring_qss(self.tokens))
         self._render()
 
     def on_os_scheme_changed(self) -> None:
@@ -510,9 +557,10 @@ class MainWindow(QMainWindow):
         self._show_stale(outdated)
         compute_word = {OutcomeComputing: "updating", OutcomeFailed: "error"}.get(type(state), "ready")
         self.status["st-compute"].setText(text(f"shell.st-compute.{compute_word}"))
-        self.rail_empty.setVisible(shown is None)
-        for card in self.cards.values():
-            card.setVisible(shown is not None)
+        self._render_results(state, shown.outcome if shown else None, outdated)
+        self.rail.show_summary(shown.summary if shown else None, self.tokens, stale=outdated)
+        for action_id in EXPORT_ACTIONS:
+            self.toolstrip.actions_by_id[action_id].setEnabled(shown is not None)
         if shown is None:
             self.status["st-drc"].setText(text("shell.st-drc.none"))
             self.status["st-counts"].setText("")
@@ -521,8 +569,6 @@ class MainWindow(QMainWindow):
                 None, self.tokens, self.appearance.phase_render_mode.value, self.outcome.hidden_layers.value
             )
             return
-        for item in shown.summary:
-            self.cards[item.key].show_item(item)
         self._show_counts(shown)
         scene = shown.scene
         self._sync_layer_boxes(scene.layers if scene else ())
@@ -534,11 +580,13 @@ class MainWindow(QMainWindow):
         drc = shown.outcome.drc
         failures = sum(r.violation_count for r in drc) if drc is not None else 0
         if drc is None:
-            self.status["st-drc"].setText(text("shell.st-drc.none"))
+            word = text("shell.st-drc.none")
         elif failures == 0:
-            self.status["st-drc"].setText(text("shell.st-drc.pass"))
+            word = text("shell.st-drc.pass")
         else:
-            self.status["st-drc"].setText(text("shell.st-drc.fail", count=failures))
+            word = text("shell.st-drc.fail", count=failures)
+        ink = self.tokens.colours["text-1"]
+        self.status["st-drc"].setText(f'<a href="tab-drc" style="color: {ink}; text-decoration: underline">{word}</a>')
         scene = shown.scene
         if scene is None:
             self.status["st-counts"].setText("")
@@ -548,6 +596,16 @@ class MainWindow(QMainWindow):
         self.status["st-counts"].setText(
             text("shell.st-counts.text", layers=len(scene.layers), coils=len(coils), vias=vias)
         )
+
+    def _render_results(self, state: OutcomeState, outcome: ComputeOutcome | None, outdated: bool) -> None:
+        mode = self.appearance.phase_render_mode.value
+        self.results.show(outcome.analysis if outcome else None, stale=outdated)
+        self.results_tab.set_tokens(self.tokens)
+        self.results_tab.set_computing(isinstance(state, OutcomeComputing))
+        self.drc_tab.show_table(drc_table(outcome), self.tokens)
+        self.back_emf_tab.show_outcome(outcome, self.tokens, mode)
+        self.torque_speed_tab.show_outcome(outcome, self.tokens, mode)
+        self.compare_tab.show_outcome(outcome, self.tokens)
 
     def _sync_layer_boxes(self, layers: tuple[str, ...]) -> None:
         if tuple(self.layer_boxes) != layers:
