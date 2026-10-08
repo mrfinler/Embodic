@@ -324,6 +324,7 @@ Qt `objectName` equals the Phase 1 id without `#`. `param-*` ids are kept unchan
 | Canvas | +, -, 0 | Zoom in, out, fit |
 | Canvas | L, G, C, M, T | Labels, greyscale, current, magnets, terminals |
 | Canvas | [ and ] | Previous or next layer solo |
+| Canvas | Page Up, Page Down | Previous or next item of `board-picker`, one board per phase only (`screens.md` section 4.1, assumption) |
 | Canvas | A, B, C (Shift), Esc | Highlight phase, clear. Shift+C highlights phase C because C alone toggles current arrows. |
 | Toolstrip, tabs, tables | Arrow keys, Home, End | Move inside the widget; Tab leaves it |
 

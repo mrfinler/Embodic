@@ -4,9 +4,10 @@
     .venv/bin/python docs/phase2/design/checks/screens_coverage.py          # check; exit 1 on a finding
     .venv/bin/python docs/phase2/design/checks/screens_coverage.py --table  # print the coverage table
 
-Findings: an objectName defined in two rows; a binding pointer that is not a FIELDS pointer; a required pointer of a
-blank draft, or a required field under a bound container, that no widget binds for its topology; a coverage table in
-screens.md that differs from the generated one.
+Findings: an objectName defined in two rows; a binding pointer that is not a FIELDS pointer and not in AWAITING_FIELDS;
+an AWAITING_FIELDS pointer that FIELDS now holds; a required pointer of a blank draft, or a required field under a
+bound container, that no widget binds for its topology; a coverage table in screens.md that differs from the generated
+one.
 """
 
 from __future__ import annotations
@@ -28,8 +29,8 @@ WIDGET_ID = re.compile(r"`([a-z][a-z0-9*<>-]*)`")
 POINTER = re.compile(r"`(/[a-z0-9_/*]+)`")
 SEPARATOR = re.compile(r"^\|(\s*:?-+:?\s*\|)+\s*$")
 TABLE_START = "| Pointer | spiral | serpentine | wave |"
-# Required in a blank draft today, leaves the required set in the U-M2a fix round (screen_model_reconciliation.md R9).
-PENDING = {("/phases", TopologyKind.SPIRAL): "none (R9: optional, neutral 3)"}
+# Pointers a decision has settled that FIELDS does not hold yet. Each entry becomes a finding once FIELDS holds it.
+AWAITING_FIELDS = {"/outline/screws/*/hole_diameter_mm": "D-031a, U-M2d-3"}
 
 
 def _cells(line: str) -> list[str]:
@@ -105,8 +106,6 @@ def _coverage_table(bound: dict, missing: dict[TopologyKind, list[str]]) -> list
         for topology in TopologyKind:
             if pointer not in missing[topology]:
                 row.append("not required")
-            elif (pointer, topology) in PENDING:
-                row.append(PENDING[(pointer, topology)])
             else:
                 row.append(", ".join(f"`{w}`" for w in bound.get((pointer, topology), ["MISSING"])))
         lines.append(f"| `{pointer}` | " + " | ".join(row) + " |")
@@ -119,14 +118,21 @@ def main() -> int:
     missing = _blank_missing()
     findings = [f"objectName defined in {n} rows: {w}" for w, n in sorted(defined.items()) if n > 1]
     model = {spec.pointer for spec in FIELDS}
-    findings += [f"binding pointer is not a FIELDS pointer: {p}" for p in sorted(set(pointers) - model)]
+    findings += [
+        f"binding pointer is not a FIELDS pointer: {p}" for p in sorted(set(pointers) - model - set(AWAITING_FIELDS))
+    ]
+    findings += [
+        f"FIELDS now holds {p} ({why}): remove it from AWAITING_FIELDS"
+        for p, why in AWAITING_FIELDS.items()
+        if p in model
+    ]
     for topology in TopologyKind:
         for pointer in missing[topology]:
-            if (pointer, topology) not in bound and (pointer, topology) not in PENDING:
+            if (pointer, topology) not in bound:
                 findings.append(f"{topology.value}: blank-draft required pointer without a widget: {pointer}")
         for spec in field_specs(topology):
             key = (spec.pointer, topology)
-            if spec.required and key not in bound and key not in PENDING and _reachable(spec.pointer, topology, bound):
+            if spec.required and key not in bound and _reachable(spec.pointer, topology, bound):
                 findings.append(f"{topology.value}: required field without a widget: {spec.pointer}")
     table = _coverage_table(bound, missing)
     if "--table" in sys.argv:
@@ -138,6 +144,8 @@ def main() -> int:
         findings.append("coverage table in screens.md differs from --table output")
     counts = ", ".join(f"{t.value} {len(missing[t])}" for t in TopologyKind)
     print(f"{len(defined)} objectNames, {len(set(pointers))} binding pointers, blank-draft required: {counts}")
+    for pointer, why in AWAITING_FIELDS.items():
+        print(f"awaiting FIELDS: {pointer} ({why})")
     findings = list(dict.fromkeys(findings))
     print("\n".join(findings) if findings else "no findings")
     return 1 if findings else 0

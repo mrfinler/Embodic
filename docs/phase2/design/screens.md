@@ -1,10 +1,18 @@
 Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5
 
-# embodic screens v2 (Phase 2, PySide6)
+# embodic screens v2.1 (Phase 2, PySide6)
 
-Date 2026-10-05. Read with `design_spec.md` (tokens, toolstrip, hooks, keyboard map). v2 applies rows R1 to R14 of
-`docs/phase2/architecture/screen_model_reconciliation.md` to sections 1 to 5, 6 and 7. Sections 8 to 14 are unchanged
-from v1.
+Date 2026-10-08. Read with `design_spec.md` (tokens, toolstrip, hooks, keyboard map). v2 applied rows R1 to R14 of
+`docs/phase2/architecture/screen_model_reconciliation.md` to sections 1 to 5, 6 and 7. v2.1 (U-S4c) follows the model
+after U-M2a-fix and U-M2a-fix2 and decisions D-024, D-025d and D-031:
+
+- Section 16 is regenerated. `/phases` is optional for every topology (DEF-1).
+- Section 4 shows `param-stack-mode` and `param-board-gap` (D-016 fields exist now) and specifies how the layer pairs
+  follow the copper count (D-024). Section 4.1 proposes the board picker for one board per phase (`assumption`).
+- Section 5 adds `param-screw-hole-diameter` (D-031a).
+- Section 15 drops the requests that U-M2a-fix closed.
+
+Sections 8 to 14 are unchanged from v1.
 
 Conventions for every table:
 
@@ -31,6 +39,8 @@ Conventions for every table:
   `RANGE_ABOVE_SUPPORTED`. A quoted text without a code is a proposal to the unit that owns the rule.
 - Validation runs on commit. The message goes in `<id>-error` (`QLabel[class="field-error"]`), the field gets
   `invalid=true`, and the Checks list gets the same text. An INFO issue shows as a hint under the field, not an error.
+  A WARNING issue shows in `<id>-error` with `state=warn`, the `check-warn` icon and the word "Warning" before the
+  text. The field does not get `invalid=true`, and compute still runs.
 - Hidden vs disabled. A field that does not apply to the active topology or option is hidden with its label, unit and
   chip (`setVisible(False)` on the row). A field blocked by a sibling option in the same group is disabled and its hint
   names the option ("Not used with straight ends").
@@ -126,14 +136,15 @@ State rules:
 | `param-rotation-mode` | "Pair rotation", segment None, Alternate, Custom | view model: writes `/winding/layers/pairs/*/rotation_rad` | spiral | none | none |
 | `param-pair-rotation` | "Rotation of the selected pair", degrees | `/winding/layers/pairs/*/rotation_rad` | spiral | default | none |
 | `param-layers-per-phase` | "Layers per phase" | `/winding/layers_per_phase` | serpentine | required | `INVALID_LAYERS_PER_PHASE` |
-| `param-stack-mode` | QComboBox "Stack mode"; hidden (R8) | none yet (D-016 contract change) | serpentine | none | none |
+| `param-stack-mode` | "Boards", segment "Single board", "One board per phase" | `/winding/stack_mode` | serpentine | default | `INVALID_SERPENTINE_COPPER_COUNT` |
 | `param-layer-order` | "Layer order", QComboBox Grouped, Interleaved | `/winding/layer_order` | serpentine | default | none |
-| `param-board-gap` | "Board gap", mm; hidden (R8) | none yet (D-016 contract change) | serpentine | none | none |
+| `param-board-gap` | "Gap between boards", mm | `/winding/board_gap_mm` | serpentine | default | none |
 | `param-via-drill` | "Via drill", mm | `/vias/drill_mm` | spiral, serpentine, wave | required | `INVALID_VIA_RING` |
 | `param-via-pad` | "Via pad", mm | `/vias/pad_mm` | spiral, serpentine, wave | required | `INVALID_VIA_RING` |
 | `param-vias-per-transition` | "Vias per transition" | `/vias/vias_per_transition` | spiral, serpentine, wave | default | none |
 | `param-via-plating` | "Via plating", µm | `/vias/plating_um` | spiral, serpentine, wave | required, property | none |
-| `layer-list` | QTableView: layer, kind, group, rotation, joins via, copper µm, show; Space toggles "show" | `/stackup/layers`, `/stackup/layers/*/kind`, `/stackup/layers/*/name`, `/stackup/layers/*/thickness_mm`, `/stackup/layers/*/material`, `/winding/layers/pairs`, `/winding/layers/pairs/*/index`, `/winding/layers/pairs/*/layer_in`, `/winding/layers/pairs/*/layer_out`, `/winding/layers/pairs/*/phases`, `/winding/layers/series_groups` | spiral, serpentine, wave | required | `INVALID_STACKUP_NO_COPPER`, `INVALID_LAYER_NAME_DUPLICATE`, `INVALID_PAIR_LAYER_UNKNOWN`, `INVALID_PAIR_LAYER_SAME`, `INVALID_PAIR_INDEX_DUPLICATE`, `INVALID_SERIES_GROUPS` |
+| `layer-list` | QTableView: layer, kind, pair, group, rotation, joins via, copper µm, show; Space toggles "show"; Delete removes the selected pair (spiral) | `/stackup/layers`, `/stackup/layers/*/kind`, `/stackup/layers/*/name`, `/stackup/layers/*/thickness_mm`, `/stackup/layers/*/material`, `/winding/layers/pairs`, `/winding/layers/pairs/*/index`, `/winding/layers/pairs/*/layer_in`, `/winding/layers/pairs/*/layer_out`, `/winding/layers/pairs/*/phases`, `/winding/layers/series_groups` | spiral, serpentine, wave | required | `INVALID_STACKUP_NO_COPPER`, `INVALID_LAYER_NAME_DUPLICATE`, `INVALID_PAIR_LAYER_UNKNOWN`, `INVALID_PAIR_LAYER_SAME`, `INVALID_PAIR_INDEX_DUPLICATE`, `INVALID_SERIES_GROUPS`, `RANGE_SPIRAL_COPPER_COUNT_ODD` (WARNING), `INVALID_SERPENTINE_COPPER_COUNT` |
+| `layer-pairs-notice` | QFrame[class="notice"] under `layer-list`: one sentence and an **Undo** button | derived: what `derive_layer_pairs` changed in the last edit | spiral | hidden | none |
 
 State rules:
 
@@ -142,20 +153,88 @@ State rules:
   `generate_even_stackup(copper_count, copper_thickness_mm, board_thickness_mm)`, with the copper weight converted by
   `copper_oz_to_mm`, and writes `/stackup/layers` as one undoable edit. `layer-list` edits the result. Proposal: after
   a manual `layer-list` edit, a generator input change asks "Replace the edited stack-up?" before it writes.
-- For serpentine the copper count must equal phases times layers per phase (UT-GEN-03), so `param-layer-count` offers
-  only that value.
-- The pair columns of `layer-list` (rotation, group, joins via) show for spiral only. The group column edits
-  `/winding/layers/series_groups`. Proposal to U-M4c: for spiral, the generator edit also writes one pair per two
-  consecutive copper layers, all in series, so a blank design does not start with an empty pair list (open question).
+- Serpentine copper count (UT-GEN-03, D-031e). On a single board the copper count equals phases times layers per
+  phase. With one board per phase the stack-up describes one board, so the count equals layers per phase
+  (`INVALID_SERPENTINE_COPPER_COUNT`). `param-layer-count` offers only the value that applies. Today the model checks
+  the count only for one board per phase (`validate.py` `_serpentine_layers`, `verified` by reading).
+- The pair columns of `layer-list` (pair, group, rotation, joins via) show for spiral only. The pair column shows the
+  pair index plus one ("Pair 1" is index 0). The group column edits `/winding/layers/series_groups`.
 - Rotation mode (R4) reads the current pair rotations. None writes 0 to every pair. Alternate writes pi/Q to every
   second pair, Q being the coil count (option M3, UT-GEO-11). Custom shows `param-pair-rotation`, which edits the pair
   selected in `layer-list`; the other modes hide it.
-- `param-stack-mode` and `param-board-gap` stay hidden until the D-016 fields exist in the contract (R8). Then
-  `param-board-gap` shows only when the stack mode is "stacked boards".
 - The field check `INVALID_VIA_RING` compares the via pad with the drill. The DRC check `DRC_ANNULAR_RING` compares
   pad minus drill with twice `param-min-ring` and reports in the DRC table. A design can pass the first and fail the
   second (R13).
 - Rotation of layer groups shows as solid and dashed footprints on the canvas.
+
+Layer pairs follow the copper count (spiral, D-024, D-025d):
+
+- Every edit that changes the number of copper layers calls `derive_layer_pairs(draft)` and writes its result in the
+  same undoable edit. These edits are a stack-up generator write, an added or removed copper row in `layer-list`, and
+  a loaded project file. Pair k joins copper layers 2k and 2k + 1 in stack order. A blank spiral design therefore shows
+  its pairs as soon as the three stack-up generator inputs hold values.
+- A new pair starts with its rotation at the documented default and a `default` chip in the rotation cell, in its own
+  series group.
+- A pair that still exists after the edit keeps every value the user gave it (rotation, phases, group) and its
+  `user` chips.
+- When the count falls, the pairs past the new count go, with their group entries.
+- `layer-pairs-notice` names what the edit changed, for example "Layer pairs: 3. Pair 3 added with the default
+  rotation." or "Layer pairs: 1. Pair 2 removed: the stack-up has 2 copper layers." **Undo** reverts the whole edit,
+  the copper count included (UX-AC-12). The notice hides at the next edit.
+- Delete on a selected pair row removes that pair, not its copper layers. The two layers show "No coil" in the pair
+  column, and `layer-pairs-notice` reads "Pair 2 removed. It returns with default values when the copper layer count
+  changes." The count is the structure, so a later count change derives the pair again (Fable ruling on U-M2a-fix2).
+  Today this fails for a pair that is not the last one: `derive_layer_pairs` keys the surviving pairs by list
+  position, so the pairs after the deleted one shift and the next derivation repeats an index
+  (`checks/pair_delete_probe.py` exits 1, `verified` by running on 2026-10-08; DEF-S4c-01).
+- An odd copper count leaves the last copper layer without a pair. Its pair column reads "No coil", and
+  `layer-list-error` shows the WARNING text of `RANGE_SPIRAL_COPPER_COUNT_ODD`: "Spiral coils use copper layers in
+  pairs; with an odd count one copper layer carries no coil." Compute still runs. `param-layer-count` offers only even
+  counts, so an odd count comes from a `layer-list` edit or a loaded file.
+- After a count change, rotation mode reads the rotations again. A new pair at the default rotation can turn Alternate
+  into Custom; choosing Alternate again applies it to every pair.
+
+Stack mode (serpentine, D-016):
+
+- "One board per phase" builds one board per phase, each with the stack-up in `layer-list` (interfaces.md §2.2).
+  The board picker of section 4.1 appears.
+- `param-board-gap` is disabled with the hint "Used only with one board per phase." while the mode is "Single board".
+  `param-layer-order` is disabled with the hint "Not used with one board per phase: each board holds one phase." while
+  the mode is "One board per phase" (Xcoil `ui.js` l.236 and `engine.js` l.681, cited in interfaces.md §2.2).
+- With one board per phase no board carries a star or delta interconnect (interfaces.md §5). Proposal for a hint under
+  `param-connection`: "One board per phase: connect the phases between the boards."
+
+### 4.1 Board picker for one board per phase (`assumption` until U-M4c tests it)
+
+A serpentine design with `/winding/stack_mode` = `one_board_per_phase` produces a `BoardStack` of one `Layout` per
+board, board k holding phase k (interfaces.md §5). The user needs to see the whole stack and each board. One control
+does both.
+
+| objectName | Qt widget | Binding key | Topology | Start | Messages |
+|---|---|---|---|---|---|
+| `board-picker` | QComboBox in the toolstrip View section, caption "Board": "All boards", "Board A", "Board B", "Board C" (one item per phase) | control: canvas view state, not a design value | serpentine | "All boards" | none |
+
+- Place. The View section of the toolstrip, beside the canvas toggles, because the choice changes what the canvas
+  draws and nothing in the design. It is not in the inspector: the inspector holds design values with provenance
+  chips, and a view choice there would look like one.
+- Visibility. Shown only while the design has more than one board. It is hidden for spiral, wave and single-board
+  serpentine designs, because it never applies there (P3). The items follow `/phases` before the first compute.
+- Default "All boards". The canvas draws every board's copper over one outline, each phase in its colour, line style
+  and coil-eye hatch (design_spec.md section 3.3). The picture matches the single-board view of the same winding, so
+  switching the stack mode does not change what the user sees first. "Board A" draws board A only.
+- Names. Boards carry the letter of the phase they hold, as the exports do (`_board` plus the phase letter,
+  interfaces.md §5). The UI does not show Xcoil's `B1:` prefix, because "B1" reads as phase B.
+- Never colour alone (D-011). Each item names its letter. A phase-colour swatch beside an item repeats the letter and
+  turns grey in greyscale mode.
+- Keyboard. Page Up and Page Down on the focused canvas select the previous or next item. Layer solo (`[` and `]`)
+  works inside the selected board, or on every board for "All boards".
+- DRC. `drc-summary` counts the whole stack and then each board: "DRC: 2 failures, 0 warnings. Board A pass, Board B
+  2 failures, Board C pass." `drc-table` gains a "Board" column and lists every board whatever the picker shows, so a
+  failure is never hidden by a view choice. **Locate** sets the picker to the row's board, then zooms.
+- Results. The picker does not change results. Physics reads every board of the stack (`analyse`, interfaces.md §5),
+  and phase results are per phase as before. `st-counts` reads "3 boards, 2 copper layers each" (example values).
+- Export. The picker does not change exports. SVG and DXF write one file per board, and `export-result` lists each
+  file (interfaces.md §5).
 
 ## 5. Board and rotor (`tab-board`)
 
@@ -169,7 +248,8 @@ One `QGroupBox` per group, in this order. Every row applies to all three topolog
 | `param-outline-rotation` | Outline | "Rotation", degrees | `/outline/board/rotation_rad` (polygon) | default | none |
 | `param-corner-radius-board` | Outline | "Corner radius", mm | `/outline/board/corner_radius_mm` (polygon) | default | none |
 | `param-bore` | Outline | "Centre bore": segment None, Circle, Polygon, then radius, or sides, across flats, corner radius and rotation | `/outline/bore`, `/outline/bore/shape`, `/outline/bore/radius_mm`, `/outline/bore/sides`, `/outline/bore/across_flats_mm`, `/outline/bore/corner_radius_mm`, `/outline/bore/rotation_rad` | required | none |
-| `screw-table` | Fasteners | QTableView: size, fit, count, pitch radius (mm), angle offset (degrees); one row per screw pattern | `/outline/screws`, `/outline/screws/*/size`, `/outline/screws/*/fit`, `/outline/screws/*/count`, `/outline/screws/*/pitch_radius_mm`, `/outline/screws/*/angle_offset_rad` | default (no patterns) | DRC `DRC_COPPER_HOLE` |
+| `screw-table` | Fasteners | QTableView: size, fit, hole diameter (mm, read-only), count, pitch radius (mm), angle offset (degrees); one row per screw pattern | `/outline/screws`, `/outline/screws/*/size`, `/outline/screws/*/fit`, `/outline/screws/*/count`, `/outline/screws/*/pitch_radius_mm`, `/outline/screws/*/angle_offset_rad` | default (no patterns) | DRC `DRC_COPPER_HOLE` |
+| `param-screw-hole-diameter` | Fasteners | "Hole diameter of the selected pattern", mm | `/outline/screws/*/hole_diameter_mm` | required when a pattern exists, no default (D-031a) | none |
 | `btn-screw-add` | Fasteners | QToolButton "Add pattern" | command | none | none |
 | `btn-screw-remove` | Fasteners | QToolButton "Remove pattern" | command | none | none |
 | `param-copper-weight` | Stack-up and manufacturing | "Copper weight", oz | view model: stack-up generator writes `/stackup/layers` | empty | none |
@@ -209,6 +289,12 @@ State rules:
 - The arc rows of the magnet show for Arc, the block rows for Block.
 - `screw-table` starts with no rows. Each new row starts with its required cells empty. An example ported from the
   two Xcoil rings has two rows (R6).
+- `param-screw-hole-diameter` edits the pattern selected in `screw-table`, as `param-pair-rotation` does for pairs. It
+  is a field and not a table cell because a required value needs the unit label, the provenance chip, the "Required"
+  hint and the error label, and a cell carries none of them. It is hidden while the table has no rows. A new pattern
+  starts with the hole diameter empty, and its read-only cell reads "Required". **Go to first missing field** selects
+  the row and focuses the field. The UI fills no ISO 273 value; such values ship only as labelled example values once
+  Agent 5 cites the source (D-031a, U-S3b).
 - Rotor and magnets shows the pole count of `param-poles` read-only.
 - B_r, mu_r and h start empty like every required field (R10, D-014): a default B_r would be a physical assumption
   inside Ke. Of the optional groups only Drive is in the form.
@@ -309,15 +395,17 @@ of the focused field (field `whatsThis` holds the topic id).
 
 ## 15. Requests to other owners
 
-screens.md v2 names these changes; each owner applies them through Fable.
+screens.md names these changes; each owner applies them through Fable. U-M2a-fix closed the v2 requests for widget
+ids, `/phases` and `RANGE_COIL_GAP_BELOW_CLEARANCE` (`screen_model_diff.py` lists 2 and 3 empty, 2026-10-08).
 
 | To | Request | Row |
 |---|---|---|
-| U-M2a fix round (`fields.py`) | Set `widget_id` for the new widgets: `param-phase-count` (`/phases`), `param-bus-width`, `param-ring-width`, `param-terminal-pad`, `param-terminal-drill`, `param-terminal-location` (`/winding/terminal_side`), `param-via-plating`, `param-back-iron`, `param-min-via-space`, `param-min-edge`, `param-min-hole-space`, `param-min-ring` | R5, R9 |
-| U-M2a fix round (`fields.py`) | Set `widget_id` `screw-table` for `/outline/screws` and every `/outline/screws/*` leaf; `param-screw-fit` no longer exists | R6 |
-| U-M2a fix round (`fields.py`) | Set `widget_id` for the magnet geometry, which is required once a magnet shape is chosen: `param-magnet-arc-ratio`, `param-magnet-r-inner`, `param-magnet-r-outer` (arc), `param-magnet-width`, `param-magnet-length`, `param-magnet-r-center` (block). No row of the reconciliation covers them, because `screen_model_diff.py` reads only blank drafts | none |
-| U-M2a fix round (model) | `/phases` optional with neutral value 3; issue `RANGE_COIL_GAP_BELOW_CLEARANCE` (INFO, Suggestion of the trace spacing) | R9, R12 |
-| U-M4c | Stack-up generator, rotation mode helper, required-field bar and the spiral pair proposal of section 4 | R3, R4, R11 |
+| U-M2d-3 (`fields.py`) | Add `/outline/screws/*/hole_diameter_mm` with `widget_id` `param-screw-hole-diameter` (D-031a). `screens_coverage.py` then reports that its `AWAITING_FIELDS` entry must go | D-031a |
+| U-M2d-3 (model) | The single-board serpentine copper-count check (copper count = phases times layers per phase) | D-031e |
+| Model owner (`draft.py`) | DEF-S4c-01: `derive_layer_pairs` must keep a surviving pair by its identity, not its list position, so a deleted middle pair returns and no index repeats. `checks/pair_delete_probe.py` exits 0 when fixed | D-024 |
+| U-M4c | Stack-up generator, rotation mode helper and required-field bar | R3, R4, R11 |
+| U-M4c | Layer pairs: call `derive_layer_pairs` in the edit that changes the copper count, and `layer-pairs-notice` (section 4) | D-024 |
+| U-M4c | Stack mode applicability and the board picker (section 4.1, `assumption`; UX-AC-26) | D-016 |
 | Owners of the rules | The quoted proposals in sections 1 to 5 have no issue code yet | R14 |
 
 ## 16. Required pointers of a blank draft and their widgets
@@ -328,7 +416,6 @@ the same script fails when this table drifts. A cell names the widget that fills
 | Pointer | spiral | serpentine | wave |
 |---|---|---|---|
 | `/name` | `param-design-name` | `param-design-name` | `param-design-name` |
-| `/phases` | none (R9: optional, neutral 3) | `param-phase-count` | `param-phase-count` |
 | `/winding/coil/coil_count` | `param-coil-count` | not required | not required |
 | `/winding/coil/r_inner_mm` | `param-r-inner` | not required | not required |
 | `/winding/coil/r_outer_mm` | `param-r-outer` | not required | not required |
