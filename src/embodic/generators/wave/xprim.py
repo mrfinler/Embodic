@@ -150,8 +150,8 @@ def rotate_prims(prims: list[XPrim], ang: float) -> list[XPrim]:
 
 def unit(x: float, y: float) -> tuple[float, float]:
     """Xcoil unit (l.1713): a zero vector divides by 1."""
-    length = hypot_mm(x, y) or 1.0
-    return x / length, y / length
+    length_mm = hypot_mm(x, y) or 1.0
+    return x / length_mm, y / length_mm
 
 
 def prim_dir_at(q: XPrim, at_end: bool) -> tuple[float, float]:
@@ -177,18 +177,18 @@ def prim_dir_end_angle(q: XPrim) -> float:
     return q.a2 + (1 if q.a2 >= q.a1 else -1) * math.pi / 2
 
 
-def trim_prim_end(q: XPrim, length: float) -> XPrim | None:
-    """Xcoil trimPrimEnd: shorten the end by ``length``; None when nothing remains."""
+def trim_prim_end(q: XPrim, length_mm: float) -> XPrim | None:
+    """Xcoil trimPrimEnd: shorten the end by ``length_mm``; None when nothing remains."""
     total = prim_length(q)
-    if length >= total - 1e-9:
+    if length_mm >= total - 1e-9:
         return None
     if isinstance(q, XLine):
-        f = (total - length) / total
+        f = (total - length_mm) / total
         return replace(q, x2=q.x1 + (q.x2 - q.x1) * f, y2=q.y1 + (q.y2 - q.y1) * f)
-    return replace(q, a2=q.a1 + (q.a2 - q.a1) * (total - length) / total)
+    return replace(q, a2=q.a1 + (q.a2 - q.a1) * (total - length_mm) / total)
 
 
-def trim_prim_start(q: XPrim, length: float) -> XPrim | None:
+def trim_prim_start(q: XPrim, length_mm: float) -> XPrim | None:
     """Xcoil trimPrimStart."""
-    r = trim_prim_end(reverse_prims([q])[0], length)
+    r = trim_prim_end(reverse_prims([q])[0], length_mm)
     return reverse_prims([r])[0] if r else None

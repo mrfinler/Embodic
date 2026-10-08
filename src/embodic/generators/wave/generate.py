@@ -13,7 +13,7 @@ import math
 
 from embodic.errors import IssueCategory, Severity, Unbuildable, ValidationIssue, message_for
 from embodic.generators.wave.assemble import Obj, SeriesElement, WaveBuild, assemble_layout, build_in_layer_order
-from embodic.generators.wave.build import WaveGeometry, build_wave
+from embodic.generators.wave.build import Track, WaveGeometry, build_wave
 from embodic.generators.wave.derive import WaveFrame, WaveParams, WaveRefusal, derive_wave, max_wave_turns
 from embodic.generators.wave.interconnect import IcPad, PadSpec, build_interconnect
 from embodic.generators.wave.overlap import build_overlap
@@ -26,6 +26,7 @@ from embodic.results import Registry
 MAX_POLES = 200  # Xcoil normalizeParams ranges (l.114-120)
 MAX_TURNS = 200
 MAX_LAYERS = 16
+MAX_SLOTS = 2400  # assumption: no wave winding approaches it (Xcoil's defaults use 96); bounds time and memory
 _REFUSAL_CODES = {
     "WAVE_MIN_POLES": ("UNBUILDABLE_WAVE_MIN_POLES", "/rotor/poles"),
     "WAVE_SLOT_PITCH": ("UNBUILDABLE_WAVE_SLOT_PITCH", "/winding/turns"),
@@ -67,18 +68,21 @@ def _out_of_range(design: DesignParameters, spec: WaveWindingSpec) -> tuple[str,
         bad.append("/winding/turns")
     if not (2 <= design.rotor.poles <= MAX_POLES and design.rotor.poles % 2 == 0):
         bad.append("/rotor/poles")
+    elif design.rotor.poles * design.phases * spec.turns > MAX_SLOTS:
+        bad.append("/winding/turns")
     return tuple(bad)
 
 
-def wave_params(design: DesignParameters, spec: WaveWindingSpec) -> WaveParams:
+def wave_params(design: DesignParameters, spec: WaveWindingSpec, start_angle_deg: float = 0.0) -> WaveParams:
     """Xcoil's flat parameter names for the wave builders, read from the design."""
     return WaveParams(
+        start_angle_deg=start_angle_deg,
         poles=design.rotor.poles, phases=design.phases, turns=spec.turns, r_in=spec.r_inner_mm, r_out=spec.r_outer_mm,
-        trace_width=spec.trace_width_mm, clearance=spec.clearance_mm,
-        end_width_outer=spec.end_width_outer_mm or 0.0, end_width_inner=spec.end_width_inner_mm or 0.0,
-        via_pad=design.vias.pad_mm, via_drill=design.vias.drill_mm, wave_layers=len(design.stackup.copper_layers()),
+        trace_width_mm=spec.trace_width_mm, clearance_mm=spec.clearance_mm,
+        end_width_outer_mm=spec.end_width_outer_mm or 0.0, end_width_inner_mm=spec.end_width_inner_mm or 0.0,
+        via_pad=design.vias.pad_mm, via_drill_mm=design.vias.drill_mm, wave_layers=len(design.stackup.copper_layers()),
         wave_style=spec.wave_style.value, rounded=spec.corner_style is CornerStyle.ROUND,
-        fillet_radius=spec.fillet_radius_mm, bus_width=spec.bus_width_mm,
+        fillet_radius_mm=spec.fillet_radius_mm, bus_width_mm=spec.bus_width_mm,
     )  # fmt: skip
 
 
@@ -96,6 +100,13 @@ def _wants_interconnect(design: DesignParameters) -> bool:
     return conn.draw_interconnect and design.phases == 3 and conn.topology is not ConnectionTopology.OPEN
 
 
+def _end_via(t: Track) -> int:
+    """Via ring index of the via a track ends on in current direction (outer via 2k, inner via 2k + 1)."""
+    if t.kind == "T":
+        return 2 * t.via_out if t.sign > 0 else 2 * t.via_in + 1
+    return 2 * t.via_in + 1 if t.sign < 0 else 2 * t.via_out
+
+
 def _track_objects(frame: WaveFrame, geometry: WaveGeometry) -> tuple[list[Obj], dict[tuple[str, int], list[int]]]:
     """Tracks of every layer (T on even layers, B on odd ones) and the group links on layer 0, in Xcoil's order."""
     objects: list[Obj] = []
@@ -105,7 +116,7 @@ def _track_objects(frame: WaveFrame, geometry: WaveGeometry) -> tuple[list[Obj],
         for t in geometry.tracks_t if kind == "T" else geometry.tracks_b:
             by_slot.setdefault((kind, t.slot), []).append(len(objects))
             objects.append(Obj(layer=layer, kind="track", prims=t.prims, phase=t.phase, element=t.slot,
-                               polarity=1 if t.sign > 0 else -1))  # fmt: skip
+                               polarity=1 if t.sign > 0 else -1, end_via=_end_via(t)))  # fmt: skip
         if layer == 0:
             objects.extend(Obj(layer=0, kind="link", prims=lk.prims, phase=lk.phase) for lk in geometry.links)
     return objects, by_slot
@@ -133,10 +144,10 @@ def _series_elements(
 def _build_standard(design: DesignParameters, frame: WaveFrame) -> WaveBuild | Unbuildable:
     """Xcoil computeWave for involute, jog and chord: tracks, group links, interconnect."""
     geometry = build_wave(frame)
-    if geometry.r_link - geometry.link_width / 2 < 0.5 or not geometry.link_room:
+    if geometry.r_link - geometry.link_width_mm / 2 < 0.5 or not geometry.link_room:
         return _unbuildable("UNBUILDABLE_WAVE_LINK_ROOM", ("/winding/r_inner_mm",))
     objects, by_slot = _track_objects(frame, geometry)
-    r_min_cu = geometry.r_link - geometry.link_width / 2
+    r_min_cu = geometry.r_link - geometry.link_width_mm / 2
     r_max_cu = frame.r_vo + max(frame.pad, frame.w_out, frame.w if frame.style == "chord" else 0.0) / 2
     r_max_all = r_max_cu
     pads: tuple[IcPad, ...] = ()
@@ -144,8 +155,8 @@ def _build_standard(design: DesignParameters, frame: WaveFrame) -> WaveBuild | U
         conn = design.connection
         ic = build_interconnect(
             geometry.terms, connection="star" if conn.topology is ConnectionTopology.STAR else "delta", base=r_max_cu,
-            bus_width=conn.ring_width_mm, clearance=frame.s, via_pad=frame.pad,
-            pad=PadSpec(size=conn.terminal_pad_mm, drill=conn.terminal_drill_mm),
+            bus_width_mm=conn.ring_width_mm, clearance_mm=frame.s, via_pad=frame.pad,
+            pad=PadSpec(size=conn.terminal_pad_mm, drill_mm=conn.terminal_drill_mm),
             link_layers=list(range(frame.layers - 1, 0, -1)), line_layer=0,
         )  # fmt: skip
         if ic.unroutable:
@@ -161,7 +172,17 @@ def _build_standard(design: DesignParameters, frame: WaveFrame) -> WaveBuild | U
 
 
 def generate_wave(design: DesignParameters, registry: Registry) -> BoardStack | Unbuildable:
-    """Faithful port of Xcoil buildWave/buildWaveOverlap, one board; a winding other than wave raises TypeError."""
+    """Faithful port of Xcoil buildWave/buildWaveOverlap, one board; a winding other than wave raises TypeError.
+
+    The start angle is 0, Xcoil's default: ``WaveWindingSpec`` has no start angle (open question Q-1).
+    """
+    return generate_wave_rotated(design, registry, 0.0)
+
+
+def generate_wave_rotated(
+    design: DesignParameters, registry: Registry, start_angle_deg: float
+) -> BoardStack | Unbuildable:  # fmt: skip
+    """``generate_wave`` with Xcoil's ``startAngleDeg``: the whole winding turns rigidly by that angle (PR-14)."""
     spec = design.winding
     if not isinstance(spec, WaveWindingSpec):
         raise TypeError(f"generate_wave needs a wave winding, got {type(spec).__name__}")
@@ -170,7 +191,7 @@ def generate_wave(design: DesignParameters, registry: Registry) -> BoardStack | 
     layers = len(design.stackup.copper_layers())
     if layers < 2 or layers % 2 != 0 or layers > MAX_LAYERS:
         return _unbuildable("UNBUILDABLE_WAVE_LAYER_COUNT", ("/stackup/layers",))
-    params = wave_params(design, spec)
+    params = wave_params(design, spec, start_angle_deg)
     frame = derive_wave(params)
     if isinstance(frame, tuple):
         return _refusals(frame, params)

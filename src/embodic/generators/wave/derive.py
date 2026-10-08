@@ -32,18 +32,18 @@ class WaveParams:
     turns: int
     r_in: float
     r_out: float
-    trace_width: float
-    clearance: float
-    end_width_outer: float = 0.0
-    end_width_inner: float = 0.0
+    trace_width_mm: float
+    clearance_mm: float
+    end_width_outer_mm: float = 0.0
+    end_width_inner_mm: float = 0.0
     via_pad: float
-    via_drill: float
+    via_drill_mm: float
     start_angle_deg: float = 0.0
     wave_layers: int = 2
     wave_style: WaveStyleName = "involute"
     rounded: bool = True  # cornerStyle 'round'
-    fillet_radius: float = 0.4
-    bus_width: float = 1.0
+    fillet_radius_mm: float = 0.4
+    bus_width_mm: float = 1.0
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -59,7 +59,7 @@ class EndGeometry:
     """One end of the tracks: via ring radius, track spacing, the spacing required and the end-turn width."""
 
     rv: float
-    spacing: float
+    spacing_mm: float
     need: float
     w_end: float
     rb: float | None = None  # base radius of the involute end-turn; None for the other styles
@@ -90,16 +90,16 @@ class WaveFrame:
     r_vo: float
     r_vi: float
     r_track_min: float | None = None  # chord only
-    pitch_out: float = 0.0  # overlap only
-    pitch_in: float = 0.0
+    pitch_out_mm: float = 0.0  # overlap only
+    pitch_in_mm: float = 0.0
 
     def rho_out(self, level: int) -> float:
         """Xcoil W.rhoOut: radius of the outer end-turn arc at nesting ``level`` (overlap)."""
-        return self.p.r_out + self.w / 2 + self.s + self.w_out / 2 + level * self.pitch_out
+        return self.p.r_out + self.w / 2 + self.s + self.w_out / 2 + level * self.pitch_out_mm
 
     def rho_in(self, level: int) -> float:
         """Xcoil W.rhoIn: radius of the inner end-turn arc at nesting ``level`` (overlap)."""
-        return self.p.r_in - self.w / 2 - self.s - self.w_in / 2 - level * self.pitch_in
+        return self.p.r_in - self.w / 2 - self.s - self.w_in / 2 - level * self.pitch_in_mm
 
     def belt_phase(self, beta: int) -> int:
         """Xcoil beltPhase: the phase of belt ``beta`` (belts repeat every 2m)."""
@@ -151,7 +151,7 @@ def _solve_end(
         if chord >= pad + s - 1e-9:
             break
         d *= (pad + s) / chord * 1.01
-    return EndGeometry(rb=rb, rv=rv, spacing=rb * d_theta, need=need, w_end=w_end)
+    return EndGeometry(rb=rb, rv=rv, spacing_mm=rb * d_theta, need=need, w_end=w_end)
 
 
 def _seg(a: tuple[float, float], b: tuple[float, float]) -> XLine:
@@ -161,7 +161,7 @@ def _seg(a: tuple[float, float], b: tuple[float, float]) -> XLine:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class _Gap:
     ok: bool
-    spacing: float
+    spacing_mm: float
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -198,7 +198,7 @@ class _Base:
         d_via = min(point_segment_distance(bc[0], bc[1], seg), point_segment_distance(bm[0], bm[1], seg))
         via_chord = 2 * r_b * math.sin(dth / 2)
         ok = d_chord >= w_end + s - 1e-9 and d_via >= (pad + w_end) / 2 + s - 1e-9 and via_chord >= pad + s - 1e-9
-        return _Gap(ok=ok, spacing=d_chord)
+        return _Gap(ok=ok, spacing_mm=d_chord)
 
 
 def _refusal(code: RefusalCode, field: str) -> tuple[WaveRefusal, ...]:
@@ -211,8 +211,8 @@ def _derive_chord(b: _Base) -> WaveFrame | tuple[WaveRefusal, ...]:
     g1, g2 = b.gap_ok(rvi, -alpha, rvo, alpha, b.w), b.gap_ok(rvo, alpha, rvi, -alpha, b.w)
     if not rvi > 0.5 or not g1.ok or not g2.ok:
         return _refusal("WAVE_SLOT_PITCH", "turns")
-    outer = EndGeometry(rv=rvo, spacing=g2.spacing, need=b.w + b.s, w_end=b.w)
-    inner = EndGeometry(rv=rvi, spacing=g1.spacing, need=b.w + b.s, w_end=b.w)
+    outer = EndGeometry(rv=rvo, spacing_mm=g2.spacing_mm, need=b.w + b.s, w_end=b.w)
+    inner = EndGeometry(rv=rvi, spacing_mm=g1.spacing_mm, need=b.w + b.s, w_end=b.w)
     # a chord that sweeps a wide angle dips inside the inner via ring: remember its innermost radius for the group links
     ca, cb = polar(rvi, -alpha), polar(rvo, alpha)
     cl = hypot_mm(cb[0] - ca[0], cb[1] - ca[1])
@@ -270,8 +270,8 @@ def _derive_jog(b: _Base) -> WaveFrame | tuple[WaveRefusal, ...]:
     if inner_via is None or not inner_via[1].ok:
         return _refusal("WAVE_INNER_TIGHT", "turns")
     (rvo, g_o), (rvi, g_i) = outer_via, inner_via
-    outer = EndGeometry(rv=rvo, spacing=g_o.spacing, need=b.w_out + b.s, w_end=b.w_out)
-    inner = EndGeometry(rv=rvi, spacing=g_i.spacing, need=b.w_in + b.s, w_end=b.w_in)
+    outer = EndGeometry(rv=rvo, spacing_mm=g_o.spacing_mm, need=b.w_out + b.s, w_end=b.w_out)
+    inner = EndGeometry(rv=rvi, spacing_mm=g_i.spacing_mm, need=b.w_in + b.s, w_end=b.w_in)
     return b.frame(outer, inner)
 
 
@@ -285,9 +285,9 @@ def _derive_overlap(b: _Base) -> WaveFrame | tuple[WaveRefusal, ...]:
     if deepest < 0.5 or via_chord_in < max(b.pad, b.w) + b.s - 1e-9:
         return _refusal("WAVE_INNER_TIGHT", "turns")
     r_vo = p.r_out + b.w / 2 + b.s + b.w_out / 2 + (mq - 1) * pitch_out
-    outer = EndGeometry(rv=r_vo, spacing=pitch_out, need=pitch_out, w_end=b.w_out)
-    inner = EndGeometry(rv=r_vi, spacing=pitch_in, need=pitch_in, w_end=b.w_in)
-    return b.frame(outer, inner, pitch_out=pitch_out, pitch_in=pitch_in)
+    outer = EndGeometry(rv=r_vo, spacing_mm=pitch_out, need=pitch_out, w_end=b.w_out)
+    inner = EndGeometry(rv=r_vi, spacing_mm=pitch_in, need=pitch_in, w_end=b.w_in)
+    return b.frame(outer, inner, pitch_out_mm=pitch_out, pitch_in_mm=pitch_in)
 
 
 def _derive_involute(b: _Base) -> WaveFrame | tuple[WaveRefusal, ...]:
@@ -297,7 +297,7 @@ def _derive_involute(b: _Base) -> WaveFrame | tuple[WaveRefusal, ...]:
     if inner is None:
         return _refusal("WAVE_INNER_TIGHT", "turns")
     assert outer is not None
-    if outer.spacing < outer.need - 1e-9:
+    if outer.spacing_mm < outer.need - 1e-9:
         return _refusal("WAVE_OUTER_TIGHT", "endWidthOuter")
     return b.frame(outer, inner)
 
@@ -314,14 +314,14 @@ def derive_wave(p: WaveParams) -> WaveFrame | tuple[WaveRefusal, ...]:
     refusals: list[WaveRefusal] = []
     if p.phases > 1 and pp < 2:
         refusals.append(WaveRefusal(code="WAVE_MIN_POLES", field="poles"))
-    if 2 * p.r_in * math.sin(d_theta / 2) < p.trace_width + p.clearance - 1e-9:
+    if 2 * p.r_in * math.sin(d_theta / 2) < p.trace_width_mm + p.clearance_mm - 1e-9:
         refusals.append(WaveRefusal(code="WAVE_SLOT_PITCH", field="turns"))
     if refusals:
         return tuple(refusals)
     base = _Base(
-        p=p, pp=pp, tau=tau, mq=mq, d_theta=d_theta, w=p.trace_width, s=p.clearance, pad=p.via_pad,
-        w_out=p.end_width_outer if p.end_width_outer > 0 else p.trace_width,
-        w_in=p.end_width_inner if p.end_width_inner > 0 else p.trace_width,
+        p=p, pp=pp, tau=tau, mq=mq, d_theta=d_theta, w=p.trace_width_mm, s=p.clearance_mm, pad=p.via_pad,
+        w_out=p.end_width_outer_mm if p.end_width_outer_mm > 0 else p.trace_width_mm,
+        w_in=p.end_width_inner_mm if p.end_width_inner_mm > 0 else p.trace_width_mm,
     )  # fmt: skip
     return _BY_STYLE[p.wave_style](base)
 

@@ -50,6 +50,7 @@ class Obj:
     net: str | None = None  # interconnect only
     element: int | None = None  # slot of a track
     polarity: Literal[1, -1, 0] = 0
+    end_via: int | None = None  # index in WaveBuild.vias of the via the track ends on, in current direction
     ic: IcItem | None = None
 
 
@@ -107,6 +108,11 @@ def _role(item: IcItem, path_id: int) -> InterconnectRole:
     if item.link.net == "N":
         return NeutralRing(path_id=path_id, tap_via_ids=tuple(t.via for t in item.link.taps))
     return PhaseLink(path_id=path_id, phase=PHASES[int(item.link.net[1:])])
+
+
+def _member(obj: Obj, path_id: int) -> Member:
+    """One layer copy of a series element: its track and the via it ends on (Xcoil adds one rVia per element)."""
+    return Member(path_ids=(path_id,), via_ids=() if obj.end_via is None else (obj.end_via,))
 
 
 def _derived(
@@ -182,7 +188,7 @@ def assemble_layout(design: DesignParameters, build: WaveBuild, registry: Regist
             PhaseCircuit(
                 phase=PHASES[ph],
                 groups=tuple(
-                    ParallelGroup(members=tuple(Member(path_ids=(i,), via_ids=()) for i in e.objects))
+                    ParallelGroup(members=tuple(_member(build.objects[i], i) for i in e.objects))
                     for e in build.elements
                     if e.phase == ph
                 ),

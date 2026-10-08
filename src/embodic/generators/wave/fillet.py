@@ -56,10 +56,9 @@ def arc_from_tangent(a: Vec, ta: Vec, b: Vec, w: float, kind: str) -> XPrim:
 
 
 def fillet_line_arc(
-    a: XPrim, b: XPrim, d_a: Vec, d_b: Vec, cr: float, rho: float, w_fil: float, p: Vec
+    a: XPrim, b: XPrim, d_a: Vec, cr: float, rho: float, w_fil: float, p: Vec
 ) -> tuple[XPrim, float, float] | None:  # fmt: skip
     """Xcoil filletLineArc: fillet between an incoming line and an outgoing arc about the origin; (arc, ta, tb)."""
-    del d_b
     assert isinstance(b, XArc)
     radius = b.r
     inside = (d_a[0] * p[0] + d_a[1] * p[1]) > 0
@@ -113,10 +112,10 @@ def _corner_fillet(a: XPrim, b: XPrim, rc: float, w_fil: float | None) -> tuple[
             return arc_from_tangent(start, d_a, end, wf, "fillet"), tl, tl
         return None
     if isinstance(a, XLine) and isinstance(b, XArc) and _about_origin(b):
-        return fillet_line_arc(a, b, d_a, d_b, cr, rc, wf, p)
+        return fillet_line_arc(a, b, d_a, cr, rc, wf, p)
     if isinstance(a, XArc) and isinstance(b, XLine) and _about_origin(a):
         ra, rb = reverse_prims([b])[0], reverse_prims([a])[0]
-        f2 = fillet_line_arc(ra, rb, prim_dir_at(ra, True), prim_dir_at(rb, False), -cr, rc, wf, p)
+        f2 = fillet_line_arc(ra, rb, prim_dir_at(ra, True), -cr, rc, wf, p)
         return None if f2 is None else (reverse_prims([f2[0]])[0], f2[2], f2[1])
     return None
 
@@ -168,14 +167,14 @@ class _TaperContext:
         return max(0.3, abs(math.sin(a - b)))
 
 
-def _split_head(q: XPrim, length: float, w: float) -> tuple[XPrim, XPrim]:
-    """First ``length`` mm of ``q`` as a taper of width ``w``, then the rest."""
+def _split_head(q: XPrim, length_mm: float, w: float) -> tuple[XPrim, XPrim]:
+    """First ``length_mm`` mm of ``q`` as a taper of width ``w``, then the rest."""
     total = prim_length(q)
     if isinstance(q, XLine):
-        f = length / total
+        f = length_mm / total
         x, y = q.x1 + (q.x2 - q.x1) * f, q.y1 + (q.y2 - q.y1) * f
         return replace(q, x2=x, y2=y, w=w, kind="taper"), replace(q, x1=x, y1=y)
-    da = (1 if q.a2 > q.a1 else -1) * length / q.r
+    da = (1 if q.a2 > q.a1 else -1) * length_mm / q.r
     mid = q.a1 + da
     return replace(q, a2=mid, w=w, kind="taper"), replace(q, a1=mid)
 

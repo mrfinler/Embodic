@@ -103,7 +103,7 @@ class WaveGeometry:
     terms: tuple[Terminal, ...]
     r_link: float
     special: dict[int, Literal["removed", "shift"]]
-    link_width: float
+    link_width_mm: float
     link_room: bool
 
 
@@ -149,13 +149,13 @@ class _LinkRing:
     """Radius and width of the group-link ring, and whether it fits at all."""
 
     r_link: float
-    width: float
+    width_mm: float
     room: bool
 
 
 def _link_ring(frame: WaveFrame) -> _LinkRing:
     """Fit the m group links on one radius inside the inner via ring; the bus narrows until the links keep clearance."""
-    bw = frame.p.bus_width
+    bw = frame.p.bus_width_mm
     end_gap = max(frame.pad, frame.w_in, frame.w if frame.style == "chord" else 0.0) / 2 + frame.s
 
     def r_link_for(b: float) -> float:
@@ -173,19 +173,19 @@ def _link_ring(frame: WaveFrame) -> _LinkRing:
                 break
             b2 = max(b_min, b2 * LINK_SHRINK)
         bw, room = (b2, True) if fits(b2) else (b_min, False)
-    return _LinkRing(r_link=r_link_for(bw), width=bw, room=room)
+    return _LinkRing(r_link=r_link_for(bw), width_mm=bw, room=room)
 
 
 def _link(frame: WaveFrame, ring: _LinkRing, from_via: WaveVia, touch: tuple[int, int], phase: int) -> Link:
     """Stub, ring arc, stub from the inner via of the F belt over one pole pitch; stubs are no wider than the pad."""
     a1 = math.atan2(from_via.y, from_via.x)
     a2 = a1 + frame.tau
-    wn = min(ring.width, frame.pad)
+    wn = min(ring.width_mm, frame.pad)
     s1, e1 = polar(frame.r_vi, a1), polar(ring.r_link, a1)
     s2, e2 = polar(frame.r_vi, a2), polar(ring.r_link, a2)
     prims: tuple[XPrim, ...] = (
         XLine(x1=s1[0], y1=s1[1], x2=e1[0], y2=e1[1], w=wn, kind="stub"),
-        XArc(cx=0.0, cy=0.0, r=ring.r_link, a1=a1, a2=a2, w=ring.width, kind="ring"),
+        XArc(cx=0.0, cy=0.0, r=ring.r_link, a1=a1, a2=a2, w=ring.width_mm, kind="ring"),
         XLine(x1=e2[0], y1=e2[1], x2=s2[0], y2=s2[1], w=wn, kind="stub"),
     )
     return Link(phase=phase, net=f"L{phase}", touch=touch, prims=prims)
@@ -223,4 +223,4 @@ def build_wave(frame: WaveFrame) -> WaveGeometry:
     return WaveGeometry(t0=tuple(t0), b0=tuple(b0), t_shift=None if t_shift is None else tuple(t_shift),
                         tracks_t=tuple(tracks_t), tracks_b=tuple(tracks_b), vias=tuple(vias), zones=tuple(zones),
                         links=tuple(links), terms=tuple(terms), r_link=ring.r_link, special=special,
-                        link_width=ring.width, link_room=ring.room)  # fmt: skip
+                        link_width_mm=ring.width_mm, link_room=ring.room)  # fmt: skip

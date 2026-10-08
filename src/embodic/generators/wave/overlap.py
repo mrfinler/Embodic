@@ -39,6 +39,7 @@ class OverlapTrack:
     sign: int
     special: Literal["shift"] | None
     prims: tuple[XPrim, ...]
+    end_via: int  # slot of the via the track ends on, in current direction
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -56,7 +57,7 @@ class _Canon:
 
     def __init__(self, frame: WaveFrame) -> None:
         self.frame = frame
-        self.rho = frame.p.fillet_radius if frame.p.rounded else 0.0
+        self.rho = frame.p.fillet_radius_mm if frame.p.rounded else 0.0
         self._cache: dict[tuple[NetKind, int, bool], list[XPrim]] = {}
 
     def get(self, kind: NetKind, level: int, shift: bool) -> list[XPrim]:
@@ -65,9 +66,9 @@ class _Canon:
             self._cache[key] = self._t(level, shift) if kind == "T" else self._b(level, shift)
         return self._cache[key]
 
-    def _finish(self, prims: list[XPrim], end_width: float) -> list[XPrim]:
+    def _finish(self, prims: list[XPrim], end_width_mm: float) -> list[XPrim]:
         prims = fillet_path(prims, self.rho, None)
-        return taper_junctions(prims) if end_width != self.frame.w else prims
+        return taper_junctions(prims) if end_width_mm != self.frame.w else prims
 
     def _t(self, level: int, shift: bool) -> list[XPrim]:
         f = self.frame
@@ -164,9 +165,11 @@ def build_overlap_geometry(frame: WaveFrame) -> OverlapGeometry:
         shifted = kind == "shift"
         pr = rotate_prims(canon.get("T" if is_t else "B", level, shifted), ang)
         forward = sgn > 0 if is_t else sgn < 0
+        far = (k + mq - (1 if shifted else 0)) % n_slots  # the via at the other end of the track
         tracks.append(OverlapTrack(kind="T" if is_t else "B", slot=k, phase=phase, sign=sgn,
                                    special="shift" if shifted else None,
-                                   prims=tuple(pr if forward else reverse_prims(pr))))  # fmt: skip
+                                   prims=tuple(pr if forward else reverse_prims(pr)),
+                                   end_via=far if forward else k))  # fmt: skip
     terms = _terminals(frame, chains, vias)
     return OverlapGeometry(tracks=tuple(tracks), vias=tuple(vias), terms=tuple(terms))
 
@@ -221,7 +224,7 @@ def _star_ring(
     frame: WaveFrame, design: DesignParameters, terms: Sequence[Terminal], r_min_cu: float, pad_r: float
 ) -> tuple[IcItem, IcPad, float]:  # fmt: skip
     """Neutral ring inside the inner arcs on layer 0, joining the three minus terminals; the N pad sits inside it."""
-    bw, s = frame.p.bus_width, frame.s
+    bw, s = frame.p.bus_width_mm, frame.s
     r_n = r_min_cu - s - bw / 2
     wn = min(bw, frame.pad)
     taps = tuple(t for t in terms if t.sign < 0)
@@ -251,7 +254,7 @@ def _leads(
     open_winding: bool,
 ) -> tuple[list[IcItem], list[IcPad], float]:  # fmt: skip
     """Line leads (plus side, layer 1) or the minus-terminal pads of an open winding (minus side, layer 0)."""
-    bw, s = frame.p.bus_width, frame.s
+    bw, s = frame.p.bus_width_mm, frame.s
     listed = [t for t in terms if t.sign == sign]
     w_s = bw if sign > 0 else min(bw, frame.pad)
     defs = [_PadDef(term=t, a=math.atan2(t.y, t.x)) for t in listed]
@@ -260,7 +263,7 @@ def _leads(
     r_pad_c = r_cor + sign * (w_s / 2 + s + pad_r)
     moved = spread_pad_angles(defs, min(r_pad0, r_pad_c), pad_r, s)
     r_pad = r_pad_c if moved else r_pad0
-    rho = frame.p.fillet_radius if frame.p.rounded else 0.0
+    rho = frame.p.fillet_radius_mm if frame.p.rounded else 0.0
     layer = 1 if sign > 0 else 0
     items: list[IcItem] = []
     pads: list[IcPad] = []
@@ -320,7 +323,7 @@ def _objects(
         for t in (t for t in geometry.tracks if t.kind == kind):
             by_slot.setdefault((kind, t.slot), []).append(len(objects))
             objects.append(Obj(layer=layer, kind="track", prims=t.prims, phase=t.phase, element=t.slot,
-                               polarity=1 if t.sign > 0 else -1))  # fmt: skip
+                               polarity=1 if t.sign > 0 else -1, end_via=t.end_via))  # fmt: skip
     for item in items:
         objects.append(Obj(layer=item.layer, kind="ic", prims=item.prims, phase=item.phase, net=item.net, ic=item))
     elements = [SeriesElement(phase=t.phase, objects=tuple(by_slot[(t.kind, t.slot)])) for t in geometry.tracks]

@@ -23,7 +23,7 @@ class PadSpec:
     """Terminal pad inputs: round pad of width ``size`` (the pad reach is its radius)."""
 
     size: float
-    drill: float
+    drill_mm: float
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -110,8 +110,8 @@ def _relation(lo1: float, hi1: float, a1: float, a2: float, margin: float) -> Li
     return rel
 
 
-def _delta_links(terms: Sequence[Terminal], layer_links: Sequence[int], base: float, bus_width: float,
-                 clearance: float) -> list[RingLink]:  # fmt: skip
+def _delta_links(terms: Sequence[Terminal], layer_links: Sequence[int], base: float, bus_width_mm: float,
+                 clearance_mm: float) -> list[RingLink]:  # fmt: skip
     """Delta links, shorter spans first; a link may enclose earlier ones on a layer but not partly overlap them."""
     raw = []
     for src, dst in DELTA_PAIRS:
@@ -121,7 +121,7 @@ def _delta_links(terms: Sequence[Terminal], layer_links: Sequence[int], base: fl
         a2 = a_f + d if d <= math.pi else a_f - (2 * math.pi - d)
         raw.append((f"D{src}", a_f, a2, (frm, to)))
     raw.sort(key=lambda x: abs(x[2] - x[1]))
-    margin = (bus_width + clearance) / max(1.0, abs(base))
+    margin = (bus_width_mm + clearance_mm) / max(1.0, abs(base))
     placed: list[RingLink] = []
     for net, a1, a2, taps in raw:
         lo1, hi1 = min(a1, a2) - margin, max(a1, a2) + margin
@@ -143,11 +143,11 @@ def _delta_links(terms: Sequence[Terminal], layer_links: Sequence[int], base: fl
 
 
 def build_interconnect(
-    terms: Sequence[Terminal], *, connection: Literal["star", "delta"], base: float, bus_width: float,
-    clearance: float, via_pad: float, pad: PadSpec, link_layers: Sequence[int], line_layer: int,
+    terms: Sequence[Terminal], *, connection: Literal["star", "delta"], base: float, bus_width_mm: float,
+    clearance_mm: float, via_pad: float, pad: PadSpec, link_layers: Sequence[int], line_layer: int,
 ) -> Interconnect:  # fmt: skip
     """Xcoil buildInterconnect with ``neck`` and no stub layer, outward from copper radius ``base``."""
-    bw, s = bus_width, clearance
+    bw, s = bus_width_mm, clearance_mm
     if connection == "star":
         links = [_star_link(terms)]
     else:
