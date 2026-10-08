@@ -4,12 +4,13 @@ A failure the user can cause comes back as issues. An exception inside a stage i
 INTERNAL_<STAGE>_FAILED issue whose `value` holds the traceback, and the stages that need its product do not run.
 """
 
+import dataclasses
 import hashlib
 import platform
 import time
 import traceback
 from collections import OrderedDict
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path
@@ -33,8 +34,10 @@ from embodic.model.validate import validate_design
 from embodic.model.winding_specs import SpiralWindingSpec
 from embodic.outcome import ComputeOptions, ComputeOutcome, Stage, VersionInfo
 from embodic.physics import analyse
+from embodic.physics.analyse import NON_FINITE_CODE
 from embodic.results import AnalysisResult, Registry, load_registry
 from embodic.results.analysis_result import to_json
+from embodic.results.traceable import Traceable
 from embodic.winding import plan_issues, plan_spiral_winding
 
 __all__ = [
@@ -119,6 +122,30 @@ class _Run:
             return _FAILED
         finally:
             self.timings_s[stage.value] = self.timings_s.get(stage.value, 0.0) + time.perf_counter() - started
+
+
+def _traceables(value: object) -> Iterator[Traceable[object]]:
+    if isinstance(value, Traceable):
+        yield value
+    elif dataclasses.is_dataclass(value) and not isinstance(value, type):
+        for f in dataclasses.fields(value):
+            yield from _traceables(getattr(value, f.name))
+    elif isinstance(value, tuple):
+        for item in value:
+            yield from _traceables(item)
+
+
+def _non_finite_issues(analysis: AnalysisResult | _Failed) -> Iterator[ValidationIssue]:
+    for result in _traceables(analysis):
+        if any(flag.code == NON_FINITE_CODE for flag in result.validity):
+            yield ValidationIssue(
+                code=NON_FINITE_CODE,
+                category=IssueCategory.UNSUPPORTED_RANGE,
+                severity=Severity.WARNING,
+                message=message_for(NON_FINITE_CODE),
+                pointers=(),
+                value=result.quantity,
+            )
 
 
 def _internal(stage: Stage, trace: str) -> ValidationIssue:
@@ -274,6 +301,7 @@ def compute(
     )
     if analysis is None:
         return None
+    run.issues.extend(_non_finite_issues(analysis))
     return outcome(boards, drc, None if isinstance(analysis, _Failed) else analysis)
 
 

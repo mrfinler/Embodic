@@ -78,12 +78,20 @@ from embodic.units import Unit, rpm_to_rad_per_s
 EDGE_CHECK_ID = "EC-05"
 SKIN_DEPTH_FRACTION = 1.0 / 3.0  # REQ-T-08: w above delta / 3 raises RANGE_SKIN_DEPTH
 IDEAL_INTEGRAL_STEPS = 200  # Xcoil analyzeElements `ideal` integral (EQ-27)
+NON_FINITE_CODE = "PHYSICS_NON_FINITE_RESULT"
 UNCLASSIFIED_INTERCONNECT = ValidityFlag(
     code="INTERNAL_INTERCONNECT_UNCLASSIFIED",
     message="interconnect copper not classified",
     eq_id="EQ-23",
     effect=ValidityEffect.CAP,
 )
+
+
+def _non_finite_flag(value: object, eq_id: str) -> tuple[ValidityFlag, ...]:
+    numbers = value if isinstance(value, tuple) else (value,)
+    if all(math.isfinite(n) for n in numbers if isinstance(n, float)):
+        return ()
+    return (ValidityFlag(code=NON_FINITE_CODE, message="value is not finite", eq_id=eq_id, effect=ValidityEffect.CAP),)
 
 
 class CancelToken(Protocol):
@@ -227,7 +235,7 @@ def analyse(
             eq_ids=eq_ids,
             inputs=refs,
             registry=registry,
-            validity=validity,
+            validity=(*validity, *_non_finite_flag(value, eq_ids[0])),
             kind_tag=kind_tag,  # type: ignore[arg-type]
         )
 
