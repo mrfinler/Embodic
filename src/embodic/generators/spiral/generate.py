@@ -5,9 +5,11 @@ sides with arc ends), the outer-end jog and the full (lead arc) or half closing 
 U-E3b); layer pairs in parallel (one shared centre via) and in series groups (G5 k centre vias, G6 transfer via fan,
 DRC-checked and refused when a rule fails, D-020); G8 series chains of each phase on the bus rings (legs on layer Y,
 ring arcs on layer X, net PHASE_x), the star or delta links and the U/V/W(/N) leads with their pads.
-Not built yet (returned as Unbuildable, never ignored): pair rotation, phase per pair, stadium ends (G2 gives no jog
-for an end arc tangent to its sides), tapers (G9), the straight lead, custom terminal offset, parallel paths, screw
-holes, and polygon corner radii. Open phases end on the ring vias of their first and last coil, without pads.
+Pair rotation is built when every pair shares it (option M3 with one rotation, D-024 default 0).
+Not built yet (returned as Unbuildable, never ignored): pairs rotated against each other, phase per pair, stadium
+ends (G2 gives no jog for an end arc tangent to its sides), tapers (G9), the straight lead, custom terminal offset,
+parallel paths, screw holes, and polygon corner radii. Open phases end on the ring vias of their first and last coil,
+without pads.
 """
 
 import dataclasses
@@ -69,7 +71,8 @@ def _unsupported(design: DesignParameters, spec: SpiralWindingSpec) -> tuple[str
     """Pointers of inputs whose value selects geometry this generator does not build yet."""
     coil, pairs = spec.coil, spec.layers.pairs
     checks = {
-        "/winding/layers/pairs": any(p.rotation_rad != 0.0 or p.phases is not None for p in pairs),
+        # Pairs rotated against each other need a series link between coils at different angles (G6 gives none).
+        "/winding/layers/pairs": len({p.rotation_rad for p in pairs}) > 1 or any(p.phases is not None for p in pairs),
         "/winding/layers/series_groups": not all(spec.layers.series_groups)
         or sorted(i for group in spec.layers.series_groups for i in group) != sorted(p.index for p in pairs),
         "/winding/coil/end_style": coil.end_style is EndStyle.STADIUM,
@@ -107,6 +110,8 @@ def _out_of_range(design: DesignParameters, spec: SpiralWindingSpec) -> tuple[st
     bad += [p for p, v in non_negative.items() if not (math.isfinite(v) and v >= 0)]
     if not math.isfinite(coil.first_coil_angle_rad):
         bad.append("/winding/coil/first_coil_angle_rad")
+    bad += [f"/winding/layers/pairs/{k}/rotation_rad" for k, p in enumerate(spec.layers.pairs)
+            if not math.isfinite(p.rotation_rad)]  # fmt: skip
     if not (math.isfinite(coil.r_outer_mm) and coil.r_outer_mm > coil.r_inner_mm):
         bad.append("/winding/coil/r_outer_mm")
     if coil.coil_count < 3:
@@ -314,11 +319,12 @@ def _coil_copper(
     coil_ends: dict[Phase, list[CoilEnds]] = {phase: [] for phase in Phase}
     coil = spec.coil
     rings = coil_art.ring_vias
+    first_rad = (coil.first_coil_angle_rad + spec.layers.pairs[0].rotation_rad) % (2 * math.pi)
     via_points = tuple(p for g, group in enumerate(coil_art.groups) for p in (rings[g], group.centre_via)) + rings[-1:]
     pair_groups = [tuple(p for p in spec.layers.pairs if p.index in group) for group in spec.layers.series_groups]
     for assignment in plan.assignment:
         k, sign = assignment.coil_index, assignment.polarity
-        angle = coil.first_coil_angle_rad % (2 * math.pi) + k * 2 * math.pi / coil.coil_count
+        angle = first_rad + k * 2 * math.pi / coil.coil_count
         net = f"PHASE_{assignment.phase.value}"
         coil_vias = _coil_vias(design, span, via_points, angle, net, first_id=len(vias))
         vias += coil_vias

@@ -146,3 +146,53 @@ def test_ut_geo_19_series_pairs_whose_via_fan_breaks_drc_are_refused(registry: R
     assert [(i.code, i.pointers) for i in refused.issues] == [
         ("UNBUILDABLE_SERIES_VIA_FAN_DRC", ("/winding/layers/series_groups",))
     ]
+
+
+def _rotated(design: DesignParameters, rotations: tuple[float, ...]) -> DesignParameters:
+    assert isinstance(design.winding, SpiralWindingSpec)
+    layers = design.winding.layers
+    pairs = tuple(dataclasses.replace(p, rotation_rad=r) for p, r in zip(layers.pairs, rotations, strict=True))
+    winding = dataclasses.replace(design.winding, layers=dataclasses.replace(layers, pairs=pairs))
+    return dataclasses.replace(design, winding=winding)
+
+
+def _end_points(board: Layout) -> list[tuple[float, float]]:
+    return [pt for path in board.paths for prim in path.primitives for pt in (prim.start_point(), prim.end_point())]
+
+
+@pytest.mark.req("REQ-F-03")
+def test_m3_a_rotation_every_pair_shares_turns_the_whole_winding(registry: Registry) -> None:
+    """Option M3 with one rotation: pi/Q on every pair builds the board of first coil angle theta_0 + pi/Q.
+
+    Catches a pair rotation the generator ignores (the board would equal the unrotated one).
+    """
+    design = _three_pairs(((0, 1, 2),))
+    assert isinstance(design.winding, SpiralWindingSpec)
+    step = math.pi / design.winding.coil.coil_count
+    coil = design.winding.coil
+    shifted_design = dataclasses.replace(
+        design,
+        winding=dataclasses.replace(
+            design.winding, coil=dataclasses.replace(coil, first_coil_angle_rad=coil.first_coil_angle_rad + step)
+        ),
+    )
+    boards = [generate_spiral(d, registry) for d in (_rotated(design, (step, step, step)), shifted_design, design)]
+    assert all(isinstance(b, BoardStack) for b in boards)
+    turned, shifted, plain = (_end_points(b.boards[0]) for b in boards)  # type: ignore[union-attr]
+    assert max(math.dist(a, b) for a, b in zip(turned, shifted, strict=True)) <= 1e-9
+    assert max(math.dist(a, b) for a, b in zip(turned, plain, strict=True)) > 1.0
+
+
+@pytest.mark.req("REQ-F-03")
+def test_ut_geo_11_pairs_rotated_against_each_other_are_refused(registry: Registry) -> None:
+    """UT-GEO-11 is not met yet: a pair at pi/Q among unrotated pairs needs a series link G6 does not specify.
+
+    The generator refuses it with the pointer instead of building the rotation silently wrong or dropping it.
+    """
+    design = _three_pairs(((0,), (1,), (2,)))
+    assert isinstance(design.winding, SpiralWindingSpec)
+    refused = generate_spiral(_rotated(design, (0.0, math.pi / design.winding.coil.coil_count, 0.0)), registry)
+    assert isinstance(refused, Unbuildable)
+    assert [(i.code, i.pointers) for i in refused.issues] == [
+        ("UNBUILDABLE_SPIRAL_OPTION_NOT_IMPLEMENTED", ("/winding/layers/pairs",))
+    ]
