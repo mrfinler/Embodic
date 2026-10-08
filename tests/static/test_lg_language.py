@@ -7,6 +7,9 @@ import pytest
 
 THAI_FIRST, THAI_LAST = 0x0E00, 0x0E7F
 ALLOWED_SYMBOLS = frozenset("°µΩ²³·−×±≤≥√")
+# Symbols one module may add (D-040): the Greek letters equation_specification.md writes in the quantity symbols that
+# results/labels.py shows (delta l.326, Delta T l.373, eta and P_delta,circ l.509). No other module may use them.
+MODULE_SYMBOLS = {"embodic.results.labels": frozenset("ηδΔ")}
 
 
 def is_thai(char: str) -> bool:
@@ -14,9 +17,14 @@ def is_thai(char: str) -> bool:
     return THAI_FIRST <= ord(char) <= THAI_LAST
 
 
-def is_allowed_in_english_text(char: str) -> bool:
-    """Return True for printable ASCII, tab, newline and the allowed unit symbols."""
-    return " " <= char <= "~" or char in "\t\n\r" or char in ALLOWED_SYMBOLS
+def is_allowed_in_english_text(char: str, module_name: str = "") -> bool:
+    """Return True for printable ASCII, tab, newline, the allowed unit symbols and the module's own symbols."""
+    return (
+        " " <= char <= "~"
+        or char in "\t\n\r"
+        or char in ALLOWED_SYMBOLS
+        or char in MODULE_SYMBOLS.get(module_name, frozenset())
+    )
 
 
 def check_string_literals(modules) -> list[str]:
@@ -25,7 +33,7 @@ def check_string_literals(modules) -> list[str]:
     for module in modules:
         for node in ast.walk(module.tree):
             if isinstance(node, ast.Constant) and isinstance(node.value, str):
-                bad = sorted({c for c in node.value if not is_allowed_in_english_text(c)})
+                bad = sorted({c for c in node.value if not is_allowed_in_english_text(c, module.name)})
                 if bad:
                     codes = ", ".join(f"U+{ord(c):04X}" for c in bad)
                     violations.append(f"{module.where(node)}: non-English characters {codes}; software text is English")
@@ -67,6 +75,20 @@ def test_lg01_flags_thai_and_accented_letters_but_not_unit_symbols(planted):
     assert len(violations) == 2
     assert any("U+0E2A" in v for v in violations)
     assert any("U+00E9" in v for v in violations)
+
+
+@pytest.mark.req("REQ-L-01")
+def test_lg01_admits_the_spec_greek_letters_in_the_label_module_only(planted):
+    """Catches a Greek allowance that leaked to every module, or one that also admits letters the labels do not use."""
+    symbols = "η δ ΔT P_δ,circ"
+    labels = planted("embodic.results.labels", f'SYMBOLS = "{symbols}"\nOTHER = "ω"\n')
+    elsewhere = planted("embodic.errors", f'SYMBOLS = "{symbols}"\n')
+    assert [v.split(": ", 1)[1] for v in check_string_literals([labels])] == [
+        "non-English characters U+03C9; software text is English"
+    ]
+    assert [v.split(": ", 1)[1] for v in check_string_literals([elsewhere])] == [
+        "non-English characters U+0394, U+03B4, U+03B7; software text is English"
+    ]
 
 
 @pytest.mark.req("REQ-L-01")

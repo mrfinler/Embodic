@@ -49,8 +49,7 @@ QUANTITY_LABELS: Mapping[str, str] = MappingProxyType(
 
 # Symbols exactly as equation_specification.md writes them; "l." is the spec line. A field with no stated symbol has no
 # entry: the peak line constant, the rms phase EMF, THD (an abbreviation) and the IPC current (the bare "I" of EQ-15).
-# Four stated symbols are held back because LG-01 (tests/static ALLOWED_SYMBOLS) rejects Greek letters in source text:
-# eta (l.509), delta (l.326), Delta T (l.373) and P_delta,circ (l.509). They need a ruling on that allowlist.
+# The four Greek ones (η, δ, ΔT, P_δ,circ) are allowed in this module only: tests/static/test_lg_language.py (D-040).
 QUANTITY_SYMBOLS: Mapping[str, str] = MappingProxyType(
     {
         "ke_phase_v_s_per_rad": "Ke_ph",  # l.219
@@ -67,9 +66,13 @@ QUANTITY_SYMBOLS: Mapping[str, str] = MappingProxyType(
         "loss_circulating_w": "P_circ",  # l.509
         "loss_interconnect_w": "P_ic",  # l.441
         "loss_total_w": "P_loss",  # l.509
+        "loss_delta_circulating_w": "P_δ,circ",  # l.509
         "output_power_w": "P_out",  # l.509
+        "efficiency": "η",  # l.509
         "motor_constant_n_m_per_sqrt_w": "K_m",  # l.509
         "current_density_a_per_mm2": "J",  # l.429
+        "skin_depth_mm": "δ",  # l.326
+        "temperature_rise_k": "ΔT",  # l.373
         "inductance_estimate_h": "L_m",  # l.337, EQ-14 (a): the form `inductance_estimate_h` computes
         "mass_copper_g": "m_Cu",  # l.362
         "mass_laminate_g": "m_lam",  # l.362
