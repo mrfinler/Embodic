@@ -70,7 +70,6 @@ logger = logging.getLogger(__name__)
 
 MIN_SIZE_PX = (960, 540)
 THREE_PANE_FROM_PX = 1280
-INSPECTOR_TABS = ("tab-coil", "tab-phases", "tab-layers", "tab-board")
 HOME_PLACEHOLDER = "%USERPROFILE%"
 
 

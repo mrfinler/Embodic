@@ -11,6 +11,7 @@ on screen marked outdated (REQ-F-27).
 """
 
 import dataclasses
+import functools
 import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -302,12 +303,10 @@ def form_rows(
     """
     rows: dict[str, FieldRow] = {}
     values = draft.values
-    bore = values.get(BORE_POINTER, {}) if BORE_POINTER in values else {}
     for spec in field_specs(draft.topology):
         if spec.pointer.startswith(BORE_POINTER + "/") and spec.pointer != f"{BORE_POINTER}/shape":
             widget_id = bore_widget_id(spec)
-            chosen = bore is not None and values.get(f"{BORE_POINTER}/shape") == spec.variant
-            rows[widget_id] = _row(spec, widget_id, chosen, draft, chips, issues)
+            rows[widget_id] = _row(spec, widget_id, bore_choice(values) == spec.variant, draft, chips, issues)
             continue
         if not is_inspector_input(spec):
             continue
@@ -479,9 +478,14 @@ def feasibility_hints(outcome: ComputeOutcome) -> dict[str, str]:
     return {}
 
 
+@functools.cache
+def _example_titles() -> Mapping[str, str]:
+    return {info.example_id: info.title for info in list_examples()}
+
+
 def example_title(example_id: str) -> str:
     """Return the gallery title of a packaged example, or its id when it is no longer packaged."""
-    return next((info.title for info in list_examples() if info.example_id == example_id), example_id)
+    return _example_titles().get(example_id, example_id)
 
 
 class DesignSession:
