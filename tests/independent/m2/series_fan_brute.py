@@ -56,7 +56,7 @@ def series_board(name: str, groups: int):
     return build_layout(design, load_registry())
 
 
-def brute(name: str, groups: int, reach_mm: float = 0.05) -> tuple[list[PairResult], float]:
+def brute(name: str, groups: int, reach_mm: float = 0.0, decide: bool = True) -> tuple[list[PairResult], float]:
     """Return (violations, least copper clearance lower bound) of the series board by the certified sweep."""
     from embodic.io.board_dump import dump_layout, encode_board_dump
 
@@ -72,7 +72,7 @@ def brute(name: str, groups: int, reach_mm: float = 0.05) -> tuple[list[PairResu
         lambda kind: rule if kind in COPPER_KINDS else 0.0,
         exempt,
         reach_mm=reach_mm,
-        decide=False,
+        decide=decide,
     )
     copper = [r for r in results if r.kind in COPPER_KINDS]
     least = min((r.clearance.lo for r in copper), default=float("inf"))

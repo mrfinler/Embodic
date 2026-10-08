@@ -155,3 +155,39 @@ one-board stack, so the existing GR-19 case ids stay as they are. This matches i
 | DEF-M1V-03 | medium | `pytest tests/independent/m1/test_gr19_drc.py -k continuous --runxfail` | one continuous chain per CopperPath; Xcoil `ic` objects map to one path with gaps of 11.28 mm (serpentine path 15) and 22.11 mm (wave path 192) | U-M1z (mapper) | open; strict xfail still fails on 69381b5 |
 | DEF-M1V-04 | low | read `src/embodic/io/board_dump.py` l.8-11, l.108 | interfaces.md 9.2 says v1 has no field changes; the writer omits the layer PCB-tool name (D-009, MT-07) and always writes via `phase` null | interfaces.md owner (Fable) | open; `src/embodic/io/board_dump.py` l.11-12 and l.108 unchanged on 69381b5 |
 | DEF-M1V-05 | low | `grep -n "edge:" src/embodic/drc/report.py src/embodic/drc/items.py` | report.py documents ids `edge:0/prim:5`; items.py emits `edge:outer/prim:5` | U-M1c owner | closed; `report.py` l.63 now documents `edge:outer/prim:5` |
+
+## M2 instruments and verdicts (U-V2, against main 24b33f2)
+
+Prepared by: Agent 4 - Independent Verificator - model: claude-opus-5-5
+
+Run `pytest tests/independent/m2 -q` (about 20 s), `python tests/independent/m2/or01.py` (OR-01 numbers) and
+`python tests/independent/m2/series_fan_brute.py` (series fan, long). The `own_*.py` files import nothing from
+embodic. `or01.py`, `series_fan_brute.py` and the tests import embodic only to build the subject through the public
+API (`build_layout`, `compute`, `analyse`, `save_project`, `load_project`) and to read its output.
+
+| File | What it does | What it would catch |
+|---|---|---|
+| `own_winding.py` | star of slots with exact `Fraction` angles, half-open 60 degree belts in EQ-08 order; k_d,n from signed phasors, k_p,n = abs(sin(n p pi / Q)) for a one-slot-pitch coil | a belt edge rounded the wrong way, a lost polarity, k_p from the mechanical span |
+| `own_emf.py` | EQ-05 cosh/sinh form evaluated exactly at every chord (no table), EQ-06 flux linkage on 0.05 mm chords clipped to the magnet span, line waveform peak over one electrical period | a field, z, clip or phase-sum change in embodic |
+| `or01.py` | OR-01 from `oracle_cases.json` O1-D08 inputs and the own field, on the subject's D08 layout | see `test_or01.py` |
+| `own_spiral.py` | G1 to G5 turn table, loop rule, full and half closing with the G5 choice, centre via radius, G9 fillet corner closed form (families B, C, D, J, concentric radii) | a turn off by a pitch, a wrong closing, a constant fillet radius |
+| `series_fan_brute.py` | series-group board through embodic's dump writer, M1's own reader and M1's certified pair sweep under the contract exemptions | a fan stub or via closer than s |
+
+| Item | Verdict | Evidence (`verified` = reproduced by running) |
+|---|---|---|
+| 1 Winding: phases and k_w for 12/16, 12/10, 12/14, 9/8, 24/22 | pass | `test_winding.py`: every coil's phase and polarity equals the own star; k_w,n (n 1, 5, 7) equals own k_d k_p within 1e-12. Own k_w1: 0.866025, 0.933013, 0.933013, 0.945214, 0.949469. 12/10 equals the published double-layer 0.933 (Emetor glossary "Concentrated winding" Fig. 2, https://www.emetor.com/glossary/concentrated-winding/); the other four have no external value read (`inferred` from the own formula). A belt-edge mutant in `star_of_slots.py` failed 3 tests |
+| 2 Physics closed forms | pass (EC-05 grading not done) | `test_physics_closed_forms.py`: EQ-05 at z = 0 equals K_n l_m / (l_m + mu_r G) within 1e-9 relative at r = 1e7 mm and rises to it monotonically; the own limit reproduces CF-01 1.162077823 T; EQ-06 sector loop in a uniform field equals B_1 (r_b^2 - r_a^2) sin(p sigma / 2) within 1e-12. `integrate_path` with abs(dr) failed 4 tests. The loop is a sector loop through the public `integrate_path` kernel, not a hand-built `Layout` through `analyse()` (deviation) |
+| 3 Spiral generator, CF-11 and D08 | pass | `test_spiral.py`: own plan N 10 full (CF-11) and N 3 half (D08) as the worked examples; every coil-layer's end-arc radii equal own R_out,t and r_end,t within 1e-9; one centre via per coil at own r_v (30.7 and 27.625479 mm) within 1e-9; joints within 1e-6; layer Y is the reversed mirror of X within 1e-9; CF-11 fillet change at rho 0.5 mm: generator -52.838874602741 mm, own closed form -52.838874602741 mm (equal within 1e-9). Series fan (`series_fan_brute.py`, rule s on every copper pair kind, contract exemptions): 0 violations for CF-11 k = 2 and 3 and D08 k = 2 and 3 (22.1, 28.7, 3.3, 4.5 s); every near pair's bracket starts at 0.199999 (CF-11) or 0.799999 mm (D08), a lower bound, not refined. A first run that refined every bracket to 1e-10 mm did not finish CF-11 k = 2 in 5.5 min; plateau pairs (concentric arcs) are the likely limiter (`inferred`, not profiled) |
+| 4 OR-01 with an own field | pass | own Ke_LL peak 0.0308780 V s/rad, embodic 0.0308768 (-3.83e-5 relative), D08 measured 0.031 (own -0.39 %). Chord step 0.5 to 0.02 mm moves own Ke by 2.4e-7 relative; an own 48-step linear table gives -2.45e-5, so the table accounts for 1.4e-5 of the gap and 2.5e-5 is unexplained (`unresolved`) |
+| 5 Provenance truth table through `compute()` | pass | `test_provenance.py`: property (`/rotor/remanence_t`) listed for user, example, default, not for measured; design (`/rotor/air_gap_mm`) listed only for example (D-023b); status and value equal in all 8 cells (D-007) |
+| 6 Project file | pass | `test_project_round_trip.py`: 3 examples save and reload with equal design, origin and measurements; stored hash equals `compute()`'s; files validate against `project.v1.schema.json`; a re-save differs only in `saved_utc`; an edited value loads as `user`, an untouched one as `example` |
+| 7 DEF-M2e3-01 | not done (timebox) | read only: Xcoil `analyzeElements` (engine.js l.1846-1882) sums 1 / sum(1/R) per element over parallel members, and `analyzeWave` (l.2030-2062) treats copies of one track on all layers of its type as parallel and keeps `rVia` and links out of `Rtrace`; the harness `_series_circuit` (tests/golden/m2_physics/test_analyse_layouts.py l.44) has no such members. The re-measurement needs Xcoil's element lists, which the GR-19 dumps do not hold |
+| 8 XD-M1-002 by dense sampling | pass with defects | `test_xd_m1_002.py`: embodic's distance lies in the certified bracket on all 1000 calls; exactly 19 goldens are false 0s, largest true value 13.084767 mm, inside the 13.1 mm allow-list tolerance; dense sampling (20001 points per segment) agrees with the bracket within 1e-3. DEF-UV2-01 |
+| 9 Gate stability and section 5.5 | see gate table | `test_cancel_from_another_thread_stops_a_long_run` is Agent 3's (tests/unit/drc/test_run_drc.py l.295): a 0.05 s timer and an absolute 2.0 s bound break rules 1 and 2. `test_cancel_without_clock.py` is the rule 1 form: a token that turns true at its k-th read; run_drc returns None after exactly k reads for k = 1, the middle and the last read of a full run |
+| 10 `-board<k>` | not applicable | M2 writes no multi-board dump; `series_fan_brute.py` dumps one board as `CF-11-k2` with no suffix, as the rule says |
+
+Defects (U-V2):
+
+| ID | Severity | Reproduce | Expected vs actual | Owner | Status |
+|---|---|---|---|---|---|
+| DEF-UV2-01 | low | `pytest tests/independent/m2/test_xd_m1_002.py -k true_range --runxfail` | the XD-M1-002 reason (tests/golden/expected_diffs/m1.toml l.20), test_plan.md section 3 (l.84) and D-033c state the 19 true distances as 4.0001 to 13.0848 mm; they are 0.528833 to 13.084767 mm (4.000143 is call 18, not the least). The 13.1 mm tolerance still covers all 19 | allow-list owner (Agent 3), test_plan.md (Agent 6), decision log (Fable) | open; strict xfail |
