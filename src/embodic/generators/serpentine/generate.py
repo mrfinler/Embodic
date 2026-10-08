@@ -6,11 +6,13 @@ copper with ``xcoilRawLayout``. The board outline comes from the design's own ou
 ``buildMechanical`` scale factors, so the outline is the one part of the board GR-20 does not compare.
 """
 
+import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from types import MappingProxyType
 
 from embodic.errors import IssueCategory, Severity, Unbuildable, ValidationIssue, message_for
+from embodic.generators.base import unusable_sizes
 from embodic.generators.serpentine.canonical import BuildFailure, CanonFailure
 from embodic.generators.serpentine.derived import serpentine_derived
 from embodic.generators.serpentine.fit import max_traces_fit
@@ -49,6 +51,7 @@ from embodic.geometry.layout import BoardStack, Layout, Pad, Via, ViaRole
 from embodic.geometry.outline import build_outline
 from embodic.geometry.paths import CopperPath
 from embodic.model.design import DesignParameters
+from embodic.model.validate import TRACES_MAX
 from embodic.model.vocabulary import ConnectionTopology, Phase, TopologyKind, ViaSpan
 from embodic.model.winding_specs import SerpentineWindingSpec, StackMode
 from embodic.results import Registry
@@ -76,6 +79,37 @@ def _issue(code: str, pointers: tuple[str, ...], value: int | None = None, limit
         limit=limit,
     )
     return Unbuildable(issues=(issue,))
+
+
+def _out_of_range(design: DesignParameters, spec: SerpentineWindingSpec) -> tuple[str, ...]:
+    """Pointers of inputs the geometry cannot use (D-030): sizes, a DRC-refused width, counts beyond Xcoil's ranges."""
+    positive = {
+        "/winding/r_inner_mm": spec.r_inner_mm,
+        "/winding/clearance_mm": spec.clearance_mm,
+        "/winding/end_width_outer_mm": spec.end_width_outer_mm or spec.trace_width_mm,
+        "/winding/end_width_inner_mm": spec.end_width_inner_mm or spec.trace_width_mm,
+        "/vias/pad_mm": design.vias.pad_mm,
+        "/connection/ring_width_mm": design.connection.ring_width_mm,
+        "/connection/terminal_pad_mm": design.connection.terminal_pad_mm,
+    }
+    bad = unusable_sizes(positive, ("/winding/trace_width_mm", spec.trace_width_mm), design.drc_rules)
+    if not (math.isfinite(spec.r_outer_mm) and spec.r_outer_mm > spec.r_inner_mm):
+        bad.append("/winding/r_outer_mm")
+    if not (math.isfinite(spec.fillet_radius_mm) and spec.fillet_radius_mm >= 0):
+        bad.append("/winding/fillet_radius_mm")
+    if not math.isfinite(spec.start_angle_rad):
+        bad.append("/winding/start_angle_rad")
+    if spec.turns < 1:
+        bad.append("/winding/turns")
+    if spec.strands < 1:
+        bad.append("/winding/strands")
+    if spec.turns >= 1 and spec.strands >= 1 and spec.turns * spec.strands > TRACES_MAX:
+        bad += ["/winding/turns", "/winding/strands"]
+    if design.rotor.poles < 2:
+        bad.append("/rotor/poles")
+    if spec.layers_per_phase < 1:
+        bad.append("/winding/layers_per_phase")
+    return tuple(bad)
 
 
 def _refusal(failure: CanonFailure) -> Unbuildable:
@@ -378,6 +412,8 @@ def generate_serpentine(design: DesignParameters, registry: Registry) -> BoardSt
     spec = design.winding
     if not isinstance(spec, SerpentineWindingSpec):
         raise TypeError(f"generate_serpentine needs a serpentine winding, got {type(spec).__name__}")
+    if pointers := _out_of_range(design, spec):
+        return _issue("UNBUILDABLE_SERPENTINE_INPUT_OUT_OF_RANGE", pointers)
     d = derive(params_from_design(design, spec))
     plan = plan_stack(d)
     if isinstance(plan, CanonFailure):
