@@ -4,11 +4,18 @@ Agent 4's ``drc_universe.contract_exemptions`` predates rule 5 and rule 2b, so t
 its result.
 """
 
+import math
 from collections.abc import Sequence
 
-from brute_clearance import centreline_bracket
-from drc_universe import COINCIDENT_MM, Cls, Item, Pair, _box_gap, _ends, _owners, _pairs, _paths, disc_centre
+from brute_clearance import bounding_boxes, centreline_bracket
+from drc_universe import COINCIDENT_MM, Cls, Item, Pair, _ends, _owners, _pairs, _paths, disc_centre
 from records import Line, Prim
+
+
+def _box_gap(p: Prim, q: Prim) -> float:
+    """Return the distance between the centreline bounding boxes of two primitives (0 when they overlap)."""
+    a, b = bounding_boxes([p, q])
+    return math.hypot(max(0.0, a[0] - b[2], b[0] - a[2]), max(0.0, a[1] - b[3], b[1] - a[3]))
 
 
 def t_junction_pairs(items: Sequence[Item]) -> set[Pair]:
