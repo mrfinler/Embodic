@@ -75,8 +75,8 @@ def test_pr_03_every_built_path_is_continuous(design: DesignParameters) -> None:
 @pytest.mark.req("REQ-F-14")
 @settings(max_examples=max(20, COMPUTE_EXAMPLES * 4))
 @given(draft=mutated_drafts())
-def test_pr_05_arbitrary_values_never_raise_or_return_non_finite(draft: Any) -> None:
-    """PR-05. Catches an uncaught exception, a silent invalid input or a NaN/infinity in any result."""
+def test_pr_05_arbitrary_values_never_raise_and_invalid_values_return_issues(draft: Any) -> None:
+    """PR-05 (exception part). Catches an uncaught exception or an invalid input that returns no issue."""
     parsed = parse_draft(draft)
     if isinstance(parsed, DraftIncomplete):
         assert parsed.missing or parsed.issues
@@ -86,6 +86,17 @@ def test_pr_05_arbitrary_values_never_raise_or_return_non_finite(draft: Any) -> 
     assert [i.code for i in outcome.issues if i.code.startswith("INTERNAL_")] == []
     if any(i.severity is Severity.ERROR for i in outcome.issues):
         assert not outcome.ok
+
+
+@pytest.mark.req("REQ-F-14")
+@pytest.mark.xfail(strict=True, reason="DEF-M2f-01: valid input gives kv_rpm_per_v and THD of +inf (physics owner)")
+def test_pr_05_valid_input_gives_finite_results() -> None:
+    """PR-05 (finite part), found by the random search: CF-11 with the block magnet centred at r 5 mm."""
+    design = cf11()
+    magnet = dataclasses.replace(design.rotor.magnet, r_center_mm=5.0)
+    design = dataclasses.replace(design, rotor=dataclasses.replace(design.rotor, magnet=magnet))
+    outcome = _outcome(design)
+    assert [i for i in outcome.issues if i.severity is Severity.ERROR] == []
     assert list(_nonfinite_tags(outcome_to_json(outcome))) == []
 
 
