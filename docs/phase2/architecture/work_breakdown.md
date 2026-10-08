@@ -211,7 +211,7 @@ writes them; the "after" column names the in-flight unit that must merge first.
 | U-M1b fix round (test IDs, DEF-M1b-01); revision 2026-10-05 (U-D3): merged into the U-M1c fix round, see §8 | `tests/unit/geometry/test_transforms.py`<br>`tests/unit/geometry/test_discretise.py` | - | test names and docstrings say UT-GEO-22 and UT-GEO-23 instead of UT-GEO-12 and UT-GEO-15 | no test in `tests/unit/geometry` names UT-GEO-12, and only the determinism test in `test_layout.py` names UT-GEO-15; commit gates green |
 | U-M2a fix round (model, U-M2a report and `screen_model_reconciliation.md`); revision 2026-10-05 (U-D3): runs after U-S4b and U-D3 merge and also adds the D-016 fields, see §8 | `src/embodic/model/**`<br>`src/embodic/errors/catalogue/model.py`<br>`tests/unit/model/**` | U-M1z, Agent 1's screens.md revision | units `UM`, `W_PER_M2_K`, `OHM_M`, `PER_K`, `G_PER_CM3` on plating, convection and material override values; `phases` optional with neutral value 3 (R9); widget ids of R5, R6 and R9; INFO issue `RANGE_COIL_GAP_BELOW_CLEARANCE` (R12); a UT-GEO-12 test (stack-up z exact, Phase 1 meaning) | commit gates green; UT-MOD-03 asserts the new units; a blank spiral draft no longer lists `/phases`; `checks/screen_model_diff.py` prints nothing in lists 2 and 3 |
 
-## 8. Units added since 2026-10-05 (revision 2026-10-05, U-D3; revision 2026-10-08, U-D4; revision 2026-10-08 (U-D5); revision 2026-10-08 (U-D6); revision 2026-10-08 (U-D7); revision 2026-10-09 (U-D8))
+## 8. Units added since 2026-10-05 (revision 2026-10-05, U-D3; revision 2026-10-08, U-D4; revision 2026-10-08 (U-D5); revision 2026-10-08 (U-D6); revision 2026-10-08 (U-D7); revision 2026-10-09 (U-D8); revision 2026-10-09 (U-D9))
 
 Fable added these units from 2026-10-05 on. Units with the same **Batch** run at the same time. A batch named after a wave
 of §3 (for example `W5`) runs beside that wave's §1 units. `checks/check_contract.py` parses this table and checks that
@@ -261,6 +261,11 @@ no two units of one batch share a write path. **After** names what must merge fi
 | U-V3b | Agent 4 | B18 | `tests/independent/**` | U-M3-fix2 | rules 5 and 2b in the independent exemption model; the DEF-M3a-01, DEF-UV3-01 and DEF-UV3-02 xfails retired after re-measuring | done, merged 3246f09; `pytest tests/independent -q` 302 passed, 1 skipped, 2 xfailed (DEF-M1V-03) |
 | U-D8 | Agent 6 | B19 | `docs/phase2/architecture/**` | - | contract text for D-036 and D-037; this table | `checks/check_contract.py` and the trace matrix pass |
 | U-E8 | Agent 2 | B19 | `docs/phase2/engineering/**`<br>`docs/phase2/evidence/evidence_register.md`<br>`docs/phase2/evidence/evidence_register.json`<br>`docs/phase2/evidence/source_gaps_phase2.md` | - | positions on the three items M3 left open: XD-WAVE-001 and the overlap delta case, serpentine strands > 1 beside a same-net via, the per-phase stack interconnect | the ACCEPTANCE of its brief; Fable reviews |
+| U-M4r-fix | Agent 1 | B20 | `resources/themes/**`<br>`tools/design/**`<br>`docs/phase2/design/design_spec.md` | - | the theme files carry the status tokens (D-038a); design_spec.md §6 names the toolstrip icon stems of interfaces.md §11 | done, merged 199a655; `tools/design/check_theme_tokens.py` exits 0 and `tests/unit/ui/shell/test_contrast_check.py` passes (U-M4r-fix report) |
+| U-M4-fix | Agent 3 | B20 | `src/embodic/ui/viewmodels/appearance.py`<br>`tests/unit/property/t_junctions.py`<br>`tests/golden/expected_diffs/wave.toml`<br>`tests/golden/m3_wave/test_gr22_results.py`<br>`src/embodic/io/exporters.py`<br>`src/embodic/io/report.py`<br>`tests/unit/embodic_io/exporters/**`<br>`src/embodic/results/labels.py`<br>`src/embodic/results/__init__.py`<br>`tests/unit/results/**` | U-M4a, U-M4b | one `PhaseRenderMode` enum; `t_junctions.py` without private imports; XD-WAVE-001 `verified` and XD-WAVE-002 (D-038b, D-038c); `engine_version` is the embodic version (D-038d); `embodic.results.labels` read by the PDF report (D-038e) | done, merged 71cdcf1; merged gate 6 of 6 (store `decisions.tsv`, 2026-10-09T04:10Z) |
+| U-M4c-2 | Agent 3 | B21 | `src/embodic/ui/views/coil_panel.py`<br>`src/embodic/ui/views/phase_panel.py`<br>`src/embodic/ui/views/layer_panel.py`<br>`src/embodic/ui/views/board_rotor_panel.py`<br>`src/embodic/ui/viewmodels/session.py`<br>`src/embodic/ui/strings/design.py`<br>`tests/ui/qt_design/**`<br>`tests/unit/ui/session/**`<br>`tests/unit/embodic_io/project/make_examples.py`<br>`resources/examples/**` | U-M4c | the inspector items U-M4c left unbuilt and three defects: segment controls, pair rotation, board picker, screw table, "Mark as measured", `phase-balance-status`, the `offer_recovery` test, DEF-3 heading, and the example builder rounding derived values to 1e-9 (DEF-1, D-038f) | the ACCEPTANCE of its brief; Fable reviews |
+| U-S4d | Agent 1 | B21 | `docs/phase2/design/**`<br>`tools/design/**`<br>`resources/themes/**`<br>`resources/icons/**` | U-M4c | design review of the first M4 screens, with one ruling per open point (greyscale exports, label density, new objectNames, tab focus ring, DRC wording in the rail, rail below 1280 px) | the ACCEPTANCE of its brief; Fable reviews |
+| U-D9 | Agent 6 | B21 | `docs/phase2/architecture/**` | - | contract text for D-038; this table | `checks/check_contract.py` and the trace matrix pass |
 
 The M1 rows of §1 keep U-M1c's full path list. The U-M1c fix round leaves out `src/embodic/model/drc_rules.py` and
 `tests/golden/m1_drc/**`, so it shares no path with the U-M2a fix round or the U-M1d fix round 2. U-V1b-fix may run
@@ -328,3 +333,24 @@ them. The write-path cells of the three §1 rows now match the briefs Fable disp
 §3 waves W0 and W8, and naming B19 after either would also compare units that are not running. The check therefore
 does not see B19 beside the three M4 units. The five dispatched path lists share no path (`verified` by running
 `paths_overlap` from `checks/check_contract.py` over them, U-D8).
+
+Revision 2026-10-09 (U-D9). Wave M4-2 is two dispatches (store `decisions.tsv`, 2026-10-09T02:30Z and 04:10Z). The
+table calls them B20 and B21 and names neither after a §3 wave, for the reason given for B19.
+
+B20 ran on main bcc6749: U-M4r-fix (Agent 1), U-M4-fix (Agent 3) and U-M4c (Agent 3, keeps its §1 row). Fable merged
+them as 199a655, 71cdcf1 and 3acb044, and the merged gate was 6 of 6 with 2323 passed (store `decisions.tsv`, not
+re-run here). U-M4c is done with part of its scope. Its report lists what it did not build: screw-table editing, manual
+phase assignment, pair rotation, `layer-pairs-notice`, the board picker, the "Mark as measured" menu and
+`phase-balance-status`, and it left the segment controls as combo boxes. Those items move to U-M4c-2. The two panels
+`serpentine_panel.py` and `wave_panel.py` of its §1 row do not exist on main 3acb044 (`verified` by listing
+`src/embodic/ui/views`): the field table already places those rows, and the shared row code sits in `coil_panel.py`.
+U-M4c also edited two files outside its brief, `src/embodic/ui/strings/__init__.py` and
+`tests/ui/qt_shell/test_toolstrip_and_start.py` (U-M4c report).
+
+B21 runs on main 3acb044: U-M4c-2, U-S4d, U-D9 and U-M4d (Agent 3, keeps its §1 row). U-M4e and U-V4 keep their §1
+rows unchanged. The brief of U-M4d grants the wiring in `src/embodic/ui/views/main_window.py` and
+`src/embodic/ui/app.py`, as the brief of U-M4c did. Neither §1 row lists those two files, because U-M4b owns them there
+and a second M4 row with the same path fails the milestone rule of `checks/check_contract.py`. U-M4c-2 does not touch
+them (its brief stops and reports if a panel needs a hook there). The B21 path lists, U-M4d's included, share no path
+(`verified` by running `paths_overlap` over the brief lists, U-D9). U-M4c-2 also names "the one test module that pins
+example hashes, if any"; its path is `unresolved` here, so the row omits it.

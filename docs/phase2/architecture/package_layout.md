@@ -23,6 +23,9 @@ Revision 2026-10-05 (U-D2, corrections from the W1 and W2 reports):
 - §1. Test folders follow a naming rule that keeps every top-level test package name unique and untaken (U-M1y, MT-08).
   The planned golden and Qt test folders are renamed to fit it, and `tests/unit/io` became `tests/unit/embodic_io`.
 
+Revision 2026-10-09 (U-D9, D-038e; `src/embodic/results/labels.py` on main 3acb044, `verified` by reading). §1 lists
+`results/labels.py`.
+
 ## 1. Repository tree
 
 ```
@@ -47,7 +50,8 @@ embodic/
                                  operating.py materials.py analysis_options.py drc_rules.py (DrcRules, validate_drc_rules)
                                  winding_specs.py schema.py (type-hint walk: leaves, JSON conversion, pointers)
                                  fields.py draft.py provenance.py validate.py
-    results/                     status.py traceable.py registry.py analysis_result.py formatting.py
+    results/                     status.py traceable.py registry.py analysis_result.py formatting.py labels.py
+                                 (QUANTITY_LABELS, D-038e)
     winding/                     feasibility.py star_of_slots.py winding_factors.py plan.py
     geometry/                    merged (U-M1b): primitives.py transforms.py discretise.py paths.py (CopperPath,
                                  COINCIDENCE_MM) circuit.py layout.py arrays.py hashing.py distance.py grid.py

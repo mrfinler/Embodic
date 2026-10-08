@@ -52,6 +52,12 @@ the copper-count rule of each port and corrects the XD-WAVE text. §5 closes the
 warnings in `BoardStack.issues`. §7 adds rule 2b, per primitive (D-037a), and the rule 5 end-point reading. §13 adds
 point 7 (M3 items closed) and point 8 (the per-phase stack limitation of D-037b).
 
+Revision 2026-10-09 (U-D9, claude-sonnet-5-5, D-038; the code on main 3acb044 was read for every item): §2.2 and §13
+point 7 give XD-WAVE-001 and XD-WAVE-002 their status and close the via-length question (D-038b, D-038c). §3 adds the
+module `embodic.results.labels` (D-038e). §9.3 states the engine version, the DRC behaviour of the PDF report, what
+`write_bundle` returns, and which import of `PhaseRenderMode` is canonical (D-038d). §11 widens the
+`ThemeTokens.colours` comment to the status tokens (D-038a) and names the theme generator.
+
 ## 0. Rules for every public boundary
 
 - Lengths are millimetres (`_mm`), angles radians (`_rad`) inside the core, temperature °C (`_degc`), current A (`_a`),
@@ -752,15 +758,25 @@ Revision 2026-10-09 (U-D8, D-031e, D-035e, D-037d; main 8a297a0, `verified` by r
 `validate_design` runs both rules from `CROSS_FIELD_RULES` (`model/validate.py` l.343-356). The serpentine row also
 closes DEF-U-D4-02 (§13 point 7).
 
-Revision 2026-10-09 (U-D8, D-035e, D-036e, D-037d; `tests/golden/expected_diffs/wave.toml` and
-`tests/golden/m3_wave/test_gr22_results.py` on main 8a297a0, `verified` by reading). XD-WAVE text. `wave.toml` holds one
-entry, XD-WAVE-001. In the overlap wave with a star connection embodic counts the three tap stubs as phase link copper,
-and Xcoil sets its link sum to zero (`engine.js` l.2172). Its status is `assumption` until Agent 2 decides (U-E8), and
-it does not cover the overlap wave with a delta connection (Xcoil 0 W, embodic 0.00196 W; U-M3-fix2 report, not
-re-measured here). The via-length difference above has no XD-WAVE entry. Instead
-`test_gr22_phase_resistance_differs_from_xcoil_only_by_the_via_barrel_length` (`test_gr22_results.py` l.124) removes
-the barrel length and compares. D-035e names an XD-WAVE entry for it. The code and the decision differ here, and §13
-point 7 reports it for Fable.
+Revision 2026-10-09 (U-D8, D-035e, D-036e, D-037d; corrected by U-D9 with D-038b and D-038c;
+`tests/golden/expected_diffs/wave.toml` and `tests/golden/m3_wave/test_gr22_results.py` on main 3acb044, `verified` by
+reading). XD-WAVE text. `wave.toml` holds two entries.
+
+- XD-WAVE-001 (`wave.toml` l.12) covers the overlap wave with a star connection. embodic counts the three tap stubs as
+  phase link copper, and Xcoil sets its link sum to zero (`engine.js` l.2172). Its status is `verified` (U-E8,
+  `docs/phase2/engineering/open_positions_m3.md` §1a): the stubs are the only copper between each minus terminal and
+  the star ring, so each carries I_line, and Xcoil's zero is an omission.
+- XD-WAVE-002 (`wave.toml` l.21) covers the overlap wave with a delta connection, case
+  `wave-analysis-overlap-l2-m3-p16-t2-delta`. embodic counts the three line leads at I_line^2 x R and gets
+  1.962909e-03 W. That value is an upper bound, and Xcoil reports 0 W because its overlap path leaves `icR` null
+  (`engine.js` l.2154). Its status is `inferred`. The true value is `unresolved` until the spec names the external
+  closure point (U-E8, `open_positions_m3.md` §1b).
+- `test_gr22_interconnect_loss_matches_xcoil_for_star_and_delta` (`test_gr22_results.py` l.154) applies both entries.
+  `test_gr22_overlap_difference_is_the_uncounted_copper_and_nothing_else` (l.168) reclassifies the uncounted copper as
+  carrying no current and then finds embodic equal to Xcoil, so no other copper differs.
+- The via-length difference above has no XD-WAVE entry. D-038b corrects D-035e: no entry is owed.
+  `test_gr22_phase_resistance_differs_from_xcoil_only_by_the_via_barrel_length` (`test_gr22_results.py` l.124) removes
+  the barrel length at function level and compares.
 
 ### 2.3 Field table, draft and the new-design flow (ADR-0010)
 
@@ -1240,6 +1256,25 @@ Revision 2026-10-08 (U-D6, DEF-M2e4-01). `motor_constant_n_m_per_sqrt_w` stays i
 `src/embodic/results/analysis_result.py` and the unit from `src/embodic/units.py` (`verified` by reading, 2026-10-08).
 The kernel `motor_constant_n_m_per_sqrt_w` is on main (`src/embodic/physics/circuit.py` l.195). U-M2-fix3 adds the unit
 and fills the field from that kernel. The other four loss-sum fields are on main.
+
+Revision 2026-10-09 (U-D9, D-038e; `src/embodic/results/labels.py` on main 3acb044, `verified` by reading and by
+running). The module `embodic.results.labels` holds the English display label of every `AnalysisResult` field. Before it
+existed, the Key results table of the PDF report printed raw field names (U-M4a report, Fable's finding ii).
+
+```python
+QUANTITY_LABELS: Mapping[str, str]  # AnalysisResult field name -> English label, e.g. "ke_line_peak_v_s_per_rad" -> "Line back-EMF constant, peak"
+```
+
+- The keys are the 35 `AnalysisResult` field names, one label each and no extra key
+  (`test_every_analysis_result_field_has_exactly_one_label`, `tests/unit/results/test_labels.py` l.15). The labels are
+  distinct English text without underscores (l.20).
+- The mapping is read-only (`MappingProxyType`, `labels.py` l.10), and `embodic.results` exports it (`__init__.py` l.5).
+- The labels follow the equation titles of `equation_specification.md`. The two labels that the summary strip of the
+  shell shows have the same text as `shell.sum-ke.label` and `shell.sum-r-phase.label` in `embodic.ui.strings.shell`
+  (`test_labels.py` l.27).
+- Readers. The PDF report prints these labels in its Key results table (`io/report.py` l.108). The results view-model of
+  §11 reads the same mapping for `ResultRow.label`, so the rail, the cards and the PDF name a quantity alike and UI
+  strings do not repeat the labels. No code builds `ResultRow` on main 3acb044; U-M4d does.
 
 ## 4. `embodic.winding`: spiral phase plan
 
@@ -2541,7 +2576,7 @@ class PhaseRenderMode(StrEnum):
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ExportMetadata:
     embodic_version: str
-    engine_version: str
+    engine_version: str  # the embodic version string: there is no separate engine (D-038d)
     registry_version: str
     design_hash: str
     generated_utc: str
@@ -2573,13 +2608,43 @@ def write_dxf(outcome: ComputeOutcome, path: Path, part: Literal["complete", "ou
               *, allow_drc_errors: bool = False) -> ExportSummary | ExportRefused: ...
 def write_report_pdf(outcome: ComputeOutcome, path: Path, *,
                      mode: PhaseRenderMode = PhaseRenderMode.GREYSCALE_HATCH) -> ExportSummary | ExportRefused:
-    """Own dependency-free writer (port of Xcoil report.js, team's own code). Every value with unit and status."""
+    """Own dependency-free writer (port of Xcoil report.js, team's own code). Every value with unit and status.
+    Refuses only without a layout. A failed DRC never refuses: the report documents it (D-038d)."""
 def write_readme(outcome: ComputeOutcome, files: Sequence[ExportSummary], path: Path) -> ExportSummary:
     """Plain-text README.txt describing every exported file, units, frame and the estimate caveats (Xcoil ui-main.js l.37)."""
 def write_bundle(outcome: ComputeOutcome, kinds: Sequence[ExportKind], path: Path, *,
                  allow_drc_errors: bool = False) -> tuple[ExportSummary, ...] | ExportRefused:
-    """ZIP of the selected exports plus README.txt (stdlib zipfile)."""
+    """ZIP of the selected exports plus README.txt (stdlib zipfile). Returns the first refusal and then writes no ZIP.
+    The summaries name each member by its path inside the ZIP, for example Path("motor_report.pdf")."""
 ```
+
+Revision 2026-10-09 (U-D9, D-038d; `src/embodic/io` on main 3acb044, `verified` by reading and by running each case
+below on the packaged examples). What the exporters do, as the code implements it:
+
+- Engine version. `ExportMetadata.engine_version` is the embodic version string (`export_metadata`, `io/exporters.py`
+  l.82-92: `engine_version=versions.embodic`). There is no separate engine. The Python and NumPy versions stay in
+  `VersionInfo` (`outcome.py` l.25-32) and are not part of the stamp. The D08 example gives `0.0.1` for both fields.
+  `test_dxf.py` l.118 and `test_svg.py` l.75 pin the equality.
+- PDF report and DRC. `write_report_pdf` never refuses for a failed DRC. It asks `exportable_boards` with
+  `allow_drc_errors=True` (`io/report.py` l.250), prints the DRC result in the report (`_drc`, l.115) and stamps
+  `drc_passed` in the metadata. Its only refusal is `no_layout`. The wave example, with 186 violations, writes a four-page
+  PDF without confirmation.
+- Bundle and DRC. `write_bundle` still applies the DRC gate to the whole bundle (`io/bundle.py` l.76-78). A bundle of the
+  PDF report alone, for the wave example without `allow_drc_errors`, returns `drc_errors_not_confirmed`.
+- Bundle and `no_screws`. `write_dxf(part="screws")` returns `no_screws()` when the boards have no screw holes
+  (`io/dxf_writer.py` l.171). `write_bundle` returns that refusal from the first selected writer that refuses
+  (`io/bundle.py` l.86) and writes no ZIP. Asking for `ExportKind.DXF_SCREWS` on the D08 example gives
+  `ExportRefused(reason="no_screws")` and no file. `test_ut_exp_05_bundle_refuses_screws_on_a_board_without_holes`
+  (`test_report_readme_bundle.py` l.116) pins it.
+- Bundle member paths. The returned summaries name each member by its path inside the ZIP (`io/bundle.py` l.92). A
+  bundle named `m.zip` of SVG and PDF returns `m.svg`, `m_report.pdf` and `README.txt`, and the archive holds the same
+  names. The temporary folder in which the writers worked never appears. `test_ut_exp_05_bundle_holds_selected_files_and_readme`
+  (`test_report_readme_bundle.py` l.102) pins it.
+- `PhaseRenderMode`. The enum is defined in `embodic.io.exporters` (l.35) and that import is canonical. The view-model
+  module `embodic.ui.viewmodels.appearance` re-exports the same object (l.5), and `geometry_view.py` l.35 imports it
+  from there. §11 uses it through `AppearanceViewModel`. The four import contracts hold with this import (`lint-imports`
+  reports 4 kept on main 3acb044). `test_phase_render_mode.py` l.19 shows that the view-model hands the writers their
+  own enum member.
 
 ## 10. `embodic.outcome` and `embodic.api`: the compute facade
 
@@ -2677,14 +2742,16 @@ class PhaseStyle:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ThemeTokens:
     name: Literal["light", "dark"]
-    colours: Mapping[str, str]  # chrome tokens, white / grey / black only (REQ-L-04)
+    colours: Mapping[str, str]  # chrome tokens (white / grey / black, REQ-L-04) plus status-pass, status-fail and
+    # status-warn, the three semantic status tokens (D-038a)
     phases: tuple[PhaseStyle, PhaseStyle, PhaseStyle]
     focus_ring_px: int
     control_height_px: int
 
 
 def load_theme(name: Literal["light", "dark"]) -> ThemeTokens:
-    """Reads resources/themes/<name>.json (Agent 1). Raises on a missing token: the build ships both themes."""
+    """Reads resources/themes/<name>.json, which tools/design/build_themes.py generates from resources/themes/tokens.json
+    (the one source). Raises on a missing chrome token: the build ships both themes."""
 
 
 def resolve_theme(choice: ThemeName, os_prefers_dark: bool) -> Literal["light", "dark"]: ...
@@ -2837,6 +2904,23 @@ class AppearanceViewModel(Protocol):
     def toggle_phase_render_mode(self) -> None: ...
 ```
 
+Revision 2026-10-09 (U-D9, D-038a; `src/embodic/ui/theme.py`, `tools/design/build_themes.py` and
+`resources/themes/*.json` on main 3acb044, `verified` by reading and by running). Theme tokens and the theme generator:
+
+- `ThemeTokens.colours` holds 20 tokens per theme: the 17 chrome tokens (grey only, REQ-L-04; `CHROME_TOKENS`,
+  `theme.py` l.18) and the three semantic status tokens `status-pass`, `status-fail` and `status-warn` (D-038a). The
+  status tokens are the only chromatic entries. REQ-L-04's rule of white, grey and black names the chrome tokens. The
+  six `phase-*` colours live in `phases`, not in `colours`.
+- The status tokens are keys of `colours`, not fields of `ThemeTokens`. `parse_theme` (`theme.py` l.106) requires only
+  `CHROME_TOKENS`, so a theme file without a status token still loads (17 colours, run on `light.json`).
+  `tools/design/check_theme_tokens.py` requires all 20 (`STATUS_TOKENS`, l.26). `token_hex` in `tools/contrast_check.py`
+  (l.67) looks up the contrast pairs of `tokens.json` in `colours`, and some pairs name a status token. A theme file
+  without them therefore raised `KeyError: 'status-pass'` in `tests/unit/ui/shell/test_contrast_check.py` on main
+  bcc6749 (U-M4r-fix report).
+- `load_theme` (`theme.py` l.126) reads `resources/themes/<name>.json`. `tools/design/build_themes.py` writes that file
+  (`theme_tokens`, l.64) with the QSS and the glyphs from `resources/themes/tokens.json`, the one source of colours.
+  Running the generator twice leaves `git status` clean.
+
 ## 12. `embodic.cli`
 
 ```python
@@ -2890,14 +2974,15 @@ Revision 2026-10-08 (U-D6). The rows above name main c7fff3a; the two U-D6 rows 
 closed on main a336531 except for `motor_constant_n_m_per_sqrt_w` (DEF-M2e4-01, §3) and the spiral generator's
 `Circuit.interconnect_roles` (`inferred` from the U-M2e-4 report and the passing signature check). U-M2-fix3 owns
 both.
-7. M3 items closed (revision 2026-10-09, U-D8; main 8a297a0, `verified` by reading unless the row says otherwise).
+7. M3 items closed (revision 2026-10-09, U-D8; main 8a297a0, `verified` by reading unless the row says otherwise;
+   the XD-WAVE row corrected by U-D9 on main 3acb044).
 
 | Item | Closed by | State on main 8a297a0 |
 |---|---|---|
 | §2.2: the INVALID code of the wave copper-count rule is U-M3-fix's to name | D-035e, D-037d | `INVALID_WAVE_COPPER_COUNT` in `validate_design` (§2.2, revision U-D8) |
 | §5: the wave case of `INTERCONNECT_EXTERNAL` is `unresolved`; `BoardStack` has no `issues` field | D-035a, D-036d | `RANGE_WAVE_INTERCONNECT_EXTERNAL` through `BoardStack.issues` (§6, revision U-D8) |
 | §7: rule 2b text and the rule 5 end-point reading | D-036a, D-037a | `_taps` and `_junctions` in `drc/items.py` (§7, revision U-D8) |
-| §2.2: U-M3-fix records the via-length difference as an XD-WAVE entry | D-035e, D-036e | `wave.toml` holds XD-WAVE-001 (overlap star) only. The via-length difference is checked by a GR-22 test, not by an XD-WAVE entry. The code differs from D-035e here; Fable rules whether an entry is still owed |
+| §2.2: U-M3-fix records the via-length difference as an XD-WAVE entry | D-035e, D-036e, D-038b | No entry is owed (D-038b corrects D-035e). `test_gr22_phase_resistance_differs_from_xcoil_only_by_the_via_barrel_length` (`test_gr22_results.py` l.124) removes the barrel length at function level and compares. `wave.toml` on main 3acb044 holds XD-WAVE-001 (overlap star, `verified`) and XD-WAVE-002 (overlap delta, `inferred`; §2.2) |
 | DEF-U-D4-02 (point 6): `validate_design` checks only `one_board_per_phase` | D-032c (U-M2-fix, work_breakdown.md §8) | both stack modes checked (`model/validate.py` l.196-200) |
 
 8. Recorded limitation (revision 2026-10-09, U-D8, D-037b): "per-phase stack: interconnect between boards not
