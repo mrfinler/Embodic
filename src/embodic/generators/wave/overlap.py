@@ -20,7 +20,7 @@ from embodic.generators.wave.assemble import (
 from embodic.generators.wave.build import MINUS, PHASE_NAMES, Terminal, WaveVia
 from embodic.generators.wave.derive import WaveFrame
 from embodic.generators.wave.fillet import fillet_path, taper_junctions
-from embodic.generators.wave.interconnect import IcItem, IcPad, RingLink
+from embodic.generators.wave.interconnect import IcItem, IcPad, IcPart
 from embodic.generators.wave.xprim import XArc, XLine, XPrim, ang_norm, polar, reverse_prims, rotate_prims
 from embodic.model.design import DesignParameters
 from embodic.model.vocabulary import ConnectionTopology
@@ -235,17 +235,21 @@ def _star_ring(
     first, last = order[(big + 1) % 3], order[big]
     a1 = ang[first]
     a2 = a1 + ang_norm(ang[last] - a1)
-    prims: list[XPrim] = [XArc(cx=0.0, cy=0.0, r=r_n, a1=a1, a2=a2, w=bw, kind="ring")]
-    for t in taps:
-        e = polar(r_n, math.atan2(t.y, t.x))
-        prims.append(XLine(x1=t.x, y1=t.y, x2=e[0], y2=e[1], w=wn, kind="stub"))
+    seq = (first, order[(big + 2) % 3], last)
+    ring = IcPart(
+        role="ring", prims=(XArc(cx=0.0, cy=0.0, r=r_n, a1=a1, a2=a2, w=bw, kind="ring"),),
+        taps=tuple(taps[k].via for k in seq),
+    )  # fmt: skip
+    stubs = [
+        IcPart(role="link", prims=(XLine(x1=t.x, y1=t.y, x2=ex, y2=ey, w=wn, kind="stub"),), phase=t.phase)
+        for t in taps
+        for ex, ey in [polar(r_n, math.atan2(t.y, t.x))]
+    ]
     an = (a1 + a2) / 2
     r_pad_n = r_n - bw / 2 - s - pad_r
     pn, rr = polar(r_pad_n, an), polar(r_n, an)
-    prims.append(XLine(x1=rr[0], y1=rr[1], x2=pn[0], y2=pn[1], w=bw, kind="stub"))
-    seq = (first, order[(big + 2) % 3], last)
-    ring = RingLink(net="N", a1=a1, a2=a2, taps=tuple(taps[k] for k in seq), level=0)
-    item = IcItem(kind="ring", layer=0, net="N", prims=tuple(prims), touch=tuple(t.via for t in taps), link=ring)
+    lead = IcPart(role="neutral_lead", prims=(XLine(x1=rr[0], y1=rr[1], x2=pn[0], y2=pn[1], w=bw, kind="stub"),))
+    item = IcItem(kind="ring", layer=0, net="N", parts=(ring, *stubs, lead), touch=tuple(t.via for t in taps))
     return item, IcPad(x=pn[0], y=pn[1], net="N", phase=-1, layer=0), r_pad_n - pad_r
 
 
@@ -272,7 +276,8 @@ def _leads(
         net = PHASE_NAMES[t.phase] + ("+" if t.sign > 0 else "-") if open_winding else ("U", "V", "W")[t.phase]
         pe = polar(r_pad, d.ap)
         prims = corridor_prims((t.x, t.y), d.a, d.ap, r_cor, r_pad, w_s, rho)
-        items.append(IcItem(kind="line", layer=layer, net=net, prims=tuple(prims), touch=(t.via,), phase=t.phase))
+        line = IcPart(role="line", prims=tuple(prims), phase=t.phase)
+        items.append(IcItem(kind="line", layer=layer, net=net, parts=(line,), touch=(t.via,), phase=t.phase))
         pads.append(IcPad(x=pe[0], y=pe[1], net=net, phase=t.phase, layer=layer))
     edge = r_pad + pad_r if sign > 0 else r_pad - pad_r
     return items, pads, edge
@@ -324,8 +329,11 @@ def _objects(
             by_slot.setdefault((kind, t.slot), []).append(len(objects))
             objects.append(Obj(layer=layer, kind="track", prims=t.prims, phase=t.phase, element=t.slot,
                                polarity=1 if t.sign > 0 else -1, end_via=t.end_via))  # fmt: skip
-    for item in items:
-        objects.append(Obj(layer=item.layer, kind="ic", prims=item.prims, phase=item.phase, net=item.net, ic=item))
+    objects.extend(
+        Obj(layer=item.layer, kind="ic", prims=part.prims, phase=item.phase, net=item.net, ic=part)
+        for item in items
+        for part in item.parts
+    )
     elements = [SeriesElement(phase=t.phase, objects=tuple(by_slot[(t.kind, t.slot)])) for t in geometry.tracks]
     return objects, elements
 

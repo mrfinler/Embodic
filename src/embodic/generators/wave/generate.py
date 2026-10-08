@@ -162,7 +162,9 @@ def _build_standard(design: DesignParameters, frame: WaveFrame) -> WaveBuild | U
         if ic.unroutable:
             return _unbuildable("UNBUILDABLE_WAVE_INTERCONNECT_CROSSING", ("/connection/topology",))
         objects.extend(
-            Obj(layer=item.layer, kind="ic", prims=item.prims, phase=None, net=item.net, ic=item) for item in ic.items
+            Obj(layer=item.layer, kind="ic", prims=part.prims, phase=None, net=item.net, ic=part)
+            for item in ic.items
+            for part in item.parts
         )
         pads, r_max_all = ic.pads, max(r_max_cu, ic.r_edge)
     elements = _series_elements(frame, geometry, objects, by_slot)

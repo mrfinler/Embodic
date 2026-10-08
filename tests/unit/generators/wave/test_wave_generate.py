@@ -12,6 +12,7 @@ from embodic.errors import Unbuildable
 from embodic.generators.wave import generate_wave
 from embodic.geometry.circuit import LineLead, NeutralLead, NeutralRing, PhaseLink
 from embodic.geometry.layout import BoardStack, Layout, ViaRole
+from embodic.geometry.paths import is_continuous
 from embodic.model.design import DesignParameters
 from embodic.model.stackup import generate_even_stackup
 from embodic.model.vocabulary import ConnectionTopology, Phase
@@ -144,13 +145,52 @@ def test_star_interconnect_roles(registry: Registry) -> None:
     """Catches an interconnect path with no role or the wrong one: physics reads only the roles (section 5)."""
     board = _board(wave(), registry)
     roles = board.circuit.interconnect_roles
-    assert sorted(type(r).__name__ for r in roles) == ["LineLead"] * 3 + ["NeutralLead", "NeutralRing"]
+    assert (
+        sorted(type(r).__name__ for r in roles) == ["LineLead"] * 3 + ["NeutralLead", "NeutralRing"] + ["PhaseLink"] * 3
+    )
     ring = next(r for r in roles if isinstance(r, NeutralRing))
     taps = [board.vias[i] for i in ring.tap_via_ids]
     assert [v.role for v in taps] == [ViaRole.TERMINAL] * 3 and len({v.net for v in taps}) == 3
     leads = {r.phase for r in roles if isinstance(r, LineLead)}
     assert leads == set(Phase)
     assert any(isinstance(r, NeutralLead) for r in roles)
+
+
+@pytest.mark.parametrize("style", STYLES)
+def test_star_tap_stubs_are_phase_links_that_start_on_their_own_terminal_via(
+    style: WaveStyle, registry: Registry
+) -> None:
+    """Catches DEF-U-M3b-01: the tap stubs sat in the ring path, so the ring resistance between taps counted stubs.
+
+    Each stub is the PhaseLink of the phase whose terminal via it starts on, and the ring path holds the arc only.
+    """
+    board = _board(wave(style), registry)
+    paths = {p.id: p for p in board.paths}
+    for role in board.circuit.interconnect_roles:
+        if isinstance(role, PhaseLink):
+            x, y = paths[role.path_id].primitives[0].start_point()
+            (via,) = [v for v in board.vias if math.dist((v.x_mm, v.y_mm), (x, y)) < 1e-9]
+            assert via.net == f"PHASE_{role.phase.value}" and via.role is ViaRole.TERMINAL
+        if isinstance(role, NeutralRing):
+            assert {type(q).__name__ for q in paths[role.path_id].primitives} == {"Arc"}
+
+
+@pytest.mark.parametrize("topology", [ConnectionTopology.STAR, ConnectionTopology.DELTA])
+@pytest.mark.parametrize("style", STYLES)
+def test_every_interconnect_path_is_one_continuous_chain(
+    style: WaveStyle, topology: ConnectionTopology, registry: Registry
+) -> None:
+    """Catches DEF-U-M3b-01: a ring item of stubs and an arc is no chain (interfaces.md section 5).
+
+    As one CopperPath its pieces are neighbours by index only, so DRC rule 1 exempts the wrong pairs.
+    """
+    design = wave(style)
+    design = dataclasses.replace(design, connection=dataclasses.replace(design.connection, topology=topology))
+    board = _board(design, registry)
+    broken = [
+        p.id for p in board.paths if p.id in board.circuit.interconnect_path_ids and not is_continuous(p.primitives)
+    ]
+    assert broken == []
 
 
 def test_delta_links_belong_to_their_phase(registry: Registry) -> None:

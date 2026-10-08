@@ -16,6 +16,7 @@ from embodic.generators.wave.xprim import XArc, XLine, XPrim, ang_norm, polar
 DELTA_PAIRS = ((0, 2), (2, 1), (1, 0))
 LINE_NETS = ("U", "V", "W")
 ItemKind = Literal["line", "ring", "neutral_pad"]
+PartRole = Literal["line", "link", "ring", "neutral_lead"]
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -40,16 +41,28 @@ class RingLink:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
+class IcPart:
+    """One continuous chain of an item and the current it carries: Xcoil's item is several pieces, a path is one chain.
+
+    ``phase`` is set for line and link parts, ``taps`` (tap vias in ring order) for the ring part.
+    """
+
+    role: PartRole
+    prims: tuple[XPrim, ...]
+    phase: int | None = None
+    taps: tuple[int, ...] = ()
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
 class IcItem:
-    """One interconnect object on one copper layer (Xcoil ``ic.items`` entry)."""
+    """One interconnect object on one copper layer (Xcoil ``ic.items`` entry), split into its parts in Xcoil's order."""
 
     kind: ItemKind
     layer: int
     net: str
-    prims: tuple[XPrim, ...]
+    parts: tuple[IcPart, ...]
     touch: tuple[int, ...]
     phase: int | None = None  # line items
-    link: RingLink | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -177,27 +190,33 @@ def build_interconnect(
     pads: list[IcPad] = []
     for lk in links:
         radius = r_ring(lk.level)
-        prims: list[XPrim] = []
-        for t in lk.taps:
-            prims.extend(stub_prims(t, radius))
-        prims.append(XArc(cx=0.0, cy=0.0, r=radius, a1=lk.a1, a2=lk.a2, w=bw, kind="ring"))
-        items.append(IcItem(kind="ring", layer=link_layers[lk.layer_index], net=lk.net, prims=tuple(prims),
-                            touch=tuple(t.via for t in lk.taps), link=lk))  # fmt: skip
+        star = lk.net == "N"
+        parts = [
+            IcPart(role="link", prims=tuple(stub_prims(t, radius)), phase=t.phase if star else int(lk.net[1:]))
+            for t in lk.taps
+        ]
+        arc = (XArc(cx=0.0, cy=0.0, r=radius, a1=lk.a1, a2=lk.a2, w=bw, kind="ring"),)
+        if star:
+            parts.append(IcPart(role="ring", prims=arc, taps=tuple(t.via for t in lk.taps)))
+        else:
+            parts.append(IcPart(role="link", prims=arc, phase=int(lk.net[1:])))
+        items.append(IcItem(kind="ring", layer=link_layers[lk.layer_index], net=lk.net, parts=tuple(parts),
+                            touch=tuple(t.via for t in lk.taps)))  # fmt: skip
     for phase in range(3):
         tp = _terminal(terms, phase, 1)
         a = _angle(tp)
         pe = polar(r_pad, a)
-        items.append(IcItem(kind="line", layer=line_layer, net=LINE_NETS[phase], prims=tuple(stub_prims(tp, r_pad)),
-                            touch=(tp.via,), phase=phase))  # fmt: skip
+        line = IcPart(role="line", prims=tuple(stub_prims(tp, r_pad)), phase=phase)
+        items.append(IcItem(kind="line", layer=line_layer, net=LINE_NETS[phase], parts=(line,), touch=(tp.via,),
+                            phase=phase))  # fmt: skip
         pads.append(IcPad(x=pe[0], y=pe[1], net=LINE_NETS[phase], phase=phase, layer=line_layer))
     if connection == "star":
         tn = links[0].taps[2]
         a = _angle(tn)
         pe, rr = polar(r_pad, a), polar(r_ring(0), a)
         layer = link_layers[0]
-        items.append(IcItem(kind="neutral_pad", layer=layer, net="N",
-                            prims=(XLine(x1=rr[0], y1=rr[1], x2=pe[0], y2=pe[1], w=bw, kind="stub"),),
-                            touch=()))  # fmt: skip
+        lead = IcPart(role="neutral_lead", prims=(XLine(x1=rr[0], y1=rr[1], x2=pe[0], y2=pe[1], w=bw, kind="stub"),))
+        items.append(IcItem(kind="neutral_pad", layer=layer, net="N", parts=(lead,), touch=()))
         pads.append(IcPad(x=pe[0], y=pe[1], net="N", phase=-1, layer=layer))
     return Interconnect(
         items=tuple(items), pads=tuple(pads), links=tuple(links), r_pad=r_pad, r_edge=r_pad + pad_r,

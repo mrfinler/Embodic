@@ -136,3 +136,21 @@ def test_gr22_phase_resistance_differs_from_xcoil_only_by_the_via_barrel_length(
     verdict = compare_scalar(sum(golden) / phases, again.resistance_phase_operating_ohm.value, INTEGRATED)
     assert verdict.ok, f"{analysis_id}: {verdict}"
     assert r.resistance_phase_operating_ohm.value > again.resistance_phase_operating_ohm.value
+
+
+INTERCONNECT_CASES = [
+    a
+    for a, c in ANALYSES.items()
+    if len(c.calls[0].output["phaseKe"]) == 3 and "overlap" not in a and not a.endswith("-open")
+]
+
+
+@pytest.mark.parametrize("analysis_id", INTERCONNECT_CASES)
+def test_gr22_interconnect_loss_matches_xcoil_for_star_and_delta(analysis_id: str, golden_report: Any) -> None:
+    """Catches DEF-U-M3b-01: a star item of stubs and ring in one path, which counted 0.24 of Xcoil's loss.
+
+    The overlap style is left out: Xcoil's overlap bookkeeping sets its link sum to 0 (engine.js l.2172), so
+    it counts neither tap stubs nor leads, and embodic counts them.
+    """
+    xcoil, r, _ = _run(analysis_id)
+    golden_report.check(analysis_id, compare_scalar(xcoil["pInterconnect"], r.loss_interconnect_w.value, INTEGRATED))

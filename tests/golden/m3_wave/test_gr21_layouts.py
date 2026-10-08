@@ -13,6 +13,7 @@ from m1_layout.xcoil_map import layout_from_xcoil
 
 from embodic.generators.wave import generate_wave
 from embodic.geometry.layout import Layout
+from embodic.geometry.paths import CopperPath
 from embodic.geometry.primitives import path_length_mm
 from embodic.results import load_registry
 
@@ -53,15 +54,37 @@ def test_gr21_covers_every_style_with_two_four_and_six_layers_and_one_to_three_p
         assert {p["phases"] for p in styled} >= {1, 2, 3}
 
 
+def _objects(layout: Layout) -> list[tuple[tuple[int, str, Any, int | None], int]]:
+    """((layer, net, phase, element), primitive count) of each Xcoil-style object, in path order.
+
+    Xcoil's ring or link item is one object of stubs and an arc; the port gives each chain its own path (DEF-U-M3b-01).
+    Consecutive interconnect paths on one layer, net and phase are therefore counted as the one object they came from.
+    """
+    interconnect = set(layout.circuit.interconnect_path_ids)
+    keys: list[tuple[int, str, Any, int | None]] = []
+    counts: list[int] = []
+    previous: CopperPath | None = None
+    for p in layout.paths:
+        joins = (
+            previous is not None
+            and p.id in interconnect
+            and previous.id in interconnect
+            and (previous.layer, previous.net, previous.phase) == (p.layer, p.net, p.phase)
+        )
+        if joins:
+            counts[-1] += len(p.primitives)
+        else:
+            keys.append((layout.copper_layers.index(p.layer), p.net, p.phase, p.element))
+            counts.append(len(p.primitives))
+        previous = p
+    return list(zip(keys, counts, strict=True))
+
+
 @pytest.mark.parametrize("case_id", CASES)
 def test_gr21_objects_have_xcoils_layer_net_phase_and_primitive_count(case_id: str) -> None:
     """Catches a dropped, duplicated or misordered track, link or interconnect object."""
     layout, expected = _generated(case_id)
-    key = [(layout.copper_layers.index(p.layer), p.net, p.phase, p.element, len(p.primitives)) for p in layout.paths]
-    golden = [
-        (expected.copper_layers.index(p.layer), p.net, p.phase, p.element, len(p.primitives)) for p in expected.paths
-    ]
-    assert key == golden
+    assert _objects(layout) == _objects(expected)
 
 
 @pytest.mark.parametrize("case_id", CASES)
