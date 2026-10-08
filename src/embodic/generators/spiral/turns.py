@@ -230,29 +230,43 @@ def radial_bound(frame: CoilFrame) -> float:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Eye:
-    """Radial window for the centre via and the lead-arc end on the coil centre line (G5 full closing, k = 1)."""
+    """Radial window for the centre vias and lead-arc ends on the coil centre line (G5 full closing).
+
+    k series groups put k vias on the centre line from r_hi downward, one via pitch apart.
+    """
 
     r_lo_mm: float
     r_hi_mm: float
+    vias: int = 1
+    via_pitch_mm: float = 0.0
 
     @property
     def fits(self) -> bool:
-        """One via fits when the window is not empty."""
-        return self.r_hi_mm - self.r_lo_mm >= -_FIT_SLACK_MM
+        """The k vias fit when the window holds k - 1 via pitches."""
+        return self.r_hi_mm - self.r_lo_mm - (self.vias - 1) * self.via_pitch_mm >= -_FIT_SLACK_MM
 
     @property
     def via_radius_mm(self) -> float:
         """r_v = r_hi: the last left side is as long as the window allows."""
         return self.r_hi_mm
 
+    def group_via_radius_mm(self, group: int) -> float:
+        """r_v of series group ``group``: ``group`` via pitches below r_hi."""
+        return self.r_hi_mm - group * self.via_pitch_mm
 
-def eye(frame: CoilFrame, turns: tuple[LoopTurn, ...], n: int) -> Eye:
-    """Window of one centre via inside turn n - 1; via pad and lead-arc end share V, so m = max(pad, w)/2."""
+
+def eye(frame: CoilFrame, turns: tuple[LoopTurn, ...], n: int, vias: int = 1) -> Eye:
+    """Window of ``vias`` centre vias inside turn n - 1; via pad and lead-arc end share V, so m = max(pad, w)/2."""
     last, s, w = turns[n - 1], frame.clearance_mm, frame.trace_width_mm
     m = max(frame.via_pad_mm, w) / 2
     side_lo = frame.side_clearance_level_mm(frame.offset_mm(n - 1), w / 2 + s + m)
     inner_lo = last.end_radius_mm + frame.end_width_inner_mm / 2 + s + m
-    return Eye(r_lo_mm=max(side_lo, inner_lo), r_hi_mm=last.outer_radius_mm - frame.end_width_outer_mm / 2 - s - m)
+    return Eye(
+        r_lo_mm=max(side_lo, inner_lo),
+        r_hi_mm=last.outer_radius_mm - frame.end_width_outer_mm / 2 - s - m,
+        vias=vias,
+        via_pitch_mm=m + frame.via_pad_mm / 2 + s,
+    )
 
 
 def half_turn(frame: CoilFrame, t: int) -> HalfTurn | None:
@@ -348,19 +362,33 @@ class HalfClosing:
 Closing = FullClosing | HalfClosing
 
 
-def closing_for(frame: CoilFrame, turns: tuple[LoopTurn, ...], n: int) -> Closing | None:
-    """Close n turns: full when its eye fits (it keeps the last left side), else half, else None."""
-    if 1 <= n <= len(turns) and (window := eye(frame, turns, n)).fits:
+def closing_for(frame: CoilFrame, turns: tuple[LoopTurn, ...], n: int, vias: int = 1) -> Closing | None:
+    """Close n turns: full when its eye fits (it keeps the last left side), else half, else None.
+
+    k > 1 series groups keep the full closing: k vias cannot share the half closing's P (G5).
+    """
+    if 1 <= n <= len(turns) and (window := eye(frame, turns, n, vias)).fits:
         lead_point = frame.on_left(frame.offset_mm(n - 1), window.via_radius_mm)
         return FullClosing(turns=turns[:n], eye=window, lead_point=lead_point)
-    if half := _half_closing_turn(frame, turns, n):
+    if vias == 1 and (half := _half_closing_turn(frame, turns, n)):
         return HalfClosing(turns=turns[: n - 1], half=half)
     return None
 
 
-def max_closing(frame: CoilFrame, turns: tuple[LoopTurn, ...]) -> Closing | None:
+def max_closing(frame: CoilFrame, turns: tuple[LoopTurn, ...], vias: int = 1) -> Closing | None:
     """Return the closing with the most turns (G5 choice); None when not even one turn closes."""
-    return next((c for n in range(len(turns) + 1, 0, -1) if (c := closing_for(frame, turns, n)) is not None), None)
+    closings = (closing_for(frame, turns, n, vias) for n in range(len(turns) + 1, 0, -1))
+    return next((c for c in closings if c is not None), None)
+
+
+def group_closing(frame: CoilFrame, closing: FullClosing, group: int) -> FullClosing:
+    """Return the closing of series group ``group``: its last left side and lead arc end at its own via radius (G5)."""
+    r_v = closing.eye.group_via_radius_mm(group)
+    return FullClosing(
+        turns=closing.turns,
+        eye=Eye(r_lo_mm=closing.eye.r_lo_mm, r_hi_mm=r_v),
+        lead_point=frame.on_left(frame.offset_mm(closing.n - 1), r_v),
+    )
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

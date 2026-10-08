@@ -68,6 +68,8 @@ def case(g: sr.Geo) -> dict[str, object]:
         "r_v": path["r_v"],
         "body": path["body"],
         "lead": path["lead"],
+        "stub": path["stub"],
+        "total": path["total"],
         "rows": rows,
         "terminal_angle_rad": math.radians(path["terminal_angle_deg"]),
     }
