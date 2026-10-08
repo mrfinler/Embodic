@@ -47,6 +47,11 @@ item): §3 states that `motor_constant_n_m_per_sqrt_w` stays in the contract and
 §9.1 answers the three open questions of U-M2f: the provenance of a design whose origin is not packaged, unknown keys,
 and what PR-12 means by "set back to default". §13 closes the PENDING list of point 2 and adds two defect rows.
 
+Revision 2026-10-09 (U-D8, decisions D-035 to D-037; the code on main 8a297a0 was read for every item): §2.2 names
+the copper-count rule of each port and corrects the XD-WAVE text. §5 closes the wave warning case. §6 lists the port
+warnings in `BoardStack.issues`. §7 adds rule 2b, per primitive (D-037a), and the rule 5 end-point reading. §13 adds
+point 7 (M3 items closed) and point 8 (the per-phase stack limitation of D-037b).
+
 ## 0. Rules for every public boundary
 
 - Lengths are millimetres (`_mm`), angles radians (`_rad`) inside the core, temperature °C (`_degc`), current A (`_a`),
@@ -736,6 +741,26 @@ Revision 2026-10-08 (U-D7, D-035e; U-M3b report Q1, Q2 and Q4; `src/embodic/gene
 Wave copper count (D-035e, as D-031e did for the serpentine). On main the wave generator refuses an odd copper count
 or a count below 2 with `UNBUILDABLE_WAVE_LAYER_COUNT` on `/stackup/layers`, and `validate_design` has no wave rule
 (U-M3b deviations). U-M3-fix moves the rule into `validate_design`. The INVALID code it reports is U-M3-fix's to name.
+
+Revision 2026-10-09 (U-D8, D-031e, D-035e, D-037d; main 8a297a0, `verified` by reading). Copper count per topology:
+
+| Topology | `validate_design` (INVALID, ERROR) | Generator refusal (UNBUILDABLE) |
+|---|---|---|
+| wave | `INVALID_WAVE_COPPER_COUNT` on `/stackup/layers` when the copper count is below 2, odd, or above `WAVE_LAYERS_MAX` = 16 (`model/validate.py` l.31, l.210-215; text in `errors/catalogue/wave.py` l.24) | `UNBUILDABLE_WAVE_LAYER_COUNT`, same condition (`generators/wave/generate.py` l.218-220) |
+| serpentine | `INVALID_SERPENTINE_COPPER_COUNT` on `/stackup/layers`, `/winding/layers_per_phase` and `/winding/stack_mode` when the count differs from `layers_per_phase` (one board per phase) or `phases * layers_per_phase` (single) (`model/validate.py` l.196-200; text in `errors/catalogue/model.py` l.38) | `UNBUILDABLE_SERPENTINE_COPPER_COUNT` when the count differs from the planned layers per board (`generators/serpentine/generate.py` l.385-387) |
+
+`validate_design` runs both rules from `CROSS_FIELD_RULES` (`model/validate.py` l.343-356). The serpentine row also
+closes DEF-U-D4-02 (§13 point 7).
+
+Revision 2026-10-09 (U-D8, D-035e, D-036e, D-037d; `tests/golden/expected_diffs/wave.toml` and
+`tests/golden/m3_wave/test_gr22_results.py` on main 8a297a0, `verified` by reading). XD-WAVE text. `wave.toml` holds one
+entry, XD-WAVE-001: in the overlap wave with a star connection embodic counts the three tap stubs as phase link copper,
+and Xcoil sets its link sum to zero (`engine.js` l.2172). Its status is `assumption` until Agent 2 decides (U-E8), and
+it does not cover the overlap wave with a delta connection (Xcoil 0 W, embodic 0.00196 W; U-M3-fix2 report, not
+re-measured here). The via-length difference above has no XD-WAVE entry. Instead
+`test_gr22_phase_resistance_differs_from_xcoil_only_by_the_via_barrel_length` (`test_gr22_results.py` l.124) removes
+the barrel length and compares. D-035e names an XD-WAVE entry for it. The code and the decision differ here, and §13
+point 7 reports it for Fable.
 
 ### 2.3 Field table, draft and the new-design flow (ADR-0010)
 
@@ -1736,6 +1761,9 @@ the same code when it has one terminal per rim (l.2190); the U-M3-fix brief does
 is `unresolved`. The compute facade merges `BoardStack.issues` into `ComputeOutcome.issues` (§10, U-M3-fix brief).
 `stack_hash` keeps its inputs, the boards' `layout_hash` values and the gap, because an issue is not copper. On main
 4aec992 `BoardStack` has no `issues` field yet (`layout.py` l.120-145).
+Revision 2026-10-09 (U-D8, D-036d; main 8a297a0, `verified` by reading). Closed. `BoardStack.issues` exists
+(`geometry/layout.py` l.130) and refuses an ERROR (l.139-140). The wave case is no longer `unresolved`: both ports
+emit their warning through it (§6, revision U-D8).
 
 Revision 2026-10-08 (U-D4, D-031b, D-031f; `src/embodic/geometry/layout.py`, `details.py` and
 `src/embodic/generators/spiral/derived.py` on main c7fff3a, `verified` by reading).
@@ -1870,6 +1898,22 @@ in these points, each recorded in the unit's report:
 | wave | vias carry the roles STITCH and TERMINAL; polarity is the belt sign | U-M3b lists both as deviations without a reason (`unresolved`) |
 | wave | the via barrel length is the board thickness | §2.2, revision U-D7 |
 
+Revision 2026-10-09 (U-D8, D-035a, D-036d; `src/embodic/generators/serpentine/generate.py`,
+`src/embodic/generators/wave/generate.py`, `src/embodic/errors/catalogue/serpentine.py` and `wave.py` on main 8a297a0,
+`verified` by reading). Warnings that a port returns in `BoardStack.issues` (§5). Each has category UNSUPPORTED_RANGE
+and severity WARNING, and `compute` merges it into `ComputeOutcome.issues` (`api.py` l.287 and l.290, §10). Xcoil raises `INTERCONNECT_EXTERNAL`
+for all three cases.
+
+| Port | Code | Emitted when | Pointers | Source |
+|---|---|---|---|---|
+| serpentine | `RANGE_SERPENTINE_INTERCONNECT_BOARDS` | the interconnect is wanted (`draw_interconnect`, three phases, topology not `open`), none is built, and `stack_mode` is not `single` | `/connection/draw_interconnect`, `/winding/stack_mode` | `_external_interconnect`, `serpentine/generate.py` l.165-187 (Xcoil l.2535) |
+| serpentine | `RANGE_SERPENTINE_INTERCONNECT_LAYER` | the same, with `stack_mode` `single` | `/connection/draw_interconnect`, `/winding/layers_per_phase` | the same function |
+| wave | `RANGE_WAVE_INTERCONNECT_EXTERNAL` | the style is overlap, the interconnect is wanted, and the topology is delta | `/connection/draw_interconnect`, `/connection/topology` | `_external_interconnect`, `wave/generate.py` l.103-125 (D-036d) |
+
+Xcoil's overlap branch `else if (wantIc)` (l.2190) follows `if (wantIc || conn === 'open')` and never runs. The wave
+condition is the one its message states (`wave/generate.py` l.104-108 docstring; U-M3-fix2 report, `inferred`).
+
+
 ## 7. `embodic.drc`
 
 Rule D-006: violation when measured clearance < rule - `DRC_EPSILON_MM`. Turns of one spiral share a net and still keep
@@ -1882,6 +1926,8 @@ Revision 2026-10-05 (U-D3, D-022). Rule 1 is narrowed (D-022 b, DEF-M1V-01) and 
 (D-022 a, DEF-M1z-01). Agent 3 implements both in the U-M1c fix round. Nothing else in this section changed.
 Revision 2026-10-08 (U-D4, D-022c): rule 2 gains the tap clause and the waiver loses its terminal-via qualifier; see
 the note after the rule list.
+Revision 2026-10-09 (U-D8, D-036a, D-037a): rule 2 gains the same-net tap (rule 2b), and rule 5 states that the other
+path's centreline includes its end points. See the note after the rule list.
 
 1. Neighbours in one path. Each primitive that is not a fillet or a taper is a main primitive and starts a new main
    index (Xcoil `mi`, `engine.js` `drcObjects` l.1697). A fillet or taper belongs to the main primitive it follows and
@@ -1900,12 +1946,18 @@ the note after the rule list.
    path's layer or on all layers. The end group is the terminating main primitive with its fillets and tapers.
    Tap (D-022c): a via and every primitive of an interconnect path when the via centre lies within `pad_mm / 2` of
    that path's centreline, at an end or mid-path.
+   Same-net tap, rule 2b (revision 2026-10-09 (U-D8), D-036a as D-037a rules it): a via and each primitive of a path
+   of the via's net whose centreline passes within `pad_mm / 2` of the via centre. The exemption is per primitive, not
+   per path: every other primitive of that path stays checked against the via. Rule 2b names vias, not pads. The tap
+   clause above stays whole-path for interconnect paths (D-022c).
 3. Path ends meeting at a node. The end groups of two different paths on one layer whose end points lie on one via,
    on one pad, or within `COINCIDENCE_MM` of each other.
 4. A pad and a via whose centre lies inside the pad.
 5. A T-junction (revision 2026-10-08 (U-D7), D-035b). The end group of a path whose end point lies within
    `COINCIDENCE_MM` of the centreline of another path of the same net is exempt from every primitive of that other
-   path.
+   path. The centreline includes its two end points (revision 2026-10-09 (U-D8), D-037a). An end point that lies on
+   the other path's end point therefore also exempts its end group from every primitive of that path, not only from
+   that path's end group under rule 3.
 
 Revision 2026-10-08 (U-D7, D-035b; U-M3a report Q2, U-M3b report Q3). Xcoil joins copper mid-path in three places:
 the serpentine strand bus (`engine.js` l.485), the serpentine star-ring taps (l.1289) and the wave star item, which
@@ -1924,6 +1976,22 @@ taper is exempt from the main primitive it follows, the one it precedes, and the
 implements the three cases as one test on slots, `abs(slot_a - slot_b) <= 2`, where a main primitive takes slot
 2 x main index and a fillet or taper takes 2 x main index + 1 of the main before it (`items.py` l.48, `engine.py`
 l.195).
+
+Revision 2026-10-09 (U-D8, D-036a, D-037a; `src/embodic/drc/items.py` on main 8a297a0, `verified` by reading and by
+the UT-DRC-04 tests named below). Rule 2b. The serpentine strand bus carries a terminal via of its own net mid-bus, so
+rules 1 to 5 reported the via against the bus it sits on (U-M3-fix report). D-036a exempted the via from the whole
+path. D-037a narrows that to each primitive whose centreline passes within `pad_mm / 2` of the via centre, because the
+whole-path reading exempted 828 extra pairs on the D08 spiral and hid true trace-to-via clearances. `_taps`
+(`items.py` l.253-269) tests each primitive of a non-interconnect path of the via's net on its own and tests an
+interconnect path as a whole (D-022c). The decision text and the code agree. The strand sides that pass within 0.109 mm
+of such a via stay reported (D-036a, faithful port).
+
+Revision 2026-10-09 (U-D8, D-037a; U-V3b report; `tests/independent/README.md` on main 8a297a0, `verified` by
+reading). Rule 5 reading. `_junctions` (`items.py` l.272-287) measures the distance from a path end to the centreline of
+every primitive of the other same-net paths on its layer, end points included, and exempts the end group from every
+primitive of each path within `COINCIDENCE_MM`. Agent 4's independent model reads rule 5 the same way. One pair on
+each GR-19 layout depends on that reading: the start of path 16 (wave: 193) is the end of path 15 (wave: 192) and
+also lies on its primitive 2, both net `N`. Only rule 5 exempts that primitive, and `run_drc` exempts it too.
 
 Net test. Rules 2 to 5 (rule 5 added 2026-10-08, U-D7) apply only when both objects carry the same net, with one waiver (D-022 a, as revised by
 D-022c). Rules 2 and 3 also apply, whatever the net names and the via role, when one object is an interconnect path
@@ -1952,10 +2020,11 @@ is the independent check of rule 1.
 | 2 | UT-DRC-04 cases 2a (end on its via or pad exempt) and 2b (foreign via reported) |
 | 2, waiver | UT-DRC-04 case 2c (interconnect end on a terminal, centre or transfer via of another net, and on a pad of another net, exempt), near miss 2b |
 | 2, tap | UT-DRC-04 case 2d (vias of any net and role tapping an interconnect ring mid-path and at its ends exempt from every primitive of the ring; the same ring as a phase path of another net reported) |
+| 2b, same-net tap (revision 2026-10-09, U-D8) | the four rule 2b tests of UT-DRC-04 in test_plan.md §5.1 (via on a line and on an arc exempt; the same via on another net reported; 0.01 mm outside the band reported; a far primitive of the tapped path still checked). D-036a's "rule 2b" is not UT-DRC-04 case 2b, which is the foreign-via near miss of rule 2 |
 | 3 | UT-DRC-04 cases 3a (same-net ends at one via, pad or coincident point exempt) and 3b (different-net ends at a coincident point without a land reported) |
 | 3, waiver | UT-DRC-04 case 3c (interconnect end and phase path end on one via of any role, or one pad, exempt), near miss 3b |
 | 4 | UT-DRC-04 cases 4a (same-net via inside a pad exempt) and 4b (other-net via inside a pad reported) |
-| 5 (revision 2026-10-08, U-D7) | UT-DRC-04 cases 5a (end point on the middle of a same-net line exempt from that path), 5b (end point on the middle of a same-net arc exempt), 5c (the same T with the two paths on different nets reported) and 5d (the same-net end point 0.01 mm short of the centreline reported) |
+| 5 (revision 2026-10-08, U-D7) | UT-DRC-04 cases 5a (end point on the middle of a same-net line exempt from that path), 5b (end point on the middle of a same-net arc exempt), 5c (the same T with the two paths on different nets reported) and 5d (the same-net end point 0.01 mm short of the centreline reported). The end-point reading (revision 2026-10-09, U-D8) has no UT-DRC-04 case; GR-19 in `tests/independent/m1/test_gr19_drc.py` covers it |
 
 ```python
 DRC_EPSILON_MM: float = 1e-6
@@ -2821,3 +2890,18 @@ Revision 2026-10-08 (U-D6). The rows above name main c7fff3a; the two U-D6 rows 
 closed on main a336531 except for `motor_constant_n_m_per_sqrt_w` (DEF-M2e4-01, §3) and the spiral generator's
 `Circuit.interconnect_roles` (`inferred` from the U-M2e-4 report and the passing signature check). U-M2-fix3 owns
 both.
+7. M3 items closed (revision 2026-10-09, U-D8; main 8a297a0, `verified` by reading unless the row says otherwise).
+
+| Item | Closed by | State on main 8a297a0 |
+|---|---|---|
+| §2.2: the INVALID code of the wave copper-count rule is U-M3-fix's to name | D-035e, D-037d | `INVALID_WAVE_COPPER_COUNT` in `validate_design` (§2.2, revision U-D8) |
+| §5: the wave case of `INTERCONNECT_EXTERNAL` is `unresolved`; `BoardStack` has no `issues` field | D-035a, D-036d | `RANGE_WAVE_INTERCONNECT_EXTERNAL` through `BoardStack.issues` (§6, revision U-D8) |
+| §7: rule 2b text and the rule 5 end-point reading | D-036a, D-037a | `_taps` and `_junctions` in `drc/items.py` (§7, revision U-D8) |
+| §2.2: U-M3-fix records the via-length difference as an XD-WAVE entry | D-035e, D-036e | `wave.toml` holds XD-WAVE-001 (overlap star) only. The via-length difference is checked by a GR-22 test, not by an XD-WAVE entry. The code differs from D-035e here; Fable rules whether an entry is still owed |
+| DEF-U-D4-02 (point 6): `validate_design` checks only `one_board_per_phase` | D-032c (U-M2-fix, work_breakdown.md §8) | both stack modes checked (`model/validate.py` l.196-200) |
+
+8. Recorded limitation (revision 2026-10-09, U-D8, D-037b). Per-phase stack: interconnect between boards not
+   modelled; Ke/P_ic status `unresolved`. The serpentine example built one board per phase gives three boards, each
+   DRC-clean, and the `RANGE_SERPENTINE_INTERCONNECT_BOARDS` warning (§6). Its Ke is finite (0.0707654 V·s/rad,
+   Fable's acceptance probe), and D-037b states that this is not a claim of accuracy. The status here is the decision's
+   label. Whether the `Traceable` status fields of that outcome say `unresolved` is not checked by U-D8 (`unresolved`).
