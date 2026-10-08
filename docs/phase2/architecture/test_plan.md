@@ -49,6 +49,11 @@ the overlap delta case it leaves out. §5 names the one open defect that keeps a
 with the rule 2b tests (D-036a, D-037a). §5.2 sets PR-14's serpentine Ke tolerance to 1e-8 rel. with the chord-count
 reason (D-036c). No ID changed.
 
+Revision 2026-10-09 (U-D9, D-038; `tests/golden/expected_diffs/wave.toml` and `tests/golden/m3_wave/test_gr22_results.py`
+on main 3acb044 read for every item): §3 gives XD-WAVE-001 the status `verified`, adds XD-WAVE-002 for the overlap wave
+with a delta connection (`inferred`, true value `unresolved`) and records that the via barrel length has no entry
+(D-038b). No ID changed.
+
 ## 1. What changed and why
 
 | Change | Reason |
@@ -95,12 +100,13 @@ where embodic and a dense sample give 0.5288 to 13.0848 mm (corrected 2026-10-08
 stated 4.0001 mm as the low end; Agent 4 measured 0.5288 mm, DEF-UV2-01). The entry admits numeric diffs up to 13.1 mm abs. for
 that case only. Fable signed off on behalf of Agents 2 and 4 (D-033c), and Agent 4 re-checks the entry in U-V2.
 
-Revision 2026-10-09 (U-D8, D-036e, D-037d; `tests/golden/expected_diffs/wave.toml` on main 8a297a0, `verified` by
-reading). Wave entries:
+Revision 2026-10-09 (U-D8, D-036e, D-037d; corrected by U-D9 with D-038b; `tests/golden/expected_diffs/wave.toml` on
+main 3acb044, `verified` by reading). Wave entries:
 
 | ID | Case | EQ-ID | Status | Difference | Not covered |
 |---|---|---|---|---|---|
-| XD-WAVE-001 | `wave-analysis-overlap-l2-m3-p16-t2` | EQ-23 | `assumption` until Agent 2 decides (U-E8); Agent 2 and Agent 4 sign-off pending | overlap wave, star connection: embodic counts the three tap stubs as phase link copper, and Xcoil sets its link sum to zero (`engine.js` l.2172); interconnect loss 0.007422 W against 0.005007 W (+48.2 %, the entry's own measurement) | the overlap wave with a delta connection: Xcoil 0 W, embodic 0.00196 W (U-M3-fix2 report, not re-measured here). U-E8 decides |
+| XD-WAVE-001 | `wave-analysis-overlap-l2-m3-p16-t2` | EQ-23 | `verified` (U-E8, `open_positions_m3.md` §1a); Agent 2 confirmed, Agent 4 sign-off pending | overlap wave, star connection: the three tap stubs are the only copper between each minus terminal and the star ring, so each carries I_line. embodic counts them as phase link copper, and Xcoil sets its link sum to zero (`engine.js` l.2172), an omission. Interconnect loss 0.007422 W against 0.005007 W (+48.2 %, the entry's own measurement) | the overlap wave with a delta connection (XD-WAVE-002) and the via barrel length, which has no entry (D-038b) |
+| XD-WAVE-002 | `wave-analysis-overlap-l2-m3-p16-t2-delta` | EQ-23 | `inferred` (U-E8, `open_positions_m3.md` §1b); the true value is `unresolved` until the spec names the external closure point; Agent 4 sign-off pending | overlap wave, delta connection: embodic counts the three line leads at I_line^2 x R, 1.962909e-03 W, an upper bound (6.543030e-04 W if the leads carry I_ph). Xcoil reports 0 W because its overlap path leaves `icR` null (`engine.js` l.2154) | the true loss, which depends on where the external delta closure lands |
 
 The serpentine entries that U-M3-fix2 removed from `expected_diffs/serpentine.toml` (seeded-04, -13 and -19 are now
 DRC-clean) were never listed in this section, so no row changes.
