@@ -33,6 +33,8 @@ def test_ui30_back_emf_chart_has_one_unit_legend_end_labels_data_table_and_badge
     assert chart.legend_labels == ("Phase A", "Phase B", "Phase C")
     assert chart.end_labels == ("A", "B", "C")
     assert panel.badge.label.property("status") == "not-tested" and panel.eq.text() == "EQ-18"
+    qtbot.mouseClick(panel.eq, Qt.MouseButton.LeftButton)
+    assert window.guide is not None and window.guide.current_topic() == "EQ-18"
     qtbot.mouseClick(panel.table_toggle, Qt.MouseButton.LeftButton)
     assert panel.table.isVisible() and panel.table.rowCount() == len(chart.model.xs) == 181
     assert [panel.table.horizontalHeaderItem(c).text() for c in range(4)] == [

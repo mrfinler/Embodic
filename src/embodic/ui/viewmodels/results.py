@@ -248,8 +248,6 @@ class ResultsViewModel:
         self.rows.set(tuple(r for r in self._all if r.status in self.status_filter.value))
 
 
-# ---------------------------------------------------------------------------------------------------- DRC tab
-
 CheckState: TypeAlias = Literal["pass", "fail", "not-run"]
 
 
@@ -320,9 +318,6 @@ def drc_table(outcome: ComputeOutcome | None) -> DrcTable | None:
         summary = text("drc.summary.fail", **counts)
     note = text("drc.truncated", shown=len(rows), total=failures) if len(rows) < failures else None
     return DrcTable(state=state, summary=summary, failure_count=failures, warning_count=warnings, rows=rows, note=note)
-
-
-# ---------------------------------------------------------------------------------------------------- charts
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -472,8 +467,6 @@ def tick_text(value: float) -> str:
     return f"{MINUS}{shown}" if value < 0 else shown
 
 
-# ---------------------------------------------------------------------------------------------------- compare
-
 Direction: TypeAlias = Literal["up", "down", "same"]
 
 
@@ -580,9 +573,6 @@ class CompareViewModel:
     def set_reference(self, outcome: ComputeOutcome) -> None:
         """Store an outcome as the reference."""
         self.reference.set(outcome)
-
-
-# ---------------------------------------------------------------------------------------------------- guide
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

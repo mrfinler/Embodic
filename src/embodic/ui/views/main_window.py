@@ -245,6 +245,8 @@ class MainWindow(QMainWindow):
         self.compare_tab = CompareTab(self.compare)
         for tab in (self.results_tab, self.drc_tab, self.back_emf_tab, self.torque_speed_tab, self.compare_tab):
             self.results_tabs.addTab(tab, text(f"results.{tab.objectName()}.label"))
+        for panel in (*self.back_emf_tab.panels, *self.torque_speed_tab.panels, self.compare_tab.chart):
+            panel.eq.activated.connect(self.show_equations)
         return self.results_tabs
 
     def _shortcuts(self) -> None:
