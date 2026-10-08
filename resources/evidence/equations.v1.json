@@ -944,9 +944,11 @@
     "EV-58",
     "EV-59",
     "EV-60",
-    "EV-61"
+    "EV-61",
+    "EV-89",
+    "EV-90"
    ],
-   "source_notes": "D04 eq. 1; D11 eq. 14; D12 eq. 1 (N_c/N_pm = m/(m+1)); D07 p.3; D15 eq. 6 (per-turn average); feasibility rule textbook not accessed (G24); integer phasor arithmetic required (Xcoil belt-edge bug)",
+   "source_notes": "D04 eq. 1; D11 eq. 14; D12 eq. 1 (N_c/N_pm = m/(m+1)); D07 p.3; D15 eq. 6 (per-turn average); feasibility rule textbook not accessed (G24); integer phasor arithmetic required (Xcoil belt-edge bug); EV-89 (Tessarolo 2019, eq. 15) states the balance condition Q/(3t) integer and EV-90 (Alberti and Bianchi slides) defines t = gcd(Q, p); neither covers parallel paths (G30), so `a | t` stays inferred",
    "gate_verdict": "replace",
    "status": "inferred",
    "tolerance": {
@@ -1591,11 +1593,11 @@
     },
     {
      "name": "vacuum_permeability_h_per_m",
-     "value": 1.2566370614359173e-06,
+     "value": 1.25663706127e-06,
      "unit": "H_per_m",
-     "source": null,
-     "status": "assumption",
-     "basis": "4*pi*1e-7 as in Xcoil engine.js l.11 (MU0) and src/embodic/physics/losses.py MU0_H_PER_M; no evidence entry"
+     "source": "EV-84",
+     "status": "verified",
+     "basis": "CODATA 2022 (EV-84, NIST allascii row 'vacuum mag. permeability', u = 2.0e-16 H/m); EV-86: mu_0 is measured, not exactly 4*pi*1e-7. Xcoil engine.js l.11 and src/embodic/physics/losses.py use 4*pi*1e-7 (relative -1.3e-10)"
     }
    ]
   },
@@ -1727,11 +1729,11 @@
    "constants": [
     {
      "name": "vacuum_permeability_h_per_m",
-     "value": 1.2566370614359173e-06,
+     "value": 1.25663706127e-06,
      "unit": "H_per_m",
-     "source": null,
-     "status": "assumption",
-     "basis": "4*pi*1e-7 as in Xcoil engine.js l.11 (MU0) and src/embodic/physics/losses.py MU0_H_PER_M; no evidence entry"
+     "source": "EV-84",
+     "status": "verified",
+     "basis": "CODATA 2022 (EV-84, NIST allascii row 'vacuum mag. permeability', u = 2.0e-16 H/m); EV-86: mu_0 is measured, not exactly 4*pi*1e-7. Xcoil engine.js l.11 and src/embodic/physics/losses.py use 4*pi*1e-7 (relative -1.3e-10)"
     }
    ]
   },
@@ -2011,8 +2013,10 @@
      "meaning": "phase THD"
     }
    ],
-   "sources": [],
-   "source_notes": "Xcoil emfWaveform/lineWaveform; oracle D09 Table 7 p.8 (5.7 %, basis unresolved)",
+   "sources": [
+    "EV-91"
+   ],
+   "source_notes": "Xcoil emfWaveform/lineWaveform; oracle D09 Table 7 p.8 (5.7 %, basis unresolved); EV-91 (D09 Table 7 p.8) is an oracle THD value only; D09 defines no THD basis, so the THD definition stays unresolved (G31) (revision 2026-10-08, U-E5)",
    "gate_verdict": "reuse",
    "status": "inferred",
    "tolerance": {
@@ -2155,9 +2159,10 @@
     }
    ],
    "sources": [
-    "EV-24"
+    "EV-24",
+    "EV-92"
    ],
-   "source_notes": "standard PMSM/inverter theory - textbook source needed; depends on EQ-14; EV-24 (D06 eq. 2) supports only the torque relation T = m E I / omega; the inverter fundamentals and the pull-out and pull-in formulas still have no source",
+   "source_notes": "standard PMSM/inverter theory - textbook source needed; depends on EQ-14; EV-24 (D06 eq. 2) supports only the torque relation T = m E I / omega; EV-92 (Microchip AN955, an induction-motor note) gives the SPWM and SVPWM linear limits only; the six-step fundamental and the pull-out and pull-in formulas still have no source (revision 2026-10-08, U-E5)",
    "gate_verdict": "cannot verify yet",
    "status": "unresolved",
    "tolerance": {
@@ -2749,9 +2754,9 @@
      "name": "ndfeb_density_g_per_cm3",
      "value": 7.5,
      "unit": "g_per_cm3",
-     "source": null,
-     "status": "assumption",
-     "basis": "Xcoil engine.js l.2556, no datasheet in the evidence register"
+     "source": "EV-93",
+     "status": "inferred",
+     "basis": "Xcoil engine.js l.2556 value; EV-93 (HGT Table IV) reads 7.4-7.7 g/cm3 for sintered NdFeB, so 7.5 lies inside one manufacturer's class range, not a grade value (revision 2026-10-08, U-E5)"
     },
     {
      "name": "steel_density_g_per_cm3",
@@ -2825,11 +2830,11 @@
    "constants": [
     {
      "name": "vacuum_permittivity_f_per_m",
-     "value": 8.854e-12,
+     "value": 8.8541878188e-12,
      "unit": "F_per_m",
-     "source": null,
-     "status": "assumption",
-     "basis": "Xcoil engine.js l.1181 (EPS0 = 8.854e-12); no evidence entry"
+     "source": "EV-85",
+     "status": "verified",
+     "basis": "CODATA 2022 (EV-85, NIST allascii row 'vacuum electric permittivity', u = 1.4e-21 F/m); EV-86: eps_0 is measured. Xcoil engine.js l.1181 uses 8.854e-12 (relative -2.1e-5)"
     }
    ]
   },
