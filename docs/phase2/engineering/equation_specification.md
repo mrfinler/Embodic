@@ -437,6 +437,20 @@ This note adds no input and leaves the registry status of EQ-05 unchanged.
 - Formula: star R_LL = (2/3)Σ_k(R_k + l_k + s_k) + (2/3)(n₁ + n₂); delta b_k = R_k + l_k, S = Σb_k,
   R_LL = (1/3)Σ_k b_k(S − b_k)/S + (2/3)Σ s_k; P_ic = I_line²(Σs + Σl + Σn) (star), I_line²Σs + I_ph²Σl (delta).
   R_LL is the mean over the three terminal pairs.
+- Neutral pad lead (revision 2026-10-08 (U-E7), question of U-M2e-4). In a star with an N pad, the copper from the
+  neutral ring out to the N pad is neither link copper nor a neutral-ring segment. With the N pad open (three-wire
+  drive), Kirchhoff's current law at the star point gives i_U + i_V + i_W = 0, so this lead carries no current. The
+  physical P_ic and R_LL therefore exclude it (inferred; embodic's `NeutralLead`, src/embodic/geometry/circuit.py
+  l.62 to 63, makes the same assumption). Xcoil treats it two ways (verified, engine.js read). Without a stub layer the
+  pad lead is its own item with no `line`, `tapOf` or `link` tag (l.1313, 1320), and `interconnectResistance` adds it to
+  no sum (l.1363 to 1368). With a stub layer (sector coils, l.1295) Xcoil appends the pad path to the third neutral tap
+  stub as one object (l.1314 to 1318), and l.1365 adds that whole item to the link l_k of the tap's phase. Xcoil's star
+  P_ic then includes I_line² R_pad and its R_LL includes (2/3) R_pad (l.1422 to 1423) (verified, read). embodic's
+  EQ-23 gate is `reuse` and its golden harness follows Xcoil's precedence (tests/golden/m2_physics/xcoil_roles.py
+  rule 2; U-M2e-4 report), so embodic's P_ic includes the continuation on sector star layouts (verified, harness read).
+  That P_ic exceeds the physical value by I_line² R_pad (inferred); the size of R_pad on any example is not tested.
+  With a four-wire drive the lead carries the neutral current, not I_line (inferred); embodic has no four-wire mode
+  (unresolved). Excluding the lead would change the gate to `reuse with change` (open, Fable decides).
 - Sources: network identities; engine.js `applyConnection` lines 1418 to 1429, `interconnectResistance` 1361 to 1374.
 - Variables: R_k phase, l_k link, s_k line stub, n_i neutral-ring segment resistances [Ω].
 - Validity: DC. Limitations: none beyond EQ-10.
