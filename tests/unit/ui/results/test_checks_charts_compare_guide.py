@@ -1,0 +1,185 @@
+"""DRC table, chart models, comparison and the equation register (UI-10, UI-17, UI-30, UI-34). Qt-free."""
+
+import cmath
+import math
+
+import numpy as np
+import pytest
+
+from embodic.errors import message_for
+from embodic.model.vocabulary import Phase
+from embodic.results.status import Status
+from embodic.ui.viewmodels.results import (
+    START_TOPIC,
+    CompareViewModel,
+    back_emf_chart,
+    compare_chart,
+    compare_rows,
+    drc_table,
+    equation_topic,
+    guide_groups,
+    nice_ticks,
+    result_rows,
+    tick_text,
+    topic_for,
+    torque_speed_charts,
+)
+
+
+@pytest.mark.req("REQ-F-33")
+def test_drc_table_of_the_wave_example_lists_every_failure_with_catalogue_text(wave):
+    """Catches a summary that disagrees with the rows, or measured and required values that print alike."""
+    table = drc_table(wave)
+    assert (table.state, table.summary, table.failure_count) == ("fail", "DRC: 186 failures, 0 warnings", 186)
+    assert len(table.rows) == 186 and table.note is None
+    first = table.rows[0]
+    assert (first.number, first.rule_code, first.layer_text) == (1, "DRC_TRACE_VIA", "L1")
+    assert first.message == message_for("DRC_TRACE_VIA")
+    assert (first.measured_text, first.required_text) == ("0.199965 mm", "0.200000 mm")
+    assert first.at_mm == wave.drc[0].violations[0].at_mm
+
+
+@pytest.mark.req("REQ-F-33")
+def test_drc_table_of_a_passing_design_says_passed(d08):
+    """Catches a pass shown as failures or an empty state after a compute."""
+    table = drc_table(d08)
+    assert (table.state, table.summary, table.rows) == ("pass", "DRC: passed, no failures", ())
+    assert drc_table(None) is None
+
+
+def fundamental(waveform):
+    """Return the n = 1 phasor of one period sampled with both ends included (independent DFT)."""
+    samples = np.asarray(waveform[:-1])
+    theta = 2 * math.pi * np.arange(samples.size) / samples.size
+    return 2 * complex(np.mean(samples * np.cos(theta)), -np.mean(samples * np.sin(theta)))
+
+
+@pytest.mark.req("REQ-N-25")
+def test_ui30_back_emf_chart_has_three_phases_one_unit_and_the_badge_of_its_data(d08):
+    """Catches a chart with a second unit, a missing phase, a wrong period or a curve not from the result's data."""
+    chart = back_emf_chart(d08)
+    assert (chart.chart_id, chart.y_unit, chart.x_unit) == ("chart-backemf", "V", "°")
+    assert [(s.phase, s.label) for s in chart.series] == [(p, f"Phase {p.value}") for p in Phase]
+    assert (len(chart.xs), chart.xs[0], chart.xs[-1]) == (181, 0.0, 360.0)
+    analysis = d08.analysis
+    assert chart.status is analysis.emf_waveform_v.status
+    assert chart.eq_ids[:2] == ("EQ-18", "EQ-06")
+    result_a = fundamental(analysis.emf_waveform_v.value)
+    chart_a = fundamental(chart.series[0].ys)
+    assert abs(chart_a - result_a) < 1e-9 * abs(result_a)
+    omega = 1000.0 * 2 * math.pi / 60
+    for series, phase in zip(chart.series, analysis.phases, strict=True):
+        expected = cmath.rect(phase.ke_peak_v_s_per_rad.value * omega, phase.emf_phasor_angle_rad.value)
+        assert abs(fundamental(series.ys) - expected) < 1e-9 * abs(expected)
+
+
+@pytest.mark.req("REQ-N-25", "REQ-F-20")
+def test_ui30_ui07_torque_and_power_are_two_charts_sharing_the_rpm_axis_with_the_estimate_label(d08, serpentine):
+    """Catches torque and power on one chart (two units) or an EQ-20 curve shown without its estimate label."""
+    assert torque_speed_charts(d08) is None
+    torque, power = torque_speed_charts(serpentine)
+    ts = serpentine.analysis.torque_speed
+    assert (torque.chart_id, torque.y_unit, power.chart_id, power.y_unit) == (
+        "chart-torque-speed",
+        "N·m",
+        "chart-power-speed",
+        "W",
+    )
+    assert torque.xs == power.xs == ts.speed_rpm.value
+    assert torque.x_unit == power.x_unit == "rpm"
+    assert torque.series[0].ys == ts.torque_n_m.value and power.series[0].ys == ts.power_w.value
+    assert (torque.status, torque.estimate_label) == (Status.UNRESOLVED, "estimate")
+    assert power.status is Status.UNRESOLVED
+
+
+@pytest.mark.req("REQ-N-25")
+@pytest.mark.parametrize(
+    ("lo", "hi", "ticks"),
+    [
+        (0.0, 1.95, (0.0, 0.5, 1.0, 1.5, 2.0)),
+        (-1.95, 1.95, (-2.0, -1.0, 0.0, 1.0, 2.0)),
+        (0.0, 0.0, (-1.0, -0.5, 0.0, 0.5, 1.0)),
+    ],
+)
+def test_ticks_are_round_and_cover_the_range(lo, hi, ticks):
+    """Catches ticks that leave data outside the axis or land on unround values."""
+    assert nice_ticks(lo, hi) == ticks
+
+
+@pytest.mark.req("REQ-L-07")
+def test_tick_labels_use_the_unicode_minus():
+    """Catches an ASCII hyphen on a negative tick."""
+    assert (tick_text(-0.5), tick_text(2.0), tick_text(0.0)) == ("−0.5", "2", "0")
+
+
+@pytest.mark.req("REQ-F-17", "REQ-L-08")
+def test_ui10_compare_current_column_equals_the_single_design_results(d08, spiral_14p):
+    """Catches a comparison that recomputes or reformats a value differently from the Results tab."""
+    rows = {r.quantity: r for r in compare_rows(d08, spiral_14p)}
+    for single in result_rows(spiral_14p.analysis):
+        assert rows[single.quantity].current_text == f"{single.value_text} {single.unit_text}"
+    for single in result_rows(d08.analysis):
+        assert rows[single.quantity].reference_text == f"{single.value_text} {single.unit_text}"
+
+
+@pytest.mark.req("REQ-L-08")
+def test_ui34_counts_are_integers_and_deltas_carry_sign_and_direction(d08, spiral_14p):
+    """Catches a count printed with decimals, a delta without its sign, or a direction that contradicts the sign."""
+    rows = {r.quantity: r for r in compare_rows(d08, spiral_14p)}
+    for key in ("copper-layers", "coils", "vias", "drc-failures"):
+        row = rows[key]
+        assert row.reference_text.isdigit() and row.current_text.isdigit(), key
+        assert "." not in row.delta_text
+    for row in rows.values():
+        sign = row.delta_text[0]
+        expected = {"+": "up", "−": "down"}.get(sign, "same")
+        assert row.direction == expected, row
+        assert row.direction != "same" or row.delta_text.split()[0] == "0"
+    same = compare_rows(d08, d08)
+    assert {(r.direction, r.delta_text.split()[0]) for r in same} == {("same", "0")}
+
+
+@pytest.mark.req("REQ-F-17")
+def test_compare_reference_needs_confirmation_only_when_one_is_stored(d08, spiral_14p):
+    """Catches a reference replaced without asking, or a first reference that asks."""
+    vm = CompareViewModel()
+    assert not vm.needs_confirmation()
+    vm.set_reference(d08)
+    assert vm.needs_confirmation() and vm.reference.value is d08
+    chart = compare_chart(d08, spiral_14p)
+    assert [s.reference for s in chart.series] == [True, False]
+    assert chart.y_unit == "V"
+
+
+@pytest.mark.req("REQ-F-26")
+def test_ui17_every_register_entry_shows_the_registry_content(registry):
+    """Catches a reference view that drops or rewrites a field of an equation entry or its sources."""
+    for eq_id, entry in registry.equations.items():
+        topic = equation_topic(eq_id, registry)
+        rows = dict.fromkeys(topic.rows)
+        values = [v for _, v in rows]
+        assert topic.topic_id == eq_id
+        assert ("Name", entry.name) in rows and ("Formula", entry.formula) in rows
+        assert ("Equation gate", entry.gate.value) in rows and ("Evidence status", entry.status.value) in rows
+        assert ("Test state in this build", registry.test_state(eq_id).value) in rows
+        for ev_id in entry.sources:
+            ev = registry.evidence.get(ev_id)
+            assert any(v.startswith(f"{ev_id}: ") and (ev is None or ev.location in v) for v in values), ev_id
+        for test_id in entry.tests:
+            assert ("Tests", test_id) in rows
+        for assumption in entry.dominant_assumptions:
+            assert ("Dominant assumptions", assumption) in rows
+
+
+@pytest.mark.req("REQ-F-26")
+def test_ui17_guide_tree_has_the_four_groups_and_every_equation(registry):
+    """Catches a register that misses an equation or a guide without its four groups."""
+    groups = guide_groups(registry, (("Global", "F1", "Guide"),))
+    assert [g.title for g in groups] == ["Guide topics", "Equation register", "Status labels", "Keyboard shortcuts"]
+    assert [t.topic_id for t in groups[1].topics] == list(registry.equations)
+    assert [t.title for t in groups[2].topics] == [s.value for s in Status]
+    assert (topic_for("EQ-18", registry), topic_for(None, registry), topic_for("param-x", registry)) == (
+        "EQ-18",
+        START_TOPIC,
+        START_TOPIC,
+    )
