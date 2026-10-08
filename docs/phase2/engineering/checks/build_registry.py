@@ -201,9 +201,7 @@ DEF23 = {
 }
 
 # DEF-M2b-03. Physical and material constants only; formula coefficients (1/24, IPC-2221 k/b/c) stay in the formula with its sources.
-# Names match embodic.model.materials.MaterialOverrides where a user override exists. mu_0 and eps_0 (revision 2026-10-05, U-E3):
-# Unit H_per_m and F_per_m exist since U-M2a-fix; the evidence register has no SI or CODATA entry, so both are `assumption` with the
-# value the code ports from Xcoil (equation_specification.md, "Source and unit gaps").
+# Names match embodic.model.materials.MaterialOverrides where a user override exists.
 RHO_CU = {"name": "copper_resistivity_20c_ohm_m", "value": 1.7241e-8, "unit": "ohm_m", "source": "EV-53", "status": "verified",
           "basis": "IACS annealed copper at 20 degC, NBS Handbook 100 p.2"}
 ALPHA_CU = {"name": "copper_temp_coeff_per_k", "value": 0.00393, "unit": "per_K", "source": "EV-53", "status": "verified",
@@ -212,14 +210,19 @@ DENSITY_CU = {"name": "copper_density_g_per_cm3", "value": 8.89, "unit": "g_per_
               "basis": "IACS density, NBS Handbook 100 p.4"}
 DENSITY_LAMINATE = {"name": "laminate_density_g_per_cm3", "value": 1.85, "unit": "g_per_cm3", "source": None, "status": "assumption",
                     "basis": "Xcoil engine.js l.1151 and l.1377 (FR-4), no datasheet in the evidence register"}
-DENSITY_NDFEB = {"name": "ndfeb_density_g_per_cm3", "value": 7.5, "unit": "g_per_cm3", "source": None, "status": "assumption",
-                 "basis": "Xcoil engine.js l.2556, no datasheet in the evidence register"}
+DENSITY_NDFEB = {"name": "ndfeb_density_g_per_cm3", "value": 7.5, "unit": "g_per_cm3", "source": "EV-93", "status": "inferred",
+                 "basis": "Xcoil engine.js l.2556 value; EV-93 (HGT Table IV) reads 7.4-7.7 g/cm3 for sintered NdFeB, so 7.5 lies "
+                          "inside one manufacturer's class range, not a grade value (revision 2026-10-08, U-E5)"}
 DENSITY_STEEL = {"name": "steel_density_g_per_cm3", "value": 7.85, "unit": "g_per_cm3", "source": None, "status": "assumption",
                  "basis": "Xcoil engine.js l.2556, no datasheet in the evidence register"}
-MU_0 = {"name": "vacuum_permeability_h_per_m", "value": 4e-7 * 3.141592653589793, "unit": "H_per_m", "source": None, "status": "assumption",
-        "basis": "4*pi*1e-7 as in Xcoil engine.js l.11 (MU0) and src/embodic/physics/losses.py MU0_H_PER_M; no evidence entry"}
-EPS_0 = {"name": "vacuum_permittivity_f_per_m", "value": 8.854e-12, "unit": "F_per_m", "source": None, "status": "assumption",
-         "basis": "Xcoil engine.js l.1181 (EPS0 = 8.854e-12); no evidence entry"}
+# Revision 2026-10-08 (U-E5): CODATA 2022 values (EV-84, EV-85); EV-86 (SI Brochure 9 §2.3.1) says mu_0 is no longer exactly
+# 4*pi*1e-7. The code constants (losses.py MU0_H_PER_M, Xcoil EPS0) are Agent 3's to change.
+MU_0 = {"name": "vacuum_permeability_h_per_m", "value": 1.25663706127e-6, "unit": "H_per_m", "source": "EV-84", "status": "verified",
+        "basis": "CODATA 2022 (EV-84, NIST allascii row 'vacuum mag. permeability', u = 2.0e-16 H/m); EV-86: mu_0 is measured, "
+                 "not exactly 4*pi*1e-7. Xcoil engine.js l.11 and src/embodic/physics/losses.py use 4*pi*1e-7 (relative -1.3e-10)"}
+EPS_0 = {"name": "vacuum_permittivity_f_per_m", "value": 8.8541878188e-12, "unit": "F_per_m", "source": "EV-85", "status": "verified",
+         "basis": "CODATA 2022 (EV-85, NIST allascii row 'vacuum electric permittivity', u = 1.4e-21 F/m); EV-86: eps_0 is measured. "
+                  "Xcoil engine.js l.1181 uses 8.854e-12 (relative -2.1e-5)"}
 CONSTANTS = {
     "EQ-10": [RHO_CU, ALPHA_CU], "EQ-11": [RHO_CU, ALPHA_CU], "EQ-12": [RHO_CU, ALPHA_CU],
     "EQ-16": [DENSITY_CU, DENSITY_LAMINATE], "EQ-28": [DENSITY_NDFEB, DENSITY_STEEL],
@@ -251,8 +254,14 @@ ASSUMPTION_STATUS = {"standard source missing": "unresolved", "coefficient 1/24 
 # DEF-M2b-02: evidence entries that support part of an equation; the equation status stays as it is.
 EXTRA_SOURCES = {
     "EQ-15": (["EV-82", "EV-83"], "EV-82 and EV-83 state the IPC-2221 coefficients second-hand; the standard's own text is not read (G5)"),
-    "EQ-20": (["EV-24"], "EV-24 (D06 eq. 2) supports only the torque relation T = m E I / omega; the inverter fundamentals and the "
-                         "pull-out and pull-in formulas still have no source"),
+    "EQ-20": (["EV-24", "EV-92"], "EV-24 (D06 eq. 2) supports only the torque relation T = m E I / omega; EV-92 (Microchip AN955, "
+                                  "an induction-motor note) gives the SPWM and SVPWM linear limits only; the six-step fundamental and "
+                                  "the pull-out and pull-in formulas still have no source (revision 2026-10-08, U-E5)"),
+    # Revision 2026-10-08 (U-E5).
+    "EQ-08": (["EV-89", "EV-90"], "EV-89 (Tessarolo 2019, eq. 15) states the balance condition Q/(3t) integer and EV-90 (Alberti and "
+                                  "Bianchi slides) defines t = gcd(Q, p); neither covers parallel paths (G30), so `a | t` stays inferred"),
+    "EQ-18": (["EV-91"], "EV-91 (D09 Table 7 p.8) is an oracle THD value only; D09 defines no THD basis, so the THD definition "
+                         "stays unresolved (G31) (revision 2026-10-08, U-E5)"),
 }
 
 

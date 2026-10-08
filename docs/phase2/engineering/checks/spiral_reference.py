@@ -238,6 +238,84 @@ def coil_path(g, turns, N, kind="full"):
             "lead_point_L": L, "terminal_point": tv, "closing": kind}
 
 
+def fillet_delta(R, d, r, outer):
+    """G9 (revision 2026-10-08, U-E5): exact track-length change of one fillet of radius r between a side line at offset d
+    and an end arc of radius R about the origin. outer: the fillet lies inside the arc (corners B, J); else outside (C, D).
+    Edge frame: corner at (lam0, d); fillet centre at (lamc, d + r), distance Rc = R -/+ r from the origin."""
+    sg = -1.0 if outer else 1.0
+    Rc = R + sg * r
+    if Rc <= 0 or Rc < d + r:
+        return None
+    b0, bc = math.asin(d / R), math.asin((d + r) / Rc)
+    lam0, lamc = math.sqrt(R * R - d * d), math.sqrt(Rc * Rc - (d + r) ** 2)
+    line, arc, fil = sg * (lamc - lam0), R * (bc - b0), r * (math.pi / 2 - sg * bc)
+    return {"phi_deg": math.degrees(math.pi / 2 + sg * b0), "line_cut": line, "arc_cut": arc, "fillet": fil,
+            "delta": fil - line - arc}
+
+
+def fillet_families(g, turns, N, kind):
+    """Corner families of the generator (fillets.py _family): B every outer arc into its right side, C and D the
+    trapezoid inner ends, J each left side into the next outer arc. Returns {family: [(t, R, d, outer)]}, innermost last."""
+    full = turns[:N] if kind == "full" else turns[:N - 1]
+    trap = [tt for tt in full if tt["type"] == "trapezoid"]
+    tops = full[:-1] if kind == "full" else full
+    outer_ts = [tt["t"] for tt in full] + ([N - 1] if kind == "half" else [])
+    return {"B": [(t, g.R_out(t), g.d(t), True) for t in outer_ts],
+            "C": [(tt["t"], tt["R_in_or_apex"], tt["d_t"], False) for tt in trap],
+            "D": [(tt["t"], tt["R_in_or_apex"], tt["d_t"], False) for tt in trap],
+            "J": [(tt["t"], g.R_out(tt["t"] + 1), tt["d_t"], True) for tt in tops]}
+
+
+def filleted_path(g, turns, N, kind, rho, concentric=True):
+    """Per-corner fillet table and the filleted track length. Concentric (G9, Xcoil engine.js l.2306): corner t of a family
+    takes rho + (t_innermost - t) * w_d, so all fillets of a family share one centre and keep the gap s. concentric=False
+    puts rho on every corner (comparison only; it is not the G9 rule)."""
+    rows = []
+    for fam, members in fillet_families(g, turns, N, kind).items():
+        t_in = members[-1][0] if members else 0
+        for t, R, d, outer in members:
+            r = rho + (t_in - t) * g.wd if concentric else rho
+            fd = fillet_delta(R, d, r, outer)
+            rows.append(dict(family=fam, t=t, r=r, **({k: v for k, v in fd.items()} if fd else {"delta": None})))
+    sharp = coil_path(g, turns, N, kind)
+    delta = sum(rw["delta"] for rw in rows)
+    return {"rows": rows, "corners": len(rows), "sum_r": sum(rw["r"] for rw in rows), "delta": delta,
+            "sharp_total": sharp["total"], "filleted_total": sharp["total"] + delta,
+            "delta_pct_of_total": 100 * delta / sharp["total"]}
+
+
+def stadium(g, n_max=40):
+    """G2 stadium ends (revision 2026-10-08, U-E5, `inferred`). Outer ends of turns t >= 1: arcs about one centre
+    c_O = (x_O, y_O), y_O = w_d/(2 cos h), tangent to the left line d_(t-1) and the right line d_t, radius rho_O,t =
+    x_O sin h - d_(t-1) - w_d/2, outermost point |c_O| + rho_O,t = R_out,t. Turn 0: the same centre, rho_O,1 + w_d, from
+    its crossing A_0 with the left line d_0 to the right line d_0. Inner ends: arcs about c_I = (x_I, 0) tangent to both
+    lines d_t, rho_I,t = x_I sin h - d_t, innermost point R_in,t; below rho_min = w_d/(2 cos h) the end is the
+    apex-limited arc rho_min about ((d_t + rho_min)/sin h, 0)."""
+    sh, ch, wd = math.sin(g.h), math.cos(g.h), g.wd
+    yO = wd / (2 * ch)
+    K = g.R_out(1) + (g.d(0) + g.d(1)) / 2
+    xO = (-K * sh + math.sqrt(K * K - yO * yO * ch * ch)) / (ch * ch)
+    rO1 = xO * sh - g.d(0) - wd / 2
+    xI = (g.Ri0 - g.d(0)) / (1 - sh)
+    rmin = wd / (2 * ch)
+    rows = []
+    for t in range(n_max):
+        rO = rO1 + (1 - t) * wd
+        rI = xI * sh - g.d(t)
+        if rI >= rmin:
+            xi, ri, kind = xI, rI, "round"
+        else:
+            xi, ri, kind = (g.d(t) + rmin) / sh, rmin, "apex"
+        right = (xO * ch - yO * sh) - xi * ch  # B_t minus C_t along u_R: feet of c_O and of the inner centre
+        if rO <= 0 or right < 2 * g.w:
+            break
+        rows.append({"t": t, "end_out_radius": rO, "end_in_radius": ri, "inner_kind": kind,
+                     "R_out_outermost": math.hypot(xO, yO) + rO, "inner_level": xi - ri, "right_side": right})
+    a0 = math.sqrt((rO1 + wd) ** 2 - rO1 ** 2)
+    return {"x_O": xO, "y_O": yO, "rho_O1": rO1, "rho_O0": rO1 + wd, "A0_beyond_tangent": a0, "x_I": xI, "rho_I0": xI * sh - g.d(0),
+            "rho_min": rmin, "turns": rows}
+
+
 def closed_form(g, N):
     """EQ-03 concentric-loop length (cross-check only)."""
     th, L = 2 * g.h, 0.0
@@ -365,3 +443,30 @@ if __name__ == "__main__":
     print("eye sensitivity (case, via pad mm, loop-rule turns, turns after the centre-via rule, closing):")
     for e in extra:
         print("  ", e)
+    print("=" * 100)
+    print("G9 fillets (revision 2026-10-08, U-E5): per-corner change dL = r(pi/2 - sg*bc) - sg(lamc - lam0) - R(bc - b0)")
+    for nm, Q, poles, ri, ro, w, s, gap, pad, rho in (("CF-11 default 12/16", 12, 16, 18.0, 38.0, 0.5, 0.2, 0.2, 0.6, 0.5),
+                                                      ("CF-10 D08 12/10", 12, 10, 11.47, 45.03, 2.06, 0.8, 0.8, 0.6, 1.0)):
+        g = Geo(Q, ri, ro, w, s, gap, pad)
+        turns, _ = turn_limit(g)
+        cl = closing(g, turns)
+        fc = filleted_path(g, turns, cl["N"], cl["kind"], rho)
+        fu = filleted_path(g, turns, cl["N"], cl["kind"], rho, concentric=False)
+        print(f" {nm}, rho {rho} mm, N {cl['N']} ({cl['kind']} closing), {fc['corners']} filleted corners")
+        if "--corners" in sys.argv:
+            for rw in fc["rows"]:
+                print(f"   {rw['family']} t={rw['t']:2d} r={rw['r']:.4f} phi={rw['phi_deg']:.4f} deg "
+                      f"line_cut={rw['line_cut']:.4f} arc_cut={rw['arc_cut']:.4f} fillet={rw['fillet']:.4f} dL={rw['delta']:+.6f}")
+        for fam in "BCDJ":
+            rs = [rw for rw in fc["rows"] if rw["family"] == fam]
+            print(f"   family {fam}: {len(rs)} corners, r {min((x['r'] for x in rs), default=0):.2f} to "
+                  f"{max((x['r'] for x in rs), default=0):.2f} mm, dL {sum(x['delta'] for x in rs):+.4f} mm")
+        print(f"   concentric (G9): sum r {fc['sum_r']:.4f} mm, dL {fc['delta']:+.4f} mm; sharp {fc['sharp_total']:.4f} -> "
+              f"filleted {fc['filleted_total']:.4f} mm ({fc['delta_pct_of_total']:+.3f} %)")
+        print(f"   uniform rho on every corner (not G9): dL {fu['delta']:+.4f} mm ({fu['delta_pct_of_total']:+.3f} %)")
+    st = stadium(Geo(12, 18.0, 38.0, 0.5, 0.2, 0.2, 0.6))
+    print("=" * 100)
+    print("G2 stadium ends, CF-11 frame (revision 2026-10-08, U-E5):",
+          json.dumps({k: round(v, 4) for k, v in st.items() if k != "turns"}))
+    for rw in st["turns"]:
+        print("   stadium turn", json.dumps({k: (round(v, 4) if isinstance(v, float) else v) for k, v in rw.items()}))

@@ -523,7 +523,7 @@ This note adds no input and leaves the registry status of EQ-05 unchanged.
 - Sources: parallel-plate capacitor (standard); engine.js `stackCapacitance` 1180 to 1188; ε_r table unsourced.
 - Variables: A [m²]; t [m]; ε_r [1]; C [F]. Validity: t ≪ copper extent.
 - Limitations: full overlap, no fringing → upper bound.
-- Reference: A 1000 mm², t 0.2 mm, ε_r 4.5 → 1.99215e-10 F (arithmetic, ε₀ 8.854e-12).
+- Reference: A 1000 mm², t 0.2 mm, ε_r 4.5 → 1.99215e-10 F (arithmetic, ε₀ 8.854e-12). Revision 2026-10-08 (U-E5): with the registry's CODATA 2022 ε₀ (EV-85) the same case gives 1.99219e-10 F; the code still uses 8.854e-12 until Agent 3 changes it.
 - Tolerance: 1e-4 relative (ε₀ digits). Gate: `reuse with change` (`stackCapacitance`). Changes: source ε_r, label
   "upper bound". Status: assumption. Dominant assumptions: ε_r, dielectric thickness.
   Applies to: spiral, serpentine, wave. Tests: EQT-29-GR.
@@ -630,7 +630,7 @@ The result badge and the assumptions tag follow D-007 exactly as written in the 
 and in the registry fields `result_badge_rule` and `assumptions_tag_rule`. The dominant assumed inputs per EQ are the
 registry field `dominant_assumptions`.
 
-## Registry constants and labels
+## Registry constants and labels (revision 2026-10-08 (U-E5))
 
 `checks/build_registry.py` writes these fields (DEF-M2b-03). The registry lists physical and material constants only.
 Formula coefficients such as 1/24 (EQ-12) and the IPC-2221 k, b and c (EQ-15) stay in the formula with its sources.
@@ -641,10 +641,10 @@ Formula coefficients such as 1/24 (EQ-12) and the IPC-2221 k, b and c (EQ-15) st
 | `copper_temp_coeff_per_k` | 0.00393 | per_K | EV-53 | verified | EQ-10, 11, 12, 13 |
 | `copper_density_g_per_cm3` | 8.89 | g_per_cm3 | EV-53 | verified | EQ-16 |
 | `laminate_density_g_per_cm3` | 1.85 | g_per_cm3 | none (Xcoil engine.js l.1377) | assumption | EQ-16 |
-| `ndfeb_density_g_per_cm3` | 7.5 | g_per_cm3 | none (Xcoil engine.js l.2556) | assumption | EQ-28 |
+| `ndfeb_density_g_per_cm3` | 7.5 | g_per_cm3 | EV-93 (7.4 to 7.7, one manufacturer's class range; value from Xcoil engine.js l.2556; revision 2026-10-08 (U-E5)) | inferred | EQ-28 |
 | `steel_density_g_per_cm3` | 7.85 | g_per_cm3 | none (Xcoil engine.js l.2556) | assumption | EQ-28 |
-| `vacuum_permeability_h_per_m` | 4π×10⁻⁷ | H_per_m | none (Xcoil engine.js l.11; revision 2026-10-05 (U-E3)) | assumption | EQ-13, 14 |
-| `vacuum_permittivity_f_per_m` | 8.854e-12 | F_per_m | none (Xcoil engine.js l.1181; revision 2026-10-05 (U-E3)) | assumption | EQ-29 |
+| `vacuum_permeability_h_per_m` | 1.25663706127e-6 | H_per_m | EV-84 (CODATA 2022); EV-86 (no longer exactly 4π×10⁻⁷); revision 2026-10-08 (U-E5) | verified | EQ-13, 14 |
+| `vacuum_permittivity_f_per_m` | 8.8541878188e-12 | F_per_m | EV-85 (CODATA 2022); EV-86; revision 2026-10-08 (U-E5) | verified | EQ-29 |
 
 Labels: EQ-14 and EQ-20 `estimate`; EQ-15 `guideline (unverified)`; EQ-19 and EQ-29 `upper bound`; EQ-28 `estimate`.
 Every other equation has `label: null`.
@@ -655,7 +655,7 @@ Each dominant assumption is an object `{text, status, fields}`. `fields` names o
 `/rotor/recoil_permeability`, `/stackup/layers/*/thickness_mm`, `/vias/plating_um`, `/operating/convection_h_w_m2k`,
 `/materials/copper_resistivity_20c_ohm_m/value` and `/materials/laminate_density_g_per_cm3/value`.
 
-## Source and unit gaps
+## Source and unit gaps (revision 2026-10-08 (U-E5))
 
 These are requests to Agent 5 and to the owner of `src/embodic/units.py`, routed through Fable. Agent 2 does not edit
 `docs/phase2/evidence/source_gaps_phase2.md`. Each listed equation keeps an empty or partial `sources` list until an
@@ -663,17 +663,17 @@ evidence entry exists. Its status already states what the evidence supports.
 
 | Item | Status | What is missing |
 |---|---|---|
-| EQ-18 | inferred | a citable THD definition; an evidence entry for the D09 Table 7 p.8 THD oracle (basis unresolved) |
+| EQ-18 | inferred | a citable THD definition (G31). Revision 2026-10-08 (U-E5): the D09 Table 7 p.8 oracle value is EV-91, wired as a partial source |
 | EQ-19 | inferred | a source for triplen circulating current in a delta winding (resistance-limited upper bound) |
-| EQ-20 | unresolved | a textbook source for SVPWM, SPWM and six-step fundamentals and for PMSM pull-out torque |
+| EQ-20 | unresolved | a textbook source for the six-step fundamental and for PMSM pull-out torque. Revision 2026-10-08 (U-E5): EV-92 (an induction-motor application note) covers the SPWM and SVPWM linear limits only, wired as a partial source |
 | EQ-23, EQ-24, EQ-26 | verified | reproduced by CF-06, CF-08 and arithmetic; the register has no `kind` for a reproduction, and no textbook entry exists for the involute property |
 | EQ-25, EQ-30 | inferred | project rules (spiral_generator_spec.md G5 and G6; decision D-006); no external source applies |
-| EQ-28 | assumption | datasheet densities for sintered NdFeB and rotor steel |
-| EQ-29 | assumption | ε_r per dielectric (datasheets); ε_0 |
+| EQ-28 | assumption | a source for the inertia formula and a rotor steel density (G34). Revision 2026-10-08 (U-E5): the NdFeB density cites EV-93 |
+| EQ-29 | assumption | ε_r per dielectric (datasheets, G35) and a source for the capacitance formula. Revision 2026-10-08 (U-E5): ε_0 cites EV-85 |
 | EQ-16 | assumption | laminate density (FR-4 datasheet) |
-| μ_0 (EQ-13, EQ-14), ε_0 (EQ-29) | assumption | revision 2026-10-05 (U-E3): registry constants added with the values the code ports from Xcoil (4π×10⁻⁷ H/m, 8.854×10⁻¹² F/m) and `source: null`; an evidence entry (SI or CODATA) is missing. Revision 2026-10-08 (U-E4): requested from Agent 5 in U-S3b (CODATA 2018 or the SI brochure); the status changes only when an EV id exists |
-| Screw clearance holes (U-M2d) | unresolved | revision 2026-10-05 (U-E3): no ISO 273 or other entry in the evidence register. Revision 2026-10-08 (U-E4): D-031 (a) adds `hole_diameter_mm` per screw pattern (user entry, no default). ISO 273 fine, medium and coarse values for M2 to M6 are requested in U-S3b and ship only as labelled example values with an EV id |
-| EQ-08 answers (U-M2c Q1, Q2) | inferred | revision 2026-10-08 (U-E4): a textbook source for the balanced concentrated-winding condition (Q/(m·t) integer) and for parallel paths dividing the periodicity; requested in U-S3b |
+| μ_0 (EQ-13, EQ-14), ε_0 (EQ-29) | verified | revision 2026-10-05 (U-E3): registry constants added with the values the code ports from Xcoil (4π×10⁻⁷ H/m, 8.854×10⁻¹² F/m) and `source: null`; an evidence entry (SI or CODATA) is missing. Revision 2026-10-08 (U-E4): requested from Agent 5 in U-S3b (CODATA 2018 or the SI brochure); the status changes only when an EV id exists | Revision 2026-10-08 (U-E5): CODATA 2022 values wired, μ_0 1.25663706127e-6 H/m (EV-84), ε_0 8.8541878188e-12 F/m (EV-85), with EV-86 for why 4π×10⁻⁷ is no longer exact. The relative differences from the code values are −1.3e-10 (μ_0) and −2.1e-5 (ε_0). `src/embodic/physics/losses.py` `MU0_H_PER_M` and `checks/build_oracle_cases.py` `MU0` keep 4π×10⁻⁷ so the oracle and the code stay equal; both change together in a code unit |
+| Screw clearance holes (U-M2d) | inferred | revision 2026-10-05 (U-E3): no ISO 273 or other entry in the evidence register. Revision 2026-10-08 (U-E4): D-031 (a) adds `hole_diameter_mm` per screw pattern (user entry, no default). ISO 273 fine, medium and coarse values for M2 to M6 are requested in U-S3b and ship only as labelled example values with an EV id | Revision 2026-10-08 (U-E5): example rows for `hole_diameter_mm`, label `example`, normal fit (EV-87 Grade 2 = EV-88 normal, drill size = minimum hole diameter): M2 2.4, M2.5 2.9 (EV-88 only), M3 3.4, M4 4.5, M5 5.5, M6 6.6 mm. The values are `verified` as read; reading Grade 2 as ISO 273 medium is `inferred` (EV-87 says neither fine, medium nor coarse; ISO 273 text not read, G28). D-032 (d): Agent 3 writes them into `tests/unit/model/designs.py` |
+| EQ-08 answers (U-M2c Q1, Q2) | inferred | revision 2026-10-08 (U-E4): a textbook source for the balanced concentrated-winding condition (Q/(m·t) integer) and for parallel paths dividing the periodicity; requested in U-S3b | Revision 2026-10-08 (U-E5): EV-89 (balance condition Q/(3t) integer, eq. 15) and EV-90 (t = gcd(Q, p)) are wired to EQ-08 as partial sources. Neither covers parallel paths, so the rule that `a` divides t stays `inferred` (G30) |
 | EQ-10, O1-D08 phase resistance | unresolved | revision 2026-10-08 (U-E4): D08 states neither ρ₂₀ nor α_c (eq. 3.37, PDF p.45), nor the width and length of its inter-coil and star connections (PDF p.55). The loop-only residual −2.26 % and the chain part of the full-phase R stay open until those values are found |
 | EQ-05, back-plate saturation | assumption | revision 2026-10-08 (U-E4): steel B-H data and a back-iron model; D08 Table 4.8 (PDF p.60) gives fitted B_rem for one rotor only, not a model |
 

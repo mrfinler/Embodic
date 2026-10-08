@@ -16,6 +16,11 @@ Revision 2026-10-05 (U-E3b): G5 gains the half closing (the last turn ends on th
 coil centre line). D08 now builds its three turns. G3, G4, G9, the outputs, worked example 2 and the acceptance checks
 change with it. Worked example 1 is unchanged.
 
+Revision 2026-10-08 (U-E5): G2 gives the stadium-end construction with its jog and clearance proof, and confirms the
+straight-end chord levels. G3 gives the final `TURNS_EXCEED_LIMIT` texts. G9 gives the per-corner fillet length change
+and the filleted CF-11 and CF-10 lengths. The acceptance tolerance for fillets changes. `checks/spiral_reference.py`
+prints the per-corner table (`--corners`) and the stadium frame.
+
 ## Conventions
 
 - Canonical coil: centred on the +x axis, half-angle h = π/Q. The left sector edge is at +h (y > 0), the right edge at −h.
@@ -56,7 +61,7 @@ w_d = w + s; w_d,out = w_out + s; w_d,in = w_in + s; θ_cp = 2π/Q; side offset 
 sides); outer end radius R_out,t = R_o0 − t·w_d,out; inner end radius R_in,t = R_i0 + t·w_d,in. The turn pitch is w + s
 on the sides and w_end + s on the ends.
 
-### G2 Coil footprint
+### G2 Coil footprint (revision 2026-10-08 (U-E5))
 
 - Parallel sides: side t lies on the line parallel to the sector edge at perpendicular offset d_t. A point on the right
   line at axial parameter λ is λ(cos h, −sin h) + d(sin h, cos h); at radius R, λ = √(R² − d²). The left line is the
@@ -65,15 +70,60 @@ on the sides and w_end + s on the ends.
   between neighbouring rays at R_i0 is at least w_d and grows outward. Radial sides never meet, so a radial coil has no
   triangular turns.
 - Arc ends: concentric arcs at R_out,t and R_in,t.
-- Straight ends: chords perpendicular to the coil centre line at x = R cos h (Xcoil `outerR`/`innerR` with
-  `ends = straight`).
-- Stadium ends (`assumption`, interpretation of the reference render, `inferred from image`): each end is a circular arc
-  tangent to both side lines of that end. Outer end of turn t (both sides at offset d_t, apex x_a = d_t/sin h on the
-  centre line): centre x_c = (R_out,t + x_a sin h)/(1 + sin h), radius ρ = (x_c − x_a) sin h. Inner end (right side d_t,
-  left side d_t, revision 2026-10-05 (U-E3)): the mirror of the outer construction about the inner side, tangent to both
-  lines d_t with its innermost point at r_end,t. Status `not tested`; no worked example.
+- Straight ends (revision 2026-10-08 (U-E5), `inferred`): chords perpendicular to the coil centre line. The outer chord
+  of turn t lies at x = R_o0 cos h − t·w_d,out. Its centreline ends on the circle R_o0 at the sector edges and lies
+  inside it everywhere else, so the copper stays inside r_outer. The inner chord of turn t lies at x = R_i0 + t·w_d,in.
+  It touches the circle R_i0 on the centre line and lies outside it everywhere else, so the copper stays outside
+  r_inner (G9 rim rule). U-M2d-3's inner chord at x = R_i0 is correct, and so is the generator's outer level R_o0 cos h
+  (`generators/spiral/turns.py` `CoilFrame.of`). Xcoil differs (`engine.js` l.2255, l.2256). Its inner chord at
+  r_inner cos h + w_in/2 puts copper r_inner(1 − cos h) = 0.613 mm inside r_inner on the CF-11 centre line. Its outer
+  chord at r_outer cos h − w_out/2 differs from R_o0 cos h by (w_out/2)(1 − cos h) = 0.0085 mm on CF-11.
+- Stadium ends (revision 2026-10-08 (U-E5); the shape reading is `inferred from image`, the construction `inferred`,
+  the numbers `verified (by computation)` with `checks/spiral_reference.py` `stadium`). Each end is one circular arc
+  tangent to the two side lines it joins. Xcoil has no stadium end for sector coils (`engine.js` `ends` is `arc` or
+  `straight`), so no reference code exists.
+  1. Outer ends carry the jog. The outer end of turn t ≥ 1 joins the left line d_t−1 to the right line d_t, as the
+     arc-end jog of G3 does. Both lines are tangent to one circle with centre c_O = (x_O, y_O), y_O = w_d/(2 cos h),
+     radius ρ_O,t = x_O sin h − d_t−1 − w_d/2. x_O solves |c_O| + ρ_O,1 = R_out,1. With K = R_out,1 + (d_0 + d_1)/2,
+     x_O = (√(K² − y_O² cos² h) − K sin h)/cos² h. The circle for turn t + 1 is the same centre with radius
+     ρ_O,t − w_d, so it is tangent to the lines d_t and d_t+1 and its outermost point is R_out,t+1.
+  2. Turn 0 has no previous left side. Its outer end is the arc about c_O with radius ρ_O,0 = ρ_O,1 + w_d, from A_0 to
+     its tangent point on the right line d_0. A_0 is the crossing of that circle with the left line d_0 on the side away
+     from the coil centre, √((ρ_O,1 + w_d)² − ρ_O,1²) beyond the left tangent point of turn 1. A_0 is the start corner,
+     and the stub of G6 lands there. A circle tangent to both lines d_0 fails: it touches the left line d_0 0.18 mm from
+     turn 1's tangent point (CF-11), so turn 0's start would be 0.002 mm from turn 1.
+  3. Inner ends carry no jog (both sides of turn t lie on d_t). The inner end of turn t is the arc about
+     c_I = (x_I, 0), x_I = (R_i0 − d_0)/(1 − sin h), with radius ρ_I,t = x_I sin h − d_t. Its point nearest the origin
+     is x_I − ρ_I,t = R_in,t. Below ρ_min = w_d/(2 cos h) the two sides of the turn would come closer than w_d. The
+     inner end is then the apex-limited arc ρ_min about ((d_t + ρ_min)/sin h, 0), the stadium form of a triangular turn.
+  4. Turn t is four primitives: the outer arc, the right side d_t between the two tangent points, the inner arc, and
+     the left side d_t up to the left tangent point of turn t + 1. Every junction is tangent, so G9 fillets do not
+     apply. The loop rule of G3 holds with these tangent points: the right side is at least `min_side_length` long, and
+     the left side reaches the next outer tangent point.
+  Clearance proof (`inferred`, closed form). Outer arcs of turns t ≥ 0 are concentric about c_O at radius steps w_d,
+  so neighbouring outer arcs are exactly w_d apart (copper gap s). The same holds for the round inner ends about c_I.
+  The left side d_t ends on the ray from c_O that also holds turn t's left tangent point, so its nearest copper on outer
+  arc t is that arc's start, at distance √(w_d² + Δ²) ≥ w_d, where Δ is the distance along the line. An apex-limited
+  inner end lies farther out than the concentric arc it replaces, so its gap to the previous inner end grows above
+  w_d. Two sides of one turn meet the inner arc at tangent points 2ρ_I,t cos h ≥ w_d apart. The primitives that D-022
+  rule 1 does not exempt (left side t − 1 against right side t, index difference 2) are therefore at least s apart.
+  This argument is not yet a DRC run.
+  Worked example (CF-11 inputs, `verified (by computation)` for the construction as written): x_O 29.9867, y_O
+  0.3623, ρ_O,0 7.7611, ρ_O,1 7.0611; A_0 lies 3.2211 mm beyond turn 1's tangent point; x_I 24.1506, ρ_I,0 5.9006,
+  ρ_min 0.3623 mm. Turns 0 to 7 have round inner ends at levels 18.25 to 23.15 mm; turns 8 and 9 are apex-limited
+  (levels 24.0267 and 26.7313 mm). The right side is 5.5434 mm on every round turn (the feet of two fixed centres on
+  parallel lines), against 19.5017 mm for arc ends. Turn 9's right side is 2.7007 mm. The closing (G5) and its eye
+  bound with the stadium outer arc (|V − c_O| ≤ ρ_O,N−1 − w/2 − s − m) are `not tested`, so no turn count is given.
+  `UNSUPPORTED_END_STYLE` (D-032 f). The generator refuses `end_style = stadium` while this construction is not
+  implemented. After it is implemented, it still refuses stadium when any of these holds: radial sides (the side
+  lines are not parallel, so no concentric family exists); w_out ≠ w or w_in ≠ w (the end pitch must equal the side
+  pitch for concentric ends); more than one series group (k > 1; the closing is specified for k = 1 only); ρ_O,N−1 ≤
+  w/2 + s + m with the full closing. Narrow sectors need no separate rule. The right side length (x_O cos h − y_O sin
+  h) − x_I cos h does not depend on t, and the loop rule already stops the scan when that length is below
+  `min_side_length`. In the catalogue today the refusal is `UNBUILDABLE_SPIRAL_OPTION_NOT_IMPLEMENTED` with pointer
+  `/winding/coil/end_style` (`generators/spiral/generate.py` `_unsupported`).
 
-### G3 Turn geometry and turn limit (revision 2026-10-05 (U-E3))
+### G3 Turn geometry and turn limit (revision 2026-10-05 (U-E3); revision 2026-10-08 (U-E5))
 
 Turn t of layer X, in current direction (clockwise in the F.Cu view), is four primitives:
 
@@ -137,7 +187,19 @@ English, same code and placeholder):
 "The requested turns, or the turns that fit between the radii, exceed the limit of {limit} per coil layer. Lower the
 turn count, or change the trace width or clearance."
 
-The text names both causes, so it is true in all four cases, and it gives a remedy that applies to each. Follow-up
+The text names both causes, so it is true in all four cases, and it gives a remedy that applies to each.
+
+Final texts per cause (revision 2026-10-08 (U-E5), for Agent 3 to copy; English, code `UNBUILDABLE_TURNS_EXCEED_LIMIT`,
+placeholder `{limit}` unchanged):
+
+| Cause | Cases | Text |
+|---|---|---|
+| User cap: the request is above `{limit}` | 1, 4 | "The requested turn count is above the limit of {limit} turns per coil layer. Enter {limit} turns or fewer." |
+| Loop rule: more turns fit than the cap `{limit}` | 2, 3 | "More turns fit between the radii than the limit of {limit} turns per coil layer. Enter {limit} turns or fewer, or increase the trace width or the clearance." |
+
+In case 4, `{limit}` is the turns that fit, so "the limit" is the geometric one. `errors/catalogue/generators.py` maps
+one text to one code. Two texts need either a second code or the cause passed with the issue. That choice belongs to
+Agent 3 and Fable. Until it is made, the combined text above is the one to ship. Follow-up
 (`inferred`, for Fable): in case 2 a request at or below the cap is refused only because the scan runs to the cap
 before it reads the request (U-M2d-fix deviation). Scanning to min(request, cap) + 1 would build that request. This
 is a generator change and needs its own unit and test.
@@ -252,12 +314,33 @@ a pre-check only.
 - Star or delta connection of the phase ends: Xcoil `buildInterconnect` beyond the outermost bus ring (EQ-23 for its
   resistance). Open phases leave six terminals.
 
-### G9 Fillets, tapers and clearances
+### G9 Fillets, tapers and clearances (revision 2026-10-08 (U-E5))
 
 - Fillets: nested corners are filleted concentrically. The innermost turn takes the set radius ρ; each turn further out
   adds one pitch. This is valid only when the end pitch equals the side pitch (w_out = w_in = w) or the corner is square;
   otherwise corners stay sharp and width steps are tapered (Xcoil `taperJunctions`). If any fillet does not fit, multiply
   ρ by 0.7 and retry, at most 12 times; report `rho_used`. The inner end of a triangular turn is an arc of chord w_d at ρ_t (G3, revision 2026-10-05 (U-E3)).
+- Fillet length change per corner (revision 2026-10-08 (U-E5), `verified (by computation)`; the closed form is plane
+  geometry, `inferred`). Corner families (`generators/spiral/fillets.py` `_family`): B (outer arc t into right side t,
+  every turn with an outer arc), C and D (right side into inner end and inner end into left side, trapezoids only), and
+  J (left side t into outer arc t + 1, every turn but the last of a full closing). Corner t of a family takes
+  r = ρ + (t_inner − t)·w_d, where t_inner is the family's last turn. Xcoil uses the same radii (`engine.js` l.2306).
+  - Between two straight lines with interior angle φ (straight ends; φ = π/2 − h at the outer chord, π/2 + h at the
+    inner chord): ΔL = r(π − φ) − 2r cot(φ/2). At φ = 90° this is −0.4292 r.
+  - Between a side line at offset d and an end arc of radius R about the origin (arc ends): let σ = −1 when the fillet
+    lies inside the arc (B, J) and σ = +1 when it lies outside (C, D). With R_c = R + σr, β_0 = asin(d/R),
+    β_c = asin((d + r)/R_c), λ_0 = √(R² − d²) and λ_c = √(R_c² − (d + r)²):
+    ΔL = r(π/2 − σβ_c) − σ(λ_c − λ_0) − R(β_c − β_0).
+    The three terms are the fillet arc, the line cut and the end-arc cut. The sharp corner has φ = π/2 + σβ_0.
+    For R → ∞ and d = 0 the form gives r(π/2 − 2), the straight-line value at φ = 90°.
+  - Totals, from `.venv/bin/python checks/spiral_reference.py` (`--corners` prints every row). CF-11 at ρ 0.5 mm:
+    35 corners (B 10, C 8, D 8, J 9), radii 0.5 to 6.8 mm, Σr 113.4 mm. ΔL B −22.0519, C −6.7070, D −6.7070,
+    J −17.3730, total −52.8389 mm, so 415.4808 becomes 362.6419 mm (−12.718 %). CF-10 at ρ 1.0 mm: 7 corners,
+    ΔL −10.1058 mm, so 160.2750 becomes 150.1692 mm (−6.305 %).
+  - Why −12.7 % and not about −2 %. The −2 % estimate puts ρ on every corner: −7.7572 mm (−1.867 %) for CF-11. That is
+    not the G9 rule. With concentric radii the outer turns carry fillets up to 6.8 mm, and the change is roughly
+    −0.43 Σr. U-M2d-3 measured 362.64 mm on the generator, which matches this reference. DEF-M2d3-02 is therefore a
+    spec defect: the old acceptance line "±1 % when fillets are on" contradicted G9. The generator is not at fault.
 - Half closing (revision 2026-10-05 (U-E3b)): the last side ends at P with a round end cap and is not filleted there;
   its clearance to the lines d_N−2 is exactly s, so a fillet or taper must not widen it.
 - Neighbour coils: the first side offset gap/2 + w/2 gives a copper gap of max(gap, s) along the shared sector edge
@@ -398,12 +481,15 @@ the same turns. Numbers from `.venv/bin/python checks/spiral_reference.py` and `
   the full generated phase is 0.485162 Ω at 50 °C, because the series chain and vias add 0.140435 Ω. The comparison
   basis is in equation_specification.md EQ-10, "What D08's 0.39 Ω phase resistance includes".
 
-## Acceptance checks for the implementation
+## Acceptance checks for the implementation (revision 2026-10-08 (U-E5))
 
 - Turn counts exactly as above (CF-11: loop 11, full closing 10; CF-10: loop 3, half closing 3 at pad 0.6 and 1.2 mm),
   and the concentric test mode of EQ-02 (3, 11, 8). Revision 2026-10-05 (U-E3b): the CF-10 count returns from 2 to 3
   with `closing = "half"`, r_v 27.6255 mm.
-- Lengths within 1e-6 relative of the reference model for the same rules; within ±1 % when fillets are on.
+- Lengths within 1e-6 relative of the reference model for the same rules. Revision 2026-10-08 (U-E5): with fillets on,
+  each corner's ΔL within 1e-6 mm of `filleted_path` at the generator's `rho_used`, and the total within 1e-6 relative
+  (CF-11 at ρ 0.5: 362.6419 mm; CF-10 at ρ 1.0: 150.1692 mm). The generator and the reference build the same tangent
+  circles, so only rounding separates them (`inferred`).
 - Pattern strings exactly as CF-09.
 - The implementation's DRC (EQ-30) reports no violation for both examples. `checks/spiral_r2_check.py` measures the
   clearances with embodic's DRC distance kernels on the reference geometry (smallest = s in both examples); the
