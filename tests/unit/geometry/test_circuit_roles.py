@@ -5,6 +5,8 @@ import pytest
 from embodic.geometry.circuit import Circuit, LineLead, NeutralLead, NeutralRing, PhaseLink
 from embodic.model.vocabulary import ConnectionTopology, Phase
 
+pytestmark = pytest.mark.req("REQ-F-11")
+
 ROLES = (
     LineLead(path_id=10, phase=Phase.A),
     PhaseLink(path_id=11, phase=Phase.B),

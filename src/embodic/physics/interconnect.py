@@ -30,7 +30,20 @@ class InterconnectResistance:
 
 
 def is_unclassified(layout: Layout) -> bool:
-    """Return True when the layout has interconnect copper but its generator recorded no roles."""
+    """Return True when the layout has interconnect copper but its generator recorded no roles.
+
+    References: EQ-23 needs the role of every interconnect path (interfaces.md section 5).
+
+    Parameters
+    ----------
+    layout : Layout
+        Board with its circuit; lengths in mm.
+
+    Returns
+    -------
+    bool
+        True when P_ic cannot be computed, dimensionless.
+    """
     circuit = layout.circuit
     return bool(circuit.interconnect_path_ids) and not circuit.interconnect_roles
 
@@ -91,7 +104,20 @@ def interconnect_resistance(
 
 
 def sum_boards(parts: Sequence[InterconnectResistance]) -> InterconnectResistance:
-    """Add the per-phase sums of several boards, and the ring segments of the same index."""
+    """Add the per-phase sums of several boards, and the ring segments of the same index.
+
+    References: EQ-23 (series copper adds).
+
+    Parameters
+    ----------
+    parts : Sequence[InterconnectResistance]
+        Sums of each board in ohm.
+
+    Returns
+    -------
+    InterconnectResistance
+        Sums of the stack in ohm.
+    """
 
     def add(columns: Sequence[tuple[float, ...]]) -> tuple[float, ...]:
         width = max((len(c) for c in columns), default=0)
@@ -172,9 +198,7 @@ def _project(prim: Primitive, xy: tuple[float, float]) -> tuple[float, float]:
     return math.hypot(x - fx, y - fy), prim.r_mm * swept
 
 
-def interconnect_loss_w(
-    resistance: InterconnectResistance, connection: ConnectionTopology, line_current_a: float
-) -> float:
+def interconnect_loss_w(sums: InterconnectResistance, connection: ConnectionTopology, line_current_a: float) -> float:
     """Return the copper loss of the interconnect.
 
     References: EQ-23 (Xcoil applyConnection l.1422-1429). Star: I_line^2 (sum stub + sum link + sum ring); delta:
@@ -182,8 +206,8 @@ def interconnect_loss_w(
 
     Parameters
     ----------
-    resistance : InterconnectResistance
-        The sums in ohm.
+    sums : InterconnectResistance
+        The interconnect sums in ohm.
     connection : ConnectionTopology
         The analysed connection.
     line_current_a : float
@@ -196,11 +220,9 @@ def interconnect_loss_w(
     """
     match connection:
         case ConnectionTopology.STAR:
-            return line_current_a**2 * resistance.total_ohm()
+            return line_current_a**2 * sums.total_ohm()
         case ConnectionTopology.DELTA:
             phase_current_a = line_current_a / math.sqrt(3.0)
-            return line_current_a**2 * math.fsum(resistance.line_stub_ohm) + phase_current_a**2 * math.fsum(
-                resistance.link_ohm
-            )
+            return line_current_a**2 * math.fsum(sums.line_stub_ohm) + phase_current_a**2 * math.fsum(sums.link_ohm)
         case ConnectionTopology.OPEN:
             return 0.0
