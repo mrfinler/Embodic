@@ -128,6 +128,26 @@ def test_feasibility_reports_the_12_16_numbers() -> None:
     assert (feasibility.q, feasibility.periodicity, feasibility.max_parallel_paths) == (Fraction(1, 4), 4, 4)
 
 
+@pytest.mark.parametrize(
+    ("coils", "poles", "allowed"),
+    [
+        (9, 6, (1, 3)),
+        (12, 16, (1, 2, 4)),
+        (12, 12, (1, 2, 3, 6)),
+        (7, 14, (1, 7)),
+        (5, 2, (1,)),
+    ],
+)
+def test_parallel_paths_must_divide_the_periodicity(coils: int, poles: int, allowed: tuple[int, ...]) -> None:
+    """D-032a. Catches `a <= t`: a = 2 with t = 3 passes that rule although 3 mod 2 = 1 (EQ-08, inferred).
+
+    The expected sets are the divisors of t written out by hand: t = 3, 4, 6, 7 and 1.
+    """
+    feasibility = check_feasibility(coils, poles)
+    accepted = tuple(a for a in range(1, 13) if feasibility.allows_parallel_paths(a))
+    assert accepted == allowed
+
+
 def test_ut_wnd_10_balanced_coil_counts_for_14_poles_include_12_and_24() -> None:
     """Catches the Xcoil balancedSectorList regression (C6): 12 and 24 coils with 14 poles are balanced."""
     counts = balanced_coil_counts(14)

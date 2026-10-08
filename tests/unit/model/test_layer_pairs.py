@@ -40,6 +40,39 @@ def _blank_spiral(copper_count: int) -> DesignDraft:
     return derive_layer_pairs(_with_copper(blank_draft(TopologyKind.SPIRAL), copper_count))
 
 
+_PAIR_LEAVES = ("index", "layer_in", "layer_out", "rotation_rad", "phases")
+
+
+def _with_copper_names(draft: DesignDraft, names: list[str]) -> DesignDraft:
+    """Replace the stack-up by copper layers with these names, in this stack order."""
+    kept = {p: v for p, v in draft.values.items() if not p.startswith("/stackup/layers/")}
+    layers = {
+        f"/stackup/layers/{k}/{leaf}": value
+        for k, name in enumerate(names)
+        for leaf, value in (("kind", "copper"), ("name", name))
+    }
+    return dataclasses.replace(draft, values={**kept, **layers})
+
+
+def _pair_rows(draft: DesignDraft) -> list[tuple[object, object, object]]:
+    """Return the (index, layer_in, layer_out) of each pair in list order."""
+    count = len([p for p in draft.values if p.startswith(PAIRS) and p.endswith("/index")])
+    return [tuple(draft.values[f"{PAIRS}/{k}/{leaf}"] for leaf in _PAIR_LEAVES[:3]) for k in range(count)]
+
+
+def _delete_pair(draft: DesignDraft, position: int) -> DesignDraft:
+    """Delete one pair as the form's list delete does: later pairs move down one position and keep their own index."""
+    count = len(_pair_rows(draft))
+    values = {p: v for p, v in draft.values.items() if not p.startswith(PAIRS)}
+    gone = draft.values[f"{PAIRS}/{position}/index"]
+    for old in range(count):
+        if old != position:
+            new = old - (old > position)
+            values |= {f"{PAIRS}/{new}/{leaf}": draft.values[f"{PAIRS}/{old}/{leaf}"] for leaf in _PAIR_LEAVES}
+    kept = [[i for i in group if i != gone] for group in draft.values[GROUPS]]
+    return dataclasses.replace(draft, values={**values, GROUPS: [group for group in kept if group]})
+
+
 @pytest.mark.req("REQ-F-03")
 def test_layer_pairs_one_pair_per_two_copper_layers_in_stack_order_all_in_series():
     """Defect caught: a blank spiral draft left with an empty pair list (D-024), wrong pair count or layer order."""
@@ -125,3 +158,40 @@ def test_layer_pairs_not_derived_for_other_topologies():
     """Defect caught: spiral pair pointers written into a serpentine draft, where they mean nothing."""
     draft = draft_from_design(serpentine_design())
     assert derive_layer_pairs(_with_copper(draft, 4)) == _with_copper(draft, 4)
+
+
+@pytest.mark.req("REQ-F-03")
+def test_layer_pairs_are_identified_by_copper_layer_names_not_list_position():
+    """DEF-S4c-01, D-032b.
+
+    Defect caught: pair settings read back by list position, so deleting the middle of three pairs and growing the
+    stack-up from 6 to 8 copper layers lists one pair twice, drops L3-L4 and L5-L6 loses its edit.
+    """
+    draft = _blank_spiral(6)
+    edits = {f"{PAIRS}/2/rotation_rad": math.pi / 12, f"{PAIRS}/2/phases": ["B"], GROUPS: [[0, 2], [1]]}
+    edited = dataclasses.replace(draft, values={**draft.values, **edits})
+    after_delete = _delete_pair(edited, 1)
+    assert _pair_rows(after_delete) == [(0, "L1", "L2"), (2, "L5", "L6")]
+    grown = derive_layer_pairs(_with_copper(after_delete, 8))
+    assert _pair_rows(grown) == [(0, "L1", "L2"), (1, "L3", "L4"), (2, "L5", "L6"), (3, "L7", "L8")]
+    assert (grown.values[f"{PAIRS}/2/rotation_rad"], grown.values[f"{PAIRS}/2/phases"]) == (math.pi / 12, ["B"])
+    assert (grown.values[f"{PAIRS}/1/rotation_rad"], grown.values[f"{PAIRS}/1/phases"]) == (0.0, None)
+    assert grown.values[GROUPS] == [[0, 2], [1], [3]]
+
+
+@pytest.mark.req("REQ-F-03")
+def test_layer_pairs_follow_a_renamed_copper_layer():
+    """D-032b. Defect caught: a pair keeps pointing at `L4` after the stack-up renames it, because position matched."""
+    renamed = derive_layer_pairs(_with_copper_names(_blank_spiral(4), ["L1", "L2", "L3", "Inner4"]))
+    assert _pair_rows(renamed) == [(0, "L1", "L2"), (1, "L3", "Inner4")]
+    assert renamed.values[GROUPS] == [[0], [1]]
+
+
+@pytest.mark.req("REQ-F-03")
+def test_layer_pairs_indices_never_repeat_when_a_new_pair_comes_first_in_stack_order():
+    """D-032b. Defect caught: the new L5-L6 pair numbered by position takes index 0, which L1-L2 already holds."""
+    draft = _blank_spiral(4)
+    joined = dataclasses.replace(draft, values={**draft.values, GROUPS: [[0, 1]]})
+    reordered = derive_layer_pairs(_with_copper_names(joined, ["L5", "L6", "L1", "L2", "L3", "L4"]))
+    assert _pair_rows(reordered) == [(2, "L5", "L6"), (0, "L1", "L2"), (1, "L3", "L4")]
+    assert reordered.values[GROUPS] == [[0, 1], [2]]
