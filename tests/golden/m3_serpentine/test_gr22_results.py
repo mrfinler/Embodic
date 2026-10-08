@@ -6,7 +6,6 @@ compare the same elements: Ke from the whole analysis, and eddy loss and trace r
 Xcoil's resistivity, each within 1e-9 relative.
 """
 
-import dataclasses
 import math
 from collections.abc import Mapping
 from typing import Any
@@ -35,7 +34,6 @@ pytestmark = pytest.mark.req("REQ-F-34")
 
 AREA = load_area("serpentine")
 BUILT = [c for c in AREA.values() if c.case_id.startswith("layout-") and "layers" in c.calls[0].output]
-PER_PHASE = [c for c in BUILT if c.calls[0].output["nBoards"] > 1]
 # The seeded sets repeat what the presets cover; they run in the nightly profile (slow), the presets on every commit.
 CASES = [pytest.param(c, marks=pytest.mark.slow) if "seeded" in c.tags else c for c in BUILT]
 RHO_CU_20, ALPHA_CU = 1.724e-8, 0.00393  # Xcoil engine.js l.12-13: annealed copper at 20 C, 1/K
@@ -143,35 +141,11 @@ def _mean_ke(result: AnalysisResult) -> float:
     return math.fsum(p.ke_peak_v_s_per_rad.value for p in result.phases) / len(result.phases)
 
 
-def _single_board_frame(stack: BoardStack) -> BoardStack:
-    """Take each board's z back to board 0, the frame ``analyse`` expects (see DEF-M3a-01)."""
-    pitch = stack.board_thickness_mm + stack.board_gap_mm
-    boards = tuple(
-        dataclasses.replace(b, copper_z_mm={n: z - k * pitch for n, z in b.copper_z_mm.items()})
-        for k, b in enumerate(stack.boards)
-    )
-    return BoardStack(boards=boards, board_thickness_mm=stack.board_thickness_mm, board_gap_mm=stack.board_gap_mm)
-
-
 @pytest.mark.parametrize("case", CASES, ids=lambda c: c.case_id)
 def test_gr22_phase_constant_equals_xcoil(case: GoldenCase, registry: Registry, golden_report: Any) -> None:
-    """Catches a wrong copper element or phase shift in Ke: mean phase Ke from analyse(), 1e-9 rel."""
+    """Catches a wrong copper element, phase shift or board z: Ke of the stack as built (DEF-M3a-01), 1e-9 rel."""
     raw = _raw(case)
     design, stack = _built(case, registry)
-    if raw["nBoards"] > 1:
-        stack = _single_board_frame(stack)
     golden_report.check(
         case.case_id, compare_scalar(raw["analysis"]["Ke1"], _mean_ke(_analysis(design, stack, registry)), INTEGRATED)
     )
-
-
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEF-M3a-01: physics.analyse adds k x pitch to copper_z_mm that already holds it (interfaces.md section 5)",
-)
-def test_gr22_phase_constant_equals_xcoil_on_the_stack_as_built(registry: Registry) -> None:
-    """Catches the double count: a one-board-per-phase stack as returned by the generator must give Xcoil's Ke."""
-    case = PER_PHASE[0]
-    design, stack = _built(case, registry)
-    golden = compare_scalar(_raw(case)["analysis"]["Ke1"], _mean_ke(_analysis(design, stack, registry)), INTEGRATED)
-    assert golden.ok, golden.describe()
