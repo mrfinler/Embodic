@@ -45,6 +45,7 @@ PACKAGES: list[tuple[str, str, str]] = [
     ("jsonschema", "test (ADR-0008)", "no"),
     ("ezdxf", "test (ADR-0008, DXF parser)", "no"),
     ("pypdf", "test (ADR-0008, PDF parser)", "no"),
+    ("fonttools", "test (pyproject dev, U-M4f font reader oracle)", "no"),
     ("ruff", "dev", "no"),
     ("import-linter", "dev", "no"),
     ("mypy", "dev (ADR-0008)", "no"),
