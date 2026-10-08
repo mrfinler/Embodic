@@ -12,10 +12,12 @@ import itertools
 import math
 
 from embodic.errors import IssueCategory, Severity, Unbuildable, ValidationIssue, message_for
+from embodic.generators.base import unusable_sizes
 from embodic.generators.wave.assemble import Obj, SeriesElement, WaveBuild, assemble_layout, build_in_layer_order
 from embodic.generators.wave.build import Track, WaveGeometry, build_wave
 from embodic.generators.wave.derive import WaveFrame, WaveParams, WaveRefusal, derive_wave, max_wave_turns
 from embodic.generators.wave.interconnect import IcPad, PadSpec, build_interconnect
+from embodic.generators.wave.involute import DegenerateBiarcError
 from embodic.generators.wave.overlap import build_overlap
 from embodic.geometry.layout import BoardStack
 from embodic.model.design import DesignParameters
@@ -47,10 +49,9 @@ def _unbuildable(code: str, pointers: tuple[str, ...], limit: int | None = None)
 
 
 def _out_of_range(design: DesignParameters, spec: WaveWindingSpec) -> tuple[str, ...]:
-    """Pointers of inputs the geometry cannot use: non-finite or non-positive sizes, counts outside Xcoil's ranges."""
+    """Pointers of inputs the geometry cannot use (D-030): sizes, a DRC-refused width, counts beyond Xcoil's ranges."""
     positive = {
         "/winding/r_inner_mm": spec.r_inner_mm,
-        "/winding/trace_width_mm": spec.trace_width_mm,
         "/winding/clearance_mm": spec.clearance_mm,
         "/winding/bus_width_mm": spec.bus_width_mm,
         "/winding/end_width_outer_mm": spec.end_width_outer_mm or spec.trace_width_mm,
@@ -59,7 +60,7 @@ def _out_of_range(design: DesignParameters, spec: WaveWindingSpec) -> tuple[str,
         "/connection/ring_width_mm": design.connection.ring_width_mm,
         "/connection/terminal_pad_mm": design.connection.terminal_pad_mm,
     }
-    bad = [pointer for pointer, v in positive.items() if not (math.isfinite(v) and v > 0)]
+    bad = unusable_sizes(positive, "/winding/trace_width_mm", spec.trace_width_mm, design.drc_rules)
     if not (math.isfinite(spec.r_outer_mm) and spec.r_outer_mm > spec.r_inner_mm):
         bad.append("/winding/r_outer_mm")
     if not (math.isfinite(spec.fillet_radius_mm) and spec.fillet_radius_mm >= 0):
@@ -222,7 +223,10 @@ def generate_wave_rotated(
     frame = derive_wave(params)
     if isinstance(frame, tuple):
         return _refusals(frame, params)
-    build = build_overlap(design, frame) if frame.style == "overlap" else _build_standard(design, frame)
+    try:
+        build = build_overlap(design, frame) if frame.style == "overlap" else _build_standard(design, frame)
+    except DegenerateBiarcError:
+        return _unbuildable("UNBUILDABLE_WAVE_END_TURN_DEGENERATE", ("/winding/r_inner_mm", "/winding/turns"))
     if isinstance(build, Unbuildable):
         return build
     layout = assemble_layout(design, build, registry)

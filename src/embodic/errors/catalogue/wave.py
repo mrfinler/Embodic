@@ -25,6 +25,10 @@ MESSAGES: Mapping[str, str] = {
         "The wave winding needs an even number of copper layers, from 2 to {limit} (T/B pairs)."
     ),
     "UNBUILDABLE_WAVE_INPUT_OUT_OF_RANGE": "A wave winding input is outside the range the geometry can use.",
+    "UNBUILDABLE_WAVE_END_TURN_DEGENERATE": (
+        "The involute end-turns collapse to a point at this radius and turn count. Increase the inner radius or the "
+        "radial span, or reduce the turns."
+    ),
     "UNBUILDABLE_WAVE_INTERCONNECT_CROSSING": "The delta links cross, and the ring layers cannot carry crossing links.",
     "RANGE_WAVE_INTERCONNECT_EXTERNAL": (
         "The overlapping radial winding has one terminal per rim: make the delta connection externally "

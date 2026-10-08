@@ -303,6 +303,10 @@ def test_terminals_sit_on_the_outer_ring_vias(registry: Registry) -> None:
 @example(r_inner=float("nan"), span=18.0, w=0.4, s=0.2, pad=0.6, turns=2, poles=16, layers=2, style="involute")
 @example(r_inner=22.0, span=18.0, w=0.4, s=0.0, pad=0.6, turns=200, poles=200, layers=2, style="jog")
 @example(r_inner=22.0, span=18.0, w=1e-9, s=0.2, pad=0.6, turns=2, poles=16, layers=16, style="chord")
+@example(  # DEF-M3b-03: biarc divides by zero when p0 == p1 and the width is denormal
+    r_inner=1.0, span=1.0, w=1.175494351e-38, s=1.401298464324817e-45, pad=1.401298464324817e-45,
+    turns=1, poles=4, layers=2, style="involute",
+)  # fmt: skip
 @given(
     r_inner=st.floats(-5.0, 60.0) | st.just(float("nan")) | st.just(float("inf")),
     span=st.floats(-5.0, 40.0),
