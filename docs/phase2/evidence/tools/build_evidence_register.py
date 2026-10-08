@@ -17,7 +17,12 @@ PHASE2_MD = ROOT / "docs/phase2/evidence/evidence_register.md"
 EQ_REGISTRY = ROOT / "docs/phase1/engineering/equation_registry_draft.json"
 OUT = ROOT / "docs/phase2/evidence/evidence_register.json"
 
-PREPARED_BY = "Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5"
+PREPARED_BY = (
+    "Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5 (rows EV-01 to EV-83); "
+    "claude-sonnet-5-5 (rows EV-84 to EV-93, unit U-S3b)"
+)
+ACCESSED_DEFAULT = "2026-10-04"
+ACCESSED = {f"EV-{n}": "2026-10-08" for n in range(84, 94)}  # U-S3b lookups
 STATUS_WEAKEST_FIRST = ["unresolved", "not tested", "assumption", "inferred", "verified"]
 # Phase 1 status cells carry qualifiers; these phrases reduce to a vocabulary word.
 STATUS_SYNONYMS = {"not accessed": "unresolved", "marketing": "unresolved"}
@@ -58,6 +63,9 @@ T = {  # topology tags, one explicit entry per row so a new row cannot be silent
     "EV-K1": ["non_engineering"], "EV-K2": ["non_engineering"], "EV-K3": ["non_engineering"],
     "EV-K4": ["non_engineering"], "EV-K5": ["non_engineering"], "EV-K6": ["non_engineering"],
     "EV-80": ["general"], "EV-81": ["general"], "EV-82": ["general"], "EV-83": ["general"],
+    "EV-84": ["general"], "EV-85": ["general"], "EV-86": ["general"], "EV-87": ["general"], "EV-88": ["general"],
+    "EV-89": ["spiral", "wave"], "EV-90": ["spiral", "wave"], "EV-91": ["spiral"], "EV-92": ["general"],
+    "EV-93": ["general"],
 }
 KIND = {  # rows that are not plain source claims
     "EV-60": "bibliographic_record", "EV-61": "bibliographic_record", "EV-63": "bibliographic_record",
@@ -85,6 +93,10 @@ DOCS_FOR_ROW = {  # rows whose Source column names no D-number
     "EV-K5": ["PYPI-kicad-python"], "EV-K6": ["WEB-KICAD-LICENCES"],
     "EV-80": ["MFR-HGT-NDFEB"], "EV-81": ["MFR-ARNOLD-SMMA2004"], "EV-82": ["THESIS-UARK2014"],
     "EV-83": ["MFR-BITTELE-TWC"],
+    "EV-84": ["NIST-CODATA2022"], "EV-85": ["NIST-CODATA2022"], "EV-86": ["BIPM-SI-BROCHURE-9"],
+    "EV-87": ["WEB-NBK-JISB1001"], "EV-88": ["WEB-AMESWEB-B1828"], "EV-89": ["BIB-TESSAROLO2019"],
+    "EV-90": ["CONF-ALBERTI-MULTILAYER"], "EV-91": ["D09"], "EV-92": ["APN-MICROCHIP-AN955"],
+    "EV-93": ["MFR-HGT-NDFEB"],
 }
 
 
@@ -163,6 +175,31 @@ OTHER_DOCS = [
         "https://scholarworks.uark.edu/cgi/viewcontent.cgi?article=3596&context=etd"),
     doc("MFR-BITTELE-TWC", "Trace Width Calculator", "Bittele Electronics", None, None,
         "PCB manufacturer web page", "manufacturer_page", "https://www.7pcb.com/trace-width-calculator"),
+    doc("NIST-CODATA2022", "Fundamental Physical Constants, Complete Listing (2022 CODATA adjustment)",
+        "NIST", 2022, "2022", "physics.nist.gov, allascii.txt", "reference_data",
+        "https://physics.nist.gov/cuu/Constants/Table/allascii.txt"),
+    doc("BIPM-SI-BROCHURE-9", "SI Brochure, 9th edition (edition number from the file name; title page not read)",
+        "BIPM (host bipm.org)", None, None, "bipm.org, SI-Brochure-9-EN.pdf", "standard",
+        "https://www.bipm.org/documents/20126/41483022/SI-Brochure-9-EN.pdf"),
+    doc("WEB-NBK-JISB1001", "Technical data 20: Diameter of clearance holes and counterbores for bolts and screws "
+        "(JIS B 1001 table)", "NBK (manufacturer)", 2015, "2015-06-18", "manufacturer technical page",
+        "manufacturer_page",
+        "https://alb02.internal.nbk1560.com/en/resources/other/article/"
+        "technical-20-diameter-of-clearance-holes-and-counterbores-for-bolts-and-screws"),
+    doc("WEB-AMESWEB-B1828", "Metric Clearance Hole Chart (cites ASME B18.2.8-1999)", "AmesWeb", None, None,
+        "web page", "web_page", "https://amesweb.info/Screws/Metric-Clearance-Hole-Chart.aspx"),
+    doc("BIB-TESSAROLO2019", "Investigation Into Multi-Layer Fractional-Slot Concentrated Windings With "
+        "Unconventional Slot-Pole Combinations", "A. Tessarolo, C. Ciriani, M. Bortolozzi, M. Mezzarobba, N. Barbini",
+        2019, "2019", "IEEE Trans. Energy Convers. 34(4) 1985-1996, doi 10.1109/TEC.2019.2929950", "journal",
+        "https://arts.units.it/bitstream/11368/2958612/4/2958612_IEEE%20TEC%202019-PostPrint.pdf"),
+    doc("CONF-ALBERTI-MULTILAYER", "Theory and Design of Fractional-Slot Multilayer Windings",
+        "L. Alberti, N. Bianchi", None, "unresolved",
+        "Presentation, University of Padova; the extract says ECCE 2011 Phoenix, the file name says ECCE 2010",
+        "presentation", "https://research.unipd.it/bitstream/11577/2514240/1/ECCE_2010_Multilayer_presentation_web.pdf"),
+    doc("APN-MICROCHIP-AN955", "VF Control of 3-Phase Induction Motor Using Space Vector Modulation, AN955 "
+        "(DS00955A)", "R. Parekh (Microchip Technology)", 2005, "2005",
+        "application note (copy hosted on mikrocontroller.net)", "application_note",
+        "https://mikrocontroller.net/attachment/337300/AN955.pdf"),
 ]
 
 
@@ -298,7 +335,7 @@ def build() -> dict:
                 "related_equations": eqs_for_ev.get(ev_id, []),
                 "related_gaps": gaps,
                 "register_origin": origin,
-                "accessed": "2026-10-04",
+                "accessed": ACCESSED.get(ev_id, ACCESSED_DEFAULT),
             })
 
     return {

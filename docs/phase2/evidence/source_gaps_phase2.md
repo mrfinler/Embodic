@@ -1,4 +1,4 @@
-Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5
+Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5. Revision 2026-10-08 (U-S3b) by Agent 5, model: claude-sonnet-5-5.
 
 # Source gaps that still affect Phase 2 results
 
@@ -33,7 +33,7 @@ as evidence.
 | G1: inductance | EQ-14 | magnetising term only, D10 eq. (14) form (EV-31) | `unresolved` (estimate) | "Inductance first estimate; no end-turn or leakage terms (EQ-14)" |
 | G4: trace eddy-loss coefficient | EQ-12 | D03 form σω²(B_z²w² + B_φ²h²)/24 per volume (EV-36) | `inferred` | "Eddy loss uses the D03 thin-conductor form; sources disagree by 2× (G4)" |
 | G3: layer-dependent EMF | EQ-07 | field evaluated at each layer's z (EQ-05) | `inferred` | "Per-layer EMF from the 2-D field model; not FEA-checked (G3)" |
-| G28: ISO 273 hole sizes | mounting-hole presets | no table values read (EV-78) | `assumption` | "Clearance-hole preset is a team assumption; ISO 273 values not read" |
+| G28: ISO 273 hole sizes | mounting-hole presets | M2 to M6 drill sizes (close / normal / loose) from a JIS B 1001 table (EV-87) and an ASME B18.2.8 table (EV-88), both read through extracts and identical for M2 to M6. ISO 273 table values not read (EV-78 holds the scope only) | `inferred`. The values are read as printed. Reading them as the ISO 273 fine / medium / coarse series is inferred from order | "Clearance-hole preset from JIS B 1001 and ASME B18.2.8 tables (EV-87, EV-88); ISO 273 text not read" |
 | G23 (second part): NdFeB Br values | magnet examples (D-015 example rotor) | N35–N52 Br typical and minimum (EV-54), read through an extract | `verified (extract)`; the PDF itself not re-read | "Br from the Arnold catalog via extract (EV-54)" |
 
 ## Not found this round
@@ -43,3 +43,42 @@ as evidence.
 - An open application note from a semiconductor or PCB manufacturer that quotes IPC-2221 §6.2 with its validity range.
   The manufacturer statement found is a calculator web page (EV-83).
 - The IPC-2221 and IPC-2152 texts, Bumby & Martin 2005, and Dai Pré & Bianchi 2006 (paywalled; not accessed).
+
+## Revision 2026-10-08 (U-S3b): requests from the equation specification
+
+Source: the "Source and unit gaps" table in `docs/phase2/engineering/equation_specification.md` and the U-E2, U-E3 and U-E3b reports. New entries are EV-84 to EV-93 in `evidence_register.json`. Web pages were read through WebFetch extracts. Direct downloads from physics.nist.gov and bipm.org were refused (proxy answer 403) and were not worked around. This unit did not edit the equation registry, so no EQ entry cites the new EV ids yet. The engineering owner decides which constants and `sources` lists change.
+
+| Request | Result | EV ids | What remains |
+|---|---|---|---|
+| µ0 (EQ-13, EQ-14) and ε0 (EQ-29) | Closed as evidence. The 2022 CODATA adjustment gives µ0 = 1.256 637 061 27 × 10⁻⁶ N A⁻² (u = 0.20 × 10⁻¹⁵) and ε0 = 8.854 187 8188 × 10⁻¹² F m⁻¹. The SI brochure says µ0 is no longer exact | EV-84, EV-85, EV-86 | Registry constants hold 4π × 10⁻⁷ (differs by 1.3e-10 relative, 0.83 standard uncertainties) and 8.854e-12 (differs by -2.1e-5 relative). Both numbers were computed in this unit. Whether to change the constants is an engineering call |
+| Screw clearance holes (U-M2d) | Two tables read for M2 to M6, with identical drill sizes. No ISO 273 table opened | EV-87, EV-88 (scope: EV-78) | G28 stays open for the ISO 273 text. The fine / medium / coarse mapping is inferred. The NBK page has no M2.5 row |
+| EQ-08 feasibility, Q/(m·t) an integer | Stated for three phases as Z / (3 × GCD(Z, p)) in a journal paper. The definition t = GCD(Q, p) is in a conference presentation | EV-89, EV-90 | Neither is a textbook. Pyrhönen et al. (EV-61) and Dai Pré and Bianchi (EV-60) stay unopened |
+| EQ-08 parallel paths dividing the periodicity | Gap G30. No opened source states the rule | none | Opened without a statement of the rule: the Leoben six-phase paper, Tessarolo 2019, the Alberti and Bianchi slides, the Emetor "number of parallel paths" page. A search hit from Nagasaki University (ICEMS 2011) redirected to a signed URL on another host and was not opened |
+| IPC-2221 constants (G5) | No change. EQ-15 already cites EV-82 and EV-83 | EV-82, EV-83 | Unchanged from the G5 row above |
+| EQ-18 THD | Oracle values read. D09 defines THD on no page of its text layer. Table 7 and the text differ by 0.1 point for radial (1.2 vs 1.3) and arc (2.8 vs 2.9) | EV-91 | Gap G31: a citable THD definition. No definition source was searched in this unit |
+| EQ-19 triplen circulating current in a delta winding | Gap G32. One search returned only forum threads and a blog page, none opened as evidence | none | A textbook or standard that states the triplen path |
+| EQ-20 SPWM, SVPWM, six-step, PMSM pull-out torque | Partly closed. An application note states the SVPWM and sine PWM linear limits (line-to-line VDC and √3/2 × VDC) | EV-92 | Gap G33: six-step fundamental and PMSM pull-out torque. The note covers induction motors and is not a textbook |
+| EQ-23, EQ-24, EQ-26 involute property | Gap G37, not searched in the timebox | none | A textbook entry for the involute property. Whether the register needs a `kind` for a reproduction is a schema decision for Agent 2 and Fable, so this unit did not touch it |
+| EQ-25, EQ-30 | No external source applies. Both are project rules (`spiral_generator_spec.md` G5 and G6, decision D-006) | none | Nothing for Agent 5 |
+| EQ-28 densities | NdFeB density range read | EV-93 | Gap G34: rotor steel density, not searched. The registry holds 7.85 g/cm³ as an `assumption` |
+| EQ-29 ε_r per dielectric | Gap G35, not searched. ε0 is closed by EV-85 | none | A datasheet for each laminate dielectric |
+| EQ-16 laminate density | Gap G36, not searched | none | An FR-4 datasheet that states density. The registry holds 1.85 g/cm³ as an `assumption` |
+
+### New gaps
+
+| Gap | Affects | Current best value | Label | Assumptions tag text |
+|---|---|---|---|---|
+| G30: parallel-path rule | EQ-08 (U-M2c question b) | The number of paths a must divide t = gcd(Q, p). Derived by Agent 2 in `equation_specification.md`, no source | `unresolved` | "Parallel-path rule derived in EQ-08; no source read (G30)" |
+| G31: THD definition | EQ-18 | THD = √(Σ_{n>1} Ke_n²)/Ke_1 as written in the specification. D09 Table 7 values (EV-91) have an unstated basis | `unresolved` | "THD relative to the fundamental; the basis of the D09 oracle is not stated (G31)" |
+| G32: triplen current in a delta winding | EQ-19 | Resistance-limited upper bound from the specification | `unresolved` | "Triplen circulating current is an upper bound; no source read (G32)" |
+| G33: six-step and pull-out torque | EQ-20 | SPWM and SVPWM linear limits from EV-92. No value for six-step or pull-out torque | `unresolved` for six-step and pull-out torque. `verified (extract)` for the two linear limits | "Drive voltage limits partly from an application note (EV-92); six-step and pull-out torque unsourced (G33)" |
+| G34: rotor steel density | EQ-28 | 7.85 g/cm³ | `assumption` | "Rotor steel density is an assumption (G34)" |
+| G35: dielectric constant | EQ-29 | per-dielectric ε_r from the specification | `assumption` | "ε_r per dielectric is an assumption (G35)" |
+| G36: laminate density | EQ-16 | 1.85 g/cm³ | `assumption` | "Laminate density is an assumption (G36)" |
+| G37: involute property | EQ-23, EQ-24, EQ-26 | reproduced by CF-06, CF-08 and arithmetic | `verified` (reproduction), no textbook entry | none |
+
+### Not found in U-S3b
+
+- Any text of ISO 273. The ISO page shows the scope and a preview link, not the table.
+- A textbook statement that the parallel paths of a concentrated winding divide t = gcd(Q, p).
+- Searches that were not run: THD definition, rotor steel density, ε_r datasheets, FR-4 density, involute property. Each has a gap row above. They ran past the 30-minute timebox.
