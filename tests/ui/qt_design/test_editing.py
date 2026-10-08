@@ -170,6 +170,18 @@ def test_ui21_after_an_unclean_exit_the_next_start_offers_recovery_with_the_iden
     assert unrecovered_autosave(ShellPaths(recovery_dir=recovery)) is None
 
 
+@pytest.mark.req("REQ-F-21")
+def test_ui22_typing_the_d08_air_gap_back_to_1_1_shows_the_example_chip(make_shell, qtbot):
+    """Catches DEF-1: the D08 file held 1.0999999999999999, so typing the shown 1.1 back left the chip on user."""
+    window = make_shell(compute_fn=no_compute).window
+    window.session.load_example(D08)
+    chip = find(window, "param-air-gap-prov")
+    enter(qtbot, window, "param-air-gap", "1.2")
+    assert chip.text() == "user"
+    enter(qtbot, window, "param-air-gap", "1.1")
+    assert (find(window, "param-air-gap").text(), chip.text()) == ("1.1", "example")
+
+
 @pytest.mark.req("REQ-F-27")
 def test_ui18_a_new_design_starts_with_an_empty_canvas(make_shell, wait_computed):
     """Catches a blank design drawn with the previous design's copper under an 'outdated' label."""

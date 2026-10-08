@@ -60,7 +60,7 @@
   },
   "phases": 3,
   "rotor": {
-   "air_gap_mm": 1.0999999999999999,
+   "air_gap_mm": 1.1,
    "back_iron_thickness_mm": 3.0,
    "magnet": {
     "kind": "arc",
@@ -144,7 +144,7 @@
    "phase_sequence": "abc"
   }
  },
- "design_hash": "sha256:b6a6a48d3a06eb023757245d55dcea7a21fe14f5bc41905d29f693eb455a2076",
+ "design_hash": "sha256:709ea86cd9d17998d231ae2beef79d813063afb6b2ff183ea9fa9050dd989761",
  "example": {
   "source_note": "D08 thesis configuration (oracle O1-D08, OR-01); the 66 mm circle board and 10 mm bore are an assumption",
   "title": "Example: UGent D08 12-coil 10-pole spiral"
@@ -152,7 +152,7 @@
  "format": "embodic-project",
  "origin_example": {
   "example_id": "spiral_12c10p_d08",
-  "example_sha256": "sha256:b6a6a48d3a06eb023757245d55dcea7a21fe14f5bc41905d29f693eb455a2076"
+  "example_sha256": "sha256:709ea86cd9d17998d231ae2beef79d813063afb6b2ff183ea9fa9050dd989761"
  },
  "provenance": {
   "/analysis/harmonics": {
