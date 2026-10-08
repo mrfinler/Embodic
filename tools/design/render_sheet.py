@@ -52,9 +52,8 @@ def main() -> int:
         p.fillRect(0, y0, img.width(), rows * CELL_H, QColor(c["surface"]))
         for i, f in enumerate(files):
             x, y = (i % COLS) * CELL_W + 8, y0 + (i // COLS) * CELL_H + 8
-            for size, dx, colour in ((48, 0, c["text-1"]), (24, 56, c["text-1"]), (16, 88, c["text-1"])) + (
-                (24, 112, c["text-disabled"]),
-            ):
+            cells = ((48, 0, c["text-1"]), (24, 56, c["text-1"]), (16, 88, c["text-1"]), (24, 112, c["text-disabled"]))
+            for size, dx, colour in cells:
                 r = QSvgRenderer(svg_bytes(f, colour, size))
                 if not r.isValid():
                     bad.append(f.name)

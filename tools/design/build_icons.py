@@ -195,6 +195,12 @@ ICONS = {
         "Toolstrip View > Theme (shown while light is active)",
         '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5z"/>',
     ),
+    "theme": (
+        "View",
+        "Cycle the colour theme (light, dark, system)",
+        "Toolstrip View > Theme, `act-theme`",
+        '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none"/>',
+    ),
     "greyscale": (
         "View",
         "Greyscale and hatching accessibility mode",
@@ -216,6 +222,12 @@ ICONS = {
         "Toolstrip Export > DXF (split button)",
         DOC + '<circle cx="12" cy="14" r="2.6"/><path d="M12 9.5v9M7.5 14h9"/>',
     ),
+    "export-pdf": (
+        "Export",
+        "Export the PDF design report",
+        "Toolstrip Export > PDF report, `act-export-pdf`",
+        DOC + '<path d="M9 11h6M9 14h6M9 17h3.5"/>',
+    ),
     "report": (
         "Export",
         "Export the PDF design report",
@@ -227,6 +239,12 @@ ICONS = {
         "Export all files and the README into one folder",
         "Toolstrip Export > All files",
         '<path d="M3 19V5h6l2 2h10v12z"/><path d="M12 10v6.5M9.3 13.8 12 16.5l2.7-2.7"/>',
+    ),
+    "compute": (
+        "Analysis",
+        "Compute the design now",
+        "Toolstrip Analysis > Compute (F5), `act-compute`",
+        '<path d="M7.5 4.5v15L19.5 12z"/>',
     ),
     "results": (
         "Verify",

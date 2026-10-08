@@ -2,7 +2,7 @@ Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5
 
 # embodic icon set
 
-49 original monochrome icons drawn for embodic. Licence: project-owned (same licence as embodic). No third-party icon set or icon font is used.
+52 original monochrome icons drawn for embodic. Licence: project-owned (same licence as embodic). No third-party icon set or icon font is used.
 
 Drawing rules: 24 px grid (`viewBox="0 0 24 24"`), 20 px live area (2 px margin), 1.5 px stroke, round caps and joins, `stroke="currentColor"`, `fill="none"`; small solid marks (nodes, magnets, vector handles) use `fill="currentColor"`. At 16 px the loader replaces `stroke-width="1.5"` with `stroke-width="2"` (renders 1.33 px). Qt does not resolve `currentColor` from the widget palette: the loader replaces `currentColor` with the theme's `icon_color` (tokens.json) for each QIcon mode. Rationale and contact sheet: `docs/phase2/design/design_spec.md` section 7.
 
@@ -36,11 +36,14 @@ Contact sheet: `_contact_sheet.png` (rendered with Qt's own QSvgRenderer at 24 p
 | `current-flow.svg` | View | Show the direction of positive current | Toolstrip View > Current toggle |
 | `theme-light.svg` | View | Switch to the light theme | Toolstrip View > Theme (shown while dark is active) |
 | `theme-dark.svg` | View | Switch to the dark theme | Toolstrip View > Theme (shown while light is active) |
+| `theme.svg` | View | Cycle the colour theme (light, dark, system) | Toolstrip View > Theme, `act-theme` |
 | `greyscale.svg` | View | Greyscale and hatching accessibility mode | Toolstrip View > Greyscale toggle (G on the canvas) |
 | `export-svg.svg` | Export | Export every layer as SVG | Toolstrip Export > SVG |
 | `export-dxf.svg` | Export | Export DXF (complete, outline or screws) | Toolstrip Export > DXF (split button) |
+| `export-pdf.svg` | Export | Export the PDF design report | Toolstrip Export > PDF report, `act-export-pdf` |
 | `report.svg` | Export | Export the PDF design report | Toolstrip Export > Report |
 | `export-all.svg` | Export | Export all files and the README into one folder | Toolstrip Export > All files |
+| `compute.svg` | Analysis | Compute the design now | Toolstrip Analysis > Compute (F5), `act-compute` |
 | `results.svg` | Verify | Results with traceability | Toolstrip Verify > Results; results tab Summary |
 | `drc.svg` | Verify | Design rule check (clearances) | Toolstrip Verify > DRC; results tab DRC |
 | `back-emf.svg` | Verify | Back-EMF waveform | Toolstrip Verify > Back-EMF; results tab Back-EMF |
