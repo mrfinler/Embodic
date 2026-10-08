@@ -58,6 +58,8 @@ TOP_LEVEL_KEYS = frozenset(
     }
 )
 _ORIGIN_KEYS = frozenset({"example_id", "example_sha256"})
+EXAMPLE_KEY = "example"  # optional: the gallery metadata of a packaged example file, never written by save_project
+_EXAMPLE_KEYS = frozenset({"title", "source_note"})
 _CONSTANT_POINTERS = frozenset({"/winding/kind", "/analysis/edge_correction"})  # written by the file, not in FIELDS
 _DESIGN_PATTERNS = frozenset({*(file_pointer(spec.pointer) for spec in FIELDS), *_CONSTANT_POINTERS})
 
@@ -265,10 +267,10 @@ def _refuse(pointer: str) -> tuple[None, tuple[ValidationIssue, ...]]:
 
 def _unknown_keys(document: Mapping[str, Any]) -> list[str]:
     """Return the pointer of every key the project schema refuses; `ui` is free-form, `provenance` is checked apart."""
-    unknown = [f"/{key}" for key in sorted(document.keys() - TOP_LEVEL_KEYS)]
-    origin = document.get("origin_example")
-    if isinstance(origin, dict):
-        unknown += [f"/origin_example/{key}" for key in sorted(origin.keys() - _ORIGIN_KEYS)]
+    unknown = [f"/{key}" for key in sorted(document.keys() - TOP_LEVEL_KEYS - {EXAMPLE_KEY})]
+    for key, allowed in (("origin_example", _ORIGIN_KEYS), (EXAMPLE_KEY, _EXAMPLE_KEYS)):
+        if isinstance(nested := document.get(key), dict):
+            unknown += [f"/{key}/{name}" for name in sorted(nested.keys() - allowed)]
     unknown += [
         f"/design{pointer}"
         for pointer in sorted(flatten(document["design"]))
@@ -288,6 +290,11 @@ def _malformed(document: object) -> str | None:
     for key, kind in expected.items():
         if key in document and not isinstance(document[key], kind):
             return f"/{key}"
+    example = document.get(EXAMPLE_KEY)
+    if EXAMPLE_KEY in document and not (
+        isinstance(example, dict) and all(isinstance(example.get(key), str) for key in _EXAMPLE_KEYS)
+    ):
+        return f"/{EXAMPLE_KEY}"
     return None if "design" in document else "/design"
 
 

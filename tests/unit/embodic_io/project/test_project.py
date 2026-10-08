@@ -10,7 +10,7 @@ import pytest
 from embodic.errors import Severity
 from embodic.io import project as project_module
 from embodic.io.canonical import canonical_json, design_hash
-from embodic.io.examples import load_example
+from embodic.io.examples import examples_dir, load_example
 from embodic.io.migrations import migrate
 from embodic.io.project import (
     LoadedDraft,
@@ -29,6 +29,7 @@ SOURCE = "magnet datasheet rev C, grade N42"
 CF11 = "spiral_12c16p_default"
 # Pinned 2026-10-08 from the packaged CF-11 example; a change means the canonical form or the example changed.
 CF11_HASH = "sha256:42b702746410833c6c52e3083613705fab52bce6c7865c216d61e7b8ba1dea58"
+EXAMPLE_OBJECT = {"title": "Example of a test file", "source_note": "test"}
 
 
 @pytest.fixture(autouse=True)
@@ -230,6 +231,9 @@ def test_def_u_d6_01_origin_that_is_not_packaged_gives_measured_and_user_only(tm
         (lambda d: d.update(extra_top=1), ["/extra_top"]),
         (lambda d: d["design"]["rotor"].update(polez=16), ["/design/rotor/polez"]),
         (lambda d: d["origin_example"].update(note="x"), ["/origin_example/note"]),
+        (lambda d: d.update(example={**EXAMPLE_OBJECT, "note": "x"}), ["/example/note"]),
+        (lambda d: d.update(example="Example"), ["/example"]),
+        (lambda d: d.update(example={"title": "Example"}), ["/example"]),
         (
             lambda d: d["design"]["rotor"].update(polez=16) or d.update(extra_top=1),
             ["/extra_top", "/design/rotor/polez"],
@@ -249,6 +253,18 @@ def test_def_u_d6_02_unknown_keys_are_refused_with_their_pointer(edit, pointers)
     loaded, issues = parse_project(json.dumps(document))
     assert loaded is None
     assert [(i.code, i.pointers) for i in issues] == [("INVALID_PROJECT_FILE", (p,)) for p in pointers]
+
+
+@pytest.mark.req("REQ-F-15")
+@pytest.mark.parametrize("path", sorted(examples_dir().glob("*.embodic.json")), ids=lambda p: p.name.split(".")[0])
+def test_every_packaged_example_file_loads_as_a_project(path: Path) -> None:
+    """Catches D-036 f: the loader refused the `example` object that the published schema allows (UT-IO-03).
+
+    Reading the file as the gallery does and as a user does must give the same design, without an issue.
+    """
+    loaded, issues = load_project(path)
+    assert isinstance(loaded, ProjectFile) and issues == ()
+    assert loaded.design == load_example(path.name.split(".")[0])[1]
 
 
 @pytest.mark.req("REQ-F-15")
