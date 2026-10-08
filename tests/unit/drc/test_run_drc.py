@@ -2,7 +2,6 @@
 
 import math
 import threading
-import time
 from dataclasses import replace
 
 import pytest
@@ -292,14 +291,36 @@ def test_cancel_token_returns_none_promptly() -> None:
     assert run_drc(layout(paths=_turns(0.2)), RULES, cancel=token) is None
 
 
+class _FlippedByAnotherThread(CancelToken):
+    """Counts reads and, at the k-th read, has another thread call ``cancel`` and waits for it (no clock involved)."""
+
+    def __init__(self, k: int | None) -> None:
+        super().__init__()
+        self.k, self.reads = k, 0
+
+    @property
+    def cancelled(self) -> bool:
+        """Return whether the token is cancelled, flipping it from a second thread at read ``k``."""
+        self.reads += 1
+        if self.reads == self.k:
+            flipper = threading.Thread(target=self.cancel)
+            flipper.start()
+            flipper.join()
+        return super().cancelled
+
+
 def test_cancel_from_another_thread_stops_a_long_run() -> None:
-    """Catches a token read only before the run starts: cancelling mid-run still returns None quickly."""
+    """Catches a token read only before the run starts: a cancel mid-run must return None and stop reading.
+
+    The run polls the token between stages and chunks (section 5.5 rule 1). An uncancelled run sets the read count;
+    cancelling at its middle read must stop right there, so the token is read exactly that often and no more.
+    """
     many = [path(i, [line(0, 0.5 * i, 200, 0.5 * i)], net=f"N{i}") for i in range(200)]
-    token = CancelToken()
-    timer = threading.Timer(0.05, token.cancel)
-    started = time.perf_counter()
-    timer.start()
-    result = run_drc(layout(paths=many), RULES, cancel=token)
-    timer.join()
-    assert result is None
-    assert time.perf_counter() - started < 2.0
+    board = layout(paths=many)
+    full = _FlippedByAnotherThread(None)
+    assert run_drc(board, RULES, cancel=full) is not None
+    assert full.reads >= 3, "the run must poll the token more than once to have a middle"
+    middle = full.reads // 2
+    token = _FlippedByAnotherThread(middle)
+    assert run_drc(board, RULES, cancel=token) is None
+    assert token.reads == middle
