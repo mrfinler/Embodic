@@ -1,8 +1,8 @@
 """Item 2 (U-V3): brute-force DRC of every ported board against ``run_drc``; prints the class table.
 
 Each board goes through embodic's dump writer and Agent 4's M1 reader, then the M1 certified pair sweep under the
-interfaces.md section 7 exemptions as D-022 and D-022c amend them (``drc_universe.contract_exemptions``). The
-T-junction rule of D-035(b) is not in the model: it is in flight (U-M3-fix) and not on the head under test.
+interfaces.md section 7 exemptions as D-022, D-022c, D-035b (rule 5) and D-036a with D-037a (rule 2b) amend them
+(``drc_universe.contract_exemptions``).
 """
 
 import json
