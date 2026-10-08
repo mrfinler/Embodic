@@ -244,7 +244,9 @@ Examples (item 5). Xcoil's `Ke1` and `keLinePk` are fundamentals; embodic's `ke_
 
 Gate (`python tools/ci.py --profile commit`, 2 cores). Runs 1 and 2 on a `git archive` of 72b3231: 415.45 s and
 425.80 s wall, 6 of 6, 2006 passed, 4 xfailed; load at start 0.61 and 1.88; both overlapped Agent 4's own sweeps.
-pytest is the limiter (409.69 s of run 1).
+Run 3 on the branch at 010c4f5: 427.24 s wall, 6 of 6, 2068 passed, 87 deselected, 6 xfailed (the 4 existing
+plus DEF-M3a-01 and DEF-UV3-02; the DEF-UV3-01 sweep is `slow`), load 1.09 at start, run alone. pytest is the limiter
+(409.69 s of run 1, 418.88 s of run 3).
 
 Defects (U-V3):
 
