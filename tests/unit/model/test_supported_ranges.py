@@ -1,11 +1,15 @@
 """Supported ranges that bound compute work or keep a formula finite (DEF-M2f-02, DEF-M2f-03)."""
 
+import warnings
+
 import pytest
 
+from embodic.api import ComputeOptions, compute
 from embodic.errors import IssueCategory, Severity
 from embodic.io.examples import load_example
 from embodic.model.design import DesignParameters
 from embodic.model.draft import DesignDraft, DraftIncomplete, draft_from_design, parse_draft
+from embodic.model.provenance import derive_provenance
 from embodic.model.schema import JsonValue
 from embodic.model.validate import validate_design
 
@@ -97,4 +101,43 @@ def test_a_magnet_that_misses_the_winding_blocks_compute(
 @pytest.mark.req("REQ-F-14")
 def test_a_magnet_overlapping_one_end_of_the_winding_passes() -> None:
     """Catches an overlap rule that also refuses a magnet covering only part of the copper span."""
-    assert _blocking(_cf11_with({"/rotor/magnet/r_center_mm": 12.0})) == set()
+    assert _blocking(_cf11_with({"/rotor/magnet/r_center_mm": 13.0})) == set()
+
+
+@pytest.mark.req("REQ-F-14")
+@pytest.mark.parametrize("r_center_mm", [12.0, 12.99])
+def test_a_block_magnet_inner_radius_below_half_its_width_is_refused(r_center_mm: float) -> None:
+    """Catches DEF-M2fix3-02: EQ-04 takes arcsin(w / 2r), so a span reaching r < w / 2 gave NaN with only a warning.
+
+    CF-11 magnet: width 6 mm, length 20 mm. Centre 12 mm puts the inner radius at 2 mm, below 3 mm, and the centre
+    itself is still above w / 2, so a check on the centre radius would miss it.
+    """
+    found = [i for i in validate_design(_cf11_with({"/rotor/magnet/r_center_mm": r_center_mm})) if "WIDER" in i.code]
+    assert [(i.code, i.severity, i.category, i.value, i.limit) for i in found] == [
+        (
+            "INVALID_MAGNET_WIDER_THAN_RADIUS",
+            Severity.ERROR,
+            IssueCategory.INVALID,
+            r_center_mm - 10.0,
+            3.0,
+        )
+    ]
+    assert found[0].pointers == ("/rotor/magnet/r_center_mm", "/rotor/magnet/length_mm", "/rotor/magnet/width_mm")
+
+
+@pytest.mark.req("REQ-F-14")
+def test_a_block_magnet_inner_radius_of_exactly_half_its_width_passes() -> None:
+    """Catches an off-by-one bound: arcsin(1) is finite, so r = w / 2 is a valid radius of the field kernel."""
+    assert [i for i in validate_design(_cf11_with({"/rotor/magnet/r_center_mm": 13.0})) if "WIDER" in i.code] == []
+
+
+@pytest.mark.req("REQ-F-14")
+def test_compute_refuses_the_narrow_radius_magnet_before_the_field_kernel_runs() -> None:
+    """Catches the leak: the design reached physics, where arcsin of a value above 1 warned and gave NaN."""
+    design = _cf11_with({"/rotor/magnet/r_center_mm": 12.0})
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        outcome = compute(design, derive_provenance(design, None, ()), options=ComputeOptions(run_drc=False))
+    assert outcome is not None
+    assert [i.code for i in outcome.issues if i.severity is Severity.ERROR] == ["INVALID_MAGNET_WIDER_THAN_RADIUS"]
+    assert outcome.analysis is None
