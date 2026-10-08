@@ -6,6 +6,8 @@ from PySide6.QtWidgets import QApplication, QLabel
 
 from embodic.ui.fonts import BODY_PX, INTER, JETBRAINS_MONO, register_fonts
 
+pytestmark = pytest.mark.req("REQ-N-06")  # the bundled files load with no network
+
 
 @pytest.fixture
 def registered(qapp: QApplication):

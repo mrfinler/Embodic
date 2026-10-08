@@ -30,6 +30,7 @@ def test_bundled_font_has_the_glyphs_embodic_prints(relative: str, code: int) ->
     assert code in cmap, f"U+{code:04X} missing from {relative}"
 
 
+@pytest.mark.req("REQ-N-06")
 def test_every_bundled_file_is_the_family_the_app_registers() -> None:
     """Catches a renamed or swapped file: the app would register a family the style sheet does not name."""
     for family, files in FONT_FILES.items():
@@ -38,12 +39,14 @@ def test_every_bundled_file_is_the_family_the_app_registers() -> None:
             assert family in {names.getDebugName(1), names.getDebugName(16)}, relative
 
 
+@pytest.mark.req("REQ-N-19")
 def test_licence_texts_ship_beside_the_fonts() -> None:
     """Catches a font folder without its SIL OFL 1.1 text (the licence requires it with every copy)."""
     for relative in ("Inter/LICENSE.txt", "JetBrainsMono/OFL.txt"):
         assert "SIL Open Font License, Version 1.1" in (FONTS_DIR / relative).read_text(encoding="utf-8"), relative
 
 
+@pytest.mark.req("REQ-N-19")
 def test_fonts_md_records_the_hash_of_every_file_in_the_folder() -> None:
     """Catches a font file replaced, added or removed without FONTS.md recording its source and SHA-256."""
     table = (FONTS_DIR / "FONTS.md").read_text(encoding="utf-8")

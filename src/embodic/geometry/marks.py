@@ -71,7 +71,7 @@ def _eye(turns: Sequence[Primitive], copper: Sequence[Primitive]) -> tuple[float
     points = [q for p in turns for q in _samples(p)]
     xs, ys = [x for x, _ in points], [y for _, y in points]
     steps = 24
-    best = (sum(xs) / len(xs), sum(ys) / len(ys), 0.0)
+    best = (math.fsum(xs) / len(xs), math.fsum(ys) / len(ys), 0.0)
     for i in range(1, steps):
         for j in range(1, steps):
             x = min(xs) + (max(xs) - min(xs)) * i / steps

@@ -8,6 +8,8 @@ from fontTools.ttLib import TTFont
 from embodic.io.pdf_writer import MONO_FILE, SANS_FILE, parse_truetype
 from embodic.paths import resource_root
 
+pytestmark = pytest.mark.req("REQ-F-16")
+
 
 def _oracle(relative: str) -> TTFont:
     return TTFont(resource_root() / "fonts" / relative)
