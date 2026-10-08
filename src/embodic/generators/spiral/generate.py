@@ -22,6 +22,7 @@ from types import MappingProxyType
 from embodic.drc import run_drc
 from embodic.drc.report import violates
 from embodic.errors import IssueCategory, Severity, Unbuildable, ValidationIssue, message_for
+from embodic.generators.fasteners import keep_out_issues
 from embodic.generators.spiral.artwork import CoilArtwork, coil_artwork, sharp_artwork
 from embodic.generators.spiral.chain import BusRings, CoilEnds, End, PhaseChain, chain_coils, norm_angle
 from embodic.generators.spiral.derived import spiral_derived
@@ -44,6 +45,7 @@ from embodic.generators.spiral.turns import (
 from embodic.generators.spiral.turns import radial_bound as eq_3_24_bound
 from embodic.geometry.circuit import Circuit, Member, ParallelGroup, PhaseCircuit
 from embodic.geometry.details import SpiralDetail, TurnLimit, TurnLimitReason
+from embodic.geometry.fasteners import place_holes
 from embodic.geometry.layout import BoardOutline, BoardStack, Layout, Via, ViaRole
 from embodic.geometry.outline import build_outline
 from embodic.geometry.paths import CopperPath
@@ -91,7 +93,6 @@ def _unsupported(design: DesignParameters, spec: SpiralWindingSpec) -> tuple[str
         "/winding/coil/inner_turn_mode": coil.inner_turn_mode is not InnerTurnMode.MOVING,
         "/winding/parallel_paths": spec.parallel_paths != 1,
         "/vias/vias_per_transition": design.vias.vias_per_transition != 1,
-        "/outline/screws": bool(design.outline.screws),
         "/outline/board/corner_radius_mm": getattr(design.outline.board, "corner_radius_mm", 0.0) != 0.0,
     }
     return tuple(pointer for pointer, unsupported in checks.items() if unsupported)
@@ -143,6 +144,9 @@ def _refusal(design: DesignParameters, spec: SpiralWindingSpec) -> Unbuildable |
         issues.append(_issue("UNBUILDABLE_UNSUPPORTED_END_STYLE", ("/winding/coil/end_style",)))
     if len({p.rotation_rad for p in spec.layers.pairs}) > 1:  # pairs join coil by coil (G6, U-E6)
         issues.append(_issue("UNBUILDABLE_PAIRS_ROTATED_APART", ("/winding/layers/pairs",)))
+    # Edge and hole-to-hole gaps depend on the outline inputs alone; build_outline does not read the copper envelope.
+    outline = build_outline(design.outline, (spec.coil.r_inner_mm, spec.coil.r_outer_mm))
+    issues += keep_out_issues(place_holes(design.outline.screws), outline, design.drc_rules)
     if pointers := _unsupported(design, spec):
         issues.append(_issue("UNBUILDABLE_SPIRAL_OPTION_NOT_IMPLEMENTED", pointers))
     return Unbuildable(issues=tuple(issues)) if issues else None

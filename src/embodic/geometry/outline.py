@@ -2,6 +2,7 @@
 
 import math
 
+from embodic.geometry.fasteners import place_holes
 from embodic.geometry.layout import BoardOutline
 from embodic.geometry.primitives import Arc, Line, Primitive, PrimitiveRole
 from embodic.model.outline import CircleOutline, OutlineSpec, PolygonOutline
@@ -25,7 +26,8 @@ def _loop(shape: CircleOutline | PolygonOutline) -> tuple[Primitive, ...]:
 
 
 def build_outline(spec: OutlineSpec, envelope_mm: tuple[float, float]) -> BoardOutline:
-    """Board edge and bore loops; polygon corner radii and screw holes are not built yet (U-M2d partial)."""
+    """Board edge, bore loop and the screw holes of every pattern; polygon corner radii are not built yet."""
     del envelope_mm  # interfaces.md section 5 signature; the copper envelope does not shape the outline yet
     cutouts = () if spec.bore is None else (_loop(spec.bore),)
-    return BoardOutline(outer=_loop(spec.board), cutouts=cutouts, holes=())
+    holes = tuple(placed.hole for placed in place_holes(spec.screws))
+    return BoardOutline(outer=_loop(spec.board), cutouts=cutouts, holes=holes)
