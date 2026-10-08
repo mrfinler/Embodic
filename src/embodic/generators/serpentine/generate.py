@@ -103,7 +103,7 @@ def _out_of_range(design: DesignParameters, spec: SerpentineWindingSpec) -> tupl
         bad.append("/winding/turns")
     if spec.strands < 1:
         bad.append("/winding/strands")
-    if spec.turns >= 1 and spec.strands >= 1 and spec.turns * spec.strands > TRACES_MAX:
+    if spec.turns * spec.strands > TRACES_MAX:
         bad += ["/winding/turns", "/winding/strands"]
     if design.rotor.poles < 2:
         bad.append("/rotor/poles")
