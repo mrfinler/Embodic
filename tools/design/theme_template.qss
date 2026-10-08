@@ -20,9 +20,10 @@ QWidget#fig-canvas { background-color: @canvas; }
 
 QTabWidget::pane { background-color: @surface; border: none; border-top: 1px solid @divider; }
 QTabBar { qproperty-drawBase: 0; }
-QTabBar::tab { background-color: transparent; color: @text-2; padding: 6px 12px; border: none; border-bottom: 2px solid transparent; }
+QTabBar::tab { background-color: transparent; color: @text-2; padding: 4px 10px 6px 10px; border: @focus-ring-px solid transparent; }
 QTabBar::tab:hover { background-color: @surface-sunken; color: @text-1; }
 QTabBar::tab:selected { color: @text-1; border-bottom: 2px solid @border-strong; }
+QTabBar::tab:selected:focus { border: @focus-ring-px solid @focus-ring; }
 QTabBar::tab:disabled { color: @text-disabled; }
 
 QLineEdit, QAbstractSpinBox, QComboBox { background-color: @surface; color: @text-1; border: 1px solid @border-control; border-radius: 4px; padding: 5px 8px; min-height: 20px; }
@@ -37,10 +38,10 @@ QComboBox::down-arrow { image: url(theme:@dir/chevron-down.svg); width: 12px; he
 QComboBox::down-arrow:disabled { image: url(theme:@dir/chevron-down-disabled.svg); }
 QComboBox QAbstractItemView { background-color: @surface; color: @text-1; border: 1px solid @border-control; selection-background-color: @surface-selected; selection-color: @text-1; outline: 0px; }
 
-QCheckBox { spacing: 8px; color: @text-1; }
+QCheckBox { spacing: 8px; color: @text-1; border: @focus-ring-px solid transparent; border-radius: 4px; padding: 0px 2px; }
+QCheckBox:focus { border: @focus-ring-px solid @focus-ring; }
 QCheckBox:disabled { color: @text-disabled; }
 QCheckBox::indicator { width: 16px; height: 16px; border: 1px solid @border-control; border-radius: 3px; background-color: @surface; }
-QCheckBox::indicator:focus { border: @focus-ring-px solid @focus-ring; }
 QCheckBox::indicator:checked { background-color: @surface-inverse; border-color: @surface-inverse; image: url(theme:@dir/check.svg); }
 QCheckBox::indicator:disabled { background-color: @bg-app; border-color: @divider; }
 QCheckBox::indicator:checked:disabled { background-color: @text-disabled; border-color: @text-disabled; }
@@ -55,8 +56,11 @@ QPushButton[class="primary"]:hover { background-color: @text-2; border-color: @t
 QPushButton[class="primary"]:focus { border: @focus-ring-px solid @focus-ring; background-color: @surface-inverse; }
 QPushButton[class="primary"]:disabled { background-color: @surface-sunken; color: @text-disabled; border-color: @divider; }
 
-QTableView { background-color: @surface; alternate-background-color: @bg-app; color: @text-1; gridline-color: @divider; border: 1px solid @divider; selection-background-color: @surface-selected; selection-color: @text-1; }
+QTableView { background-color: @surface; alternate-background-color: @bg-app; color: @text-1; gridline-color: @divider; border: 1px solid @divider; padding: 1px; selection-background-color: @surface-selected; selection-color: @text-1; }
 QTableView::item:focus { border: 1px solid @focus-ring; }
+QListView, QTreeView { background-color: @surface; color: @text-1; border: 1px solid @divider; padding: 1px; }
+QListView:focus, QTreeView:focus, QTableView:focus { border: @focus-ring-px solid @focus-ring; padding: 0px; }
+QComboBox QAbstractItemView:focus { border: 1px solid @border-control; padding: 0px; }
 QHeaderView { background-color: @surface-sunken; border: none; }
 QHeaderView::section { background-color: @surface-sunken; color: @text-2; padding: 4px 8px; border: none; border-right: 1px solid @divider; border-bottom: 1px solid @divider; font-weight: 600; }
 QTableCornerButton::section { background-color: @surface-sunken; border: none; border-bottom: 1px solid @divider; }

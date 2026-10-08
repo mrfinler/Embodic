@@ -7,7 +7,7 @@
 Findings: an objectName defined in two rows; a binding pointer that is not a FIELDS pointer and not in AWAITING_FIELDS;
 an AWAITING_FIELDS pointer that FIELDS now holds; a required pointer of a blank draft, or a required field under a
 bound container, that no widget binds for its topology; a coverage table in screens.md that differs from the generated
-one.
+one; a literal objectName that the UI code sets and that no screens.md table defines (screens.md section 14a).
 """
 
 from __future__ import annotations
@@ -30,7 +30,9 @@ POINTER = re.compile(r"`(/[a-z0-9_/*]+)`")
 SEPARATOR = re.compile(r"^\|(\s*:?-+:?\s*\|)+\s*$")
 TABLE_START = "| Pointer | spiral | serpentine | wave |"
 # Pointers a decision has settled that FIELDS does not hold yet. Each entry becomes a finding once FIELDS holds it.
-AWAITING_FIELDS = {"/outline/screws/*/hole_diameter_mm": "D-031a, U-M2d-3"}
+AWAITING_FIELDS: dict[str, str] = {}
+UI_CODE = REPO / "src/embodic/ui"
+SET_NAME = re.compile(r'setObjectName\("([a-z][a-z0-9-]*)"\)')
 
 
 def _cells(line: str) -> list[str]:
@@ -112,11 +114,21 @@ def _coverage_table(bound: dict, missing: dict[TopologyKind, list[str]]) -> list
     return lines
 
 
+def _names_in_code() -> set[str]:
+    """Return the literal objectNames the UI code sets; f-string names follow a pattern row of section 14a."""
+    return {name for path in UI_CODE.rglob("*.py") for name in SET_NAME.findall(path.read_text(encoding="utf-8"))}
+
+
 def main() -> int:
     """Print the findings and return 1 when there is any."""
     defined, bound, pointers = _read_screens()
+    spec_names = set(WIDGET_ID.findall((REPO / "docs/phase2/design/design_spec.md").read_text(encoding="utf-8")))
     missing = _blank_missing()
     findings = [f"objectName defined in {n} rows: {w}" for w, n in sorted(defined.items()) if n > 1]
+    findings += [
+        f"UI code sets an objectName no screens.md table defines: {name}"
+        for name in sorted(_names_in_code() - set(defined) - spec_names)
+    ]
     model = {spec.pointer for spec in FIELDS}
     findings += [
         f"binding pointer is not a FIELDS pointer: {p}" for p in sorted(set(pointers) - model - set(AWAITING_FIELDS))

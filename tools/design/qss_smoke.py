@@ -5,8 +5,9 @@ Usage, from the repository root::
     QT_QPA_PLATFORM=offscreen python tools/design/qss_smoke.py [--out docs/phase2/design]
 
 Builds one widget of every styled kind, saves ``theme_smoke_<theme>.png`` into ``--out``, and compares four sampled
-pixels per theme with their tokens (result-card border and fill, primary button fill, invalid-field border). Exit
-code 1 when a pixel differs or Qt prints a message other than the offscreen plugin's propagateSizeHints notice.
+pixels per theme with their tokens (result-card border and fill, primary button fill, invalid-field border). Then it
+focuses a tab bar, two checkboxes and a list and counts the ring pixels each gains. Exit code 1 when a pixel differs,
+a focused widget shows no ring, or Qt prints a message other than the offscreen plugin's propagateSizeHints notice.
 """
 
 import argparse
@@ -17,7 +18,7 @@ from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtCore import QByteArray, QDir, QPoint, QSize, Qt, qInstallMessageHandler
-from PySide6.QtGui import QIcon, QImage, QPainter, QPixmap, QStandardItem, QStandardItemModel
+from PySide6.QtGui import QColor, QIcon, QImage, QPainter, QPixmap, QStandardItem, QStandardItemModel
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (
     QApplication,
@@ -30,8 +31,10 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QListWidget,
     QMainWindow,
     QPushButton,
+    QTabBar,
     QTableView,
     QTabWidget,
     QToolBar,
@@ -244,6 +247,49 @@ def check_theme(theme: str, out: Path, app: QApplication, messages: list[str]) -
     return failures
 
 
+def focus_failures(theme: str, app: QApplication) -> list[str]:
+    """Focus a tab bar, a checked and an unchecked checkbox and a list; each must gain a ring of ``focus-ring`` pixels.
+
+    The threshold is the one of the app's AX-03 test: at least twice the widget's shorter side in ring-coloured pixels.
+    """
+    ring = QColor(TOKENS["themes"][theme]["color"]["focus-ring"])
+    host = QWidget()
+    lay = QVBoxLayout(host)
+    tabs = QTabBar()
+    for label in ("Coil", "Phases", "Layers"):
+        tabs.addTab(label)
+    unchecked, checked = QCheckBox("L1"), QCheckBox("L2")
+    checked.setChecked(True)
+    issues = QListWidget()
+    issues.addItem("No issues.")
+    park = QLineEdit()
+    for w in (tabs, unchecked, checked, issues, park):
+        lay.addWidget(w)
+    host.show()
+    host.activateWindow()
+    app.processEvents()
+
+    def ring_px(w: QWidget) -> int:
+        image = w.grab().toImage()
+        return sum(
+            1 for x in range(image.width()) for y in range(image.height()) if image.pixelColor(x, y).rgb() == ring.rgb()
+        )
+
+    failures = []
+    for name, w in (("tab", tabs), ("checkbox", unchecked), ("checked checkbox", checked), ("list", issues)):
+        park.setFocus(Qt.FocusReason.TabFocusReason)
+        app.processEvents()
+        before = ring_px(w)
+        w.setFocus(Qt.FocusReason.TabFocusReason)
+        app.processEvents()
+        gained, need = ring_px(w) - before, 2 * min(w.width(), w.height())
+        print(f"{theme:5} focus {name:16} +{gained} ring px (needs {need}) {'ok' if gained >= need else 'MISSING'}")
+        if gained < need:
+            failures.append(f"{theme}: focused {name} shows no focus ring")
+    host.close()
+    return failures
+
+
 def main() -> int:
     """Run both themes; return 1 on any failure."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -255,6 +301,9 @@ def main() -> int:
     app = QApplication(sys.argv)
     QDir.addSearchPath("theme", str(RES / "themes"))
     failures = check_theme("light", out, app, messages) + check_theme("dark", out, app, messages)
+    for theme in ("light", "dark"):
+        app.setStyleSheet((RES / "themes" / f"{theme}.qss").read_text(encoding="utf-8"))
+        failures += focus_failures(theme, app)
     for f in failures:
         print("FAIL", f)
     print(f"qss_smoke: {'FAIL' if failures else 'pass'} ({len(failures)} failures)")

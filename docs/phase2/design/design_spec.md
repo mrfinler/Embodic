@@ -2,7 +2,8 @@ Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5
 
 # embodic design specification v1 (Phase 2, PySide6 desktop)
 
-Date 2026-10-04. Supersedes `docs/phase1/design/design_spec_draft.md` for everything Phase 2 builds. Companion files:
+Date 2026-10-04, revised 2026-10-09 (U-S4d: sections 3.3, 3.4, 5 and 8 follow the rulings of `m4_review.md`).
+Supersedes `docs/phase1/design/design_spec_draft.md` for everything Phase 2 builds. Companion files:
 
 - `screens.md` gives every screen with its widget table and state rules.
 - `acceptance_criteria.md` lists the UX acceptance criteria UX-AC v1.
@@ -121,15 +122,25 @@ mode, not only in greyscale mode.
 
 | Cue | Phase A | Phase B | Phase C | Where |
 |---|---|---|---|---|
-| Letter label on every coil | `A1+`, `A2-` ... | `B1+` ... | `C1+` ... | Geometry view. Always on; the Labels toggle adds terminal and net labels, never removes the phase letter. Below 9 px label height the label moves to a leader outside the ring. |
-| Coil-eye fill (inside the innermost turn only) | solid tint 10 % | 45 degree hatch | 135 degree hatch | Geometry view. Hatch never crosses copper, so it cannot be read as a trace (Phase 1 finding). |
+| Letter label | spiral `A1+`, `A2−`; wave `A+`, `A−` per phase belt; serpentine `A` | `B1+` ... | `C1+` ... | Geometry view, SVG and PDF, both modes. Placement rules below. The Labels toggle adds terminal and net labels and never removes a phase label. Minus is U+2212. |
+| Coil-eye fill (inside the innermost turn only) | solid tint 10 % | 45 degree hatch | 135 degree hatch | Geometry view, SVG and PDF, both modes, clipped to the eye disc. Hatch never crosses copper, so it cannot be read as a trace (Phase 1 finding). On screen the hatch is a pattern in screen space (about 4 px pitch) so it shows at fit zoom; in files the pitch is 0.4 mm. |
 | Chart line style | solid 2 px | dashed 6/3 | dotted 1.5/3 | Back-EMF, torque-speed, compare charts |
-| Legend | swatch with stroke and fill pattern, then "Phase A" text | same | same | Always present for two or more phases |
+| Legend | drawing: solid copper bar in the phase ink, eye swatch, "Phase A"; chart: line sample, "Phase A" | same | same | Always present for two or more phases, on the canvas and in every drawing file. A drawing legend never shows a dashed line, because copper is never dashed. |
 | Copper | solid | solid | solid | Copper is never dashed: a dashed trace reads as an open circuit (assumption). |
 
 Machine-readable form: `tokens.json` > `phase_style`.
 
+Label placement (U-S4d ruling b, `assumption` until U-M4c-2 tests it). Labels place in priority order: the first coil
+of each phase, then every coil in index order. A label whose box, grown by 2 px, meets a placed label, a terminal pad
+or the view edge is skipped; the first label of each phase always places, with a leader outside the ring if its own
+spot is taken. Placement reruns after each zoom or resize step, and a skipped label shows in the hover tooltip of its
+copper. Serpentine phases get 4 labels at fit zoom, one per quadrant, on the outermost end turn. Files use the fit-zoom
+set at page scale. The canvas, the SVG and the PDF take labels and eye discs from one module, so they cannot differ.
+
 ### 3.4 Accessibility mode (greyscale and hatching)
+
+Greyscale mode keeps every cue of section 3.3: labels and eye fills are what identify phase and polarity; the grey
+ladder is the third cue, never the only one (REQ-N-14, REQ-N-23; legend-only exports do not pass, U-S4d ruling a).
 
 Toggle: View > Greyscale (G on the canvas). It also applies automatically in the PDF report when the user picks
 "Greyscale print" and when Windows high contrast is on (`QStyleHints.colorScheme` does not report high contrast; Agent 3
@@ -169,7 +180,7 @@ Phase A is the strongest step in both themes. Validator `--ordinal` passes both 
 
 | Window width | Layout | Panes |
 |---|---|---|
-| 960 to 1279 px | Two panes | Inspector 300 px, centre (canvas or results tabs) fills. The results rail becomes the "Key results" tab beside the canvas. |
+| 960 to 1279 px | Two panes | Inspector 300 px, centre (canvas or results tabs) fills. The results rail becomes the "Key results" tab beside the canvas (U-M4d builds it with `results-tabs`; U-S4d ruling f: the 960 x 540 shot with three panes clipped values, badges and units). No card ever shrinks below its size hint; a pane that runs out of height scrolls. |
 | 1280 px and wider | Three panes | Inspector 340 px, centre fills, results rail 360 px. Splitters let the user resize; widths persist per user. |
 | Minimum | 960 x 540 px | `QMainWindow.setMinimumSize(960, 540)`. Below 1100 px toolstrip labels of small buttons collapse to icons, large buttons keep labels. At 540 px height the inspector and rail scroll inside their own `QScrollArea`. |
 
@@ -281,6 +292,11 @@ Rules:
 - Checks, each run from the repository root with the project venv: `check_theme_tokens.py` (contract fields read from
   interfaces.md), `contrast.py` (appendix A), `qss_smoke.py` (offscreen render and pixel samples, exit 1 on a mismatch),
   `check_checklist.py` (`screenshot_checklist.md` covers `screens.md` sections 1 to 14).
+- Focus ring (U-S4d ruling d). The template owns every focus ring: the current tab of a focused `QTabBar`
+  (`QTabBar::tab:selected:focus`), the whole `QCheckBox` (indicator and text, with a transparent border reserved so focus
+  does not shift the layout; a ring on the indicator alone vanished on a checked box) and focused list, tree and table
+  views. `qss_smoke.py` focuses a tab bar, two checkboxes and a list and fails when one gains fewer ring pixels than
+  twice its shorter side. No focus styling lives in code.
 - Loader contract for Agent 3: call `QDir.addSearchPath("theme", "<resources/themes>")`, register fonts, then
   `app.setStyleSheet(...)`. Use the Fusion style so unstyled parts follow a `QPalette` built from the same tokens.
 - QSS has no CSS classes. The brief's `.result-card` maps to a dynamic property: `w.setProperty("class", "result-card")`

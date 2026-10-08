@@ -1,8 +1,9 @@
 Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5
 
-# embodic screens v2.1 (Phase 2, PySide6)
+# embodic screens v2.2 (Phase 2, PySide6)
 
-Date 2026-10-08. Read with `design_spec.md` (tokens, toolstrip, hooks, keyboard map). v2 applied rows R1 to R14 of
+Date 2026-10-08, revised 2026-10-09 (U-S4d): rulings of `m4_review.md` applied to the conventions and sections 1, 2,
+3, 4, 5, 6.1 (new) and 14a (new). Read with `design_spec.md` (tokens, toolstrip, hooks, keyboard map). v2 applied rows R1 to R14 of
 `docs/phase2/architecture/screen_model_reconciliation.md` to sections 1 to 5, 6 and 7. v2.1 (U-S4c) follows the model
 after U-M2a-fix and U-M2a-fix2 and decisions D-024, D-025d and D-031:
 
@@ -41,6 +42,11 @@ Conventions for every table:
   `invalid=true`, and the Checks list gets the same text. An INFO issue shows as a hint under the field, not an error.
   A WARNING issue shows in `<id>-error` with `state=warn`, the `check-warn` icon and the word "Warning" before the
   text. The field does not get `invalid=true`, and compute still runs.
+- Layout of a field row (U-S4d g2). The label sits above the control for every field, choice fields included. The
+  row reserves the unit column and the chip column even when they are empty, so control edges align and nothing moves
+  when a chip appears or goes. Chips are 20 px tall and centred on the control.
+- Choice fields with two or three options may be a `QComboBox` or a segment (U-M4c builds combo boxes). Either one
+  takes the field's objectName.
 - Hidden vs disabled. A field that does not apply to the active topology or option is hidden with its label, unit and
   chip (`setVisible(False)` on the row). A field blocked by a sibling option in the same group is disabled and its hint
   names the option ("Not used with straight ends").
@@ -54,7 +60,7 @@ one home.
 | objectName | Qt widget | Binding key | Rule |
 |---|---|---|---|
 | `param-design-name` | QLineEdit "Design name"; initial focus | `/name` | `INVALID_EMPTY_TEXT` |
-| `param-topology` | 3 x QToolButton (exclusive, large icons): Spiral, Serpentine, Wave | view model: `DesignDraft.topology` | Proposal: "Choose a topology." |
+| `param-topology` | Button group of three QToolButtons (exclusive, `ToolButtonTextUnderIcon`, 24 px `topology-*` icon, `border-control` boundary when unchecked): `param-topology-spiral`, `param-topology-serpentine`, `param-topology-wave` | view model: `DesignDraft.topology` | Proposal: "Choose a topology." |
 | `example-picker` | QComboBox, first item "No example (blank)" | none (loads an example) | Enter loads after confirmation if the inspector holds user values |
 | `btn-create-design` | QPushButton[class="primary"] "Create design" | command | Enabled when the name is valid and a topology is chosen (R11); Enter |
 | `btn-cancel-new` | QPushButton "Cancel" | command | Esc |
@@ -110,7 +116,7 @@ on the canvas, not in the tab.
 | `param-connection` | "Connection", mirrors the toolstrip Connection buttons: Star, Delta, Open | `/connection/topology` | spiral, serpentine, wave | default | none |
 | `param-phase-assign-mode` | "Assignment", segment Auto, Manual | `/winding/assignment` | spiral | default | none |
 | `param-phase-sequence` | "Phase sequence", segment A-B-C, A-C-B; hint "Swapping B and C reverses rotation." | `/winding/phase_sequence` | spiral | default | none |
-| `phase-pattern-string` | QLabel[class="unit"], read-only, selectable | result `winding.assignment` | spiral | none | none |
+| `phase-pattern-string` | QLabel[class="unit"], read-only, selectable, caption "Coil pattern", hint "Upper case +, lower case −." | result `winding.assignment` | spiral | none | none |
 | `phase-balance-status` | QLabel[class="check-state"] | result `winding.balance` | spiral | none | "Not balanced: choose 12, 18 or 24 coils" (example values from the engine) |
 | `phase-table` | QTableView: coil, phase, polarity; F2 edits in manual mode | `/winding/assignment/*/coil_index`, `/winding/assignment/*/phase`, `/winding/assignment/*/polarity` | spiral | none | Proposal: "Each phase needs the same number of coils." |
 | `param-terminal-location` | "Terminals": segment Outer, Inner (serpentine); QLabel "Outer rim", read-only (spiral, wave) | `/winding/terminal_side` | serpentine | default | none |
@@ -143,7 +149,7 @@ State rules:
 | `param-via-pad` | "Via pad", mm | `/vias/pad_mm` | spiral, serpentine, wave | required | `INVALID_VIA_RING` |
 | `param-vias-per-transition` | "Vias per transition" | `/vias/vias_per_transition` | spiral, serpentine, wave | default | none |
 | `param-via-plating` | "Via plating", µm | `/vias/plating_um` | spiral, serpentine, wave | required, property | none |
-| `layer-list` | QTableView: layer, kind, pair, group, rotation, joins via, copper µm, show; Space toggles "show"; Delete removes the selected pair (spiral) | `/stackup/layers`, `/stackup/layers/*/kind`, `/stackup/layers/*/name`, `/stackup/layers/*/thickness_mm`, `/stackup/layers/*/material`, `/winding/layers/pairs`, `/winding/layers/pairs/*/index`, `/winding/layers/pairs/*/layer_in`, `/winding/layers/pairs/*/layer_out`, `/winding/layers/pairs/*/phases`, `/winding/layers/series_groups` | spiral, serpentine, wave | required | `INVALID_STACKUP_NO_COPPER`, `INVALID_LAYER_NAME_DUPLICATE`, `INVALID_PAIR_LAYER_UNKNOWN`, `INVALID_PAIR_LAYER_SAME`, `INVALID_PAIR_INDEX_DUPLICATE`, `INVALID_SERIES_GROUPS`, `RANGE_SPIRAL_COPPER_COUNT_ODD` (WARNING), `INVALID_SERPENTINE_COPPER_COUNT` |
+| `layer-list` | QTableView: Layer, Kind, Thickness (µm); spiral adds Pair and Rotation (°). Columns size to their header; no sideways scroll at 300 px. The series group is set from the row's context menu, the joins-via layer shows in the row tooltip, and layer visibility stays with the canvas toggles (U-S4d g1). Delete removes the selected pair (spiral) | `/stackup/layers`, `/stackup/layers/*/kind`, `/stackup/layers/*/name`, `/stackup/layers/*/thickness_mm`, `/stackup/layers/*/material`, `/winding/layers/pairs`, `/winding/layers/pairs/*/index`, `/winding/layers/pairs/*/layer_in`, `/winding/layers/pairs/*/layer_out`, `/winding/layers/pairs/*/phases`, `/winding/layers/series_groups` | spiral, serpentine, wave | required | `INVALID_STACKUP_NO_COPPER`, `INVALID_LAYER_NAME_DUPLICATE`, `INVALID_PAIR_LAYER_UNKNOWN`, `INVALID_PAIR_LAYER_SAME`, `INVALID_PAIR_INDEX_DUPLICATE`, `INVALID_SERIES_GROUPS`, `RANGE_SPIRAL_COPPER_COUNT_ODD` (WARNING), `INVALID_SERPENTINE_COPPER_COUNT` |
 | `layer-pairs-notice` | QFrame[class="notice"] under `layer-list`: one sentence and an **Undo** button | derived: what `derive_layer_pairs` changed in the last edit | spiral | hidden | none |
 
 State rules:
@@ -157,8 +163,8 @@ State rules:
   phase. With one board per phase the stack-up describes one board, so the count equals layers per phase
   (`INVALID_SERPENTINE_COPPER_COUNT`). `param-layer-count` offers only the value that applies. Today the model checks
   the count only for one board per phase (`validate.py` `_serpentine_layers`, `verified` by reading).
-- The pair columns of `layer-list` (pair, group, rotation, joins via) show for spiral only. The pair column shows the
-  pair index plus one ("Pair 1" is index 0). The group column edits `/winding/layers/series_groups`.
+- The pair columns of `layer-list` (Pair, Rotation) show for spiral only. The pair column shows the pair index plus one
+  ("Pair 1" is index 0). The row context menu "Series group" edits `/winding/layers/series_groups`.
 - Rotation mode (R4) reads the current pair rotations. None writes 0 to every pair. Alternate writes pi/Q to every
   second pair, Q being the coil count (option M3, UT-GEO-11). Custom shows `param-pair-rotation`, which edits the pair
   selected in `layer-list`; the other modes hide it.
@@ -247,7 +253,12 @@ One `QGroupBox` per group, in this order. Every row applies to all three topolog
 | `param-outline-size` | Outline | "Board radius" (circle), "Across flats" (polygon), mm | `/outline/board/radius_mm` (circle), `/outline/board/across_flats_mm` (polygon) | required | DRC `DRC_COPPER_EDGE` |
 | `param-outline-rotation` | Outline | "Rotation", degrees | `/outline/board/rotation_rad` (polygon) | default | none |
 | `param-corner-radius-board` | Outline | "Corner radius", mm | `/outline/board/corner_radius_mm` (polygon) | default | none |
-| `param-bore` | Outline | "Centre bore": segment None, Circle, Polygon, then radius, or sides, across flats, corner radius and rotation | `/outline/bore`, `/outline/bore/shape`, `/outline/bore/radius_mm`, `/outline/bore/sides`, `/outline/bore/across_flats_mm`, `/outline/bore/corner_radius_mm`, `/outline/bore/rotation_rad` | required | none |
+| `param-bore` | Outline | "Centre bore": None, Circle, Polygon | `/outline/bore`, `/outline/bore/shape` | required | none |
+| `param-bore-radius` | Outline | "Bore radius", mm | `/outline/bore/radius_mm` (circle) | required | none |
+| `param-bore-sides` | Outline | "Bore sides" | `/outline/bore/sides` (polygon) | required | none |
+| `param-bore-across-flats` | Outline | "Bore across flats", mm | `/outline/bore/across_flats_mm` (polygon) | required | none |
+| `param-bore-corner-radius` | Outline | "Bore corner radius", mm | `/outline/bore/corner_radius_mm` (polygon) | default | none |
+| `param-bore-rotation` | Outline | "Bore rotation", degrees | `/outline/bore/rotation_rad` (polygon) | default | none |
 | `screw-table` | Fasteners | QTableView: size, fit, hole diameter (mm, read-only), count, pitch radius (mm), angle offset (degrees); one row per screw pattern | `/outline/screws`, `/outline/screws/*/size`, `/outline/screws/*/fit`, `/outline/screws/*/count`, `/outline/screws/*/pitch_radius_mm`, `/outline/screws/*/angle_offset_rad` | default (no patterns) | DRC `DRC_COPPER_HOLE` |
 | `param-screw-hole-diameter` | Fasteners | "Hole diameter of the selected pattern", mm | `/outline/screws/*/hole_diameter_mm` | required when a pattern exists, no default (D-031a) | none |
 | `btn-screw-add` | Fasteners | QToolButton "Add pattern" | command | none | none |
@@ -324,6 +335,18 @@ command of `btn-first-missing` (R11). While computing, values dim to 60 % after 
 reads "Updating"; previous values stay until new ones arrive. Invalid input keeps the last valid results dimmed with
 `stale=true` and the stamp "Last valid results". Keys from Phase 1 stay: `r-phase`, `ke`, `kt`, `ls`, `dt`, `j`.
 
+### 6.1 Status cards of the results rail (U-S4d e)
+
+Until `tab-drc` exists the rail heads with two status cards, each with a `check-*` glyph and a word, never colour alone.
+
+| objectName | Qt widget | Binding key | Rule |
+|---|---|---|---|
+| `rail-inputs` | QFrame[class="result-card"] with QLabel[class="check-state"] | session issues | "Inputs": `check-pass` "No input issues" or `check-fail` "3 input issues" (example count) |
+| `rail-drc` | QFrame[class="result-card"] with QLabel[class="check-state"] | `drc.passed`, `drc.violation_count` | "DRC": `check-pass` "Passed", `check-fail` "186 failures" (example count) or "Not run". A link opens `tab-drc` once it exists. |
+
+The card that read "Design: Problems found" goes: it merged two states, and beside "No issues." it read as a
+contradiction. `issues-list` takes the title "Input issues" and the empty text "No input issues.".
+
 ## 7. DRC (`tab-drc`)
 
 | objectName | Qt widget | Binding key | Behaviour |
@@ -393,6 +416,33 @@ of the focused field (field `whatsThis` holds the topic id).
 `st-cursor` (x, y in mm, mono). The status bar announces "Results updated, DRC: 1 failure" at most once per second through
 `QAccessible` (assumption: Agent 3 checks NVDA on Windows).
 
+## 14a. Names set in code (U-S4d c)
+
+Shell and dialog parts that U-M4b and U-M4c named. `checks/screens_coverage.py` fails when the UI code sets a literal
+objectName that no table defines.
+
+| objectName | Part | Status |
+|---|---|---|
+| `dlg-new-design` | New design dialog (section 1) | ratified |
+| `issues-list` | QListWidget of the input issues in the rail (section 6.1) | ratified |
+| `fig-stale` | Stamp "Last valid drawing" on the canvas | ratified |
+| `dlg-examples` | Examples gallery dialog | ratified |
+| `examples-list` | Its list; items `example-<id>` | ratified |
+| `dlg-recovery` | Recovery offer after an unclean exit (UI-21) | ratified |
+| `btn-recover`, `btn-discard-recovery` | Its two buttons | declared |
+| `btn-load-example`, `btn-cancel-examples` | Examples gallery buttons | declared |
+| `menu-examples` | Examples menu of the toolstrip | declared |
+| `dlg-error` | Engine error dialog (UI-12) | declared |
+| `main-window`, `work-area`, `centre` | Window, splitter and centre pane | declared |
+| `empty-state`, `btn-empty-new`, `btn-empty-examples` | Empty session with New design and Examples (UI-23) | declared |
+| `required-bar` | Container of `new-required-count` and `btn-first-missing` | declared |
+| `results-rail-empty` | Rail sentence before the first compute | declared |
+| `layer-toggles` | Canvas layer checkboxes, one `layer-<name>` each | declared |
+| `toolstrip-tabs` | Tab bar of the toolstrip; sections `ts-section-<group>` | declared |
+| `design-notice`, `design-notice-text`, `btn-notice-undo`, `btn-apply-suggestion` | Inline notice "Changed from X to Y" with Undo and a suggestion button (UX-AC-12) | declared |
+| `param-topology-hint` | Hint under the topology buttons | declared |
+| `tab-board-group-fasteners` | Fasteners group box; group boxes are `<tab>-group-<group>` | declared |
+
 ## 15. Requests to other owners
 
 screens.md names these changes; each owner applies them through Fable. U-M2a-fix closed the v2 requests for widget
@@ -400,7 +450,7 @@ ids, `/phases` and `RANGE_COIL_GAP_BELOW_CLEARANCE` (`screen_model_diff.py` list
 
 | To | Request | Row |
 |---|---|---|
-| U-M2d-3 (`fields.py`) | Add `/outline/screws/*/hole_diameter_mm` with `widget_id` `param-screw-hole-diameter` (D-031a). `screens_coverage.py` then reports that its `AWAITING_FIELDS` entry must go | D-031a |
+| Model owner (`fields.py`) | `FieldSpec.widget_id` of `/outline/bore/radius_mm` and the four polygon bore pointers names the section 5 bore widgets (U-S4d c) | U-S4d c |
 | U-M2d-3 (model) | The single-board serpentine copper-count check (copper count = phases times layers per phase) | D-031e |
 | Model owner (`draft.py`) | DEF-S4c-01: `derive_layer_pairs` must keep a surviving pair by its identity, not its list position, so a deleted middle pair returns and no index repeats. `checks/pair_delete_probe.py` exits 0 when fixed | D-024 |
 | U-M4c | Stack-up generator, rotation mode helper and required-field bar | R3, R4, R11 |
