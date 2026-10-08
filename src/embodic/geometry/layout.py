@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Literal
 
+from embodic.errors import Severity, ValidationIssue
 from embodic.geometry.arrays import LayoutArrays, layout_arrays
 from embodic.geometry.circuit import Circuit
 from embodic.geometry.details import TopologyDetail
@@ -126,14 +127,17 @@ class BoardStack:
     boards: tuple[Layout, ...]  # never empty; board k of a per-phase stack holds only phase k
     board_thickness_mm: float  # one board, = design.stackup.board_thickness_mm()
     board_gap_mm: float  # 0.0 when len(boards) == 1
+    issues: tuple[ValidationIssue, ...] = ()  # WARNING and INFO of the build (D-035 a); an error is Unbuildable
     stack_hash: str = field(init=False)  # "sha256:<hex>" over the boards' layout_hash values in order and the gap
 
     def __post_init__(self) -> None:
-        """Set ``stack_hash``; raise ValueError for no board, or a gap other than 0.0 on a one-board stack."""
+        """Set ``stack_hash``; raise ValueError for no board, a gap other than 0.0 on a one-board stack, or an error."""
         if not self.boards:
             raise ValueError("a BoardStack needs at least one board")
         if len(self.boards) == 1 and self.board_gap_mm != 0.0:
             raise ValueError(f"a one-board stack has no board gap, got {self.board_gap_mm!r} mm")
+        if errors := [i.code for i in self.issues if i.severity is Severity.ERROR]:
+            raise ValueError(f"the issues of a built stack are warning or info, got errors {errors}")
         document = {"boards": [b.layout_hash for b in self.boards], "board_gap_mm": self.board_gap_mm}
         text = json.dumps(document, sort_keys=True, separators=(",", ":"), allow_nan=False)
         object.__setattr__(self, "stack_hash", "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest())

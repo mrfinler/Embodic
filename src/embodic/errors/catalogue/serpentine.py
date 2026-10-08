@@ -23,4 +23,10 @@ MESSAGES: Mapping[str, str] = {
         "The stack-up has {limit} copper layers; the winding needs {value}. The stack-up must match the layers per "
         "phase and the stack mode."
     ),
+    "RANGE_SERPENTINE_INTERCONNECT_BOARDS": (
+        "One board per phase: make the {value} connection between boards externally."
+    ),
+    "RANGE_SERPENTINE_INTERCONNECT_LAYER": (
+        "A single layer per phase leaves one terminal inside the winding: make the {value} connection externally."
+    ),
 }

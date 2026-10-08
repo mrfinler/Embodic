@@ -142,13 +142,17 @@ def _item_paths(item: object) -> list[PathSpec]:
     raise TypeError(f"unknown interconnect item {item!r}")
 
 
+def _wants_interconnect(design: DesignParameters, d: Frame) -> bool:
+    connection = design.connection
+    return connection.draw_interconnect and d.p.phases == 3 and connection.topology is not ConnectionTopology.OPEN
+
+
 def _add_interconnect(
     design: DesignParameters, spec: SerpentineWindingSpec, d: Frame, plan: StackPlan
 ) -> Interconnect | None:
     """Star or delta links, line stubs and terminal pads on a single board (Xcoil l.2519-2531)."""
     connection = design.connection
-    wanted = connection.draw_interconnect and d.p.phases == 3 and connection.topology is not ConnectionTopology.OPEN
-    if not (wanted and spec.stack_mode is StackMode.SINGLE and d.has_y):
+    if not (_wants_interconnect(design, d) and spec.stack_mode is StackMode.SINGLE and d.has_y):
         return None
     base = plan.r_max_cu if d.outer else plan.r_min_cu
     link_layers = tuple(range(len(plan.layers) - 1, 0, -1))
@@ -156,6 +160,31 @@ def _add_interconnect(
     for item in ic.items:
         plan.layers[item.layer].paths.extend(_item_paths(item))
     return ic
+
+
+def _external_interconnect(
+    design: DesignParameters, spec: SerpentineWindingSpec, d: Frame, ic: Interconnect | None
+) -> tuple[ValidationIssue, ...]:
+    """Xcoil's INTERCONNECT_EXTERNAL warning (l.2535): an interconnect was asked for and the board cannot carry it."""
+    if ic is not None or not _wants_interconnect(design, d):
+        return ()
+    code = (
+        "RANGE_SERPENTINE_INTERCONNECT_BOARDS"
+        if spec.stack_mode is not StackMode.SINGLE
+        else "RANGE_SERPENTINE_INTERCONNECT_LAYER"
+    )
+    connection = design.connection.topology.value
+    pointer = "/winding/stack_mode" if spec.stack_mode is not StackMode.SINGLE else "/winding/layers_per_phase"
+    return (
+        ValidationIssue(
+            code=code,
+            category=IssueCategory.UNSUPPORTED_RANGE,
+            severity=Severity.WARNING,
+            message=message_for(code).format(value=connection),
+            pointers=("/connection/draw_interconnect", pointer),
+            value=connection,
+        ),
+    )
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -367,4 +396,5 @@ def generate_serpentine(design: DesignParameters, registry: Registry) -> BoardSt
         boards=boards,
         board_thickness_mm=design.stackup.board_thickness_mm(),
         board_gap_mm=spec.board_gap_mm if plan.n_boards > 1 else 0.0,
+        issues=_external_interconnect(design, spec, d, ic),
     )

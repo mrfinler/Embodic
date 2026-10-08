@@ -12,7 +12,7 @@ from harness import INTEGRATED, GoldenCase, Tolerance, compare_prims, compare_sc
 from m1_layout.xcoil_map import layout_from_xcoil
 
 from embodic.generators.wave import generate_wave
-from embodic.geometry.layout import Layout
+from embodic.geometry.layout import BoardStack, Layout
 from embodic.geometry.paths import CopperPath
 from embodic.geometry.primitives import path_length_mm
 from embodic.results import load_registry
@@ -40,7 +40,7 @@ def _generated(case_id: str) -> tuple[Layout, Layout]:
     """(embodic layout, Xcoil layout mapped to embodic objects) of one case."""
     raw = _raw(CASES[case_id])
     stack = generate_wave(design_from_xcoil(raw["params"]), load_registry())
-    assert not hasattr(stack, "issues"), f"{case_id}: Unbuildable {getattr(stack, 'issues', None)}"
+    assert isinstance(stack, BoardStack), f"{case_id}: Unbuildable {getattr(stack, 'issues', None)}"
     return stack.boards[0], layout_from_xcoil(raw)
 
 

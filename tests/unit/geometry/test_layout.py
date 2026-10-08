@@ -5,6 +5,7 @@ import math
 
 import pytest
 
+from embodic.errors import IssueCategory, Severity, ValidationIssue
 from embodic.geometry.circuit import Circuit, Member, ParallelGroup, PhaseCircuit
 from embodic.geometry.layout import BoardOutline, BoardStack, Layout, Via, ViaRole
 from embodic.geometry.paths import CopperPath
@@ -113,3 +114,26 @@ def test_board_stack_hash_follows_board_order_copper_and_gap() -> None:
     assert base.stack_hash.startswith("sha256:")
     assert base.stack_hash != BoardStack(boards=(b, a), board_thickness_mm=1.6, board_gap_mm=0.5).stack_hash
     assert base.stack_hash != BoardStack(boards=(a, b), board_thickness_mm=1.6, board_gap_mm=0.6).stack_hash
+
+
+def _issue(severity: Severity) -> ValidationIssue:
+    return ValidationIssue(code="RANGE_EXAMPLE", category=IssueCategory.UNSUPPORTED_RANGE, severity=severity,
+                           message="Example.", pointers=())  # fmt: skip
+
+
+def test_board_stack_issues_default_to_none_and_hold_warnings_and_infos_only() -> None:
+    """Defect caught: an ERROR riding on a built stack. A generator reports an error as Unbuildable (D-035 a)."""
+    plain = BoardStack(boards=(_layout(),), board_thickness_mm=1.6, board_gap_mm=0.0)
+    assert plain.issues == ()
+    notes = (_issue(Severity.WARNING), _issue(Severity.INFO))
+    assert BoardStack(boards=(_layout(),), board_thickness_mm=1.6, board_gap_mm=0.0, issues=notes).issues == notes
+    with pytest.raises(ValueError, match="warning or info"):
+        BoardStack(boards=(_layout(),), board_thickness_mm=1.6, board_gap_mm=0.0, issues=(_issue(Severity.ERROR),))
+
+
+def test_board_stack_hash_ignores_issues() -> None:
+    """Defect caught: a hash over issues. They derive from the design, so the same copper keeps the same cache key."""
+    note = (_issue(Severity.WARNING),)
+    quiet = BoardStack(boards=(_layout(),), board_thickness_mm=1.6, board_gap_mm=0.0)
+    noted = BoardStack(boards=(_layout(),), board_thickness_mm=1.6, board_gap_mm=0.0, issues=note)
+    assert quiet.stack_hash == noted.stack_hash

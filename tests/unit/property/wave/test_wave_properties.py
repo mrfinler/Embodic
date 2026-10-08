@@ -19,7 +19,7 @@ from tests.unit.property.t_junctions import t_junction_pairs
 
 from embodic.drc import run_drc
 from embodic.generators.wave.generate import generate_wave_rotated
-from embodic.geometry.layout import Layout
+from embodic.geometry.layout import BoardStack, Layout
 from embodic.io.board_dump import dump_layout, encode_board_dump
 from embodic.model.winding_specs import WaveStyle
 from embodic.physics import analyse
@@ -79,8 +79,8 @@ def test_pr_14_rotating_the_start_angle_leaves_ke_resistance_and_drc_values_unch
     pp = design.rotor.poles // 2
     base = generate_wave_rotated(design, REGISTRY, 0.0)
     turned = generate_wave_rotated(design, REGISTRY, 360.0 / pp * turn)
-    assert not hasattr(base, "issues") and not hasattr(turned, "issues")
-    a, b = analyse(design, base, {}, REGISTRY), analyse(design, turned, {}, REGISTRY)  # type: ignore[arg-type]
+    assert isinstance(base, BoardStack) and isinstance(turned, BoardStack)
+    a, b = analyse(design, base, {}, REGISTRY), analyse(design, turned, {}, REGISTRY)
     assert a is not None and b is not None
     for name in ("ke_phase_v_s_per_rad", "ke_line_v_s_per_rad", "resistance_phase_20c_ohm", "loss_eddy_w"):
         assert getattr(b, name).value == pytest.approx(getattr(a, name).value, rel=1e-9), name

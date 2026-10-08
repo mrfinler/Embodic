@@ -287,6 +287,7 @@ def compute(
         run.issues.extend(geometry.built.issues)
         return outcome()
     boards = geometry.built
+    run.issues.extend(boards.issues)
 
     drc = _check_boards(run, boards, design, options, cache, cancel) if options.run_drc else None
     if isinstance(drc, _Cancelled) or stopped():
