@@ -10,7 +10,7 @@ from embodic import api
 from embodic.api import StageCache, compute, compute_project, outcome_to_json
 from embodic.drc import CancelToken
 from embodic.errors import IssueCategory, Severity
-from embodic.io.examples import load_example
+from embodic.io.examples import examples_dir, load_example
 from embodic.io.project import LoadedDraft, ProjectFile, project_provenance, save_project
 from embodic.model.design import DesignParameters
 from embodic.model.draft import draft_from_design
@@ -164,6 +164,20 @@ def test_compute_project_of_an_example_project(tmp_path: Path) -> None:
     outcome = compute_project(path)
     assert isinstance(outcome, api.ComputeOutcome)
     assert outcome.ok
+    assert outcome.provenance["/rotor/poles"].provenance == "example"
+
+
+@pytest.mark.req("REQ-F-15")
+@pytest.mark.parametrize("path", sorted(examples_dir().glob("*.embodic.json")), ids=lambda p: p.name.split(".")[0])
+def test_compute_project_opens_every_packaged_example_file(path: Path) -> None:
+    """Catches D-036 f: an example file the loader refused as INVALID_PROJECT_FILE could not be opened or computed.
+
+    The file is the one the examples gallery reads, with its `example` object, and not a copy that `save_project`
+    wrote. The outcome must hold the design of the example id and label its fields `example`.
+    """
+    outcome = compute_project(path)
+    assert isinstance(outcome, api.ComputeOutcome), outcome
+    assert outcome.design == load_example(path.name.split(".")[0])[1]
     assert outcome.provenance["/rotor/poles"].provenance == "example"
 
 

@@ -26,4 +26,8 @@ MESSAGES: Mapping[str, str] = {
     ),
     "UNBUILDABLE_WAVE_INPUT_OUT_OF_RANGE": "A wave winding input is outside the range the geometry can use.",
     "UNBUILDABLE_WAVE_INTERCONNECT_CROSSING": "The delta links cross, and the ring layers cannot carry crossing links.",
+    "RANGE_WAVE_INTERCONNECT_EXTERNAL": (
+        "The overlapping radial winding has one terminal per rim: make the delta connection externally "
+        "(star is routed on-board)."
+    ),
 }

@@ -8,12 +8,14 @@ import pytest
 from hypothesis import example, given, settings
 from hypothesis import strategies as st
 
-from embodic.errors import Unbuildable
+from embodic.api import compute
+from embodic.errors import IssueCategory, Severity, Unbuildable
 from embodic.generators.wave import generate_wave
 from embodic.geometry.circuit import LineLead, NeutralLead, NeutralRing, PhaseLink
 from embodic.geometry.layout import BoardStack, Layout, ViaRole
 from embodic.geometry.paths import is_continuous
 from embodic.model.design import DesignParameters
+from embodic.model.provenance import derive_provenance
 from embodic.model.stackup import generate_even_stackup
 from embodic.model.vocabulary import ConnectionTopology, Phase
 from embodic.model.winding_specs import SpiralWindingSpec, WaveStyle, WaveWindingSpec
@@ -209,6 +211,61 @@ def test_delta_links_belong_to_their_phase(registry: Registry) -> None:
         "D1",
         "D2",
     }
+
+
+def _connected(style: WaveStyle, topology: ConnectionTopology, draw: bool = True) -> DesignParameters:
+    design = wave(style)
+    connection = dataclasses.replace(design.connection, topology=topology, draw_interconnect=draw)
+    return dataclasses.replace(design, connection=connection)
+
+
+def test_overlap_delta_connection_that_cannot_be_drawn_is_a_warning_on_the_stack(registry: Registry) -> None:
+    """Catches D-036 d: Xcoil's INTERCONNECT_EXTERNAL warning (engine.js l.2190) was dropped for the overlap wave.
+
+    The overlap winding has one terminal per rim, so the delta connection is left to the user.
+    """
+    stack = generate_wave(_connected(WaveStyle.OVERLAP, ConnectionTopology.DELTA), registry)
+    assert isinstance(stack, BoardStack)
+    (issue,) = stack.issues
+    assert (issue.code, issue.severity, issue.category) == (
+        "RANGE_WAVE_INTERCONNECT_EXTERNAL",
+        Severity.WARNING,
+        IssueCategory.UNSUPPORTED_RANGE,
+    )
+    assert issue.message == (
+        "The overlapping radial winding has one terminal per rim: make the delta connection externally "
+        "(star is routed on-board)."
+    )
+    assert not any(p.net.startswith("D") for p in stack.boards[0].paths)
+
+
+@pytest.mark.parametrize(
+    ("style", "topology", "draw"),
+    [
+        (WaveStyle.OVERLAP, ConnectionTopology.STAR, True),
+        (WaveStyle.OVERLAP, ConnectionTopology.DELTA, False),
+        (WaveStyle.OVERLAP, ConnectionTopology.OPEN, True),
+        (WaveStyle.INVOLUTE, ConnectionTopology.DELTA, True),
+        (WaveStyle.JOG, ConnectionTopology.STAR, True),
+        (WaveStyle.CHORD, ConnectionTopology.DELTA, True),
+    ],
+    ids=["overlap-star", "overlap-delta-not-asked", "overlap-open", "involute-delta", "jog-star", "chord-delta"],
+)
+def test_no_interconnect_warning_when_it_is_drawn_or_not_asked_for(
+    style: WaveStyle, topology: ConnectionTopology, draw: bool, registry: Registry
+) -> None:
+    """Catches a warning for an interconnect nobody asked for, or one the board does carry."""
+    stack = generate_wave(_connected(style, topology, draw), registry)
+    assert isinstance(stack, BoardStack)
+    assert stack.issues == ()
+
+
+def test_compute_reports_the_wave_stack_warning_in_the_outcome(registry: Registry) -> None:
+    """Catches D-035 a for the wave: the facade must merge BoardStack.issues, or the user never sees the warning."""
+    design = _connected(WaveStyle.OVERLAP, ConnectionTopology.DELTA)
+    outcome = compute(design, derive_provenance(design, None, ()), registry=registry)
+    assert outcome is not None and outcome.boards is not None
+    assert [i.code for i in outcome.issues if i.severity is Severity.WARNING] == ["RANGE_WAVE_INTERCONNECT_EXTERNAL"]
 
 
 @pytest.mark.parametrize("style", STYLES)

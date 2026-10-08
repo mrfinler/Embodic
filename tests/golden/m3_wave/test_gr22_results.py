@@ -11,11 +11,14 @@ from typing import Any
 
 import pytest
 from harness import (
+    EXPECTED_DIFFS_DIR,
     INTEGRATED,
     Comparison,
     GoldenCase,
+    apply_allow_list,
     compare_scalar,
     compare_sequence,
+    load_allow_list,
     load_area,
     load_case,
     near_threshold,
@@ -23,6 +26,7 @@ from harness import (
 from harness.codec import DATA_DIR
 
 from embodic.generators.wave import generate_wave
+from embodic.geometry.circuit import NeutralLead, PhaseLink
 from embodic.geometry.discretise import piece_ratios
 from embodic.geometry.layout import BoardStack
 from embodic.physics import analyse
@@ -141,16 +145,56 @@ def test_gr22_phase_resistance_differs_from_xcoil_only_by_the_via_barrel_length(
 INTERCONNECT_CASES = [
     a
     for a, c in ANALYSES.items()
-    if len(c.calls[0].output["phaseKe"]) == 3 and "overlap" not in a and not a.endswith("-open")
+    if len(c.calls[0].output["phaseKe"]) == 3
+    and not a.endswith("-open")
+    and not ("overlap" in a and a.endswith("-delta"))
 ]
+OVERLAP_STAR = "wave-analysis-overlap-l2-m3-p16-t2"
+ALLOW = load_allow_list(EXPECTED_DIFFS_DIR / "wave.toml")
 
 
 @pytest.mark.parametrize("analysis_id", INTERCONNECT_CASES)
 def test_gr22_interconnect_loss_matches_xcoil_for_star_and_delta(analysis_id: str, golden_report: Any) -> None:
     """Catches DEF-U-M3b-01: a star item of stubs and ring in one path, which counted 0.24 of Xcoil's loss.
 
-    The overlap style is left out: Xcoil's overlap bookkeeping sets its link sum to 0 (engine.js l.2172), so
-    it counts neither tap stubs nor leads, and embodic counts them.
+    The overlap star is compared too (D-036 e): embodic counts its tap stubs and Xcoil does not, and XD-WAVE-001
+    admits exactly that. The overlap delta stays out: Xcoil leaves its interconnect bookkeeping unset there
+    (engine.js l.2155-2172), which D-036 does not rule on.
     """
     xcoil, r, _ = _run(analysis_id)
-    golden_report.check(analysis_id, compare_scalar(xcoil["pInterconnect"], r.loss_interconnect_w.value, INTEGRATED))
+    comparison = compare_scalar(xcoil["pInterconnect"], r.loss_interconnect_w.value, INTEGRATED)
+    golden_report.check(analysis_id, apply_allow_list(comparison, analysis_id, ALLOW))
+
+
+def test_gr22_overlap_star_difference_is_the_tap_stub_copper_and_nothing_else() -> None:
+    """Catches an allow-list entry that hides more than XD-WAVE-001 says: it is the three PhaseLink tap stubs.
+
+    Reclassifying them as NeutralLead copper (no current, as in Xcoil's `link: [0, 0, 0]`, engine.js l.2172) makes
+    embodic's interconnect loss equal Xcoil's, so no other copper differs.
+    """
+    xcoil, r, stack = _run(OVERLAP_STAR)
+    board = stack.boards[0]
+    stubs = [role for role in board.circuit.interconnect_roles if isinstance(role, PhaseLink)]
+    assert len(stubs) == 3
+    roles = tuple(
+        NeutralLead(path_id=x.path_id) if isinstance(x, PhaseLink) else x for x in board.circuit.interconnect_roles
+    )
+    uncounted = dataclasses.replace(board, circuit=dataclasses.replace(board.circuit, interconnect_roles=roles))
+    params = _layout_case(OVERLAP_STAR).calls[0].output["params"]
+    again = analyse(
+        design_from_xcoil(params),
+        dataclasses.replace(stack, boards=(uncounted,)),
+        {},
+        _xcoil_registry(xcoil, params["tempC"]),
+    )
+    assert again is not None
+    assert r.loss_interconnect_w.value > xcoil["pInterconnect"]
+    verdict = compare_scalar(xcoil["pInterconnect"], again.loss_interconnect_w.value, INTEGRATED)
+    assert verdict.ok, verdict
+
+
+def test_gr22_every_allow_listed_case_still_differs() -> None:
+    """Catches a stale entry: each listed case must still differ from Xcoil, else the entry is deleted."""
+    for entry in ALLOW:
+        xcoil, r, _ = _run(entry.case)
+        assert not compare_scalar(xcoil["pInterconnect"], r.loss_interconnect_w.value, INTEGRATED).ok, entry.id

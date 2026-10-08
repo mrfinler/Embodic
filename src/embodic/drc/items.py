@@ -167,17 +167,19 @@ def build_items(layout: Layout) -> tuple[Items, dict[int, int]]:
 class _PathEnd:
     path: CopperPath
     point: tuple[float, float]
-    group: tuple[int, ...]  # item indices of the terminating main primitive and its fillets and tapers
+    group: tuple[int, ...]  # item indices of the terminating main primitive and the fillets and tapers either side
 
 
-def _path_ends(layout: Layout, first_item: dict[int, int]) -> Iterator[_PathEnd]:
+def _path_ends(layout: Layout, items: Items, first_item: dict[int, int]) -> Iterator[_PathEnd]:
     for path in layout.paths:
         if not path.primitives:
             continue
         mains = main_indices(path.primitives)
         base = first_item[path.id]
+        slots = items.slot[base : base + len(path.primitives)]
         for k, point in ((0, path.primitives[0].start_point()), (-1, path.primitives[-1].end_point())):
-            yield _PathEnd(path, point, tuple(base + i for i, m in enumerate(mains) if m == mains[k]))
+            near_main = np.abs(slots - 2 * mains[k]) <= 1
+            yield _PathEnd(path, point, tuple(base + int(i) for i in np.flatnonzero(near_main)))
 
 
 def _inside_pad(pad: Pad, x_mm: float, y_mm: float) -> bool:
@@ -187,15 +189,17 @@ def _inside_pad(pad: Pad, x_mm: float, y_mm: float) -> bool:
 def exempt_pairs(layout: Layout, items: Items, first_item: dict[int, int]) -> IntArray:
     """Sorted keys ``i * n + j`` (i < j) of item pairs that connectivity exempts.
 
-    Exempt: a via or pad and the end group of a same-net path whose end point lies on that via or pad; the end groups
-    of different paths that meet at one via, pad or coincident end point (a node); a pad and a same-net via whose
-    centre lies inside it. An interconnect path joins, whatever the nets and the via role, a via or pad its end lies on
-    and every via whose centre lies within ``pad_mm / 2`` of its centreline (D-022 a and c). The end group of a path
-    whose end point lies within COINCIDENCE_MM of another same-net path's centreline on its layer is exempt from that
-    whole path (T-junction, D-035 b). Primitives adjacent in one path are exempted in the engine from ``path`` and
-    ``slot``.
+    Exempt: a via or pad and the end group of a same-net path whose end point lies on that via or pad (the end group
+    is the terminating main primitive and the fillets and tapers either side of it); the end groups of different
+    paths that meet at one via, pad or coincident end point (a node); a pad and a same-net via whose centre lies
+    inside it. An interconnect path joins, whatever the nets and the via role, a via or pad its end lies on and every
+    via whose centre lies within ``pad_mm / 2`` of its centreline (D-022 a and c). A via is also exempt from each
+    same-net primitive whose centreline passes within ``pad_mm / 2`` of its centre (D-036 a, D-037a). The end group of
+    a path whose end point lies within COINCIDENCE_MM of another same-net path's centreline on its layer is exempt from
+    that whole path (T-junction, D-035 b). Primitives adjacent in one path are exempted in the engine from ``path``
+    and ``slot``.
     """
-    ends = list(_path_ends(layout, first_item))
+    ends = list(_path_ends(layout, items, first_item))
     via_base = int(np.count_nonzero(items.item_class == ItemClass.TRACE))
     pad_base = via_base + len(layout.vias)
     interconnects = frozenset(layout.circuit.interconnect_path_ids)
@@ -236,17 +240,33 @@ def exempt_pairs(layout: Layout, items: Items, first_item: dict[int, int]) -> In
     return np.unique(np.array(keys, dtype=np.int64))
 
 
+def _centreline_distance_mm(items: Items, trace: IntArray, x_mm: float, y_mm: float) -> FloatArray:
+    """Distance from a point to the centreline of each trace item in ``trace``."""
+    point = np.array([x_mm, y_mm, x_mm, y_mm, 0.0, 0.0])
+    distance_mm = np.empty(len(trace))
+    for arcs in (False, True):
+        kind = items.is_arc[trace] == arcs
+        distance_mm[kind] = closest_pairs(np.tile(point, (int(kind.sum()), 1)), False, items.rows[trace[kind]], arcs)[D]
+    return distance_mm
+
+
 def _taps(layout: Layout, items: Items, interconnects: frozenset[int], via_base: int) -> Iterator[tuple[int, int]]:
-    """Yield (via item, trace item) for each item of an interconnect path passing within pad_mm / 2 of the via."""
-    traces = np.flatnonzero((items.item_class == ItemClass.TRACE) & np.isin(items.path, list(interconnects)))
+    """Yield (via item, trace item) for each trace item a via taps.
+
+    An interconnect path is tapped whole, whatever its net, when any of its items passes within pad_mm / 2 of the via
+    centre (D-022c). Any other path is tapped item by item, and only when it carries the via's net (D-036 a, D-037a).
+    """
+    traces = np.flatnonzero(items.item_class == ItemClass.TRACE)
+    net_of = {path.id: path.net for path in layout.paths}
+    trace_net = np.array([net_of[int(i)] for i in items.path[traces]])
+    interconnect = np.isin(items.path[traces], list(interconnects))
     for v, via in enumerate(layout.vias):
-        centre = np.tile([via.x_mm, via.y_mm, via.x_mm, via.y_mm, 0.0, 0.0], (len(traces), 1))
-        distance_mm = np.empty(len(traces))
-        for arcs in (False, True):
-            kind = items.is_arc[traces] == arcs
-            distance_mm[kind] = closest_pairs(centre[kind], False, items.rows[traces[kind]], arcs)[D]
-        tapped = items.path[traces[distance_mm <= via.pad_mm / 2]]
-        yield from ((via_base + v, int(i)) for i in traces[np.isin(items.path[traces], tapped)])
+        joinable = interconnect | (trace_net == via.net)
+        candidates, ring = traces[joinable], interconnect[joinable]
+        within = _centreline_distance_mm(items, candidates, via.x_mm, via.y_mm) <= via.pad_mm / 2
+        tapped_rings = items.path[candidates[within & ring]]
+        exempt = within | (ring & np.isin(items.path[candidates], tapped_rings))
+        yield from ((via_base + v, int(i)) for i in candidates[exempt])
 
 
 def _junctions(
@@ -262,13 +282,7 @@ def _junctions(
         trace = np.concatenate([np.arange(first_item[p.id], first_item[p.id] + len(p.primitives)) for p in paths])
         owner = items.path[trace]
         for e in (e for e in ends if e.path.layer == layer and e.path.net == net):
-            point = np.array([*e.point, *e.point, 0.0, 0.0])
-            distance_mm = np.empty(len(trace))
-            for arcs in (False, True):
-                kind = items.is_arc[trace] == arcs
-                distance_mm[kind] = closest_pairs(
-                    np.tile(point, (int(kind.sum()), 1)), False, items.rows[trace[kind]], arcs
-                )[D]
+            distance_mm = _centreline_distance_mm(items, trace, *e.point)
             trunks = np.unique(owner[(distance_mm <= COINCIDENCE_MM) & (owner != e.path.id)])
             yield from ((i, int(j)) for j in trace[np.isin(owner, trunks)] for i in e.group)
 
