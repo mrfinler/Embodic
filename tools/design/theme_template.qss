@@ -9,7 +9,7 @@ QToolButton { color: @text-1; background-color: transparent; border: 1px solid t
 QToolButton:hover { background-color: @surface-sunken; border-color: @divider; }
 QToolButton:pressed { background-color: @surface-selected; }
 QToolButton:checked { background-color: @surface-selected; border-color: @border-strong; }
-QToolButton:focus { border: 2px solid @focus-ring; padding: 3px; }
+QToolButton:focus { border: @focus-ring-px solid @focus-ring; padding: 3px; }
 QToolButton:disabled { color: @text-disabled; background-color: transparent; border-color: transparent; }
 QToolButton[class="ts-large"] { min-width: 52px; }
 QToolButton[class="ts-small"] { padding: 2px 6px 2px 4px; }
@@ -26,7 +26,7 @@ QTabBar::tab:selected { color: @text-1; border-bottom: 2px solid @border-strong;
 QTabBar::tab:disabled { color: @text-disabled; }
 
 QLineEdit, QAbstractSpinBox, QComboBox { background-color: @surface; color: @text-1; border: 1px solid @border-control; border-radius: 4px; padding: 5px 8px; min-height: 20px; }
-QLineEdit:focus, QAbstractSpinBox:focus, QComboBox:focus { border: 2px solid @focus-ring; padding: 4px 7px; }
+QLineEdit:focus, QAbstractSpinBox:focus, QComboBox:focus { border: @focus-ring-px solid @focus-ring; padding: 4px 7px; }
 QLineEdit:disabled, QAbstractSpinBox:disabled, QComboBox:disabled { color: @text-disabled; background-color: @bg-app; border-color: @divider; }
 QLineEdit[readOnly="true"] { background-color: @surface-sunken; border-color: @divider; }
 QLineEdit[invalid="true"], QAbstractSpinBox[invalid="true"], QComboBox[invalid="true"] { border: 2px solid @status-fail; padding: 4px 7px; }
@@ -40,7 +40,7 @@ QComboBox QAbstractItemView { background-color: @surface; color: @text-1; border
 QCheckBox { spacing: 8px; color: @text-1; }
 QCheckBox:disabled { color: @text-disabled; }
 QCheckBox::indicator { width: 16px; height: 16px; border: 1px solid @border-control; border-radius: 3px; background-color: @surface; }
-QCheckBox::indicator:focus { border: 2px solid @focus-ring; }
+QCheckBox::indicator:focus { border: @focus-ring-px solid @focus-ring; }
 QCheckBox::indicator:checked { background-color: @surface-inverse; border-color: @surface-inverse; image: url(theme:@dir/check.svg); }
 QCheckBox::indicator:disabled { background-color: @bg-app; border-color: @divider; }
 QCheckBox::indicator:checked:disabled { background-color: @text-disabled; border-color: @text-disabled; }
@@ -48,11 +48,11 @@ QCheckBox::indicator:checked:disabled { background-color: @text-disabled; border
 QPushButton { background-color: @surface; color: @text-1; border: 1px solid @border-control; border-radius: 4px; padding: 6px 14px; min-height: 18px; }
 QPushButton:hover { background-color: @surface-sunken; }
 QPushButton:pressed { background-color: @surface-selected; }
-QPushButton:focus { border: 2px solid @focus-ring; padding: 5px 13px; }
+QPushButton:focus { border: @focus-ring-px solid @focus-ring; padding: 5px 13px; }
 QPushButton:disabled { color: @text-disabled; border-color: @divider; background-color: @bg-app; }
 QPushButton[class="primary"] { background-color: @surface-inverse; color: @text-inverse; border-color: @surface-inverse; font-weight: 600; }
 QPushButton[class="primary"]:hover { background-color: @text-2; border-color: @text-2; }
-QPushButton[class="primary"]:focus { border: 2px solid @focus-ring; background-color: @surface-inverse; }
+QPushButton[class="primary"]:focus { border: @focus-ring-px solid @focus-ring; background-color: @surface-inverse; }
 QPushButton[class="primary"]:disabled { background-color: @surface-sunken; color: @text-disabled; border-color: @divider; }
 
 QTableView { background-color: @surface; alternate-background-color: @bg-app; color: @text-1; gridline-color: @divider; border: 1px solid @divider; selection-background-color: @surface-selected; selection-color: @text-1; }

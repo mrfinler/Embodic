@@ -22,6 +22,8 @@ THEMES = REPO / "resources" / "themes"
 TOKENS = THEMES / "tokens.json"
 TEMPLATE = Path(__file__).with_name("theme_template.qss")
 MODEL = "claude-opus-5-5"
+DASH = {"solid": "solid", "dashed": "dash", "dotted": "dot"}
+DATA_PREFIXES = ("phase-", "status-")
 
 GLYPHS = {
     "chevron-down.svg": ('<path d="M3 4.5 6 7.5 9 4.5"/>', "text-2", 12),
@@ -30,8 +32,8 @@ GLYPHS = {
 }
 
 
-def render_qss(theme: str, colours: dict[str, str]) -> str:
-    """Return the style sheet of one theme: ``@<token>`` becomes its hex value, ``@dir`` the theme name."""
+def render_qss(theme: str, colours: dict[str, str], focus_ring_px: int) -> str:
+    """Return the style sheet of one theme: ``@<token>`` becomes its value, ``@dir`` the theme name."""
     head = (
         f'/* embodic {theme} theme. Generated from resources/themes/tokens.json, theme "{theme}". Do not hand-edit.\n'
         f"   Prepared by: Agent 1 (UX/UI) - model: {MODEL}\n"
@@ -50,13 +52,42 @@ def render_qss(theme: str, colours: dict[str, str]) -> str:
             if name == "dir":
                 return theme
             used.append(name)
-            return colours[name]
+            return f"{focus_ring_px}px" if name == "focus-ring-px" else colours[name]
 
         text = re.sub(r"@([a-z0-9-]+)", sub, line)
         if used:
             text += " /* " + ", ".join(dict.fromkeys(used)) + " */"
         out.append(text)
     return head + "\n".join(out) + "\n"
+
+
+def theme_tokens(theme: str, tokens: dict) -> dict:
+    """Return the ThemeTokens of interfaces.md section 11 for one theme.
+
+    ``colours`` holds the chrome tokens only (white, grey and black, REQ-L-04). Phase colours move into ``phases``;
+    status colours stay in the QSS because ThemeTokens has no field for them.
+    """
+    c = tokens["themes"][theme]["color"]
+    phases = []
+    for phase, style in tokens["phase_style"].items():
+        key = f"phase-{phase.lower()}"
+        phases.append(
+            {
+                "phase": phase,
+                "colour_hex": c[key],
+                "grey_hex": c[f"{key}-grey"],
+                "hatch_deg": style["hatch_deg"] or 0,
+                "dash": DASH[style["line"]],
+                "label": style["label"],
+            }
+        )
+    return {
+        "name": theme,
+        "colours": {k: v for k, v in c.items() if not k.startswith(DATA_PREFIXES)},
+        "phases": phases,
+        "focus_ring_px": tokens["focus_ring_px"],
+        "control_height_px": tokens["control_height_px"],
+    }
 
 
 def glyph_svg(body: str, colour: str, size: int) -> str:
@@ -84,7 +115,8 @@ def main() -> int:
             "disabled": c["text-disabled"],
             "checked": c["text-1"],
         }
-        write_if_changed(THEMES / f"{theme}.qss", render_qss(theme, c))
+        write_if_changed(THEMES / f"{theme}.qss", render_qss(theme, c, tokens["focus_ring_px"]))
+        write_if_changed(THEMES / f"{theme}.json", json.dumps(theme_tokens(theme, tokens), indent=1) + "\n")
         glyph_dir = THEMES / theme
         glyph_dir.mkdir(exist_ok=True)
         for name, (body, token, size) in GLYPHS.items():
