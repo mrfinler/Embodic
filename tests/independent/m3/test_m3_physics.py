@@ -23,9 +23,8 @@ def test_gr22_ke_from_own_field(case_id: str) -> None:
     assert embodic_ke_ll_peak(case_id) / own_ke_ll_peak(case_id) - 1 == pytest.approx(0, abs=OWN_FIELD_REL)
 
 
-@pytest.mark.xfail(strict=True, reason="DEF-M3a-01 on 72b3231: analyse.py l.254-255, l.270 add k x pitch to stack z")
 def test_per_phase_stack_ke_uses_the_board_z() -> None:
-    """Item 3: Ke of a per-phase stack must use each board's own z; embodic +5.1 % over own on 72b3231."""
+    """Item 3: Ke of a per-phase stack must use each board's own z (DEF-M3a-01: +5.1 % on 72b3231, now closed)."""
     case_id = "s-perphase-3-t5-gap0p3"
     assert embodic_ke_ll_peak(case_id) / own_ke_ll_peak(case_id) - 1 == pytest.approx(0, abs=OWN_FIELD_REL)
 
@@ -75,9 +74,8 @@ def test_serpentine_example_interconnect_loss_equals_xcoil() -> None:
     assert e == pytest.approx(x, rel=1e-3)
 
 
-@pytest.mark.xfail(strict=True, reason="DEF-UV3-02: wave example P_ic 0.002575 W vs Xcoil 0.011174 W (-77 %)")
 def test_wave_example_interconnect_loss_equals_xcoil() -> None:
-    """Item 5: catches a lead, link or ring segment dropped from P_ic on the wave example."""
+    """Item 5: catches a lead, link or ring segment dropped from P_ic on the wave example (DEF-UV3-02, -77 % before)."""
     e, x = _row("wave_16p_example", "P_ic")
     assert e == pytest.approx(x, rel=1e-3)
 
