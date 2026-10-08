@@ -36,6 +36,12 @@ restates `embodic.physics` as merged (D-025a, D-026c, D-031f) and gives EQ-20 `p
 fields added since the first draft of v1 and the schema version rule for U-M2f. §13 closes point 2, opens point 5 and
 lists in point 6 the code on main that contradicts these lines, as defect rows for its owners.
 
+Revision 2026-10-08 (U-D5, decisions D-032a, D-033b, D-033d and D-033e; the merged code on main e1536b8 was read for
+every item): §4 adopts t mod a = 0 with `Feasibility.allows_parallel_paths`, renames the code to
+`UNBUILDABLE_PARALLEL_PATHS_NOT_DIVISOR` and marks `Feasibility.max_parallel_paths` for removal. §5 states the via roles
+of a series coil (2k + 1 vias). §6 lists the spiral generator's Unbuildable codes with the `TURNS_EXCEED_LIMIT` cause
+value and the series via fan of spec G6 (U-E6). §13 closes point 5.
+
 ## 0. Rules for every public boundary
 
 - Lengths are millimetres (`_mm`), angles radians (`_rad`) inside the core, temperature °C (`_degc`), current A (`_a`),
@@ -1192,7 +1198,10 @@ class Feasibility:
     q: Fraction
     periodicity: int  # t = gcd(Q, p)
     balanced: bool
-    max_parallel_paths: int
+    max_parallel_paths: int  # always = periodicity; marked for removal (revision 2026-10-08 (U-D5))
+
+    def allows_parallel_paths(self, paths: int) -> bool:
+        """True when `paths` divides the periodicity t (D-032a; `inferred` until a source lands)."""
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1241,7 +1250,7 @@ prefix sets category and severity (`plan.py` `_KIND_BY_PREFIX`). Every issue cit
 |---|---|---|---|---|
 | `UNBUILDABLE_UNBALANCED_WINDING` | `plan_spiral_winding`, star of slots only | UNBUILDABLE, ERROR | `/winding/coil/coil_count`, `/rotor/poles` | none |
 | `UNBUILDABLE_ASSIGNMENT_COVERAGE` | `plan_spiral_winding`, manual assignment that does not list coils 0 to Q - 1 once | UNBUILDABLE, ERROR | `/winding/assignment` | none |
-| `UNBUILDABLE_PARALLEL_PATHS_EXCEED_T` | `plan_spiral_winding`, `parallel_paths > feasibility.max_parallel_paths` | UNBUILDABLE, ERROR | `/winding/parallel_paths` | requested paths, `max_parallel_paths` |
+| `UNBUILDABLE_PARALLEL_PATHS_NOT_DIVISOR` | `plan_spiral_winding`, `not feasibility.allows_parallel_paths(parallel_paths)` (revision 2026-10-08 (U-D5), D-032a, D-033d) | UNBUILDABLE, ERROR | `/winding/parallel_paths` | requested paths, `periodicity` |
 | `RANGE_DELTA_TRIPLEN` | `plan_issues`, delta with k_w3 > 1e-9 | UNSUPPORTED_RANGE, WARNING | `/connection/topology` | k_w3, 0 |
 | `RANGE_MANUAL_ASSIGNMENT_UNBALANCED` | `plan_issues`, manual assignment not balanced | UNSUPPORTED_RANGE, WARNING | `/winding/assignment` | spread (max - min) / max of the fundamental phase EMF magnitudes |
 
@@ -1250,8 +1259,15 @@ count. The plan's winding factors use the outermost-turn span 2 pi / Q (A2-TOP �
 turn spans to `compute_winding_factors` when it needs the turn-averaged values. Agent 2 answered the two engineering
 questions of U-M2c (D-025e) in `docs/phase2/engineering/equation_specification.md` l.207-214, both `inferred` with no
 textbook source yet: one phase per layer pair is self-consistent when 2p/Q is odd, and the parallel path count a must
-divide t, where the code checks only a <= t. No decision adopts the second answer, so this section adds no rule for
-it; it is an open question for Fable.
+divide t.
+
+Revision 2026-10-08 (U-D5, D-032a, D-033d; `src/embodic/winding/feasibility.py` and `plan.py` on main e1536b8,
+`verified` by reading). D-032a adopts the second answer: a design plans only when t mod a = 0, and the rule stays
+`inferred` until a source lands. `plan_spiral_winding` asks `Feasibility.allows_parallel_paths` and puts t in the
+issue's `limit`. `max_parallel_paths` is marked for removal. It always equals `periodicity`, its name describes the
+replaced rule a <= t, and since D-032a no production code reads it (one assertion in
+`tests/unit/winding/test_star_of_slots.py` l.128 does). The next unit that writes `src/embodic/winding/**` deletes the
+field and that assertion. Fable schedules it; until then the stub names the field as main has it.
 
 ## 5. `embodic.geometry`: primitives, electrical element list, Layout
 
@@ -1726,6 +1742,13 @@ Rules:
   The mapped Xcoil layouts of `tests/golden/m1_layout/xcoil_map.py` take them from Xcoil's items too (DEF-M2e3-01 is
   the related circuit-mapping defect, Agent 4, U-V2).
 
+Revision 2026-10-08 (U-D5, D-033b; `docs/phase2/engineering/spiral_generator_spec.md` G6 via plan, U-E6). Via roles of
+one spiral coil with k series groups (`LayerConfig.series_groups`), each placed v times per transition: k `CENTRE`
+vias, k - 1 `TRANSFER` vias and 2 `TERMINAL` vias, so 2k + 1 per coil and Q·v·(2k + 1) per board. A `TERMINAL` via is
+also the stitch via of an end group with more than one pair. Each `ParallelGroup` of a `PhaseCircuit` is one series
+group, and its members enter at ring via g and leave at ring via g + 1. The generator on main e1536b8 places these
+vias; whether the fan between them passes DRC is §6.
+
 
 ## 6. `embodic.generators`: plug-in interface (ADR-0012)
 
@@ -1764,6 +1787,30 @@ def build_layout(design: DesignParameters, registry: Registry) -> BoardStack | U
 Revision 2026-10-05 (U-D3, D-016): every generator returns a `BoardStack` (§5). The names `build_layout` and
 `generate_*` stay, because no code calls them yet (U-M2d writes them) and the rename would touch ADR-0012 and
 package_layout.md for no behavioural gain.
+
+Revision 2026-10-08 (U-D5, D-033b, D-033e; `src/embodic/generators/spiral/generate.py` and
+`src/embodic/errors/catalogue/generators.py` on main e1536b8, `verified` by reading). Unbuildable codes of
+`generate_spiral` that D-032 and D-033 touch. Category UNBUILDABLE, severity ERROR for all. The catalogue holds one
+text per code.
+
+| Code | Returned when | Pointers | `value`, `limit` |
+|---|---|---|---|
+| `UNBUILDABLE_TURNS_EXCEED_LIMIT` | the requested turns exceed `MAX_TURNS_PER_LAYER` or the turns that fit, or the turns that fit exceed `MAX_TURNS_PER_LAYER` | `/winding/coil/turns` | `value` is the `TurnsExceedCause`: `user_cap` (the requested count is too high; `limit` is `MAX_TURNS_PER_LAYER` or the turns that fit, l.139 and l.399) or `loop_rule` (more turns fit than `MAX_TURNS_PER_LAYER`, whatever was requested; `limit` is `MAX_TURNS_PER_LAYER`, l.391 and l.396) |
+| `UNBUILDABLE_UNSUPPORTED_END_STYLE` | `end_style` is `stadium` (D-032f; U-E6 left the stadium closing unspecified) | `/winding/coil/end_style` | none |
+| `UNBUILDABLE_SERIES_VIA_FAN_DRC` | k > 1 series groups and the built board reports any DRC violation (D-020, D-033b) | `/winding/layers/series_groups` | none |
+| `UNBUILDABLE_SPIRAL_OPTION_NOT_IMPLEMENTED` | among other options, layer pairs at more than one rotation | `/winding/layers/pairs` | none |
+
+Series layer pairs. Main builds them with the v1.0 terminal fan, which fails DRC on CF-11 (DEF-M2d4-02), so every
+series design returns `UNBUILDABLE_SERIES_VIA_FAN_DRC`. D-033b calls this the honest state. Its decision text names the
+code `UNBUILDABLE_SERIES_FAN_DRC`; the code on main and in spec G6 is `UNBUILDABLE_SERIES_VIA_FAN_DRC`, and this
+contract uses that name. Spec G6 (revision U-E6) replaces the fan: pitch c_f = max(pad, w, bw) + s, Δa = asin(c_f/r_T),
+radial stubs for fan levels 1 and up, and the same refusal when 2r_T sin a_(L-1) < c_f or the board DRC reports a
+violation. Agent 2 measured the construction DRC-clean on CF-11 and D08 for k = 2 and 3 (`series_fan_check.py`,
+construction `inferred`). U-M2d-5 implements it, and the DRC check before return stays.
+
+Pairs rotated against each other. Spec G6 forbids layer pairs of one winding at two rotations (`inferred`, U-E6) and
+proposes `UNBUILDABLE_PAIRS_ROTATED_APART` with pointer `/winding/layers/pairs`. U-M2d-5 adds it to the catalogue.
+Until then main returns `UNBUILDABLE_SPIRAL_OPTION_NOT_IMPLEMENTED` with the same pointer.
 
 ## 7. `embodic.drc`
 
@@ -2650,9 +2697,8 @@ def main(argv: Sequence[str] | None = None) -> int:
    has one `rule.clearance`). Agent 4's readers and the golden harness need all three before M3 compares ported
    boards. Agent 6 specifies v2 with Agent 4 before U-V3; until then embodic writes v1. Revision 2026-10-08 (U-D4):
    v2 also needs `Circuit.interconnect_roles` (§5), so Agent 4's readers can check P_ic.
-5. Open 2026-10-08 (U-D4), for Fable. Agent 2's `inferred` answer that the parallel path count must divide t
-   (`equation_specification.md` l.213-214) is stricter than `plan_spiral_winding`, which refuses only a > t (§4). No
-   decision adopts it, so the contract keeps the code's rule.
+5. Closed 2026-10-08 (U-D5, D-032a). Agent 2's `inferred` answer that the parallel path count must divide t
+   (`equation_specification.md` l.213-214) is the rule, and `plan_spiral_winding` on main e1536b8 applies it (§4).
 6. Code on main c7fff3a that contradicts a contract line (revision 2026-10-08, U-D4). Each row names the owner and
    how to reproduce it. The text above states the decision, not the code.
 

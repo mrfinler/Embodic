@@ -34,6 +34,12 @@ It adds UT-GEO-24 (first coil angle, D-031c), UT-GEO-25 (`TurnLimit.closing`, D-
 interconnect copper) and UT-PHY-23 (EQ-20 for any phase count, D-031f). §5.5 adds the rule for timing tests that
 Agent 4 applies in U-V2. The M2 exit of §7 already covers the new IDs (all UT-GEO, UT-WND and UT-PHY).
 
+Revision 2026-10-08 (U-D5, D-033b, D-033c and D-033g): §3 names the first M1 allow-list entry, XD-M1-002. §5.1 amends
+UT-GEO-13 for the 2k + 1 via plan (U-E6) and UT-GEO-11 for the state of pair rotation on main e1536b8. It adds
+UT-GEO-26 for series layer pairs. UT-GEO-19 keeps its Phase 1 meaning, phase per pair (M4). The series-pair tests in
+`tests/unit/generators/test_spiral_pairs.py` that carry the label UT-GEO-19 on main are UT-GEO-26. The M2 exit of §7
+covers UT-GEO-26.
+
 ## 1. What changed and why
 
 | Change | Reason |
@@ -72,6 +78,12 @@ non-finite values, `-0.0` for negative zero. Primitives use the board-dump recor
 results 1e-9 rel., paths by sampled distance 1e-6 mm, DRC values 1e-6 mm abs., near-threshold decisions with margin
 below 1e-9 rel. logged as indeterminate. `tests/golden/expected_diffs/<area>.toml` (one file per owning unit) lists
 every intentional deviation with EQ-ID, reason and the Agent 2 and Agent 4 sign-off.
+
+Revision 2026-10-08 (U-D5, D-033c; `tests/golden/expected_diffs/m1.toml` on main e1536b8, `verified` by reading). The
+first M1 entry is XD-M1-002, case `segsegdist-seeded-collinear`, EQ-30. Xcoil's `segSegDist` skips its crossing test
+only when |d1 x d2| <= 1e-15 mm² (`engine.js` l.565). In 19 of the 1000 fixture calls it returns a false crossing (0)
+where embodic and a dense sample give 4.0001 to 13.0848 mm. The entry admits numeric diffs up to 13.1 mm abs. for
+that case only. Fable signed off on behalf of Agents 2 and 4 (D-033c), and Agent 4 re-checks the entry in U-V2.
 
 D-006 band rule (the only statement of it; every other document refers here). Xcoil passes a clearance when it is at
 least rule - 0.004 mm (`engine.js` `runDrc` l.757 sets `tol = 0.004`; l.773 and l.774 report an error when the value is
@@ -136,6 +148,9 @@ Phase 1 UT-PHY-01 to UT-PHY-21 and OR-01 to OR-12 stay. Two changes apply.
 | UT-GEO-22 | New 2026-10-05: transform exactness | rotating (2, 0) by 60 degrees gives (1, sqrt 3) within 1e-12 mm; a mirror about 45 degrees swaps x and y and negates an arc's sweep; `transform` mirrors before it rotates; rotating forward and back, and `reverse_path`, return or swap every end point within 1e-9 mm (`tests/unit/geometry/test_transforms.py`, labelled UT-GEO-12 there until relabelled) |
 | UT-GEO-23 | New 2026-10-05: discretise bounds | every chord of `discretise_path` respects `max_segment_mm`, `max_angle_rad` and `max_sagitta_mm`; piece lengths sum to the path length and `s_mm` increases; a 90 degree arc of r = 10 mm with a 5 degree step gives 18 chords; K chords give K + 1 points from start to end (`tests/unit/geometry/test_discretise.py`, labelled UT-GEO-15 there until relabelled) |
 | UT-GEO-21 | Amended 2026-10-08 (U-D4, D-031a): fastener holes | holes at the specified pitch radius, count and angle offset with `Hole.diameter_mm` equal to the pattern's `hole_diameter_mm` for every `size` and `fit`; a pattern without `hole_diameter_mm` does not parse; edge, pitch and copper keep-out violations reported (REQ-F-24) |
+| UT-GEO-11 | Amended revision 2026-10-08 (U-D5): pair rotation pi/Q | Phase 1 criterion (group-2 centre vias in the group-1 inter-coil gaps, pi/Q ± 1e-9 rad) is not met on main e1536b8. One rotation shared by every pair (option M3) builds the board of first coil angle θ₀ + pi/Q (`test_spiral_pairs.py`). Pairs at two rotations: main returns Unbuildable `UNBUILDABLE_SPIRAL_OPTION_NOT_IMPLEMENTED` at `/winding/layers/pairs`; spec G6 (U-E6, `inferred`) forbids the combination with `UNBUILDABLE_PAIRS_ROTATED_APART`, which U-M2d-5 adds. Whether the Phase 1 build criterion for two rotations is withdrawn is open for Fable |
+| UT-GEO-13 | Amended revision 2026-10-08 (U-D5, spec G6 via plan, U-E6): via plan count and spans | per coil k centre, k - 1 transfer and 2 terminal vias, 2k + 1 in all; N_via = Q·v·(2k + 1), all through vias (D-015). The default totals stay: 36 for M1 (Q = 12, k = 1) and 60 for M2 (k = 2) (`verified` by arithmetic). `checks/series_fan_check.py` counts 5 per coil for k = 2 and 7 for k = 3 |
+| UT-GEO-26 | New revision 2026-10-08 (U-D5, D-020, D-033b, D-033g): series layer pairs (G5 k centre vias, G6 via fan) | CF-11 with k = 3 series groups keeps 10 turns and centre-via radii 30.7, 29.9 and 29.1 mm; group g's X joins ring via g to its centre via and its Y joins that centre via to ring via g + 1. `generate_spiral` never returns a series board with a DRC violation: it returns the board with 0 violations or Unbuildable `UNBUILDABLE_SERIES_VIA_FAN_DRC` at `/winding/layers/series_groups`. On main e1536b8 CF-11 is refused (DEF-M2d4-02). From U-M2d-5, CF-11 and D08 with k = 2 and k = 3 build with 0 violations and a smallest clearance of 0.2 mm (CF-11) and 0.8 mm (D08), the values of `series_fan_check.py` |
 | UT-GEO-24 | New 2026-10-08 (U-D4, D-031c): first coil angle any finite | a spiral design with `first_coil_angle_rad` = 1.0, 1.0 + 2 pi, and 1.0 - 2 pi builds in every case, and coil 0's axis and every primitive end point agree within 1e-9 rad and 1e-9 mm; the model accepts the value as typed and the project file stores it unchanged |
 | UT-GEO-25 | New 2026-10-08 (U-D4, D-031b): closing of the last turn | `SpiralDetail.turn_limit.closing` equals the closing the generator built: `half` for the D08 example (3 turns, D-030) and `full` for a design whose G5 eye fits; the value is not a `FIELDS` pointer and is absent from the project file |
 | UT-UNI-01 | Amended 2026-10-04: unit conversions and rounding | deg and rad, mm and m, rpm and rad/s, mil² and mm² round trips within 2 ulp of the input (`math.ulp`), not exact (requirements.md revision note); `js_round` gives 3, -2, 1, 0, -1, 0 for 2.5, -2.5, 0.5, -0.5, -1.5, 0.49999999999999994 (JS `Math.round`); `quantise(-0.000025, 1e5) == -0.00002`; neither returns -0.0 |
@@ -257,7 +272,7 @@ the owner packages of `interfaces.md`.
 |---|---|---|---|---|---|
 | REQ-F-01 | carried | must | M2 | embodic.generators.spiral | UT-GEO-01, UT-GEO-03, UT-GEO-04, UT-GEO-05, PR-03, PR-10 |
 | REQ-F-02 | carried | must | M2 | embodic.winding | UT-WND-01, UT-WND-02, UT-WND-03, UT-WND-04, UT-WND-05, UT-WND-06 |
-| REQ-F-03 | carried | must | M2 | embodic.generators.spiral | UT-GEO-10, UT-GEO-11, UT-GEO-19, UT-GEO-24, UT-PHY-07 |
+| REQ-F-03 | carried | must | M2 | embodic.generators.spiral | UT-GEO-10, UT-GEO-11, UT-GEO-19, UT-GEO-24, UT-GEO-26, UT-PHY-07 |
 | REQ-F-04 | carried | must | M2 | embodic.model | UT-GEO-12, GR-07 |
 | REQ-F-05 | amended | must | M2 | embodic.generators.spiral | UT-GEO-13, UT-PHY-11, PR-01 |
 | REQ-F-06 | carried | must | M2 | embodic.generators.spiral | UT-GEO-07, UT-GEO-08, UT-GEO-09, UT-GEO-17, UT-GEO-18, UT-GEO-25, OR-04 |
