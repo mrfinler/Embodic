@@ -95,7 +95,6 @@ def test_xcoil_differs_only_in_19_false_crossings_inside_the_allow_list_toleranc
     assert max(t for _, t in wrong) == pytest.approx(13.0848, abs=1e-4)
 
 
-@pytest.mark.xfail(strict=True, reason="DEF-UV2-01: the XD-M1-002 reason states 4.0001 mm as the least true value")
 def test_allow_list_reason_states_the_true_range_of_the_19_calls() -> None:
     """The reason's range "a to b mm" must hold the least and largest true distance of the 19 calls."""
     reason = TOML.read_text(encoding="utf-8").split('id = "XD-M1-002"')[1].split("tolerance")[0]
