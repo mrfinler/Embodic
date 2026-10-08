@@ -139,7 +139,6 @@ class GeometryView(QGraphicsView):
     """Draws a GeometryScene; layers in ``hidden`` are left out of the scene, not merely hidden."""
 
     cursor_moved = Signal(float, float)
-    board_step = Signal(int)  # Page Up -1, Page Down +1: the board picker moves (screens.md 4.1)
 
     def __init__(self) -> None:
         super().__init__()
@@ -159,12 +158,10 @@ class GeometryView(QGraphicsView):
         self._geometry: GeometryScene | None = None
         self._mode = PhaseRenderMode.COLOUR
         self._hidden: frozenset[str] = frozenset()
-        self._board: int | None = None
         self._extent = QRectF()
         self._label_items: list[QGraphicsItem] = []
         self._font = label_font()
         self._metrics = QFontMetricsF(self._font)
-        self.placed: tuple[PlacedLabel, ...] = ()
 
     def show_geometry(
         self,
@@ -172,15 +169,10 @@ class GeometryView(QGraphicsView):
         tokens: ThemeTokens,
         mode: PhaseRenderMode,
         hidden: frozenset[str],
-        board: int | None = None,
     ) -> None:
-        """Redraw with new content, theme, render mode, layer visibility or board; keeps the zoom when it can.
-
-        ``board`` is the index of the one board to draw, or None for every board (screens.md 4.1).
-        """
+        """Redraw with new content, theme, render mode or layer visibility; keeps the zoom when the extent stays."""
         first = self._geometry is None and geometry is not None
         self._geometry, self._tokens, self._mode, self._hidden = geometry, tokens, mode, hidden
-        self._board = board
         self.setBackgroundBrush(QColor(tokens.colours["canvas"]))
         self._rebuild()
         if first:
@@ -189,8 +181,7 @@ class GeometryView(QGraphicsView):
     def _shown(self) -> list[tuple[Layout, BoardMarks]]:
         if self._geometry is None:
             return []
-        pairs = list(zip(self._geometry.boards, self._geometry.marks, strict=True))
-        return pairs if self._board is None else [pairs[self._board]]
+        return list(zip(self._geometry.boards, self._geometry.marks, strict=True))
 
     def _phase_colour(self, style: PhaseStyle) -> QColor:
         return QColor(style.colour_hex if self._mode is PhaseRenderMode.COLOUR else style.grey_hex)
@@ -209,7 +200,7 @@ class GeometryView(QGraphicsView):
     def _rebuild(self) -> None:
         scene = self.scene()
         scene.clear()
-        self._label_items, self.placed = [], ()
+        self._label_items = []
         self._extent = QRectF()
         if self._geometry is None or self._tokens is None:
             return
@@ -303,20 +294,19 @@ class GeometryView(QGraphicsView):
         self._label_items = []
         shown = self._shown()
         if not shown or self._tokens is None:
-            self.placed = ()
             return
         anchors = [a for _, m in shown for a in m.anchors]
         obstacles = [box for _, m in shown for box in m.pads]
         if (legend := self._legend_box_mm()) is not None:
             obstacles.append(legend)
-        self.placed = place_in_view(
+        placed = place_in_view(
             [a for a in anchors if a.first_of_phase] + [a for a in anchors if not a.first_of_phase],
             view=self._viewport_mm(),
             text_size=self._text_size,
             obstacles=obstacles,
             ring_outer_mm=max(board.envelope_mm[1] for board, _ in shown),
         )
-        for label in self.placed:
+        for label in placed:
             self._draw_label(label)
 
     def _draw_label(self, label: PlacedLabel) -> None:
@@ -453,8 +443,6 @@ class GeometryView(QGraphicsView):
             self.zoom_by(1 / ZOOM_STEP)
         elif key == Qt.Key.Key_0:
             self.fit_view()
-        elif key in (Qt.Key.Key_PageUp, Qt.Key.Key_PageDown):
-            self.board_step.emit(-1 if key == Qt.Key.Key_PageUp else 1)
         else:
             super().keyPressEvent(event)
 

@@ -482,12 +482,12 @@ def _apply_widths(table: QTableWidget) -> None:
 
 
 def fit_width(table: QTableWidget) -> None:
-    """Keep a table inside the inspector with no sideways scroll; each column at least as wide as its header.
+    """Fit a table's columns inside the inspector; each column at least as wide as its header.
 
-    A header that names a unit wraps before it ("Pitch" over "radius" over "(mm)"), so the 300 px inspector holds
-    every column (ruling g 1, U-M4c-2 open question). Cells longer than their share elide.
+    A header that names a unit wraps before it ("Pitch" over "radius" over "(mm)") and cells longer than their share
+    elide, so the table scrolls sideways only when even the headers need more than the inspector width (ruling g 1).
     """
-    table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
     table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
     table.horizontalHeader().setStretchLastSection(False)
     table.viewport().removeEventFilter(_FIT_ON_RESIZE)

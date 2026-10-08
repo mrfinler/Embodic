@@ -72,7 +72,6 @@ class BoardMarks:
     hover tooltip of its copper.
     """
 
-    name: str  # the phase letter of a per-phase board (screens.md 4.1), "" for a board with every phase
     anchors: tuple[LabelAnchor, ...]  # priority order of embodic.geometry.labels
     coils: tuple[CoilMark, ...]  # every coil on every layer, with its eye disc
     pads: tuple[Box, ...]  # labels keep clear of these
@@ -244,16 +243,10 @@ def _label_of_path(board: Layout, anchors: tuple[LabelAnchor, ...]) -> dict[int,
     return named
 
 
-def _board_name(board: Layout, per_phase: bool) -> str:
-    phases = {p.phase for p in board.paths if p.phase is not None}
-    return next(iter(phases)).value if per_phase and len(phases) == 1 else ""
-
-
-def board_marks(board: Layout, per_phase: bool) -> BoardMarks:
+def board_marks(board: Layout) -> BoardMarks:
     """Return the labels, eye fills and pad boxes of one board; the worker calls this (the eye search is slow)."""
     anchors = label_anchors(board)
     return BoardMarks(
-        name=_board_name(board, per_phase),
         anchors=anchors,
         coils=tuple(coil_marks(board)),
         pads=pad_boxes(board),
@@ -327,8 +320,7 @@ def geometry_scene(outcome: ComputeOutcome) -> GeometryScene | None:
         return None
     boards = outcome.boards.boards
     layers = tuple(dict.fromkeys(layer for board in boards for layer in board.copper_layers))
-    per_phase = len(boards) > 1
-    return GeometryScene(boards=boards, layers=layers, marks=tuple(board_marks(b, per_phase) for b in boards))
+    return GeometryScene(boards=boards, layers=layers, marks=tuple(board_marks(board) for board in boards))
 
 
 def phases_drawn(boards: Sequence[Layout]) -> tuple[Phase, ...]:
