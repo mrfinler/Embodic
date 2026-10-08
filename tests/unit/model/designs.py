@@ -52,7 +52,8 @@ def _xcoil_rotor() -> RotorSpec:
 
 
 def _xcoil_design(winding: WindingSpec, copper_count: int) -> DesignParameters:
-    screws = (ScrewPattern(size="M3", fit=ScrewFit.NORMAL, count=8, pitch_radius_mm=44.5),)
+    # 3.4 mm: M3 normal fit, JIS B 1001 grade 2 (EV-87) and ASME B18.2.8 normal (EV-88); an example value (D-032d).
+    screws = (ScrewPattern(size="M3", fit=ScrewFit.NORMAL, count=8, pitch_radius_mm=44.5, hole_diameter_mm=3.4),)
     return DesignParameters(
         name="Xcoil defaults example",
         phases=3,

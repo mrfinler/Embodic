@@ -53,6 +53,24 @@ def test_bv01_trace_width(value, code):
     assert [(i.code, i.pointers) for i in outcome.issues] == [(code, ("/winding/coil/trace_width_mm",))]
 
 
+@pytest.mark.req("REQ-F-14", "REQ-F-24")
+@pytest.mark.parametrize(
+    ("value", "code"),
+    [
+        (0.0, "INVALID_NON_POSITIVE"),
+        (-3.4, "INVALID_NON_POSITIVE"),
+        (math.nan, "INVALID_TYPE"),
+        ("3.4", "INVALID_TYPE"),
+    ],
+)
+def test_screw_hole_diameter_must_be_a_positive_number(value, code):
+    """D-031a. Defect caught: a hole that cannot be drilled (diameter 0 or less, NaN, text) reaching the outline."""
+    pointer = "/outline/screws/0/hole_diameter_mm"
+    outcome = _parse_with(serpentine_design(), pointer, value)
+    assert isinstance(outcome, DraftIncomplete)
+    assert [(i.code, i.pointers) for i in outcome.issues] == [(code, (pointer,))]
+
+
 @pytest.mark.req("REQ-F-14")
 @pytest.mark.parametrize("r_outer_mm", [18.0, 10.0])
 def test_bv02_spiral_radius_order(r_outer_mm):

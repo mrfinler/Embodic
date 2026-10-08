@@ -5,7 +5,7 @@ import re
 
 import pytest
 
-from embodic.model.fields import FIELD_BY_KEY, FIELDS, FieldGroup, FieldKind, Sign, field_specs
+from embodic.model.fields import FIELD_BY_KEY, FIELDS, FieldGroup, FieldKind, Limits, Sign, field_specs
 from embodic.model.schema import ValueType, field_key, leaves
 from embodic.model.vocabulary import TopologyKind
 from embodic.units import Unit
@@ -44,8 +44,8 @@ def test_every_leaf_has_exactly_one_field_and_every_field_a_leaf(topology):
 def test_field_counts_per_topology():
     """Defect caught: a topology silently losing or gaining inputs (counts pinned from the first run)."""
     counts = {topology.value: len(field_specs(topology)) for topology in TopologyKind}
-    assert counts == {"spiral": 113, "serpentine": 101, "wave": 93}
-    assert len(FIELDS) == 134
+    assert counts == {"spiral": 114, "serpentine": 102, "wave": 94}
+    assert len(FIELDS) == 135
 
 
 @pytest.mark.req("REQ-N-24")
@@ -111,10 +111,19 @@ def test_screens_v2_widgets_bind_their_field(key, widget_id):
 
 @pytest.mark.req("REQ-N-24")
 def test_screw_patterns_bind_to_the_screw_table():
-    """R6. Defect caught: a screw leaf bound to the removed `param-screw-fit` or to no widget."""
+    """R6, D-031a. Defect caught: a screw leaf bound to the removed `param-screw-fit` or to no widget."""
     screws = [spec for spec in FIELDS if spec.pointer.startswith("/outline/screws")]
-    assert len(screws) == 6
-    assert {spec.widget_id for spec in screws} == {"screw-table"}
+    assert len(screws) == 7
+    assert {spec.widget_id for spec in screws if not spec.pointer.endswith("/hole_diameter_mm")} == {"screw-table"}
+
+
+@pytest.mark.req("REQ-F-24", "REQ-N-24")
+def test_screw_hole_diameter_is_a_required_positive_mm_input_with_its_own_widget():
+    """D-031a, interfaces.md section 2.2 row. Defect caught: a default or unit-less hole diameter, a missing widget."""
+    spec = FIELD_BY_KEY["/outline/screws/*/hole_diameter_mm"]
+    assert (spec.kind, spec.unit, spec.required, spec.neutral_value) == (FieldKind.DESIGN, Unit.MM, True, None)
+    assert (spec.group, spec.widget_id) == (FieldGroup.FASTENERS, "param-screw-hole-diameter")
+    assert (spec.limits, spec.step, spec.topologies) == (Limits(sign=Sign.POSITIVE), None, frozenset(TopologyKind))
 
 
 @pytest.mark.req("REQ-T-06")
