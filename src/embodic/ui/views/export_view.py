@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from PySide6.QtCore import QUrl
+from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -78,9 +78,10 @@ class ExportDialog(QDialog):
             icon = themed_icon(CHECK_ICONS[item.state], tokens)
             if icon is not None:
                 row.setIcon(icon)
-            row.setData(0x0100, item.state)
+            row.setData(Qt.ItemDataRole.UserRole, item.state)
             self.checklist.addItem(row)
-        self.checklist.setMaximumHeight(110)
+        self.checklist.setWordWrap(True)
+        self.checklist.setMaximumHeight(150)
         self.problem = QLabel()
         self.problem.setObjectName("export-problem")
         self.problem.setProperty("class", "hint")

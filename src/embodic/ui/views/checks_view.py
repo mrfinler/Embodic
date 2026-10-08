@@ -124,8 +124,9 @@ class DrcTab(QWidget):
         self.icon.setVisible(table is not None and icon is not None)
         if icon is not None:
             self.icon.setPixmap(icon.pixmap(16, 16))
-        self.note.setVisible(table is not None and table.note is not None)
-        self.note.setText(table.note or "" if table is not None else "")
+        note = table.note if table is not None else None
+        self.note.setVisible(note is not None)
+        self.note.setText(note or "")
         rows = table.rows if table is not None else ()
         self.model.setRowCount(0)
         fail_icon = themed_icon("check-fail", tokens)

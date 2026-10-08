@@ -85,7 +85,6 @@ MIN_SIZE_PX = (960, 540)
 THREE_PANE_FROM_PX = 1280
 HOME_PLACEHOLDER = "%USERPROFILE%"
 EXPORT_ACTIONS = ("act-export-svg", "act-export-dxf", "act-export-pdf", "act-export-all")
-RESULTS_TABS = ("tab-results", "tab-drc", "tab-back-emf", "tab-torque-speed", "tab-compare")
 
 
 def redact_home(text_with_paths: str) -> str:
@@ -148,7 +147,6 @@ class MainWindow(QMainWindow):
         appearance.theme.subscribe(lambda _: self.apply_theme())
         appearance.phase_render_mode.subscribe(lambda _: self._render())
         self.canvas.cursor_moved.connect(self._show_cursor)
-        self.compare.reference.subscribe(lambda _: self._render())
         self._shortcuts()
         self.apply_theme()
         self._show_issues()

@@ -48,11 +48,11 @@ def grab(app: QApplication, widget: QWidget, path: Path) -> None:
     widget.grab().save(str(path))
 
 
-def tab(window: MainWindow, tab_id: str, app: QApplication) -> None:
-    """Bring a results tab forward and give it most of the centre."""
+def tab(window: MainWindow, tab_id: str, app: QApplication, canvas_px: int = 300) -> None:
+    """Bring a results tab forward; the canvas keeps ``canvas_px`` of the centre height."""
     window.show_results_tab(tab_id)
     app.processEvents()
-    window.centre_split.setSizes([300, 360])
+    window.centre_split.setSizes([canvas_px, 660 - canvas_px])
     app.processEvents()
 
 
@@ -82,7 +82,7 @@ def main(out_dir: Path) -> int:
         window.appearance.set_theme(ThemeName.LIGHT)
         window.session.edit("/operating/dc_link_v", 24.0)
         settle(app, window)
-        tab(window, "tab-torque-speed", app)
+        tab(window, "tab-torque-speed", app, canvas_px=60)
         grab(app, window, out_dir / "torque_speed_d08_dc24v_light.png")
 
         window.session.load_example(D08)
@@ -90,7 +90,7 @@ def main(out_dir: Path) -> int:
         window.compare_tab.set_reference.click()
         window.session.load_example(D14)
         settle(app, window)
-        tab(window, "tab-compare", app)
+        tab(window, "tab-compare", app, canvas_px=60)
         grab(app, window, out_dir / "compare_d08_vs_12c14p_light.png")
 
         window.session.load_example(WAVE)

@@ -202,8 +202,7 @@ class ResultCard(QFrame):
 
     def disclosure_text(self) -> str:
         """Return the text of the open disclosure, section by section (for tests and screen readers)."""
-        labels = [w for w in self.how.findChildren(QLabel)]
-        return "\n".join(label.text() for label in labels)
+        return "\n".join(label.text() for label in self.how.findChildren(QLabel))
 
     def _copy(self) -> None:
         if self.row is not None:
@@ -368,10 +367,8 @@ class CompareTab(QWidget):
         layout = QVBoxLayout(self)
         layout.addLayout(top)
         layout.addWidget(self.empty)
-        body = QHBoxLayout()
-        body.addWidget(self.table, 3)
-        body.addWidget(self.chart, 2)
-        layout.addLayout(body, 1)
+        layout.addWidget(self.table, 3)
+        layout.addWidget(self.chart, 2)
         vm.reference.subscribe(lambda _: self.refresh())
         self.confirm: QWidget | None = None
 

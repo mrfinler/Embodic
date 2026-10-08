@@ -235,8 +235,10 @@ class ChartWidget(QWidget):
         for series in model.series:
             path = QPainterPath()
             for i, (x, y) in enumerate(zip(model.xs, series.ys, strict=True)):
-                point = to_px(x, y)
-                path.moveTo(point) if i == 0 else path.lineTo(point)
+                if i == 0:
+                    path.moveTo(to_px(x, y))
+                else:
+                    path.lineTo(to_px(x, y))
             painter.setPen(series_pen(series, self.tokens, self.mode))
             painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.drawPath(path)
