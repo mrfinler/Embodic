@@ -126,7 +126,7 @@ def test_ut_exp_05_failed_drc_refuses_without_confirmation(
     outcome = outcome_of(WAVE)
     refused = write(outcome, tmp_path, False)
     assert isinstance(refused, ExportRefused) and refused.reason == "drc_errors_not_confirmed"
-    assert refused.issues[0].code == "EXPORT_DRC_ERRORS_NOT_CONFIRMED" and refused.issues[0].value == 186
+    assert refused.issues[0].code == "DRC_EXPORT_NOT_CONFIRMED" and refused.issues[0].value == 186
     assert {i.code for i in refused.issues[1:]} == {"DRC_TRACE_TRACE", "DRC_TRACE_VIA"}
     assert list(tmp_path.iterdir()) == []
     written = write(outcome, tmp_path, True)

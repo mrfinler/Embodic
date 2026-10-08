@@ -1,7 +1,7 @@
 """Dependency-free PDF 1.4 writer: A4 pages of text and vector paths in the standard Helvetica fonts, no embedding.
 
 Structure after Xcoil report.js Doc() (l.23-80), the team's own code. Text is WinAnsi; characters outside it are
-replaced by ASCII spellings (``Ω`` -> ``ohm``) so the standard fonts can show every value.
+replaced by ASCII spellings (the ohm sign becomes ``ohm``) so the standard fonts can show every value.
 """
 
 import math
@@ -11,7 +11,16 @@ from dataclasses import dataclass, field
 PAGE_W = 595.28
 PAGE_H = 841.89
 FONTS = {"F1": "Helvetica", "F2": "Helvetica-Bold"}
-_SUBSTITUTE = {"−": "-", "Ω": "ohm", "√": "sqrt", "≤": "<=", "≥": ">=", "π": "pi", "ε": "eps", "×": "x"}
+_SUBSTITUTE = {
+    "\u2212": "-",  # minus sign
+    "\u03a9": "ohm",
+    "\u221a": "sqrt",
+    "\u2264": "<=",
+    "\u2265": ">=",
+    "\u03c0": "pi",
+    "\u03b5": "eps",
+    "\u00d7": "x",
+}
 
 
 def _f(value: float) -> str:
@@ -43,7 +52,9 @@ def rgb(colour_hex: str) -> str:
     return " ".join(_f(int(colour_hex[i : i + 2], 16) / 255) for i in (1, 3, 5))
 
 
-def arc_bezier(cx: float, cy: float, r: float, start: float, sweep: float) -> list[tuple[float, ...]]:
+def arc_bezier(
+    cx: float, cy: float, r: float, start: float, sweep: float
+) -> list[tuple[float, float, float, float, float, float]]:
     """Return cubic Bezier segments (x1, y1, x2, y2, x3, y3) of an arc, at most a quarter turn each."""
     pieces = max(1, math.ceil(abs(sweep) / (math.pi / 2) - 1e-9))
     step = sweep / pieces

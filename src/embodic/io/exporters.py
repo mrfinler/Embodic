@@ -108,18 +108,32 @@ def metadata_fields(metadata: ExportMetadata) -> tuple[tuple[str, str], ...]:
     )
 
 
-def _issue(code: str, category: IssueCategory, **extra: float | int | str | None) -> ValidationIssue:
+def _issue(
+    code: str,
+    category: IssueCategory,
+    *,
+    value: float | int | str | None = None,
+    limit: float | int | str | None = None,
+    hint: str = "",
+) -> ValidationIssue:
     return ValidationIssue(
-        code=code, category=category, severity=Severity.ERROR, message=message_for(code), pointers=(), **extra
+        code=code,
+        category=category,
+        severity=Severity.ERROR,
+        message=message_for(code),
+        pointers=(),
+        value=value,
+        limit=limit,
+        hint=hint,
     )
 
 
 def _drc_failures(reports: tuple[DrcReport, ...] | None) -> tuple[ValidationIssue, ...]:
     """Return the confirmation issue and one issue per failed check kind of each board, in board order."""
     if reports is None:
-        return (_issue("EXPORT_DRC_ERRORS_NOT_CONFIRMED", IssueCategory.DRC, value="DRC did not run"),)
+        return (_issue("DRC_EXPORT_NOT_CONFIRMED", IssueCategory.DRC, value="DRC did not run"),)
     total = sum(report.violation_count for report in reports)
-    issues = [_issue("EXPORT_DRC_ERRORS_NOT_CONFIRMED", IssueCategory.DRC, value=total)]
+    issues = [_issue("DRC_EXPORT_NOT_CONFIRMED", IssueCategory.DRC, value=total)]
     for board, report in enumerate(reports, start=1):
         failed = {violation.kind for violation in report.violations}
         for summary in report.summaries:
@@ -139,7 +153,9 @@ def _drc_failures(reports: tuple[DrcReport, ...] | None) -> tuple[ValidationIssu
 def exportable_boards(outcome: ComputeOutcome, *, allow_drc_errors: bool) -> tuple[Layout, ...] | ExportRefused:
     """Return the boards to draw, or the refusal: no layout, or a DRC that did not pass without confirmation."""
     if outcome.boards is None:
-        return ExportRefused(reason="no_layout", issues=(_issue("EXPORT_NO_LAYOUT", IssueCategory.UNBUILDABLE),))
+        return ExportRefused(
+            reason="no_layout", issues=(_issue("UNBUILDABLE_EXPORT_NO_LAYOUT", IssueCategory.UNBUILDABLE),)
+        )
     if not drc_passed(outcome) and not allow_drc_errors:
         return ExportRefused(reason="drc_errors_not_confirmed", issues=_drc_failures(outcome.drc))
     return outcome.boards.boards
@@ -147,7 +163,7 @@ def exportable_boards(outcome: ComputeOutcome, *, allow_drc_errors: bool) -> tup
 
 def no_screws() -> ExportRefused:
     """Return the refusal of a screws drawing for a board without screw holes."""
-    return ExportRefused(reason="no_screws", issues=(_issue("EXPORT_NO_SCREWS", IssueCategory.INVALID),))
+    return ExportRefused(reason="no_screws", issues=(_issue("INVALID_EXPORT_NO_SCREW_HOLES", IssueCategory.INVALID),))
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
