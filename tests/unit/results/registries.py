@@ -1,7 +1,9 @@
 """Registry builders for the results tests: raw packaged JSON, EC-05 in its contract shape, all tests passed."""
 
 import dataclasses
+import importlib.util
 import json
+from pathlib import Path
 
 from embodic.paths import resource_root
 from embodic.results.registry import Registry, parse_registry
@@ -16,6 +18,17 @@ EC05_CONTRACT_FIELDS = {
     "independent_oracles": ["OR-01"],
     "dependent_oracles": ["OR-07", "OR-08"],
 }
+
+
+REPO = Path(__file__).resolve().parents[3]
+
+
+def load_sync_tool():
+    """Import tools/sync_registry.py, which is a script and not a package module."""
+    spec = importlib.util.spec_from_file_location("sync_registry", REPO / "tools" / "sync_registry.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def raw_documents() -> tuple[dict, dict]:

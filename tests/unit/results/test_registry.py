@@ -2,11 +2,12 @@
 
 import copy
 import dataclasses
+import json
 import re
 from pathlib import Path
 
 import pytest
-from tests.unit.results.registries import raw_documents
+from tests.unit.results.registries import load_sync_tool, raw_documents
 
 from embodic.model.fields import FIELDS
 from embodic.model.schema import pattern_of
@@ -31,10 +32,19 @@ CONSTANTS = {
 
 @pytest.mark.req("REQ-T-04")
 def test_registry_packaged_counts_and_versions(packaged):
-    """Catches a loader that drops entries or a version not tied to the synced files."""
-    assert len(packaged.equations) == 30
-    assert len(packaged.evidence) == 108  # entries in resources/evidence/evidence.v1.json after U-S3c
-    assert re.fullmatch(r"v1\+[0-9a-f]{12}\.[0-9a-f]{12}", packaged.version)
+    """Catches a loader that drops entries or a packaged copy that fell behind its source (D-040b).
+
+    The expected counts and version come from the source documents through the filter tools/sync_registry.py
+    applies, so a legitimately added EQ or EV row passes and a stale packaged copy fails.
+    """
+    tool = load_sync_tool()
+    expected = tool.expected_copies()
+    equations = json.loads(expected["equations.v1.json"])["equations"]
+    evidence = json.loads(expected["evidence.v1.json"])["entries"]
+    assert len(packaged.equations) == len(equations)
+    assert len(packaged.evidence) == len(evidence)
+    digests = [tool.sha256_of(expected[name])[:12] for name in ("equations.v1.json", "evidence.v1.json")]
+    assert packaged.version == f"v1+{digests[0]}.{digests[1]}"
     assert packaged.passed_tests == frozenset()
 
 
