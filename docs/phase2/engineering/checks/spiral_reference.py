@@ -333,9 +333,13 @@ def closed_form(g, N):
 
 
 def via_count(Q, groups, v=1):
-    """Step G6 via plan: groups = list of parallel-pair counts per series group (answers_to_agents.md 3.1)."""
+    """Step G6 via plan (revision 2026-10-08, U-E6): k centre, k - 1 transfer and 2 terminal vias per coil.
+
+    groups = list of parallel-pair counts per series group (answers_to_agents.md 3.1); a terminal via is also the
+    stitch via of an end group with more than one pair, so the count does not depend on the group sizes.
+    """
     k = len(groups)
-    per_coil = 2 * k - 1 + (1 if groups[0] > 1 else 0) + (1 if groups[-1] > 1 else 0)
+    per_coil = 2 * k + 1
     return {"centre_vias_per_coil": k, "per_coil": per_coil, "total": Q * v * per_coil}
 
 

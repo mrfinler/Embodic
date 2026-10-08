@@ -21,6 +21,11 @@ straight-end chord levels. G3 gives the final `TURNS_EXCEED_LIMIT` texts. G9 giv
 and the filleted CF-11 and CF-10 lengths. The acceptance tolerance for fillets changes. `checks/spiral_reference.py`
 prints the per-corner table (`--corners`) and the stadium frame.
 
+Revision 2026-10-08 (U-E6): G6 gives the series via fan that passes DRC on CF-11 and D08 (DEF-M2d4-02), the via count
+2k + 1 per coil (UT-GEO-13), and forbids pairs rotated against each other. G2 states that stadium ends stay refused
+with `UNSUPPORTED_END_STYLE`. Worked examples 1 and 2 gain the fan numbers; their per-turn tables are unchanged.
+`checks/series_fan_check.py` prints the fan and its DRC runs.
+
 ## Conventions
 
 - Canonical coil: centred on the +x axis, half-angle h = π/Q. The left sector edge is at +h (y > 0), the right edge at −h.
@@ -114,6 +119,10 @@ on the sides and w_end + s on the ends.
   (levels 24.0267 and 26.7313 mm). The right side is 5.5434 mm on every round turn (the feet of two fixed centres on
   parallel lines), against 19.5017 mm for arc ends. Turn 9's right side is 2.7007 mm. The closing (G5) and its eye
   bound with the stadium outer arc (|V − c_O| ≤ ρ_O,N−1 − w/2 − s − m) are `not tested`, so no turn count is given.
+  Closing (revision 2026-10-08 (U-E6), `not tested`). The closing, its via placement, the turn count and a DRC run
+  are not done in U-E6; the timebox went to the G6 fan. Until a reference closing with a DRC run exists, the generator
+  refuses every design with `end_style = stadium` with `UNSUPPORTED_END_STYLE` (D-033 e makes it a catalogue code),
+  pointer `/winding/coil/end_style`. The construction above stays the frame for that unit.
   `UNSUPPORTED_END_STYLE` (D-032 f). The generator refuses `end_style = stadium` while this construction is not
   implemented. After it is implemented, it still refuses stadium when any of these holds: radial sides (the side
   lines are not parallel, so no concentric family exists); w_out ≠ w or w_in ≠ w (the end pitch must equal the side
@@ -278,23 +287,110 @@ via and layer Y's mirrored side lands on the same point. There is no lead.
   same-net path whose end point lies on it, `src/embodic/drc/items.py` `exempt_pairs`) covers it. No new exemption.
   Clearances of worked example 2 are in its table.
 
-### G6 Terminals, layer pairs and the via plan
+### G6 Terminals, layer pairs and the via plan (revision 2026-10-08 (U-E6))
 
 - Terminal via ring: r_T = r_outer + s + pad/2. The entry terminal of layer X sits at angle
   a_V = min(angle of the start corner, h − asin((max(pad, bw) + s)/(2r_T))), so terminals of neighbouring coils stay
   max(pad, bw) + s apart (Xcoil `sectorCoilX`). A straight stub joins the start corner to the terminal via. Layer Y ends
   at the mirror terminal (angle −a_V).
-- Via plan (answers_to_agents.md §3.1, through vias only per D-015, v vias per transition): k series groups, group g with
-  n_g parallel pairs. Per coil: k centre vias, k − 1 transfer vias, plus one stitch via at an end group with n > 1.
-  Total N_via = Q·v·(2k − 1 + [n₁ > 1] + [n_k > 1]).
+- Via plan (revision 2026-10-08 (U-E6); answers_to_agents.md §3.1, through vias only per D-015, v vias per transition):
+  k series groups, group g with n_g parallel pairs. Per coil: k centre vias, k − 1 transfer vias and 2 terminal vias,
+  so 2k + 1. A terminal via is also the stitch via of an end group with n > 1. Total N_via = Q·v·(2k + 1). This is the
+  UT-GEO-13 formula. The v1.0 formula Q·v·(2k − 1 + [n₁ > 1] + [n_k > 1]) left out the terminal vias of end groups
+  with one pair; the generator places them in every case (`generators/spiral/generate.py` `_coil_vias`, roles
+  terminal, centre, transfer; `verified` by reading, and `checks/series_fan_check.py` counts 5 per coil for k = 2 and 7
+  for k = 3).
 - Parallel pairs (one group): all X layers identical, all Y layers identical, one shared centre via, stitch vias at the
   two terminals.
 - Series groups (k > 1): the exit of group g is the entry of group g + 1. Group g + 1 starts at the corner where group g
-  ended, so its X layer is the layer-X path without its first outer arc, and the two corners alternate. Through vias of
-  different groups at the same corner need separate positions (terminal fan: level ℓ at angle a_V − ℓ·2 asin((pad + s)/(2r_T))).
-  Status `unresolved`: no worked example; the fan must pass G9 DRC. This is an open question in the report.
-- Rotated layer groups: a pair with rotation π/Q places its coils between the coils of the unrotated pairs (Phase 1 M3).
-  Coil angles become θ₀ + (k + ½)·2π/Q for that pair. The phase assignment G7 is computed per pair from its own angles.
+  ended, so the two corners alternate: even groups enter on the CCW side, odd groups on the CW side and without the
+  first outer arc. The v1.0 terminal fan (level ℓ at a_V − ℓ·2 asin((pad + s)/(2r_T)), straight stubs from the corner)
+  fails DRC (DEF-M2d4-02): the stub to level 1 passes the level-0 via at −0.0779 mm on CF-11, and two legs 0.8 mm
+  apart overlap at bus width 1.0 mm. The fan below replaces it.
+
+Series via fan (revision 2026-10-08 (U-E6); construction `inferred`, numbers `verified (by computation)` with
+`.venv/bin/python docs/phase2/engineering/checks/series_fan_check.py`). Via sizes are the example values of the worked
+examples (pad 0.6 mm, `example`; D08 pad `assumption`).
+
+1. Ring vias. A coil has k + 1 ring vias on the terminal ring r_T: via 0 is the entry, vias 1 to k − 1 are transfers,
+   via k is the exit. Via i lies on the CCW side for even i and on the CW side for odd i, at fan level ℓ = ⌊i/2⌋ and
+   angle ±a_ℓ. A side holds L = ⌊k/2⌋ + 1 levels at most.
+2. Pitch. c_f = max(pad, w, bw) + s and Δa = asin(c_f/r_T).
+3. Angles. a_0 = a_V, the terminal angle above. a_1 = min(a_V − Δa, h − asin((d_0 + w + s)/R_o0)), and
+   a_ℓ = a_1 − (ℓ − 1)·Δa for ℓ ≥ 2. The first term keeps a radial stub at a_1 clear of via 0. The second keeps the
+   stub foot w + s from the side line d_0 that ends at the corner on the same layer (for parallel sides d_0 + w + s =
+   d_1, so the foot lies where line d_1 meets R_o0 or nearer the centre line).
+4. Stubs. Each layer of a coil carries one stub. Group g's layer X enters at via g, its layer Y leaves at via g + 1.
+   - Level 0 keeps the U-E3 straight stub between the via and the corner (A_0 on the CCW side, B_0 on the CW side).
+     A single-pair coil is therefore unchanged.
+   - Level ℓ ≥ 1 is a radial stub at ±a_ℓ from r_T to R_o0, joined to outer arc 0 cut at that angle. On layer X the
+     outer arc 0 starts at ±a_ℓ instead of A_0: from +a_ℓ for an even group, and only the piece from −a_ℓ to B_0 for an
+     odd group. On layer Y the path is the mirror of the whole body (outer arc 0 included), and its last outer arc,
+     which runs clockwise from A_0, ends at ±a_ℓ: at −a_ℓ for an even group, at +a_ℓ (the piece from A_0) for an odd
+     group. The cut arc has no radial length, so it adds or removes no EMF of its own (G3 jog argument).
+5. Legs. The G8 legs leave vias 0 and k radially. For even k both lie on the CCW side, k/2 levels apart.
+6. Refusal. The generator returns `UNBUILDABLE_SERIES_VIA_FAN_DRC` when 2r_T sin a_L−1 < c_f (the innermost vias of
+   the two sides would come closer than the pitch) or when the board DRC of D-020 reports any violation.
+
+Clearance proof (closed form, `inferred`). The chord between neighbouring levels is c = 2r_T sin(Δa/2) ≥ r_T sin Δa =
+c_f.
+
+- Fan via to outer arc 0, every layer: r_T − pad/2 − (R_o0 + w/2) = s, from the definition of r_T.
+- Via to via: c − pad ≥ max(w, bw) + s ≥ s.
+- Radial stub at a_ℓ to vias ℓ ± 1: a via is at least as far from the stub as from the stub's line, r_T sin Δa = c_f,
+  so the clearance is at least c_f − w/2 − pad/2 ≥ s.
+- Straight level-0 stub to via 1: the stub leaves via 0 away from via 1 (it lies at angles ≥ a_V), so its nearest
+  point is at least as far as via 0's centre. Measured, not proved in general.
+- Leg to the next via: c − bw/2 − pad/2 ≥ s. Leg to leg (even k): c − bw ≥ s.
+- Stub foot to the side line d_0 on the same layer: the side, the cut arc and the stub are three main primitives, so
+  D-022 rule 1 does not exempt the side from the stub. R_o0 sin(h − a_1) − d_0 − w ≥ s by the second term of a_1.
+- Neighbour coils: the nearest neighbour via is its level 0, max(pad, bw) + s from ours (terminal rule). Its other
+  levels lie farther from the shared sector edge.
+- The other stubs of a coil lie on other layers. Through vias are on every layer, so every stub was checked against
+  every via above.
+
+| Clearance (mm) | CF-11 (s 0.2) | D08 (s 0.8) |
+|---|---|---|
+| level angles a_0, a_1 (deg) | 14.1070, 12.3209 | 13.1376, 9.4048 (corner term) |
+| via 0 to via 1, pads | 0.6001 | 2.3984 |
+| radial stub (level 1) to via 0 | 0.6500 | 1.6669 |
+| straight stub (level 0) to via 1 | 0.6501 | 1.6669 |
+| leg to next via; leg to leg (even k) | 0.4001; 0.2001 | 2.1984; 1.9984 |
+| stub foot to side line d_0, same layer | 0.9145 | 0.8000 |
+| fan via to outer arc 0 | 0.2000 | 0.8000 |
+| innermost CCW via to innermost CW via | 15.8308 | 14.4886 |
+
+DRC result (`verified (by computation)`, `run_drc` on main's generator with this fan in place of
+`series.series_coil`, in the check process only; sharp corners; no exemption beyond interfaces.md §7):
+
+| Board | v1.0 fan | U-E6 fan, whole board | U-E6 fan, fan copper alone |
+|---|---|---|---|
+| CF-11, k = 3 (L1 to L6) | 36 violations, trace-via −0.0779 | 0 violations, smallest 0.2000 (trace-trace, trace-via, via-via, pad-trace) | 0, trace-trace 0.2000, trace-via 0.2000 |
+| CF-11, k = 2 | 48, trace-trace −0.1792 | 0, smallest 0.2000 | 0, 0.2000 |
+| D08, k = 3, 2 turns | 84, trace-via −0.1520 | 0, smallest 0.8000 | 0, 0.8000 |
+| D08, k = 2, 2 turns | 42, trace-via −0.1520 | 0, smallest 0.8000 | 0, 0.8000 |
+
+The smallest clearance equals s on every board. The coil bodies set it (turns at the pitch, G3), and so does the fan
+via to outer arc 0. D08 builds 2 turns with k > 1 because the half closing takes one centre via (G5). "Fan copper alone"
+is each stub with the primitive it joins, the legs, the bus ring arcs and the ring-side vias. The DRC checked no fan
+via pair in those runs, and no via pair at all on the D08 boards, because all lie more than c_f apart. The via-to-via
+values therefore come from the closed-form table above.
+
+Status: series layer pairs stay `unresolved` (D-020) until a fabricated board confirms them. With fillets, and with
+radial sides (the second term of a_1 then uses the side ray), the fan is `not tested`.
+
+- Pairs rotated against each other (revision 2026-10-08 (U-E6)). A series or parallel group joins the copper of one
+  coil position through its centre, transfer and terminal vias. A pair rotated by π/Q has no coil at that position:
+  its coils sit half a coil pitch away (Phase 1 M3, coil angles θ₀ + (k + ½)·2π/Q). G7 assigns each pair's phases from
+  its own angles. The shift is p·π/Q electrical: 8 × 15° = 120° for CF-11, so the rotated coil belongs to another phase,
+  and 5 × 15° = 75° for D08, which lies on no phase axis (`verified (by computation)`, arithmetic). A coil-level link
+  across the two rotations would join coils of different phases. The combination is therefore forbidden (`inferred`):
+  all pairs of one winding share one rotation. Pairs at two rotations could be joined only at phase level, as
+  separate G8 chains joined on the bus rings. This spec does not define that. Proposed catalogue entry for Agent 3
+  (code, pointer, English text): `UNBUILDABLE_PAIRS_ROTATED_APART`, `/winding/layers/pairs`, "Every layer pair of a
+  winding needs the same rotation. Pairs are joined coil by coil, and a pair rotated by half a coil pitch has no coil
+  at the same position." Today `generate.py` `_unsupported` returns `UNBUILDABLE_SPIRAL_OPTION_NOT_IMPLEMENTED` with
+  the same pointer. UT-GEO-11 then tests the refusal, not a build.
 
 ### G7 Phase assignment from the exact star of slots (EQ-08)
 
@@ -413,8 +509,11 @@ Inputs: Q 12, 2p 16, r 18.0 to 38.0 mm, w 0.5, s 0.2, gap 0.2, via pad 0.6, bus 
 
   Smallest clearance over all non-adjacent copper pairs 0.2000 mm (outer arc 1 to left side 1); smallest trace-to-via
   0.2000 mm (outer arc 0 to its own terminal via). The v1.0 value was −0.2271 mm (DEF-M2d-01).
-- G6: r_T 38.5 mm; terminal angle 14.107° (start corner 14.469°). Vias: single pair 12; three parallel pairs 36; three
-  series groups 60.
+- G6 (revision 2026-10-08 (U-E6)): r_T 38.5 mm; terminal angle 14.107° (start corner 14.469°). Vias (2k + 1 per
+  coil): single pair 36; three parallel pairs 36; three series groups 84. Series fan, three groups on L1 to L6: c_f
+  1.2 mm, levels 14.1070° and 12.3209°; vias 0 and 2 on the CCW side, 1 and 3 on the CW side; layers L4, L5 and L6
+  take radial stubs at level 1. DRC 0 violations, smallest clearance 0.2000 mm (G6 tables). The per-turn table above
+  is unchanged: the fan changes only the stubs and outer arc 0 of the level-1 layers.
 - G8: bus ring radii 39.5, 40.7, 41.9 mm for levels 0 to 2.
 - EQ-10: 0.411684 Ω per coil-layer at 20 °C; 4 coils × 2 layers in series = 3.293473 Ω per phase before links.
 
@@ -476,6 +575,9 @@ the same turns. Numbers from `.venv/bin/python checks/spiral_reference.py` and `
   At pad 1.2 mm the centre via clearance is 1.2300 mm. Smallest clearance over all non-adjacent copper pairs 0.8000 mm
   (outer arc 1 to left side 1); smallest trace-to-via 0.8000 mm (outer arc 0 to its own terminal via). No exemption
   beyond the existing connectivity rule.
+- G6 series fan (revision 2026-10-08 (U-E6)): with k = 2 or 3 the full closing builds 2 turns (G5). c_f 2.86 mm
+  (w is the largest of pad, w and bw), levels 13.1376° and 9.4048°; the corner term sets level 1. DRC 0 violations,
+  smallest clearance 0.8000 mm (G6 tables). The per-turn table above (k = 1, half closing) is unchanged.
 - EQ-10: 0.043091 Ω per coil-layer at 50 °C; 4 coils × 2 layers = 0.344727 Ω per phase before links. D08 prints 0.39 Ω
   from the loop model (Table 4.6 p.57, calculated, not measured), so this is no validation. Revision 2026-10-08 (U-E4):
   the full generated phase is 0.485162 Ω at 50 °C, because the series chain and vias add 0.140435 Ω. The comparison
@@ -494,5 +596,8 @@ the same turns. Numbers from `.venv/bin/python checks/spiral_reference.py` and `
 - The implementation's DRC (EQ-30) reports no violation for both examples. `checks/spiral_r2_check.py` measures the
   clearances with embodic's DRC distance kernels on the reference geometry (smallest = s in both examples); the
   generator's own DRC run is `not tested` until U-M2d-2.
+- Revision 2026-10-08 (U-E6): series layer pairs (k = 2 and 3) of CF-11 and D08 with the G6 fan build with 0 DRC
+  violations and smallest clearance s; the ring vias sit at the G6 angles within 1e-9 mm; via count 2k + 1 per coil.
+  `checks/series_fan_check.py` prints the reference numbers and ends with `RESULT PASS`.
 - Per-coil flux linkage at least 0.96 of the concentric loops with the same radii for CF-11 (layer X), and at least 0.90
   of D08's three loops for CF-10 (series pair per layer; revision 2026-10-05 (U-E3b)).
