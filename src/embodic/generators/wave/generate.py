@@ -100,6 +100,31 @@ def _wants_interconnect(design: DesignParameters) -> bool:
     return conn.draw_interconnect and design.phases == 3 and conn.topology is not ConnectionTopology.OPEN
 
 
+def _external_interconnect(design: DesignParameters, frame: WaveFrame) -> tuple[ValidationIssue, ...]:
+    """Xcoil's INTERCONNECT_EXTERNAL warning (engine.js l.2190): the overlap winding cannot carry a delta connection.
+
+    Xcoil's ``else if (wantIc)`` branch sits after ``if (wantIc || conn === 'open')`` and never runs; the condition
+    here is the one its message states (D-036 d).
+    """
+    if (
+        frame.style != "overlap"
+        or not _wants_interconnect(design)
+        or design.connection.topology is not ConnectionTopology.DELTA
+    ):
+        return ()
+    code = "RANGE_WAVE_INTERCONNECT_EXTERNAL"
+    return (
+        ValidationIssue(
+            code=code,
+            category=IssueCategory.UNSUPPORTED_RANGE,
+            severity=Severity.WARNING,
+            message=message_for(code),
+            pointers=("/connection/draw_interconnect", "/connection/topology"),
+            value=ConnectionTopology.DELTA.value,
+        ),
+    )
+
+
 def _end_via(t: Track) -> int:
     """Via ring index of the via a track ends on in current direction (outer via 2k, inner via 2k + 1)."""
     if t.kind == "T":
@@ -201,4 +226,9 @@ def generate_wave_rotated(
     if isinstance(build, Unbuildable):
         return build
     layout = assemble_layout(design, build, registry)
-    return BoardStack(boards=(layout,), board_thickness_mm=design.stackup.board_thickness_mm(), board_gap_mm=0.0)
+    return BoardStack(
+        boards=(layout,),
+        board_thickness_mm=design.stackup.board_thickness_mm(),
+        board_gap_mm=0.0,
+        issues=_external_interconnect(design, frame),
+    )
