@@ -10,7 +10,6 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QHeaderView,
-    QLabel,
     QLineEdit,
     QTableWidget,
     QTableWidgetItem,
@@ -32,7 +31,7 @@ from embodic.ui.viewmodels.session import (
     parse_text,
     screw_patterns,
 )
-from embodic.ui.views.coil_panel import FieldEditor, FieldPanel, choice_text, fit_rows
+from embodic.ui.views.coil_panel import FieldEditor, FieldPanel, choice_text, fit_rows, fit_width, label_above
 
 BORE_CHOICES = ("none", "circle", "polygon")
 HOLE_WIDGET = "param-screw-hole-diameter"
@@ -68,7 +67,7 @@ class BoardRotorPanel(FieldPanel):
             bore.activated.connect(lambda index: self._choose_bore(bore.itemData(index)))
             bore.setAccessibleName(text("param-bore.label"))
             self.helpers["param-bore"] = bore
-            self._pending_bore = (QLabel(text("param-bore.label")), bore)
+            self._pending_bore = label_above(text("param-bore.label"), bore)
         if group is FieldGroup.MANUFACTURING:
             fields: tuple[tuple[str, StackupInput], ...] = (
                 ("param-copper-weight", "copper_oz"),
@@ -80,7 +79,7 @@ class BoardRotorPanel(FieldPanel):
                 edit.setPlaceholderText(text("design.unit.oz") if field == "copper_oz" else text("design.unit.mm"))
                 edit.editingFinished.connect(lambda e=edit, f=field: self._stackup_input(e, f))
                 edit.setAccessibleName(text(f"{name}.label"))
-                form.addRow(QLabel(text(f"{name}.label")), edit)
+                form.addRow(label_above(text(f"{name}.label"), edit))
                 self.helpers[name] = edit
 
     def build(self) -> None:
@@ -95,7 +94,7 @@ class BoardRotorPanel(FieldPanel):
                 (i for i, item in enumerate(names) if item and _name(item.widget()).startswith("param-bore-")),
                 form.rowCount(),
             )
-            form.insertRow(first_bore, *self._pending_bore)
+            form.insertRow(first_bore, self._pending_bore)
         self._layout.insertWidget(2, self._fasteners())
 
     def _fasteners(self) -> QGroupBox:
@@ -215,6 +214,7 @@ class BoardRotorPanel(FieldPanel):
             table.selectRow(selected)
         table.blockSignals(False)
         fit_rows(table)
+        fit_width(table)
         remove.setEnabled(bool(patterns))
         if patterns:
             row = self.session.item_row(HOLE_WIDGET, f"{SCREWS_POINTER}/{selected}/hole_diameter_mm")

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import (
     QButtonGroup,
     QComboBox,
@@ -21,16 +21,26 @@ from PySide6.QtWidgets import (
 from embodic.io.examples import list_examples
 from embodic.model.vocabulary import TopologyKind
 from embodic.ui.strings import text
+from embodic.ui.theme import ThemeTokens
 from embodic.ui.viewmodels.session import DesignSession
+from embodic.ui.views.style import themed_icon
 
 MIN_SIZE_PX = (560, 400)
+TOPOLOGY_ICON_PX = 24
+# palette(mid) is the border-control token (style.palette_for), so the boundary follows the theme (ruling g 3, F14).
+UNCHECKED_BOUNDARY_QSS = "QToolButton:!checked { border: 1px solid palette(mid); }"
 
 
 class NewDesignDialog(QDialog):
     """Names the design and fixes its topology; every value is entered in the inspector afterwards."""
 
     def __init__(
-        self, session: DesignSession, parent: QWidget | None = None, confirm_replace: Callable[[], bool] | None = None
+        self,
+        session: DesignSession,
+        parent: QWidget | None = None,
+        confirm_replace: Callable[[], bool] | None = None,
+        *,
+        tokens: ThemeTokens,
     ) -> None:
         super().__init__(parent)
         self.session = session
@@ -58,7 +68,12 @@ class NewDesignDialog(QDialog):
             button.setObjectName(f"param-topology-{topology.value}")
             button.setText(text(f"topology.{topology.value}"))
             button.setCheckable(True)
-            button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
+            icon = themed_icon(f"topology-{topology.value}", tokens)
+            if icon is not None:
+                button.setIcon(icon)
+                button.setIconSize(QSize(TOPOLOGY_ICON_PX, TOPOLOGY_ICON_PX))
+            button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+            button.setStyleSheet(UNCHECKED_BOUNDARY_QSS)
             self.topology_group.addButton(button)
             self.topology_buttons[topology] = button
             buttons.addWidget(button)

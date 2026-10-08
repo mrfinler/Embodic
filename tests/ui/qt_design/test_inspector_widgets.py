@@ -57,7 +57,7 @@ def test_the_layer_list_header_shows_every_column_title_in_full(make_shell):
     shown = [c for c in range(header.count()) if not header.isSectionHidden(c)]
     assert len(shown) == 5
     assert all(header.sectionSize(c) >= header.sectionSizeHint(c) for c in shown)
-    thickness = [table.horizontalHeaderItem(c).text() for c in shown].index("Thickness (µm)")
+    thickness = [table.horizontalHeaderItem(c).text().replace("\n", " ") for c in shown].index("Thickness (µm)")
     assert header.sectionViewportPosition(thickness) + header.sectionSize(thickness) <= table.viewport().width()
 
 

@@ -16,7 +16,7 @@ from embodic.model.schema import JsonValue
 from embodic.model.vocabulary import TopologyKind
 from embodic.ui.strings import text
 from embodic.ui.viewmodels.session import ASSIGNMENT_MODES, ASSIGNMENT_POINTER, DesignSession, assignment_mode
-from embodic.ui.views.coil_panel import FieldPanel, Segment, fit_rows, hint_label, repolish, show_hints
+from embodic.ui.views.coil_panel import FieldPanel, Segment, fit_rows, hint_label, label_above, repolish, show_hints
 
 PHASE_COLUMNS = ("coil_index", "phase", "polarity")
 _EDIT_TRIGGERS = QAbstractItemView.EditTrigger.EditKeyPressed | QAbstractItemView.EditTrigger.DoubleClicked
@@ -39,13 +39,20 @@ class PhasePanel(FieldPanel):
             lambda choice: self.session.set_assignment_mode(ASSIGNMENT_MODES[str(choice)]),
         )
         mode.setAccessibleName(text("param-phase-assign-mode.label"))
-        form.addRow(QLabel(text("param-phase-assign-mode.label")), mode)
+        form.addRow(label_above(text("param-phase-assign-mode.label"), mode))
         self.helpers["param-phase-assign-mode"] = mode
 
     def build(self) -> None:
         """Add the phase rows, then the pattern, the balance status and the phase table (spiral)."""
         super().build()
         self.pattern = hint_label("phase-pattern-string")
+        self.pattern.setProperty("class", "unit")
+        self.pattern_caption = QLabel(text("phase-pattern-string.label"))
+        self.pattern_caption.setBuddy(self.pattern)
+        self.pattern_hint = QLabel(text("phase-pattern-string.hint"))
+        self.pattern_hint.setProperty("class", "hint")
+        self.pattern.setAccessibleName(self.pattern_caption.text())
+        self.pattern.setAccessibleDescription(self.pattern_hint.text())
         self.balance = QLabel()
         self.balance.setObjectName("phase-balance-status")
         self.balance.setProperty("class", "check-state")
@@ -53,7 +60,9 @@ class PhasePanel(FieldPanel):
         section = QWidget()
         column = QVBoxLayout(section)
         column.setContentsMargins(0, 0, 0, 0)
+        column.addWidget(self.pattern_caption)
         column.addWidget(self.pattern)
+        column.addWidget(self.pattern_hint)
         column.addWidget(self.balance)
         if "param-phase-assign-mode" in self.helpers:
             table = QTableWidget(0, len(PHASE_COLUMNS))
@@ -68,6 +77,8 @@ class PhasePanel(FieldPanel):
     def refresh_helpers(self) -> None:
         """Show the assignment mode, the phase table and what the last compute says about the pattern and balance."""
         show_hints({"phase-pattern-string": self.pattern, "phase-balance-status": self.balance}, self.session)
+        for part in (self.pattern_caption, self.pattern_hint):
+            part.setVisible(not self.pattern.isHidden())
         self.balance.setProperty(
             "state", "pass" if self.balance.text() == text("phase-balance-status.balanced") else "fail"
         )

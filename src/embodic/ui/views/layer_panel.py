@@ -30,7 +30,7 @@ from embodic.ui.viewmodels.session import (
     pair_number,
     rotation_mode,
 )
-from embodic.ui.views.coil_panel import FieldEditor, FieldPanel, Segment, fit_rows
+from embodic.ui.views.coil_panel import FieldEditor, FieldPanel, Segment, fit_rows, fit_width, label_above
 
 COPPER_COUNTS = (2, 4, 6, 8)
 LAYER_COLUMNS = ("layer", "kind", "thickness", "pair", "rotation")
@@ -68,7 +68,7 @@ class LayerPanel(FieldPanel):
             count.addItem(label, copper)
         count.activated.connect(lambda index: self.session.set_stackup_input("copper_count", count.itemData(index)))
         count.setAccessibleName(text(f"{name}.label"))
-        form.addRow(QLabel(text(f"{name}.label")), count)
+        form.addRow(label_above(text(f"{name}.label"), count))
         self.helpers["copper-count"] = count
         if document.draft.topology is TopologyKind.SPIRAL:
             mode = Segment(
@@ -145,6 +145,7 @@ class LayerPanel(FieldPanel):
         rotation_spec = FIELD_BY_KEY[f"{PAIRS_POINTER}/*/rotation_rad"]
         rows: list[tuple[str, ...]] = []
         pair_rows: dict[int, int] = {}
+        tips: dict[int, str] = {}
         position = 0
         while (kind := values.get(f"{STACKUP_POINTER}/{position}/kind")) is not None:
             name = values.get(f"{STACKUP_POINTER}/{position}/name")
@@ -157,6 +158,9 @@ class LayerPanel(FieldPanel):
             rotation = display_text(rotation_spec, pair.rotation_rad) if pair is not None else ""
             if pair is not None:
                 pair_rows[len(rows)] = pair.position
+                tips[len(rows)] = text(
+                    "layer-list.joins", number=pair_number(pair), layer_in=pair.layer_in, layer_out=pair.layer_out
+                )
             rows.append((str(name), text(f"layer-list.{kind}"), micrometres, label, rotation))
             position += 1
         selected = table.currentRow()
@@ -164,13 +168,16 @@ class LayerPanel(FieldPanel):
         table.setRowCount(len(rows))
         for r, cells in enumerate(rows):
             for c, cell in enumerate(cells):
-                table.setItem(r, c, QTableWidgetItem(cell))
+                item = QTableWidgetItem(cell)
+                item.setToolTip(tips.get(r, ""))
+                table.setItem(r, c, item)
         if 0 <= selected < len(rows):
             table.selectRow(selected)
         table.blockSignals(False)
         fit_rows(table)
         for c, column in enumerate(LAYER_COLUMNS):
             table.setColumnHidden(c, column in PAIR_COLUMNS and not spiral)
+        fit_width(table)
         self._show_rotation(table, pair_rows)
         notice, message = self.helpers["layer-pairs-notice"], self.helpers["layer-pairs-notice-text"]
         assert isinstance(message, QLabel)
