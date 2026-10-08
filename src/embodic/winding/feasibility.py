@@ -19,6 +19,10 @@ class Feasibility:
     balanced: bool
     max_parallel_paths: int
 
+    def allows_parallel_paths(self, paths: int) -> bool:
+        """Return True when `paths` divides the periodicity t (D-032a; `inferred` until a source lands)."""
+        return self.periodicity % paths == 0
+
 
 def check_feasibility(coil_count: int, poles: int, phases: int = 3, *, phase_per_pair: bool = False) -> Feasibility:
     """Check a coil and pole count.

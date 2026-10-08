@@ -7,7 +7,7 @@ MESSAGES: Mapping[str, str] = {
         "The star of slots gives no balanced 3-phase winding for this coil count and pole count."
     ),
     "UNBUILDABLE_PARALLEL_PATHS_EXCEED_T": (
-        "The number of parallel paths exceeds the machine periodicity t = gcd(Q, p) = {limit}."
+        "The number of parallel paths must divide the machine periodicity t = gcd(Q, p) = {limit}."
     ),
     "UNBUILDABLE_ASSIGNMENT_COVERAGE": "The manual phase assignment must list every coil index from 0 to Q - 1 once.",
     "RANGE_DELTA_TRIPLEN": (
