@@ -167,17 +167,19 @@ def build_items(layout: Layout) -> tuple[Items, dict[int, int]]:
 class _PathEnd:
     path: CopperPath
     point: tuple[float, float]
-    group: tuple[int, ...]  # item indices of the terminating main primitive and its fillets and tapers
+    group: tuple[int, ...]  # item indices of the terminating main primitive and the fillets and tapers either side
 
 
-def _path_ends(layout: Layout, first_item: dict[int, int]) -> Iterator[_PathEnd]:
+def _path_ends(layout: Layout, items: Items, first_item: dict[int, int]) -> Iterator[_PathEnd]:
     for path in layout.paths:
         if not path.primitives:
             continue
         mains = main_indices(path.primitives)
         base = first_item[path.id]
+        slots = items.slot[base : base + len(path.primitives)]
         for k, point in ((0, path.primitives[0].start_point()), (-1, path.primitives[-1].end_point())):
-            yield _PathEnd(path, point, tuple(base + i for i, m in enumerate(mains) if m == mains[k]))
+            near_main = np.abs(slots - 2 * mains[k]) <= 1
+            yield _PathEnd(path, point, tuple(base + int(i) for i in np.flatnonzero(near_main)))
 
 
 def _inside_pad(pad: Pad, x_mm: float, y_mm: float) -> bool:
@@ -187,7 +189,8 @@ def _inside_pad(pad: Pad, x_mm: float, y_mm: float) -> bool:
 def exempt_pairs(layout: Layout, items: Items, first_item: dict[int, int]) -> IntArray:
     """Sorted keys ``i * n + j`` (i < j) of item pairs that connectivity exempts.
 
-    Exempt: a via or pad and the end group of a same-net path whose end point lies on that via or pad; the end groups
+    Exempt: a via or pad and the end group of a same-net path whose end point lies on that via or pad (the end group
+    is the terminating main primitive and the fillets and tapers either side of it); the end groups
     of different paths that meet at one via, pad or coincident end point (a node); a pad and a same-net via whose
     centre lies inside it. An interconnect path joins, whatever the nets and the via role, a via or pad its end lies on
     and every via whose centre lies within ``pad_mm / 2`` of its centreline (D-022 a and c). The end group of a path
@@ -195,7 +198,7 @@ def exempt_pairs(layout: Layout, items: Items, first_item: dict[int, int]) -> In
     whole path (T-junction, D-035 b). Primitives adjacent in one path are exempted in the engine from ``path`` and
     ``slot``.
     """
-    ends = list(_path_ends(layout, first_item))
+    ends = list(_path_ends(layout, items, first_item))
     via_base = int(np.count_nonzero(items.item_class == ItemClass.TRACE))
     pad_base = via_base + len(layout.vias)
     interconnects = frozenset(layout.circuit.interconnect_path_ids)

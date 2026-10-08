@@ -115,6 +115,40 @@ def test_ut_drc_04_other_phase_on_a_terminal_via_and_a_phase_path_on_another_net
     }
 
 
+def _reversed(prims: list) -> list:
+    """Return the same copper walked from the other end."""
+    flipped = [
+        replace(p, x1_mm=p.x2_mm, y1_mm=p.y2_mm, x2_mm=p.x1_mm, y2_mm=p.y1_mm)
+        if hasattr(p, "x1_mm")
+        else replace(p, start_rad=p.start_rad + p.sweep_rad, sweep_rad=-p.sweep_rad)
+        for p in prims
+    ]
+    return flipped[::-1]
+
+
+@pytest.mark.parametrize("walked_from_the_pad", [False, True], ids=["pad at the last end", "pad at the first end"])
+def test_ut_drc_04_end_group_holds_the_fillet_next_to_the_terminating_main_at_either_end(
+    walked_from_the_pad: bool,
+) -> None:
+    """Catches DEF-UV3-01: the fillet before the last main is not exempt from the pad the path ends on.
+
+    main0 runs east along y = 0, a half-turn fillet (r 0.25) leads to main1, 0.3 mm long, west along y = 0.5, and the
+    path ends on a 0.6 mm round pad at (3.7, 0.5). The fillet centreline ends on the pad outline, so only the end
+    group exemption (section 7, rule 2) keeps it out of the report. main0 clears the pad by 0.1 mm and stays reported.
+    """
+    prims = [
+        line(0, 0, 4, 0),
+        replace(arc(4, 0.25, 0.25, -math.pi / 2, math.pi), role=PrimitiveRole.FILLET),
+        line(4, 0.5, 3.7, 0.5),
+    ]
+    walk = _reversed(prims) if walked_from_the_pad else prims
+    board = layout(paths=[path(0, walk, net="A")], pads=[pad(0, 3.7, 0.5, w=0.6, h=0.6, net="A")])
+    report = run_drc(board, RULES)
+    assert report is not None
+    main0 = "path:0/prim:2" if walked_from_the_pad else "path:0/prim:0"
+    assert [(v.kind, v.objects) for v in report.violations] == [(DrcCheckKind.PAD_TRACE, (main0, "pad:0"))]
+
+
 def _ring_with_taps(net: str) -> tuple[CopperPath, list[Via]]:
     """Return an arc-plus-line ring on ``net`` and four vias of other nets that overlap its copper.
 
