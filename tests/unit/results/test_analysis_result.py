@@ -77,7 +77,8 @@ def test_analysis_result_every_id_resolves(packaged):
                 walk(item)
 
     walk(result)
-    assert len(found) == len(traceable_fields(AnalysisResult)) + len(traceable_fields(LayerResult)) + 4
+    phase_count = len(traceable_fields(PhaseResult))
+    assert len(found) == len(traceable_fields(AnalysisResult)) + len(traceable_fields(LayerResult)) + phase_count
     assert all(t.eq_ids and set(t.eq_ids) <= packaged.equations.keys() for t in found)
     assert all(set(t.evidence_ids) <= packaged.evidence.keys() for t in found)
 

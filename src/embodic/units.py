@@ -87,7 +87,7 @@ _DISPLAY = MappingProxyType(
         Unit.G: "g",
         Unit.G_PER_CM3: "g/cm³",
         Unit.N_M: "N·m",
-        Unit.N_M_PER_SQRT_W: "N·m/sqrt(W)",
+        Unit.N_M_PER_SQRT_W: "N·m/√W",
         Unit.RPM: "rpm",
         Unit.HZ: "Hz",
         Unit.F_PER_M: "F/m",

@@ -167,6 +167,11 @@ def _magnet_faces_winding(design: DesignParameters) -> Iterator[ValidationIssue]
     if magnet.kind == "block" and not r_in > 0:
         yield issue("INVALID_MAGNET_CROSSES_AXIS", ["/rotor/magnet/r_center_mm", "/rotor/magnet/length_mm"])
         return
+    if magnet.kind == "block" and r_in < magnet.width_mm / 2.0:
+        # EQ-04 takes asin(w / 2r) at every radius of the span; the kernel's precondition is r >= w / 2.
+        pointers = ["/rotor/magnet/r_center_mm", "/rotor/magnet/length_mm", "/rotor/magnet/width_mm"]
+        yield issue("INVALID_MAGNET_WIDER_THAN_RADIUS", pointers, value=r_in, limit=magnet.width_mm / 2.0, unit=Unit.MM)
+        return
     coil_in, coil_out = _winding_span_mm(design)
     if coil_in < coil_out and not (r_in < coil_out and r_out > coil_in):
         # No magnet radius faces the copper, so Ke is 0 and kv and THD divide by it (DEF-M2f-01).

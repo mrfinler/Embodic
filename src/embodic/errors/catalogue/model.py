@@ -23,6 +23,10 @@ MESSAGES: Mapping[str, str] = {
     "INVALID_MAGNET_CROSSES_AXIS": (
         "The block magnet reaches past the rotor axis: its centre radius must exceed half its length."
     ),
+    "INVALID_MAGNET_WIDER_THAN_RADIUS": (
+        "The block magnet is too wide for its inner radius: the inner radius must be at least half the magnet width, "
+        "{limit}{unit}."
+    ),
     "RANGE_MAGNET_OUTSIDE_WINDING": (
         "The magnet does not face the winding: its radial span must overlap the copper between the inner and outer "
         "radius."

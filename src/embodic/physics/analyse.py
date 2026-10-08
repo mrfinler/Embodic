@@ -4,6 +4,7 @@ Topology-agnostic: it reads the paths, vias, circuit and copper_z_mm of every bo
 Board k of a stack sits k * (board thickness + gap) below board 0 (inferred from BoardStack.stack_thickness_mm).
 """
 
+import cmath
 import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -296,6 +297,7 @@ def analyse(
     circ_ph = {ph: math.fsum(s.circulating_loss_w.get(ph, 0.0) for s in solutions) for ph in phases}
     m = len(phases)
     ke_ph = {ph: float(abs(emf[ph][0])) for ph in phases}
+    emf_angle_ph = {ph: cmath.phase(emf[ph][0]) for ph in phases}
     ke1 = math.fsum(ke_ph.values()) / m
     topology = boards.boards[0].circuit.topology
     connection = topology if design.phases == 3 else ConnectionTopology.OPEN
@@ -457,6 +459,9 @@ def analyse(
             phase=ph,
             ke_peak_v_s_per_rad=tr(
                 "phase_ke_peak", ke_ph[ph], Unit.V_S_PER_RAD, ("EQ-06", "EQ-07"), emf_refs, emf_validity
+            ),
+            emf_phasor_angle_rad=tr(
+                "phase_emf_phasor_angle", emf_angle_ph[ph], Unit.RAD, ("EQ-06", "EQ-07"), emf_refs, emf_validity
             ),
             resistance_20c_ohm=tr(
                 "phase_resistance_20c", r_20_ph[ph], Unit.OHM, ("EQ-10", "EQ-11"), r_refs, skin_validity

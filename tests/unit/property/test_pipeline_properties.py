@@ -1,4 +1,4 @@
-"""PR-03, PR-05 to PR-12 on random spiral designs (PR-07 spacing and PR-11 edge clearance: see the unit report)."""
+"""PR-03, PR-05 to PR-12 on random spiral designs."""
 
 import cmath
 import dataclasses
@@ -13,10 +13,12 @@ from hypothesis import assume, example, given, settings
 from hypothesis import strategies as st
 
 from embodic.api import ComputeOptions, StageCache, compute, outcome_to_json
+from embodic.drc import DrcCheckKind, run_drc
 from embodic.errors import Severity, Unbuildable
 from embodic.generators import build_layout
+from embodic.geometry.layout import Layout
 from embodic.geometry.paths import is_continuous
-from embodic.geometry.primitives import Arc, Line, Primitive, PrimitiveRole
+from embodic.geometry.primitives import Arc, Line, Primitive, PrimitiveRole, primitive_length_mm
 from embodic.geometry.transforms import mirror, reverse_path
 from embodic.io.canonical import design_hash
 from embodic.model.design import DesignParameters
@@ -206,6 +208,30 @@ def test_pr_07_balanced_designs_have_equal_phase_ke(design: DesignParameters) ->
     assert max(magnitudes) == pytest.approx(min(magnitudes), rel=REL)
 
 
+def _wrapped_rad(angle_rad: float) -> float:
+    """Return ``angle_rad`` folded into (-pi, pi]."""
+    return math.pi - (math.pi - angle_rad) % math.tau
+
+
+@pytest.mark.req("REQ-F-02")
+@settings(max_examples=COMPUTE_EXAMPLES)
+@given(design=spiral_designs().filter(_balanced))
+def test_pr_07_balanced_designs_have_phase_emf_phasors_120_degrees_apart(design: DesignParameters) -> None:
+    """PR-07 (spacing part). Catches a phase whose EMF phasor is shifted off 120 electrical degrees from the next.
+
+    Each step A to B, B to C and C to A turns the same way by 2 pi / 3, within 1e-9 rad; the turn direction follows
+    the slot and pole combination, so it may be either sign.
+    """
+    analysis = _outcome(design).analysis
+    if analysis is None:
+        return
+    angles = [p.emf_phasor_angle_rad.value for p in analysis.phases]
+    assert len(angles) == 3
+    steps = [_wrapped_rad(angles[(k + 1) % 3] - angles[k]) for k in range(3)]
+    assert steps == pytest.approx([steps[0]] * 3, abs=1e-9)
+    assert abs(steps[0]) == pytest.approx(2.0 * math.pi / 3.0, abs=1e-9)
+
+
 @pytest.mark.req("REQ-F-15")
 @given(a=spiral_designs(), b=spiral_designs())
 def test_pr_08_hash_changes_iff_the_design_changes(a: DesignParameters, b: DesignParameters) -> None:
@@ -243,6 +269,76 @@ def test_pr_11_copper_stays_inside_the_envelope(design: DesignParameters) -> Non
                 points = [p.start_point(), p.end_point()] + ([p.mid_point()] if isinstance(p, Arc) else [])
                 for x, y in points:
                     assert r_min - 1e-9 <= math.hypot(x, y) <= r_max + 1e-9
+
+
+SAMPLE_STEP_MM = 0.2
+
+
+def _distance_to_outline_mm(point: tuple[float, float], outline_prim: Primitive) -> float:
+    """Return the distance from ``point`` to one outline line or arc, by plain geometry (independent of the DRC)."""
+    x, y = point
+    if isinstance(outline_prim, Line):
+        ax, ay, bx, by = outline_prim.x1_mm, outline_prim.y1_mm, outline_prim.x2_mm, outline_prim.y2_mm
+        t = ((x - ax) * (bx - ax) + (y - ay) * (by - ay)) / ((bx - ax) ** 2 + (by - ay) ** 2)
+        t = min(1.0, max(0.0, t))
+        return math.hypot(x - (ax + t * (bx - ax)), y - (ay + t * (by - ay)))
+    angle = math.atan2(y - outline_prim.cy_mm, x - outline_prim.cx_mm)
+    turned = (angle - outline_prim.start_rad) * math.copysign(1.0, outline_prim.sweep_rad) % math.tau
+    if turned <= abs(outline_prim.sweep_rad):
+        return abs(math.hypot(x - outline_prim.cx_mm, y - outline_prim.cy_mm) - outline_prim.r_mm)
+    return min(math.hypot(x - qx, y - qy) for qx, qy in (outline_prim.start_point(), outline_prim.end_point()))
+
+
+def _centreline_points(p: Primitive) -> Iterator[tuple[float, float]]:
+    """Yield points along a copper primitive, at most ``SAMPLE_STEP_MM`` apart, ends included."""
+    count = max(1, math.ceil(primitive_length_mm(p) / SAMPLE_STEP_MM))
+    for k in range(count + 1):
+        t = k / count
+        if isinstance(p, Line):
+            yield p.x1_mm + t * (p.x2_mm - p.x1_mm), p.y1_mm + t * (p.y2_mm - p.y1_mm)
+        else:
+            yield p.point_at(p.start_rad + t * p.sweep_rad)
+
+
+def _tightest_clearances_mm(board: Layout) -> tuple[float, float]:
+    """Return the smallest copper-to-outline and copper-to-hole clearance of a board (inf without holes)."""
+    loops = [board.outline.outer, *board.outline.cutouts]
+    edge_mm = hole_mm = math.inf
+    for path in board.paths:
+        for prim in path.primitives:
+            for x, y in _centreline_points(prim):
+                edge_mm = min(
+                    edge_mm, min(_distance_to_outline_mm((x, y), q) for loop in loops for q in loop) - prim.width_mm / 2
+                )
+                for hole in board.outline.holes:
+                    hole_mm = min(
+                        hole_mm, math.hypot(x - hole.x_mm, y - hole.y_mm) - hole.diameter_mm / 2 - prim.width_mm / 2
+                    )
+    return edge_mm, hole_mm
+
+
+@pytest.mark.req("REQ-F-09", "REQ-F-10")
+@settings(max_examples=max(20, COMPUTE_EXAMPLES))
+@given(design=spiral_designs())
+def test_pr_11_copper_short_of_the_edge_or_hole_clearance_is_reported_by_the_drc(design: DesignParameters) -> None:
+    """PR-11 (clearance part). Catches copper inside the edge or hole clearance that the DRC passes.
+
+    The generator does not promise the clearance (a link of a 4-pole draw lies 0.14 mm from the edge under a 0.3 mm
+    rule), so containment holds exactly when the DRC says so. The distance comes from point-to-line and point-to-arc
+    geometry, not from the DRC kernels. A sampled point is within half a sampling step of any point of its edge, so
+    only copper short of the rule by more than SAMPLE_STEP_MM / 2 must be reported.
+    """
+    built = build_layout(design, REGISTRY)
+    if isinstance(built, Unbuildable):
+        return
+    slack_mm = SAMPLE_STEP_MM / 2
+    for board in built.boards:
+        edge_mm, hole_mm = _tightest_clearances_mm(board)
+        report = run_drc(board, design.drc_rules)
+        assert report is not None
+        kinds = {v.kind for v in report.violations}
+        assert edge_mm >= design.drc_rules.edge_clearance_mm - slack_mm or DrcCheckKind.COPPER_EDGE in kinds
+        assert hole_mm >= design.drc_rules.hole_clearance_mm - slack_mm or DrcCheckKind.COPPER_HOLE in kinds
 
 
 @pytest.mark.req("REQ-T-03", "REQ-F-21")
