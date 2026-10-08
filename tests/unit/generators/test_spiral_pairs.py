@@ -94,7 +94,7 @@ def _series_coil(groups: int) -> tuple[SeriesCoil, FullClosing]:
     closing = max_closing(frame, loop_turns(frame)[0], vias=groups)
     assert isinstance(closing, FullClosing)
     coil = series_coil(frame, closing, design.connection.ring_width_mm, groups, {})
-    assert coil is not None
+    assert isinstance(coil, SeriesCoil), coil
     return coil, closing
 
 
@@ -115,15 +115,16 @@ def test_ut_geo_19_series_groups_get_their_own_centre_via_one_pitch_apart() -> N
 def test_ut_geo_19_each_group_runs_from_its_ring_via_to_its_centre_and_out_to_the_next() -> None:
     """UT-GEO-19 (M2, G6): group g's X joins ring via g to its centre via, its Y the centre to ring via g + 1.
 
-    Ring vias alternate CCW and CW sides of the coil; two on one side sit pad + s = 0.8 mm apart (terminal fan).
-    Catches a transfer via on the wrong side, two groups landing on one ring via, or an odd group that keeps the first
-    outer arc (it enters at the right side of turn 0).
+    Ring vias alternate CCW and CW sides of the coil; two on one side sit at least the fan pitch
+    c_f = max(pad, w, bw) + s = 1.2 mm apart (G6 U-E6; the spec table gives a pad gap of 0.6001 mm on CF-11).
+    Catches a transfer via on the wrong side, two groups landing on one ring via, the v1.0 pitch pad + s, or an odd
+    group that keeps the first outer arc (it enters at the right side of turn 0).
     """
     coil, _ = _series_coil(3)
     rings = coil.ring_vias
     assert [math.copysign(1.0, p[1]) for p in rings] == [1.0, -1.0, 1.0, -1.0]
-    assert math.dist(rings[0], rings[2]) == pytest.approx(0.8, abs=1e-9)
-    assert math.dist(rings[1], rings[3]) == pytest.approx(0.8, abs=1e-9)
+    assert math.dist(rings[0], rings[2]) - 0.6 == pytest.approx(0.6001, abs=1e-4)
+    assert math.dist(rings[1], rings[3]) - 0.6 == pytest.approx(0.6001, abs=1e-4)
     for g, group in enumerate(coil.groups):
         assert math.dist(group.x[0].start_point(), rings[g]) <= 1e-9
         assert math.dist(group.x[-1].end_point(), group.centre_via) <= 1e-9
@@ -136,12 +137,14 @@ def test_ut_geo_19_each_group_runs_from_its_ring_via_to_its_centre_and_out_to_th
 
 
 @pytest.mark.req("REQ-F-03")
-def test_ut_geo_19_series_pairs_whose_via_fan_breaks_drc_are_refused(registry: Registry) -> None:
-    """D-020: CF-11 series pairs fail DRC at the fan (stub to fan level 1 passes the level-0 via), so: Unbuildable.
+def test_ut_geo_19_series_pairs_whose_fan_sides_meet_are_refused(registry: Registry) -> None:
+    """G6 step 6: a 6 mm bus ring makes the fan pitch 6.2 mm, so the innermost CCW and CW vias come closer than it.
 
-    Catches a series board returned with DRC violations, or one silently changed to parallel pairs.
+    Catches a fan built with its levels crossed over the coil axis, or a series design silently changed to parallel.
     """
-    refused = generate_spiral(_three_pairs(((0,), (1,), (2,))), registry)
+    design = _three_pairs(((0,), (1,), (2,)))
+    wide = dataclasses.replace(design, connection=dataclasses.replace(design.connection, ring_width_mm=6.0))
+    refused = generate_spiral(wide, registry)
     assert isinstance(refused, Unbuildable)
     assert [(i.code, i.pointers) for i in refused.issues] == [
         ("UNBUILDABLE_SERIES_VIA_FAN_DRC", ("/winding/layers/series_groups",))
@@ -184,15 +187,18 @@ def test_m3_a_rotation_every_pair_shares_turns_the_whole_winding(registry: Regis
 
 
 @pytest.mark.req("REQ-F-03")
-def test_ut_geo_11_pairs_rotated_against_each_other_are_refused(registry: Registry) -> None:
-    """UT-GEO-11 is not met yet: a pair at pi/Q among unrotated pairs needs a series link G6 does not specify.
+@pytest.mark.parametrize("series_groups", [((0,), (1,), (2,)), ((0, 1, 2),)], ids=["series", "parallel"])
+def test_ut_geo_11_pairs_rotated_against_each_other_are_refused(
+    registry: Registry, series_groups: tuple[tuple[int, ...], ...]
+) -> None:
+    """UT-GEO-11 (G6 U-E6): a pair at pi/Q among unrotated pairs has no coil at the others' positions, so: refused.
 
-    The generator refuses it with the pointer instead of building the rotation silently wrong or dropping it.
+    Catches the rotation built silently wrong or dropped, in series or in parallel, or the old not-implemented code.
     """
-    design = _three_pairs(((0,), (1,), (2,)))
+    design = _three_pairs(series_groups)
     assert isinstance(design.winding, SpiralWindingSpec)
     refused = generate_spiral(_rotated(design, (0.0, math.pi / design.winding.coil.coil_count, 0.0)), registry)
     assert isinstance(refused, Unbuildable)
     assert [(i.code, i.pointers) for i in refused.issues] == [
-        ("UNBUILDABLE_SPIRAL_OPTION_NOT_IMPLEMENTED", ("/winding/layers/pairs",))
+        ("UNBUILDABLE_PAIRS_ROTATED_APART", ("/winding/layers/pairs",))
     ]
