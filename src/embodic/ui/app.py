@@ -17,11 +17,12 @@ from types import TracebackType
 from typing import NamedTuple
 
 from PySide6.QtCore import QSettings, QStandardPaths, Qt
-from PySide6.QtGui import QGuiApplication
+from PySide6.QtGui import QFontDatabase, QGuiApplication
 from PySide6.QtWidgets import QApplication
 
 from embodic.api import compute
 from embodic.results import load_registry
+from embodic.ui.fonts import register_fonts
 from embodic.ui.theme import ThemeName
 from embodic.ui.viewmodels.appearance import AppearanceViewModel
 from embodic.ui.viewmodels.outcome import OutcomeReady, OutcomeViewModel
@@ -177,6 +178,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     assert isinstance(app, QApplication)
     app.setOrganizationName(SETTINGS_ORG)
     app.setApplicationName(SETTINGS_APP)
+    register_fonts(QFontDatabase.addApplicationFont, app)
     data_dir = app_data_dir()
     setup_logging(data_dir / "logs")
     paths = ShellPaths(recovery_dir=data_dir / "recovery")
