@@ -15,6 +15,9 @@ from embodic.ui.views.style import icons_dir
 from embodic.ui.views.toolstrip_bar import ToolstripBar, UnknownCommandError
 
 IMPLEMENTED = {"save_project", "show_examples", "compute_now", "cycle_theme", "toggle_phase_render_mode", "fit_view"}
+IMPLEMENTED |= {"new_design", "set_connection_star", "set_connection_delta"}  # U-M4c session commands
+IMPLEMENTED |= {f"set_topology_{name}" for name in ("spiral", "serpentine", "wave")}
+DISABLED_UNTIL_UNDO = {"undo", "redo"}  # U-M4c: enabled once the session has history
 
 
 @pytest.mark.req("REQ-F-21")
@@ -45,7 +48,7 @@ def test_ui25_every_action_has_label_tooltip_accessible_name_and_a_resolved_comm
         assert (button.text(), button.accessibleName()) == (label, label)
         assert button.toolTip().startswith(f"{label} ({row.shortcut})." if row.shortcut else f"{label}.")
         assert button.isEnabled() is (row.command in IMPLEMENTED), row.id
-        if row.command not in IMPLEMENTED:
+        if row.command not in IMPLEMENTED | DISABLED_UNTIL_UNDO:
             assert button.toolTip().endswith("Not available in this version."), row.id
         if row.shortcut:
             assert toolstrip.actions_by_id[row.id].shortcut().toString() == row.shortcut

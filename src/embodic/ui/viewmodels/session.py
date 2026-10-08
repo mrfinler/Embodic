@@ -326,7 +326,7 @@ def bore_choice(values: Mapping[str, JsonValue]) -> str | None:
 
 def widget_for_pointer(pointer: str, draft: DesignDraft) -> str | None:
     """Return the objectName that fills a pointer: what "Go to first missing field" and issue links focus."""
-    if pointer.startswith(STACKUP_POINTER):
+    if pointer.startswith((STACKUP_POINTER, "/winding/layers/")):  # spiral pairs derive from the copper count (D-024)
         return "param-wave-layers" if draft.topology is TopologyKind.WAVE else "param-layer-count"
     if pointer in (BORE_POINTER, f"{BORE_POINTER}/shape"):
         return "param-bore"
