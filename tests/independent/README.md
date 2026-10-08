@@ -11,7 +11,7 @@ from `embodic`, so a defect in embodic cannot also hide in the expected values (
 ```bash
 python3 -m venv .venv && . .venv/bin/activate && pip install -e ".[dev]"
 pytest tests/independent/m1 -q              # self-tests; the Xcoil tests need node and /home/claude/serpentine
-python tests/independent/m1/mutants.py      # seeded defects; every one must be killed
+python tests/independent/m1/mutants.py      # seeded defects; every one must be killed (words after it pick by name)
 ```
 
 ## M1 instruments (`m1/`)
@@ -23,7 +23,7 @@ python tests/independent/m1/mutants.py      # seeded defects; every one must be 
 | `continuity.py` | first joint of an ordered path whose end-to-start gap exceeds 1e-6 mm (IT-21; REQ-N-21 revision 2026-10-05, `COINCIDENCE_MM`) | a generator or writer that breaks a path, reverses a primitive or emits NaN |
 | `board_dump_reader.py` | parses `embodic.board-dump` v1 into own records; reports every missing field, duplicate id, unknown layer, end point that disagrees with its geometry, and primitive not owned by exactly one object | a writer that drops or renames fields, rounds end points, or orders paths by file position |
 | `xcoil_oracle.py`, `xcoil_oracle.cjs` | third oracle: Xcoil `segSegDist`, `ptSegDist`, `drcObjects` under Node, read-only | a defect in the instrument itself |
-| `mutants.py` | applies 18 named defects to a copy of the instruments and checks a test fails for each | a self-test that passes whatever the instrument does |
+| `mutants.py` | applies 25 named defects to a copy of the instruments laid out like the repository, after the unmutated copy passes, and checks a test fails for each | a self-test that passes whatever the instrument does |
 | `drc_universe.py` | every copper item of a board (traces, vias, pads, edges, holes) on its layers; the section 7 exemptions as D-022 and D-022c amend them, each pair labelled with its rule; brute pair sweep | a DRC that checks the wrong layer pairs, exempts too much or too little, or picks the wrong kind |
 | `random_boards.py` | seeded boards: 1 to 3 layers, self-crossing line and arc paths, vias on and off path ends, pads, holes, edges | - |
 | `embodic_adapter.py` | the only instrument that imports embodic: builds a `Layout` from items through public constructors | - |
@@ -74,7 +74,7 @@ step 2 that box contains the arc, so box distance is a lower bound of `D`.
 | Brackets contain the closed-form values for parallel, crossing, tangent, concentric and arc-line cases | verified (`test_brute_clearance.py`) |
 | Brackets overlap a dense point sampling with the 1-Lipschitz bound on 40 random arc pairs | verified (`test_bracket_contains_dense_point_sampling_on_random_arc_pairs`) |
 | A 1 um (1e-3 mm) intrusion is a violation; rule - 0.9 nm is clean and rule - 1.1 nm a violation (epsilon 1e-6 mm), for lines, concentric arcs and arc-line | verified |
-| Each of the 18 seeded defects in `mutants.py` fails a test | verified for the 5 continuity and exemption mutants on 69381b5 (U-V1b-fix); the other 13 last run in part 2 |
+| Each of the 25 seeded defects in `mutants.py` fails a test | verified for the 9 exemption mutants on 695be33 (U-V3b), each killed by an exemption or agreement test; the continuity and reader mutants last run on 69381b5 or in part 2 |
 | Rounding stays below `FP_MARGIN_MM` | assumption |
 | embodic's DRC agrees with this instrument | verified on main a138975 (part 2, table below) |
 | Xcoil `drcObjects` differs from exact arc distances by at most 0.002 mm | inferred from `discretize` sagTol 0.001 (engine.js l.536-555); one concentric case verified |
@@ -85,9 +85,12 @@ step 2 that box contains the arc, so box distance is a lower bound of `D`.
   That exemption is wider than D-006 allows. Compare it with embodic only for pairs between objects.
 - `drcObjects` checks segments only within one grid cell of each other (`gridQuery` with radius 0). Far-apart objects
   return `Infinity`.
-- `contract_exemptions` codes interfaces.md section 7 with D-022 and D-022c from the text, not from
-  `embodic.drc.items`. `test_exemption_model.py` checks it on hand-worked cases. D-022c says a land on an interconnect
-  centreline is "exempt from that path"; the model reads that as every primitive of the path (open question to Fable).
+- `contract_exemptions` codes interfaces.md section 7 with D-022, D-022c, D-035b (rule 5) and D-036a with D-037a
+  (rule 2b) from the text, not from `embodic.drc.items`. `test_exemption_model.py` checks it on hand-worked cases.
+  D-022c says a land on an interconnect centreline is "exempt from that path"; the model reads that as every primitive
+  of the path. Rule 2b names vias, not pads, and is per primitive. Rule 5 reads "the centreline of another path" as the
+  whole centreline, its end points included; no board in this suite tells that reading from a mid-path-only one
+  (`not tested`). Point-to-centreline distances are exact closed forms (`point_to_centreline`).
 - The minima test brackets the pairs run_drc reports as well as its own violating pairs, so a pair the contract exempts
   but run_drc reports is caught by the exemption tests, not by the minima test.
 - Pads other than round ones are not modelled. All GR-19 pads are round.
@@ -252,10 +255,36 @@ Defects (U-V3):
 
 | ID | Severity | Reproduce | Expected vs actual | Owner | Status |
 |---|---|---|---|---|---|
-| DEF-UV3-01 | low | `pytest tests/independent/m3/test_drc_m3.py -k overlap-p12 --runxfail` | rule 2 exempts a via and the end group of a path ending on it, and the end group holds the fillet before the terminating main (section 7 rules 1 and 2). `_path_ends` (src/embodic/drc/items.py l.173-180) takes the items whose main index equals the last main's, and a fillet carries the index of the main before it, so at a path's last end the preceding fillet is left out. w-overlap-p12-l4-m1: paths 0 and 25 end on stitch via 2 through a 0.302 mm leg; fillet 5 is reported at -0.198 mm. The first end is not affected (`inferred` from the code) | Agent 3 (DRC) | open; strict xfail |
-| DEF-UV3-02 | medium | `cd tests/independent/m3 && python examples_m3.py`; `pytest tests/independent/m3/test_m3_physics.py -k wave_example_interconnect --runxfail` | wave example P_ic: Xcoil 0.01117442 W (star: line stubs, links and two neutral-ring segments at `busWidth`, engine.js l.1361-1374, l.1423), embodic 0.002574557 W. The serpentine example agrees within 5.8e-5. Cause `unresolved`; it may share the root of the wave star item (U-M3b Q3, in flight) | Agent 3 (physics, wave port) | open; strict xfail |
-| DEF-M3a-01 | medium | `pytest tests/independent/m3/test_m3_physics.py -k board_z --runxfail` | confirmed on 72b3231 with the own field (item 3 row) | U-M3-fix | open; in flight |
+| DEF-UV3-01 | low | `pytest tests/independent/m3/test_drc_m3.py -k overlap-p12 --runxfail` | rule 2 exempts a via and the end group of a path ending on it, and the end group holds the fillet before the terminating main (section 7 rules 1 and 2). `_path_ends` (src/embodic/drc/items.py l.173-180) takes the items whose main index equals the last main's, and a fillet carries the index of the main before it, so at a path's last end the preceding fillet is left out. w-overlap-p12-l4-m1: paths 0 and 25 end on stitch via 2 through a 0.302 mm leg; fillet 5 is reported at -0.198 mm. The first end is not affected (`inferred` from the code) | Agent 3 (DRC) | closed by U-M3-fix2 (D-036b); xfail removed in U-V3b |
+| DEF-UV3-02 | medium | `cd tests/independent/m3 && python examples_m3.py`; `pytest tests/independent/m3/test_m3_physics.py -k wave_example_interconnect --runxfail` | wave example P_ic: Xcoil 0.01117442 W (star: line stubs, links and two neutral-ring segments at `busWidth`, engine.js l.1361-1374, l.1423), embodic 0.002574557 W. The serpentine example agrees within 5.8e-5. Cause `unresolved`; it may share the root of the wave star item (U-M3b Q3, in flight) | Agent 3 (physics, wave port) | closed by U-M3-fix (star split); xfail removed in U-V3b |
+| DEF-M3a-01 | medium | `pytest tests/independent/m3/test_m3_physics.py -k board_z --runxfail` | confirmed on 72b3231 with the own field (item 3 row) | U-M3-fix | closed by U-M3-fix (D-035c); xfail removed in U-V3b |
 
 Open question. `embodic.api.compute_project` on `resources/examples/serpentine_16p_example.embodic.json` returns
 `INVALID_PROJECT_FILE`. The examples load through `embodic.io.examples.load_example`. Is a packaged example file meant
 to open as a project?
+
+## U-V3b verdicts (against main 695be33)
+
+Rule 5 (D-035b) and rule 2b (D-036a, D-037a: a via is exempt only from each same-net primitive whose centreline passes
+within `pad_mm / 2` of its centre) are in `contract_exemptions`. Hand-worked cases in `test_exemption_model.py`: 5a line,
+5b arc, 5c other net, 5d 0.01 mm short; 2b mid-primitive, between two primitives, 0.31 mm near miss, corner, other net,
+pad. Before the change, on 695be33, random seed 4, GR-19 serpentine and wave, and M3 w-involute-p20-l2-m3 and
+w-jog-p16-l4-m3 failed; after it they pass (`verified`). The model agrees with `run_drc` on every board in the suite;
+no disagreement to report.
+
+Pairs below the rule that only the new rules exempt (scratch count: sweep with every other exemption, `verified`):
+
+| Boards | rule 2b | rule 5 |
+|---|---|---|
+| 200 random boards | 38 pairs on 29 boards | 0 |
+| GR-19 serpentine, wave | 0 | 1, 1 |
+| M3 w-involute-p20-l2-m3, w-jog-p16-l4-m3 | 0 | 1, 1 |
+
+Retired strict xfails, re-measured on 695be33 (`verified` by running):
+
+| Defect | Before | 695be33 |
+|---|---|---|
+| DEF-M3a-01 | Ke +5.13 % over own (72b3231) | s-perphase-3-t5-gap0p3: embodic 0.0840892394, own 0.084092513 (-3.9e-5); own with the doubled offset now -4.88 % away |
+| DEF-UV3-02 | wave P_ic 0.002575 vs 0.011174 W (-77 %) | 0.011175066 vs 0.011174418 W (+5.8e-5, the serpentine example's ratio too) |
+| DEF-UV3-01 | 2 trace_via pairs reported that rule 2 exempts | w-overlap-p12-l4-m1: engine 51 = brute 51, sets equal |
+
