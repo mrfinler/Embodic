@@ -217,10 +217,10 @@ succeeded for the current input; "has reference" means a reference design is sto
 | View | `btn-show-current` | `current-flow` | Current | small | C on canvas | Show arrows for positive current. Static, no animation. | geometry drawn (checkable) |
 | View | `btn-show-magnets` | `rotor` | Magnets | small | M on canvas | Show the rotor magnets over the stator. | rotor defined (checkable) |
 | View | `btn-greyscale` | `greyscale` | Greyscale | small | G on canvas | Greyscale with hatching for phases. | always (checkable) |
-| View | `btn-theme` | `theme-dark` or `theme-light` | Dark theme or Light theme | small | Ctrl+Shift+T | Switch the colour theme. | always; icon and label show the theme it switches to |
+| View | `btn-theme` | `theme` | Dark theme or Light theme | small | Ctrl+Shift+T | Switch the colour theme. | always; the label shows the theme it switches to |
 | Export | `btn-export-svg` | `export-svg` | SVG | large | none | Vector drawing of every layer, in millimetres. | computed |
 | Export | `btn-export-dxf` | `export-dxf` | DXF | large (split menu) | none | DXF: complete, outline only, or screws only. | computed; outline and screws need the board defined |
-| Export | `btn-export-report` | `report` | Report | large | Ctrl+P | PDF design report with figures, results and checks. | computed |
+| Export | `btn-export-report` | `export-pdf` | Report | large | Ctrl+P | PDF design report with figures, results and checks. | computed |
 | Export | `btn-export-all` | `export-all` | All files | small | Ctrl+E | SVG, DXF, JSON, PDF and README into one folder. | computed |
 | Verify | `btn-results` | `results` | Results | large | Alt+5 | Results with units, status and equations. | always (empty state before compute) |
 | Verify | `btn-drc` | `drc` | DRC | small | Alt+6 | Design rule checks and clearances. | always (empty state before compute) |
@@ -271,11 +271,13 @@ Rules:
   `tools/design/build_themes.py` with the template `tools/design/theme_template.qss`; the substitution rule is "replace
   `@<token>` with `themes.<theme>.color.<token>`, `@focus-ring-px` with `focus_ring_px`, and `@dir` with the theme
   name". Run it from the repository root; a second run changes nothing.
-- `light.json` and `dark.json` carry the ThemeTokens fields only. `colours` holds the 17 chrome tokens (grey only,
-  REQ-L-04). The phase tokens map into `phases`: `hatch_deg` null becomes 0, line `dashed` and `dotted` become `dash` and
-  `dot`. The icon loader reads `colours["text-1"]` and `colours["text-disabled"]`, which equal `icon_color.normal` and
-  `.disabled`. The status tokens (`status-pass`, `status-fail`, `status-warn`) have no ThemeTokens field and reach the UI
-  through the QSS only (`unresolved`, open question to Agent 6).
+- `light.json` and `dark.json` carry the ThemeTokens fields only. `colours` holds 20 tokens: the 17 chrome tokens (grey
+  only, REQ-L-04) and the three status tokens `status-pass`, `status-fail` and `status-warn` (coordinator ruling D-038a).
+  The status tokens are the only chromatic entries, so the white, grey and black rule of REQ-L-04 names the chrome tokens.
+  The phase tokens map into `phases`: `hatch_deg` null becomes 0, line `dashed` and `dotted` become `dash` and `dot`. The
+  icon loader reads `colours["text-1"]` and `colours["text-disabled"]`, which equal `icon_color.normal` and `.disabled`.
+  `check_theme_tokens.py` requires all 20 keys with the values of `tokens.json`. The interfaces.md section 11 comment on
+  `ThemeTokens.colours` still says chrome tokens only. Agent 6 amends it in U-D9 (`unresolved` until then).
 - Checks, each run from the repository root with the project venv: `check_theme_tokens.py` (contract fields read from
   interfaces.md), `contrast.py` (appendix A), `qss_smoke.py` (offscreen render and pixel samples, exit 1 on a mismatch),
   `check_checklist.py` (`screenshot_checklist.md` covers `screens.md` sections 1 to 14).

@@ -7,9 +7,11 @@ Usage, from the repository root::
 Field names come from the ``ThemeTokens`` and ``PhaseStyle`` dataclasses in interfaces.md section 11, so a contract
 change fails this check until the generator follows. Rules: exactly the contract fields; ``name`` equals the file
 stem; three phases A, B, C in order; ``hatch_deg`` in {0, 45, 135}; ``dash`` in {solid, dash, dot}; every colour a
-``#rrggbb`` hex; ``colours`` and ``grey_hex`` white, grey or black only (REQ-L-04); pixel sizes positive integers; and
-the icon colours of ``tokens.json`` equal ``colours["text-1"]`` and ``colours["text-disabled"]``, the keys the icon
-loader reads. Exit code 1 when a rule fails.
+``#rrggbb`` hex; ``colours`` holds every ``tokens.json`` colour except the ``phase-*`` ones (20 per theme), with the
+same values; the chrome tokens and ``grey_hex`` are white, grey or black only (REQ-L-04) and the three status tokens
+(D-038a) are the only chromatic ``colours``; pixel sizes positive integers; and the icon colours of ``tokens.json``
+equal ``colours["text-1"]`` and ``colours["text-disabled"]``, the keys the icon loader reads. Exit code 1 when a rule
+fails.
 """
 
 import json
@@ -21,6 +23,8 @@ REPO = Path(__file__).resolve().parents[2]
 THEMES = REPO / "resources" / "themes"
 INTERFACES = REPO / "docs" / "phase2" / "architecture" / "interfaces.md"
 HEX = re.compile(r"#[0-9a-f]{6}")
+STATUS_TOKENS = ("status-pass", "status-fail", "status-warn")
+PHASE_PREFIX = "phase-"
 
 
 def contract_fields(text: str, cls: str) -> list[str]:
@@ -69,23 +73,32 @@ def phase_problems(phases: object, fields: list[str]) -> list[str]:
     return problems
 
 
-def colour_problems(colours: object, icon: dict[str, str]) -> list[str]:
-    """Return the rules the chrome ``colours`` mapping breaks."""
+def colour_problems(colours: object, source: dict) -> list[str]:
+    """Return the rules the ``colours`` mapping breaks; ``source`` is ``tokens.json`` > ``themes.<theme>``."""
     if not isinstance(colours, dict) or not colours:
         return ["colours: expected a non-empty mapping"]
-    problems = []
+    wanted = {k: v for k, v in source["color"].items() if not k.startswith(PHASE_PREFIX)}
+    problems = [f"colours lacks {k}" for k in sorted({*wanted, *STATUS_TOKENS} - colours.keys())]
+    problems += [
+        f"colours has {k}, which is not a tokens.json colour outside the phase-* keys"
+        for k in sorted(colours.keys() - wanted.keys())
+    ]
     for k, v in colours.items():
         if not isinstance(v, str) or not HEX.fullmatch(v):
             problems.append(f"colours[{k}]: {v!r} is not #rrggbb")
-        elif not is_grey(v):
+        elif k not in STATUS_TOKENS and not is_grey(v):
             problems.append(f"colours[{k}]: {v} is not white, grey or black (REQ-L-04)")
+        elif k in wanted and v != wanted[k]:
+            problems.append(f"colours[{k}]: {v} differs from tokens.json {wanted[k]}")
     for key, token in (("normal", "text-1"), ("disabled", "text-disabled")):
-        if colours.get(token) != icon[key]:
-            problems.append(f"colours[{token}] {colours.get(token)} differs from icon_color.{key} {icon[key]}")
+        if colours.get(token) != source["icon_color"][key]:
+            problems.append(
+                f"colours[{token}] {colours.get(token)} differs from icon_color.{key} {source['icon_color'][key]}"
+            )
     return problems
 
 
-def theme_problems(path: Path, theme_fields: list[str], phase_fields: list[str], icon: dict[str, str]) -> list[str]:
+def theme_problems(path: Path, theme_fields: list[str], phase_fields: list[str], source: dict) -> list[str]:
     """Return every rule one theme file breaks."""
     data = json.loads(path.read_text(encoding="utf-8"))
     if sorted(data) != sorted(theme_fields):
@@ -93,7 +106,7 @@ def theme_problems(path: Path, theme_fields: list[str], phase_fields: list[str],
     problems = []
     if data["name"] != path.stem:
         problems.append(f"name {data['name']!r} differs from the file stem {path.stem!r}")
-    problems += colour_problems(data["colours"], icon)
+    problems += colour_problems(data["colours"], source)
     problems += phase_problems(data["phases"], phase_fields)
     for key in ("focus_ring_px", "control_height_px"):
         v = data[key]
@@ -115,7 +128,7 @@ def main() -> int:
             print(f"{name}: {path.relative_to(REPO)} missing")
             failures += 1
             continue
-        problems = theme_problems(path, theme_fields, phase_fields, tokens["themes"][name]["icon_color"])
+        problems = theme_problems(path, theme_fields, phase_fields, tokens["themes"][name])
         for p in problems:
             print(f"{name}: {p}")
         failures += len(problems)

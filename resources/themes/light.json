@@ -17,7 +17,10 @@
   "text-2": "#454545",
   "text-3": "#666666",
   "text-disabled": "#9a9a9a",
-  "text-inverse": "#ffffff"
+  "text-inverse": "#ffffff",
+  "status-pass": "#2f6a47",
+  "status-fail": "#a6332c",
+  "status-warn": "#875400"
  },
  "phases": [
   {

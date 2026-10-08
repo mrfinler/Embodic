@@ -23,7 +23,7 @@ TOKENS = THEMES / "tokens.json"
 TEMPLATE = Path(__file__).with_name("theme_template.qss")
 MODEL = "claude-opus-5-5"
 DASH = {"solid": "solid", "dashed": "dash", "dotted": "dot"}
-DATA_PREFIXES = ("phase-", "status-")
+PHASE_PREFIX = "phase-"
 
 GLYPHS = {
     "chevron-down.svg": ('<path d="M3 4.5 6 7.5 9 4.5"/>', "text-2", 12),
@@ -64,8 +64,9 @@ def render_qss(theme: str, colours: dict[str, str], focus_ring_px: int) -> str:
 def theme_tokens(theme: str, tokens: dict) -> dict:
     """Return the ThemeTokens of interfaces.md section 11 for one theme.
 
-    ``colours`` holds the chrome tokens only (white, grey and black, REQ-L-04). Phase colours move into ``phases``;
-    status colours stay in the QSS because ThemeTokens has no field for them.
+    ``colours`` holds every colour token except the phase ones: the chrome tokens (white, grey and black, REQ-L-04)
+    and the status tokens ``status-pass``, ``status-fail`` and ``status-warn`` (D-038a). Phase colours move into
+    ``phases``.
     """
     c = tokens["themes"][theme]["color"]
     phases = []
@@ -83,7 +84,7 @@ def theme_tokens(theme: str, tokens: dict) -> dict:
         )
     return {
         "name": theme,
-        "colours": {k: v for k, v in c.items() if not k.startswith(DATA_PREFIXES)},
+        "colours": {k: v for k, v in c.items() if not k.startswith(PHASE_PREFIX)},
         "phases": phases,
         "focus_ring_px": tokens["focus_ring_px"],
         "control_height_px": tokens["control_height_px"],
