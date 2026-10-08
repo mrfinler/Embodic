@@ -190,3 +190,25 @@ def efficiency(output_w: float, loss_w: float) -> float:
         Efficiency, dimensionless.
     """
     return output_w / (output_w + loss_w) if output_w > 0.0 else 0.0
+
+
+def motor_constant_n_m_per_sqrt_w(torque_n_m: float, copper_loss_w: float, phase_current_a: float) -> float:
+    """Return K_m = T / sqrt(P_Cu), 0 without copper loss or phase current.
+
+    References: EQ-26 (Xcoil applyConnection l.1435).
+
+    Parameters
+    ----------
+    torque_n_m : float
+        Torque at the operating current in N*m.
+    copper_loss_w : float
+        Winding copper loss in W.
+    phase_current_a : float
+        Phase current in A rms.
+
+    Returns
+    -------
+    float
+        Motor constant in N*m/sqrt(W).
+    """
+    return torque_n_m / math.sqrt(copper_loss_w) if copper_loss_w > 0.0 and phase_current_a > 0.0 else 0.0

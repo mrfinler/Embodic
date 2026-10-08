@@ -15,6 +15,7 @@ from harness.codec import load_area
 from harness.compare import KERNEL, compare_scalar, compare_sequence
 
 from embodic.model.operating import Modulation
+from embodic.model.vocabulary import ConnectionTopology
 from embodic.physics import (
     base_speed_rpm,
     inverter_phase_voltage_v,
@@ -39,6 +40,8 @@ def _port(inputs: Mapping[str, Any]) -> tuple[Modulation, np.ndarray, np.ndarray
         inputs["currentLimit"],
         inputs["poles"],
         inputs["points"],
+        phases=inputs["phases"],
+        connection=ConnectionTopology(inputs["connection"]),
     )
     return modulation, speed, torque
 
@@ -51,6 +54,16 @@ def test_the_fixtures_cover_every_modulation_and_a_delta_winding() -> None:
     assert len(CASES) >= 7
 
 
+def test_the_fixtures_cover_open_windings_of_two_and_one_phase() -> None:
+    """Defect caught: EQ-20 for phase counts other than three (open connection) left without a golden case."""
+    open_phases = {
+        c.calls[0].output["inputs"]["phases"]
+        for c in CASES.values()
+        if c.calls[0].output["inputs"]["connection"] == "open"
+    }
+    assert {1, 2, 3} <= open_phases
+
+
 @pytest.mark.parametrize("case_id", sorted(CASES))
 def test_torque_speed_curve_matches_xcoil(case_id: str) -> None:
     """Defect caught: a wrong inverter limit, torque constant, field-weakening scan or curve end point.
@@ -60,6 +73,7 @@ def test_torque_speed_curve_matches_xcoil(case_id: str) -> None:
     for call in CASES[case_id].calls:
         golden = call.output
         modulation, speed, torque = _port(golden["inputs"])
+        connection = ConnectionTopology(golden["inputs"]["connection"])
         power = torque * speed * 2.0 * math.pi / 60.0
         for name, expected, actual in (
             ("speed", golden["speedRpm"], speed),
@@ -69,11 +83,17 @@ def test_torque_speed_curve_matches_xcoil(case_id: str) -> None:
             verdict = compare_sequence(expected, actual.tolist(), KERNEL)
             assert verdict.ok, f"{case_id} {name}: {verdict}"
         scalars = (
-            ("vPhaseMax", golden["vPhaseMax"], inverter_phase_voltage_v(golden["inputs"]["vDc"], modulation)),
+            (
+                "vPhaseMax",
+                golden["vPhaseMax"],
+                inverter_phase_voltage_v(golden["inputs"]["vDc"], modulation, connection),
+            ),
             (
                 "rpmNoLoad",
                 golden["rpmNoLoad"],
-                no_load_speed_rpm(golden["inputs"]["keEqRms"] * math.sqrt(2.0), golden["inputs"]["vDc"], modulation),
+                no_load_speed_rpm(
+                    golden["inputs"]["keEqRms"] * math.sqrt(2.0), golden["inputs"]["vDc"], modulation, connection
+                ),
             ),
             ("rpmBase", golden["rpmBase"], base_speed_rpm(speed, torque)),
             ("torqueMax", golden["torqueMax"], float(np.max(torque))),

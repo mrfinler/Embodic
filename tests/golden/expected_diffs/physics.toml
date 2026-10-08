@@ -30,3 +30,73 @@ reason = "Same cause as XD-PHY-002 for the phase resistance: Xcoil's winding res
 tolerance = { rel = 0.0035, abs = 0.0 }
 agent2_signoff = "pending"
 agent4_signoff = "pending"
+
+[[diff]]
+id = "XD-PHY-004"
+case = "analysis-serpentine-default"
+path = "$[0].*_given_copper"
+eq_id = "EQ-26"
+reason = "XD-PHY-002 carried into the loss sum: embodic's eddy term counts the vbus copper. The loss sum with Xcoil's pCu differs by +0.000708 W (+1.285e-4 relative), equal to the XD-PHY-002 eddy difference; eta by -3.13e-5 relative"
+tolerance = { rel = 1.3e-4, abs = 0.0 }
+agent2_signoff = "pending"
+agent4_signoff = "pending"
+
+[[diff]]
+id = "XD-PHY-005"
+case = "analysis-sector-default"
+path = "$[0].loss_total"
+eq_id = "EQ-26"
+reason = "Measured -4.078e-3 relative at result level. Cause: the mapped Xcoil layout has no element list, so the test circuit (_series_circuit) puts every phase-tagged path in series and omits Xcoil's via barrels and links (Rextra); embodic's P_Cu differs from Xcoil's pCu by the same relative amount (DEF-M2e3-01, Agent 4 U-V2). With Xcoil's pCu in its place the sum agrees within the integrated class (test_loss_sum_and_efficiency_match_xcoil_given_its_copper_loss)"
+tolerance = { rel = 0.0041, abs = 0.0 }
+agent2_signoff = "pending"
+agent4_signoff = "pending"
+
+[[diff]]
+id = "XD-PHY-006"
+case = "analysis-sector-default"
+path = "$[0].efficiency"
+eq_id = "EQ-26"
+reason = "Measured +1.137e-3 relative at result level. Cause: the mapped Xcoil layout has no element list, so the test circuit (_series_circuit) puts every phase-tagged path in series and omits Xcoil's via barrels and links (Rextra); embodic's P_Cu differs from Xcoil's pCu by the same relative amount (DEF-M2e3-01, Agent 4 U-V2). With Xcoil's pCu in its place the sum agrees within the integrated class (test_loss_sum_and_efficiency_match_xcoil_given_its_copper_loss)"
+tolerance = { rel = 0.0012, abs = 0.0 }
+agent2_signoff = "pending"
+agent4_signoff = "pending"
+
+[[diff]]
+id = "XD-PHY-007"
+case = "analysis-serpentine-default"
+path = "$[0].loss_total"
+eq_id = "EQ-26"
+reason = "Measured +3.436e-3 relative at result level. Cause: the mapped Xcoil layout has no element list, so the test circuit (_series_circuit) puts every phase-tagged path in series and omits Xcoil's via barrels and links (Rextra); embodic's P_Cu differs from Xcoil's pCu by the same relative amount (DEF-M2e3-01, Agent 4 U-V2). With Xcoil's pCu in its place the sum agrees within the integrated class (test_loss_sum_and_efficiency_match_xcoil_given_its_copper_loss)"
+tolerance = { rel = 0.0035, abs = 0.0 }
+agent2_signoff = "pending"
+agent4_signoff = "pending"
+
+[[diff]]
+id = "XD-PHY-008"
+case = "analysis-serpentine-default"
+path = "$[0].efficiency"
+eq_id = "EQ-26"
+reason = "Measured -8.351e-4 relative at result level. Cause: the mapped Xcoil layout has no element list, so the test circuit (_series_circuit) puts every phase-tagged path in series and omits Xcoil's via barrels and links (Rextra); embodic's P_Cu differs from Xcoil's pCu by the same relative amount (DEF-M2e3-01, Agent 4 U-V2). With Xcoil's pCu in its place the sum agrees within the integrated class (test_loss_sum_and_efficiency_match_xcoil_given_its_copper_loss)"
+tolerance = { rel = 0.00084, abs = 0.0 }
+agent2_signoff = "pending"
+agent4_signoff = "pending"
+
+[[diff]]
+id = "XD-PHY-009"
+case = "analysis-wave-turns-2"
+path = "$[0].loss_total"
+eq_id = "EQ-26"
+reason = "Measured -5.857e-2 relative at result level. Cause: the mapped Xcoil layout has no element list, so the test circuit (_series_circuit) puts every phase-tagged path in series and omits Xcoil's via barrels and links (Rextra); embodic's P_Cu differs from Xcoil's pCu by the same relative amount (DEF-M2e3-01, Agent 4 U-V2). With Xcoil's pCu in its place the sum agrees within the integrated class (test_loss_sum_and_efficiency_match_xcoil_given_its_copper_loss)"
+tolerance = { rel = 0.059, abs = 0.0 }
+agent2_signoff = "pending"
+agent4_signoff = "pending"
+
+[[diff]]
+id = "XD-PHY-010"
+case = "analysis-wave-turns-2"
+path = "$[0].efficiency"
+eq_id = "EQ-26"
+reason = "Measured +1.539e-2 relative at result level. Cause: the mapped Xcoil layout has no element list, so the test circuit (_series_circuit) puts every phase-tagged path in series and omits Xcoil's via barrels and links (Rextra); embodic's P_Cu differs from Xcoil's pCu by the same relative amount (DEF-M2e3-01, Agent 4 U-V2). With Xcoil's pCu in its place the sum agrees within the integrated class (test_loss_sum_and_efficiency_match_xcoil_given_its_copper_loss)"
+tolerance = { rel = 0.0154, abs = 0.0 }
+agent2_signoff = "pending"
+agent4_signoff = "pending"

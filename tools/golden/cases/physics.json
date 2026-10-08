@@ -647,6 +647,55 @@
           "Ls": 0.0002
         }
       }
+    },
+    {
+      "id": "drive-wave-two-phase",
+      "fn": "driveAnalysis",
+      "note": "EQ-20 two-phase wave, open connection: phase R, Ke1 / sqrt 2, full bridge per phase, m = 2",
+      "tags": [
+        "eq-20",
+        "open",
+        "two-phase"
+      ],
+      "inputs": {
+        "params": {
+          "topology": "wave",
+          "phases": 2,
+          "turns": 2
+        }
+      }
+    },
+    {
+      "id": "drive-sector-one-phase",
+      "fn": "driveAnalysis",
+      "note": "EQ-20 one-phase sector, open connection, m = 1",
+      "tags": [
+        "eq-20",
+        "open",
+        "one-phase"
+      ],
+      "inputs": {
+        "params": {
+          "topology": "sector",
+          "phases": 1
+        }
+      }
+    },
+    {
+      "id": "drive-sector-open",
+      "fn": "driveAnalysis",
+      "note": "EQ-20 three-phase sector, open connection, six-step full bridge",
+      "tags": [
+        "eq-20",
+        "open"
+      ],
+      "inputs": {
+        "params": {
+          "topology": "sector",
+          "connection": "open",
+          "modulation": "sixstep"
+        }
+      }
     }
   ]
 }

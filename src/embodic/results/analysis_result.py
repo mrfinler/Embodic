@@ -67,6 +67,10 @@ class AnalysisResult:
     loss_eddy_w: Traceable[float]  # EQ-12
     loss_circulating_w: Traceable[float]  # EQ-07
     loss_delta_circulating_w: Traceable[float]  # EQ-19
+    loss_interconnect_w: Traceable[float]  # EQ-23 P_ic
+    loss_total_w: Traceable[float]  # EQ-26 P_Cu + P_eddy + P_circ + P_delta,circ + P_ic
+    output_power_w: Traceable[float]  # EQ-26 P_out = T * omega_m
+    efficiency: Traceable[float]  # EQ-26 P_out / (P_out + P_loss), electromagnetic only
     thd_phase: Traceable[float]  # EQ-18
     thd_line: Traceable[float]
     current_density_a_per_mm2: Traceable[float]  # EQ-22
