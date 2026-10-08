@@ -251,8 +251,7 @@ def analyse(
     f_e = pole_pairs * op.speed_rpm / 60.0
     omega_e = 2.0 * math.pi * f_e
     g_plane = symmetry_plane_mm(rotor, boards.stack_thickness_mm)
-    pitch = boards.board_thickness_mm + boards.board_gap_mm
-    z_max = max(z + k * pitch for k, b in enumerate(boards.boards) for z in b.copper_z_mm.values())
+    z_max = max(z for b in boards.boards for z in b.copper_z_mm.values())
     edge_g = g_plane if math.isfinite(g_plane) else z_max + rotor.air_gap_mm
     check = registry.equation("EQ-05").validity_checks[0]
     assert check.id == EDGE_CHECK_ID
@@ -264,10 +263,10 @@ def analyse(
     solutions: list[CircuitSolution] = []
     r20_by_board: list[Mapping[Phase, float]] = []
     r_op_by_board: list[Mapping[int, float]] = []
-    for k, layout in enumerate(boards.boards):
+    for layout in boards.boards:
         if cancel is not None and cancel.cancelled:
             return None
-        z_of = {layer: z + k * pitch for layer, z in layout.copper_z_mm.items()}
+        z_of = layout.copper_z_mm
         for z in z_of.values():
             if z not in tables:
                 tables[z] = field_table(rotor, g_plane, z + rotor.air_gap_mm, harmonics)

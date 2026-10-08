@@ -1,18 +1,21 @@
 """UT-GEN-01, UT-GEN-02, UT-GEN-03 and UT-GEN-05 for the serpentine generator (REQ-F-34)."""
 
+import dataclasses
 import math
 
 import pytest
 from tests.unit.generators.default_example import default_design
 
+from embodic.api import compute
 from embodic.drc import DrcCheckKind, run_drc
-from embodic.errors import Severity, Unbuildable
+from embodic.errors import IssueCategory, Severity, Unbuildable
 from embodic.generators import GENERATORS, build_layout, generate_serpentine
 from embodic.geometry.circuit import LineLead, NeutralLead, NeutralRing, PhaseLink
 from embodic.geometry.details import SerpentineDetail
 from embodic.geometry.layout import BoardStack
+from embodic.model.provenance import derive_provenance
 from embodic.model.validate import validate_design
-from embodic.model.vocabulary import TopologyKind
+from embodic.model.vocabulary import ConnectionTopology, TopologyKind
 from embodic.model.winding_specs import StackMode
 from embodic.results import Registry, load_registry
 
@@ -192,3 +195,70 @@ def test_the_example_builds_drc_clean_with_xcoils_envelope(registry: Registry) -
         for x, y in (prim.start_point(), prim.end_point())
     ]
     assert min(radii) >= board.envelope_mm[0] - 1e-9 and max(radii) <= board.envelope_mm[1] + 1e-9
+
+
+def _connected(design, topology: ConnectionTopology = ConnectionTopology.STAR, draw: bool = True):  # type: ignore[no-untyped-def]
+    connection = dataclasses.replace(design.connection, topology=topology, draw_interconnect=draw)
+    return dataclasses.replace(design, connection=connection)
+
+
+@pytest.mark.parametrize(
+    ("design", "code", "message"),
+    [
+        (
+            _connected(per_phase(example_design())),
+            "RANGE_SERPENTINE_INTERCONNECT_BOARDS",
+            "One board per phase: make the star connection between boards externally.",
+        ),
+        (
+            _connected(per_phase(example_design()), ConnectionTopology.DELTA),
+            "RANGE_SERPENTINE_INTERCONNECT_BOARDS",
+            "One board per phase: make the delta connection between boards externally.",
+        ),
+        (
+            _connected(with_copper_count(with_winding(example_design(), layers_per_phase=1), 3)),
+            "RANGE_SERPENTINE_INTERCONNECT_LAYER",
+            "A single layer per phase leaves one terminal inside the winding: make the star connection externally.",
+        ),
+    ],
+    ids=["per-phase-star", "per-phase-delta", "single-layer-star"],
+)
+def test_interconnect_that_cannot_be_drawn_is_a_warning_on_the_stack(
+    design,
+    code: str,
+    message: str,
+    registry: Registry,  # type: ignore[no-untyped-def]
+) -> None:
+    """Catches D-035 a / U-M3a Q1: Xcoil's INTERCONNECT_EXTERNAL warning (engine.js l.2535) was dropped.
+
+    The user asked for an interconnect the board cannot carry, and has to make the connection by hand.
+    """
+    stack = _stack(design, registry)
+    (issue,) = stack.issues
+    assert (issue.code, issue.severity, issue.category) == (code, Severity.WARNING, IssueCategory.UNSUPPORTED_RANGE)
+    assert issue.message == message
+    assert not any(board.pads for board in stack.boards)
+
+
+@pytest.mark.parametrize(
+    "design",
+    [
+        _connected(example_design()),
+        _connected(example_design(), draw=False),
+        _connected(per_phase(example_design()), draw=False),
+        _connected(per_phase(example_design()), ConnectionTopology.OPEN),
+    ],
+    ids=["drawn", "not-asked", "not-asked-per-phase", "open"],
+)
+def test_no_interconnect_warning_when_it_is_drawn_or_not_asked_for(design, registry: Registry) -> None:  # type: ignore[no-untyped-def]
+    """Catches a warning for an interconnect nobody asked for, or one the board does carry."""
+    assert _stack(design, registry).issues == ()
+
+
+def test_compute_reports_the_stack_warning_in_the_outcome(registry: Registry) -> None:
+    """Catches D-035 a: the facade must merge BoardStack.issues, or the user never sees the warning."""
+    design = _connected(per_phase(example_design()))
+    outcome = compute(design, derive_provenance(design, None, ()), registry=registry)
+    assert outcome is not None and outcome.boards is not None
+    warnings = [i for i in outcome.issues if i.severity is Severity.WARNING]
+    assert [i.code for i in warnings] == ["RANGE_SERPENTINE_INTERCONNECT_BOARDS"]

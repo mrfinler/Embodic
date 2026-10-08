@@ -15,6 +15,7 @@ from records import Line as OwnLine
 from records import disc
 from tests.unit.generators.serpentine.make_example import example_design
 from tests.unit.generators.serpentine.support import with_winding
+from tests.unit.property.t_junctions import t_junction_pairs
 
 from embodic.drc import DrcReport, run_drc
 from embodic.generators import build_layout
@@ -90,7 +91,7 @@ def _check_against_the_brute_sweep(design: DesignParameters, stack: BoardStack) 
         report = run_drc(layout, design.drc_rules)
         assert report is not None
         items = _items(layout)
-        exempt = contract_exemptions(items, layout.circuit.interconnect_path_ids)
+        exempt = set(contract_exemptions(items, layout.circuit.interconnect_path_ids)) | t_junction_pairs(items)
         results = [
             r for r in sweep(items, range(len(layout.copper_layers)), lambda kind: rule, exempt) if r.kind in PAIR_KINDS
         ]
@@ -187,7 +188,11 @@ def test_pr_14_the_default_preset_follows_the_rotation(fraction: float) -> None:
 
 @pytest.mark.xfail(
     strict=True,
-    reason="DEF-M3a-02: Ke changes by 8.5e-9 relative (PR-14 allows 1e-9) when sharp end turns lie on the magnet edge",
+    reason=(
+        "DEF-M3a-02: Ke changes by 8.5e-9 relative (PR-14 allows 1e-9). The 18 mm sharp side lines are exactly 36 "
+        "chords of 0.5 mm; rotating moves their computed length by one ulp, ceil() gives 36 or 37 chords, and the two "
+        "valid discretisations differ by that much. Not a rotation defect: 0.49, 0.51 and 0.7 mm chords give 2e-16."
+    ),
 )
 def test_pr_14_counter_example_sharp_corners_with_one_turn() -> None:
     """PR-14 counter-example found by Hypothesis. Rotation by one electrical period changes Ke beyond 1e-9 relative."""

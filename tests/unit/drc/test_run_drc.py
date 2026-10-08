@@ -156,6 +156,62 @@ def test_ut_drc_04_via_on_a_non_interconnect_path_of_another_net_is_reported() -
     }
 
 
+def _junction_violations(branch: CopperPath, trunk: CopperPath) -> set[tuple[DrcCheckKind, tuple[str, ...]]]:
+    report = run_drc(layout(paths=[trunk, branch]), RULES)
+    assert report is not None
+    return {(v.kind, v.objects) for v in report.violations}
+
+
+@pytest.mark.parametrize("offset_mm", [0.0, 5e-7])
+def test_ut_drc_04_path_end_on_the_middle_of_a_line_of_a_same_net_path_is_a_junction(offset_mm: float) -> None:
+    """Catches D-035 b missing: a strand ending on the middle of a bus is reported against the bus (case 5a).
+
+    The branch ends on the centreline of the trunk's line, within COINCIDENCE_MM of it.
+    """
+    trunk = path(0, [line(-5, 0, 5, 0)], net="A")
+    branch = path(1, [line(0, 4, 0, offset_mm)], net="A")
+    assert _junction_violations(branch, trunk) == set()
+
+
+def test_ut_drc_04_path_start_on_the_middle_of_an_arc_of_a_same_net_path_is_a_junction() -> None:
+    """Catches a T-junction test that handles line trunks and path ends only: a start on an arc mid-path (case 5b)."""
+    trunk = path(0, [arc(0, 0, 5, 0, math.pi)], net="A")
+    branch = path(1, [line(0, 5, 0, 2)], net="A")
+    assert _junction_violations(branch, trunk) == set()
+
+
+def test_ut_drc_04_path_end_on_a_path_of_another_net_is_reported() -> None:
+    """Catches a T-junction exemption that drops the net test: a different-net end on the middle of a line (5c)."""
+    trunk = path(0, [line(-5, 0, 5, 0)], net="A")
+    branch = path(1, [line(0, 4, 0, 0)], net="B")
+    assert _junction_violations(branch, trunk) == {(DrcCheckKind.TRACE_TRACE, ("path:0/prim:0", "path:1/prim:0"))}
+
+
+@pytest.mark.parametrize("offset_mm", [2e-6, 0.01])
+def test_ut_drc_04_path_end_beyond_the_coincidence_tolerance_is_reported(offset_mm: float) -> None:
+    """Catches a T-junction tolerance that grows into slack: an end 0.01 mm off the trunk is a real overlap (5d)."""
+    trunk = path(0, [line(-5, 0, 5, 0)], net="A")
+    branch = path(1, [line(0, 4, 0, offset_mm)], net="A")
+    assert _junction_violations(branch, trunk) == {(DrcCheckKind.TRACE_TRACE, ("path:0/prim:0", "path:1/prim:0"))}
+
+
+def test_ut_drc_04_only_the_end_group_on_the_trunk_is_exempt() -> None:
+    """Catches an exemption of the whole branch: its start sits on the trunk, its other end stops 0.15 mm short (5e)."""
+    trunk = path(0, [line(-5, 0, 5, 0)], net="A")
+    branch = path(1, [line(0, 0, 0, 2), line(0, 2, 3, 2), line(3, 2, 3, 0.15)], net="A")
+    assert _junction_violations(branch, trunk) == {(DrcCheckKind.TRACE_TRACE, ("path:0/prim:0", "path:1/prim:2"))}
+
+
+def test_ut_drc_04_junction_end_group_is_exempt_from_the_whole_trunk_path() -> None:
+    """Catches an exemption limited to the primitive the end lies on: the trunk turns 0.05 mm past the end (5f).
+
+    The branch ends at (-0.05, 0) on the first trunk line; the second trunk line starts 0.05 mm further on.
+    """
+    trunk = path(0, [line(-5, 0, 0, 0), line(0, 0, 0, -5)], net="A")
+    branch = path(1, [line(-0.05, 4, -0.05, 0)], net="A")
+    assert _junction_violations(branch, trunk) == set()
+
+
 def test_ut_drc_03_one_micron_intrusion_is_exactly_one_new_violation_at_its_place() -> None:
     """Catches slack in the rule (Xcoil's 0.004 mm) or epsilon 0: rule - 1 um fails, the rule itself passes."""
     clean = run_drc(layout(paths=_turns(0.2)), RULES)

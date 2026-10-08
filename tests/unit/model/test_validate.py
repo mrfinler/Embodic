@@ -12,7 +12,7 @@ from embodic.model.validate import validate_design
 from embodic.model.vocabulary import TopologyKind
 from embodic.model.winding_specs import SerpentineWindingSpec, SpiralWindingSpec, StackMode
 
-from .designs import COPPER_2OZ_MM, serpentine_design, spiral_design
+from .designs import COPPER_2OZ_MM, serpentine_design, spiral_design, wave_design
 
 
 def _with_coil_gap(gap_mm: float) -> DesignParameters:
@@ -110,3 +110,31 @@ def test_blank_serpentine_draft_starts_on_one_board_with_xcoil_gap():
     outcome = parse_draft(DesignDraft(topology=TopologyKind.SERPENTINE, values=values))
     assert not isinstance(outcome, DraftIncomplete)
     assert outcome == serpentine_design()
+
+
+@pytest.mark.req("REQ-F-35")
+@pytest.mark.parametrize(
+    ("copper_count", "valid"),
+    [(2, True), (4, True), (16, True), (1, False), (3, False), (5, False), (18, False)],
+)
+def test_wave_copper_count_is_even_from_two_to_sixteen(copper_count, valid):
+    """UT-GEN-04, D-035 e. Defect caught: a wave stack-up of odd size or beyond Xcoil's 16 layers passing validation.
+
+    The wave winding pairs a T layer with a B layer (Xcoil LAYERS_ODD, num('waveLayers', 2, 16)).
+    """
+    design = dataclasses.replace(wave_design(), stackup=generate_even_stackup(copper_count, COPPER_2OZ_MM, 1.6))
+    found = [i for i in validate_design(design) if i.code == "INVALID_WAVE_COPPER_COUNT"]
+    if valid:
+        assert found == []
+    else:
+        assert [(i.category, i.severity, i.pointers, i.value, i.limit) for i in found] == [
+            (IssueCategory.INVALID, Severity.ERROR, ("/stackup/layers",), copper_count, 16)
+        ]
+
+
+@pytest.mark.req("REQ-F-35")
+def test_wave_copper_count_rule_leaves_the_other_topologies_alone():
+    """Defect caught: the wave rule applied to a serpentine or spiral stack-up of an odd size."""
+    for design in (serpentine_design(), spiral_design()):
+        odd = dataclasses.replace(design, stackup=generate_even_stackup(3, COPPER_2OZ_MM, 1.6))
+        assert "INVALID_WAVE_COPPER_COUNT" not in [i.code for i in validate_design(odd)]

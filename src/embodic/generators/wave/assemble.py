@@ -11,7 +11,7 @@ from types import MappingProxyType
 from typing import Literal
 
 from embodic.generators.wave.build import WaveVia
-from embodic.generators.wave.interconnect import IcItem, IcPad
+from embodic.generators.wave.interconnect import IcPad, IcPart
 from embodic.generators.wave.xprim import XPrim, to_primitive
 from embodic.geometry.circuit import (
     Circuit,
@@ -51,7 +51,7 @@ class Obj:
     element: int | None = None  # slot of a track
     polarity: Literal[1, -1, 0] = 0
     end_via: int | None = None  # index in WaveBuild.vias of the via the track ends on, in current direction
-    ic: IcItem | None = None
+    ic: IcPart | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -98,16 +98,18 @@ def phase_net(phase: int | None) -> str:
     return "" if phase is None else f"PHASE_{PHASES[phase].value}"
 
 
-def _role(item: IcItem, path_id: int) -> InterconnectRole:
-    if item.kind == "line":
-        assert item.phase is not None
-        return LineLead(path_id=path_id, phase=PHASES[item.phase])
-    if item.kind == "neutral_pad":
-        return NeutralLead(path_id=path_id)
-    assert item.link is not None
-    if item.link.net == "N":
-        return NeutralRing(path_id=path_id, tap_via_ids=tuple(t.via for t in item.link.taps))
-    return PhaseLink(path_id=path_id, phase=PHASES[int(item.link.net[1:])])
+def _role(part: IcPart, path_id: int) -> InterconnectRole:
+    match part.role:
+        case "line":
+            assert part.phase is not None
+            return LineLead(path_id=path_id, phase=PHASES[part.phase])
+        case "link":
+            assert part.phase is not None
+            return PhaseLink(path_id=path_id, phase=PHASES[part.phase])
+        case "ring":
+            return NeutralRing(path_id=path_id, tap_via_ids=part.taps)
+        case "neutral_lead":
+            return NeutralLead(path_id=path_id)
 
 
 def _member(obj: Obj, path_id: int) -> Member:

@@ -19,9 +19,10 @@ from .make_example import EXAMPLE_ID, write_example
 pytestmark = pytest.mark.req("REQ-F-35", "REQ-F-25")
 
 # M1 golden (tests/independent/m1/test_gr19_drc.py) found 191 D-006 violations on Xcoil's own wave layout. Xcoil's
-# 4 um DRC slack hides the 180 trace-to-via gaps of 0.199965 mm that D-006 (no slack) reports against 0.2 mm; the 11
-# trace-to-trace pairs all involve interconnect copper.
-EXPECTED_VIOLATIONS = {"trace_via": 180, "trace_trace": 11}
+# 4 um DRC slack hides gaps of 0.199965 mm that D-006 (no slack) reports against 0.2 mm: 180 trace-to-via and 6
+# trace-to-trace (an end turn against a line lead or a tap stub). The other 5 pairs were the star item overlapping
+# itself; since the item is split into tap stubs and ring (DEF-U-M3b-01, D-035 b) they are gone.
+EXPECTED_VIOLATIONS = {"trace_via": 180, "trace_trace": 6}
 
 
 @pytest.fixture
