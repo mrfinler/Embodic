@@ -15,6 +15,10 @@ MAX_DEVIATION_MM = 5e-4
 MAX_PIECES = 128
 
 
+class DegenerateBiarcError(ValueError):
+    """No biarc joins the two points: they coincide, or the tangents agree and the chord is perpendicular to them."""
+
+
 def invol(alpha: float) -> float:
     """Xcoil invol: the involute function tan(alpha) - alpha."""
     return math.tan(alpha) - alpha
@@ -67,11 +71,16 @@ def segment_segment_distance(a: XLine, b: XLine) -> float:
 
 
 def biarc(p0: Vec, t0: Vec, p1: Vec, t1: Vec, w: float, kind: str) -> tuple[XPrim, XPrim]:
-    """Xcoil biarc: two tangent-continuous arcs joining P0 (tangent T0) to P1 (tangent T1)."""
+    """Xcoil biarc: two tangent-continuous arcs joining P0 (tangent T0) to P1 (tangent T1).
+
+    Raises ``DegenerateBiarcError`` where Xcoil's formula divides by zero; ``generate_wave`` maps it to ``Unbuildable``.
+    """
     vx, vy = p1[0] - p0[0], p1[1] - p0[1]
     tx, ty = t0[0] + t1[0], t0[1] + t1[1]
     vt, vv = vx * tx + vy * ty, vx * vx + vy * vy
     c = 2 * (1 - (t0[0] * t1[0] + t0[1] * t1[1]))
+    if vv == 0 or (c <= 1e-12 and vt == 0):  # no joint to place, or a joint at infinity
+        raise DegenerateBiarcError(f"no biarc from {p0} to {p1}")
     d = (-vt + math.sqrt(vt * vt + c * vv)) / c if c > 1e-12 else vv / (2 * vt)
     joint = ((p0[0] + d * t0[0] + p1[0] - d * t1[0]) / 2, (p0[1] + d * t0[1] + p1[1] - d * t1[1]) / 2)
     second = arc_from_tangent(p1, (-t1[0], -t1[1]), joint, w, kind)
