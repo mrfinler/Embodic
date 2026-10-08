@@ -32,6 +32,7 @@ class PhaseResult:
 
     phase: Phase
     ke_peak_v_s_per_rad: Traceable[float]
+    emf_phasor_angle_rad: Traceable[float]  # argument of the fundamental EMF phasor, in (-pi, pi]
     resistance_20c_ohm: Traceable[float]
     resistance_operating_ohm: Traceable[float]
     circulating_loss_w: Traceable[float]
