@@ -1,12 +1,13 @@
-"""The shell window: toolstrip, placeholder inspector, geometry canvas, key results rail and status bar.
+"""The shell window: toolstrip, inspector with the design form, geometry canvas, key results rail and status bar.
 
-The design form (U-M4c) and the results, checks and export views (U-M4d) fill the reserved regions later; their
-toolstrip commands are known here and stay disabled until those view-models exist.
+The design session (U-M4c) drives the inspector, the undo history and what the canvas draws. The results, checks and
+export views (U-M4d) fill their regions later; their toolstrip commands stay disabled until those view-models exist.
 """
 
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 
 from PySide6.QtCore import QPoint, Qt
@@ -18,6 +19,8 @@ from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
+    QListWidget,
+    QListWidgetItem,
     QMainWindow,
     QMenu,
     QMessageBox,
@@ -30,7 +33,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from embodic.errors import ValidationIssue
 from embodic.io.examples import list_examples
+from embodic.model.vocabulary import TopologyKind
 from embodic.results.status import Status
 from embodic.ui.strings import text
 from embodic.ui.theme import ThemeName, ThemeTokens, load_theme, resolve_theme
@@ -43,17 +48,28 @@ from embodic.ui.viewmodels.outcome import (
     OutcomeState,
     OutcomeViewModel,
     SummaryItem,
-    shown_result,
+)
+from embodic.ui.viewmodels.session import (
+    DesignSession,
+    SessionDrafting,
+    SessionEmpty,
+    tab_of_widget,
+    widget_for_pointer,
 )
 from embodic.ui.views import style
+from embodic.ui.views.board_rotor_panel import BoardRotorPanel
+from embodic.ui.views.coil_panel import CoilPanel, FieldPanel
+from embodic.ui.views.examples_gallery import ExamplesGallery
 from embodic.ui.views.geometry_view import GeometryView
+from embodic.ui.views.layer_panel import LayerPanel
+from embodic.ui.views.new_design_dialog import NewDesignDialog
+from embodic.ui.views.phase_panel import PhasePanel
 from embodic.ui.views.toolstrip_bar import CommandTable, FocusRingTabBar, ToolstripBar
 
 logger = logging.getLogger(__name__)
 
 MIN_SIZE_PX = (960, 540)
 THREE_PANE_FROM_PX = 1280
-INSPECTOR_TABS = ("tab-coil", "tab-phases", "tab-layers", "tab-board")
 HOME_PLACEHOLDER = "%USERPROFILE%"
 
 
@@ -126,12 +142,13 @@ class MainWindow(QMainWindow):
         self,
         appearance: AppearanceViewModel,
         outcome: OutcomeViewModel,
+        session: DesignSession,
         paths: ShellPaths,
         os_prefers_dark: Callable[[], bool],
         on_close: Callable[[], None],
     ) -> None:
         super().__init__()
-        self.appearance, self.outcome, self.paths = appearance, outcome, paths
+        self.appearance, self.outcome, self.session, self.paths = appearance, outcome, session, paths
         self._on_close = on_close
         self._os_prefers_dark = os_prefers_dark
         self.tokens: ThemeTokens = load_theme("light")
@@ -149,21 +166,32 @@ class MainWindow(QMainWindow):
         self._status_bar()
         outcome.state.subscribe(lambda _: self._render())
         outcome.hidden_layers.subscribe(lambda _: self._render())
+        session.state.subscribe(lambda _: self._on_session())
+        session.issues.subscribe(lambda _: self._show_issues())
+        session.notice.subscribe(lambda _: self._show_notice())
+        for action_id, available in (("act-undo", session.can_undo), ("act-redo", session.can_redo)):
+            action = self.toolstrip.actions_by_id[action_id]
+            action.setEnabled(available.value)
+            available.subscribe(action.setEnabled)
         appearance.theme.subscribe(lambda _: self.apply_theme())
         appearance.phase_render_mode.subscribe(lambda _: self._render())
         self.canvas.cursor_moved.connect(self._show_cursor)
         self.apply_theme()
+        self._show_issues()
+        self._on_session()
 
     def _commands(self) -> CommandTable:
-        pending = (
-            "new_design open_project undo redo set_topology_spiral set_topology_serpentine set_topology_wave "
-            "set_connection_star set_connection_delta show_checks show_equations export_svg export_dxf export_pdf "
-            "export_bundle"
-        ).split()
+        pending = "open_project show_checks show_equations export_svg export_dxf export_pdf export_bundle".split()
+        session = self.session
         implemented: CommandTable = {
+            "new_design": self.show_new_design,
+            "undo": session.undo,
+            "redo": session.redo,
+            **{f"set_topology_{t.value}": partial(session.set_topology, t) for t in TopologyKind},
+            **{f"set_connection_{c}": partial(session.edit, "/connection/topology", c) for c in ("star", "delta")},
             "save_project": self.save_project_dialog,
-            "show_examples": self.show_examples_menu,
-            "compute_now": self.outcome.compute_now,
+            "show_examples": self.show_examples,
+            "compute_now": self.compute_now,
             "cycle_theme": self.appearance.cycle_theme,
             "toggle_phase_render_mode": self.appearance.toggle_phase_render_mode,
             "fit_view": self.canvas.fit_view,
@@ -173,17 +201,23 @@ class MainWindow(QMainWindow):
     def _work_area(self) -> QWidget:
         inspector = QWidget()
         inspector.setObjectName("inspector")
-        tabs = QTabWidget()
-        tabs.setObjectName("inspector-tabs")
+        self.inspector_tabs = QTabWidget()
+        self.inspector_tabs.setObjectName("inspector-tabs")
         self.inspector_tab_bar = FocusRingTabBar()
-        tabs.setTabBar(self.inspector_tab_bar)
-        for name in INSPECTOR_TABS:
-            page = QLabel(text("shell.inspector.placeholder"))
-            page.setObjectName(name)
-            page.setProperty("class", "hint")
-            page.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            tabs.addTab(page, text(f"shell.{name}.label"))
-        QVBoxLayout(inspector).addWidget(tabs)
+        self.inspector_tabs.setTabBar(self.inspector_tab_bar)
+        self.panels: dict[str, FieldPanel] = {}
+        for panel in (
+            CoilPanel(self.session),
+            PhasePanel(self.session),
+            LayerPanel(self.session),
+            BoardRotorPanel(self.session),
+        ):
+            self.panels[panel.tab] = panel
+            self.inspector_tabs.addTab(panel, text(f"shell.{panel.tab}.label"))
+        inspector_layout = QVBoxLayout(inspector)
+        inspector_layout.addWidget(self._required_bar())
+        inspector_layout.addWidget(self._notice_bar())
+        inspector_layout.addWidget(self.inspector_tabs, 1)
 
         self.centre = QStackedWidget()
         self.centre.setObjectName("centre")
@@ -204,6 +238,19 @@ class MainWindow(QMainWindow):
         for key in ("sum-ok", "sum-drc", "sum-ke", "sum-r-phase"):
             self.cards[key] = _SummaryCard(key)
             rail_layout.addWidget(self.cards[key])
+        issues_title = QLabel(text("design.issues.title"))
+        issues_title.setProperty("class", "section-title")
+        self.issues_list = QListWidget()
+        self.issues_list.setObjectName("issues-list")
+        self.issues_list.itemActivated.connect(self._issue_activated)
+        self.issues_list.itemClicked.connect(self._issue_activated)
+        self.issue_apply = QPushButton()
+        self.issue_apply.setObjectName("btn-apply-suggestion")
+        self.issue_apply.clicked.connect(self._apply_selected_suggestion)
+        self.issues_list.currentItemChanged.connect(lambda *_: self._show_apply())
+        rail_layout.addWidget(issues_title)
+        rail_layout.addWidget(self.issues_list, 1)
+        rail_layout.addWidget(self.issue_apply)
         rail_layout.addStretch(1)
 
         self.splitter = QSplitter()
@@ -225,12 +272,11 @@ class MainWindow(QMainWindow):
         buttons = QHBoxLayout()
         self.empty_new = QPushButton(text("shell.empty-new.label"))
         self.empty_new.setObjectName("btn-empty-new")
-        self.empty_new.setEnabled(False)
-        self.empty_new.setToolTip(text("toolstrip.unavailable.reason"))
+        self.empty_new.clicked.connect(self.show_new_design)
         self.empty_examples = QPushButton(text("shell.empty-examples.label"))
         self.empty_examples.setObjectName("btn-empty-examples")
         self.empty_examples.setProperty("class", "primary")
-        self.empty_examples.clicked.connect(lambda: self.show_examples_menu(self.empty_examples))
+        self.empty_examples.clicked.connect(self.show_examples)
         for widget in (title, body):
             widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
             layout.addWidget(widget)
@@ -251,9 +297,177 @@ class MainWindow(QMainWindow):
         self.layer_bar_layout = QHBoxLayout(self.layer_bar)
         self.layer_bar_layout.addWidget(QLabel(text("shell.layers.title")))
         self.layer_bar_layout.addStretch(1)
+        self.stale_label = QLabel()
+        self.stale_label.setObjectName("fig-stale")
+        self.stale_label.setProperty("class", "notice")
+        self.stale_label.setWordWrap(True)
+        self.stale_label.setVisible(False)
         layout.addWidget(self.layer_bar)
+        layout.addWidget(self.stale_label)
         layout.addWidget(self.canvas, 1)
         return page
+
+    def _required_bar(self) -> QWidget:
+        bar = self.required_bar = QWidget()
+        bar.setObjectName("required-bar")
+        layout = QHBoxLayout(bar)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.required_count = QLabel()
+        self.required_count.setObjectName("new-required-count")
+        self.required_count.setProperty("class", "hint")
+        self.first_missing = QPushButton(text("btn-first-missing.label"))
+        self.first_missing.setObjectName("btn-first-missing")
+        self.first_missing.clicked.connect(self.focus_first_missing)
+        layout.addWidget(self.required_count, 1)
+        layout.addWidget(self.first_missing)
+        return bar
+
+    def _notice_bar(self) -> QWidget:
+        self.notice = QFrame()
+        self.notice.setObjectName("design-notice")
+        self.notice.setProperty("class", "notice")
+        layout = QHBoxLayout(self.notice)
+        self.notice_text = QLabel()
+        self.notice_text.setObjectName("design-notice-text")
+        self.notice_text.setWordWrap(True)
+        undo = QPushButton(text("design.notice.undo"))
+        undo.setObjectName("btn-notice-undo")
+        undo.clicked.connect(self.session.undo)
+        layout.addWidget(self.notice_text, 1)
+        layout.addWidget(undo)
+        self.notice.setVisible(False)
+        return self.notice
+
+    def _on_session(self) -> None:
+        state = self.session.state.value
+        for panel in self.panels.values():
+            panel.refresh()
+        drafting = isinstance(state, SessionDrafting)
+        missing = len(state.missing) if isinstance(state, SessionDrafting) else 0
+        self.required_count.setText(
+            text("new-required-count.one") if missing == 1 else text("new-required-count.text", count=missing)
+        )
+        self.required_bar.setVisible(drafting)
+        compute = self.toolstrip.actions_by_id["act-compute"]
+        compute.setEnabled(not drafting)
+        head = text("act-compute.label") + f" ({compute.shortcut().toString()})."
+        reason = f"{self.required_count.text()}." if drafting else text("act-compute.tooltip")
+        compute.setToolTip(f"{head} {reason}")
+        self.setWindowTitle(self.session.title())
+        self._render()
+
+    def _show_stale(self, outdated: bool) -> None:
+        state = self.session.state.value
+        if isinstance(state, SessionDrafting):
+            message = text("design.stale.drafting", count=len(state.missing))
+        else:
+            message = text("design.stale.invalid")
+        self.stale_label.setText(message)
+        self.stale_label.setVisible(outdated)
+
+    def _show_issues(self) -> None:
+        self.issues_list.clear()
+        for found in self.session.issues.value:
+            item = QListWidgetItem(found.message)
+            item.setData(Qt.ItemDataRole.UserRole, found)
+            item.setToolTip(found.code)
+            self.issues_list.addItem(item)
+        if not self.session.issues.value:
+            self.issues_list.addItem(QListWidgetItem(text("design.issues.none")))
+        self._show_apply()
+
+    def _selected_issue(self) -> ValidationIssue | None:
+        item = self.issues_list.currentItem()
+        found = None if item is None else item.data(Qt.ItemDataRole.UserRole)
+        return found if isinstance(found, ValidationIssue) else None
+
+    def _show_apply(self) -> None:
+        found = self._selected_issue()
+        suggestion = None if found is None else found.suggestion
+        self.issue_apply.setVisible(suggestion is not None)
+        if suggestion is not None:
+            self.issue_apply.setText(text("design.issue.apply", value=suggestion.proposed_value))
+
+    def _apply_selected_suggestion(self) -> None:
+        found = self._selected_issue()
+        if found is not None and found.suggestion is not None:
+            self.session.apply_suggestion(found.suggestion)
+
+    def _issue_activated(self, item: QListWidgetItem) -> None:
+        found = item.data(Qt.ItemDataRole.UserRole)
+        if isinstance(found, ValidationIssue) and found.pointers:
+            self.focus_pointer(found.pointers[0])
+
+    def _show_notice(self) -> None:
+        notice = self.session.notice.value
+        self.notice.setVisible(notice is not None)
+        self.notice_text.setText("" if notice is None else notice.text)
+
+    def focus_pointer(self, pointer: str) -> bool:
+        """Open the tab of the input that fills a pointer and focus it (UI-14, btn-first-missing)."""
+        document = self.session.document
+        if document is None:
+            return False
+        widget_id = widget_for_pointer(pointer, document.draft)
+        if widget_id is None:
+            return False
+        panel = self.panels.get(tab_of_widget(widget_id, document.draft.topology))
+        if panel is None:
+            return False
+        self.inspector_tabs.setCurrentWidget(panel)
+        return panel.focus_widget(widget_id)
+
+    def focus_first_missing(self) -> None:
+        """Focus the input of the first missing required field."""
+        state = self.session.state.value
+        if isinstance(state, SessionDrafting) and state.missing:
+            self.focus_pointer(state.missing[0])
+
+    def new_design_dialog(self) -> NewDesignDialog:
+        """Return the New design dialog for this window's session."""
+        dialog = NewDesignDialog(self.session, self)
+        dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        return dialog
+
+    def show_new_design(self) -> None:
+        """Open the New design dialog."""
+        self.new_design_dialog().open()
+
+    def examples_gallery(self) -> ExamplesGallery:
+        """Return the Examples gallery for this window's session."""
+        gallery = ExamplesGallery(self.session, self)
+        gallery.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        return gallery
+
+    def show_examples(self) -> None:
+        """Open the Examples gallery."""
+        self.examples_gallery().open()
+
+    def compute_now(self) -> None:
+        """Compute the open design again (F5); a project the shell opened directly recomputes through the shell."""
+        if isinstance(self.session.state.value, SessionEmpty):
+            self.outcome.compute_now()
+        else:
+            self.session.compute_now()
+
+    def offer_recovery(self, path: Path) -> QMessageBox:
+        """Ask whether to recover the design autosaved before the last unclean exit (UI-21)."""
+        dialog = QMessageBox(
+            QMessageBox.Icon.Question,
+            text("recovery.title"),
+            text("recovery.body"),
+            QMessageBox.StandardButton.NoButton,
+            self,
+        )
+        dialog.setObjectName("dlg-recovery")
+        recover = dialog.addButton(text("recovery.recover"), QMessageBox.ButtonRole.AcceptRole)
+        recover.setObjectName("btn-recover")
+        discard = dialog.addButton(text("recovery.discard"), QMessageBox.ButtonRole.RejectRole)
+        discard.setObjectName("btn-discard-recovery")
+        recover.clicked.connect(lambda: self.session.open_project(path))
+        discard.clicked.connect(lambda: path.unlink(missing_ok=True))
+        dialog.open()
+        return dialog
 
     def _status_bar(self) -> None:
         bar = QStatusBar()
@@ -279,6 +493,8 @@ class MainWindow(QMainWindow):
         style.apply_theme(app, self.tokens)
         self.toolstrip.apply_theme(self.tokens)
         self.inspector_tab_bar.set_ring(self.tokens)
+        ring = f"{self.tokens.focus_ring_px}px solid {self.tokens.colours['focus-ring']}"
+        self.issues_list.setStyleSheet(f"QListWidget#issues-list:focus {{ border: {ring}; }}")
         self._render()
 
     def on_os_scheme_changed(self) -> None:
@@ -288,8 +504,10 @@ class MainWindow(QMainWindow):
 
     def _render(self) -> None:
         state: OutcomeState = self.outcome.state.value
-        shown = shown_result(state)
-        self.centre.setCurrentIndex(0 if isinstance(state, OutcomeEmpty) else 1)
+        shown, outdated = self.session.drawn(state)
+        empty = isinstance(state, OutcomeEmpty) and isinstance(self.session.state.value, SessionEmpty)
+        self.centre.setCurrentIndex(0 if empty else 1)
+        self._show_stale(outdated)
         compute_word = {OutcomeComputing: "updating", OutcomeFailed: "error"}.get(type(state), "ready")
         self.status["st-compute"].setText(text(f"shell.st-compute.{compute_word}"))
         self.rail_empty.setVisible(shown is None)
@@ -298,6 +516,10 @@ class MainWindow(QMainWindow):
         if shown is None:
             self.status["st-drc"].setText(text("shell.st-drc.none"))
             self.status["st-counts"].setText("")
+            self._sync_layer_boxes(())
+            self.canvas.show_geometry(
+                None, self.tokens, self.appearance.phase_render_mode.value, self.outcome.hidden_layers.value
+            )
             return
         for item in shown.summary:
             self.cards[item.key].show_item(item)
@@ -355,7 +577,7 @@ class MainWindow(QMainWindow):
             action = QAction(info.title, menu)
             action.setObjectName(f"example-{info.example_id}")
             action.setToolTip(info.source_note)
-            action.triggered.connect(lambda _=False, example_id=info.example_id: self.outcome.open_example(example_id))
+            action.triggered.connect(lambda _=False, example_id=info.example_id: self.session.load_example(example_id))
             menu.addAction(action)
         return menu
 
@@ -373,12 +595,15 @@ class MainWindow(QMainWindow):
             self.outcome.save_project(Path(name))
 
     def save_recovery(self, correlation_id: str) -> Path | None:
-        """Save the open project next to the log; return the file, or None when no project is open."""
-        if self.outcome.project is None:
+        """Save the open design or draft next to the log; return the file, or None when nothing is open."""
+        if self.session.document is None and self.outcome.project is None:
             return None
         self.paths.recovery_dir.mkdir(parents=True, exist_ok=True)
         path = self.paths.recovery_dir / f"recovery-{correlation_id}.embodic.json"
-        self.outcome.save_project(path)
+        if self.session.document is not None:
+            self.session.save_project(path)
+        else:
+            self.outcome.save_project(path)
         logger.info("project saved to %s", path, extra={"correlation_id": correlation_id})
         return path
 
@@ -410,6 +635,7 @@ class MainWindow(QMainWindow):
         self.splitter.setSizes([side[0], max(self.width() - sum(side), 100), side[1]])
 
     def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802 (Qt override)
-        """Stop the compute worker before the window goes."""
+        """Stop the compute worker before the window goes; a clean exit leaves no autosave to recover."""
         self._on_close()
+        self.session.discard_autosave()
         super().closeEvent(event)

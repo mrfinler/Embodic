@@ -24,6 +24,7 @@ from embodic.api import compute
 from embodic.ui.theme import ThemeName
 from embodic.ui.viewmodels.appearance import AppearanceViewModel
 from embodic.ui.viewmodels.outcome import OutcomeReady, OutcomeViewModel
+from embodic.ui.viewmodels.session import AUTOSAVE_NAME, DesignSession
 from embodic.ui.views.main_window import MainWindow, ShellPaths, redact_home
 from embodic.ui.workers import ComputeFn, ComputeWorker
 
@@ -104,12 +105,19 @@ def create_shell(
     """Wire the view-models, the worker and the window."""
     worker = ComputeWorker(compute_fn)
     outcome = OutcomeViewModel(worker)
-    window = MainWindow(AppearanceViewModel(store), outcome, paths, prefers_dark, worker.shutdown)
+    session = DesignSession(outcome, autosave_path=paths.recovery_dir / AUTOSAVE_NAME)
+    window = MainWindow(AppearanceViewModel(store), outcome, session, paths, prefers_dark, worker.shutdown)
     worker.setParent(window)
     worker.finished.connect(outcome.on_finished)
     worker.failed.connect(window.on_compute_failed)
     QGuiApplication.styleHints().colorSchemeChanged.connect(lambda _scheme: window.on_os_scheme_changed())
     return Shell(window, worker)
+
+
+def unrecovered_autosave(paths: ShellPaths) -> Path | None:
+    """Return the autosave a previous run left behind (it exits cleanly only after deleting it), or None."""
+    autosave = paths.recovery_dir / AUTOSAVE_NAME
+    return autosave if autosave.exists() else None
 
 
 def install_crash_handler(window: MainWindow) -> None:
@@ -136,7 +144,7 @@ def run_smoke(app: QApplication, window: MainWindow, screenshot_dir: Path | None
     """Open, load D08, compute, grab, quit; 0 when the window showed a computed outcome."""
     window.resize(*SCREEN_SIZES_PX[0])
     window.show()
-    window.outcome.open_example(SMOKE_EXAMPLE)
+    window.session.load_example(SMOKE_EXAMPLE)
     if not _wait_for_result(app, window) or window.grab().isNull():
         logger.error("smoke run: no computed outcome within %.0f s", SMOKE_TIMEOUT_S)
         return 1
@@ -168,12 +176,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     app.setApplicationName(SETTINGS_APP)
     data_dir = app_data_dir()
     setup_logging(data_dir / "logs")
-    window = create_shell(QSettingsStore(), ShellPaths(recovery_dir=data_dir / "recovery")).window
+    paths = ShellPaths(recovery_dir=data_dir / "recovery")
+    autosave = unrecovered_autosave(paths)
+    window = create_shell(QSettingsStore(), paths).window
     install_crash_handler(window)
     if args.smoke:
         return run_smoke(app, window, args.screenshot_dir)
     window.resize(1280, 800)
     window.show()
+    if autosave is not None:
+        window.offer_recovery(autosave)
     return app.exec()
 
 
