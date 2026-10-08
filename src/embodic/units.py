@@ -49,6 +49,7 @@ class Unit(StrEnum):
     G = "g"
     G_PER_CM3 = "g_per_cm3"
     N_M = "N_m"
+    N_M_PER_SQRT_W = "N_m_per_sqrt_W"
     RPM = "rpm"
     HZ = "Hz"
     F_PER_M = "F_per_m"
@@ -86,6 +87,7 @@ _DISPLAY = MappingProxyType(
         Unit.G: "g",
         Unit.G_PER_CM3: "g/cm³",
         Unit.N_M: "N·m",
+        Unit.N_M_PER_SQRT_W: "N·m/sqrt(W)",
         Unit.RPM: "rpm",
         Unit.HZ: "Hz",
         Unit.F_PER_M: "F/m",

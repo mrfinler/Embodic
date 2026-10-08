@@ -71,6 +71,7 @@ class AnalysisResult:
     loss_total_w: Traceable[float]  # EQ-26 P_Cu + P_eddy + P_circ + P_delta,circ + P_ic
     output_power_w: Traceable[float]  # EQ-26 P_out = T * omega_m
     efficiency: Traceable[float]  # EQ-26 P_out / (P_out + P_loss), electromagnetic only
+    motor_constant_n_m_per_sqrt_w: Traceable[float]  # EQ-26 K_m = T / sqrt(P_Cu)
     thd_phase: Traceable[float]  # EQ-18
     thd_line: Traceable[float]
     current_density_a_per_mm2: Traceable[float]  # EQ-22

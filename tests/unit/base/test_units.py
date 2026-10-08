@@ -154,3 +154,16 @@ def test_units_vacuum_constant_units_exist(code, display):
     """Catches mu_0 (H/m) and eps_0 (F/m) having no unit, which keeps them out of the registry constants (U-E2)."""
     assert Unit(code).display() == display
     assert Unit(code).value == code
+
+
+@pytest.mark.req("REQ-N-21")
+def test_units_motor_constant_unit_round_trips_by_code():
+    """Catches DEF-M2e4-01: K_m (EQ-26) had no unit, so a project file or results JSON could not name it.
+
+    The code is stored in results JSON, so it is pinned. The contract display is "N·m/√W"; LG-01 allows no radical sign
+    in a string literal yet, so the display spells it "sqrt(W)" until tests/static allows the symbol.
+    """
+    unit = Unit("N_m_per_sqrt_W")
+    assert unit is Unit.N_M_PER_SQRT_W
+    assert unit.value == "N_m_per_sqrt_W"
+    assert unit.display() == "N·m/sqrt(W)"

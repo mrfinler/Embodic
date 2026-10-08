@@ -1,11 +1,13 @@
-"""PR-03, PR-05 to PR-09, PR-11 and PR-12 on random spiral designs through the compute facade."""
+"""PR-03, PR-05 to PR-12 on random spiral designs (PR-07 spacing and PR-11 edge clearance: see the unit report)."""
 
+import cmath
 import dataclasses
 import json
 import math
 from collections.abc import Iterator
 from typing import Any
 
+import numpy as np
 import pytest
 from hypothesis import assume, example, given, settings
 from hypothesis import strategies as st
@@ -14,11 +16,13 @@ from embodic.api import ComputeOptions, StageCache, compute, outcome_to_json
 from embodic.errors import Severity, Unbuildable
 from embodic.generators import build_layout
 from embodic.geometry.paths import is_continuous
-from embodic.geometry.primitives import Arc
+from embodic.geometry.primitives import Arc, Line, Primitive, PrimitiveRole
+from embodic.geometry.transforms import mirror, reverse_path
 from embodic.io.canonical import design_hash
 from embodic.model.design import DesignParameters
 from embodic.model.draft import DraftIncomplete, parse_draft
 from embodic.model.provenance import ExampleRef, UserValue, derive_provenance
+from embodic.model.stackup import CopperLayer, DielectricLayer, Stackup
 from embodic.model.winding_specs import SpiralWindingSpec
 from embodic.outcome import ComputeOutcome
 from embodic.results import load_registry
@@ -258,3 +262,134 @@ def test_pr_12_badges_do_not_depend_on_provenance_and_reentry_changes_nothing(de
     if first.analysis is None or second.analysis is None:
         return
     assert dict(_statuses(first.analysis.to_json())) == dict(_statuses(second.analysis.to_json()))
+
+
+def _heading(p: Primitive, at_end: bool) -> float:
+    if isinstance(p, Line):
+        return math.atan2(p.y2_mm - p.y1_mm, p.x2_mm - p.x1_mm)
+    angle = p.start_rad + (p.sweep_rad if at_end else 0.0)
+    return angle + math.copysign(math.pi / 2, p.sweep_rad)
+
+
+def _filleted(design: DesignParameters, radius_mm: float) -> DesignParameters:
+    assert isinstance(design.winding, SpiralWindingSpec)
+    coil = dataclasses.replace(design.winding.coil, corner_radius_mm=radius_mm)
+    return dataclasses.replace(design, winding=dataclasses.replace(design.winding, coil=coil))
+
+
+@pytest.mark.req("REQ-F-01")
+@settings(max_examples=max(20, COMPUTE_EXAMPLES))
+@given(design=spiral_designs(), radius_mm=st.sampled_from([0.2, 0.5]))
+def test_pr_03_headings_are_continuous_at_every_fillet_joint(design: DesignParameters, radius_mm: float) -> None:
+    """PR-03 (tangent part, UT-GEO-02 on random coils). Catches a fillet on the wrong side or a mis-trimmed neighbour.
+
+    A wrong-side fillet jumps pi in heading; only joints that touch a fillet are tangent by construction (G9), the
+    other corners of an end turn are real corners.
+    """
+    built = build_layout(_filleted(design, radius_mm), REGISTRY)
+    if isinstance(built, Unbuildable):
+        return
+    for board in built.boards:
+        for path in board.paths:
+            for before, after in zip(path.primitives, path.primitives[1:], strict=False):
+                if PrimitiveRole.FILLET in (before.role, after.role):
+                    jump = abs(math.remainder(_heading(before, True) - _heading(after, False), 2.0 * math.pi))
+                    assert jump <= 1e-6
+                    assert math.dist(before.end_point(), after.start_point()) <= 1e-6
+
+
+@pytest.mark.req("REQ-F-01")
+@settings(max_examples=max(20, COMPUTE_EXAMPLES))
+@given(design=spiral_designs())
+def test_pr_10_layer_y_mirrors_layer_x_about_every_coil_axis(design: DesignParameters) -> None:
+    """PR-10 (UT-GEO-03 on random coil specs). Catches a Y spiral that is not the reversed mirror of X on any coil.
+
+    Both paths are stored in current direction, so X equals Y mirrored and reversed for every polarity.
+    """
+    built = build_layout(design, REGISTRY)
+    if isinstance(built, Unbuildable):
+        return
+    assert isinstance(design.winding, SpiralWindingSpec)
+    coil, pair = design.winding.coil, design.winding.layers.pairs[0]
+    board = built.boards[0]
+    for k in range(coil.coil_count):
+        axis = coil.first_coil_angle_rad + 2.0 * math.pi * k / coil.coil_count
+        x = next(p for p in board.paths if p.element == k and p.layer == pair.layer_in)
+        y = next(p for p in board.paths if p.element == k and p.layer == pair.layer_out)
+        expected = reverse_path(mirror(y.primitives, axis))
+        assert len(expected) == len(x.primitives)
+        for a, b in zip(expected, x.primitives, strict=True):
+            assert math.dist(a.start_point(), b.start_point()) <= 1e-9
+            assert math.dist(a.end_point(), b.end_point()) <= 1e-9
+
+
+def _with_copper_scale(design: DesignParameters, scale: float) -> DesignParameters:
+    """Scale every copper layer and give the difference to the first dielectric, so the board thickness is kept."""
+    layers = design.stackup.layers
+    removed = sum(layer.thickness_mm * (1.0 - scale) for layer in layers if isinstance(layer, CopperLayer))
+    first_dielectric = next(i for i, layer in enumerate(layers) if isinstance(layer, DielectricLayer))
+    scaled = tuple(
+        dataclasses.replace(layer, thickness_mm=layer.thickness_mm * scale)
+        if isinstance(layer, CopperLayer)
+        else dataclasses.replace(layer, thickness_mm=layer.thickness_mm + removed)
+        if i == first_dielectric
+        else layer
+        for i, layer in enumerate(layers)
+    )
+    return dataclasses.replace(design, stackup=Stackup(layers=scaled))
+
+
+@pytest.mark.req("REQ-F-11")
+@settings(max_examples=COMPUTE_EXAMPLES)
+@given(design=spiral_designs(), scales=st.tuples(st.floats(0.5, 0.8), st.floats(1.25, 2.0)))
+def test_pr_06_phase_resistance_is_affine_in_inverse_copper_thickness(
+    design: DesignParameters, scales: tuple[float, float]
+) -> None:
+    """PR-06 (R and t_cu). Catches a track resistance not proportional to 1/t_cu (EQ-10).
+
+    Vias keep their plating, so R = a / t + b: the three points (1/t, R) of three thicknesses lie on one line.
+    """
+    points = []
+    for scale in (scales[0], 1.0, scales[1]):
+        analysis = _outcome(_with_copper_scale(design, scale)).analysis
+        if analysis is None:
+            return
+        points.append((1.0 / scale, analysis.resistance_phase_20c_ohm.value))
+    (x1, r1), (x2, r2), (x3, r3) = points
+    assert (r2 - r1) * (x3 - x2) == pytest.approx((r3 - r2) * (x2 - x1), rel=1e-6)
+    assert r3 < r1
+
+
+def _first_phase_angle_rad(analysis: Any) -> float:
+    """Angle of the fundamental of the first phase EMF waveform; the last sample repeats the first."""
+    return cmath.phase(np.fft.fft(np.array(analysis.emf_waveform_v.value)[:-1])[1])
+
+
+@pytest.mark.req("REQ-F-02")
+@settings(max_examples=COMPUTE_EXAMPLES)
+@given(design=spiral_designs().filter(_balanced))
+def test_pr_06_rotating_by_one_coil_pitch_shifts_the_phasor_and_keeps_ke(design: DesignParameters) -> None:
+    """PR-06 (rotation, DEF-17). Catches a phasor that does not follow the rotor field or a Ke that depends on theta_0.
+
+    Rotating the first coil by 2 pi / Q moves the phase EMF by p 2 pi / Q electrical (p = pole pairs); numpy's fft
+    angle convention gives the delay -p 2 pi / Q (inferred from a run on CF-11). R and DRC values are not compared:
+    see the unit report, the chain routing and the terminal pads depend on where the angular cut falls.
+    """
+    assert isinstance(design.winding, SpiralWindingSpec)
+    coil = design.winding.coil
+    pitch = 2.0 * math.pi / coil.coil_count
+    rotated = dataclasses.replace(
+        design,
+        winding=dataclasses.replace(
+            design.winding, coil=dataclasses.replace(coil, first_coil_angle_rad=coil.first_coil_angle_rad + pitch)
+        ),
+    )
+    before, after = _outcome(design).analysis, _outcome(rotated).analysis
+    if before is None or after is None:
+        return
+    expected = -(design.rotor.poles // 2) * pitch
+    shift = _first_phase_angle_rad(after) - _first_phase_angle_rad(before)
+    assert abs(math.remainder(shift - expected, 2.0 * math.pi)) <= 1e-9
+    assert sorted(p.ke_peak_v_s_per_rad.value for p in after.phases) == pytest.approx(
+        sorted(p.ke_peak_v_s_per_rad.value for p in before.phases), rel=REL
+    )
