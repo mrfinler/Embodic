@@ -9,7 +9,8 @@ from pathlib import Path
 from typing import Literal, Protocol, TypeAlias
 
 from embodic.geometry.layout import Layout
-from embodic.geometry.marks import CoilMark, coil_marks
+from embodic.geometry.marks import CoilMark as CoilMark  # re-exported: the geometry view imports it from here
+from embodic.geometry.marks import coil_marks
 from embodic.io.examples import load_example
 from embodic.io.project import ProjectFile, project_from_example, project_provenance, save_project
 from embodic.model.design import DesignParameters
