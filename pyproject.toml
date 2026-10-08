@@ -23,6 +23,7 @@ desktop = ["PySide6-Essentials>=6.11,<6.12"]
 dev = [
     "pytest>=9,<10",
     "pytest-cov>=7,<8",
+    "pytest-timeout>=2.4,<3",
     "hypothesis>=6.168,<7",
     "ruff==0.16.10",
     "import-linter>=2.15,<3",
@@ -82,6 +83,8 @@ warn_return_any = false
 minversion = "9.0"
 testpaths = ["tests"]
 addopts = ["--import-mode=importlib", "--strict-markers", "--strict-config"]
+# A hang fails with its stack instead of stalling the gate; 900 s leaves room for the nightly Hypothesis profile.
+timeout = 900
 
 [tool.coverage.run]
 source = ["embodic"]

@@ -43,7 +43,6 @@ from embodic.physics.emf import (
     edge_leakage_fraction,
     field_table,
     integrate_path,
-    magnet_span_mm,
     pole_arc_ratio_mm,
 )
 from embodic.physics.estimates import inductance_estimate_h, mass_g
@@ -382,7 +381,7 @@ def analyse(
     )
     ipc_line = ipc_phase * (math.sqrt(3.0) if connection is ConnectionTopology.DELTA else 1.0)
 
-    r_a, r_b = magnet_span_mm(rotor)
+    r_a, r_b = rotor.magnet.radial_span_mm()
     sides = sum(
         1
         for b in boards.boards

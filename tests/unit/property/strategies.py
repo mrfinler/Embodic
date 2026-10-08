@@ -58,6 +58,12 @@ ANY_JSON: st.SearchStrategy[JsonValue] = st.one_of(
 )
 
 
+def cf11_draft_with(changes: dict[str, JsonValue]) -> DesignDraft:
+    """Return the CF-11 draft with some leaves replaced (pinned PR-05 inputs)."""
+    draft = draft_from_design(cf11())
+    return DesignDraft(topology=draft.topology, values={**draft.values, **changes})
+
+
 @st.composite
 def mutated_drafts(draw: st.DrawFn) -> DesignDraft:
     """Draw the CF-11 draft with one to three leaves set to arbitrary JSON values (PR-05 input)."""

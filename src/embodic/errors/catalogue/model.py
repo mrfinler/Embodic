@@ -20,6 +20,13 @@ MESSAGES: Mapping[str, str] = {
     "INVALID_ORDER": "Outer radius must be larger than the inner radius.",
     "INVALID_RADIAL_SPAN": "Outer radius must exceed inner radius by at least {limit} mm.",
     "INVALID_MAGNET_ORDER": "Magnet outer radius must exceed magnet inner radius.",
+    "INVALID_MAGNET_CROSSES_AXIS": (
+        "The block magnet reaches past the rotor axis: its centre radius must exceed half its length."
+    ),
+    "RANGE_MAGNET_OUTSIDE_WINDING": (
+        "The magnet does not face the winding: its radial span must overlap the copper between the inner and outer "
+        "radius."
+    ),
     "INVALID_LAYERS_PER_PHASE": "Layers per phase must be 1 or an even number (X/Y layer pairs).",
     "INVALID_SERIES_PAIRS_EXCEED_POLE_PAIRS": (
         "Series connection supports at most p layer pairs (p = pole pairs): each pair is rotated by two pole pitches."
@@ -29,6 +36,10 @@ MESSAGES: Mapping[str, str] = {
         "or the layers per phase when each phase has its own board."
     ),
     "RANGE_TOO_MANY_TRACES": "Total traces (turns x strands) exceed {limit}.",
+    "RANGE_WINDING_BELOW_AMBIENT": (
+        "The winding temperature is below the ambient temperature of {limit}{unit}; a heated winding cannot be "
+        "colder than its surroundings."
+    ),
     "INVALID_VIA_RING": "Via pad diameter must exceed the drill by at least {limit} mm (annular ring).",
     "INVALID_TERMINAL_PAD_RING": "Terminal pad must exceed its drill by at least {limit} mm.",
     "INVALID_SPIRAL_PHASES": "Spiral coils need 3 phases.",

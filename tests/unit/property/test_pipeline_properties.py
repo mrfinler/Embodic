@@ -7,7 +7,7 @@ from collections.abc import Iterator
 from typing import Any
 
 import pytest
-from hypothesis import assume, given, settings
+from hypothesis import assume, example, given, settings
 from hypothesis import strategies as st
 
 from embodic.api import ComputeOptions, StageCache, compute, outcome_to_json
@@ -24,7 +24,7 @@ from embodic.outcome import ComputeOutcome
 from embodic.results import load_registry
 from embodic.winding import SpiralWindingPlan, plan_spiral_winding
 
-from .strategies import COMPUTE_EXAMPLES, cf11, mutated_drafts, spiral_designs
+from .strategies import COMPUTE_EXAMPLES, cf11, cf11_draft_with, mutated_drafts, spiral_designs
 
 REGISTRY = load_registry()
 NO_DRC = ComputeOptions(run_drc=False)
@@ -75,6 +75,14 @@ def test_pr_03_every_built_path_is_continuous(design: DesignParameters) -> None:
 @pytest.mark.req("REQ-F-14")
 @settings(max_examples=max(20, COMPUTE_EXAMPLES * 4))
 @given(draft=mutated_drafts())
+# DEF-M2f-03: physics chords of 0.001 mm and a 64 mm DRC rule each ran for minutes before the supported ranges.
+@example(draft=cf11_draft_with({"/analysis/max_segment_mm": 0.001}))
+@example(draft=cf11_draft_with({"/drc_rules/trace_clearance_mm": 64}))
+# DEF-M2f-02 and the U-M2-fix3 leaf scan: each raised inside physics or DRC.
+@example(draft=cf11_draft_with({"/rotor/magnet/length_mm": 1.5e-164}))
+@example(draft=cf11_draft_with({"/operating/winding_temperature_degc": 3}))
+@example(draft=cf11_draft_with({"/vias/plating_um": 5e-324}))
+@example(draft=cf11_draft_with({"/outline/bore/radius_mm": 1e300}))
 def test_pr_05_arbitrary_values_never_raise_and_invalid_values_return_issues(draft: Any) -> None:
     """PR-05 (exception part). Catches an uncaught exception or an invalid input that returns no issue."""
     parsed = parse_draft(draft)
