@@ -1,0 +1,50 @@
+{
+ "name": "dark",
+ "colours": {
+  "bg-app": "#0f0f0f",
+  "surface": "#171717",
+  "surface-sunken": "#232323",
+  "surface-selected": "#2e2e2e",
+  "surface-inverse": "#f2f2f2",
+  "canvas": "#171717",
+  "board-fill": "#202020",
+  "divider": "#2e2e2e",
+  "grid-line": "#2a2a2a",
+  "border-control": "#7d7d7d",
+  "border-strong": "#f2f2f2",
+  "focus-ring": "#f2f2f2",
+  "text-1": "#f2f2f2",
+  "text-2": "#c8c8c8",
+  "text-3": "#a0a0a0",
+  "text-disabled": "#6e6e6e",
+  "text-inverse": "#141414"
+ },
+ "phases": [
+  {
+   "phase": "A",
+   "colour_hex": "#c43b10",
+   "grey_hex": "#e0e0e0",
+   "hatch_deg": 0,
+   "dash": "solid",
+   "label": "A"
+  },
+  {
+   "phase": "B",
+   "colour_hex": "#005bfc",
+   "grey_hex": "#a8a8a8",
+   "hatch_deg": 45,
+   "dash": "dash",
+   "label": "B"
+  },
+  {
+   "phase": "C",
+   "colour_hex": "#0eb16a",
+   "grey_hex": "#7a7a7a",
+   "hatch_deg": 135,
+   "dash": "dot",
+   "label": "C"
+  }
+ ],
+ "focus_ring_px": 2,
+ "control_height_px": 32
+}

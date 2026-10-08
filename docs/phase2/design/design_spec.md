@@ -6,7 +6,9 @@ Date 2026-10-04. Supersedes `docs/phase1/design/design_spec_draft.md` for everyt
 
 - `screens.md` gives every screen with its widget table and state rules.
 - `acceptance_criteria.md` lists the UX acceptance criteria UX-AC v1.
-- `resources/themes/tokens.json`, `light.qss`, `dark.qss` and the glyphs in `resources/themes/{light,dark}/` are what Agent 3 loads.
+- `resources/themes/tokens.json` is the single source. `tools/design/build_themes.py` generates `light.qss`, `dark.qss`,
+  the glyphs in `resources/themes/{light,dark}/` and the ThemeTokens files `light.json` and `dark.json`
+  (interfaces.md section 11) from it. These are what Agent 3 loads.
 - `resources/icons/*.svg`, `ICONS.md` and `_contact_sheet.png` hold the icon set.
 - `theme_smoke_light.png` and `theme_smoke_dark.png` are both QSS files rendered by real Qt (PySide6 6.11.2, offscreen).
 
@@ -244,7 +246,12 @@ Rules:
 
 ## 7. Icons
 
-- 49 icons in `resources/icons/` (list in `ICONS.md`). All original work, licence project-owned.
+- 52 icons in `resources/icons/` (list in `ICONS.md`). All original work, licence project-owned. `compute`,
+  `export-pdf` and `theme` were added in U-M4r for the interfaces.md section 11 `TOOLSTRIP` stems. `theme` fills one
+  half of its disc so it reads apart from `greyscale` at 16 px (`verified` on `_contact_sheet.png`).
+- `tools/design/build_icons.py` draws every icon and writes `ICONS.md`; `tools/design/render_sheet.py` renders the
+  contact sheet; `tools/design/check_icons.py` exits 1 when a `TOOLSTRIP` stem has no file or an icon breaks the rules
+  below.
 - Grid 24 px, `viewBox="0 0 24 24"`, live area 20 px (2 px margin), stroke 1.5 px, round caps and joins,
   `stroke="currentColor"`, `fill="none"`. Small solid marks (nodes, vector handles) use `fill="currentColor"`.
 - 16 px rendering: the loader replaces `stroke-width="1.5"` with `stroke-width="2"`, which renders 1.33 px.
@@ -261,8 +268,17 @@ Rules:
 
 - `light.qss` and `dark.qss` are generated from one template and the token table; each line names its tokens in a
   trailing comment and the file header lists every token value. Generated, not hand-edited. Generator:
-  `build_themes.py` in my scratchpad (`/tmp/claude-0/-home-claude/f28a4cfe-cf25-5512-9052-c4c291ea667b/scratchpad/`);
-  the substitution rule is "replace `@<token>` with `themes.<theme>.color.<token>`, and `@dir` with the theme name".
+  `tools/design/build_themes.py` with the template `tools/design/theme_template.qss`; the substitution rule is "replace
+  `@<token>` with `themes.<theme>.color.<token>`, `@focus-ring-px` with `focus_ring_px`, and `@dir` with the theme
+  name". Run it from the repository root; a second run changes nothing.
+- `light.json` and `dark.json` carry the ThemeTokens fields only. `colours` holds the 17 chrome tokens (grey only,
+  REQ-L-04). The phase tokens map into `phases`: `hatch_deg` null becomes 0, line `dashed` and `dotted` become `dash` and
+  `dot`. The icon loader reads `colours["text-1"]` and `colours["text-disabled"]`, which equal `icon_color.normal` and
+  `.disabled`. The status tokens (`status-pass`, `status-fail`, `status-warn`) have no ThemeTokens field and reach the UI
+  through the QSS only (`unresolved`, open question to Agent 6).
+- Checks, each run from the repository root with the project venv: `check_theme_tokens.py` (contract fields read from
+  interfaces.md), `contrast.py` (appendix A), `qss_smoke.py` (offscreen render and pixel samples, exit 1 on a mismatch),
+  `check_checklist.py` (`screenshot_checklist.md` covers `screens.md` sections 1 to 14).
 - Loader contract for Agent 3: call `QDir.addSearchPath("theme", "<resources/themes>")`, register fonts, then
   `app.setStyleSheet(...)`. Use the Fusion style so unstyled parts follow a `QPalette` built from the same tokens.
 - QSS has no CSS classes. The brief's `.result-card` maps to a dynamic property: `w.setProperty("class", "result-card")`
@@ -284,7 +300,7 @@ Rules:
 | `[invalid="true"]` | QLineEdit, QAbstractSpinBox, QComboBox | 2 px `status-fail` border |
 | `[class="primary"]` | QPushButton | The one primary action per view |
 
-What the smoke test proved (`verified`, real Qt 6.11.2 offscreen, `qss_smoke.py` in the scratchpad): both files load
+What the smoke test proved (`verified`, real Qt 6.11.2 offscreen, `tools/design/qss_smoke.py`): both files load
 with no style-sheet warning (the only Qt message is the offscreen plugin's "does not support propagateSizeHints()");
 sampled pixels equal the tokens for the result-card border and fill, the primary button fill and the invalid-field border
 in both themes. Not verified here: Windows rendering, high-DPI scaling at 150 % and 200 %, and the high-contrast path.

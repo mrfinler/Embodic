@@ -1,0 +1,50 @@
+{
+ "name": "light",
+ "colours": {
+  "bg-app": "#f7f7f7",
+  "surface": "#ffffff",
+  "surface-sunken": "#efefef",
+  "surface-selected": "#e4e4e4",
+  "surface-inverse": "#141414",
+  "canvas": "#ffffff",
+  "board-fill": "#f7f7f7",
+  "divider": "#dcdcdc",
+  "grid-line": "#e6e6e6",
+  "border-control": "#858585",
+  "border-strong": "#141414",
+  "focus-ring": "#141414",
+  "text-1": "#141414",
+  "text-2": "#454545",
+  "text-3": "#666666",
+  "text-disabled": "#9a9a9a",
+  "text-inverse": "#ffffff"
+ },
+ "phases": [
+  {
+   "phase": "A",
+   "colour_hex": "#941328",
+   "grey_hex": "#262626",
+   "hatch_deg": 0,
+   "dash": "solid",
+   "label": "A"
+  },
+  {
+   "phase": "B",
+   "colour_hex": "#0032e2",
+   "grey_hex": "#5e5e5e",
+   "hatch_deg": 45,
+   "dash": "dash",
+   "label": "B"
+  },
+  {
+   "phase": "C",
+   "colour_hex": "#579f03",
+   "grey_hex": "#8a8a8a",
+   "hatch_deg": 135,
+   "dash": "dot",
+   "label": "C"
+  }
+ ],
+ "focus_ring_px": 2,
+ "control_height_px": 32
+}

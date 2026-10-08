@@ -41,7 +41,7 @@ QToolButton { color: #141414; background-color: transparent; border: 1px solid t
 QToolButton:hover { background-color: #efefef; border-color: #dcdcdc; } /* surface-sunken, divider */
 QToolButton:pressed { background-color: #e4e4e4; } /* surface-selected */
 QToolButton:checked { background-color: #e4e4e4; border-color: #141414; } /* surface-selected, border-strong */
-QToolButton:focus { border: 2px solid #141414; padding: 3px; } /* focus-ring */
+QToolButton:focus { border: 2px solid #141414; padding: 3px; } /* focus-ring-px, focus-ring */
 QToolButton:disabled { color: #9a9a9a; background-color: transparent; border-color: transparent; } /* text-disabled */
 QToolButton[class="ts-large"] { min-width: 52px; }
 QToolButton[class="ts-small"] { padding: 2px 6px 2px 4px; }
@@ -58,7 +58,7 @@ QTabBar::tab:selected { color: #141414; border-bottom: 2px solid #141414; } /* t
 QTabBar::tab:disabled { color: #9a9a9a; } /* text-disabled */
 
 QLineEdit, QAbstractSpinBox, QComboBox { background-color: #ffffff; color: #141414; border: 1px solid #858585; border-radius: 4px; padding: 5px 8px; min-height: 20px; } /* surface, text-1, border-control */
-QLineEdit:focus, QAbstractSpinBox:focus, QComboBox:focus { border: 2px solid #141414; padding: 4px 7px; } /* focus-ring */
+QLineEdit:focus, QAbstractSpinBox:focus, QComboBox:focus { border: 2px solid #141414; padding: 4px 7px; } /* focus-ring-px, focus-ring */
 QLineEdit:disabled, QAbstractSpinBox:disabled, QComboBox:disabled { color: #9a9a9a; background-color: #f7f7f7; border-color: #dcdcdc; } /* text-disabled, bg-app, divider */
 QLineEdit[readOnly="true"] { background-color: #efefef; border-color: #dcdcdc; } /* surface-sunken, divider */
 QLineEdit[invalid="true"], QAbstractSpinBox[invalid="true"], QComboBox[invalid="true"] { border: 2px solid #a6332c; padding: 4px 7px; } /* status-fail */
@@ -72,7 +72,7 @@ QComboBox QAbstractItemView { background-color: #ffffff; color: #141414; border:
 QCheckBox { spacing: 8px; color: #141414; } /* text-1 */
 QCheckBox:disabled { color: #9a9a9a; } /* text-disabled */
 QCheckBox::indicator { width: 16px; height: 16px; border: 1px solid #858585; border-radius: 3px; background-color: #ffffff; } /* border-control, surface */
-QCheckBox::indicator:focus { border: 2px solid #141414; } /* focus-ring */
+QCheckBox::indicator:focus { border: 2px solid #141414; } /* focus-ring-px, focus-ring */
 QCheckBox::indicator:checked { background-color: #141414; border-color: #141414; image: url(theme:light/check.svg); } /* surface-inverse */
 QCheckBox::indicator:disabled { background-color: #f7f7f7; border-color: #dcdcdc; } /* bg-app, divider */
 QCheckBox::indicator:checked:disabled { background-color: #9a9a9a; border-color: #9a9a9a; } /* text-disabled */
@@ -80,11 +80,11 @@ QCheckBox::indicator:checked:disabled { background-color: #9a9a9a; border-color:
 QPushButton { background-color: #ffffff; color: #141414; border: 1px solid #858585; border-radius: 4px; padding: 6px 14px; min-height: 18px; } /* surface, text-1, border-control */
 QPushButton:hover { background-color: #efefef; } /* surface-sunken */
 QPushButton:pressed { background-color: #e4e4e4; } /* surface-selected */
-QPushButton:focus { border: 2px solid #141414; padding: 5px 13px; } /* focus-ring */
+QPushButton:focus { border: 2px solid #141414; padding: 5px 13px; } /* focus-ring-px, focus-ring */
 QPushButton:disabled { color: #9a9a9a; border-color: #dcdcdc; background-color: #f7f7f7; } /* text-disabled, divider, bg-app */
 QPushButton[class="primary"] { background-color: #141414; color: #ffffff; border-color: #141414; font-weight: 600; } /* surface-inverse, text-inverse */
 QPushButton[class="primary"]:hover { background-color: #454545; border-color: #454545; } /* text-2 */
-QPushButton[class="primary"]:focus { border: 2px solid #141414; background-color: #141414; } /* focus-ring, surface-inverse */
+QPushButton[class="primary"]:focus { border: 2px solid #141414; background-color: #141414; } /* focus-ring-px, focus-ring, surface-inverse */
 QPushButton[class="primary"]:disabled { background-color: #efefef; color: #9a9a9a; border-color: #dcdcdc; } /* surface-sunken, text-disabled, divider */
 
 QTableView { background-color: #ffffff; alternate-background-color: #f7f7f7; color: #141414; gridline-color: #dcdcdc; border: 1px solid #dcdcdc; selection-background-color: #e4e4e4; selection-color: #141414; } /* surface, bg-app, text-1, divider, surface-selected */
