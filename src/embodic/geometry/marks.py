@@ -133,3 +133,24 @@ def top_layer_of_each_phase(layout: Layout) -> dict[Phase, str]:
         for phase in Phase
         if any(phase == q for _, q in carried)
     }
+
+
+def hatch_chords(
+    cx_mm: float, cy_mm: float, r_mm: float, angle_deg: float, spacing_mm: float
+) -> list[tuple[tuple[float, float], tuple[float, float]]]:
+    """Return parallel chords of a disc at ``angle_deg`` (y up), ``spacing_mm`` apart, each ending on the circle."""
+    ux, uy = math.cos(math.radians(angle_deg)), math.sin(math.radians(angle_deg))
+    count = int(r_mm / spacing_mm)
+    chords = []
+    for k in range(-count, count + 1):
+        offset = k * spacing_mm
+        half = math.sqrt(max(r_mm * r_mm - offset * offset, 0.0))
+        mx, my = cx_mm - uy * offset, cy_mm + ux * offset
+        chords.append(((mx - ux * half, my - uy * half), (mx + ux * half, my + uy * half)))
+    return chords
+
+
+def eye_marks(layout: Layout) -> tuple[CoilMark, ...]:
+    """Return the marks with an eye disc on the top layer of each phase, the ones a drawing fills."""
+    layers = top_layer_of_each_phase(layout)
+    return tuple(m for m in coil_marks(layout) if m.eye_radius_mm > 0 and layers[m.phase] == m.layer)

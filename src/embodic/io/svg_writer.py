@@ -6,13 +6,15 @@ with class and label; vias, pads and holes have a class each so a reader can cou
 """
 
 import math
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from itertools import groupby
 from pathlib import Path
 from xml.sax.saxutils import quoteattr
 
+from embodic.geometry.labels import PlacedLabel, Viewport, label_anchors, pad_boxes, place_labels
 from embodic.geometry.layout import Layout, Pad
+from embodic.geometry.marks import eye_marks, hatch_chords
 from embodic.geometry.paths import CopperPath
 from embodic.geometry.primitives import Arc, Line, Primitive
 from embodic.io.exporters import (
@@ -29,16 +31,26 @@ from embodic.io.exporters import (
     pad_outline,
     phase_inks,
 )
+from embodic.io.pdf_writer import SANS_FILE, bundled_font
 from embodic.model.vocabulary import Phase
 from embodic.outcome import ComputeOutcome
 
 MARGIN_MM = 2.0
 LEGEND_ROW_MM = 4.0
 FONT_MM = 2.5
+FONT_FAMILY = "Inter, 'Inter Variable', 'Segoe UI', sans-serif"
+LABEL_MM = 2.2
+LABEL_HALO_MM = 0.5
+LEADER_MM = 0.15
+CSS_PX_PER_MM = 96 / 25.4  # the 1:1 page scale at which labels are placed
+HATCH_PITCH_MM = 0.4  # at 1:1 print scale (design_spec.md section 3.3)
+HATCH_STROKE_MM = 0.08
+EYE_TINT = 0.1
+SWATCH_R_MM = 1.3
+PAPER = "#ffffff"  # the drawing leaves the board unfilled, so the halo takes the paper's colour
 DRILL_FILL = "#ffffff"
 LAND_FILL = "#666666"
-OUTLINE_STROKE = "#141414"
-DASH_ARRAY = {"solid": None, "dash": "1.2 0.6", "dot": "0.3 0.6"}  # legend samples, mm
+INK = "#141414"
 
 
 def _n(value: float) -> str:
@@ -153,7 +165,7 @@ def _pad(svg: _Svg, pad: Pad) -> None:
 def _board(svg: _Svg, index: int, board: Layout, inks: dict[Phase | None, PhaseInk], grey: bool) -> None:
     prefix = f"b{index}"
     svg.out.append(f'<g id="board-{index}" class="board" data-label="Board {index}">')
-    svg.out.append(f'<g class="outline" data-label="Board outline" stroke="{OUTLINE_STROKE}" stroke-width="0.1">')
+    svg.out.append(f'<g class="outline" data-label="Board outline" stroke="{INK}" stroke-width="0.1">')
     svg.out.append(f'<path class="outline-outer" d="{svg.path_data(board.outline.outer, close=True)}"/>')
     for loop in board.outline.cutouts:
         svg.out.append(f'<path class="cutout" d="{svg.path_data(loop, close=True)}"/>')
@@ -175,48 +187,118 @@ def _board(svg: _Svg, index: int, board: Layout, inks: dict[Phase | None, PhaseI
     svg.out.append(f'<g id="{prefix}-pads" class="pads" data-label="Terminal pads">')
     for pad in board.pads:
         _pad(svg, pad)
+    svg.out.append("</g>")
+    svg.out.append(f'<g id="{prefix}-eyes" class="eyes" data-label="Coil eyes">')
+    for k, mark in enumerate(eye_marks(board)):
+        ink = inks[mark.phase]
+        colour = ink.grey_hex if grey else ink.colour_hex
+        disc = (mark.cx_mm, mark.cy_mm, mark.eye_radius_mm)
+        svg.out += _eye("eye", f"{prefix}-eye-{k}", mark.phase, disc, colour, ink.hatch_deg)
     svg.out.append("</g></g>")
 
 
-def _hatch_defs(inks: Iterable[PhaseInk]) -> list[str]:
-    out = ["<defs>"]
-    for ink in inks:
-        if ink.hatch_deg and ink.phase is not None:
+def _eye(
+    cls: str, clip_id: str, phase: Phase, disc: tuple[float, float, float], colour: str, hatch_deg: int
+) -> list[str]:
+    """Return the eye fill of a coil: a 10 % tint (phase A) or 0.4 mm hatch (B 45, C 135 degrees), clipped to it.
+
+    The chords are in the frame of the enclosing group: y up inside the board drawing, y down in the legend, where the
+    caller passes the angle mirrored so the hatch leans the same way on the page.
+    """
+    x, y, r = disc
+    out = [f'<defs><clipPath id="{clip_id}"><circle cx="{_n(x)}" cy="{_n(y)}" r="{_n(r)}"/></clipPath></defs>']
+    out.append(f'<g class="{cls}" data-phase="{phase.value}" clip-path="url(#{clip_id})">')
+    if hatch_deg == 0:
+        out.append(
+            f'<circle cx="{_n(x)}" cy="{_n(y)}" r="{_n(r)}" fill="{colour}" fill-opacity="{_n(EYE_TINT)}" '
+            'stroke="none"/>'
+        )
+    else:
+        d = " ".join(
+            f"M {_n(a[0])} {_n(a[1])} L {_n(b[0])} {_n(b[1])}"
+            for a, b in hatch_chords(x, y, r, hatch_deg, HATCH_PITCH_MM)
+        )
+        out.append(f'<path class="hatch" d="{d}" fill="none" stroke="{colour}" stroke-width="{_n(HATCH_STROKE_MM)}"/>')
+    out.append("</g>")
+    return out
+
+
+def _text_size_px(text: str) -> tuple[float, float]:
+    """Width and height of a label at the 1:1 page scale, measured with the bundled Inter's advance widths."""
+    return bundled_font(SANS_FILE).width_pt(text, LABEL_MM) * CSS_PX_PER_MM, LABEL_MM * CSS_PX_PER_MM
+
+
+def board_labels(board: Layout, view: Viewport) -> tuple[PlacedLabel, ...]:
+    """Return the labels a drawing of ``board`` shows: ruling b's set, placed at the 1:1 page scale."""
+    return place_labels(
+        label_anchors(board),
+        view=view,
+        text_size=_text_size_px,
+        obstacles=pad_boxes(board),
+        ring_outer_mm=board.envelope_mm[1],
+    )
+
+
+def _labels(placed: Sequence[PlacedLabel]) -> list[str]:
+    """Return the coil labels with a paper-coloured halo, in SVG's y-down space (text must not be mirrored).
+
+    The halo is its own stroked ``<text>`` under the label: renderers without ``paint-order`` (QSvgRenderer) would
+    otherwise paint the stroke over the letters.
+    """
+    font = bundled_font(SANS_FILE)
+    lift = font.cap_height / font.units_per_em * LABEL_MM / 2
+    out = [
+        f'<g class="labels" font-family="{FONT_FAMILY}" font-size="{_n(LABEL_MM)}" text-anchor="middle" fill="{INK}">'
+    ]
+    for label in placed:
+        if label.leader is not None:
+            (ax, ay), (bx, by) = label.leader
             out.append(
-                f'<pattern id="hatch-{ink.phase.value}" patternUnits="userSpaceOnUse" width="0.8" height="0.8" '
-                f'patternTransform="rotate({ink.hatch_deg})"><line x1="0" y1="0" x2="0" y2="0.8" '
-                f'stroke="{ink.grey_hex}" stroke-width="0.25"/></pattern>'
+                f'<line class="leader" x1="{_n(ax)}" y1="{_n(-ay)}" x2="{_n(bx)}" y2="{_n(-by)}" stroke="{INK}" '
+                f'stroke-width="{_n(LEADER_MM)}"/>'
             )
-    out.append("</defs>")
+        at = f'x="{_n(label.x_mm)}" y="{_n(-label.y_mm + lift)}"'
+        out.append(
+            f'<text class="coil-label-halo" {at} fill="none" stroke="{PAPER}" stroke-width="{_n(LABEL_HALO_MM)}" '
+            f'stroke-linejoin="round" style="paint-order: stroke">{label.text}</text>'
+        )
+        out.append(f'<text class="coil-label" data-phase="{label.phase.value}" {at}>{label.text}</text>')
+    out.append("</g>")
     return out
 
 
 def _legend(
     x0: float, y0: float, inks: dict[Phase | None, PhaseInk], grey: bool, metadata: ExportMetadata
 ) -> list[str]:
-    """Phase key and version stamp below the board, in SVG's y-down space (text must not be mirrored)."""
-    out = [f'<g id="legend" font-family="Helvetica, Arial, sans-serif" font-size="{_n(FONT_MM)}" fill="#141414">']
+    """Phase key and version stamp below the board, in SVG's y-down space (text must not be mirrored).
+
+    Per phase: a solid copper bar in the phase ink (copper is never dashed), the eye swatch and "Phase A".
+    """
+    out = [f'<g id="legend" font-family="{FONT_FAMILY}" font-size="{_n(FONT_MM)}" fill="{INK}">']
     for row, phase in enumerate(Phase):
         ink = inks[phase]
         y = y0 + row * LEGEND_ROW_MM
         colour = ink.grey_hex if grey else ink.colour_hex
-        dash = DASH_ARRAY[ink.dash]
-        dash_attr = f' stroke-dasharray="{dash}"' if dash else ""
         out.append(
-            f'<line x1="{_n(x0)}" y1="{_n(y)}" x2="{_n(x0 + 6)}" y2="{_n(y)}" stroke="{colour}" stroke-width="0.6"'
-            f"{dash_attr}/>"
+            f'<line class="legend-copper" x1="{_n(x0)}" y1="{_n(y)}" x2="{_n(x0 + 6)}" y2="{_n(y)}" '
+            f'stroke="{colour}" stroke-width="0.6"/>'
         )
-        if grey and ink.hatch_deg:
-            out.append(
-                f'<rect x="{_n(x0 + 7)}" y="{_n(y - 1.5)}" width="3" height="3" fill="url(#hatch-{phase.value})" '
-                f'stroke="{colour}" stroke-width="0.1"/>'
-            )
+        mirrored = (180 - ink.hatch_deg) % 180  # the legend is y down
+        out += _eye("legend-eye", f"legend-eye-{phase.value}", phase, (x0 + 8.5, y, SWATCH_R_MM), colour, mirrored)
+        out.append(
+            f'<circle class="legend-eye-edge" cx="{_n(x0 + 8.5)}" cy="{_n(y)}" r="{_n(SWATCH_R_MM)}" fill="none" '
+            f'stroke="{colour}" stroke-width="0.1"/>'
+        )
         out.append(f'<text x="{_n(x0 + 11)}" y="{_n(y + 0.9)}">{ink.label}</text>')
-    drc = "passed" if metadata.drc_passed else "FAILED"
-    stamp = f"embodic {metadata.embodic_version} | {metadata.design_hash} | DRC {drc}"
-    out.append(f'<text x="{_n(x0)}" y="{_n(y0 + 3 * LEGEND_ROW_MM + 0.9)}">{stamp}</text>')
+    out.append(f'<text class="stamp" x="{_n(x0)}" y="{_n(y0 + 3 * LEGEND_ROW_MM + 0.9)}">{stamp_text(metadata)}</text>')
     out.append("</g>")
     return out
+
+
+def stamp_text(metadata: ExportMetadata) -> str:
+    """Return the footer line of a drawing: version, design hash and DRC verdict."""
+    drc = "passed" if metadata.drc_passed else "FAILED"
+    return f"embodic {metadata.embodic_version} | {metadata.design_hash} | DRC {drc}"
 
 
 def svg_document(boards: Sequence[Layout], mode: PhaseRenderMode, metadata: ExportMetadata) -> tuple[str, _Counts]:
@@ -224,10 +306,18 @@ def svg_document(boards: Sequence[Layout], mode: PhaseRenderMode, metadata: Expo
     inks = phase_inks()
     grey = mode is PhaseRenderMode.GREYSCALE_HATCH
     x_min, y_min, x_max, y_max = _bounds(boards)
-    width = x_max - x_min + 2 * MARGIN_MM
+    footer_mm = bundled_font(SANS_FILE).width_pt(stamp_text(metadata), FONT_MM)
+    width = max(x_max - x_min, footer_mm) + 2 * MARGIN_MM
     legend_mm = 4 * LEGEND_ROW_MM + MARGIN_MM
     height = y_max - y_min + 2 * MARGIN_MM + legend_mm
     top = -(y_max + MARGIN_MM)
+    view = Viewport(
+        x_min_mm=x_min - MARGIN_MM,
+        y_min_mm=y_min - MARGIN_MM,
+        x_max_mm=x_max + MARGIN_MM,
+        y_max_mm=y_max + MARGIN_MM,
+        px_per_mm=CSS_PX_PER_MM,
+    )
     stamp_attrs = " ".join(f"{name}={quoteattr(text)}" for name, text in metadata_fields(metadata))
     svg = _Svg()
     svg.out += [
@@ -237,12 +327,13 @@ def svg_document(boards: Sequence[Layout], mode: PhaseRenderMode, metadata: Expo
         f'data-render-mode="{mode.value}">',
         "<title>embodic board drawing (mm, y up, centred on the shaft axis)</title>",
         f"<metadata><embodic:export {stamp_attrs}/></metadata>",
-        *(_hatch_defs(inks.values()) if grey else []),
         '<g id="drawing" transform="scale(1,-1)" fill="none" stroke-linecap="round" stroke-linejoin="round">',
     ]
     for index, board in enumerate(boards, start=1):
         _board(svg, index, board, inks, grey)
     svg.out.append("</g>")
+    for board in boards:
+        svg.out += _labels(board_labels(board, view))
     svg.out += _legend(x_min, -(y_min - MARGIN_MM) + LEGEND_ROW_MM, inks, grey, metadata)
     svg.out.append("</svg>")
     return "\n".join(svg.out) + "\n", svg.counts
