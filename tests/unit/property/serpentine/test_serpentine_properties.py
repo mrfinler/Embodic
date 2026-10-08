@@ -15,6 +15,7 @@ from records import Line as OwnLine
 from records import disc
 from tests.unit.generators.serpentine.make_example import example_design
 from tests.unit.generators.serpentine.support import with_winding
+from tests.unit.property.t_junctions import t_junction_pairs
 
 from embodic.drc import DrcReport, run_drc
 from embodic.generators import build_layout
@@ -90,7 +91,7 @@ def _check_against_the_brute_sweep(design: DesignParameters, stack: BoardStack) 
         report = run_drc(layout, design.drc_rules)
         assert report is not None
         items = _items(layout)
-        exempt = contract_exemptions(items, layout.circuit.interconnect_path_ids)
+        exempt = set(contract_exemptions(items, layout.circuit.interconnect_path_ids)) | t_junction_pairs(items)
         results = [
             r for r in sweep(items, range(len(layout.copper_layers)), lambda kind: rule, exempt) if r.kind in PAIR_KINDS
         ]

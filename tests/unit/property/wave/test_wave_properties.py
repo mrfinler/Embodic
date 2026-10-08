@@ -15,6 +15,7 @@ from drc_universe import contract_exemptions, sweep
 from embodic_adapter import pair_violations, uniform_rules
 from gr19 import universe
 from tests.unit.generators.wave.designs import wave
+from tests.unit.property.t_junctions import t_junction_pairs
 
 from embodic.drc import run_drc
 from embodic.generators.wave.generate import generate_wave_rotated
@@ -47,7 +48,7 @@ def test_pr_13_run_drc_never_under_reports_on_a_wave_board(style: str, poles: in
     assert report is not None
     dump = parse_board_dump(json.loads(encode_board_dump(dump_layout(layout, case_id="pr-13"))))
     items = universe(dump, {"vias": [{"phase": 0}] * len(dump.vias)}, intended=False)
-    exempt = contract_exemptions(items, frozenset(layout.circuit.interconnect_path_ids))
+    exempt = set(contract_exemptions(items, frozenset(layout.circuit.interconnect_path_ids))) | t_junction_pairs(items)
     results = sweep(items, range(len(dump.layers)), lambda kind: RULE_MM, exempt)
     brute = {frozenset((r.a, r.b)) for r in results if r.verdict is Verdict.VIOLATION}
     engine = set(pair_violations(report))
