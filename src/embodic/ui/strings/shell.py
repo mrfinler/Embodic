@@ -91,7 +91,7 @@ STRINGS: Mapping[str, str] = {
     "shell.badge.inferred": "inferred",
     "shell.badge.assumption": "assumption",
     "shell.badge.unresolved": "estimate",
-    "shell.badge.not tested": "not tested",
+    "shell.badge.not-tested": "not tested",
     "shell.st-compute.ready": "Ready",
     "shell.st-compute.updating": "Updating",
     "shell.st-compute.error": "Error",

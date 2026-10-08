@@ -82,10 +82,11 @@ def pairs() -> list[Pair]:
         tokens = themes[row["theme"]]
         fg_hex, bg_hex = token_hex(tokens, row["fg"]), token_hex(tokens, row["bg"])
         same = (fg_hex, bg_hex) == (row["fg_hex"].lower(), row["bg_hex"].lower())
+        recorded = float(row["ratio"]) if same else None
+        minimum = float(row["min"])
         found.append(
-            Pair(row["theme"], row["fg"], row["bg"], fg_hex, bg_hex, float(row["min"]), row["kind"], "tokens.json",
-                 float(row["ratio"]) if same else None)
-        )  # fmt: skip
+            Pair(row["theme"], row["fg"], row["bg"], fg_hex, bg_hex, minimum, row["kind"], "tokens.json", recorded)
+        )
     for name, tokens in themes.items():
         for fg, bg, minimum, kind, why in SHELL_PAIRS:
             found.append(Pair(name, fg, bg, token_hex(tokens, fg), token_hex(tokens, bg), minimum, kind, why, None))

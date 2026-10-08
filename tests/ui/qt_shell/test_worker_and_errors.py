@@ -1,16 +1,18 @@
 """Compute worker and crash handling (UI-02, UI-05, UI-12)."""
 
 import logging
+import sys
 import threading
 import time
 from pathlib import Path
 
 import pytest
+from PySide6.QtCore import QElapsedTimer, QTimer
 from PySide6.QtWidgets import QMessageBox
 
 from embodic.api import compute
 from embodic.io.project import ProjectFile, load_project
-from embodic.ui.app import RedactingFormatter
+from embodic.ui.app import RedactingFormatter, install_crash_handler
 from embodic.ui.viewmodels.outcome import OutcomeFailed, OutcomeReady
 
 D08 = "spiral_12c10p_d08"
@@ -66,7 +68,6 @@ def test_ui05_event_loop_answers_within_100ms_during_a_3s_compute(make_shell, qt
 
     The 100 ms bound is REQ-N-02's input-echo threshold (assumption); the idle baseline is measured first and printed.
     """
-    from PySide6.QtCore import QElapsedTimer, QTimer
 
     def synthetic(design, provenance, *, cache, cancel):
         end = time.perf_counter() + 3.0
@@ -144,3 +145,19 @@ def test_ui12_log_lines_replace_the_home_folder_with_a_placeholder():
     record = logging.LogRecord("embodic", logging.ERROR, __file__, 1, "%s", (str(Path.home() / "x.py"),), None)
     line = RedactingFormatter().format(record)
     assert "%USERPROFILE%" in line and str(Path.home()) not in line and "[-]" in line
+
+
+@pytest.mark.req("REQ-N-18")
+def test_ui12_an_exception_in_a_gui_slot_also_saves_and_explains(d08_shell, monkeypatch):
+    """Catches a GUI-thread exception (outside the worker) that is printed to a console nobody sees."""
+    monkeypatch.setattr(sys, "excepthook", sys.excepthook)
+    window = d08_shell.window
+    install_crash_handler(window)
+    try:
+        raise ValueError("injected slot fault")
+    except ValueError as error:
+        sys.excepthook(type(error), error, error.__traceback__)
+    dialog = window.findChild(QMessageBox, "dlg-error")
+    assert dialog is not None and dialog.isVisible()
+    saved = sorted(d08_shell.recovery_dir.glob("recovery-*.embodic.json"))
+    assert len(saved) == 1 and saved[0].stem.removeprefix("recovery-").removesuffix(".embodic") in dialog.text()

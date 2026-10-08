@@ -24,7 +24,7 @@ from embodic.api import compute
 from embodic.ui.theme import ThemeName
 from embodic.ui.viewmodels.appearance import AppearanceViewModel
 from embodic.ui.viewmodels.outcome import OutcomeReady, OutcomeViewModel
-from embodic.ui.views.main_window import HOME_PLACEHOLDER, MainWindow, ShellPaths
+from embodic.ui.views.main_window import MainWindow, ShellPaths, redact_home
 from embodic.ui.workers import ComputeFn, ComputeWorker
 
 logger = logging.getLogger("embodic")
@@ -59,13 +59,12 @@ class RedactingFormatter(logging.Formatter):
 
     def __init__(self) -> None:
         super().__init__("%(asctime)s %(levelname)s [%(correlation_id)s] %(name)s: %(message)s")
-        self._home = str(Path.home())
 
     def format(self, record: logging.LogRecord) -> str:
         """Format the record, with '-' when it carries no correlation id."""
         if not hasattr(record, "correlation_id"):
             record.correlation_id = "-"
-        return super().format(record).replace(self._home, HOME_PLACEHOLDER)
+        return redact_home(super().format(record))
 
 
 def app_data_dir() -> Path:

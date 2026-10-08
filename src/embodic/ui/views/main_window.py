@@ -57,11 +57,9 @@ INSPECTOR_TABS = ("tab-coil", "tab-phases", "tab-layers", "tab-board")
 HOME_PLACEHOLDER = "%USERPROFILE%"
 
 
-def display_path(path: Path) -> str:
-    """Return a path for the screen or the log with the home folder replaced by a placeholder (no user name)."""
-    home = str(Path.home())
-    shown = str(path)
-    return HOME_PLACEHOLDER + shown[len(home) :] if shown.startswith(home) else shown
+def redact_home(text_with_paths: str) -> str:
+    """Return text for the screen or the log with the home folder replaced by a placeholder (no user name)."""
+    return text_with_paths.replace(str(Path.home()), HOME_PLACEHOLDER)
 
 
 def badge_property(status: Status) -> str:
@@ -113,7 +111,7 @@ class _SummaryCard(QFrame):
         self.value.setProperty("state", item.state or "")
         self.badge.setVisible(item.status is not None)
         if item.status is not None:
-            self.badge.setText(text(f"shell.badge.{item.status.value}"))
+            self.badge.setText(text(f"shell.badge.{badge_property(item.status)}"))
             self.badge.setProperty("status", badge_property(item.status))
         self.asm.setVisible(item.assumed_count is not None)
         self.asm.setText(text("shell.sum.assumptions", count=item.assumed_count or 0))
@@ -149,7 +147,6 @@ class MainWindow(QMainWindow):
         self.layer_boxes: dict[str, QCheckBox] = {}
         self.setCentralWidget(self._work_area())
         self._status_bar()
-        self.error_dialog: QMessageBox | None = None
         outcome.state.subscribe(lambda _: self._render())
         outcome.hidden_layers.subscribe(lambda _: self._render())
         appearance.theme.subscribe(lambda _: self.apply_theme())
@@ -353,6 +350,7 @@ class MainWindow(QMainWindow):
         """Return a menu with one entry per packaged example."""
         menu = QMenu(text("shell.examples-menu.title"), self)
         menu.setObjectName("menu-examples")
+        menu.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         for info in list_examples():
             action = QAction(info.title, menu)
             action.setObjectName(f"example-{info.example_id}")
@@ -381,7 +379,7 @@ class MainWindow(QMainWindow):
         self.paths.recovery_dir.mkdir(parents=True, exist_ok=True)
         path = self.paths.recovery_dir / f"recovery-{correlation_id}.embodic.json"
         self.outcome.save_project(path)
-        logger.info("project saved to %s", display_path(path), extra={"correlation_id": correlation_id})
+        logger.info("project saved to %s", path, extra={"correlation_id": correlation_id})
         return path
 
     def report_internal_error(self, correlation_id: str) -> None:
@@ -389,7 +387,7 @@ class MainWindow(QMainWindow):
         saved = self.save_recovery(correlation_id)
         body = text(
             "shell.error.body",
-            saved=display_path(saved) if saved else text("shell.error.not-saved"),
+            saved=redact_home(str(saved)) if saved else text("shell.error.not-saved"),
             correlation_id=correlation_id,
         )
         dialog = QMessageBox(
@@ -397,7 +395,6 @@ class MainWindow(QMainWindow):
         )
         dialog.setObjectName("dlg-error")
         dialog.open()
-        self.error_dialog = dialog
 
     def on_compute_failed(self, request_id: int, correlation_id: str) -> None:
         """Show a worker crash report when it belongs to the latest request."""
