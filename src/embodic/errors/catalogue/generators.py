@@ -12,6 +12,8 @@ MESSAGES: Mapping[str, str] = {
     "UNBUILDABLE_TURNS_EXCEED_LIMIT": "The requested turn count exceeds the largest buildable count {limit}.",
     "UNBUILDABLE_PHASE_CHAIN_UNROUTABLE": "The coils of a phase cannot be chained on four bus ring levels.",
     "UNBUILDABLE_INTERCONNECT_CROSSING": "The delta links cross, and one ring layer cannot carry crossing links.",
+    "UNBUILDABLE_SCREW_HOLE_EDGE": "A screw hole is closer to the board edge or a cutout than the edge clearance.",
+    "UNBUILDABLE_SCREW_HOLE_PITCH": "Two screw holes are closer to each other than the edge clearance.",
     "UNBUILDABLE_SERIES_VIA_FAN_DRC": (
         "The series layer pairs need a transfer via fan and one centre via per group; with them the board breaks a "
         "DRC rule."
