@@ -60,7 +60,7 @@ def _out_of_range(design: DesignParameters, spec: WaveWindingSpec) -> tuple[str,
         "/connection/ring_width_mm": design.connection.ring_width_mm,
         "/connection/terminal_pad_mm": design.connection.terminal_pad_mm,
     }
-    bad = unusable_sizes(positive, ("/winding/trace_width_mm", spec.trace_width_mm), design.drc_rules)
+    bad = unusable_sizes(positive, "/winding/trace_width_mm", spec.trace_width_mm, design.drc_rules)
     if not (math.isfinite(spec.r_outer_mm) and spec.r_outer_mm > spec.r_inner_mm):
         bad.append("/winding/r_outer_mm")
     if not (math.isfinite(spec.fillet_radius_mm) and spec.fillet_radius_mm >= 0):

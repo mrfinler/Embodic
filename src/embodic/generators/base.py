@@ -23,16 +23,13 @@ class Generator(Protocol):
         ...
 
 
-def unusable_sizes(
-    positive: Mapping[str, float], trace_width: tuple[str, float], rules: DrcRules
-) -> list[str]:  # fmt: skip
+def unusable_sizes(positive: Mapping[str, float], trace_pointer: str, width_mm: float, rules: DrcRules) -> list[str]:
     """Pointers of sizes no geometry can be built from (D-030), so a generator refuses before it builds anything.
 
     A size in ``positive`` must be finite and above 0. The trace width must also not be below the DRC minimum: a
     denormal or sub-micron width drives the turn counts and the arithmetic of the builders out of range.
     """
     bad = [pointer for pointer, v in positive.items() if not (math.isfinite(v) and v > 0)]
-    pointer, width_mm = trace_width
     if not (math.isfinite(width_mm) and width_mm > 0) or violates(width_mm, rules.min_trace_width_mm):
-        bad.append(pointer)
+        bad.append(trace_pointer)
     return bad
