@@ -186,12 +186,14 @@ _ROWS: Mapping[str, _Row] = types.MappingProxyType(
         ),
         "/outline/bore": _Row(D, None, G.OUTLINE, "param-bore"),
         "/outline/bore/shape": _Row(D, None, G.OUTLINE, "param-bore"),
-        "/outline/bore/radius_mm#circle": _Row(D, Unit.MM, G.OUTLINE, "param-bore", _lim(POS), 0.5),
-        "/outline/bore/sides#polygon": _Row(D, None, G.OUTLINE, "param-bore", _lim(POS, 4, 16), 1),
-        "/outline/bore/across_flats_mm#polygon": _Row(D, Unit.MM, G.OUTLINE, "param-bore", _lim(POS), 0.5),
-        "/outline/bore/corner_radius_mm#polygon": _Row(D, Unit.MM, G.OUTLINE, "param-bore", _lim(NONNEG, 0, 500), 0.5),
+        "/outline/bore/radius_mm#circle": _Row(D, Unit.MM, G.OUTLINE, "param-bore-radius", _lim(POS), 0.5),
+        "/outline/bore/sides#polygon": _Row(D, None, G.OUTLINE, "param-bore-sides", _lim(POS, 4, 16), 1),
+        "/outline/bore/across_flats_mm#polygon": _Row(D, Unit.MM, G.OUTLINE, "param-bore-across-flats", _lim(POS), 0.5),
+        "/outline/bore/corner_radius_mm#polygon": _Row(
+            D, Unit.MM, G.OUTLINE, "param-bore-corner-radius", _lim(NONNEG, 0, 500), 0.5
+        ),
         "/outline/bore/rotation_rad#polygon": _Row(
-            D, Unit.RAD, G.OUTLINE, "param-bore", _lim(low=-TURN_RAD, high=TURN_RAD)
+            D, Unit.RAD, G.OUTLINE, "param-bore-rotation", _lim(low=-TURN_RAD, high=TURN_RAD)
         ),
         # Fasteners (Xcoil screw count 1..64, angle -360..360 deg)
         "/outline/screws": _Row(D, None, G.FASTENERS, "screw-table"),

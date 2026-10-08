@@ -122,3 +122,23 @@ def test_phase_balance_status_follows_the_engine_and_names_balanced_coil_counts(
     unbalanced = dataclasses.replace(design, winding=dataclasses.replace(design.winding, coil=coil))
     hints = feasibility_hints(compute(unbalanced, project_provenance(ProjectFile(design=unbalanced, origin=None))))
     assert hints["phase-balance-status"] == "Not balanced: choose 9, 12 or 15 coils."  # 10 poles: 3, 6, 9, 12, 15...
+
+
+# Ruling c (m4_review.md): `param-bore` is the shape control; each bore pointer has its own input.
+BORE_WIDGETS = {
+    "/outline/bore": "param-bore",
+    "/outline/bore/shape": "param-bore",
+    "/outline/bore/radius_mm#circle": "param-bore-radius",
+    "/outline/bore/sides#polygon": "param-bore-sides",
+    "/outline/bore/across_flats_mm#polygon": "param-bore-across-flats",
+    "/outline/bore/corner_radius_mm#polygon": "param-bore-corner-radius",
+    "/outline/bore/rotation_rad#polygon": "param-bore-rotation",
+}
+
+
+@pytest.mark.req("REQ-F-32")
+def test_ruling_c_each_bore_pointer_names_its_own_widget_in_the_field_table():
+    """Catches every bore pointer sharing `param-bore`, so Go to first missing field focuses the shape, not the gap."""
+    from embodic.model.fields import FIELD_BY_KEY
+
+    assert {key: FIELD_BY_KEY[key].widget_id for key in BORE_WIDGETS} == BORE_WIDGETS
