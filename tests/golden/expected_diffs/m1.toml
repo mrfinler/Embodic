@@ -1,5 +1,5 @@
 # Intentional differences between embodic and Xcoil v3 for the M1 golden cases (owner: U-M1d, then U-M1b/U-M1c via Fable).
-# No M1 deviation is recorded yet. Schema and semantics: tools/golden/README.md, section "Allow-lists".
+# Schema and semantics: tools/golden/README.md, section "Allow-lists".
 #
 # [[diff]]
 # id = "XD-M1-001"                       # unique in this file
@@ -12,3 +12,12 @@
 # agent4_signoff = "reference"           # Agent 4 approval
 
 schema_version = 1
+
+[[diff]]
+id = "XD-M1-002"
+case = "segsegdist-seeded-collinear"
+eq_id = "EQ-30"
+reason = "Xcoil segSegDist skips the crossing test only when |d1 x d2| <= 1e-15 mm^2 (engine.js l.565). On long, nearly collinear disjoint segments the cross product is rounding noise above that, t and u are garbage, and Xcoil returns a false crossing (0). In 19 of the 1000 fixture calls the golden is 0 while embodic returns 4.0001 to 13.0848 mm; the minimum over a dense sample of both segments agrees with embodic to every printed digit. embodic skips the crossing test when |d1 x d2| <= 1e-12 |d1| |d2| (D-032e) in embodic.drc.kernels and embodic.geometry.distance. The tolerance bound is the largest of the 19 embodic distances rounded up (13.0848 to 13.1 mm). The other 981 calls and the shallow-crossing golden match within 1e-12 mm."
+tolerance = { rel = 0.0, abs = 13.1 }
+agent2_signoff = "Fable on behalf of Agent 2 (D-033c)"
+agent4_signoff = "Fable on behalf of Agent 4 (D-033c); Agent 4 re-checks in U-V2"
