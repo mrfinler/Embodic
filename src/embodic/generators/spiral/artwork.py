@@ -62,7 +62,7 @@ def _build(
     def corner(kind: CornerKind, t: int, vertex: Point) -> Corner:
         return filleted.get((kind, t)) or Corner.sharp(vertex)
 
-    def turn_corner(c: Corner) -> None:
+    def add_fillet(c: Corner) -> None:
         if c.fillet is not None:
             prims.append(c.fillet)
 
@@ -90,13 +90,13 @@ def _build(
         b, c, d = corner(CornerKind.B, t, turn.b), corner(CornerKind.C, t, turn.c), corner(CornerKind.D, t, turn.d)
         j_next = corner(CornerKind.J, t, top)
         arc(turn.outer_radius_mm, start, b.end_in, (turn.j, turn.b), w_out)
-        turn_corner(b)
+        add_fillet(b)
         side(b.start_out, c.end_in, (turn.b, turn.c))
-        turn_corner(c)
+        add_fillet(c)
         arc(turn.end_radius_mm, c.start_out, d.end_in, (turn.c, turn.d), w_in)
-        turn_corner(d)
+        add_fillet(d)
         side(d.start_out, j_next.end_in, (turn.d, top))
-        turn_corner(j_next)
+        add_fillet(j_next)
         start = j_next.start_out
     if isinstance(closing, FullClosing):
         r_v = closing.eye.via_radius_mm
@@ -106,7 +106,7 @@ def _build(
         half = closing.half
         b = corner(CornerKind.B, half.index, half.b)
         arc(half.outer_radius_mm, start, b.end_in, (half.j, half.b), w_out)
-        turn_corner(b)
+        add_fillet(b)
         side(b.start_out, half.via, (half.b, half.via))
     return CoilArtwork(primitives=tuple(prims), terminal=terminal, centre_via=closing.centre_via), fits
 
