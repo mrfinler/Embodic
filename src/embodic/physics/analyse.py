@@ -28,6 +28,7 @@ from embodic.physics.circuit import (
     delta_circulating_loss_w,
     efficiency,
     line_resistance_ohm,
+    motor_constant_n_m_per_sqrt_w,
     solve_phase_circuit,
 )
 from embodic.physics.constants import phase_constants
@@ -557,6 +558,14 @@ def analyse(
         loss_total_w=tr("loss_total", loss_total, Unit.W, sum_eq, sum_refs, sum_validity),
         output_power_w=tr("output_power", p_out, Unit.W, ("EQ-26", "EQ-09", "EQ-06"), [*emf_refs, current, speed]),
         efficiency=tr("efficiency", efficiency(p_out, loss_total), Unit.ONE, sum_eq, sum_refs, sum_validity),
+        motor_constant_n_m_per_sqrt_w=tr(
+            "motor_constant",
+            motor_constant_n_m_per_sqrt_w(torque, p_cu, i_ph),
+            Unit.N_M_PER_SQRT_W,
+            ("EQ-26", "EQ-09", "EQ-06", "EQ-10", "EQ-11"),
+            [*emf_refs, *loss_refs],
+            (*emf_validity, *skin_validity),
+        ),
         thd_phase=tr("thd_phase", thd(amplitudes), Unit.ONE, ("EQ-18", "EQ-06"), emf_refs),
         thd_line=tr("thd_line", thd(line_amplitudes), Unit.ONE, ("EQ-18", "EQ-06"), emf_refs),
         current_density_a_per_mm2=tr("current_density", density, Unit.A_PER_MM2, ("EQ-22",), [*copper_t, current]),
