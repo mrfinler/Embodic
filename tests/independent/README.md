@@ -161,7 +161,7 @@ one-board stack, so the existing GR-19 case ids stay as they are. This matches i
 Prepared by: Agent 4 - Independent Verificator - model: claude-opus-5-5
 
 Run `pytest tests/independent/m2 -q` (about 20 s), `python tests/independent/m2/or01.py` (OR-01 numbers) and
-`python tests/independent/m2/series_fan_brute.py` (series fan, long). The `own_*.py` files import nothing from
+`python tests/independent/m2/series_fan_brute.py` (series fan, about 1 min). The `own_*.py` files import nothing from
 embodic. `or01.py`, `series_fan_brute.py` and the tests import embodic only to build the subject through the public
 API (`build_layout`, `compute`, `analyse`, `save_project`, `load_project`) and to read its output.
 

@@ -1,6 +1,6 @@
 """Series via fan clearances by brute force: M1's certified pair sweep over a series-group spiral board.
 
-Run: python tests/independent/m2/series_fan_brute.py  (prints violations and the least copper clearance per case)
+Run: python tests/independent/m2/series_fan_brute.py  (prints violations per case, about 1 min)
 
 The board comes from the public API (build_layout), goes through embodic's board-dump writer and is read back by
 Agent 4's own reader (tests/independent/m1/board_dump_reader.py). Exemptions are the contract's (drc_universe.py).
@@ -57,7 +57,7 @@ def series_board(name: str, groups: int):
 
 
 def brute(name: str, groups: int, reach_mm: float = 0.0, decide: bool = True) -> tuple[list[PairResult], float]:
-    """Return (violations, least copper clearance lower bound) of the series board by the certified sweep."""
+    """Return the violations and the least bracket lower end of the near copper pairs (decided, not refined)."""
     from embodic.io.board_dump import dump_layout, encode_board_dump
 
     stack = series_board(name, groups)
