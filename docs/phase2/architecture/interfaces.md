@@ -42,6 +42,11 @@ every item): §4 adopts t mod a = 0 with `Feasibility.allows_parallel_paths`, re
 of a series coil (2k + 1 vias). §6 lists the spiral generator's Unbuildable codes with the `TURNS_EXCEED_LIMIT` cause
 value and the series via fan of spec G6 (U-E6). §13 closes point 5.
 
+Revision 2026-10-08 (U-D6, the U-M2e-4 and U-M2f reports; the merged code on main a336531 was read or run for every
+item): §3 states that `motor_constant_n_m_per_sqrt_w` stays in the contract and that U-M2-fix3 adds it with its unit.
+§9.1 answers the three open questions of U-M2f: the provenance of a design whose origin is not packaged, unknown keys,
+and what PR-12 means by "set back to default". §13 closes the PENDING list of point 2 and adds two defect rows.
+
 ## 0. Rules for every public boundary
 
 - Lengths are millimetres (`_mm`), angles radians (`_rad`) inside the core, temperature °C (`_degc`), current A (`_a`),
@@ -1185,6 +1190,12 @@ reading, 2026-10-08): the open connection has no interconnect loss, the efficien
 `motor_constant_n_m_per_sqrt_w` is 0 when the copper loss or the phase current is 0, as Xcoil reports it. Each field
 cites its EQ-ID, so its badge follows the registry status of EQ-23 and EQ-26 and the inputs it depends on (D-007).
 
+Revision 2026-10-08 (U-D6, DEF-M2e4-01). `motor_constant_n_m_per_sqrt_w` stays in `AnalysisResult` with the unit
+`Unit.N_M_PER_SQRT_W` of §1. Main a336531 has neither: the field is absent from
+`src/embodic/results/analysis_result.py` and the unit from `src/embodic/units.py` (`verified` by reading, 2026-10-08).
+The kernel `motor_constant_n_m_per_sqrt_w` is on main (`src/embodic/physics/circuit.py` l.195). U-M2-fix3 adds the unit
+and fills the field from that kernel. The other four loss-sum fields are on main.
+
 ## 4. `embodic.winding`: spiral phase plan
 
 Used by the spiral generator only. Exact integer arithmetic (EQ-08 `replace`).
@@ -2201,8 +2212,9 @@ File name `<name>.embodic.json`, UTF-8 JSON. Top level (values are examples, `as
 
 Rules:
 - `provenance` lists every concrete pointer of the design. `save_project` writes `derive_provenance()` output; on load the
-  stored map is checked against the derivation when the referenced example is packaged with the same SHA-256, and kept
-  as stored otherwise (`INFO_EXAMPLE_NOT_PACKAGED`). A `measured` entry without `source`, or on a design field, is
+  stored map is checked against the derivation when the referenced example is packaged with the same SHA-256, and
+  replaced by the derivation without the example otherwise (`INFO_EXAMPLE_NOT_PACKAGED`; revision 2026-10-08, U-D6,
+  question 1 below). A `measured` entry without `source`, or on a design field, is
   `INVALID_PROVENANCE`. A file with no `origin_example` stores `{"provenance": "default"}` for optional fields still at
   their neutral value (§2.4 rule 3; revision 2026-10-04, D-019).
 - `design_hash` = SHA-256 over the canonical JSON of `design` only (sorted keys, no whitespace, shortest round-trip float
@@ -2232,6 +2244,39 @@ added, removed or renamed key, a changed unit, or a changed meaning. A migration
 reproduces the old file's behaviour; when no such value exists, the key stays empty and the file loads as a
 `LoadedDraft` (D-014: no invented input). U-M2f's JSON Schema test (UT-IO-03) pins the shape, so such a change fails
 the test until the version and the migration exist.
+
+Revision 2026-10-08 (U-D6). U-M2f's three open questions, answered from §2.4, the schema version rule above and
+ADR-0010. Each `verified (run)` line below names the function that was run on main a336531 and its input.
+
+1. Provenance when the origin is not packaged. `origin` is a packaged example, or every field is `measured` where a
+   measurement names it and `user` everywhere else. Neither `ProjectFile` nor
+   `LoadedDraft` gains a field for a stored map. The file keeps `origin_example` unchanged, so an app that packages
+   that SHA-256 derives `example` again. `default` does not apply either, because §2.4 rule 3 needs a blank origin and
+   this design has one that is not blank. The reason is that provenance is derived from values (§2.4). Rule 2 needs the
+   example's values, which the app does not have, so a stored map could not follow the first edit and would disagree
+   with the values. Badges never read provenance. Every unmeasured property input stays in the assumed-inputs tag, so
+   only design inputs leave it, and a design input is exact for the geometry it builds (ADR-0010 decision 6). Main
+   a336531 instead derives as for a blank origin: the D08 example with a changed `example_sha256` gives 56 `user` and
+   30 `default` entries (`verified (run)`, `project_provenance`, 2026-10-08). §13 row DEF-U-D6-01 tracks it.
+2. Unknown keys. The loader refuses what the schema refuses: a key that `project.v1.schema.json` does not allow
+   gives `INVALID_PROJECT_FILE` with the key's pointer, and the file does not load. The schema refuses a top-level
+   `extra_top` and a nested `design/rotor/polez` (`verified (run)`, `jsonschema` `Draft202012Validator` on
+   `spiral_12c10p_d08.embodic.json`, 2026-10-08). `ui` stays free-form, and a `provenance` pointer is checked as
+   today. The reasons are three. Under the schema version rule every legitimate key change raises
+   `schema_version`, so an unknown key in a v1 file comes from a hand edit or a writer defect, never from a newer
+   app. Ignoring it drops a value the
+   user typed: a misspelt optional key loads its neutral value with no message, which D-014 forbids. And UT-IO-03
+   validates files against the schema, so a loader that opens what the schema refuses makes the schema wrong about
+   the files the app opens. Main a336531 loads `design/rotor/polez` and a top-level `extra_top` with no issue
+   (`verified (run)`, `parse_project` on `spiral_12c10p_d08.embodic.json`, 2026-10-08). §13 row DEF-U-D6-02 tracks it.
+3. PR-12 "set back to default". "Default" is the origin's value of the field: the example's value when the origin is an
+   example, and `FieldSpec.neutral_value` when the origin is blank (§2.4 rules 2 and 3). Take design D0, change one
+   field to another value (D1), then type the origin's value again (D2). PR-12 then requires four things.
+   `design_hash(D2) == design_hash(D0) != design_hash(D1)`. The field's provenance in D2 equals its provenance in D0
+   (`example` or `default`). The assumed-inputs tag of D2 equals the tag of D0, so the field rejoins the tag when its
+   provenance is `example` or its kind is property; a design field back at its neutral value stays out (ADR-0010
+   decision 6). Every badge of D2 equals the badge computed with every pointer `user`. Phase 1's "the hash changes"
+   (DEF-21) compares D2 with D1, not with D0.
 
 Angles (decided 2026-10-05, U-D2, U-M2a report). The file stores degrees under `_deg` names, as §0 says and as the
 example above shows. The model stores radians under `_rad` names (`src/embodic/model/fields.py`). `embodic.io` converts
@@ -2688,7 +2733,8 @@ def main(argv: Sequence[str] | None = None) -> int:
    and rows; U-M2d builds the stack type into the generator interface; U-M3a builds the per-phase serpentine.
 2. Closed 2026-10-08 (U-D4, D-031f). §8 restates the kernel argument lists as merged; `checks/physics_signatures.py`
    compares every public name of `embodic.physics` with its stub and lists the three EQ-20 drive changes U-M2e-4
-   still owes.
+   still owes. Revision 2026-10-08 (U-D6, DEF-M2e4-02): U-M2e-4 merged them, so the PENDING list is empty and the
+   check passes on main a336531 with 33 names compared.
 3. Whether Xcoil's serpentine analysis path (`engine.js` `analyze`, l.880-1017) and the generic element path
    (`analyzeElements`, l.1846) give the same EMF for the same copper is `unresolved`; GR-22 measures it (test_plan.md).
 4. Board dump v2 (added 2026-10-05, U-M1b report). v1 cannot say three things: a Member with several paths (v1 writes
@@ -2708,3 +2754,10 @@ def main(argv: Sequence[str] | None = None) -> int:
 | DEF-U-D4-02 | Agent 3 | §2.2 and UT-GEN-03: copper count = phases x layers per phase for `stack_mode` `single` (D-031e) | `validate_design` checks only `one_board_per_phase` (`model/validate.py` l.170) | `serpentine_design()` of `tests/unit/model/designs.py` with `layers_per_phase=1` (3 phases, 6 copper layers): `single` gives no issue, `one_board_per_phase` gives `INVALID_SERPENTINE_COPPER_COUNT` (`verified (run)`, 2026-10-08) | no unit yet: needs `src/embodic/model/validate.py` and `tests/unit/boundary/test_bv_design.py`, which U-M2a-fix named as the blocker; neither is in U-M2d-3's scope |
 | DEF-U-D4-03 | Agent 3 | §2.1 `ScrewPattern.hole_diameter_mm` (D-031a); §5 `TurnLimit.closing` (D-031b) | neither field exists (`model/outline.py`, `geometry/details.py`) | read the two dataclasses | U-M2d-3 (in its brief) |
 | DEF-U-D4-04 | Agent 3 | §8 EQ-20 drive helpers take `connection`, the envelope `phases` and `connection`; §3 loss-sum fields; §5 `Circuit.interconnect_roles` (D-031f) | `drive.py` fixes `PHASES = 3`; `analyse` gives `torque_speed=None` for other phase counts and adds no interconnect resistance (`physics/analyse.py` l.334, l.432) | `checks/physics_signatures.py` lists the three drive names as PENDING | U-M2e-4 (§8 of work_breakdown.md) |
+| DEF-U-D6-01 | Agent 3 | §9.1 question 1: an origin that is not packaged gives `measured` or `user`, never `default` | `project_provenance` passes `None` to `derive_provenance` for such an origin, which reads it as a blank origin (`io/project.py` l.99-111) | parse `resources/examples/spiral_12c10p_d08.embodic.json`, build a `ProjectFile` of its design with `ExampleRef(example_id="spiral_12c10p_d08", example_sha256="sha256:other")`, call `project_provenance`: 56 `user`, 30 `default` (`verified (run)`, main a336531) | no unit yet: `src/embodic/io/project.py` is in no running brief |
+| DEF-U-D6-02 | Agent 3 | §9.1 question 2: a key the schema refuses gives `INVALID_PROJECT_FILE` | `parse_project` ignores unknown keys (`io/project.py` l.244-283) | add `"polez": 99` to `design.rotor`, or `"extra_top": 1` at the top level, of the same file and call `parse_project`: `ProjectFile`, no issue (`verified (run)`, main a336531) | no unit yet: same file |
+
+Revision 2026-10-08 (U-D6). The rows above name main c7fff3a; the two U-D6 rows name main a336531. DEF-U-D4-04 is
+closed on main a336531 except for `motor_constant_n_m_per_sqrt_w` (DEF-M2e4-01, §3) and the spiral generator's
+`Circuit.interconnect_roles` (`inferred` from the U-M2e-4 report and the passing signature check). U-M2-fix3 owns
+both.

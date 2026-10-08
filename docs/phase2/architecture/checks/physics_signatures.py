@@ -19,11 +19,7 @@ import types
 from pathlib import Path
 
 INTERFACES = Path(__file__).resolve().parents[1] / "interfaces.md"
-PENDING = {  # name -> unit that implements the contract change
-    "inverter_phase_voltage_v": "U-M2e-4",
-    "no_load_speed_rpm": "U-M2e-4",
-    "torque_speed_envelope": "U-M2e-4",
-}
+PENDING: dict[str, str] = {}  # name -> unit that implements the contract change; emptied by U-D6 after U-M2e-4
 
 
 def contract_namespace() -> dict[str, object]:
