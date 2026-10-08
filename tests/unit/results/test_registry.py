@@ -33,7 +33,7 @@ CONSTANTS = {
 def test_registry_packaged_counts_and_versions(packaged):
     """Catches a loader that drops entries or a version not tied to the synced files."""
     assert len(packaged.equations) == 30
-    assert len(packaged.evidence) == 96  # the phase2_scope entries of the 104 in the source register
+    assert len(packaged.evidence) == 108  # entries in resources/evidence/evidence.v1.json after U-S3c
     assert re.fullmatch(r"v1\+[0-9a-f]{12}\.[0-9a-f]{12}", packaged.version)
     assert packaged.passed_tests == frozenset()
 
