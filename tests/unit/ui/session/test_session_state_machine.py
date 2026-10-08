@@ -284,3 +284,15 @@ def test_the_stackup_generator_writes_layers_and_pairs_in_one_undoable_edit(rig)
     assert not any(p.startswith(("/stackup", "/winding/layers")) for p in missing)
     session.undo()
     assert "/stackup/layers" in session.state.value.missing
+
+
+@pytest.mark.req("REQ-F-27")
+def test_a_new_design_does_not_show_the_previous_design_as_its_outdated_drawing(rig, d08_ready):
+    """Catches a blank design that inherits another design's drawing and labels it outdated."""
+    session, outcome, submitter = rig
+    session.load_example(D08)
+    outcome.on_finished(submitter.requests[-1].request_id, d08_ready)
+    session.new_design(TopologyKind.WAVE)
+    assert session.drawn(outcome.state.value) == (None, False)
+    session.undo()
+    assert isinstance(session.state.value, SessionComputed)

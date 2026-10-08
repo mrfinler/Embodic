@@ -516,6 +516,10 @@ class MainWindow(QMainWindow):
         if shown is None:
             self.status["st-drc"].setText(text("shell.st-drc.none"))
             self.status["st-counts"].setText("")
+            self._sync_layer_boxes(())
+            self.canvas.show_geometry(
+                None, self.tokens, self.appearance.phase_render_mode.value, self.outcome.hidden_layers.value
+            )
             return
         for item in shown.summary:
             self.cards[item.key].show_item(item)

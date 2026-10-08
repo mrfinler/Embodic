@@ -12,6 +12,7 @@ from embodic.io.canonical import design_hash
 from embodic.io.examples import load_example
 from embodic.model.draft import parse_draft
 from embodic.model.provenance import ExampleValue
+from embodic.model.vocabulary import TopologyKind
 from embodic.ui.app import unrecovered_autosave
 from embodic.ui.viewmodels.session import SessionComputed, SessionDrafting, SessionEmpty
 from embodic.ui.views.main_window import ShellPaths
@@ -167,3 +168,15 @@ def test_ui21_after_an_unclean_exit_the_next_start_offers_recovery_with_the_iden
     assert second.session.chips() == chips
     second.close()
     assert unrecovered_autosave(ShellPaths(recovery_dir=recovery)) is None
+
+
+@pytest.mark.req("REQ-F-27")
+def test_ui18_a_new_design_starts_with_an_empty_canvas(make_shell, wait_computed):
+    """Catches a blank design drawn with the previous design's copper under an 'outdated' label."""
+    window = make_shell().window
+    window.session.load_example(D08)
+    wait_computed(window)
+    assert window.canvas.scene().items()
+    window.session.new_design(TopologyKind.SPIRAL)
+    assert not window.canvas.scene().items()
+    assert not find(window, "fig-stale").isVisibleTo(window)

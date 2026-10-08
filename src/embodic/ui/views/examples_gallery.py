@@ -34,6 +34,7 @@ class ExamplesGallery(QDialog):
         self.list = QListWidget()
         self.list.setObjectName("examples-list")
         self.list.setAccessibleName(text("examples-list.accessible"))
+        self.list.setWordWrap(True)
         for info in list_examples():
             topology = text(f"topology.{info.topology.value}")
             item = QListWidgetItem(f"{info.title}\n{topology}. {info.source_note}")

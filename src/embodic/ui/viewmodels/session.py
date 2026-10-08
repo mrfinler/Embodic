@@ -509,13 +509,13 @@ class DesignSession:
 
     def new_design(self, topology: TopologyKind) -> None:
         """Open a blank draft: required fields missing, optional fields at their neutral value (D-014)."""
-        self._commit(SessionDocument(draft=blank_draft(topology), origin=None))
+        self._replace(SessionDocument(draft=blank_draft(topology), origin=None))
 
     def load_example(self, example_id: str) -> None:
         """Open a packaged example as a new design whose fields carry `example` provenance (REQ-F-38)."""
         ref, design = load_packaged_example(example_id)
         self._origins[ref] = design
-        self._commit(SessionDocument(draft=draft_from_design(design), origin=ref))
+        self._replace(SessionDocument(draft=draft_from_design(design), origin=ref))
 
     def open_project(self, path: Path) -> tuple[ValidationIssue, ...]:
         """Open a project file, complete or a draft; return its load issues."""
@@ -523,7 +523,7 @@ class DesignSession:
         if loaded is None:
             return issues
         draft = draft_from_design(loaded.design) if isinstance(loaded, ProjectFile) else loaded.draft
-        self._commit(SessionDocument(draft=draft, origin=loaded.origin, measurements=loaded.measurements))
+        self._replace(SessionDocument(draft=draft, origin=loaded.origin, measurements=loaded.measurements))
         return issues
 
     def save_project(self, path: Path) -> str:
@@ -705,6 +705,11 @@ class DesignSession:
         if isinstance(parsed, DesignParameters):
             return ProjectFile(design=parsed, origin=document.origin, measurements=document.measurements)
         return LoadedDraft(draft=document.draft, origin=document.origin, measurements=document.measurements)
+
+    def _replace(self, document: SessionDocument) -> None:
+        """Open another design: the drawing of the one before is not an outdated view of it."""
+        self._drawn = None
+        self._commit(document)
 
     def _commit(self, document: SessionDocument | None, *, record: bool = True) -> None:
         if record:
