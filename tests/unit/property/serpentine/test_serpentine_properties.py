@@ -188,7 +188,11 @@ def test_pr_14_the_default_preset_follows_the_rotation(fraction: float) -> None:
 
 @pytest.mark.xfail(
     strict=True,
-    reason="DEF-M3a-02: Ke changes by 8.5e-9 relative (PR-14 allows 1e-9) when sharp end turns lie on the magnet edge",
+    reason=(
+        "DEF-M3a-02: Ke changes by 8.5e-9 relative (PR-14 allows 1e-9). The 18 mm sharp side lines are exactly 36 "
+        "chords of 0.5 mm; rotating moves their computed length by one ulp, ceil() gives 36 or 37 chords, and the two "
+        "valid discretisations differ by that much. Not a rotation defect: 0.49, 0.51 and 0.7 mm chords give 2e-16."
+    ),
 )
 def test_pr_14_counter_example_sharp_corners_with_one_turn() -> None:
     """PR-14 counter-example found by Hypothesis. Rotation by one electrical period changes Ke beyond 1e-9 relative."""
