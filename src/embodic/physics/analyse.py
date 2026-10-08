@@ -78,7 +78,7 @@ from embodic.units import Unit, rpm_to_rad_per_s
 EDGE_CHECK_ID = "EC-05"
 SKIN_DEPTH_FRACTION = 1.0 / 3.0  # REQ-T-08: w above delta / 3 raises RANGE_SKIN_DEPTH
 IDEAL_INTEGRAL_STEPS = 200  # Xcoil analyzeElements `ideal` integral (EQ-27)
-NON_FINITE_CODE = "PHYSICS_NON_FINITE_RESULT"
+NON_FINITE_CODE = "RANGE_NON_FINITE_RESULT"
 UNCLASSIFIED_INTERCONNECT = ValidityFlag(
     code="INTERNAL_INTERCONNECT_UNCLASSIFIED",
     message="interconnect copper not classified",

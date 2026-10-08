@@ -168,7 +168,7 @@ def _magnet_faces_winding(design: DesignParameters) -> Iterator[ValidationIssue]
         yield issue("INVALID_MAGNET_CROSSES_AXIS", ["/rotor/magnet/r_center_mm", "/rotor/magnet/length_mm"])
         return
     coil_in, coil_out = _winding_span_mm(design)
-    if not (r_in < coil_out and r_out > coil_in):
+    if coil_in < coil_out and not (r_in < coil_out and r_out > coil_in):
         # No magnet radius faces the copper, so Ke is 0 and kv and THD divide by it (DEF-M2f-01).
         yield issue("RANGE_MAGNET_OUTSIDE_WINDING", ["/rotor/magnet"], value=r_in, limit=coil_out, unit=Unit.MM)
 

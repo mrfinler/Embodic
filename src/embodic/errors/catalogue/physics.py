@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 
 MESSAGES: Mapping[str, str] = {
-    "PHYSICS_NON_FINITE_RESULT": (
+    "RANGE_NON_FINITE_RESULT": (
         "A result is not a finite number at this operating point; it is shown as unresolved. The quantity is named "
         "in the issue value."
     ),

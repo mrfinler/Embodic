@@ -133,7 +133,7 @@ def test_pr_05_a_non_finite_result_is_unresolved_and_named_by_an_issue() -> None
     outcome = _outcome(_with_operating(cf11(), speed_rpm=0.0))
     assert outcome.analysis is not None
     non_finite = [t for t in _traceables(outcome.analysis) if not _is_finite(t.value)]
-    flagged = [i.value for i in outcome.issues if i.code == "PHYSICS_NON_FINITE_RESULT"]
+    flagged = [i.value for i in outcome.issues if i.code == "RANGE_NON_FINITE_RESULT"]
     assert sorted(t.quantity for t in non_finite) == sorted(flagged)
     assert "skin_depth" in flagged
     assert {t.status for t in non_finite} == {Status.UNRESOLVED}
