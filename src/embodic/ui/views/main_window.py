@@ -25,6 +25,8 @@ from PySide6.QtWidgets import (
     QMenu,
     QMessageBox,
     QPushButton,
+    QScrollArea,
+    QSizePolicy,
     QSplitter,
     QStackedWidget,
     QStatusBar,
@@ -52,8 +54,11 @@ from embodic.ui.viewmodels.outcome import (
 )
 from embodic.ui.viewmodels.results import (
     CompareViewModel,
+    DrcTable,
     ResultsViewModel,
+    drc_card,
     drc_table,
+    inputs_card,
     topic_for,
 )
 from embodic.ui.viewmodels.session import (
@@ -83,6 +88,8 @@ logger = logging.getLogger(__name__)
 
 MIN_SIZE_PX = (960, 540)
 THREE_PANE_FROM_PX = 1280
+INSPECTOR_PX = (300, 340)  # two-pane and three-pane widths (design_spec.md section 5)
+RAIL_PX = 360
 HOME_PLACEHOLDER = "%USERPROFILE%"
 EXPORT_ACTIONS = ("act-export-svg", "act-export-dxf", "act-export-pdf", "act-export-all")
 
@@ -207,12 +214,13 @@ class MainWindow(QMainWindow):
         rail.show_drc.connect(partial(self.show_results_tab, "tab-drc"))
         rail.open_equation.connect(self.show_equations)
         rail_layout = rail.body
-        issues_title = QLabel(text("design.issues.title"))
+        issues_title = QLabel(text("rail.issues.title"))
         issues_title.setProperty("class", "section-title")
         self.issues_list = QListWidget()
         self.issues_list.setObjectName("issues-list")
         self.issues_list.itemActivated.connect(self._issue_activated)
         self.issues_list.itemClicked.connect(self._issue_activated)
+        self.issues_list.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.MinimumExpanding)
         self.issue_apply = QPushButton()
         self.issue_apply.setObjectName("btn-apply-suggestion")
         self.issue_apply.clicked.connect(self._apply_selected_suggestion)
@@ -222,9 +230,15 @@ class MainWindow(QMainWindow):
         rail_layout.addWidget(self.issue_apply)
         rail_layout.addStretch(1)
 
+        self.rail_scroll = QScrollArea()
+        self.rail_scroll.setObjectName("rail-scroll")
+        self.rail_scroll.setWidgetResizable(True)
+        self.rail_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.rail_scroll.setWidget(rail)
+
         self.splitter = QSplitter()
         self.splitter.setObjectName("work-area")
-        for pane in (inspector, self.centre, rail):
+        for pane in (inspector, self.centre, self.rail_scroll):
             self.splitter.addWidget(pane)
         self.splitter.setStretchFactor(1, 1)
         return self.splitter
@@ -410,7 +424,7 @@ class MainWindow(QMainWindow):
             item.setToolTip(found.code)
             self.issues_list.addItem(item)
         if not self.session.issues.value:
-            self.issues_list.addItem(QListWidgetItem(text("design.issues.none")))
+            self.issues_list.addItem(QListWidgetItem(text("rail.issues.none")))
         self._show_apply()
 
     def _selected_issue(self) -> ValidationIssue | None:
@@ -532,7 +546,7 @@ class MainWindow(QMainWindow):
         assert isinstance(app, QApplication)
         style.apply_theme(app, self.tokens)
         self.toolstrip.apply_theme(self.tokens)
-        for region in (self.results_tabs, self.rail):
+        for region in (self.results_tabs, self.rail_scroll):
             region.setStyleSheet(focus_ring_qss(self.tokens))
         self._render()
 
@@ -549,8 +563,11 @@ class MainWindow(QMainWindow):
         self._show_stale(outdated)
         compute_word = {OutcomeComputing: "updating", OutcomeFailed: "error"}.get(type(state), "ready")
         self.status["st-compute"].setText(text(f"shell.st-compute.{compute_word}"))
-        self._render_results(state, shown.outcome if shown else None, outdated)
-        self.rail.show_summary(shown.summary if shown else None, self.tokens, stale=outdated)
+        outcome = shown.outcome if shown else None
+        table = drc_table(outcome)
+        self._render_results(state, outcome, table, outdated)
+        cards = None if table is None else (inputs_card(self.session.issues.value), drc_card(table))
+        self.rail.show_cards(cards, self.tokens, stale=outdated)
         for action_id in EXPORT_ACTIONS:
             self.toolstrip.actions_by_id[action_id].setEnabled(shown is not None)
         if shown is None:
@@ -589,12 +606,14 @@ class MainWindow(QMainWindow):
             text("shell.st-counts.text", layers=len(scene.layers), coils=len(coils), vias=vias)
         )
 
-    def _render_results(self, state: OutcomeState, outcome: ComputeOutcome | None, outdated: bool) -> None:
+    def _render_results(
+        self, state: OutcomeState, outcome: ComputeOutcome | None, table: DrcTable | None, outdated: bool
+    ) -> None:
         mode = self.appearance.phase_render_mode.value
         self.results.show(outcome.analysis if outcome else None, stale=outdated)
         self.results_tab.set_tokens(self.tokens)
         self.results_tab.set_computing(isinstance(state, OutcomeComputing))
-        self.drc_tab.show_table(drc_table(outcome), self.tokens)
+        self.drc_tab.show_table(table, self.tokens)
         self.back_emf_tab.show_outcome(outcome, self.tokens, mode)
         self.torque_speed_tab.show_outcome(outcome, self.tokens, mode)
         self.compare_tab.show_outcome(outcome, self.tokens)
@@ -677,12 +696,25 @@ class MainWindow(QMainWindow):
         if isinstance(self.outcome.state.value, OutcomeFailed):
             self.report_internal_error(correlation_id)
 
+    def _place_rail(self, wide: bool) -> None:
+        """From 1280 px the rail is the third pane; below it the rail is the first results tab (design_spec.md 5)."""
+        index = self.results_tabs.indexOf(self.rail_scroll)
+        if wide and index >= 0:
+            self.results_tabs.removeTab(index)
+            self.splitter.addWidget(self.rail_scroll)
+            self.rail_scroll.show()
+        elif not wide and index < 0:
+            self.results_tabs.insertTab(0, self.rail_scroll, text("shell.results-rail.title"))
+
     def resizeEvent(self, event) -> None:  # noqa: N802 (Qt override)
-        """Size the side panes for the two-pane and three-pane widths (design_spec.md section 5)."""
+        """Size the panes for the two-pane and three-pane widths (design_spec.md section 5)."""
         super().resizeEvent(event)
         wide = self.width() >= THREE_PANE_FROM_PX
-        side = (340, 360) if wide else (240, 240)
-        self.splitter.setSizes([side[0], max(self.width() - sum(side), 100), side[1]])
+        self._place_rail(wide)
+        panes = self.splitter.width() - self.splitter.handleWidth() * (self.splitter.count() - 1)
+        inspector = INSPECTOR_PX[wide]
+        side = (RAIL_PX,) if wide else ()
+        self.splitter.setSizes([inspector, max(panes - inspector - sum(side), 100), *side])
 
     def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802 (Qt override)
         """Stop the compute worker before the window goes; a clean exit leaves no autosave to recover."""
