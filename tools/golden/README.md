@@ -183,6 +183,26 @@ duplicate ids. `apply_allow_list(comparison, case_id, entries)` marks each admit
 is `expected` when every diff is admitted. An entry with a tolerance override never admits a structural diff (length,
 type, keys, direction, pass/fail). `m1.toml` has no entries yet.
 
+## Parameter maps
+
+`tools/golden/param_map/<area>.json` maps the parameter names of an Xcoil case to embodic pointers, for the areas whose
+cases are whole designs (U-M3a: `serpentine.json`). It sits beside the allow-list: the allow-list says where embodic may
+differ, the parameter map says what the same design is called in each tool.
+
+```json
+{"format": "embodic.golden-param-map", "format_version": 1, "area": "serpentine", "note": "...",
+ "fields": [{"xcoil": "startAngleDeg", "pointers": ["/winding/start_angle_rad"], "transform": "deg_to_rad"}],
+ "derived": [{"pointer": "/stackup/layers", "rule": "..."}, {"pointer": "/connection/neutral_pad", "value": true, "reason": "..."}],
+ "not_mapped": [{"xcoil": "padShape", "reason": "..."}]}
+```
+
+- `fields` rows give one Xcoil key and the pointers it sets (a key may set several, for example `clearance`). `transform`
+  is absent (copy), `deg_to_rad`, `zero_is_none` (Xcoil 0 means "same as the trace width", embodic `None`) or `enum`
+  with an `enum` table from the Xcoil string to the embodic value.
+- `derived` rows are design values that no single Xcoil key sets. A row holds a `rule` in words or a fixed `value` with its
+  `reason`; the Python reader (`tests/golden/m3_serpentine/design_map.py`) implements each.
+- `not_mapped` lists Xcoil keys the layout does not read, so a reader can tell "left out on purpose" from "forgotten".
+
 ## Self-checks
 
 ```sh

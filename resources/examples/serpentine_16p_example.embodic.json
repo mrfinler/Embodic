@@ -1,0 +1,639 @@
+{
+ "app_version": "0.0.1",
+ "design": {
+  "analysis": {
+   "edge_correction": "off",
+   "harmonics": [
+    1,
+    3,
+    5,
+    7,
+    9,
+    11,
+    13
+   ],
+   "max_segment_mm": 0.5
+  },
+  "connection": {
+   "draw_interconnect": true,
+   "neutral_pad": true,
+   "ring_width_mm": 1.0,
+   "terminal_drill_mm": 1.2,
+   "terminal_pad_mm": 2.4,
+   "topology": "star"
+  },
+  "drc_rules": {
+   "edge_clearance_mm": 0.3,
+   "hole_clearance_mm": 0.3,
+   "min_annular_ring_mm": 0.1,
+   "min_drill_mm": 0.3,
+   "min_trace_width_mm": 0.15,
+   "trace_clearance_mm": 0.2,
+   "via_clearance_mm": 0.2
+  },
+  "materials": {
+   "copper_density_g_per_cm3": null,
+   "copper_resistivity_20c_ohm_m": null,
+   "copper_temp_coeff_per_k": null,
+   "laminate_density_g_per_cm3": null
+  },
+  "name": "Example: 16-pole serpentine (Xcoil default)",
+  "operating": {
+   "ambient_temperature_degc": 25.0,
+   "convection_h_w_m2k": 30.0,
+   "dc_link_v": 24.0,
+   "line_current_rms_a": 0.8,
+   "modulation": "svpwm",
+   "speed_rpm": 1500.0,
+   "winding_temperature_degc": 60.0
+  },
+  "outline": {
+   "board": {
+    "radius_mm": 55.92,
+    "shape": "circle"
+   },
+   "bore": {
+    "radius_mm": 17.0,
+    "shape": "circle"
+   },
+   "screws": [
+    {
+     "angle_offset_deg": 0.0,
+     "count": 8,
+     "fit": "normal",
+     "hole_diameter_mm": 3.4,
+     "pitch_radius_mm": 52.42,
+     "size": "M3"
+    }
+   ]
+  },
+  "phases": 3,
+  "rotor": {
+   "air_gap_mm": 0.8,
+   "back_iron_thickness_mm": 3.0,
+   "magnet": {
+    "kind": "arc",
+    "pole_arc_ratio": 0.85,
+    "r_inner_mm": 22.0,
+    "r_outer_mm": 40.0,
+    "thickness_mm": 3.0
+   },
+   "magnet_offset_deg": 0.0,
+   "poles": 16,
+   "recoil_permeability": 1.05,
+   "remanence_t": 1.3,
+   "rotor_type": "double"
+  },
+  "stackup": {
+   "layers": [
+    {
+     "kind": "copper",
+     "name": "L1",
+     "thickness_mm": 0.0696
+    },
+    {
+     "kind": "dielectric",
+     "material": "FR-4",
+     "name": "D1",
+     "thickness_mm": 0.23648000000000002
+    },
+    {
+     "kind": "copper",
+     "name": "L2",
+     "thickness_mm": 0.0696
+    },
+    {
+     "kind": "dielectric",
+     "material": "FR-4",
+     "name": "D2",
+     "thickness_mm": 0.23648000000000002
+    },
+    {
+     "kind": "copper",
+     "name": "L3",
+     "thickness_mm": 0.0696
+    },
+    {
+     "kind": "dielectric",
+     "material": "FR-4",
+     "name": "D3",
+     "thickness_mm": 0.23648000000000002
+    },
+    {
+     "kind": "copper",
+     "name": "L4",
+     "thickness_mm": 0.0696
+    },
+    {
+     "kind": "dielectric",
+     "material": "FR-4",
+     "name": "D4",
+     "thickness_mm": 0.23648000000000002
+    },
+    {
+     "kind": "copper",
+     "name": "L5",
+     "thickness_mm": 0.0696
+    },
+    {
+     "kind": "dielectric",
+     "material": "FR-4",
+     "name": "D5",
+     "thickness_mm": 0.23648000000000002
+    },
+    {
+     "kind": "copper",
+     "name": "L6",
+     "thickness_mm": 0.0696
+    }
+   ]
+  },
+  "vias": {
+   "drill_mm": 0.3,
+   "pad_mm": 0.6,
+   "plating_um": 25.0,
+   "vias_per_transition": 1
+  },
+  "winding": {
+   "board_gap_mm": 0.1,
+   "clearance_mm": 0.2,
+   "corner_style": "round",
+   "end_width_inner_mm": null,
+   "end_width_outer_mm": null,
+   "fillet_max": false,
+   "fillet_radius_mm": 0.4,
+   "kind": "serpentine",
+   "layer_order": "grouped",
+   "layers_per_phase": 2,
+   "pair_connection": "series",
+   "r_inner_mm": 22.0,
+   "r_outer_mm": 40.0,
+   "side_style": "parallel",
+   "stack_mode": "single",
+   "start_angle_deg": 0.0,
+   "strands": 1,
+   "terminal_side": "outer",
+   "trace_width_mm": 0.4,
+   "turns": 4
+  }
+ },
+ "design_hash": "sha256:3fa7f90783e1d3e9a1ec1b4d886f8fddf3a48404a32a669faf913d55527e469f",
+ "example": {
+  "source_note": "Xcoil default serpentine preset (engine.js l.19-97), example values (assumption)",
+  "title": "Example: 16-pole serpentine (Xcoil default)"
+ },
+ "format": "embodic-project",
+ "origin_example": {
+  "example_id": "serpentine_16p_example",
+  "example_sha256": "sha256:3fa7f90783e1d3e9a1ec1b4d886f8fddf3a48404a32a669faf913d55527e469f"
+ },
+ "provenance": {
+  "/analysis/harmonics": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/analysis/max_segment_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/connection/draw_interconnect": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/connection/neutral_pad": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/connection/ring_width_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/connection/terminal_drill_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/connection/terminal_pad_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/connection/topology": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/drc_rules/edge_clearance_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/drc_rules/hole_clearance_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/drc_rules/min_annular_ring_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/drc_rules/min_drill_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/drc_rules/min_trace_width_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/drc_rules/trace_clearance_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/drc_rules/via_clearance_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/materials/copper_density_g_per_cm3": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/materials/copper_resistivity_20c_ohm_m": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/materials/copper_temp_coeff_per_k": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/materials/laminate_density_g_per_cm3": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/name": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/operating/ambient_temperature_degc": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/operating/convection_h_w_m2k": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/operating/dc_link_v": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/operating/line_current_rms_a": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/operating/modulation": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/operating/speed_rpm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/operating/winding_temperature_degc": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/outline/board/radius_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/outline/board/shape": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/outline/bore/radius_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/outline/bore/shape": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/outline/screws/0/angle_offset_deg": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/outline/screws/0/count": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/outline/screws/0/fit": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/outline/screws/0/hole_diameter_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/outline/screws/0/pitch_radius_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/outline/screws/0/size": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/phases": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/rotor/air_gap_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/rotor/back_iron_thickness_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/rotor/magnet/kind": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/rotor/magnet/pole_arc_ratio": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/rotor/magnet/r_inner_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/rotor/magnet/r_outer_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/rotor/magnet/thickness_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/rotor/magnet_offset_deg": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/rotor/poles": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/rotor/recoil_permeability": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/rotor/remanence_t": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/rotor/rotor_type": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/0/kind": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/0/name": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/0/thickness_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/1/kind": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/1/material": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/1/name": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/1/thickness_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/10/kind": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/10/name": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/10/thickness_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/2/kind": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/2/name": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/2/thickness_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/3/kind": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/3/material": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/3/name": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/3/thickness_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/4/kind": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/4/name": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/4/thickness_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/5/kind": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/5/material": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/5/name": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/5/thickness_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/6/kind": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/6/name": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/6/thickness_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/7/kind": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/7/material": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/7/name": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/7/thickness_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/8/kind": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/8/name": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/8/thickness_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/9/kind": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/9/material": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/9/name": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/stackup/layers/9/thickness_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/vias/drill_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/vias/pad_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/vias/plating_um": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/vias/vias_per_transition": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/winding/board_gap_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/winding/clearance_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/winding/corner_style": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/winding/end_width_inner_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/winding/end_width_outer_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/winding/fillet_max": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/winding/fillet_radius_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/winding/layer_order": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/winding/layers_per_phase": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/winding/pair_connection": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/winding/r_inner_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/winding/r_outer_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/winding/side_style": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/winding/stack_mode": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/winding/start_angle_deg": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/winding/strands": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/winding/terminal_side": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/winding/trace_width_mm": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  },
+  "/winding/turns": {
+   "example_id": "serpentine_16p_example",
+   "provenance": "example"
+  }
+ },
+ "saved_utc": "2026-10-08T00:00:00Z",
+ "schema_version": 1,
+ "ui": {}
+}

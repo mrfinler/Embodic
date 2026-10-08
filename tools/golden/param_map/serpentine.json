@@ -1,0 +1,48 @@
+{
+  "format": "embodic.golden-param-map",
+  "format_version": 1,
+  "area": "serpentine",
+  "note": "Maps Xcoil parameter names to embodic pointers for the GR-20 layout cases. The Python reader is tests/golden/m3_serpentine/design_map.py.",
+  "fields": [
+    {"xcoil": "poles", "pointers": ["/rotor/poles"]},
+    {"xcoil": "phases", "pointers": ["/phases"]},
+    {"xcoil": "rIn", "pointers": ["/winding/r_inner_mm", "/rotor/magnet/r_inner_mm"]},
+    {"xcoil": "rOut", "pointers": ["/winding/r_outer_mm", "/rotor/magnet/r_outer_mm"]},
+    {"xcoil": "turns", "pointers": ["/winding/turns"]},
+    {"xcoil": "strands", "pointers": ["/winding/strands"]},
+    {"xcoil": "traceWidth", "pointers": ["/winding/trace_width_mm"]},
+    {"xcoil": "clearance", "pointers": ["/winding/clearance_mm", "/drc_rules/trace_clearance_mm", "/drc_rules/via_clearance_mm"]},
+    {"xcoil": "endWidthOuter", "pointers": ["/winding/end_width_outer_mm"], "transform": "zero_is_none"},
+    {"xcoil": "endWidthInner", "pointers": ["/winding/end_width_inner_mm"], "transform": "zero_is_none"},
+    {"xcoil": "style", "pointers": ["/winding/side_style"], "transform": "enum", "enum": {"parallel": "parallel", "radial": "radial"}},
+    {"xcoil": "cornerStyle", "pointers": ["/winding/corner_style"], "transform": "enum", "enum": {"round": "round", "sharp": "sharp"}},
+    {"xcoil": "filletRadius", "pointers": ["/winding/fillet_radius_mm"]},
+    {"xcoil": "filletMax", "pointers": ["/winding/fillet_max"]},
+    {"xcoil": "terminalSide", "pointers": ["/winding/terminal_side"], "transform": "enum", "enum": {"outer": "outer", "inner": "inner"}},
+    {"xcoil": "startAngleDeg", "pointers": ["/winding/start_angle_rad"], "transform": "deg_to_rad"},
+    {"xcoil": "layersPerPhase", "pointers": ["/winding/layers_per_phase"]},
+    {"xcoil": "pairConnection", "pointers": ["/winding/pair_connection"], "transform": "enum", "enum": {"series": "series", "parallel": "parallel"}},
+    {"xcoil": "layerOrder", "pointers": ["/winding/layer_order"], "transform": "enum", "enum": {"grouped": "grouped", "interleaved": "interleaved"}},
+    {"xcoil": "stackMode", "pointers": ["/winding/stack_mode"], "transform": "enum", "enum": {"single": "single", "perPhase": "one_board_per_phase"}},
+    {"xcoil": "boardGap", "pointers": ["/winding/board_gap_mm"]},
+    {"xcoil": "viaDrill", "pointers": ["/vias/drill_mm"]},
+    {"xcoil": "viaPad", "pointers": ["/vias/pad_mm"]},
+    {"xcoil": "connection", "pointers": ["/connection/topology"], "transform": "enum", "enum": {"star": "star", "delta": "delta", "open": "open"}},
+    {"xcoil": "interconnect", "pointers": ["/connection/draw_interconnect"]},
+    {"xcoil": "busWidth", "pointers": ["/connection/ring_width_mm"]},
+    {"xcoil": "terminalPad", "pointers": ["/connection/terminal_pad_mm"]},
+    {"xcoil": "terminalDrill", "pointers": ["/connection/terminal_drill_mm"]}
+  ],
+  "derived": [
+    {"pointer": "/stackup/layers", "rule": "even stack-up of N copper layers (generate_even_stackup): N = phases x layersPerPhase for single, layersPerPhase for perPhase; copper thickness = copperOzOuter x 0.0348 mm, board thickness = boardThickness"},
+    {"pointer": "/connection/neutral_pad", "value": true, "reason": "Xcoil always draws the N pad of a star connection (engine.js l.1313)"},
+    {"pointer": "/outline", "rule": "circle of radius outlineScale x rMaxAll and bore innerScale x rMinAll from the Xcoil layout, no screws: embodic takes absolute outline inputs, Xcoil scale factors (engine.js l.1101)"},
+    {"pointer": "/analysis/max_segment_mm", "value": 0.5, "reason": "Xcoil analyze discretises the strands with hMax 0.5 mm (engine.js l.887); Ke agrees to 1e-14 relative only with the same chords"},
+    {"pointer": "/rotor/magnet", "rule": "arc magnet spanning rIn to rOut (Xcoil magnetAuto, engine.js l.130); other rotor and operating values equal Xcoil's defaults in tests/unit/model/designs.py"}
+  ],
+  "not_mapped": [
+    {"xcoil": "padShape", "reason": "ConnectionSpec has round pads only; Xcoil default round"},
+    {"xcoil": "padHeight", "reason": "round pads only"},
+    {"xcoil": "everything else", "reason": "rotor, drive, thermal, screw and report keys; the layout does not read them"}
+  ]
+}
