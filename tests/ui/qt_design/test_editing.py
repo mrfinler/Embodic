@@ -3,16 +3,21 @@
 UI-11, UI-14, UI-15, UI-18, UI-19, UI-21 (Phase 1 test plan, carried into Phase 2).
 """
 
+import dataclasses
+import sys
+
 import pytest
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QListWidget, QMessageBox
+from PySide6.QtCore import QSettings, Qt
+from PySide6.QtWidgets import QApplication, QListWidget, QMessageBox
 from tests.ui.qt_design.conftest import enter, find
 
 from embodic.io.canonical import design_hash
 from embodic.io.examples import load_example
+from embodic.io.project import ProjectFile, save_project
 from embodic.model.draft import parse_draft
 from embodic.model.provenance import ExampleValue
 from embodic.model.vocabulary import TopologyKind
+from embodic.ui import app as app_module
 from embodic.ui.app import unrecovered_autosave
 from embodic.ui.viewmodels.session import SessionComputed, SessionDrafting, SessionEmpty
 from embodic.ui.views.main_window import ShellPaths
@@ -170,6 +175,18 @@ def test_ui21_after_an_unclean_exit_the_next_start_offers_recovery_with_the_iden
     assert unrecovered_autosave(ShellPaths(recovery_dir=recovery)) is None
 
 
+@pytest.mark.req("REQ-F-21")
+def test_ui22_typing_the_d08_air_gap_back_to_1_1_shows_the_example_chip(make_shell, qtbot):
+    """Catches DEF-1: the D08 file held 1.0999999999999999, so typing the shown 1.1 back left the chip on user."""
+    window = make_shell(compute_fn=no_compute).window
+    window.session.load_example(D08)
+    chip = find(window, "param-air-gap-prov")
+    enter(qtbot, window, "param-air-gap", "1.2")
+    assert chip.text() == "user"
+    enter(qtbot, window, "param-air-gap", "1.1")
+    assert (find(window, "param-air-gap").text(), chip.text()) == ("1.1", "example")
+
+
 @pytest.mark.req("REQ-F-27")
 def test_ui18_a_new_design_starts_with_an_empty_canvas(make_shell, wait_computed):
     """Catches a blank design drawn with the previous design's copper under an 'outdated' label."""
@@ -180,3 +197,39 @@ def test_ui18_a_new_design_starts_with_an_empty_canvas(make_shell, wait_computed
     window.session.new_design(TopologyKind.SPIRAL)
     assert not window.canvas.scene().items()
     assert not find(window, "fig-stale").isVisibleTo(window)
+
+
+@pytest.mark.req("REQ-F-31")
+def test_ui21_main_offers_recovery_of_the_autosave_left_by_an_unclean_exit(qtbot, tmp_path, monkeypatch):
+    """Catches main() starting without the recovery offer, or a recovery that opens another design than the autosave."""
+    ref, design = load_example(D08)
+    edited = dataclasses.replace(design, operating=dataclasses.replace(design.operating, speed_rpm=1234.0))
+    data_dir = tmp_path / "data"
+    autosave = data_dir / "recovery" / "autosave.embodic.json"
+    autosave.parent.mkdir(parents=True)
+    save_project(autosave, ProjectFile(design=edited, origin=ref))
+    settings = QSettings(str(tmp_path / "settings.ini"), QSettings.Format.IniFormat)
+    monkeypatch.setattr(app_module, "app_data_dir", lambda: data_dir)
+    monkeypatch.setattr(app_module, "setup_logging", lambda log_dir: log_dir)
+    store = app_module.QSettingsStore
+    monkeypatch.setattr(app_module, "QSettingsStore", lambda: store(settings))
+    monkeypatch.setattr(sys, "excepthook", sys.excepthook)
+    shells = []
+    create_shell = app_module.create_shell
+    monkeypatch.setattr(app_module, "create_shell", lambda *args: shells.append(create_shell(*args)) or shells[-1])
+    seen = {}
+
+    def run_event_loop(app):
+        window = shells[0].window
+        qtbot.addWidget(window)
+        dialog = window.findChild(QMessageBox, "dlg-recovery")
+        seen["offered"] = dialog is not None and dialog.isVisible()
+        if dialog is not None:
+            qtbot.mouseClick(find(dialog, "btn-recover"), Qt.MouseButton.LeftButton)
+        seen["hash"] = session_hash(window) if window.session.document is not None else None
+        return 0
+
+    monkeypatch.setattr(QApplication, "exec", run_event_loop)
+    assert app_module.main([]) == 0
+    assert seen == {"offered": True, "hash": design_hash(edited)}
+    assert design_hash(edited) != design_hash(design)

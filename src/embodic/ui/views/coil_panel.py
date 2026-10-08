@@ -4,31 +4,36 @@ A row binds to one `FieldSpec` through its `widget_id` and shows label, input, u
 What a row shows comes from `DesignSession.rows()`; a row only parses the typed text and calls `DesignSession.edit`.
 """
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping, Sequence
 
-from PySide6.QtCore import QEvent, QObject, Qt
+from PySide6.QtCore import QEvent, QObject, QPoint, Qt
 from PySide6.QtWidgets import (
+    QButtonGroup,
     QCheckBox,
     QComboBox,
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QLineEdit,
+    QMenu,
     QScrollArea,
+    QTableWidget,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
 from embodic.errors import IssueCategory, Severity
-from embodic.model.fields import FieldGroup, FieldSpec
+from embodic.model.fields import FieldGroup, FieldKind, FieldSpec
 from embodic.model.provenance import MeasuredValue
-from embodic.model.schema import JsonValue, ValueType
+from embodic.model.schema import Choice, JsonValue, ValueType
 from embodic.ui.strings import STRINGS, text
 from embodic.ui.viewmodels.session import (
+    TAB_OF_GROUP,
     DesignSession,
     FieldRow,
-    SessionComputed,
     display_text,
     feasibility_hints,
     parse_text,
@@ -45,6 +50,22 @@ TITLED_GROUPS = frozenset(
         FieldGroup.OPERATING,
         FieldGroup.DRIVE,
         FieldGroup.COOLING,
+    }
+)
+# Choice fields that screens.md sections 2 to 5 draw as an exclusive QToolButton segment; other choices are combo boxes.
+SEGMENT_WIDGETS = frozenset(
+    {
+        "param-side-style",
+        "param-end-style",
+        "param-x-inward-sense",
+        "param-phase-count",
+        "param-connection",
+        "param-phase-sequence",
+        "param-terminal-location",
+        "param-pair-connection",
+        "param-stack-mode",
+        "param-outline-shape",
+        "param-magnet-shape",
     }
 )
 
@@ -83,12 +104,52 @@ class _NoWheelWithoutFocus(QObject):
 _WHEEL_GUARD = _NoWheelWithoutFocus()
 
 
+class Segment(QWidget):
+    """An exclusive QToolButton segment: the widget id names the row, `<id>-<choice>` names each button."""
+
+    def __init__(self, widget_id: str, choices: Sequence[Choice], on_choose: Callable[[Choice], None]) -> None:
+        super().__init__()
+        self.setObjectName(widget_id)
+        self.group = QButtonGroup(self)
+        self.buttons: dict[Choice, QToolButton] = {}
+        line = QHBoxLayout(self)
+        line.setContentsMargins(0, 0, 0, 0)
+        line.setSpacing(2)
+        for choice in choices:
+            button = QToolButton()
+            button.setObjectName(f"{widget_id}-{choice}")
+            button.setText(choice_text(choice))
+            button.setCheckable(True)
+            button.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+            button.clicked.connect(lambda _checked=False, value=choice: on_choose(value))
+            self.group.addButton(button)
+            self.buttons[choice] = button
+            line.addWidget(button)
+        line.addStretch(1)
+        self.setFocusProxy(self.buttons[choices[0]])
+
+    def show_value(self, value: JsonValue) -> None:
+        """Check the button of a value; a value no button has (a required segment not chosen yet) checks none."""
+        self.group.setExclusive(False)
+        for choice, button in self.buttons.items():
+            button.setChecked(choice == value)
+        self.group.setExclusive(True)
+        checked = next((button for choice, button in self.buttons.items() if choice == value), None)
+        self.setFocusProxy(checked or next(iter(self.buttons.values())))
+
+    def value(self) -> Choice | None:
+        """Return the checked choice, or None."""
+        return next((choice for choice, button in self.buttons.items() if button.isChecked()), None)
+
+
 class FieldEditor(QWidget):
     """One inspector row: label, input (objectName = widget_id), unit, provenance chip, message and hint."""
 
     def __init__(self, widget_id: str, spec: FieldSpec, session: DesignSession) -> None:
         super().__init__()
         self.widget_id, self.spec, self.session = widget_id, spec, session
+        self.pointer = spec.pointer
+        self._present = False
         self.setObjectName(f"{widget_id}-row")
         self._shown = ""
         self.label = QLabel()
@@ -111,20 +172,26 @@ class FieldEditor(QWidget):
         self.hint.setObjectName(f"{widget_id}-hint")
         self.hint.setProperty("class", "hint")
         self.hint.setWordWrap(True)
+        head = QHBoxLayout()
+        head.setContentsMargins(0, 0, 0, 0)
+        head.addWidget(self.label, 1)
         line = QHBoxLayout()
         line.setContentsMargins(0, 0, 0, 0)
         line.addWidget(self.input, 1)
         line.addWidget(self.unit)
-        line.addWidget(self.chip)
+        # A segment needs the row's full width ("Single board", "One board per phase"), so its chip moves up a line.
+        (head if isinstance(self.input, Segment) else line).addWidget(self.chip)
         column = QVBoxLayout(self)
         column.setContentsMargins(0, 0, 0, 0)
         column.setSpacing(2)
-        column.addWidget(self.label)
+        column.addLayout(head)
         column.addLayout(line)
         column.addWidget(self.error)
         column.addWidget(self.hint)
 
     def _make_input(self, spec: FieldSpec) -> QWidget:
+        if spec.value_type is ValueType.CHOICE and self.widget_id in SEGMENT_WIDGETS:
+            return Segment(self.widget_id, spec.choices, self._commit)
         if spec.value_type is ValueType.CHOICE:
             box = QComboBox()
             box.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
@@ -142,10 +209,41 @@ class FieldEditor(QWidget):
         edit = QLineEdit()
         edit.setMinimumWidth(MIN_INPUT_PX)
         edit.editingFinished.connect(self._commit_text)
+        if spec.kind is FieldKind.PROPERTY and spec.value_type is ValueType.FLOAT:
+            edit.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+            edit.customContextMenuRequested.connect(lambda pos: self._show_context_menu(edit, pos))
         return edit
 
     def _commit(self, value: JsonValue) -> None:
-        self.session.edit(self.spec.pointer, value)
+        self.session.edit(self.pointer, value)
+
+    def context_menu(self) -> QMenu:
+        """Return the input's edit menu plus "Mark as measured" for a property field (D-007, screens.md conventions)."""
+        assert isinstance(self.input, QLineEdit)
+        menu = self.input.createStandardContextMenu()
+        menu.addSeparator()
+        action = menu.addAction(text("design.mark-measured"))
+        action.setObjectName(f"{self.widget_id}-mark-measured")
+        action.setEnabled(self._present)
+        action.triggered.connect(self._ask_source)
+        return menu
+
+    def _show_context_menu(self, edit: QLineEdit, pos: QPoint) -> None:
+        self.context_menu().exec(edit.mapToGlobal(pos))
+
+    def _ask_source(self) -> None:
+        source, accepted = QInputDialog.getText(
+            self, text("design.mark-measured.title"), text("design.mark-measured.prompt")
+        )
+        if accepted:
+            self.mark_measured(source)
+
+    def mark_measured(self, source: str) -> None:
+        """Mark this field measured with its source; a refusal shows its message under the field."""
+        refused = self.session.mark_measured(self.pointer, source)
+        if refused is not None:
+            self.error.setText(refused.message)
+            self.error.setVisible(True)
 
     def _commit_text(self) -> None:
         assert isinstance(self.input, QLineEdit)
@@ -156,7 +254,7 @@ class FieldEditor(QWidget):
 
     def show_row(self, row: FieldRow, topology: str) -> None:
         """Show what the session says about this field."""
-        self.spec = row.spec
+        self.spec, self.pointer, self._present = row.spec, row.pointer, row.present
         self.setVisible(row.visible)
         self.input.setEnabled(row.enabled)
         self.label.setText(label_text(self.widget_id, topology, str(row.spec.variant)))
@@ -168,7 +266,9 @@ class FieldEditor(QWidget):
         self.input.setAccessibleDescription(" ".join(t for t in (self.unit.text(), self.hint.text()) if t))
 
     def _show_value(self, row: FieldRow) -> None:
-        if isinstance(self.input, QComboBox):
+        if isinstance(self.input, Segment):
+            self.input.show_value(row.value if row.present or not row.spec.required else None)
+        elif isinstance(self.input, QComboBox):
             self.input.blockSignals(True)
             self.input.setCurrentIndex(self.input.findData(row.value) if row.present or not row.spec.required else -1)
             self.input.setPlaceholderText(text("design.required.hint"))
@@ -273,18 +373,23 @@ class FieldPanel(QScrollArea):
                 widget.show()
 
     def build(self) -> None:
-        """Add the field rows of this tab, one group box per form group where the tab has several."""
+        """Add the field rows of this tab, one group box per form group where the tab has several.
+
+        A field placed on another tab than its group's (Poles on the Coil tab) joins that tab's untitled section.
+        """
         sections: dict[str, QFormLayout] = {}
         for row in self.session.rows():
             if row.tab != self.tab:
                 continue
-            title = text(f"design.group.{row.spec.group.value}") if row.spec.group in TITLED_GROUPS else ""
+            group = row.spec.group
+            titled = group in TITLED_GROUPS and TAB_OF_GROUP.get(group) == self.tab
+            title = text(f"design.group.{group.value}") if titled else ""
             if title not in sections:
                 box = QGroupBox(title) if title else QWidget()
-                box.setObjectName(f"{self.tab}-group-{row.spec.group.value}")
+                box.setObjectName(f"{self.tab}-group-{group.value}")
                 sections[title] = QFormLayout(box)
                 self._layout.addWidget(box)
-                self.add_helpers(row.spec.group, sections[title])
+                self.add_helpers(group, sections[title])
             editor = FieldEditor(row.widget_id, row.spec, self.session)
             self.editors[row.widget_id] = editor
             sections[title].addRow(editor)
@@ -307,6 +412,12 @@ class FieldPanel(QScrollArea):
     def visible_inputs(self) -> set[str]:
         """Return the objectNames of the field inputs this tab shows (UI-28)."""
         return {widget_id for widget_id, editor in self.editors.items() if editor.isVisibleTo(self)}
+
+
+def fit_rows(table: QTableWidget) -> None:
+    """Size a table to its rows, so the inspector scrolls instead of the table showing empty space."""
+    chrome = table.horizontalHeader().sizeHint().height() + table.horizontalScrollBar().sizeHint().height()
+    table.setFixedHeight(chrome + table.verticalHeader().length() + 2 * table.frameWidth())
 
 
 def hint_label(name: str) -> QLabel:
@@ -338,9 +449,8 @@ class CoilPanel(FieldPanel):
 
 
 def show_hints(labels: Mapping[str, QLabel], session: DesignSession) -> None:
-    """Fill hint labels from the outcome of the current design; hide them while there is none or it is stale."""
-    state = session.state.value
-    outcome = state.outcome if isinstance(state, SessionComputed) and not state.stale else None
+    """Fill hint labels from the result of the current design; hide them while there is none (computing, outdated)."""
+    outcome = session.current_outcome()
     hints = feasibility_hints(outcome) if outcome is not None else {}
     for name, label in labels.items():
         label.setText(hints.get(name, ""))

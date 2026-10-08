@@ -4,8 +4,8 @@ import itertools
 
 import pytest
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QDialog, QLabel, QLineEdit
-from tests.ui.qt_design.conftest import enter, find
+from PySide6.QtWidgets import QDialog, QGroupBox, QLabel, QLineEdit
+from tests.ui.qt_design.conftest import enter, find, input_name
 
 from embodic.errors import Severity
 from embodic.io.examples import list_examples
@@ -68,18 +68,19 @@ def test_ui24_blank_design_computes_once_when_the_last_required_field_is_filled(
         pointer = state.missing[0]
         qtbot.mouseClick(find(window, "btn-first-missing"), Qt.MouseButton.LeftButton)
         focused = window.focusWidget()
-        assert focused.objectName() == widget_for_pointer(pointer, window.session.document.draft), pointer
+        name = input_name(focused)
+        assert name == widget_for_pointer(pointer, window.session.document.draft), pointer
         if pointer.startswith(("/stackup", "/winding/layers/")):
             inputs = stackup_from_values(values)
-            enter(qtbot, window, focused.objectName(), inputs.copper_count)
+            enter(qtbot, window, name, inputs.copper_count)
             enter(qtbot, window, "param-copper-weight", f"{inputs.copper_oz:g}")
             enter(qtbot, window, "param-board-thickness", f"{inputs.board_thickness_mm:g}")
-        elif focused.objectName() == "param-bore":
+        elif name == "param-bore":
             enter(qtbot, window, "param-bore", values["/outline/bore/shape"])
         else:
             value = values[pointer]
             typed = display_text(field_for(pointer, values), value) if isinstance(focused, QLineEdit) else value
-            enter(qtbot, window, focused.objectName(), typed)
+            enter(qtbot, window, name, typed)
     assert isinstance(window.session.state.value, SessionComputed)
     wait_computed(window)
     qtbot.wait(100)
@@ -159,6 +160,16 @@ def test_ui28_an_option_blocked_by_a_sibling_is_disabled_with_the_reason(make_sh
     window.session.edit("/winding/coil/end_style", "straight")
     assert corner.isVisibleTo(window.panels["tab-coil"]) and not corner.isEnabled()
     assert find(window, "param-corner-radius-hint").text() == "Not used with straight ends."
+
+
+@pytest.mark.req("REQ-F-32")
+def test_the_coil_tab_shows_poles_under_no_rotor_heading(make_shell):
+    """Catches DEF-3: the rotor group of Poles put a "Rotor and magnets" heading on the untitled Coil tab."""
+    window = make_shell().window
+    window.session.load_example(D08)
+    coil = window.panels["tab-coil"]
+    assert "param-poles" in coil.visible_inputs()
+    assert [box.title() for box in coil.findChildren(QGroupBox) if box.title()] == []
 
 
 def visible_chips(window):
