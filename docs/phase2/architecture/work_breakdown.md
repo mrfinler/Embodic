@@ -28,6 +28,9 @@ write paths and merge order. `checks/check_contract.py` now also reads §8 and f
 is merged into the U-M1c fix round, the U-M1d fix round 2 runs beside W5, and the U-M2a fix round gains the two D-016
 fields.
 
+Revision 2026-10-08 (U-D4): §8 lists the fourteen units run or started since the U-D3 revision, with the write paths
+their briefs granted, and adds U-M2e-4 for the D-031f physics items. `checks/check_contract.py` checks the new batches.
+
 Sizes: S below 300 lines of code and tests, M 300 to 1000, L 1000 to 2500, XL above 2500 (`assumption`, estimated from
 the Xcoil line counts in Agent 3's `migration_mapping.md` §3 and the Phase 1 module list).
 
@@ -208,9 +211,9 @@ writes them; the "after" column names the in-flight unit that must merge first.
 | U-M1b fix round (test IDs, DEF-M1b-01); revision 2026-10-05 (U-D3): merged into the U-M1c fix round, see §8 | `tests/unit/geometry/test_transforms.py`<br>`tests/unit/geometry/test_discretise.py` | - | test names and docstrings say UT-GEO-22 and UT-GEO-23 instead of UT-GEO-12 and UT-GEO-15 | no test in `tests/unit/geometry` names UT-GEO-12, and only the determinism test in `test_layout.py` names UT-GEO-15; commit gates green |
 | U-M2a fix round (model, U-M2a report and `screen_model_reconciliation.md`); revision 2026-10-05 (U-D3): runs after U-S4b and U-D3 merge and also adds the D-016 fields, see §8 | `src/embodic/model/**`<br>`src/embodic/errors/catalogue/model.py`<br>`tests/unit/model/**` | U-M1z, Agent 1's screens.md revision | units `UM`, `W_PER_M2_K`, `OHM_M`, `PER_K`, `G_PER_CM3` on plating, convection and material override values; `phases` optional with neutral value 3 (R9); widget ids of R5, R6 and R9; INFO issue `RANGE_COIL_GAP_BELOW_CLEARANCE` (R12); a UT-GEO-12 test (stack-up z exact, Phase 1 meaning) | commit gates green; UT-MOD-03 asserts the new units; a blank spiral draft no longer lists `/phases`; `checks/screen_model_diff.py` prints nothing in lists 2 and 3 |
 
-## 8. Units added 2026-10-05 (revision 2026-10-05, U-D3)
+## 8. Units added since 2026-10-05 (revision 2026-10-05, U-D3; revision 2026-10-08, U-D4)
 
-Fable added these units on 2026-10-05. Units with the same **Batch** run at the same time. A batch named after a wave
+Fable added these units from 2026-10-05 on. Units with the same **Batch** run at the same time. A batch named after a wave
 of §3 (for example `W5`) runs beside that wave's §1 units. `checks/check_contract.py` parses this table and checks that
 no two units of one batch share a write path. **After** names what must merge first; it orders merges, not runs.
 
@@ -223,8 +226,32 @@ no two units of one batch share a write path. **After** names what must merge fi
 | U-V1b-fix | Agent 4 | B1 | `tests/independent/m1/**`<br>`tests/independent/README.md` | U-M1c fix round, for the DEF-M1V-01 xfail | stale xfail marks removed; continuity instrument at the 1e-6 mm bound of interfaces.md §5 | `pytest tests/independent/m1 -q` green on the merged head |
 | U-M1d fix round 2 | Agent 3 | W5 | `tools/golden/functions/m1_drc.mjs`<br>`tools/golden/cases/m1_drc.json`<br>`tests/golden/data/m1_drc/**`<br>`tests/golden/m1_drc/**` | U-M1c fix round | as in §7 (band-rule fixtures for GR-18) | as in §7 |
 | U-M2a fix round | Agent 3 | B2 | `src/embodic/model/**`<br>`src/embodic/errors/catalogue/model.py`<br>`tests/unit/model/**` | U-S4b, U-D3 | as in §7, plus `StackMode`, `SerpentineWindingSpec.stack_mode` and `board_gap_mm` with the two FIELDS rows of interfaces.md §2.2, and the UT-GEN-03 relations (copper count per stack mode, gap range) | as in §7; UT-MOD-03 sees both new leaves with their rows; a blank serpentine draft holds `stack_mode` `"single"` and `board_gap_mm` 0.1 with `default` provenance |
+| U-M1c-fix2 | Agent 3 | B2 | `src/embodic/drc/**`<br>`tests/unit/drc/**` | U-M1c fix round | D-022c tap exemption: an interconnect path is exempt from every via whose centre lies within `pad_mm / 2` of its centreline (DEF-M1c3-01) | done, merged 1d94913; UT-DRC-04 case 2d passes and its phase-net near miss is reported |
+| U-M2a-fix2 | Agent 3 | W5 | `src/embodic/model/**`<br>`tests/unit/model/**`<br>`src/embodic/errors/catalogue/model.py` | U-M2a fix round | D-024 derived layer pairs (`derive_layer_pairs`); odd copper count WARNING `RANGE_SPIRAL_COPPER_COUNT_ODD` (D-025d). The catalogue path was edited beyond the brief's SCOPE line (U-M2a-fix2 report) | done, merged 00ce3ba; `pytest tests/unit/model -q` green |
+| U-M2e-2 | Agent 3 | B3 | `src/embodic/physics/**`<br>`tests/unit/physics/**`<br>`tests/golden/m2_physics/**`<br>`tests/golden/data/physics/**`<br>`tests/golden/expected_diffs/physics.toml`<br>`tools/golden/cases/physics.json`<br>`tools/golden/functions/physics.mjs`<br>`src/embodic/errors/catalogue/physics.py` | U-M2e | `analyse()`, EC-05 downgrade, EQ-06/07/12/14/16/19/23/26/27 kernels, EQ-18 waveform (partial: EQ-20 and interconnect copper left) | done (partial), merged a7f3d8b; every `AnalysisResult` field is a `Traceable` with an EQ-ID on three mapped layouts |
+| U-M2e-3a | Agent 3 | B4 | `tests/unit/physics/test_oracles.py` | U-M2e-2, U-M2d | OR-01 as a real test, strict xfail on a Ke miss only | done, merged 4591c48 |
+| U-E3 | Agent 2 | B5 | `docs/phase2/engineering/**` | - | spiral spec revised for D-028 turn geometry and the DEF-M2d-01 lead; U-M2c questions answered (`inferred`) | done (partial), committed bd019c5 |
+| U-M2e-3 | Agent 3 | B5 | `src/embodic/physics/**`<br>`tests/unit/physics/**`<br>`tests/golden/m2_physics/**`<br>`tests/golden/data/physics/**`<br>`tests/golden/expected_diffs/physics.toml`<br>`tools/golden/cases/physics.json`<br>`tools/golden/functions/physics.mjs`<br>`src/embodic/errors/catalogue/physics.py`<br>`src/embodic/results/analysis_result.py` | U-M2e-3a | goldens EQ-06/12/18/23/26, XD-PHY-002 (D-029), EQ-20 port for three phases, `ke_line_peak_v_s_per_rad`; drive helpers (interfaces.md §8) | done (partial), merged bd019c5; the stopped items move to U-M2e-4 |
+| U-E3b | Agent 2 | B6 | `docs/phase2/engineering/**` | U-E3 | G5 centre-via rule for D08's three turns, half closing | done, committed c13f8e4 |
+| U-M2d-2 | Agent 3 | B7 | `src/embodic/generators/**`<br>`src/embodic/geometry/details.py`<br>`src/embodic/geometry/layout.py`<br>`src/embodic/geometry/outline.py`<br>`src/embodic/geometry/fasteners.py`<br>`tests/unit/generators/**`<br>`tests/unit/geometry/m2/**`<br>`src/embodic/errors/catalogue/generators.py`<br>`tests/unit/physics/test_oracles.py` | U-E3b | spiral generator per the revised spec: G3 to G5 both closings, G8 chains, star and delta interconnect, `Layout.derived`; OR-01 passes (D-030) | done (partial), merged c071967; CF-11 and D08 DRC-clean |
+| U-M2d-fix | Agent 3 | B8 | `src/embodic/generators/spiral/**`<br>`src/embodic/generators/base.py`<br>`src/embodic/errors/catalogue/generators.py`<br>`tests/unit/generators/**` | U-M2d-2 | generator bounds before geometry (D-030), `MAX_TURNS_PER_LAYER = 100` | done, merged 7ce1c3e; fuzz test in bounded memory, gate 6 of 6 twice |
+| U-M2d-3 | Agent 3 | B9 | `src/embodic/generators/**`<br>`src/embodic/geometry/details.py`<br>`src/embodic/geometry/fasteners.py`<br>`src/embodic/geometry/outline.py`<br>`src/embodic/geometry/layout.py`<br>`tests/unit/generators/**`<br>`tests/unit/geometry/m2/**`<br>`src/embodic/errors/catalogue/generators.py`<br>`src/embodic/model/outline.py`<br>`src/embodic/model/fields.py`<br>`tests/unit/model/test_outline*.py`<br>`tests/unit/model/test_fields.py`<br>`tests/unit/physics/test_oracles.py` | U-M2d-fix | G9 fillets, side and end styles, several layer pairs, fasteners from `hole_diameter_mm` (D-031a), `TurnLimit.closing` (D-031b), any finite first coil angle (D-031c); `model/` paths for D-031 only | its brief's ACCEPTANCE; UT-GEO-21, UT-GEO-24 and UT-GEO-25 pass; DEF-U-D4-01 and DEF-U-D4-03 closed |
+| U-D4 | Agent 6 | B9 | `docs/phase2/architecture/**` | - | contract text for D-022c, D-025, D-026 and D-031; this table | `checks/check_contract.py` and `checks/physics_signatures.py` pass |
+| U-S4c | Agent 1 | B9 | `docs/phase2/design/**` | - | screens.md v2.1: DEF-1, `param-screw-hole-diameter`, board picker, derived layer pairs | the ACCEPTANCE of its brief; Fable reviews |
+| U-E4 | Agent 2 | B9 | `docs/phase2/engineering/**` | - | D08 phase-resistance explanation, turn-limit wording | the ACCEPTANCE of its brief; Fable reviews |
+| U-S3b | Agent 5 | B9 | `docs/phase2/evidence/**` | - | evidence entries requested since U-S3 (ISO 273 hole sizes among them) | the ACCEPTANCE of its brief; Fable reviews |
+| U-M2e-4 | Agent 3 | B10 | `src/embodic/physics/**`<br>`tests/unit/physics/**`<br>`tests/golden/m2_physics/**`<br>`tests/golden/data/physics/**`<br>`tests/golden/expected_diffs/physics.toml`<br>`tools/golden/cases/physics.json`<br>`tools/golden/functions/physics.mjs`<br>`src/embodic/errors/catalogue/physics.py`<br>`src/embodic/results/analysis_result.py`<br>`src/embodic/units.py`<br>`src/embodic/geometry/circuit.py`<br>`src/embodic/generators/spiral/interconnect.py`<br>`src/embodic/generators/spiral/generate.py`<br>`tests/unit/generators/test_interconnect_roles.py`<br>`tests/golden/m1_layout/xcoil_map.py` | U-M2d-3, U-D4 | interfaces.md §5 `InterconnectRole` and `Circuit.interconnect_roles` filled by the spiral generator; §3 loss-sum fields and `Unit.N_M_PER_SQRT_W`; §8 EQ-20 with `phases` and `connection` (D-031f) | commit gates green; UT-PHY-22, UT-PHY-23 and the UT-GEN-01 role clause pass; `checks/physics_signatures.py` lists no PENDING name; DEF-U-D4-04 closed |
 
 The M1 rows of §1 keep U-M1c's full path list. The U-M1c fix round leaves out `src/embodic/model/drc_rules.py` and
 `tests/golden/m1_drc/**`, so it shares no path with the U-M2a fix round or the U-M1d fix round 2. U-V1b-fix may run
 beside the U-M1c fix round, but Fable merges it second: once D-022 lands, the strict DEF-M1V-01 xfail in
 `tests/independent/m1/test_drc_agreement.py` passes unexpectedly and fails the run until its mark is removed.
+
+Revision 2026-10-08 (U-D4). The table now lists every unit run since 2026-10-05 that §1 does not hold, with the paths
+its brief granted (store `briefs/`), and the next physics unit U-M2e-4. U-M2e-2 ran beside U-M2d (W6) but continues U-M2e,
+which §3 also names in W6, so it has its own batch B3. Batches B3 to B8 ran one after another; their merge commits are
+on main. Batch B9 runs now, beside no §1 unit, because U-M2f (W7 in §3) has not started. U-M2d-3 and U-M2e-4 both
+write `tests/unit/physics/test_oracles.py` and the spiral generator, so U-M2e-4 waits for U-M2d-3 (B10).
+U-M2e-4 also writes `src/embodic/geometry/circuit.py` and `src/embodic/units.py`, which no running unit owns. U-V2
+(Agent 4) is not listed: its brief does not exist yet, and it applies test_plan.md §5.5. DEF-U-D4-02 (single-mode copper
+count) has no unit yet: it needs `src/embodic/model/validate.py` and `tests/unit/boundary/test_bv_design.py`.

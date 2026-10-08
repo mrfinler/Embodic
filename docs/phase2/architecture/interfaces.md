@@ -26,6 +26,16 @@ board. §6, §8 and §10 take or return a `BoardStack`, and `ComputeOutcome.drc`
 the fillet exemption and adds the interconnect net waiver, with test cases per rule. §9.2 describes the board dump
 `board_dump.py` writes today and its two differences from Phase 1 §7.5. §13 point 1 is closed.
 
+Revision 2026-10-08 (U-D4, decisions D-022c, D-025, D-026 and D-031; the merged code on main c7fff3a was read for
+every item): §1 adds `Unit.N_M_PER_SQRT_W` for U-M2e-4. §2.1 adds `ScrewPattern.hole_diameter_mm` (D-031a). §2.2
+states the `first_coil_angle_rad` range (D-031c) and adds two FIELDS rows. §3 adds `ke_line_peak_v_s_per_rad` as
+implemented and the U-M2e-4 loss-sum fields (D-031f). §4 ratifies `plan_issues` and the winding issue codes (D-031d).
+§5 adds `TurnClosing` and `TurnLimit.closing` (D-031b), restates `Layout.detail` and `Layout.derived` as implemented,
+and specifies the interconnect classification U-M2e-4 builds (D-031f). §7 folds D-022c into rules 2 and 3. §8
+restates `embodic.physics` as merged (D-025a, D-026c, D-031f) and gives EQ-20 `phases` and `connection`. §9.1 lists the
+fields added since the first draft of v1 and the schema version rule for U-M2f. §13 closes point 2, opens point 5 and
+lists in point 6 the code on main that contradicts these lines, as defect rows for its owners.
+
 ## 0. Rules for every public boundary
 
 - Lengths are millimetres (`_mm`), angles radians (`_rad`) inside the core, temperature °C (`_degc`), current A (`_a`),
@@ -99,6 +109,7 @@ class Unit(StrEnum):
     G = "g"
     G_PER_CM3 = "g_per_cm3"  # display "g/cm³"; density
     N_M = "N_m"
+    N_M_PER_SQRT_W = "N_m_per_sqrt_W"  # display "N·m/√W"; motor constant K_m (EQ-26), revision 2026-10-08 (U-D4)
     RPM = "rpm"
     HZ = "Hz"
     ONE = "one"
@@ -342,12 +353,15 @@ class ScrewFit(StrEnum):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ScrewPattern:
-    """Clearance holes from a fastener table (REQ-F-24). Table values need a cited source (Agent 3 F-20)."""
+    """Clearance holes of one fastener pattern (REQ-F-24). Revision 2026-10-08 (U-D4, D-031a): the user enters the hole
+    diameter; `size` and `fit` label the holes and pick no value. ISO 273 values ship only as labelled example values
+    once Agent 5 cites the source (U-S3b)."""
 
     size: str  # e.g. "M3"
     fit: ScrewFit
     count: int
     pitch_radius_mm: float
+    hole_diameter_mm: float  # required whenever a pattern exists; no default (D-031a)
     angle_offset_rad: float = 0.0
 
 
@@ -511,7 +525,7 @@ class SpiralCoilSpec:
     corner_radius_mm: float = 0.0
     end_width_outer_mm: float | None = None
     end_width_inner_mm: float | None = None
-    first_coil_angle_rad: float = math.pi / 2
+    first_coil_angle_rad: float = math.pi / 2  # any finite value; the generator normalises it modulo 2*pi (D-031c)
     x_inward_sense: Sense = Sense.CW
     lead_style: LeadStyle = LeadStyle.RADIAL_THEN_ARC
     terminal_offset_mm: float | None = None
@@ -669,6 +683,28 @@ limits and step from Xcoil `normalizeParams` l.127 and `ui.js` l.107):
 Both are design fields, so they can never be marked measured, and a blank serpentine draft starts them at their
 neutral values with the `default` chip (D-019). The screens.md binding keys `/winding/serpentine/stack_mode` and
 `/winding/serpentine/board_gap_mm` are labels only; the UI binds through `widget_id` (§2.3).
+
+Revision 2026-10-08 (U-D4, D-031a, D-031c and D-031e). FIELDS rows that U-M2d-3 adds or confirms in
+`src/embodic/model/fields.py` `_ROWS`. The first row is new. The second row states the range of the row that exists on
+main c7fff3a, which has no limits (`verified` by reading `fields.py` l.122).
+
+| Pointer | Kind | Unit | Required | Default (neutral value) | Group | Widget id | Limits | Step | Topologies |
+|---|---|---|---|---|---|---|---|---|---|
+| `/outline/screws/*/hole_diameter_mm` | design | mm | yes, once the pattern exists | none | FASTENERS | `param-screw-hole-diameter` | `Limits(sign=POSITIVE)` | none | all |
+| `/winding/coil/first_coil_angle_rad` | design | rad | no | pi / 2 | COIL | `param-first-coil-angle` | `Limits()`: any finite value | none | spiral |
+
+- Hole diameter. The decision fixes kind, unit, requirement, default and widget. `POSITIVE` is an `assumption`: it
+  matches the sign of `/vias/drill_mm` (`fields.py` l.167), and a hole of diameter 0 or less cannot be drilled. No
+  supported range is set until Agent 5 cites a fastener table. The board outline takes its `Hole.diameter_mm` from this value (§5,
+  `build_outline`). `size` and `fit` stay labels.
+- First coil angle. The model accepts any finite value and stores it as typed, so the project file keeps what the user
+  entered (§9.1). The spiral generator reduces it modulo 2 pi before it places coil 0. A negative angle is therefore
+  buildable. The generator on main refuses it (§13 point 6, DEF-U-D4-01).
+- Copper count per stack mode (D-031e, UT-GEN-03). `validate_design` checks, for a serpentine design, that the
+  copper layer count of `stackup` equals `phases * layers_per_phase` for `StackMode.SINGLE` (Xcoil
+  `stackupFor(p, perBoard)`, `engine.js` l.686-688) and `layers_per_phase` for `StackMode.ONE_BOARD_PER_PHASE`, else
+  `INVALID_SERPENTINE_COPPER_COUNT` with the three pointers. Main checks only the second mode (§13 point 6,
+  DEF-U-D4-02).
 
 ### 2.3 Field table, draft and the new-design flow (ADR-0010)
 
@@ -1101,6 +1137,7 @@ class TorqueSpeedEstimate:
 class AnalysisResult:
     ke_phase_v_s_per_rad: Traceable[float]  # EQ-06, EQ-09
     ke_line_v_s_per_rad: Traceable[float]  # EQ-09
+    ke_line_peak_v_s_per_rad: Traceable[float]  # EQ-18, EQ-09: peak of the line waveform per mech. rad/s (U-M2e-3)
     kt_n_m_per_a: Traceable[float]  # EQ-09
     kv_rpm_per_v: Traceable[float]  # EQ-09
     winding_factor_1: Traceable[float]  # EQ-08 (spiral); kind_tag "derived" from the generator for serpentine/wave
@@ -1113,6 +1150,11 @@ class AnalysisResult:
     loss_eddy_w: Traceable[float]  # EQ-12
     loss_circulating_w: Traceable[float]  # EQ-07
     loss_delta_circulating_w: Traceable[float]  # EQ-19
+    loss_interconnect_w: Traceable[float]  # EQ-23 P_ic; U-M2e-4 (D-031f)
+    loss_total_w: Traceable[float]  # EQ-26 P_Cu + P_eddy + P_circ + P_delta,circ + P_ic; U-M2e-4
+    output_power_w: Traceable[float]  # EQ-26 P_out = T * omega_m; U-M2e-4
+    efficiency: Traceable[float]  # EQ-26 P_out / (P_out + P_loss), electromagnetic only; U-M2e-4
+    motor_constant_n_m_per_sqrt_w: Traceable[float]  # EQ-26 K_m = T / sqrt(P_Cu); U-M2e-4
     thd_phase: Traceable[float]  # EQ-18
     thd_line: Traceable[float]
     current_density_a_per_mm2: Traceable[float]  # EQ-22
@@ -1129,6 +1171,13 @@ class AnalysisResult:
     torque_speed: TorqueSpeedEstimate | None  # EQ-20; None without dc_link_v
     registry_version: str
 ```
+
+Revision 2026-10-08 (U-D4, D-031f). `ke_line_peak_v_s_per_rad` is on main (`src/embodic/results/analysis_result.py`,
+U-M2e-3); OR-01 compares it with D08's measured peak (D-030). The five loss-sum fields are the U-M2e-4 contract; §8
+says how `analyse` computes them. Their values follow Xcoil `applyConnection` (`engine.js` l.1419-1434; `verified` by
+reading, 2026-10-08): the open connection has no interconnect loss, the efficiency is 0 without output power, and
+`motor_constant_n_m_per_sqrt_w` is 0 when the copper loss or the phase current is 0, as Xcoil reports it. Each field
+cites its EQ-ID, so its badge follows the registry status of EQ-23 and EQ-26 and the inputs it depends on (D-007).
 
 ## 4. `embodic.winding`: spiral phase plan
 
@@ -1156,10 +1205,13 @@ class CoilAssignment:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class SpiralWindingPlan:
+    """Phase plan of one layer pair; with one phase per pair it is the template every pair repeats. No issues field
+    (D-031d): warnings come from plan_issues."""
+
     feasibility: Feasibility
     assignment: tuple[CoilAssignment, ...]
     pattern: str  # "AabBCcaABbcC", upper = +, lower = -
-    winding_factors: Mapping[int, Traceable[float]]  # harmonic order -> k_w,n
+    winding_factors: Mapping[int, Traceable[float]]  # harmonic order -> k_w,n; orders PLAN_HARMONICS = (1, 3, 5, 7)
 
 
 def check_feasibility(coil_count: int, poles: int, phases: int = 3, *, phase_per_pair: bool = False) -> Feasibility: ...
@@ -1171,7 +1223,35 @@ def compute_winding_factors(assignment: Sequence[CoilAssignment], poles: int, co
                             registry: Registry) -> dict[int, Traceable[float]]: ...
 def plan_spiral_winding(design: DesignParameters, spec: SpiralWindingSpec,
                         registry: Registry) -> SpiralWindingPlan | Unbuildable: ...
+def plan_issues(plan: SpiralWindingPlan, design: DesignParameters) -> tuple[ValidationIssue, ...]:
+    """Warnings a buildable plan carries: delta with k_w3 not zero, an unbalanced manual assignment (D-031d)."""
 ```
+
+Revision 2026-10-08 (U-D4, D-031d; `src/embodic/winding/plan.py` and `src/embodic/errors/catalogue/winding.py` on main
+c7fff3a, `verified` by reading). `plan_spiral_winding` returns `Unbuildable` for a design it cannot plan, and
+`plan_issues` returns the warnings of a plan it can build. The plan carries no `issues` field, so a plan stays a pure
+value that the generator copies into `SpiralDetail.plan` and the warnings are computed where the design is at hand. The
+compute facade (U-M2f) adds `plan_issues(detail.plan, design)` to the outcome's issues for every spiral board; until
+then no production code calls it.
+
+Issue codes of `embodic.winding`. The catalogue has no `WND_` prefix, so the codes use the shared prefixes, and the
+prefix sets category and severity (`plan.py` `_KIND_BY_PREFIX`). Every issue cites EQ-08.
+
+| Code | Returned by | Category, severity | Pointers | `value`, `limit` |
+|---|---|---|---|---|
+| `UNBUILDABLE_UNBALANCED_WINDING` | `plan_spiral_winding`, star of slots only | UNBUILDABLE, ERROR | `/winding/coil/coil_count`, `/rotor/poles` | none |
+| `UNBUILDABLE_ASSIGNMENT_COVERAGE` | `plan_spiral_winding`, manual assignment that does not list coils 0 to Q - 1 once | UNBUILDABLE, ERROR | `/winding/assignment` | none |
+| `UNBUILDABLE_PARALLEL_PATHS_EXCEED_T` | `plan_spiral_winding`, `parallel_paths > feasibility.max_parallel_paths` | UNBUILDABLE, ERROR | `/winding/parallel_paths` | requested paths, `max_parallel_paths` |
+| `RANGE_DELTA_TRIPLEN` | `plan_issues`, delta with k_w3 > 1e-9 | UNSUPPORTED_RANGE, WARNING | `/connection/topology` | k_w3, 0 |
+| `RANGE_MANUAL_ASSIGNMENT_UNBALANCED` | `plan_issues`, manual assignment not balanced | UNSUPPORTED_RANGE, WARNING | `/winding/assignment` | spread (max - min) / max of the fundamental phase EMF magnitudes |
+
+A manual assignment is accepted even when it is unbalanced; only the star of slots refuses an unbalanced coil and pole
+count. The plan's winding factors use the outermost-turn span 2 pi / Q (A2-TOP §2.2). The generator passes the real
+turn spans to `compute_winding_factors` when it needs the turn-averaged values. Agent 2 answered the two engineering
+questions of U-M2c (D-025e) in `docs/phase2/engineering/equation_specification.md` l.207-214, both `inferred` with no
+textbook source yet: one phase per layer pair is self-consistent when 2p/Q is odd, and the parallel path count a must
+divide t, where the code checks only a <= t. No decision adopts the second answer, so this section adds no rule for
+it; it is an open question for Fable.
 
 ## 5. `embodic.geometry`: primitives, electrical element list, Layout
 
@@ -1315,10 +1395,53 @@ class PhaseCircuit:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
+class LineLead:
+    """Interconnect copper from a phase end to its line pad; carries the line current (Xcoil lineStub)."""
+
+    kind: Literal["line_lead"] = "line_lead"
+    path_id: int
+    phase: Phase
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class PhaseLink:
+    """Interconnect copper in series with one phase branch: a star tap stub or a whole delta link (Xcoil link)."""
+
+    kind: Literal["phase_link"] = "phase_link"
+    path_id: int
+    phase: Phase
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class NeutralRing:
+    """Star-point ring; the copper between two consecutive taps carries one line current (Xcoil neutralRing)."""
+
+    kind: Literal["neutral_ring"] = "neutral_ring"
+    path_id: int
+    tap_via_ids: tuple[int, ...]  # tap vias in ring order; the first and the last sit at the ring ends
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class NeutralLead:
+    """Interconnect copper from the star point to the neutral pad; no current in a balanced star (Xcoil l.1313)."""
+
+    kind: Literal["neutral_lead"] = "neutral_lead"
+    path_id: int
+
+
+InterconnectRole: TypeAlias = LineLead | PhaseLink | NeutralRing | NeutralLead
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
 class Circuit:
     phases: tuple[PhaseCircuit, ...]
     topology: ConnectionTopology
     interconnect_path_ids: tuple[int, ...]
+    interconnect_roles: tuple[InterconnectRole, ...] = ()  # U-M2e-4 (D-031f); empty, or one role per interconnect id
+
+    def __post_init__(self) -> None:
+        """Raises ValueError when interconnect_roles is not empty and its path ids are not interconnect_path_ids, each
+        exactly once."""
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1351,13 +1474,21 @@ class TurnLimitReason(StrEnum):
     USER = "user"
 
 
+class TurnClosing(StrEnum):  # revision 2026-10-08 (U-D4, D-031b); spiral_generator_spec.md G5
+    FULL = "full"  # N full turns; a lead arc at r_v joins the last left side to the centre via
+    HALF = "half"  # N - 1 full turns and a closing half turn whose right side ends on the centre via
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class TurnLimit:
-    radial_bound: float
+    """Turn bounds of one spiral coil (spiral_generator_spec.md G3 and G5)."""
+
+    radial_bound: float  # D08 eq. 3.24, information only
     loops_trapezoidal: int
     loops_triangular: int
     eye_limit: int | None
     limiting_reason: TurnLimitReason
+    closing: TurnClosing  # how the built coil reaches its centre via (D-031b)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1398,9 +1529,9 @@ class Layout:
     outline: BoardOutline
     circuit: Circuit
     symmetry: RotationalSymmetry | None
-    detail: TopologyDetail  # generator-specific record; consumers other than the UI ignore it
-    derived: tuple[Traceable[float], ...]  # feasibility-rail values shared by all topologies (track length, turns, ...)
     envelope_mm: tuple[float, float]  # r_min_cu, r_max_cu
+    detail: TopologyDetail | None = None  # generator-specific record; None only for hand-built test layouts
+    derived: tuple[Traceable[float], ...] = ()  # feasibility-rail values; () only for hand-built test layouts
     layout_hash: str = field(init=False)  # "sha256:<hex>"; never passed in
 
     def __post_init__(self) -> None:
@@ -1547,6 +1678,54 @@ How each consumer reads a stack:
 | exporters (§9.3) | SVG and DXF write one file per board when the stack has more than one, suffixed `_board` plus the phase letter (Xcoil `ui-main.js` l.31); the PDF report and README describe the whole stack and its thickness (Xcoil `report.js` l.292) |
 | UI geometry view (§11) | shows one board of the stack at a time; how the user picks the board is Agent 1's screens.md decision (request through Fable) |
 
+Revision 2026-10-08 (U-D4, D-031b, D-031f; `src/embodic/geometry/layout.py`, `details.py` and
+`src/embodic/generators/spiral/derived.py` on main c7fff3a, `verified` by reading).
+
+Closing of the last turn. `TurnLimit.closing` records which G5 closing the generator built. The type lives in
+`embodic.geometry.details`, so `Layout.detail` stays typed without an upward import (contract C1). The spiral
+generator's own `ClosingKind` (`generators/spiral/turns.py`) has the same two values; U-M2d-3 adds the field and maps
+or replaces the private enum. The field is derived from the design, so the project file does not store it (§9.1).
+
+`Layout.detail` and `Layout.derived` as implemented. Both have defaults, so a test can build a `Layout` by hand without
+a generator record. Every generator sets both on every board it returns. A consumer that reads `detail` handles `None`
+as "no generator record" (the UI shows no topology panel). The spiral generator fills `derived` with five values, in
+this order; each is a `Traceable[float]` with no EQ-ID whose inputs are the coil pointers of `derived.py`:
+
+| `quantity` | Unit | `kind_tag` | Value |
+|---|---|---|---|
+| `turns_per_coil_per_layer` | one | count | turns built |
+| `turn_limit_per_coil_per_layer` | one | count | turns that fit (G3, G5) |
+| `track_length_per_coil_layer_mm` | mm | derived | track length of one coil on one layer |
+| `copper_r_min_mm` | mm | derived | `envelope_mm[0]` |
+| `copper_r_max_mm` | mm | derived | `envelope_mm[1]` |
+
+Interconnect classification (D-031f, built by U-M2e-4). Physics needs to know which current each interconnect path
+carries to compute the line-to-line resistance and P_ic of EQ-23. Xcoil keeps that as three per-phase sums,
+`lineStub`, `link` and `neutralRing` (`interconnectResistance`, `engine.js` l.1361-1372; `verified` by reading,
+2026-10-08). The net names cannot carry it: a star tap stub has net `N` but belongs to one phase. So the generator,
+which knows the role of each path when it builds it, records one `InterconnectRole` per interconnect path in
+`Circuit.interconnect_roles`:
+
+| Role | Xcoil term | Current (EQ-23) | Which paths (spiral, `generators/spiral/interconnect.py`) |
+|---|---|---|---|
+| `LineLead(phase)` | `lineStub[k]`, items with `line` (l.1364) | line current | lead from the phase start to its `U`, `V` or `W` pad |
+| `PhaseLink(phase)` | `link[k]`, `tapOf` items and stubs with `tap` (l.1365-1368); delta link `D<k>` (l.1366) | star: line current; delta: phase current | star tap stub of that phase; the whole delta link of net `D<k>`, in series with phase k (Xcoil l.1366, l.1425) |
+| `NeutralRing(tap_via_ids)` | `neutralRing` segments (l.1369-1370) | one line current per segment | star-point ring of net `N`; segment k joins tap k and tap k + 1 |
+| `NeutralLead` | the `neutralPad` item (l.1313), counted in no sum | none in a balanced star | lead from the star point to the `N` pad |
+
+Rules:
+
+- The data shape is a tagged union, so a ring cannot carry a phase and a lead cannot lack one. `interconnect_path_ids`
+  stays, because DRC (§7) and the hand-built layouts of tests and Agent 4's instruments read it. `Circuit.__post_init__`
+  keeps the two fields consistent when the roles are given.
+- Every generator that builds interconnect copper fills `interconnect_roles` (UT-GEN-01). An empty tuple with
+  interconnect paths present means the layout was built by hand; `analyse` then reports `loss_interconnect_w` with
+  status `unresolved` and the reason "interconnect copper not classified", and adds no interconnect resistance.
+- Physics reads only the roles and the copper; it never infers a role from a net name or a primitive role.
+- The serpentine and wave ports (U-M3a, U-M3b) fill the same records from Xcoil's `ic.items` and wave links (l.1687).
+  The mapped Xcoil layouts of `tests/golden/m1_layout/xcoil_map.py` take them from Xcoil's items too (DEF-M2e3-01 is
+  the related circuit-mapping defect, Agent 4, U-V2).
+
 
 ## 6. `embodic.generators`: plug-in interface (ADR-0012)
 
@@ -1596,6 +1775,8 @@ of two boards never forms a pair (Xcoil skips other-board pairs, `engine.js` l.7
 
 Revision 2026-10-05 (U-D3, D-022). Rule 1 is narrowed (D-022 b, DEF-M1V-01) and rules 2 and 3 gain one net waiver
 (D-022 a, DEF-M1z-01). Agent 3 implements both in the U-M1c fix round. Nothing else in this section changed.
+Revision 2026-10-08 (U-D4, D-022c): rule 2 gains the tap clause and the waiver loses its terminal-via qualifier; see
+the note after the rule list.
 
 1. Neighbours in one path. Each primitive that is not a fillet or a taper is a main primitive and starts a new main
    index (Xcoil `mi`, `engine.js` `drcObjects` l.1697). A fillet or taper belongs to the main primitive it follows and
@@ -1612,23 +1793,35 @@ Revision 2026-10-05 (U-D3, D-022). Rule 1 is narrowed (D-022 b, DEF-M1V-01) and 
 2. A path end on a land. A via and the end group of a path whose end point lies within `pad_mm / 2` of the via
    centre. A pad and the end group of a path whose end point lies inside the pad outline, when the pad is on the
    path's layer or on all layers. The end group is the terminating main primitive with its fillets and tapers.
+   Tap (D-022c): a via and every primitive of an interconnect path when the via centre lies within `pad_mm / 2` of
+   that path's centreline, at an end or mid-path.
 3. Path ends meeting at a node. The end groups of two different paths on one layer whose end points lie on one via,
    on one pad, or within `COINCIDENCE_MM` of each other.
 4. A pad and a via whose centre lies inside the pad.
 
-Net test. Rules 2 to 4 apply only when both objects carry the same net, with one waiver (D-022 a). Rules 2 and 3 also
-apply, whatever the net names, when one object is an interconnect path (its id is in `Circuit.interconnect_path_ids`;
-nets `N`, `U`, `V`, `W`, `D...`) and the land is a terminal via (`ViaRole.TERMINAL`) or a pad:
+Revision 2026-10-08 (U-D4, D-022c; `src/embodic/drc/items.py` `exempt_pairs` and `_taps` on main c7fff3a, `verified`
+by reading). The star-point ring is tapped by vias mid-path (DEF-M1c3-01, Xcoil sector layout), so the tap clause of
+rule 2 exempts the via from the whole interconnect path, not only from the primitive it lies on. D-022c also replaces
+the terminal-via qualifier of the D-022 a waiver for interconnect paths. Rule 1 reads as D-022c confirms: a fillet or
+taper is exempt from the main primitive it follows, the one it precedes, and their fillets and tapers. The engine
+implements the three cases as one test on slots, `abs(slot_a - slot_b) <= 2`, where a main primitive takes slot
+2 x main index and a fillet or taper takes 2 x main index + 1 of the main before it (`items.py` l.48, `engine.py`
+l.195).
 
-- rule 2: an interconnect path's end group and the terminal via or pad its end point lies on;
-- rule 3: an interconnect path's end group and the end group of another path, when both end points lie on one terminal
-  via or one pad.
+Net test. Rules 2 to 4 apply only when both objects carry the same net, with one waiver (D-022 a, as revised by
+D-022c). Rules 2 and 3 also apply, whatever the net names and the via role, when one object is an interconnect path
+(its id is in `Circuit.interconnect_path_ids`; nets `N`, `U`, `V`, `W`, `D...`):
 
-A lead or star-point link that ends on a phase's terminal via is an intended joint, not a short. The waiver does not
-reach rule 4, a via of another role, or a node of coincident end points with no via or pad; those keep the net test.
-Net names do not change: phase copper and vias carry `PHASE_A`, `PHASE_B` and `PHASE_C`, and interconnects keep their
-circuit net. Xcoil's single `WINDING` net is not adopted, because it would also exempt another phase's path end that
-lands on a via by mistake. Rule 1 needs no net test, because a path has one net.
+- rule 2: an interconnect path's end group and any via or pad its end point lies on;
+- rule 2, tap: an interconnect path and any via whose centre lies within `pad_mm / 2` of its centreline;
+- rule 3: an interconnect path's end group and the end group of another path, when both end points lie on one via or
+  one pad.
+
+A lead or star-point link that ends on a phase via, or a ring that a via taps, is an intended joint, not a short. The
+waiver does not reach rule 4, a via on a path that is not an interconnect, or a node of coincident end points with no
+via or pad; those keep the net test. Net names do not change: phase copper and vias carry `PHASE_A`, `PHASE_B` and
+`PHASE_C`, and interconnects keep their circuit net. Xcoil's single `WINDING` net is not adopted, because it would also
+exempt another phase's path end that lands on a via by mistake. Rule 1 needs no net test, because a path has one net.
 
 Tests per rule (test_plan.md §5.1 UT-DRC-04, amended 2026-10-05). Every rule has one case that must be exempt and one
 near miss that must be reported. PR-01 and PR-13 check the exemption set as a whole against Agent 4's brute-force
@@ -1640,9 +1833,10 @@ is the independent check of rule 1.
 | 1, main pairs | UT-DRC-04 cases 1a (adjacent mains exempt) and 1b (mains two apart, same net, reported) |
 | 1, fillets and tapers | UT-DRC-04 cases 1c (corner fillet exempt from both mains) and 1d (fillet against the main two steps back reported, the DEF-M1V-01 hairpin) |
 | 2 | UT-DRC-04 cases 2a (end on its via or pad exempt) and 2b (foreign via reported) |
-| 2, waiver | UT-DRC-04 cases 2c (interconnect end on a terminal via of another net exempt) and 2d (interconnect end on a centre or transfer via of another net reported) |
+| 2, waiver | UT-DRC-04 case 2c (interconnect end on a terminal, centre or transfer via of another net, and on a pad of another net, exempt), near miss 2b |
+| 2, tap | UT-DRC-04 case 2d (vias of any net and role tapping an interconnect ring mid-path and at its ends exempt from every primitive of the ring; the same ring as a phase path of another net reported) |
 | 3 | UT-DRC-04 cases 3a (same-net ends at one via, pad or coincident point exempt) and 3b (different-net ends at a coincident point without a land reported) |
-| 3, waiver | UT-DRC-04 case 3c (interconnect end and phase path end on one terminal via exempt) |
+| 3, waiver | UT-DRC-04 case 3c (interconnect end and phase path end on one via of any role, or one pad, exempt), near miss 3b |
 | 4 | UT-DRC-04 cases 4a (same-net via inside a pad exempt) and 4b (other-net via inside a pad reported) |
 
 ```python
@@ -1752,10 +1946,18 @@ Kernels return plain floats or arrays and cite their EQ-ID in the docstring; onl
 `Traceable`. Argument lists follow the Phase 1 registry variables; Agent 2's `docs/phase2/engineering/equation_registry.json`
 is the authority for formulas. A kernel signature change after M2 starts is a contract change (Fable approves).
 
+Revision 2026-10-08 (U-D4, D-025a, D-026c and D-031f). The block below is `src/embodic/physics/__init__.py` on main
+c7fff3a as merged by U-M2e, U-M2e-2 and U-M2e-3, signature by signature (`verified` by running `inspect.signature` on
+every public name, 2026-10-08), plus the U-M2e-4 changes marked in comments. Kernels that U-M2e-2 split or replaced:
+`flux_linkage_harmonics` became `field_table` and `integrate_path` with the `PathField` record; `eddy_loss_w` and
+`edge_leakage_fraction` read `PathField` values instead of `LayoutArrays`.
+
 ```python
 @dataclass(frozen=True, slots=True, kw_only=True)
 class CircuitSolution:
-    phase_emf_phasor_v_s_per_rad: Mapping[Phase, complex]  # per harmonic 1, peak flux-linkage derivative
+    """Per-phase EMF phasors of every analysed harmonic (EQ-18 needs all of them), resistance and circulating loss."""
+
+    phase_emf_phasor_v_s_per_rad: Mapping[Phase, NDArray[np.complex128]]  # one entry per harmonic, design order
     phase_resistance_ohm: Mapping[Phase, float]
     circulating_loss_w: Mapping[Phase, float]
 
@@ -1763,7 +1965,7 @@ class CircuitSolution:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class MotorConstants:
     ke_line_v_s_per_rad: float
-    kt_n_m_per_a: float
+    kt_n_m_per_a: float  # per line ampere rms
     kv_rpm_per_v: float
 
 
@@ -1773,49 +1975,135 @@ class MassBreakdown:
     laminate_g: float
 
 
+@dataclass(frozen=True, slots=True, kw_only=True)
+class FieldTable:
+    """Peak B_z and B_t of every harmonic on FIELD_TABLE_STEPS + 1 radii of the magnet span, at one copper z."""
+
+    r_inner_mm: float
+    r_outer_mm: float
+    harmonics: tuple[int, ...]
+    bz_t: FloatArray  # (harmonics, steps + 1)
+    bt_t: FloatArray
+
+    def at(self, radius_mm: float) -> tuple[FloatArray, FloatArray]: ...  # Xcoil `look`
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class PathField:
+    """What one copper path collects from the rotor field, per harmonic (EQ-06, EQ-12, EC-05)."""
+
+    flux_linkage_t_mm2: NDArray[np.complex128]  # sum B_z,n r_m dr exp(-j n p theta_m), T*mm^2
+    eddy_bz_sum: FloatArray  # sum L frac B_z,n^2 w^3 in T^2 mm^4
+    eddy_bt_sum: FloatArray  # sum L frac B_t,n^2 w in T^2 mm^2
+    edge_weight: float  # sum |B_z,1 r_m dr| inside the span (EC-05 w)
+    edge_weighted: float  # sum w exp(-d / (c_e G)), without the D_e factor
+
+
+class PhysicsCancelToken(Protocol):
+    """Published as embodic.physics.analyse.CancelToken: anything with a `cancelled` flag, such as the DRC token (§7).
+    Physics may not import drc (MT-01). Named PhysicsCancelToken here only because one stub module holds both."""
+
+    @property
+    def cancelled(self) -> bool: ...
+
+
 def pole_arc_ratio_block(width_mm: float, radius_mm: FloatArray, poles: int) -> FloatArray: ...  # EQ-04
-def symmetry_plane_mm(rotor: RotorSpec, board_thickness_mm: float) -> float: ...  # EQ-05 G
+def symmetry_plane_mm(rotor: RotorSpec, board_thickness_mm: float) -> float: ...  # EQ-05 G; analyse passes the stack
 def field_harmonic(n: int, radius_mm: FloatArray, z_mm: FloatArray, rotor: RotorSpec, symmetry_plane_mm: float,
                    alpha_p: FloatArray) -> tuple[FloatArray, FloatArray]: ...  # EQ-05, (Bz, Bt) peak in T
-def edge_leakage_fraction(layout: Layout, rotor: RotorSpec, check: ValidityCheckSpec) -> float: ...  # EC-05 e_edge
-def flux_linkage_harmonics(arrays: LayoutArrays, z_by_layer_mm: Mapping[str, float], rotor: RotorSpec,
-                           harmonics: Sequence[int], max_segment_mm: float) -> NDArray[np.complex128]: ...  # EQ-06
-def solve_phase_circuit(circuit: Circuit, path_emf: NDArray[np.complex128], path_r_ohm: FloatArray,
-                        via_r_ohm: FloatArray) -> CircuitSolution: ...  # EQ-07
+def field_table(rotor: RotorSpec, symmetry_plane_mm: float, z_from_magnet_mm: float,
+                harmonics: Sequence[int]) -> FieldTable: ...  # EQ-05 on Xcoil's NR = 48 radii
+def integrate_path(prims: Sequence[Primitive], table: FieldTable, pole_pairs: int, max_segment_mm: float,
+                   edge_decay_mm: float) -> PathField: ...  # EQ-06, EQ-12 sums, EC-05 weights
+def edge_leakage_fraction(fields: Sequence[PathField], amplitude: float) -> float: ...  # EC-05 e_edge
+def solve_phase_circuit(circuit: Circuit, path_flux_linkage_t_mm2: Mapping[int, NDArray[np.complex128]],
+                        path_r_ohm: Mapping[int, float], via_r_ohm: Mapping[int, float],
+                        mechanical_speed_rad_per_s: float) -> CircuitSolution: ...  # EQ-07
 def phase_constants(ke_phase_v_s_per_rad: float, topology: ConnectionTopology, phases: int,
                     poles: int) -> MotorConstants: ...  # EQ-09
 def copper_resistivity_ohm_m(temperature_degc: float, rho20_ohm_m: float, alpha_per_k: float) -> float: ...  # EQ-10
-def path_resistance_ohm(arrays: LayoutArrays, thickness_mm_by_layer: Mapping[str, float],
-                        resistivity_ohm_m: float) -> FloatArray: ...  # EQ-10
+def path_resistance_ohm(arrays: LayoutArrays, layer_thickness_mm: Mapping[str, float],
+                        resistivity_ohm_m: float) -> FloatArray: ...  # EQ-10; D-025a name
 def via_resistance_ohm(drill_mm: float, plating_um: float, length_mm: float, resistivity_ohm_m: float,
                        count: int) -> float: ...  # EQ-11
-def eddy_loss_w(arrays: LayoutArrays, b_peak_t: Mapping[int, tuple[FloatArray, FloatArray]],
-                thickness_mm_by_layer: Mapping[str, float], electrical_speed_rad_per_s: float,
-                resistivity_ohm_m: float) -> float: ...  # EQ-12
+def eddy_loss_w(field: PathField, harmonics: Sequence[int], thickness_mm: float, electrical_speed_rad_per_s: float,
+                resistivity_ohm_m: float) -> float: ...  # EQ-12, one path
 def skin_depth_mm(frequency_hz: float, resistivity_ohm_m: float) -> float: ...  # EQ-13
-def inductance_estimate_h(series_turns: int, winding_factor_1: float, r_outer_mm: float, r_inner_mm: float,
+def inductance_estimate_h(series_turns: float, winding_factor_1: float, r_outer_mm: float, r_inner_mm: float,
                           pole_pairs: int, effective_gap_mm: float) -> float: ...  # EQ-14 (estimate)
 def ipc2221_current_a(cross_section_mm2: float, temperature_rise_k: float, internal: bool) -> float: ...  # EQ-15
-def mass_g(copper_area_mm2_by_layer: Mapping[str, float], thickness_mm_by_layer: Mapping[str, float],
+def mass_g(layer_copper_area_mm2: Mapping[str, float], layer_thickness_mm: Mapping[str, float],
            board_area_mm2: float, board_thickness_mm: float, copper_density_g_per_cm3: float,
-           laminate_density_g_per_cm3: float) -> MassBreakdown: ...  # EQ-16
+           laminate_density_g_per_cm3: float) -> MassBreakdown: ...  # EQ-16; D-025a and D-026c names
 def temperature_rise_k(loss_w: float, board_area_mm2: float, convection_h_w_m2k: float) -> float: ...  # EQ-17
-def emf_waveform_v(phasors_v: Mapping[int, complex], samples: int) -> FloatArray: ...  # EQ-18
-def thd(harmonic_amplitudes: Mapping[int, float]) -> float: ...  # EQ-18
-def delta_circulating_loss_w(triplen_emf_v: Mapping[int, complex], loop_resistance_ohm: float) -> float: ...  # EQ-19
-def torque_speed_envelope(resistance_ohm: float, inductance_h: float, ke_v_s_per_rad: float, dc_link_v: float,
-                          modulation: Modulation, current_limit_a: float, poles: int,
-                          points: int) -> tuple[FloatArray, FloatArray]: ...  # EQ-20 (estimate)
+def emf_waveform_v(phasors_v: Mapping[int, complex], samples: int = 181) -> FloatArray: ...  # EQ-18, Xcoil 181 samples
+def line_waveforms_v(phase_waveforms_v: Sequence[FloatArray],
+                     topology: ConnectionTopology) -> tuple[FloatArray, ...]: ...  # EQ-18 line waveforms
+def thd(harmonic_amplitudes: Mapping[int, float]) -> float: ...  # EQ-18; inf for a zero fundamental (D-025c)
+def delta_circulating_loss_w(phase_emf_v: Sequence[NDArray[np.complex128]],
+                             loop_resistance_ohm: float) -> float: ...  # EQ-19
+def line_resistance_ohm(phase_r_ohm: Sequence[float], topology: ConnectionTopology,
+                        line_stub_ohm: Sequence[float] = (0.0, 0.0, 0.0), link_ohm: Sequence[float] = (0.0, 0.0, 0.0),
+                        neutral_ring_ohm: Sequence[float] = ()) -> float: ...  # EQ-23
+def efficiency(output_w: float, loss_w: float) -> float: ...  # EQ-26; 0 without output
 def loss_budget_current_a(copper_loss_w: float, phases: int, phase_resistance_ohm: float) -> float: ...  # EQ-21
 def current_density_a_per_mm2(phase_current_a: float, parallel_paths: int, width_mm: float,
                               thickness_mm: float) -> float: ...  # EQ-22
 
+# Drive helpers (EQ-20, Xcoil inverterVoltage and driveAnalysis, engine.js l.2679-2725). U-M2e-4 adds `connection`
+# and `phases`; main c7fff3a has neither and fixes the envelope at three phases (drive.py PHASES = 3).
+def inverter_phase_voltage_v(dc_link_v: float, modulation: Modulation,
+                             connection: ConnectionTopology) -> float: ...  # open: full bridge per phase (l.2681)
+def no_load_speed_rpm(ke_v_s_per_rad: float, dc_link_v: float, modulation: Modulation,
+                      connection: ConnectionTopology) -> float: ...
+def base_speed_rpm(speed_rpm: FloatArray, torque_n_m: FloatArray) -> float: ...
+def torque_speed_envelope(resistance_ohm: float, inductance_h: float, ke_v_s_per_rad: float, dc_link_v: float,
+                          modulation: Modulation, current_limit_a: float, poles: int, points: int, *, phases: int,
+                          connection: ConnectionTopology) -> tuple[FloatArray, FloatArray]: ...  # EQ-20 (estimate)
+
 
 def analyse(design: DesignParameters, boards: BoardStack, provenance: ProvenanceMap, registry: Registry,
-            *, cancel: CancelToken | None = None) -> AnalysisResult | None:
+            *, cancel: PhysicsCancelToken | None = None) -> AnalysisResult | None:
     """Topology-agnostic: reads paths, vias, circuit and copper_z_mm of every board and boards.stack_thickness_mm only
     (revision 2026-10-05, U-D3, D-016). None only when cancelled."""
 ```
+
+What the merged names mean (D-031f, adopted as implemented):
+
+- `layer_thickness_mm` and `layer_copper_area_mm2` replace `thickness_mm_by_layer` and `copper_area_mm2_by_layer`
+  (D-025a, D-026c): the unit suffix ends the name, as MT-05 requires.
+- `CircuitSolution.phase_emf_phasor_v_s_per_rad` holds every analysed harmonic, in the order of
+  `design.analysis.harmonics`, because EQ-18 builds the waveform from all of them. Harmonic 1 is index 0.
+- `solve_phase_circuit` takes per-path flux linkage in T·mm² and the mechanical speed, so it can return the
+  circulating loss in W. Path and via resistances are keyed by id.
+- The cancel token in physics is a `Protocol` with one read-only `cancelled` property, because MT-01 forbids
+  `embodic.physics` to import `embodic.drc`. The DRC `CancelToken` of §7 satisfies it.
+- `ke_line_peak_v_s_per_rad` (§3) is the peak of the synthesised line waveform per mechanical rad/s.
+- `inverter_phase_voltage_v`, `no_load_speed_rpm` and `base_speed_rpm` are U-M2e-3 additions; the envelope uses them.
+- `analyse` integrates the eddy loss over every copper path, the interconnect included (D-029), and adds no
+  interconnect resistance to the phase or line values today.
+
+U-M2e-4 (D-031f). Data shape first: `Circuit.interconnect_roles` (§5) is the input; the five result fields of §3 are
+the output. Steps, each from Xcoil `applyConnection` (`engine.js` l.1398-1436; `verified` by reading, 2026-10-08):
+
+1. Resistance of every classified path at 20 °C and at the winding temperature with `path_resistance_ohm`. For a
+   `NeutralRing`, the copper between tap k and tap k + 1 is one segment, as Xcoil `interconnectResistance` l.1369-1370
+   computes it from the tap angles.
+2. Per-phase sums `line_stub_ohm` (LineLead), `link_ohm` (PhaseLink) and `neutral_ring_ohm` (segments) passed to
+   `line_resistance_ohm` for `resistance_line_ohm` (EQ-23, l.1419-1429).
+3. `loss_interconnect_w` (EQ-23): star I_line² (Σ stub + Σ link + Σ ring); delta I_line² Σ stub + I_ph² Σ link; open 0
+   (l.1422-1429).
+4. The delta circulating loss uses the loop resistance Σ R_k + Σ link_k (l.1411), so the delta links count.
+5. `loss_total_w` = P_Cu + P_eddy + P_circ + P_delta,circ + P_ic; `output_power_w` = T ω_m; `efficiency` from
+   `efficiency()`; `motor_constant_n_m_per_sqrt_w` = T / sqrt(P_Cu) when P_Cu > 0 and I_ph > 0, else 0 (EQ-26,
+   l.1430-1434). The unit is `Unit.N_M_PER_SQRT_W` (§1).
+6. EQ-20 for every phase count: `analyse` calls `torque_speed_envelope` with `phases=design.phases` and the connection
+   it analyses (open whenever `design.phases != 3`, as Xcoil l.1399). Inside, the open connection uses the phase
+   resistance, Ke1 / sqrt 2, the full-bridge voltage and m phases; star and delta use the three-phase star equivalent
+   (Xcoil l.2689-2694). `torque_speed` stays `None` only without `dc_link_v` or with Ke1 = 0.
+
+Golden cases come from Xcoil's `an.pInterconnect`, `an.lossTotal`, `an.efficiency`, `an.motorConstant` and
+`an.rLineLine` on star and delta layouts, and from `driveAnalysis` for a two-phase and a one-phase design.
 
 ## 9. `embodic.io`: project file v1, examples, board dump, exporters
 
@@ -1876,6 +2164,27 @@ Rules:
   refused (`INVALID_SCHEMA_VERSION_NEWER`). Phase 1 drafts never shipped a v1 file, so no Phase 1 migration exists.
 - The published JSON Schema `src/embodic/io/schema/project.v1.schema.json` (Draft 2020-12) is validated against every
   example and fixture in tests (UT-IO-03); the runtime loader is hand-written and typed.
+
+Revision 2026-10-08 (U-D4). Fields added to `design` since this section was first written, and what the file stores:
+
+| Pointer in the file | Added by | Stored as | Note |
+|---|---|---|---|
+| `/winding/stack_mode` | D-016 (U-D3) | `"single"` or `"one_board_per_phase"` | serpentine only |
+| `/winding/board_gap_mm` | D-016 (U-D3) | mm | serpentine only; no effect for `single` |
+| `/outline/screws/{k}/hole_diameter_mm` | D-031a | mm | required in every pattern; the example above has no pattern |
+| `/winding/coil/first_coil_angle_deg` | range only (D-031c) | degrees as typed, any finite value | the file keeps the user's value; only the generator reduces it modulo 360 degrees |
+
+Derived values are not stored: `TurnLimit.closing` (D-031b), `Layout.derived` and every other generator output come
+from the design, so the file holds no copy that could disagree with it. The spiral layer-pair list stays stored,
+because the user may edit it after D-024 derives it.
+
+Schema version rule for U-M2f. No project file has been written yet, so v1 is the `design` shape of `FIELDS` when
+U-M2f merges, including the four rows above, and no migration exists for them. After that merge, any change that makes
+a v1 reader read a file differently or refuse it increments `schema_version` and adds `migrate_v<n>_to_v<n+1>`: an
+added, removed or renamed key, a changed unit, or a changed meaning. A migration sets a new key only to the value that
+reproduces the old file's behaviour; when no such value exists, the key stays empty and the file loads as a
+`LoadedDraft` (D-014: no invented input). U-M2f's JSON Schema test (UT-IO-03) pins the shape, so such a change fails
+the test until the version and the migration exist.
 
 Angles (decided 2026-10-05, U-D2, U-M2a report). The file stores degrees under `_deg` names, as §0 says and as the
 example above shows. The model stores radians under `_rad` names (`src/embodic/model/fields.py`). `embodic.io` converts
@@ -2330,12 +2639,26 @@ def main(argv: Sequence[str] | None = None) -> int:
 1. Closed 2026-10-05 (U-D3, D-016). `SerpentineWindingSpec` has `stack_mode` and `board_gap_mm` with their FIELDS rows
    (§2.2), and a design's boards are a `BoardStack` of one `Layout` per board (§5). U-M2a's fix round adds the fields
    and rows; U-M2d builds the stack type into the generator interface; U-M3a builds the per-phase serpentine.
-2. Physics kernel argument lists for EQ-12, EQ-14, EQ-16, EQ-17, EQ-20 follow the Phase 1 registry variables. Agent 2's
-   v1 specification (U-S2) may change them before M2; the change goes through Fable and updates this file.
+2. Closed 2026-10-08 (U-D4, D-031f). §8 restates the kernel argument lists as merged; `checks/physics_signatures.py`
+   compares every public name of `embodic.physics` with its stub and lists the three EQ-20 drive changes U-M2e-4
+   still owes.
 3. Whether Xcoil's serpentine analysis path (`engine.js` `analyze`, l.880-1017) and the generic element path
    (`analyzeElements`, l.1846) give the same EMF for the same copper is `unresolved`; GR-22 measures it (test_plan.md).
 4. Board dump v2 (added 2026-10-05, U-M1b report). v1 cannot say three things: a Member with several paths (v1 writes
    one `members[]` entry per path, so the grouping of paths into one route is lost), the polarity of a path (the
    GR-19 mapper writes `polarity=0` because Xcoil does not return it), and the DRC record for per-kind rules (v1 `drc`
    has one `rule.clearance`). Agent 4's readers and the golden harness need all three before M3 compares ported
-   boards. Agent 6 specifies v2 with Agent 4 before U-V3; until then embodic writes v1.
+   boards. Agent 6 specifies v2 with Agent 4 before U-V3; until then embodic writes v1. Revision 2026-10-08 (U-D4):
+   v2 also needs `Circuit.interconnect_roles` (§5), so Agent 4's readers can check P_ic.
+5. Open 2026-10-08 (U-D4), for Fable. Agent 2's `inferred` answer that the parallel path count must divide t
+   (`equation_specification.md` l.213-214) is stricter than `plan_spiral_winding`, which refuses only a > t (§4). No
+   decision adopts it, so the contract keeps the code's rule.
+6. Code on main c7fff3a that contradicts a contract line (revision 2026-10-08, U-D4). Each row names the owner and
+   how to reproduce it. The text above states the decision, not the code.
+
+| ID | Owner | Contract line | Main c7fff3a | Reproduce | Closes in |
+|---|---|---|---|---|---|
+| DEF-U-D4-01 | Agent 3 | §2.2: `first_coil_angle_rad` accepts any finite value (D-031c) | `generate_spiral` refuses a negative angle: `_out_of_range` lists it among the non-negative inputs (`generators/spiral/generate.py` l.98-103) | `default_design()` of `tests/unit/generators/default_example.py` with `first_coil_angle_rad=-0.1` gives `Unbuildable` `UNBUILDABLE_SPIRAL_INPUT_OUT_OF_RANGE` at `/winding/coil/first_coil_angle_rad`; 7.0 builds (`verified (run)`, 2026-10-08) | U-M2d-3 (in its brief) |
+| DEF-U-D4-02 | Agent 3 | §2.2 and UT-GEN-03: copper count = phases x layers per phase for `stack_mode` `single` (D-031e) | `validate_design` checks only `one_board_per_phase` (`model/validate.py` l.170) | `serpentine_design()` of `tests/unit/model/designs.py` with `layers_per_phase=1` (3 phases, 6 copper layers): `single` gives no issue, `one_board_per_phase` gives `INVALID_SERPENTINE_COPPER_COUNT` (`verified (run)`, 2026-10-08) | no unit yet: needs `src/embodic/model/validate.py` and `tests/unit/boundary/test_bv_design.py`, which U-M2a-fix named as the blocker; neither is in U-M2d-3's scope |
+| DEF-U-D4-03 | Agent 3 | §2.1 `ScrewPattern.hole_diameter_mm` (D-031a); §5 `TurnLimit.closing` (D-031b) | neither field exists (`model/outline.py`, `geometry/details.py`) | read the two dataclasses | U-M2d-3 (in its brief) |
+| DEF-U-D4-04 | Agent 3 | §8 EQ-20 drive helpers take `connection`, the envelope `phases` and `connection`; §3 loss-sum fields; §5 `Circuit.interconnect_roles` (D-031f) | `drive.py` fixes `PHASES = 3`; `analyse` gives `torque_speed=None` for other phase counts and adds no interconnect resistance (`physics/analyse.py` l.334, l.432) | `checks/physics_signatures.py` lists the three drive names as PENDING | U-M2e-4 (§8 of work_breakdown.md) |

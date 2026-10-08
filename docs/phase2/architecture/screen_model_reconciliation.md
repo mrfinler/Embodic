@@ -19,6 +19,11 @@ view-model helpers of rows R3 and R4 (`param-topology`, `param-layer-count`, `pa
 `param-copper-weight`, `param-board-thickness`, `param-rotation-mode`) and, until the D-016 contract change,
 `param-stack-mode` and `param-board-gap`.
 
+Revision 2026-10-08 (U-D4). On main c7fff3a with the screens.md working copy that Agent 1 is revising in U-S4c, the
+script prints seven widgets in list 1 and nothing in lists 2 and 3 (`verified (run)`, 2026-10-08). List 1 holds the
+six view-model helpers of R2 to R4 and `param-screw-hole-diameter`, which waits for its FIELDS row (R16).
+`param-stack-mode` and `param-board-gap` have their rows since the U-M2a fix round, and `param-screw-fit` is gone (R15).
+
 ## Binding rule
 
 `FieldSpec.widget_id` is the only join between a widget and a field (interfaces.md §2.3). U-M4c binds through it and
@@ -43,9 +48,11 @@ screens.md already says that Agent 6 owns the final pointer and the objectName s
 | R12 | Coil gap | error "Gap must be at least the trace spacing." | no rule; Agent 2's generator uses max(gap, s) (`spiral_generator_spec.md` l.31, l.147) | Agent 2's semantics stand: a gap below s is valid and the generator uses s. The model adds an INFO issue `RANGE_COIL_GAP_BELOW_CLEARANCE` with a Suggestion of s, shown as a hint, not an error | Agent 1 (drop the error); U-M2a fix round (issue and message) |
 | R13 | Via ring | "Pad must be larger than drill + 2 x annular ring." | `INVALID_VIA_RING`: pad at least drill + 0.1 mm (Xcoil `VIA_RING`, `engine.js` l.145) | Two checks at two levels, both kept. The field shows the catalogue text of `INVALID_VIA_RING`. The relation pad - drill >= 2 x `min_annular_ring_mm` is the DRC check ANNULAR_RING and appears in the DRC table. A design can pass the field check and fail DRC; that is intended | Agent 1 (message) |
 | R14 | Message texts | each row proposes a text | `embodic.errors.MESSAGES` | The UI shows the catalogue text of the issue. A screens.md text without an issue code is a proposal to the unit that owns the rule | Agent 1; owning units |
+| R15 | Screw fit widget (DEF-2, U-M2a-fix report) | `param-screw-fit` named only in the §15 prose, so script list 1 reported it | `/outline/screws/*/fit` has `widget_id` `screw-table` (R6) | Revision 2026-10-08 (U-D4): R6 stands. Fit is a column of `screw-table`, and no `param-screw-fit` widget exists. The prose mention goes; the script then has nothing to report. Closed in the U-S4c working copy, which no longer names it | Agent 1 (U-S4c) |
+| R16 | Hole diameter (D-031a) | `param-screw-hole-diameter` edits the pattern selected in `screw-table` | no field on main c7fff3a | Revision 2026-10-08 (U-D4): new FIELDS row `/outline/screws/*/hole_diameter_mm`, design, mm, required once the pattern exists, no default, `widget_id` `param-screw-hole-diameter` (interfaces.md §2.2). `size` and `fit` stay labels and pick no diameter. Example values come only from a cited table (U-S3b) | U-M2d-3 (field row); Agent 1 (widget, done in U-S4c) |
 
 ## What does not change
 
 The objectNames, groups, keyboard behaviour and state rules of screens.md stay, except where a row above says
 otherwise. The model keeps its pointers, required set and units, except for the U-M2a fix round items named in R5, R6,
-R9 and R12.
+R9 and R12 and the U-M2d-3 field of R16.

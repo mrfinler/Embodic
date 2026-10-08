@@ -27,6 +27,13 @@ Revision 2026-10-05 (U-D3, D-016 and D-022): §5.1 amends UT-DRC-04 with one exe
 connectivity rule of interfaces.md §7 (D-022). §5.1 amends UT-GEN-01 and UT-GEN-03 and adds UT-GEN-05 for the
 one-board-per-phase serpentine stack (D-016). §3 adds stack-mode cases to GR-20. §7 adds UT-GEN-05 to the M3 exit.
 
+Revision 2026-10-08 (U-D4, D-022c and D-031): §5.1 amends UT-DRC-04 cases 2c, 2d and 3c for the tap exemption
+(D-022c), UT-GEN-01 for `interconnect_roles`, `detail` and `derived`, UT-GEN-03 for the single-mode copper count
+(D-031e), UT-GEO-21 for the entered hole diameter (D-031a), and UT-WND-07 and UT-WND-09 for `plan_issues` (D-031d).
+It adds UT-GEO-24 (first coil angle, D-031c), UT-GEO-25 (`TurnLimit.closing`, D-031b), UT-PHY-22 (loss sum and
+interconnect copper) and UT-PHY-23 (EQ-20 for any phase count, D-031f). §5.5 adds the rule for timing tests that
+Agent 4 applies in U-V2. The M2 exit of §7 already covers the new IDs (all UT-GEO, UT-WND and UT-PHY).
+
 ## 1. What changed and why
 
 | Change | Reason |
@@ -128,13 +135,20 @@ Phase 1 UT-PHY-01 to UT-PHY-21 and OR-01 to OR-12 stay. Two changes apply.
 |---|---|---|
 | UT-GEO-22 | New 2026-10-05: transform exactness | rotating (2, 0) by 60 degrees gives (1, sqrt 3) within 1e-12 mm; a mirror about 45 degrees swaps x and y and negates an arc's sweep; `transform` mirrors before it rotates; rotating forward and back, and `reverse_path`, return or swap every end point within 1e-9 mm (`tests/unit/geometry/test_transforms.py`, labelled UT-GEO-12 there until relabelled) |
 | UT-GEO-23 | New 2026-10-05: discretise bounds | every chord of `discretise_path` respects `max_segment_mm`, `max_angle_rad` and `max_sagitta_mm`; piece lengths sum to the path length and `s_mm` increases; a 90 degree arc of r = 10 mm with a 5 degree step gives 18 chords; K chords give K + 1 points from start to end (`tests/unit/geometry/test_discretise.py`, labelled UT-GEO-15 there until relabelled) |
+| UT-GEO-21 | Amended 2026-10-08 (U-D4, D-031a): fastener holes | holes at the specified pitch radius, count and angle offset with `Hole.diameter_mm` equal to the pattern's `hole_diameter_mm` for every `size` and `fit`; a pattern without `hole_diameter_mm` does not parse; edge, pitch and copper keep-out violations reported (REQ-F-24) |
+| UT-GEO-24 | New 2026-10-08 (U-D4, D-031c): first coil angle any finite | a spiral design with `first_coil_angle_rad` = 1.0, 1.0 + 2 pi, and 1.0 - 2 pi builds in every case, and coil 0's axis and every primitive end point agree within 1e-9 rad and 1e-9 mm; the model accepts the value as typed and the project file stores it unchanged |
+| UT-GEO-25 | New 2026-10-08 (U-D4, D-031b): closing of the last turn | `SpiralDetail.turn_limit.closing` equals the closing the generator built: `half` for the D08 example (3 turns, D-030) and `full` for a design whose G5 eye fits; the value is not a `FIELDS` pointer and is absent from the project file |
 | UT-UNI-01 | Amended 2026-10-04: unit conversions and rounding | deg and rad, mm and m, rpm and rad/s, mil² and mm² round trips within 2 ulp of the input (`math.ulp`), not exact (requirements.md revision note); `js_round` gives 3, -2, 1, 0, -1, 0 for 2.5, -2.5, 0.5, -0.5, -1.5, 0.49999999999999994 (JS `Math.round`); `quantise(-0.000025, 1e5) == -0.00002`; neither returns -0.0 |
-| UT-DRC-04 | Amended 2026-10-05 (U-D3, D-022): connectivity exemptions, one exempt case and one near miss per rule of interfaces.md §7, each below the rule so only the exemption decides | 1a adjacent main primitives exempt; 1b same-net main primitives two indices apart reported; 1c a corner fillet or taper exempt from both mains it belongs to and from the other fillets and tapers of those mains; 1d the DEF-M1V-01 hairpin: a fillet against the main two steps back reported; 2a a path end group exempt from the via or pad its end lies on; 2b a via the path does not end on reported; 2c an interconnect path (net `U`) ending on a `PHASE_A` terminal via, and on a pad of another net, exempt; 2d the same interconnect end on a `PHASE_A` centre or transfer via reported; 3a same-net end groups meeting at one via, one pad or within `COINCIDENCE_MM` exempt; 3b different-net end groups at a coincident point with no via or pad reported; 3c an interconnect end group and a phase path end group on one terminal via exempt; 4a a same-net via inside a pad exempt; 4b an other-net via inside a pad reported |
-| UT-GEN-01 | Amended 2026-10-05 (U-D3): generator contract for spiral, serpentine, wave and a stub | returns a `BoardStack` or Unbuildable, never raises on fuzzed input; spiral and wave stacks hold exactly one board; same design gives the same `stack_hash`; on every board, every circuit path and via ID exists and every winding path belongs to exactly one Member or to `interconnect_path_ids` |
+| UT-DRC-04 | Amended 2026-10-05 (U-D3, D-022) and 2026-10-08 (U-D4, D-022c): connectivity exemptions, one exempt case and one near miss per rule of interfaces.md §7, each below the rule so only the exemption decides | 1a adjacent main primitives exempt; 1b same-net main primitives two indices apart reported; 1c a corner fillet or taper exempt from both mains it belongs to and from the other fillets and tapers of those mains; 1d the DEF-M1V-01 hairpin: a fillet against the main two steps back reported; 2a a path end group exempt from the via or pad its end lies on; 2b a via the path does not end on reported; 2c an interconnect path (net `U`) ending on a `PHASE_A` via of any role (terminal, centre, transfer), and on a pad of another net, exempt; 2d vias of any net and role tapping an interconnect ring (net `N`) mid-path and at its ends, each centre within `pad_mm / 2` of the centreline, exempt from every primitive of the ring, and the same ring with a phase net (not an interconnect) reported against the same vias; 3a same-net end groups meeting at one via, one pad or within `COINCIDENCE_MM` exempt; 3b different-net end groups at a coincident point with no via or pad reported; 3c an interconnect end group and a phase path end group on one via of any role, or on one pad, exempt; 4a a same-net via inside a pad exempt; 4b an other-net via inside a pad reported |
+| UT-GEN-01 | Amended 2026-10-05 (U-D3) and 2026-10-08 (U-D4, D-031f): generator contract for spiral, serpentine, wave and a stub | returns a `BoardStack` or Unbuildable, never raises on fuzzed input; spiral and wave stacks hold exactly one board; same design gives the same `stack_hash`; on every board, every circuit path and via ID exists and every winding path belongs to exactly one Member or to `interconnect_path_ids`; every board sets `detail` and a non-empty `derived`; from U-M2e-4, every id of `interconnect_path_ids` has exactly one `interconnect_roles` entry |
 | UT-GEN-02 | Dispatch | `build_layout` routes by `design.topology`; calling `generate_wave` with a spiral design raises TypeError |
-| UT-GEN-03 | Amended 2026-10-05 (U-D3): serpentine validation | layers per phase 1 or even; copper count = phases x layers per phase for `stack_mode` `single` and = layers per phase for `one_board_per_phase` (one board's stack-up, Xcoil `stackupFor(p, perBoard)` l.686-688), else INVALID with the pointer; `board_gap_mm` below 0 is INVALID and above 10 mm is UNSUPPORTED_RANGE (Xcoil l.127) |
+| UT-GEN-03 | Amended 2026-10-05 (U-D3); single-mode rule ratified 2026-10-08 (U-D4, D-031e; main checks only `one_board_per_phase`, DEF-U-D4-02): serpentine validation | layers per phase 1 or even; copper count = phases x layers per phase for `stack_mode` `single` and = layers per phase for `one_board_per_phase` (one board's stack-up, Xcoil `stackupFor(p, perBoard)` l.686-688), else INVALID with the pointer; `board_gap_mm` below 0 is INVALID and above 10 mm is UNSUPPORTED_RANGE (Xcoil l.127) |
 | UT-GEN-04 | Wave validation | copper count even and at least 2; each style builds for 1, 2 and 3 phases |
 | UT-GEN-05 | New 2026-10-05 (U-D3): one board per phase | `stack_mode` `one_board_per_phase` with 3 phases gives 3 boards in phase order; board k holds only phase k copper and one PhaseCircuit, and its `copper_z_mm` equals the single-board stack-up z plus k x (board thickness + `board_gap_mm`) within 1e-12 mm (Xcoil l.695); `stack_thickness_mm` = n x board thickness + (n - 1) x gap (l.689); no board has interconnect paths or pads, and with the interconnect requested for three phases in star or delta the outcome carries a WARNING issue that the phase connection is made externally (Xcoil warning `INTERCONNECT_EXTERNAL`, l.2525-2535); `stack_mode` `single` gives one board whose `layout_hash` equals the one built with `board_gap_mm` changed (the gap has no effect, l.689 and l.695); a via of board A placed over board B copper produces no DRC pair |
+| UT-WND-07 | Amended 2026-10-08 (U-D4, D-031d): delta with k_w3 not zero | `plan_issues(plan, design)` returns `RANGE_DELTA_TRIPLEN` (WARNING, pointer `/connection/topology`) for 12/14 delta and nothing for 12/16 delta; `plan_spiral_winding` returns a plan in both cases |
+| UT-WND-09 | Amended 2026-10-08 (U-D4, D-031d): manual assignment override | an unbalanced manual assignment returns a plan, and `plan_issues` returns `RANGE_MANUAL_ASSIGNMENT_UNBALANCED` with the magnitude spread as `value`; a balanced one returns no issue |
+| UT-PHY-22 | New 2026-10-08 (U-D4, D-031f): interconnect copper and loss sum (EQ-23, EQ-26), U-M2e-4 | on a hand-built star layout with known lead, link and ring resistances: `resistance_line_ohm` and `loss_interconnect_w` equal the EQ-23 closed form within 1e-12 relative; delta: P_ic = I_line^2 sum stub + I_ph^2 sum link and the circulating loop includes the links; open: P_ic = 0; `loss_total_w` is the sum of its five terms, `efficiency` = P_out / (P_out + P_loss), `motor_constant_n_m_per_sqrt_w` = T / sqrt(P_Cu) and 0 at zero current; a layout with interconnect paths and no roles gives `loss_interconnect_w` status `unresolved`; golden cases against Xcoil `pInterconnect`, `rLineLine`, `lossTotal`, `efficiency` and `motorConstant` on star and delta layouts |
+| UT-PHY-23 | New 2026-10-08 (U-D4, D-031f): EQ-20 for any phase count, U-M2e-4 | with `dc_link_v` set, one-, two- and three-phase designs return a `torque_speed` estimate; the open connection uses the full-bridge voltage (SVPWM and SPWM V_dc / sqrt 2, six-step 4 V_dc / (pi sqrt 2), Xcoil l.2681) and the phase resistance; star and delta keep today's three-phase values unchanged; golden against Xcoil `driveAnalysis` for a two-phase design |
 | UT-MOD-01 | Blank draft | `blank_draft(t)` has no required value and every optional field at its neutral value; `parse_draft` returns DraftIncomplete listing all required pointers in form order |
 | UT-MOD-02 | Draft round trip | `parse_draft(draft_from_design(d)) == d` for every example |
 | UT-MOD-03 | Field table completeness | every leaf of every DesignParameters variant has exactly one FieldSpec where it applies; `_mm` fields carry Unit.MM, `_rad` fields Unit.RAD; property fields are the closed list in ADR-0010 |
@@ -195,6 +209,23 @@ offscreen platform.
 | AX-09 | Every toolstrip icon rendered in both themes reaches at least 3:1 against the toolstrip background |
 | PF-05 | Baseline record for one serpentine and one wave example (no target; recorded for regression) |
 
+### 5.5 Timing tests (revision 2026-10-08, U-D4)
+
+A test that runs in the commit profile does not depend on how fast the machine is. The commit gate failed once on
+`tests/unit/drc/test_run_drc.py` `test_cancel_from_another_thread_stops_a_long_run` (U-E3 report, Fable's gate on
+bd019c5): the test cancels from a 0.05 s timer and asserts a 2 s wall-clock bound, so it fails both when the run ends
+before the timer fires and when a loaded machine runs slowly. Agent 4 applies these rules in U-V2:
+
+1. Prefer a trigger that does not use the clock. To test mid-run cancellation, pass a token whose `cancelled`
+   property turns true after its k-th read. Assert that the run returns `None` and that the token was read fewer
+   times than an uncancelled run reads it.
+2. When the property under test is a time, measure a baseline in the same test (for example, the same operation
+   uncancelled) and bound the result relative to it, such as "below half the baseline". State the ratio and why.
+   An absolute bound in seconds is allowed only beside a baseline of the same run.
+3. A test that needs neither form is marked `slow` (`tools/ci.py` runs it in the nightly profile only), and its
+   docstring names the time it measures.
+4. Performance budgets (PF tests) stay in the release profile with their own measured baselines.
+
 ## 6. Withdrawn tests
 
 <!-- withdrawn-tests:start -->
@@ -226,15 +257,15 @@ the owner packages of `interfaces.md`.
 |---|---|---|---|---|---|
 | REQ-F-01 | carried | must | M2 | embodic.generators.spiral | UT-GEO-01, UT-GEO-03, UT-GEO-04, UT-GEO-05, PR-03, PR-10 |
 | REQ-F-02 | carried | must | M2 | embodic.winding | UT-WND-01, UT-WND-02, UT-WND-03, UT-WND-04, UT-WND-05, UT-WND-06 |
-| REQ-F-03 | carried | must | M2 | embodic.generators.spiral | UT-GEO-10, UT-GEO-11, UT-GEO-19, UT-PHY-07 |
+| REQ-F-03 | carried | must | M2 | embodic.generators.spiral | UT-GEO-10, UT-GEO-11, UT-GEO-19, UT-GEO-24, UT-PHY-07 |
 | REQ-F-04 | carried | must | M2 | embodic.model | UT-GEO-12, GR-07 |
 | REQ-F-05 | amended | must | M2 | embodic.generators.spiral | UT-GEO-13, UT-PHY-11, PR-01 |
-| REQ-F-06 | carried | must | M2 | embodic.generators.spiral | UT-GEO-07, UT-GEO-08, UT-GEO-09, UT-GEO-17, UT-GEO-18, OR-04 |
+| REQ-F-06 | carried | must | M2 | embodic.generators.spiral | UT-GEO-07, UT-GEO-08, UT-GEO-09, UT-GEO-17, UT-GEO-18, UT-GEO-25, OR-04 |
 | REQ-F-07 | carried | must | M2 | embodic.physics | UT-PHY-01, UT-PHY-02, UT-PHY-04, UT-PHY-14 |
 | REQ-F-08 | carried | must | M2 | embodic.generators.spiral | UT-PHY-09, UT-WND-07 |
 | REQ-F-09 | carried | should | M2 | embodic.geometry | UT-GEO-14, UT-DRC-06, UT-EXP-02 |
 | REQ-F-10 | carried | must | M1 | embodic.drc | UT-DRC-01, UT-DRC-02, UT-DRC-03, UT-DRC-04, UT-DRC-05, UT-DRC-08, PR-01, PR-02, PR-13, GR-18 |
-| REQ-F-11 | carried | must | M2 | embodic.physics | UT-PHY-05, UT-PHY-06, UT-PHY-10, UT-PHY-12, UT-PHY-15, UT-PHY-16, UT-PHY-17, UT-PHY-18, UT-PHY-19, GR-02, GR-03, GR-04, GR-09, GR-11, GR-13, OR-01, OR-11, OR-12, UI-07 |
+| REQ-F-11 | carried | must | M2 | embodic.physics | UT-PHY-05, UT-PHY-06, UT-PHY-10, UT-PHY-12, UT-PHY-15, UT-PHY-16, UT-PHY-17, UT-PHY-18, UT-PHY-19, GR-02, GR-03, GR-04, GR-09, GR-11, GR-13, OR-01, OR-11, OR-12, UT-PHY-22, UI-07 |
 | REQ-F-12 | carried | must | M2 | embodic.physics | UT-PHY-08, UT-PHY-20, GR-05 |
 | REQ-F-13 | carried | must | M4 | embodic.ui.views | UI-02, UI-03, UI-04, UI-06 |
 | REQ-F-14 | amended | must | M2 | embodic.model | PR-05, BV-01, BV-02, BV-03, BV-05, BV-06, UI-14 |
@@ -243,11 +274,11 @@ the owner packages of `interfaces.md`.
 | REQ-F-17 | carried | could | M4 | embodic.ui.views | UI-10 |
 | REQ-F-18 | amended | must | M5 | embodic.cli | UT-CLI-01, UT-CLI-02 |
 | REQ-F-19 | amended | must | M2 | embodic.generators | UT-GEO-20, UT-GEN-01, UT-GEN-02, MT-01 |
-| REQ-F-20 | carried | could | M2 | embodic.physics | UI-07, UT-RES-02 |
+| REQ-F-20 | carried | could | M2 | embodic.physics | UI-07, UT-RES-02, UT-PHY-23 |
 | REQ-F-21 | amended | must | M4 | embodic.ui.viewmodels | UI-22, UI-23, PR-12 |
 | REQ-F-22 | amended | should | M4 | embodic.ui.viewmodels | UI-11, UT-SES-02 |
 | REQ-F-23 | carried | must | M4 | embodic.ui.viewmodels | UI-15 |
-| REQ-F-24 | carried | should | M2 | embodic.geometry | UT-GEO-21 |
+| REQ-F-24 | amended | should | M2 | embodic.geometry | UT-GEO-21 |
 | REQ-F-25 | amended | should | M4 | resources/examples | UI-16, UT-IO-08 |
 | REQ-F-26 | carried | should | M4 | embodic.ui.views | UI-17 |
 | REQ-F-27 | carried | should | M4 | embodic.ui.viewmodels | UI-18 |
