@@ -11,11 +11,12 @@ from hypothesis import example, given, settings
 from hypothesis import strategies as st
 from tests.unit.generators.d08_example import d08_design
 from tests.unit.generators.default_example import default_design
+from tests.unit.generators.wave.designs import wave
 from tests.unit.model.designs import serpentine_design
 
 from embodic.drc import run_drc
 from embodic.errors import Unbuildable
-from embodic.generators import GENERATORS, build_layout, generate_spiral, generate_wave
+from embodic.generators import GENERATORS, build_layout, generate_serpentine, generate_spiral, generate_wave
 from embodic.geometry.details import SpiralDetail, TurnClosing, TurnLimitReason
 from embodic.geometry.discretise import discretise
 from embodic.geometry.layout import BoardStack, Layout, ViaRole
@@ -184,12 +185,22 @@ def test_same_design_gives_the_same_stack_hash(registry: Registry) -> None:
 
 @pytest.mark.req("REQ-F-19")
 def test_ut_gen_02_dispatch(registry: Registry) -> None:
-    """UT-GEN-02: build_layout routes by topology; a stub refuses; a wrong winding is a TypeError."""
-    assert set(GENERATORS) == set(TopologyKind)
-    assert isinstance(build_layout(default_design(), registry), BoardStack)
-    refused = build_layout(serpentine_design(), registry)
-    assert isinstance(refused, Unbuildable)
-    assert [i.code for i in refused.issues] == ["UNBUILDABLE_UNSUPPORTED_TOPOLOGY"]
+    """UT-GEN-02: build_layout routes by topology to the real generators; a wrong winding is a TypeError.
+
+    Catches a table entry pointing at the wrong or a stub generator, and a dispatcher that ignores the topology.
+    """
+    assert GENERATORS[TopologyKind.SPIRAL] is generate_spiral
+    assert GENERATORS[TopologyKind.SERPENTINE] is generate_serpentine
+    assert GENERATORS[TopologyKind.WAVE] is generate_wave
+    for design, generate in (
+        (default_design(), generate_spiral),
+        (serpentine_design(), generate_serpentine),
+        (wave(), generate_wave),
+    ):
+        built = build_layout(design, registry)
+        assert isinstance(built, BoardStack), design.topology
+        direct = generate(design, registry)
+        assert isinstance(direct, BoardStack) and built.stack_hash == direct.stack_hash
     with pytest.raises(TypeError):
         generate_wave(default_design(), registry)
     with pytest.raises(TypeError):
