@@ -1,13 +1,50 @@
 """The Board and rotor tab (`tab-board`, screens.md section 5): outline, bore, stack-up, rules, rotor, operation."""
 
-from PySide6.QtWidgets import QComboBox, QFormLayout, QGroupBox, QLabel, QLineEdit, QVBoxLayout, QWidget
+from collections.abc import Mapping
 
-from embodic.model.fields import FieldGroup
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QComboBox,
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QLineEdit,
+    QTableWidget,
+    QTableWidgetItem,
+    QToolButton,
+    QVBoxLayout,
+    QWidget,
+)
+
+from embodic.model.fields import FIELD_BY_KEY, FieldGroup
+from embodic.model.schema import JsonValue, ValueType
 from embodic.ui.strings import text
-from embodic.ui.viewmodels.session import BORE_POINTER, DesignSession, StackupInput, bore_choice
-from embodic.ui.views.coil_panel import FieldPanel, choice_text
+from embodic.ui.viewmodels.session import (
+    BORE_POINTER,
+    SCREWS_POINTER,
+    DesignSession,
+    StackupInput,
+    bore_choice,
+    display_text,
+    parse_text,
+    screw_patterns,
+)
+from embodic.ui.views.coil_panel import FieldEditor, FieldPanel, choice_text
 
 BORE_CHOICES = ("none", "circle", "polygon")
+HOLE_WIDGET = "param-screw-hole-diameter"
+SCREW_COLUMNS = (
+    ("size", "size"),
+    ("fit", "fit"),
+    ("hole_diameter_mm", "hole"),
+    ("count", "count"),
+    ("pitch_radius_mm", "pitch-radius"),
+    ("angle_offset_rad", "angle-offset"),
+)
+_READ_ONLY_LEAF = "hole_diameter_mm"  # a required value needs its own field with unit, chip and error (screens.md 5)
 
 
 def _name(widget: QWidget | None) -> str:
@@ -59,14 +96,61 @@ class BoardRotorPanel(FieldPanel):
                 form.rowCount(),
             )
             form.insertRow(first_bore, *self._pending_bore)
-        fasteners = QGroupBox(text("design.group.fasteners"))
-        fasteners.setObjectName("tab-board-group-fasteners")
-        screws = QLabel(text("screw-table.empty"))
-        screws.setObjectName("screw-table")
-        screws.setProperty("class", "hint")
-        screws.setWordWrap(True)
-        QVBoxLayout(fasteners).addWidget(screws)
-        self._layout.insertWidget(2, fasteners)
+        self._layout.insertWidget(2, self._fasteners())
+
+    def _fasteners(self) -> QGroupBox:
+        box = QGroupBox(text("design.group.fasteners"))
+        box.setObjectName("tab-board-group-fasteners")
+        table = QTableWidget(0, len(SCREW_COLUMNS))
+        table.setObjectName("screw-table")
+        table.setHorizontalHeaderLabels([text(f"screw-table.{key}") for _, key in SCREW_COLUMNS])
+        table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        table.verticalHeader().setVisible(False)
+        table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        table.itemChanged.connect(self._edit_cell)
+        table.itemSelectionChanged.connect(self.refresh_helpers)
+        add = QToolButton()
+        add.setObjectName("btn-screw-add")
+        add.setText(text("btn-screw-add.label"))
+        add.clicked.connect(self.session.add_screw_pattern)
+        remove = QToolButton()
+        remove.setObjectName("btn-screw-remove")
+        remove.setText(text("btn-screw-remove.label"))
+        remove.clicked.connect(lambda: self.session.remove_screw_pattern(table.currentRow()))
+        hole = FieldEditor(HOLE_WIDGET, FIELD_BY_KEY[f"{SCREWS_POINTER}/*/hole_diameter_mm"], self.session)
+        buttons = QHBoxLayout()
+        buttons.addWidget(add)
+        buttons.addWidget(remove)
+        buttons.addStretch(1)
+        column = QVBoxLayout(box)
+        column.addWidget(table)
+        column.addLayout(buttons)
+        column.addWidget(hole)
+        self.helpers.update({"screw-table": table, "btn-screw-remove": remove, HOLE_WIDGET: hole})
+        return box
+
+    def _edit_cell(self, item: QTableWidgetItem) -> None:
+        document = self.session.document
+        if document is None:
+            return
+        leaf = SCREW_COLUMNS[item.column()][0]
+        spec = FIELD_BY_KEY[f"{SCREWS_POINTER}/*/{leaf}"]
+        typed = item.text().strip()
+        value: JsonValue = parse_text(spec, typed)
+        if spec.value_type is ValueType.CHOICE:
+            value = next((c for c in spec.choices if choice_text(c).lower() == typed.lower()), value)
+        self.session.edit(f"{SCREWS_POINTER}/{item.row()}/{leaf}", value)
+
+    def focus_widget(self, widget_id: str) -> bool:
+        """Select the first pattern without a hole diameter before focusing its field (Go to first missing field)."""
+        table = self.helpers.get("screw-table")
+        document = self.session.document
+        if widget_id == HOLE_WIDGET and isinstance(table, QTableWidget) and document is not None:
+            patterns = screw_patterns(document.draft.values)
+            first = next((k for k, pattern in enumerate(patterns) if _READ_ONLY_LEAF not in pattern), 0)
+            table.selectRow(first)
+        return super().focus_widget(widget_id)
 
     def _choose_bore(self, choice: str) -> None:
         document = self.session.document
@@ -87,10 +171,11 @@ class BoardRotorPanel(FieldPanel):
             self.session.set_stackup_input(field, value)
 
     def refresh_helpers(self) -> None:
-        """Show the bore choice and the stack-up generator inputs."""
+        """Show the bore choice, the screw patterns and the stack-up generator inputs."""
         document = self.session.document
         if document is None:
             return
+        self._show_screws(document.draft.values)
         bore = self.helpers.get("param-bore")
         if isinstance(bore, QComboBox):
             choice = bore_choice(document.draft.values)
@@ -103,3 +188,35 @@ class BoardRotorPanel(FieldPanel):
             edit = self.helpers.get(name)
             if isinstance(edit, QLineEdit) and not edit.hasFocus():
                 edit.setText("" if value is None else f"{value:.6g}")
+
+    def _show_screws(self, values: Mapping[str, JsonValue]) -> None:
+        table, hole, remove = (self.helpers.get(name) for name in ("screw-table", HOLE_WIDGET, "btn-screw-remove"))
+        if not isinstance(table, QTableWidget) or not isinstance(hole, FieldEditor) or remove is None:
+            return
+        patterns = screw_patterns(values)
+        selected = len(patterns) - 1 if len(patterns) > table.rowCount() else table.currentRow()
+        table.blockSignals(True)
+        table.setRowCount(len(patterns))
+        for r, pattern in enumerate(patterns):
+            for c, (leaf, _) in enumerate(SCREW_COLUMNS):
+                spec = FIELD_BY_KEY[f"{SCREWS_POINTER}/*/{leaf}"]
+                value = pattern.get(leaf, spec.neutral_value)
+                shown = choice_text(value) if spec.value_type is ValueType.CHOICE and value is not None else ""
+                shown = shown or display_text(spec, value)
+                if leaf == _READ_ONLY_LEAF and value is None:
+                    shown = text("design.required.hint")
+                item = QTableWidgetItem(shown)
+                if leaf == _READ_ONLY_LEAF:
+                    item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                table.setItem(r, c, item)
+        if patterns and not 0 <= selected < len(patterns):
+            selected = len(patterns) - 1
+        if patterns:
+            table.selectRow(selected)
+        table.blockSignals(False)
+        remove.setEnabled(bool(patterns))
+        if patterns:
+            row = self.session.item_row(HOLE_WIDGET, f"{SCREWS_POINTER}/{selected}/hole_diameter_mm")
+            assert row is not None
+            hole.show_row(row, str(self._topology))
+        hole.setVisible(bool(patterns))

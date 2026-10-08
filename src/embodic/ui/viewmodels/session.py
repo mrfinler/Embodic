@@ -13,6 +13,7 @@ on screen marked outdated (REQ-F-27).
 import dataclasses
 import functools
 import logging
+import math
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -41,11 +42,13 @@ from embodic.model.schema import JsonValue, ValueType, flatten, pattern_of, to_j
 from embodic.model.stackup import generate_even_stackup
 from embodic.model.validate import issue, validate_design
 from embodic.model.vocabulary import TopologyKind
+from embodic.model.winding_specs import SpiralWindingSpec
 from embodic.outcome import ComputeOutcome
 from embodic.ui.strings import text
 from embodic.ui.viewmodels.observable import Observable
 from embodic.ui.viewmodels.outcome import OutcomeReady, OutcomeState, OutcomeViewModel, shown_result
 from embodic.units import MM_PER_COPPER_OZ, Unit, copper_oz_to_mm, deg_to_rad, rad_to_deg
+from embodic.winding import balanced_coil_counts
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +57,10 @@ AUTOSAVE_NAME = "autosave.embodic.json"
 STACKUP_POINTER = "/stackup/layers"
 BORE_POINTER = "/outline/bore"
 ASSIGNMENT_POINTER = "/winding/assignment"
+PAIRS_POINTER = "/winding/layers/pairs"
+SCREWS_POINTER = "/outline/screws"
+COIL_COUNT_POINTER = "/winding/coil/coil_count"
+BALANCE_HINT_OPTIONS = 3  # balanced coil counts the unbalanced hint offers, nearest to the entered count first
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -105,6 +112,28 @@ class EditNotice:
 
 
 StackupInput: TypeAlias = Literal["copper_count", "copper_oz", "board_thickness_mm"]
+RotationMode: TypeAlias = Literal["none", "alternate", "custom"]
+AssignmentMode: TypeAlias = Literal["auto", "manual"]
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class LayerPair:
+    """One listed layer pair of a spiral draft, in list order (D-032b: its identity is the two layer names)."""
+
+    position: int
+    index: JsonValue
+    layer_in: JsonValue
+    layer_out: JsonValue
+    rotation_rad: JsonValue
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class CoilPhase:
+    """One row of the phase table: a coil, its phase and its polarity."""
+
+    coil_index: JsonValue
+    phase: JsonValue
+    polarity: JsonValue
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -200,6 +229,7 @@ class FieldRow:
     widget_id: str
     tab: str
     spec: FieldSpec
+    pointer: str  # the concrete pointer the input writes; a list item's for the selected pair or screw pattern
     visible: bool
     enabled: bool
     present: bool  # False = missing (required) or absent (optional at its default)
@@ -207,11 +237,6 @@ class FieldRow:
     provenance: FieldProvenance | None
     issue: ValidationIssue | None
     hint: str
-
-    @property
-    def pointer(self) -> str:
-        """Return the concrete pointer the input writes."""
-        return self.spec.pointer
 
 
 def is_inspector_input(spec: FieldSpec) -> bool:
@@ -266,8 +291,10 @@ def _row(
     draft: DesignDraft,
     chips: Mapping[str, FieldProvenance],
     issues: tuple[ValidationIssue, ...],
+    pointer: str | None = None,
 ) -> FieldRow:
     topology, values = draft.topology, draft.values
+    pointer = pointer or spec.pointer
     enabled, hint = True, ""
     for rule in OPTION_RULES:
         if rule.widget_id == widget_id and _rule_applies(rule, topology, values):
@@ -275,20 +302,21 @@ def _row(
             enabled = rule.effect != "disable"
             hint = text(rule.hint_key) if rule.hint_key else ""
     static = _STATIC_HINTS.get((widget_id, topology)) or _STATIC_HINTS.get((widget_id, None))
-    present = spec.pointer in values
-    provenance = chips.get(spec.pointer)
+    present = pointer in values
+    provenance = chips.get(pointer)
     if not present and not spec.required:
         provenance = DefaultValue()
     return FieldRow(
         widget_id=widget_id,
         tab=TAB_OF_WIDGET.get(widget_id, TAB_OF_GROUP.get(spec.group, "")),
         spec=spec,
+        pointer=pointer,
         visible=visible,
         enabled=enabled,
         present=present,
-        value=current_value(values, spec.pointer, topology),
+        value=current_value(values, pointer, topology),
         provenance=provenance,
-        issue=_first_issue(spec.pointer, issues),
+        issue=_first_issue(pointer, issues),
         hint=hint or (text(static) if static else ""),
     )
 
@@ -453,10 +481,138 @@ def stackup_from_values(values: Mapping[str, JsonValue]) -> StackupInputs:
     )
 
 
+def layer_pairs(values: Mapping[str, JsonValue]) -> tuple[LayerPair, ...]:
+    """Return the pairs a draft lists, in list order."""
+    pairs = []
+    while (base := f"{PAIRS_POINTER}/{len(pairs)}/") + "layer_in" in values:
+        pairs.append(
+            LayerPair(
+                position=len(pairs),
+                index=values.get(base + "index"),
+                layer_in=values[base + "layer_in"],
+                layer_out=values.get(base + "layer_out"),
+                rotation_rad=values.get(
+                    base + "rotation_rad", FIELD_BY_KEY[f"{PAIRS_POINTER}/*/rotation_rad"].neutral_value
+                ),
+            )
+        )
+    return tuple(pairs)
+
+
+def pair_number(pair: LayerPair) -> int:
+    """Return the number the UI shows for a pair: its index plus one ("Pair 1" is index 0, screens.md section 4)."""
+    return pair.index + 1 if isinstance(pair.index, int) else pair.position + 1
+
+
+def alternate_rotation_rad(values: Mapping[str, JsonValue]) -> float | None:
+    """Return pi/Q, the rotation Alternate gives every second pair (R4, option M3); None while Q is not a count."""
+    coils = values.get(COIL_COUNT_POINTER)
+    return math.pi / coils if isinstance(coils, int) and not isinstance(coils, bool) and coils > 0 else None
+
+
+def alternate_rotations(count: int, step: float) -> list[float]:
+    """Return the Alternate rotations of `count` pairs: 0 for the first, step for the second, and so on."""
+    return [step if position % 2 else 0.0 for position in range(count)]
+
+
+def rotation_mode(values: Mapping[str, JsonValue]) -> RotationMode | None:
+    """Read the rotation mode back from the pair rotations (R4); None while the draft lists no pair."""
+    rotations = [pair.rotation_rad for pair in layer_pairs(values)]
+    if not rotations:
+        return None
+    if all(rotation == 0.0 for rotation in rotations):
+        return "none"
+    step = alternate_rotation_rad(values)
+    if step is not None and rotations == alternate_rotations(len(rotations), step):
+        return "alternate"
+    return "custom"
+
+
+def _number_list(numbers: list[int], conjunction: str) -> str:
+    words = [str(n) for n in numbers]
+    return words[0] if len(words) == 1 else f"{', '.join(words[:-1])} {conjunction} {words[-1]}"
+
+
+def layer_pairs_notice(old: Mapping[str, JsonValue], new: Mapping[str, JsonValue]) -> str | None:
+    """Return what a copper-count edit did to the layer pairs (screens.md section 4), or None when it kept them all."""
+    before = {(pair.layer_in, pair.layer_out): pair for pair in layer_pairs(old)}
+    after = {(pair.layer_in, pair.layer_out): pair for pair in layer_pairs(new)}
+    added = sorted(pair_number(after[names]) for names in after.keys() - before.keys())
+    removed = sorted(pair_number(before[names]) for names in before.keys() - after.keys())
+    if not added and not removed:
+        return None
+    sentences = [text("layer-pairs-notice.count", count=len(after))]
+    if added:
+        key = "layer-pairs-notice.added" if len(added) == 1 else "layer-pairs-notice.added-many"
+        sentences.append(text(key, numbers=_number_list(added, "and")))
+    if removed:
+        key = "layer-pairs-notice.removed" if len(removed) == 1 else "layer-pairs-notice.removed-many"
+        copper = stackup_from_values(new).copper_count or 0
+        sentences.append(text(key, numbers=_number_list(removed, "and"), copper=copper))
+    return " ".join(sentences)
+
+
+def screw_patterns(values: Mapping[str, JsonValue]) -> list[dict[str, JsonValue]]:
+    """Return what the draft holds for each screw pattern, by leaf name, in list order."""
+    patterns: list[dict[str, JsonValue]] = []
+    while any(p.startswith(base := f"{SCREWS_POINTER}/{len(patterns)}/") for p in values):
+        patterns.append({p[len(base) :]: v for p, v in values.items() if p.startswith(base)})
+    return patterns
+
+
+def assignment_mode(values: Mapping[str, JsonValue]) -> AssignmentMode:
+    """Return manual while the draft lists an assignment; auto (null, star of slots) otherwise."""
+    listed = values.get(ASSIGNMENT_POINTER) is not None or any(p.startswith(ASSIGNMENT_POINTER + "/") for p in values)
+    return "manual" if listed else "auto"
+
+
+def manual_assignment(values: Mapping[str, JsonValue]) -> tuple[CoilPhase, ...]:
+    """Return the assignment rows a manual draft lists, in list order."""
+    rows = []
+    while (base := f"{ASSIGNMENT_POINTER}/{len(rows)}/") + "coil_index" in values:
+        rows.append(
+            CoilPhase(
+                coil_index=values[base + "coil_index"],
+                phase=values.get(base + "phase"),
+                polarity=values.get(base + "polarity"),
+            )
+        )
+    return tuple(rows)
+
+
+def _phase_per_pair(winding: SpiralWindingSpec) -> bool:
+    # The same rule as winding.plan.plan_spiral_winding: every pair carries exactly one phase (option M4).
+    pairs = winding.layers.pairs
+    return bool(pairs) and all(pair.phases is not None and len(pair.phases) == 1 for pair in pairs)
+
+
+def _balance_text(outcome: ComputeOutcome) -> str | None:
+    """Return the phase-balance status of a spiral result (UI-19), from the plan or the unbalanced refusal."""
+    design = outcome.design
+    detail = outcome.boards.boards[0].detail if outcome.boards is not None and outcome.boards.boards else None
+    if isinstance(detail, SpiralDetail):
+        if detail.plan.feasibility.balanced:
+            return text("phase-balance-status.balanced")
+        return text("phase-balance-status.manual")
+    winding = design.winding
+    if not isinstance(winding, SpiralWindingSpec):
+        return None
+    if not any(found.code == "UNBUILDABLE_UNBALANCED_WINDING" for found in outcome.issues):
+        return None
+    poles, coils = design.rotor.poles, winding.coil.coil_count
+    counts = (poles,) if _phase_per_pair(winding) else balanced_coil_counts(poles)
+    nearest = sorted(sorted(counts, key=lambda q: (abs(q - coils), q))[:BALANCE_HINT_OPTIONS])
+    if not nearest:
+        return text("phase-balance-status.unbalanced")
+    return text("phase-balance-status.choose", counts=_number_list(nearest, "or"))
+
+
 def feasibility_hints(outcome: ComputeOutcome) -> dict[str, str]:
     """Return the hint texts next to the inputs, from the generator record of the first board (REQ-F-28)."""
+    balance = _balance_text(outcome)
+    status = {} if balance is None else {"phase-balance-status": balance}
     if outcome.boards is None or not outcome.boards.boards:
-        return {}
+        return status
     detail = outcome.boards.boards[0].detail
     match detail:
         case SpiralDetail(plan=plan, turns_achieved=turns, turn_limit=limit):
@@ -466,7 +622,7 @@ def feasibility_hints(outcome: ComputeOutcome) -> dict[str, str]:
                 if f.balanced
                 else text("hint-combination.unbalanced", coils=f.coils, poles=f.poles)
             )
-            return {
+            return status | {
                 "hint-combination": combination,
                 "param-turns-hint": text("hint-turns.spiral", turns=turns, reason=limit.limiting_reason.value),
                 "phase-pattern-string": plan.pattern,
@@ -498,6 +654,7 @@ class DesignSession:
         self.can_undo: Observable[bool] = Observable(False)
         self.can_redo: Observable[bool] = Observable(False)
         self.notice: Observable[EditNotice | None] = Observable(None)
+        self.pairs_notice: Observable[str | None] = Observable(None)
         self.issues: Observable[tuple[ValidationIssue, ...]] = Observable(())
         self.document: SessionDocument | None = None
         self._undo: list[SessionDocument | None] = []
@@ -535,19 +692,94 @@ class DesignSession:
 
     def edit(self, pointer: str, value: JsonValue) -> None:
         """Set a value; re-entering the current value is a no-op (no undo entry, no recompute, PR-12)."""
+        self.edit_many({pointer: value})
+
+    def edit_many(self, changes: Mapping[str, JsonValue]) -> None:
+        """Set several values as one undoable edit; a stack-up change re-derives the spiral layer pairs (D-024)."""
         document = self.document
         if document is None:
             return
-        draft = DesignDraft(topology=document.draft.topology, values=_with_value(document.draft.values, pointer, value))
-        if pointer.startswith(STACKUP_POINTER):
+        old = document.draft.values
+        values = dict(old)
+        for pointer, value in changes.items():
+            values = _with_value(values, pointer, value)
+        draft = DesignDraft(topology=document.draft.topology, values=values)
+        stackup = any(pointer.startswith(STACKUP_POINTER) for pointer in changes)
+        if stackup:
             draft = derive_layer_pairs(draft)
-        if draft.values == document.draft.values:
+        new = draft.values
+        if new == old:
             return
-        old, new = document.draft.values, draft.values
         measurements = tuple(
             m for m in document.measurements if m.pointer in new and new[m.pointer] == old.get(m.pointer)
         )
-        self._commit(dataclasses.replace(document, draft=draft, measurements=measurements))
+        notice = layer_pairs_notice(old, new) if stackup else None
+        self._commit(dataclasses.replace(document, draft=draft, measurements=measurements), pairs_notice=notice)
+
+    def set_rotation_mode(self, mode: RotationMode) -> None:
+        """None writes 0 to every pair, Alternate pi/Q to every second pair; Custom writes nothing (R4)."""
+        if self.document is None or mode == "custom":
+            return
+        values = self.document.draft.values
+        step = 0.0 if mode == "none" else alternate_rotation_rad(values)
+        if step is None:
+            return
+        rotations = alternate_rotations(len(layer_pairs(values)), step)
+        self.edit_many({f"{PAIRS_POINTER}/{k}/rotation_rad": rotation for k, rotation in enumerate(rotations)})
+
+    def add_screw_pattern(self) -> None:
+        """Add a screw pattern with its required values empty (screens.md section 5)."""
+        if self.document is None:
+            return
+        patterns = screw_patterns(self.document.draft.values)
+        angle = FIELD_BY_KEY[f"{SCREWS_POINTER}/*/angle_offset_rad"].neutral_value
+        self.edit(SCREWS_POINTER, [*patterns, {"angle_offset_rad": angle}])
+
+    def remove_screw_pattern(self, position: int) -> None:
+        """Remove one screw pattern; the patterns after it move up."""
+        if self.document is None:
+            return
+        patterns = screw_patterns(self.document.draft.values)
+        if 0 <= position < len(patterns):
+            self.edit(SCREWS_POINTER, patterns[:position] + patterns[position + 1 :])
+
+    def current_outcome(self) -> ComputeOutcome | None:
+        """Return the result of the open design, also one that drew no board; None while it computes or is outdated."""
+        state = self.state.value
+        if not isinstance(state, SessionComputed) or state.computing:
+            return None
+        latest = self._outcome.state.value
+        return latest.outcome if isinstance(latest, OutcomeReady) and latest.outcome.design == state.design else None
+
+    def auto_assignment(self) -> tuple[CoilPhase, ...]:
+        """Return the star-of-slots assignment of the current result (`winding.assignment`); empty without one."""
+        outcome = self.current_outcome()
+        if outcome is None or outcome.boards is None or not outcome.boards.boards:
+            return ()
+        detail = outcome.boards.boards[0].detail
+        if not isinstance(detail, SpiralDetail):
+            return ()
+        return tuple(
+            CoilPhase(coil_index=c.coil_index, phase=c.phase.value, polarity=c.polarity) for c in detail.plan.assignment
+        )
+
+    def phase_assignment(self) -> tuple[CoilPhase, ...]:
+        """Return what the phase table shows: the listed assignment in manual mode, the result's in auto mode."""
+        if self.document is None:
+            return ()
+        values = self.document.draft.values
+        return manual_assignment(values) if assignment_mode(values) == "manual" else self.auto_assignment()
+
+    def set_assignment_mode(self, mode: AssignmentMode) -> None:
+        """Auto writes null (star of slots); Manual writes the list, starting from the current auto pattern."""
+        if self.document is None or assignment_mode(self.document.draft.values) == mode:
+            return
+        if mode == "auto":
+            self.edit(ASSIGNMENT_POINTER, None)
+            return
+        start = self.auto_assignment()
+        if start:
+            self.edit(ASSIGNMENT_POINTER, [dataclasses.asdict(row) for row in start])
 
     def set_topology(self, topology: TopologyKind) -> None:
         """Switch the topology; values typed for another topology stay in the draft and come back on a switch back."""
@@ -659,6 +891,13 @@ class DesignSession:
             return ()
         return form_rows(self.document.draft, self.chips(), self.issues.value)
 
+    def item_row(self, widget_id: str, pointer: str) -> FieldRow | None:
+        """Return the row of one list-item field (the selected pair's rotation, the selected pattern's hole)."""
+        if self.document is None:
+            return None
+        draft = self.document.draft
+        return _row(field_for(pointer, draft.values), widget_id, True, draft, self.chips(), self.issues.value, pointer)
+
     def drawn(self, latest: OutcomeState) -> tuple[OutcomeReady | None, bool]:
         """Return the result the canvas draws and whether it is outdated (REQ-F-27).
 
@@ -711,7 +950,9 @@ class DesignSession:
         self._drawn = None
         self._commit(document)
 
-    def _commit(self, document: SessionDocument | None, *, record: bool = True) -> None:
+    def _commit(
+        self, document: SessionDocument | None, *, record: bool = True, pairs_notice: str | None = None
+    ) -> None:
         if record:
             self._undo = [*self._undo, self.document][-UNDO_LIMIT:]
             self._redo = []
@@ -719,6 +960,7 @@ class DesignSession:
             self._stackup_pending = {}
         self.document = document
         self.notice.set(None)
+        self.pairs_notice.set(pairs_notice)
         self.can_undo.set(bool(self._undo))
         self.can_redo.set(bool(self._redo))
         self._refresh()

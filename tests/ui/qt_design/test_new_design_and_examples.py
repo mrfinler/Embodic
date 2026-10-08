@@ -5,7 +5,7 @@ import itertools
 import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QGroupBox, QLabel, QLineEdit
-from tests.ui.qt_design.conftest import enter, find
+from tests.ui.qt_design.conftest import enter, find, input_name
 
 from embodic.errors import Severity
 from embodic.io.examples import list_examples
@@ -68,18 +68,19 @@ def test_ui24_blank_design_computes_once_when_the_last_required_field_is_filled(
         pointer = state.missing[0]
         qtbot.mouseClick(find(window, "btn-first-missing"), Qt.MouseButton.LeftButton)
         focused = window.focusWidget()
-        assert focused.objectName() == widget_for_pointer(pointer, window.session.document.draft), pointer
+        name = input_name(focused)
+        assert name == widget_for_pointer(pointer, window.session.document.draft), pointer
         if pointer.startswith(("/stackup", "/winding/layers/")):
             inputs = stackup_from_values(values)
-            enter(qtbot, window, focused.objectName(), inputs.copper_count)
+            enter(qtbot, window, name, inputs.copper_count)
             enter(qtbot, window, "param-copper-weight", f"{inputs.copper_oz:g}")
             enter(qtbot, window, "param-board-thickness", f"{inputs.board_thickness_mm:g}")
-        elif focused.objectName() == "param-bore":
+        elif name == "param-bore":
             enter(qtbot, window, "param-bore", values["/outline/bore/shape"])
         else:
             value = values[pointer]
             typed = display_text(field_for(pointer, values), value) if isinstance(focused, QLineEdit) else value
-            enter(qtbot, window, focused.objectName(), typed)
+            enter(qtbot, window, name, typed)
     assert isinstance(window.session.state.value, SessionComputed)
     wait_computed(window)
     qtbot.wait(100)

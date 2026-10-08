@@ -14,6 +14,7 @@ from PySide6.QtWidgets import QCheckBox, QComboBox, QLineEdit, QWidget
 from embodic.api import compute
 from embodic.ui.app import QSettingsStore, create_shell
 from embodic.ui.viewmodels.session import SessionComputed
+from embodic.ui.views.coil_panel import Segment
 from embodic.ui.views.main_window import MainWindow, ShellPaths
 
 READY_TIMEOUT_MS = 60_000  # hang guard only; no assertion depends on it
@@ -80,10 +81,18 @@ def find(window: MainWindow, name: str) -> QWidget:
     return widget
 
 
+def input_name(widget: QWidget) -> str:
+    """Return the objectName of the input a focused widget belongs to: a segment button belongs to its segment."""
+    parent = widget.parentWidget()
+    return parent.objectName() if isinstance(parent, Segment) else widget.objectName()
+
+
 def enter(qtbot, window: MainWindow, name: str, value) -> None:
-    """Enter a value the way a user does: type and press Enter, pick a combo item, or click a check box."""
+    """Enter a value the way a user does: type and press Enter, pick a combo item, click a segment or a check box."""
     widget = find(window, name)
-    if isinstance(widget, QLineEdit):
+    if isinstance(widget, Segment):
+        qtbot.mouseClick(find(widget, f"{name}-{value}"), Qt.MouseButton.LeftButton)
+    elif isinstance(widget, QLineEdit):
         widget.setFocus()
         widget.selectAll()
         qtbot.keyClick(widget, Qt.Key.Key_Delete)

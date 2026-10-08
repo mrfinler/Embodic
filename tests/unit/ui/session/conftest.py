@@ -18,6 +18,12 @@ class RecordingSubmitter:
 
 
 @pytest.fixture
-def session():
+def outcome_vm():
+    """Return the shell's outcome view-model with a recording submitter in place of the worker."""
+    return OutcomeViewModel(RecordingSubmitter())
+
+
+@pytest.fixture
+def session(outcome_vm):
     """Return a DesignSession without autosave whose computes go nowhere."""
-    return DesignSession(OutcomeViewModel(RecordingSubmitter()))
+    return DesignSession(outcome_vm)
