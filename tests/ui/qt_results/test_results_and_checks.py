@@ -28,7 +28,7 @@ def test_ui06_results_tab_shows_one_card_per_quantity_with_value_unit_badge_eq_a
         name: find(card, QLabel, f"res-r-phase-{name}").text() for name in ("title", "value", "unit", "badge", "eq")
     }
     assert parts == {
-        "title": "Phase resistance at operating temperature",
+        "title": "Phase resistance at operating temperature R_ph",
         "value": "502",
         "unit": "mΩ",
         "badge": "not tested",

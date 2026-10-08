@@ -47,6 +47,15 @@ def test_ui06_every_row_shows_value_unit_and_the_badge_of_its_traceable(d08):
 
 
 @pytest.mark.req("REQ-T-01")
+def test_ui06_a_card_title_carries_the_specification_symbol_only_where_one_is_stated(d08):
+    """Catches a title without the symbol the spec states (R_ph) and one with a symbol the spec does not state."""
+    rows = rows_by_quantity(d08)
+    assert rows["resistance_phase_operating_ohm"].title == "Phase resistance at operating temperature R_ph"
+    assert rows["ke_line_peak_v_s_per_rad"].title == "Line back-EMF constant, peak"
+    assert rows["resistance_phase_operating_ohm"].label == "Phase resistance at operating temperature"
+
+
+@pytest.mark.req("REQ-T-01")
 def test_ui06_a_badge_follows_the_traceable_status_never_a_constant(d08):
     """Catches a hard-coded badge: changing only the traceable's status changes the row (D-007)."""
     t = d08.analysis.ke_phase_v_s_per_rad

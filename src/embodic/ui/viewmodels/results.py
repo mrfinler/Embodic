@@ -1,7 +1,7 @@
 """What the results area shows of a computed design: result cards, DRC table, charts, comparison, equation register.
 
 Qt-free (import contracts C2 and C3). Every badge, label and assumption count is read from the `Traceable` (D-007);
-quantity names come from `QUANTITY_LABELS` (D-038e).
+quantity names come from `QUANTITY_LABELS` and card titles from `quantity_title` (D-038e, D-039).
 """
 
 import cmath
@@ -17,6 +17,7 @@ from embodic.outcome import ComputeOutcome
 from embodic.physics.waveform import XCOIL_WAVEFORM_SAMPLES, emf_waveform_v
 from embodic.results import QUANTITY_LABELS, AnalysisResult, Registry, Traceable
 from embodic.results.formatting import MINUS, NOT_A_NUMBER, format_quantity
+from embodic.results.labels import quantity_title
 from embodic.results.status import Status, ValidityEffect, ValidityFlag, combine_status
 from embodic.results.traceable import AssumedInput
 from embodic.ui.strings import text
@@ -56,6 +57,7 @@ class ResultRow:
 
     quantity: str
     label: str
+    title: str  # the label, then the symbol the equation specification states
     value_text: str
     unit_text: str
     status: Status
@@ -71,6 +73,7 @@ def result_row(quantity: str, t: Traceable[float]) -> ResultRow:
     return ResultRow(
         quantity=quantity,
         label=QUANTITY_LABELS[quantity],
+        title=quantity_title(quantity),
         value_text=value_text,
         unit_text=unit_text,
         status=t.status,

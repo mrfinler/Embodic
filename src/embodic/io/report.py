@@ -32,8 +32,9 @@ from embodic.model.fields import field_for
 from embodic.model.schema import design_values
 from embodic.model.vocabulary import Phase
 from embodic.outcome import ComputeOutcome
-from embodic.results import QUANTITY_LABELS, AnalysisResult
+from embodic.results import AnalysisResult
 from embodic.results.formatting import format_quantity
+from embodic.results.labels import quantity_title
 from embodic.results.traceable import Traceable
 from embodic.units import Unit
 
@@ -105,7 +106,7 @@ def _key_results(flow: _Flow, analysis: AnalysisResult | None) -> None:
         status = t.status.value + (f" ({t.label})" if t.label else "")
         flow.row(
             [
-                (MARGIN, QUANTITY_LABELS[name]),
+                (MARGIN, quantity_title(name)),
                 (MARGIN + 200, value_text(t.value, t.unit)),
                 (MARGIN + 330, status),
             ]
