@@ -51,6 +51,7 @@ from embodic.ui.viewmodels.outcome import (
     OutcomeReady,
     OutcomeState,
     OutcomeViewModel,
+    coil_count,
 )
 from embodic.ui.viewmodels.results import (
     CompareViewModel,
@@ -600,10 +601,9 @@ class MainWindow(QMainWindow):
         if scene is None:
             self.status["st-counts"].setText("")
             return
-        coils = {(m.phase, m.label) for m in scene.marks}
         vias = sum(len(board.vias) for board in scene.boards)
         self.status["st-counts"].setText(
-            text("shell.st-counts.text", layers=len(scene.layers), coils=len(coils), vias=vias)
+            text("shell.st-counts.text", layers=len(scene.layers), coils=coil_count(scene), vias=vias)
         )
 
     def _render_results(

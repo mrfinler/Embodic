@@ -1,13 +1,15 @@
-"""Outcome view-model: empty start, latest wins, crash state, summary strip and coil marks (UI-02, UI-12, UI-23, UI-27).
+"""Outcome view-model: empty start, latest wins, crash state, summary strip, labels, eyes (UI-02, UI-12, UI-23, UI-27).
 
 Qt-free: the submitter is a list, and results are fed back by hand in any order.
 """
 
 import math
+import re
 
 import pytest
 
 from embodic.api import compute
+from embodic.geometry.marks import eye_marks
 from embodic.geometry.primitives import Line
 from embodic.io.examples import load_example
 from embodic.io.project import load_project, project_from_example, project_provenance
@@ -18,6 +20,7 @@ from embodic.ui.viewmodels.outcome import (
     OutcomeEmpty,
     OutcomeFailed,
     OutcomeViewModel,
+    eyes_shown,
     ready_state,
 )
 
@@ -120,20 +123,21 @@ def _dense_points(prim, count=400):
 
 
 @pytest.mark.req("REQ-N-23", "REQ-N-14")
-def test_ui27_every_coil_has_a_label_and_its_eye_hatch_never_reaches_copper(d08_ready):
-    """Catches hatch that crosses a trace (reads as copper) or a coil drawn without its phase letter.
+def test_ui27_every_top_layer_coil_has_a_label_and_an_eye_that_never_reaches_copper(d08_ready):
+    """Catches hatch that crosses a trace (reads as copper) or a coil drawn without its phase letter (UX-AC-05).
 
-    Independent of the view-model's exact arc distance: copper is sampled densely along its centre line.
+    Independent of the marks module's exact arc distance: copper is sampled densely along its centre line.
     """
     scene = d08_ready.scene
     board = scene.boards[0]
-    coils = {(p.layer, p.phase, p.element) for p in board.paths if p.element is not None}
-    assert {(m.layer, m.phase) for m in scene.marks} == {(layer, phase) for layer, phase, _ in coils}
-    assert len(scene.marks) == len(coils)
-    assert {m.label[0] for m in scene.marks} == {"A", "B", "C"}
-    assert all(m.label[-1] in "+-" for m in scene.marks)
+    (marks,) = scene.marks
+    top = board.copper_layers[0]
+    coils = {(p.phase, p.element) for p in board.paths if p.element is not None and p.layer == top}
+    eyes = eyes_shown(board, marks, frozenset())
+    assert len(marks.anchors) == len(coils) == 12
+    assert len(eyes) == 12 and {m.layer for m in eyes} == {top}
     r_inner, r_outer = board.envelope_mm
-    for mark in scene.marks:
+    for mark in eyes:
         assert mark.eye_radius_mm > 0, mark.label
         assert r_inner < math.hypot(mark.cx_mm, mark.cy_mm) < r_outer, mark.label
         for path in (p for p in board.paths if p.layer == mark.layer):
@@ -143,10 +147,39 @@ def test_ui27_every_coil_has_a_label_and_its_eye_hatch_never_reaches_copper(d08_
 
 
 @pytest.mark.req("REQ-N-23")
-def test_ui27_coil_numbers_count_within_each_phase(d08_ready):
-    """Catches labels that number coils globally (A1, B2, C3 ...) instead of per phase (A1 ... A4)."""
-    labels = sorted({m.label[:2] for m in d08_ready.scene.marks})
-    assert labels == [f"{phase.value}{n}" for phase in Phase for n in range(1, 5)]
+def test_ui27_the_canvas_fills_the_eyes_the_exports_fill_and_follows_a_hidden_top_layer(d08_ready):
+    """Catches a canvas whose eye set differs from the drawing files (ruling a 3) or vanishes with the top layer."""
+    board, marks = d08_ready.scene.boards[0], d08_ready.scene.marks[0]
+    assert eyes_shown(board, marks, frozenset()) == eye_marks(board)
+    below = eyes_shown(board, marks, frozenset({"L1"}))
+    assert len(below) == 12 and {m.layer for m in below} == {"L2"}
+    assert eyes_shown(board, marks, frozenset({"L1", "L2"})) == ()
+
+
+@pytest.mark.req("REQ-N-23")
+def test_ui27_spiral_labels_read_phase_number_and_a_true_minus_sign(d08_ready):
+    """Catches a hyphen for negative polarity (F22) or coils numbered globally (A1, B2, C3) instead of per phase."""
+    texts = [anchor.text for anchor in d08_ready.scene.marks[0].anchors]
+    assert all(re.fullmatch("[ABC][1-4][+\u2212]", t) for t in texts), texts
+    assert "-" not in "".join(texts)
+    assert sorted(t[:2] for t in texts) == [f"{phase.value}{n}" for phase in Phase for n in range(1, 5)]
+    assert {t[-1] for t in texts} == {"+", "\u2212"}  # D08 has coils of both polarities
+
+
+@pytest.mark.req("REQ-N-23")
+def test_ui27_each_label_names_the_copper_of_its_own_coil(d08_ready):
+    """Catches a hover tooltip that names another coil than the one under the pointer (ruling b: skipped labels)."""
+    board = d08_ready.scene.boards[0]
+    marks = d08_ready.scene.marks[0]
+    by_id = {p.id: p for p in board.paths}
+    coil_of_text: dict[str, set] = {}
+    for path_id, label in marks.label_of_path.items():
+        path = by_id[path_id]
+        assert label[0] == path.phase.value, (label, path.id)
+        coil_of_text.setdefault(label, set()).add((path.element, path.polarity))
+    assert set(coil_of_text) == {anchor.text for anchor in marks.anchors}
+    assert all(len(coils) == 1 for coils in coil_of_text.values()), coil_of_text
+    assert len({next(iter(c)) for c in coil_of_text.values()}) == 12
 
 
 @pytest.mark.req("REQ-F-13")

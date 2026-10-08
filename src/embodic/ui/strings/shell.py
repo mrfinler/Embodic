@@ -102,6 +102,7 @@ STRINGS: Mapping[str, str] = {
     "shell.st-units.text": "mm",
     "shell.st-cursor.text": "x {x} mm, y {y} mm",
     "shell.fig-canvas.accessible": "Geometry view of the stator board",
+    "shell.legend.phase": "Phase {phase}",
     "shell.error.title": "Internal error",
     "shell.error.body": (
         "An internal error stopped the computation. The program keeps running.\n\n"
