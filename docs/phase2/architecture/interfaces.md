@@ -621,7 +621,7 @@ class WaveWindingSpec:
     corner_style: CornerStyle = CornerStyle.ROUND
     fillet_radius_mm: float = 0.4
     wave_style: WaveStyle = WaveStyle.INVOLUTE  # Xcoil waveStyle
-    bus_width_mm: float  # Xcoil busWidth
+    bus_width_mm: float  # Xcoil busWidth, the links between layers; the interconnect uses /connection/ring_width_mm
 
 
 WindingSpec: TypeAlias = SpiralWindingSpec | SerpentineWindingSpec | WaveWindingSpec
@@ -716,6 +716,26 @@ main c7fff3a, which has no limits (`verified` by reading `fields.py` l.122).
   `stackupFor(p, perBoard)`, `engine.js` l.686-688) and `layers_per_phase` for `StackMode.ONE_BOARD_PER_PHASE`, else
   `INVALID_SERPENTINE_COPPER_COUNT` with the three pointers. Main checks only the second mode (§13 point 6,
   DEF-U-D4-02).
+
+Revision 2026-10-08 (U-D7, D-035e; U-M3b report Q1, Q2 and Q4; `src/embodic/generators/wave/generate.py`,
+`src/embodic/physics/analyse.py` and `resources/examples/wave_16p_example.embodic.json` on main 4aec992 and
+`/home/claude/serpentine/src/engine.js`, `verified` by reading). Three wave decisions:
+
+- No start angle in Phase 2. `WaveWindingSpec` gets no `start_angle_rad`. PR-14 rotates the wave through the private
+  seam `generate_wave_rotated(design, registry, start_angle_deg)` (`generate.py` l.181), and `generate_wave` calls it with 0.
+- Two width fields. Xcoil's single `busWidth` sizes both the links between layers and the interconnect (U-M3b Q2,
+  `engine.js` l.1673 and l.1226). embodic keeps two fields: `/winding/bus_width_mm` sizes the links and
+  `/connection/ring_width_mm` sizes the interconnect (`generate.py` l.85 and l.158). The wave example sets both to
+  1.0 mm, Xcoil's default `busWidth` (`engine.js` l.44).
+- Via length from the layer span. embodic computes a wave via's barrel resistance over the board thickness that a
+  through via spans (`analyse.py` l.181). Xcoil uses the spacing of the first two copper layers, `hAdj` (l.2048). The
+  embodic length is the physical one. The phase resistance of the wave example is 0.27 % higher than Xcoil's for this
+  reason alone (U-M3b Q4, `inferred` from its report). U-M3-fix records the difference as an XD-WAVE entry in
+  `tests/golden/expected_diffs/wave.toml`, which holds no entry on main 4aec992.
+
+Wave copper count (D-035e, as D-031e did for the serpentine). On main the wave generator refuses an odd copper count
+or a count below 2 with `UNBUILDABLE_WAVE_LAYER_COUNT` on `/stackup/layers`, and `validate_design` has no wave rule
+(U-M3b deviations). U-M3-fix moves the rule into `validate_design`. The INVALID code it reports is U-M3-fix's to name.
 
 ### 2.3 Field table, draft and the new-design flow (ADR-0010)
 
@@ -1575,6 +1595,7 @@ class BoardStack:
     boards: tuple[Layout, ...]  # never empty; board k of a per-phase stack holds only phase k
     board_thickness_mm: float  # one board, = design.stackup.board_thickness_mm()
     board_gap_mm: float  # 0.0 when len(boards) == 1
+    issues: tuple[ValidationIssue, ...] = ()  # WARNING and INFO only; revision 2026-10-08 (U-D7, D-035a)
     stack_hash: str = field(init=False)  # "sha256:<hex>" over the boards' layout_hash values in order and the gap
 
     def __post_init__(self) -> None:
@@ -1705,6 +1726,17 @@ How each consumer reads a stack:
 | exporters (§9.3) | SVG and DXF write one file per board when the stack has more than one, suffixed `_board` plus the phase letter (Xcoil `ui-main.js` l.31); the PDF report and README describe the whole stack and its thickness (Xcoil `report.js` l.292) |
 | UI geometry view (§11) | shows one board of the stack at a time; how the user picks the board is Agent 1's screens.md decision (request through Fable) |
 
+Revision 2026-10-08 (U-D7, D-035a; U-M3a report Q1; `src/embodic/geometry/layout.py` and `src/embodic/outcome.py` on
+main 4aec992, `verified` by reading). Warning channel. A generator that builds a stack can still have something to tell
+the user. `BoardStack.issues` carries those findings, with severity WARNING or INFO. A finding with severity ERROR stays
+in `Unbuildable` and no stack is built. The first user is the serpentine port. Xcoil warns `INTERCONNECT_EXTERNAL` when
+a one-board-per-phase stack or a single layer per phase cannot route the star or delta connection on the board
+(`engine.js` l.2535). U-M3-fix adds the catalogue code and the serpentine port emits it. Xcoil's overlap wave raises
+the same code when it has one terminal per rim (l.2190); the U-M3-fix brief does not name the wave port, so that case
+is `unresolved`. The compute facade merges `BoardStack.issues` into `ComputeOutcome.issues` (§10, U-M3-fix brief).
+`stack_hash` keeps its inputs, the boards' `layout_hash` values and the gap, because an issue is not copper. On main
+4aec992 `BoardStack` has no `issues` field yet (`layout.py` l.120-145).
+
 Revision 2026-10-08 (U-D4, D-031b, D-031f; `src/embodic/geometry/layout.py`, `details.py` and
 `src/embodic/generators/spiral/derived.py` on main c7fff3a, `verified` by reading).
 
@@ -1823,6 +1855,21 @@ Pairs rotated against each other. Spec G6 forbids layer pairs of one winding at 
 proposes `UNBUILDABLE_PAIRS_ROTATED_APART` with pointer `/winding/layers/pairs`. U-M2d-5 adds it to the catalogue.
 Until then main returns `UNBUILDABLE_SPIRAL_OPTION_NOT_IMPLEMENTED` with the same pointer.
 
+Revision 2026-10-08 (U-D7, D-035; U-M3a, U-M3b and U-M3-wire reports; `src/embodic/generators/__init__.py` on main
+4aec992, `verified` by reading). Both ports are merged. `GENERATORS` maps `SERPENTINE` to `generate_serpentine` and
+`WAVE` to `generate_wave`, and `src/embodic/generators/stubs.py` no longer exists. The ports differ from Xcoil's layout
+in these points, each recorded in the unit's report:
+
+| Port | Difference from Xcoil | Why |
+|---|---|---|
+| serpentine | the star ring is cut at the middle tap, which adds one arc | the ring is a chain of primitives; the board stays DRC-clean (U-M3a) |
+| serpentine | each tap stub is its own path | a path is one chain; the stub end meets the ring under §7 rule 5 |
+| serpentine | the bus paths are members of the phase circuit | physics and the circuit then see every phase conductor (`inferred`; the report states no reason) |
+| serpentine | the outline comes from the design inputs; an N pad exists only when `neutral_pad` is set | embodic takes the outline and the pads from `OutlineSpec` and `ConnectionSpec` (`inferred`) |
+| wave | the star item is split into one ring path and one path per stub (D-035b; U-M3-fix does it) | Xcoil holds them in one path that is not a chain (l.1284-1289, l.2169), and DRC reported it overlapping itself (U-M3b Q3) |
+| wave | vias carry the roles STITCH and TERMINAL; polarity is the belt sign | U-M3b lists both as deviations without a reason (`unresolved`) |
+| wave | the via barrel length is the board thickness | §2.2, revision U-D7 |
+
 ## 7. `embodic.drc`
 
 Rule D-006: violation when measured clearance < rule - `DRC_EPSILON_MM`. Turns of one spiral share a net and still keep
@@ -1856,6 +1903,18 @@ the note after the rule list.
 3. Path ends meeting at a node. The end groups of two different paths on one layer whose end points lie on one via,
    on one pad, or within `COINCIDENCE_MM` of each other.
 4. A pad and a via whose centre lies inside the pad.
+5. A T-junction (revision 2026-10-08 (U-D7), D-035b). The end group of a path whose end point lies within
+   `COINCIDENCE_MM` of the centreline of another path of the same net is exempt from every primitive of that other
+   path.
+
+Revision 2026-10-08 (U-D7, D-035b; U-M3a report Q2, U-M3b report Q3). Xcoil joins copper mid-path in three places:
+the serpentine strand bus (`engine.js` l.485), the serpentine star-ring taps (l.1289) and the wave star item, which
+holds the ring and its stubs in one path that is not a chain (l.1284-1289, l.2169). Rules 1 to 4 do not cover a path
+end that meets another path between its ends, so D-006 reported each joint as a violation. U-M3a measured 7 serpentine
+cases with more than one strand that fail DRC for this reason. Rule 5 covers the bus and the taps. The wave port splits
+the star item into one ring path and one path per stub, as the serpentine port already does (§6), so its stubs meet
+the ring under rule 5. Rule 5 has no interconnect waiver: D-035b names same-net paths only. U-M3-fix implements it in
+`src/embodic/drc/items.py`.
 
 Revision 2026-10-08 (U-D4, D-022c; `src/embodic/drc/items.py` `exempt_pairs` and `_taps` on main c7fff3a, `verified`
 by reading). The star-point ring is tapped by vias mid-path (DEF-M1c3-01, Xcoil sector layout), so the tap clause of
@@ -1866,7 +1925,7 @@ implements the three cases as one test on slots, `abs(slot_a - slot_b) <= 2`, wh
 2 x main index and a fillet or taper takes 2 x main index + 1 of the main before it (`items.py` l.48, `engine.py`
 l.195).
 
-Net test. Rules 2 to 4 apply only when both objects carry the same net, with one waiver (D-022 a, as revised by
+Net test. Rules 2 to 5 (rule 5 added 2026-10-08, U-D7) apply only when both objects carry the same net, with one waiver (D-022 a, as revised by
 D-022c). Rules 2 and 3 also apply, whatever the net names and the via role, when one object is an interconnect path
 (its id is in `Circuit.interconnect_path_ids`; nets `N`, `U`, `V`, `W`, `D...`):
 
@@ -1896,6 +1955,7 @@ is the independent check of rule 1.
 | 3 | UT-DRC-04 cases 3a (same-net ends at one via, pad or coincident point exempt) and 3b (different-net ends at a coincident point without a land reported) |
 | 3, waiver | UT-DRC-04 case 3c (interconnect end and phase path end on one via of any role, or one pad, exempt), near miss 3b |
 | 4 | UT-DRC-04 cases 4a (same-net via inside a pad exempt) and 4b (other-net via inside a pad reported) |
+| 5 (revision 2026-10-08, U-D7) | UT-DRC-04 cases 5a (end point on the middle of a same-net line exempt from that path), 5b (end point on the middle of a same-net arc exempt), 5c (the same T with the two paths on different nets reported) and 5d (the same-net end point 0.01 mm short of the centreline reported) |
 
 ```python
 DRC_EPSILON_MM: float = 1e-6
