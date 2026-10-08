@@ -2,7 +2,7 @@ Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5
 
 # M4 screenshot checklist
 
-Date 2026-10-09. The user asked to see a screenshot of every screen before M4 acceptance. This file lists each shot:
+Date 2026-10-09, revised 2026-10-09 (U-S4d: S35 for `screens.md` section 6.1). The user asked to see a screenshot of every screen before M4 acceptance. This file lists each shot:
 the screen and state, the example to load, the theme, the window size, what the shot must show, and the objectName
 that has keyboard focus when the shot is taken. Section numbers are those of `screens.md` v2.1; "shell" rows cover the
 window parts that U-M4b builds and that `screens.md` describes through `design_spec.md` sections 3, 5 and 6.
@@ -53,6 +53,7 @@ How to take a shot (assumption until U-M4e writes the verify skill):
 | S32 | 12 | Guide at an equation entry | `spiral_12c16p_default`, F1 on a field | L, D | 1280 x 800 | Topic tree, body with EQ-ID, formula, sources with page, status | `guide-toc` | U-M4d (assumption) |
 | S33 | 13 | Tests dialog after a run | nothing | L | 1280 x 800 | Table with result icon and word per test, summary line | `tests-table` | U-M4d (assumption) |
 | S34 | 14 | Status bar crop with a DRC failure | the S25 design | L, D | 1280 x 800 | `st-compute`, `st-drc` link, `st-counts`, `st-units`, `st-cursor` | `statusbar` | U-M4b (`st-compute`, `st-units`, `st-cursor`), U-M4d (`st-drc`, `st-counts`) |
+| S35 | 6.1 | Rail status cards with DRC failures | `wave_16p_example` | L, D | 1280 x 800, 960 x 540 | "Inputs" with `check-pass` "No input issues", "DRC" with `check-fail` "186 failures", no "Design" card; at 960 the cards sit in the Key results tab, nothing clipped | `rail-drc` | U-M4d |
 
 Rows S01 to S10 are 10 rows and 22 shots; U-M4b can take them once its shell runs. `tools/design/check_checklist.py`
 fails when a `screens.md` section 1 to 14 has no row here or a focus objectName is not defined in `screens.md`,
