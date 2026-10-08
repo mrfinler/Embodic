@@ -20,7 +20,7 @@ from embodic.model.vocabulary import TopologyKind
 from embodic.ui import app as app_module
 from embodic.ui.app import unrecovered_autosave
 from embodic.ui.viewmodels.session import SessionComputed, SessionDrafting, SessionEmpty
-from embodic.ui.views.main_window import MainWindow, ShellPaths
+from embodic.ui.views.main_window import ShellPaths
 
 D08 = "spiral_12c10p_d08"
 
@@ -214,10 +214,13 @@ def test_ui21_main_offers_recovery_of_the_autosave_left_by_an_unclean_exit(qtbot
     store = app_module.QSettingsStore
     monkeypatch.setattr(app_module, "QSettingsStore", lambda: store(settings))
     monkeypatch.setattr(sys, "excepthook", sys.excepthook)
+    shells = []
+    create_shell = app_module.create_shell
+    monkeypatch.setattr(app_module, "create_shell", lambda *args: shells.append(create_shell(*args)) or shells[-1])
     seen = {}
 
     def run_event_loop(app):
-        window = next(w for w in QApplication.topLevelWidgets() if isinstance(w, MainWindow))
+        window = shells[0].window
         qtbot.addWidget(window)
         dialog = window.findChild(QMessageBox, "dlg-recovery")
         seen["offered"] = dialog is not None and dialog.isVisible()
