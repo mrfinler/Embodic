@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 THAI_FIRST, THAI_LAST = 0x0E00, 0x0E7F
-ALLOWED_SYMBOLS = frozenset("°µΩ²³·−×±≤≥")
+ALLOWED_SYMBOLS = frozenset("°µΩ²³·−×±≤≥√")
 
 
 def is_thai(char: str) -> bool:
@@ -61,7 +61,7 @@ def test_lg01_flags_thai_and_accented_letters_but_not_unit_symbols(planted):
     thai = "".join(chr(c) for c in (0x0E2A, 0x0E27, 0x0E31, 0x0E2A, 0x0E14, 0x0E35))
     module = planted(
         "embodic.errors",
-        f'GOOD = "Resistance 1.9 Ω at 60 °C, 0.5 mm², ≤ 3 µm"\nTHAI = "{thai}"\nFRENCH = "Résistance"\n',
+        f'GOOD = "Resistance 1.9 Ω at 60 °C, 0.5 mm², ≤ 3 µm, 0.03 N·m/√W"\nTHAI = "{thai}"\nFRENCH = "Résistance"\n',
     )
     violations = check_string_literals([module])
     assert len(violations) == 2
