@@ -52,9 +52,10 @@ QWidget#fig-canvas { background-color: #ffffff; } /* canvas */
 
 QTabWidget::pane { background-color: #ffffff; border: none; border-top: 1px solid #dcdcdc; } /* surface, divider */
 QTabBar { qproperty-drawBase: 0; }
-QTabBar::tab { background-color: transparent; color: #454545; padding: 6px 12px; border: none; border-bottom: 2px solid transparent; } /* text-2 */
+QTabBar::tab { background-color: transparent; color: #454545; padding: 4px 10px 6px 10px; border: 2px solid transparent; } /* text-2, focus-ring-px */
 QTabBar::tab:hover { background-color: #efefef; color: #141414; } /* surface-sunken, text-1 */
 QTabBar::tab:selected { color: #141414; border-bottom: 2px solid #141414; } /* text-1, border-strong */
+QTabBar::tab:selected:focus { border: 2px solid #141414; } /* focus-ring-px, focus-ring */
 QTabBar::tab:disabled { color: #9a9a9a; } /* text-disabled */
 
 QLineEdit, QAbstractSpinBox, QComboBox { background-color: #ffffff; color: #141414; border: 1px solid #858585; border-radius: 4px; padding: 5px 8px; min-height: 20px; } /* surface, text-1, border-control */
@@ -69,10 +70,10 @@ QComboBox::down-arrow { image: url(theme:light/chevron-down.svg); width: 12px; h
 QComboBox::down-arrow:disabled { image: url(theme:light/chevron-down-disabled.svg); }
 QComboBox QAbstractItemView { background-color: #ffffff; color: #141414; border: 1px solid #858585; selection-background-color: #e4e4e4; selection-color: #141414; outline: 0px; } /* surface, text-1, border-control, surface-selected */
 
-QCheckBox { spacing: 8px; color: #141414; } /* text-1 */
+QCheckBox { spacing: 8px; color: #141414; border: 2px solid transparent; border-radius: 4px; padding: 0px 2px; } /* text-1, focus-ring-px */
+QCheckBox:focus { border: 2px solid #141414; } /* focus-ring-px, focus-ring */
 QCheckBox:disabled { color: #9a9a9a; } /* text-disabled */
 QCheckBox::indicator { width: 16px; height: 16px; border: 1px solid #858585; border-radius: 3px; background-color: #ffffff; } /* border-control, surface */
-QCheckBox::indicator:focus { border: 2px solid #141414; } /* focus-ring-px, focus-ring */
 QCheckBox::indicator:checked { background-color: #141414; border-color: #141414; image: url(theme:light/check.svg); } /* surface-inverse */
 QCheckBox::indicator:disabled { background-color: #f7f7f7; border-color: #dcdcdc; } /* bg-app, divider */
 QCheckBox::indicator:checked:disabled { background-color: #9a9a9a; border-color: #9a9a9a; } /* text-disabled */
@@ -87,8 +88,11 @@ QPushButton[class="primary"]:hover { background-color: #454545; border-color: #4
 QPushButton[class="primary"]:focus { border: 2px solid #141414; background-color: #141414; } /* focus-ring-px, focus-ring, surface-inverse */
 QPushButton[class="primary"]:disabled { background-color: #efefef; color: #9a9a9a; border-color: #dcdcdc; } /* surface-sunken, text-disabled, divider */
 
-QTableView { background-color: #ffffff; alternate-background-color: #f7f7f7; color: #141414; gridline-color: #dcdcdc; border: 1px solid #dcdcdc; selection-background-color: #e4e4e4; selection-color: #141414; } /* surface, bg-app, text-1, divider, surface-selected */
+QTableView { background-color: #ffffff; alternate-background-color: #f7f7f7; color: #141414; gridline-color: #dcdcdc; border: 1px solid #dcdcdc; padding: 1px; selection-background-color: #e4e4e4; selection-color: #141414; } /* surface, bg-app, text-1, divider, surface-selected */
 QTableView::item:focus { border: 1px solid #141414; } /* focus-ring */
+QListView, QTreeView { background-color: #ffffff; color: #141414; border: 1px solid #dcdcdc; padding: 1px; } /* surface, text-1, divider */
+QListView:focus, QTreeView:focus, QTableView:focus { border: 2px solid #141414; padding: 0px; } /* focus-ring-px, focus-ring */
+QComboBox QAbstractItemView:focus { border: 1px solid #858585; padding: 0px; } /* border-control */
 QHeaderView { background-color: #efefef; border: none; } /* surface-sunken */
 QHeaderView::section { background-color: #efefef; color: #454545; padding: 4px 8px; border: none; border-right: 1px solid #dcdcdc; border-bottom: 1px solid #dcdcdc; font-weight: 600; } /* surface-sunken, text-2, divider */
 QTableCornerButton::section { background-color: #efefef; border: none; border-bottom: 1px solid #dcdcdc; } /* surface-sunken, divider */
