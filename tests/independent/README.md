@@ -89,8 +89,10 @@ step 2 that box contains the arc, so box distance is a lower bound of `D`.
   (rule 2b) from the text, not from `embodic.drc.items`. `test_exemption_model.py` checks it on hand-worked cases.
   D-022c says a land on an interconnect centreline is "exempt from that path"; the model reads that as every primitive
   of the path. Rule 2b names vias, not pads, and is per primitive. Rule 5 reads "the centreline of another path" as the
-  whole centreline, its end points included; no board in this suite tells that reading from a mid-path-only one
-  (`not tested`). Point-to-centreline distances are exact closed forms (`point_to_centreline`).
+  whole centreline, its end points included. One pair each on GR-19 serpentine and wave depends on that reading: the
+  start of path 16 (193) is the end of path 15 (192) and also lies on its primitive 2, both net `N`, so only rule 5
+  exempts primitive 2; `run_drc` exempts it too (`verified`). Point-to-centreline distances are exact closed forms
+  (`point_to_centreline`).
 - The minima test brackets the pairs run_drc reports as well as its own violating pairs, so a pair the contract exempts
   but run_drc reports is caught by the exemption tests, not by the minima test.
 - Pads other than round ones are not modelled. All GR-19 pads are round.
