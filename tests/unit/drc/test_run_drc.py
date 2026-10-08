@@ -191,22 +191,16 @@ def test_ut_drc_04_via_on_a_non_interconnect_path_of_another_net_is_reported() -
 
 
 def _trunk_with_via_on_its_centreline(shape: str, via_net: str) -> tuple[CopperPath, Via]:
-    """Return a net A path and a via of ``via_net`` whose centre lies on the centreline of its first primitive.
-
-    The path turns 0.4 mm past the via, so its second primitive also comes within the via's clearance but no path end
-    lies on the via.
-    """
+    """Return a net A path of one primitive and a via of ``via_net`` centred on that primitive's centreline."""
     if shape == "line":
-        return path(0, [line(-5, 0, 0.4, 0), line(0.4, 0, 0.4, -5)], net="A"), via(0, 0, 0, net=via_net)
-    q = math.pi / 2 - 0.08
-    return path(0, [arc(0, 0, 5, 0, math.pi / 2), line(0, 5, -3, 5)], net="A"), via(
-        0, 5 * math.cos(q), 5 * math.sin(q), net=via_net
-    )
+        return path(0, [line(-5, 0, 5, 0)], net="A"), via(0, 0, 0, net=via_net)
+    q = math.pi / 4
+    return path(0, [arc(0, 0, 5, 0, math.pi)], net="A"), via(0, 5 * math.cos(q), 5 * math.sin(q), net=via_net)
 
 
 @pytest.mark.parametrize("shape", ["line", "arc"])
-def test_ut_drc_04_same_net_via_on_a_path_centreline_is_exempt_from_the_whole_path(shape: str) -> None:
-    """Catches D-036 a missing: a terminal via mid-bus is reported against the bus and the strand sides next to it."""
+def test_ut_drc_04_same_net_via_on_a_path_centreline_is_exempt_from_that_primitive(shape: str) -> None:
+    """Catches D-036 a missing: a terminal via mid-bus is reported against the bus it sits on."""
     trunk, tap = _trunk_with_via_on_its_centreline(shape, via_net="A")
     report = run_drc(layout(paths=[trunk], vias=[tap]), RULES)
     assert report is not None
@@ -219,10 +213,20 @@ def test_ut_drc_04_via_of_another_net_on_a_path_centreline_is_reported(shape: st
     trunk, tap = _trunk_with_via_on_its_centreline(shape, via_net="B")
     report = run_drc(layout(paths=[trunk], vias=[tap]), RULES)
     assert report is not None
-    assert {(v.kind, v.objects) for v in report.violations} == {
-        (DrcCheckKind.TRACE_VIA, ("path:0/prim:0", "via:0")),
-        (DrcCheckKind.TRACE_VIA, ("path:0/prim:1", "via:0")),
-    }
+    assert [(v.kind, v.objects) for v in report.violations] == [(DrcCheckKind.TRACE_VIA, ("path:0/prim:0", "via:0"))]
+
+
+def test_ut_drc_04_same_net_via_tap_leaves_a_far_primitive_of_the_same_path_checked() -> None:
+    """Catches D-037a: a tap exempts the whole path, so a turn of the path that passes too close to the via goes unseen.
+
+    main0 runs through the via at (0, 0) and is exempt. main2 returns 0.5 mm away on the same net and path, clearing
+    the via by 0.1 mm against a 0.2 mm rule, and stays reported. main0 and main2 are 0.3 mm apart and pass.
+    """
+    uturn = path(0, [line(-5, 0, 5, 0), line(5, 0, 5, 0.5), line(5, 0.5, -5, 0.5)], net="A")
+    report = run_drc(layout(paths=[uturn], vias=[via(0, 0, 0, net="A")]), RULES)
+    assert report is not None
+    assert [(v.kind, v.objects) for v in report.violations] == [(DrcCheckKind.TRACE_VIA, ("path:0/prim:2", "via:0"))]
+    assert report.violations[0].measured_mm == pytest.approx(0.1, abs=1e-12)
 
 
 @pytest.mark.parametrize(

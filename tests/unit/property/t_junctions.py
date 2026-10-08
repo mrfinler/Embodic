@@ -1,4 +1,4 @@
-"""Brute-force T-junction and same-net via tap exemptions (D-035 b, D-036 a), coded from the decision texts.
+"""Brute-force T-junction and same-net via tap exemptions (D-035 b, D-036 a, D-037a), coded from the decision texts.
 
 Agent 4's ``drc_universe.contract_exemptions`` predates rule 5 and rule 2b, so the PR-13 sweeps add these pairs to
 its result.
@@ -7,8 +7,8 @@ its result.
 from collections.abc import Sequence
 
 from brute_clearance import centreline_bracket
-from drc_universe import COINCIDENT_MM, Cls, Item, Pair, _box_gap, _ends, _on_centreline, _owners, _pairs, _paths
-from records import Line
+from drc_universe import COINCIDENT_MM, Cls, Item, Pair, _box_gap, _ends, _owners, _pairs, _paths, disc_centre
+from records import Line, Prim
 
 
 def t_junction_pairs(items: Sequence[Item]) -> set[Pair]:
@@ -31,14 +31,16 @@ def t_junction_pairs(items: Sequence[Item]) -> set[Pair]:
     return pairs
 
 
+def _within(probe: Line, prim: Prim, radius: float) -> bool:
+    return _box_gap(probe, prim) <= radius and centreline_bracket(probe, prim, threshold=radius).lo <= radius
+
+
 def same_net_via_tap_pairs(items: Sequence[Item]) -> set[Pair]:
-    """Return the pairs of a via and every primitive of a same-net path whose centreline passes within pad / 2 of it."""
+    """Return the pairs of a via and each primitive of a same-net path whose centreline passes within pad / 2 of it."""
     paths = _paths(items)
-    return {
-        pair
-        for via in items
-        if via.cls is Cls.VIA
-        for path in paths.values()
-        if path[0].net == via.net and _on_centreline(via, path)
-        for pair in _pairs([via], path)
-    }
+    pairs: set[Pair] = set()
+    for via in (it for it in items if it.cls is Cls.VIA):
+        probe = Line(*disc_centre(via), *disc_centre(via), 0.0)
+        for path in (p for p in paths.values() if p[0].net == via.net):
+            pairs.update(frozenset((via.label, it.label)) for it in path if _within(probe, it.prim, via.prim.width / 2))
+    return pairs

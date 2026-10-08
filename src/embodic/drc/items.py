@@ -193,9 +193,9 @@ def exempt_pairs(layout: Layout, items: Items, first_item: dict[int, int]) -> In
     is the terminating main primitive and the fillets and tapers either side of it); the end groups of different
     paths that meet at one via, pad or coincident end point (a node); a pad and a same-net via whose centre lies
     inside it. An interconnect path joins, whatever the nets and the via role, a via or pad its end lies on and every
-    via whose centre lies within ``pad_mm / 2`` of its centreline (D-022 a and c). A via is also exempt from the whole
-    of any same-net path whose centreline passes within ``pad_mm / 2`` of its centre (D-036 a). The end group of a
-    path whose end point lies within COINCIDENCE_MM of another same-net path's centreline on its layer is exempt from
+    via whose centre lies within ``pad_mm / 2`` of its centreline (D-022 a and c). A via is also exempt from each
+    same-net primitive whose centreline passes within ``pad_mm / 2`` of its centre (D-036 a, D-037a). The end group of
+    a path whose end point lies within COINCIDENCE_MM of another same-net path's centreline on its layer is exempt from
     that whole path (T-junction, D-035 b). Primitives adjacent in one path are exempted in the engine from ``path``
     and ``slot``.
     """
@@ -251,19 +251,22 @@ def _centreline_distance_mm(items: Items, trace: IntArray, x_mm: float, y_mm: fl
 
 
 def _taps(layout: Layout, items: Items, interconnects: frozenset[int], via_base: int) -> Iterator[tuple[int, int]]:
-    """Yield (via item, trace item) for each item of a path passing within pad_mm / 2 of the via.
+    """Yield (via item, trace item) for each trace item a via taps.
 
-    The path is an interconnect, whatever its net (D-022c), or carries the via's net (D-036 a).
+    An interconnect path is tapped whole, whatever its net, when any of its items passes within pad_mm / 2 of the via
+    centre (D-022c). Any other path is tapped item by item, and only when it carries the via's net (D-036 a, D-037a).
     """
     traces = np.flatnonzero(items.item_class == ItemClass.TRACE)
     net_of = {path.id: path.net for path in layout.paths}
     trace_net = np.array([net_of[int(i)] for i in items.path[traces]])
     interconnect = np.isin(items.path[traces], list(interconnects))
     for v, via in enumerate(layout.vias):
-        joinable = traces[interconnect | (trace_net == via.net)]
-        distance_mm = _centreline_distance_mm(items, joinable, via.x_mm, via.y_mm)
-        tapped = items.path[joinable[distance_mm <= via.pad_mm / 2]]
-        yield from ((via_base + v, int(i)) for i in joinable[np.isin(items.path[joinable], tapped)])
+        joinable = interconnect | (trace_net == via.net)
+        candidates, ring = traces[joinable], interconnect[joinable]
+        within = _centreline_distance_mm(items, candidates, via.x_mm, via.y_mm) <= via.pad_mm / 2
+        tapped_rings = items.path[candidates[within & ring]]
+        exempt = within | (ring & np.isin(items.path[candidates], tapped_rings))
+        yield from ((via_base + v, int(i)) for i in candidates[exempt])
 
 
 def _junctions(
