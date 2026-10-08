@@ -46,6 +46,7 @@ class SpiralDetail:
     turns_achieved: int
     turn_limit: TurnLimit
     track_length_per_coil_layer_mm: Mapping[str, float]  # "X", "Y"
+    rho_used_mm: float  # G9 fillet radius of the innermost corners; 0.0 for sharp corners
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

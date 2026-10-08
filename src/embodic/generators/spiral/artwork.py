@@ -1,8 +1,10 @@
 """Layer-X artwork of the canonical coil: terminal stub, turns and closing (spiral_generator_spec.md G4-G6)."""
 
 import math
+from collections.abc import Mapping
 from dataclasses import dataclass
 
+from embodic.generators.spiral.fillets import Corner, CornerKind, arc_ordered, ordered
 from embodic.generators.spiral.turns import Closing, CoilFrame, FullClosing, Point, left_side_tops
 from embodic.geometry.primitives import Arc, Line, Primitive, PrimitiveRole
 
@@ -46,25 +48,67 @@ def terminal_point(frame: CoilFrame, start_corner: Point, bus_width_mm: float) -
     return (r_t * math.cos(a_v), r_t * math.sin(a_v))
 
 
-def coil_artwork(frame: CoilFrame, closing: Closing, bus_width_mm: float) -> CoilArtwork:
-    """Layer X: stub, the full turns of ``closing``, then its lead arc (full) or its half turn (half)."""
+def _build(
+    frame: CoilFrame, closing: Closing, bus_width_mm: float, filleted: Mapping[tuple[CornerKind, int], Corner]
+) -> tuple[CoilArtwork, bool]:
+    """Layer X and whether every primitive the fillets trimmed still runs the way it ran sharp."""
     w, w_out, w_in = frame.trace_width_mm, frame.end_width_outer_mm, frame.end_width_inner_mm
     terminal = terminal_point(frame, closing.start_corner, bus_width_mm)
     prims: list[Primitive] = [_line(terminal, closing.start_corner, w, PrimitiveRole.STUB)]
+    fits = True
+
+    def corner(kind: CornerKind, t: int, vertex: Point) -> Corner:
+        return filleted.get((kind, t)) or Corner.sharp(vertex)
+
+    def turn_corner(c: Corner) -> None:
+        if c.fillet is not None:
+            prims.append(c.fillet)
+
+    def arc(r_mm: float, start: Point, end: Point, sharp: tuple[Point, Point], width_mm: float) -> None:
+        nonlocal fits
+        clockwise = _angle(sharp[1]) <= _angle(sharp[0])
+        fits = fits and arc_ordered(start, end, clockwise)
+        prims.append(_arc(r_mm, start, end, width_mm, PrimitiveRole.END_TURN))
+
+    def side(start: Point, end: Point, sharp: tuple[Point, Point]) -> None:
+        nonlocal fits
+        fits = fits and ordered(start, end, (sharp[1][0] - sharp[0][0], sharp[1][1] - sharp[0][1]))
+        prims.append(_line(start, end, w, PrimitiveRole.SIDE))
+
+    start = closing.start_corner
     for turn, top in zip(closing.turns, left_side_tops(closing), strict=True):
-        prims += [
-            _arc(turn.outer_radius_mm, turn.j, turn.b, w_out, PrimitiveRole.END_TURN),
-            _line(turn.b, turn.c, w, PrimitiveRole.SIDE),
-            _arc(turn.end_radius_mm, turn.c, turn.d, w_in, PrimitiveRole.END_TURN),
-            _line(turn.d, top, w, PrimitiveRole.SIDE),
-        ]
+        t = turn.index
+        b, c, d = corner(CornerKind.B, t, turn.b), corner(CornerKind.C, t, turn.c), corner(CornerKind.D, t, turn.d)
+        j_next = corner(CornerKind.J, t, top)
+        arc(turn.outer_radius_mm, start, b.end_in, (turn.j, turn.b), w_out)
+        turn_corner(b)
+        side(b.start_out, c.end_in, (turn.b, turn.c))
+        turn_corner(c)
+        arc(turn.end_radius_mm, c.start_out, d.end_in, (turn.c, turn.d), w_in)
+        turn_corner(d)
+        side(d.start_out, j_next.end_in, (turn.d, top))
+        turn_corner(j_next)
+        start = j_next.start_out
     if isinstance(closing, FullClosing):
         r_v = closing.eye.via_radius_mm
         prims.append(_arc(r_v, closing.lead_point, closing.centre_via, w, PrimitiveRole.LEAD))
     else:
         half = closing.half
-        prims += [
-            _arc(half.outer_radius_mm, half.j, half.b, w_out, PrimitiveRole.END_TURN),
-            _line(half.b, half.via, w, PrimitiveRole.SIDE),
-        ]
-    return CoilArtwork(primitives=tuple(prims), terminal=terminal, centre_via=closing.centre_via)
+        b = corner(CornerKind.B, half.index, half.b)
+        arc(half.outer_radius_mm, start, b.end_in, (half.j, half.b), w_out)
+        turn_corner(b)
+        side(b.start_out, half.via, (half.b, half.via))
+    return CoilArtwork(primitives=tuple(prims), terminal=terminal, centre_via=closing.centre_via), fits
+
+
+def sharp_artwork(frame: CoilFrame, closing: Closing, bus_width_mm: float) -> CoilArtwork:
+    """Layer X with every corner sharp: stub, the full turns of ``closing``, then its lead arc or its half turn."""
+    return _build(frame, closing, bus_width_mm, {})[0]
+
+
+def coil_artwork(
+    frame: CoilFrame, closing: Closing, bus_width_mm: float, filleted: Mapping[tuple[CornerKind, int], Corner]
+) -> CoilArtwork | None:
+    """Layer X with the corners of ``filleted`` rounded; None when a fillet trims a primitive past its other end."""
+    art, fits = _build(frame, closing, bus_width_mm, filleted)
+    return art if fits else None

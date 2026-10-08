@@ -1,11 +1,11 @@
 """Spiral stator of one layer pair: Q rotated copies of the canonical coil (spiral_generator_spec.md, Full stator).
 
-Built: G1 to G7 for one layer pair with parallel sides, arc ends, sharp corners, the outer-end jog and the full
+Built: G1 to G7 for one layer pair with parallel sides, arc ends, sharp or G9 concentric filleted corners, the outer-end jog and the full
 (lead arc) or half closing of G5 (revision 2026-10-05, U-E3 and U-E3b); G8 series chains of each phase on the bus
 rings (legs on layer Y, ring arcs on layer X, net PHASE_x), the star or delta links and the U/V/W(/N) leads with
 their pads.
 Not built yet (returned as Unbuildable, never ignored): several pairs, pair rotation, phase per pair, radial sides,
-straight and stadium ends, fillets (G9), the straight lead, custom terminal offset, parallel paths, screw holes, and
+straight and stadium ends, tapers (G9), the straight lead, custom terminal offset, parallel paths, screw holes, and
 polygon corner radii. Open phases end on the ring vias of their first and last coil, without pads.
 """
 
@@ -15,11 +15,13 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 
+from embodic.drc import run_drc
 from embodic.drc.report import violates
 from embodic.errors import IssueCategory, Severity, Unbuildable, ValidationIssue, message_for
-from embodic.generators.spiral.artwork import CoilArtwork, coil_artwork
+from embodic.generators.spiral.artwork import CoilArtwork, coil_artwork, sharp_artwork
 from embodic.generators.spiral.chain import BusRings, CoilEnds, End, PhaseChain, chain_coils, norm_angle
 from embodic.generators.spiral.derived import spiral_derived
+from embodic.generators.spiral.fillets import concentric_allowed, corners, radius_sequence
 from embodic.generators.spiral.interconnect import LINE_NET, Interconnect, PhaseEnd, build_interconnect, plan_links
 from embodic.generators.spiral.turns import (
     MAX_TURNS_PER_LAYER,
@@ -36,7 +38,7 @@ from embodic.generators.spiral.turns import (
 from embodic.generators.spiral.turns import radial_bound as eq_3_24_bound
 from embodic.geometry.circuit import Circuit, Member, ParallelGroup, PhaseCircuit
 from embodic.geometry.details import SpiralDetail, TurnLimit, TurnLimitReason
-from embodic.geometry.layout import BoardStack, Layout, Via, ViaRole
+from embodic.geometry.layout import BoardOutline, BoardStack, Layout, Via, ViaRole
 from embodic.geometry.outline import build_outline
 from embodic.geometry.paths import CopperPath
 from embodic.geometry.primitives import Arc, Line, Primitive, PrimitiveRole, path_length_mm
@@ -67,7 +69,6 @@ def _unsupported(design: DesignParameters, spec: SpiralWindingSpec) -> tuple[str
         "/winding/layers/pairs": len(pairs) != 1 or pairs[0].rotation_rad != 0.0 or pairs[0].phases is not None,
         "/winding/coil/side_style": coil.side_style is not SideStyle.PARALLEL,
         "/winding/coil/end_style": coil.end_style is not EndStyle.ARC,
-        "/winding/coil/corner_radius_mm": coil.corner_radius_mm != 0.0,
         "/winding/coil/lead_style": coil.lead_style is not LeadStyle.RADIAL_THEN_ARC,
         "/winding/coil/terminal_offset_mm": coil.terminal_offset_mm is not None,
         "/winding/coil/x_inward_sense": coil.x_inward_sense is not Sense.CW,
@@ -158,6 +159,55 @@ def _coil_vias(
     return vias
 
 
+def _canonical_vias(art: CoilArtwork) -> tuple[Point, Point, Point]:
+    """Entry terminal, centre via and the mirrored exit terminal of the canonical coil."""
+    return (art.terminal, art.centre_via, (art.terminal[0], -art.terminal[1]))
+
+
+def _coil_violations(design: DesignParameters, pair: LayerPair, art: CoilArtwork) -> int:
+    """DRC violations of the canonical coil alone: layer X and its three vias (layer Y is its mirror)."""
+    net = "PHASE_A"
+    path = CopperPath(id=0, layer=pair.layer_in, net=net, primitives=art.primitives, phase=Phase.A, element=0,
+                      polarity=1)  # fmt: skip
+    copper_z = design.stackup.copper_z_mm()
+    layout = Layout(
+        topology=TopologyKind.SPIRAL,
+        copper_layers=(pair.layer_in, pair.layer_out),
+        copper_z_mm=MappingProxyType({name: copper_z[name] for name in (pair.layer_in, pair.layer_out)}),
+        paths=(path,),
+        vias=tuple(_coil_vias(design, pair, _canonical_vias(art), 0.0, net, first_id=0)),
+        pads=(),
+        outline=BoardOutline(outer=(), cutouts=(), holes=()),
+        circuit=Circuit(phases=(), topology=design.connection.topology, interconnect_path_ids=()),
+        symmetry=None,
+        envelope_mm=(art.terminal[0], art.terminal[0]),
+    )
+    report = run_drc(layout, design.drc_rules, use_symmetry=False)
+    assert report is not None  # None only when cancelled, and no token is passed
+    return report.violation_count
+
+
+def _artwork(
+    design: DesignParameters, frame: CoilFrame, closing: Closing, pair: LayerPair, rho_mm: float
+) -> tuple[CoilArtwork, float]:
+    """G9: fillet at rho, shrinking by 0.7 up to 12 times until the fillets fit; sharp corners (rho 0) otherwise.
+
+    A fillet fits when every primitive it trims keeps its direction and the coil has no DRC violation its sharp
+    version does not have.
+    """
+    bus_mm = design.connection.ring_width_mm
+    sharp = sharp_artwork(frame, closing, bus_mm)
+    if rho_mm <= 0.0 or not concentric_allowed(frame):
+        return sharp, 0.0
+    baseline = _coil_violations(design, pair, sharp)
+    for r_mm in radius_sequence(rho_mm):
+        filleted = corners(frame, closing, r_mm)
+        art = None if filleted is None else coil_artwork(frame, closing, bus_mm, filleted)
+        if art is not None and _coil_violations(design, pair, art) <= baseline:
+            return art, r_mm
+    return sharp, 0.0
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class _ChainCopper:
     """Path and via ids the G8 chain of one phase added."""
@@ -241,7 +291,7 @@ def _coil_copper(
     coil, pair = spec.coil, spec.layers.pairs[0]
     x_canonical = art.primitives
     y_canonical = reverse_path(mirror(x_canonical, 0.0))  # mirror about the coil axis, traversed outward
-    via_points = (art.terminal, art.centre_via, (art.terminal[0], -art.terminal[1]))
+    via_points = _canonical_vias(art)
     terminal_rad = math.atan2(art.terminal[1], art.terminal[0])
     for assignment in plan.assignment:
         k, sign = assignment.coil_index, assignment.polarity
@@ -338,7 +388,7 @@ def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack 
     closing, best = closings
     n = closing.n
     reason = _limiting_reason(coil.turns, best.n, len(loops), stop)
-    art = coil_artwork(frame, closing, design.connection.ring_width_mm)
+    art, rho_used_mm = _artwork(design, frame, closing, pair, coil.corner_radius_mm)
     copper = _coil_copper(design, plan, spec, art)
     paths, vias = list(copper.paths), list(copper.vias)
     coil_members, terminal_vias, coil_ends = copper.members, copper.terminal_vias, copper.ends
@@ -381,6 +431,7 @@ def generate_spiral(design: DesignParameters, registry: Registry) -> BoardStack 
             closing=closing.kind,
         ),
         track_length_per_coil_layer_mm=MappingProxyType({"X": length_mm, "Y": length_mm}),
+        rho_used_mm=rho_used_mm,
     )
     copper_z = design.stackup.copper_z_mm()
     layout = Layout(
