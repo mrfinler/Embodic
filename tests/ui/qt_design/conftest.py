@@ -86,6 +86,7 @@ def enter(qtbot, window: MainWindow, name: str, value) -> None:
     if isinstance(widget, QLineEdit):
         widget.setFocus()
         widget.selectAll()
+        qtbot.keyClick(widget, Qt.Key.Key_Delete)
         qtbot.keyClicks(widget, str(value))
         qtbot.keyClick(widget, Qt.Key.Key_Return)
     elif isinstance(widget, QComboBox):
