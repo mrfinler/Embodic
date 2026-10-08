@@ -16,6 +16,7 @@ import dataclasses
 import math
 from collections.abc import Mapping
 from dataclasses import dataclass
+from enum import StrEnum
 from types import MappingProxyType
 
 from embodic.drc import run_drc
@@ -56,13 +57,21 @@ from embodic.results import Registry
 from embodic.winding import SpiralWindingPlan, plan_spiral_winding
 
 
-def _issue(code: str, pointers: tuple[str, ...], limit: int | None = None) -> ValidationIssue:
+class TurnsExceedCause(StrEnum):
+    """Who exceeds the limit of UNBUILDABLE_TURNS_EXCEED_LIMIT; the issue carries it as ``value`` (D-033e)."""
+
+    USER_CAP = "user_cap"  # the requested turn count is above the limit
+    LOOP_RULE = "loop_rule"  # more turns fit between the radii than the cap, whatever was requested
+
+
+def _issue(code: str, pointers: tuple[str, ...], limit: int | None = None, value: str | None = None) -> ValidationIssue:
     return ValidationIssue(
         code=code,
         category=IssueCategory.UNBUILDABLE,
         severity=Severity.ERROR,
         message=message_for(code).format(limit=limit),
         pointers=pointers,
+        value=value,
         limit=limit,
     )
 
@@ -75,7 +84,6 @@ def _unsupported(design: DesignParameters, spec: SpiralWindingSpec) -> tuple[str
         "/winding/layers/pairs": len({p.rotation_rad for p in pairs}) > 1 or any(p.phases is not None for p in pairs),
         "/winding/layers/series_groups": not all(spec.layers.series_groups)
         or sorted(i for group in spec.layers.series_groups for i in group) != sorted(p.index for p in pairs),
-        "/winding/coil/end_style": coil.end_style is EndStyle.STADIUM,
         "/winding/coil/lead_style": coil.lead_style is not LeadStyle.RADIAL_THEN_ARC,
         "/winding/coil/terminal_offset_mm": coil.terminal_offset_mm is not None,
         "/winding/coil/x_inward_sense": coil.x_inward_sense is not Sense.CW,
@@ -119,8 +127,8 @@ def _out_of_range(design: DesignParameters, spec: SpiralWindingSpec) -> tuple[st
     return tuple(bad)
 
 
-def _turns_exceed_limit() -> Unbuildable:
-    issue = _issue("UNBUILDABLE_TURNS_EXCEED_LIMIT", ("/winding/coil/turns",), MAX_TURNS_PER_LAYER)
+def _turns_exceed_limit(cause: TurnsExceedCause, limit: int) -> Unbuildable:
+    issue = _issue("UNBUILDABLE_TURNS_EXCEED_LIMIT", ("/winding/coil/turns",), limit, cause)
     return Unbuildable(issues=(issue,))
 
 
@@ -128,10 +136,13 @@ def _refusal(design: DesignParameters, spec: SpiralWindingSpec) -> Unbuildable |
     if pointers := _out_of_range(design, spec):
         return Unbuildable(issues=(_issue("UNBUILDABLE_SPIRAL_INPUT_OUT_OF_RANGE", pointers),))
     if spec.coil.turns is not None and spec.coil.turns > MAX_TURNS_PER_LAYER:
-        return _turns_exceed_limit()
+        return _turns_exceed_limit(TurnsExceedCause.USER_CAP, MAX_TURNS_PER_LAYER)
+    issues = []
+    if spec.coil.end_style is EndStyle.STADIUM:
+        issues.append(_issue("UNBUILDABLE_UNSUPPORTED_END_STYLE", ("/winding/coil/end_style",)))
     if pointers := _unsupported(design, spec):
-        return Unbuildable(issues=(_issue("UNBUILDABLE_SPIRAL_OPTION_NOT_IMPLEMENTED", pointers),))
-    return None
+        issues.append(_issue("UNBUILDABLE_SPIRAL_OPTION_NOT_IMPLEMENTED", pointers))
+    return Unbuildable(issues=tuple(issues)) if issues else None
 
 
 def _limiting_reason(requested: int | None, closing_limit: int, loops: int, stop: LoopStop) -> TurnLimitReason:
@@ -377,15 +388,15 @@ def _closings(
 ) -> tuple[Closing, Closing] | Unbuildable:
     """Return the closing to build and the one with the most turns (G5) for ``vias`` centre vias, or why none fits."""
     if stop is LoopStop.CAP:
-        return _turns_exceed_limit()
+        return _turns_exceed_limit(TurnsExceedCause.LOOP_RULE, MAX_TURNS_PER_LAYER)
     best = max_closing(frame, loops, vias)
     if best is None:
         return Unbuildable(issues=(_issue("UNBUILDABLE_ZERO_TURNS", ("/winding/coil/turns",)),))
     if best.n > MAX_TURNS_PER_LAYER:
-        return _turns_exceed_limit()
+        return _turns_exceed_limit(TurnsExceedCause.LOOP_RULE, MAX_TURNS_PER_LAYER)
     closing = best if requested is None else closing_for(frame, loops, requested, vias)
     if closing is None or closing.n > best.n:
-        return Unbuildable(issues=(_issue("UNBUILDABLE_TURNS_EXCEED_LIMIT", ("/winding/coil/turns",), best.n),))
+        return _turns_exceed_limit(TurnsExceedCause.USER_CAP, best.n)
     return closing, best
 
 

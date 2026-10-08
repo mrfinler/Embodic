@@ -4,7 +4,9 @@ from typing import Protocol
 
 from embodic.geometry.primitives import hypot_mm
 
-_PARALLEL_CROSS_MM2 = 1e-15
+# Parallel test: |d1 x d2| <= eps |d1| |d2| (D-032e, D-033c). Xcoil's absolute 1e-15 mm^2 (engine.js l.565) mistakes
+# rounding noise on long segments for a crossing; the same constant as embodic.drc.kernels.
+_PARALLEL_SINE = 1e-12
 
 
 class Chord(Protocol):
@@ -37,11 +39,15 @@ def point_segment_distance_mm(px_mm: float, py_mm: float, s: Chord) -> float:
 
 
 def segment_segment_distance_mm(a: Chord, b: Chord) -> float:
-    """0 when the segments intersect (non-parallel case), else the least end-point-to-segment distance."""
+    """0 when the segments intersect (non-parallel case), else the least end-point-to-segment distance.
+
+    Equals Xcoil segSegDist (GR-17) except where Xcoil reports a false crossing on nearly collinear segments
+    (XD-M1-002).
+    """
     d1x_mm, d1y_mm = a.x2_mm - a.x1_mm, a.y2_mm - a.y1_mm
     d2x_mm, d2y_mm = b.x2_mm - b.x1_mm, b.y2_mm - b.y1_mm
     den_mm2 = d1x_mm * d2y_mm - d1y_mm * d2x_mm
-    if abs(den_mm2) > _PARALLEL_CROSS_MM2:
+    if abs(den_mm2) > _PARALLEL_SINE * hypot_mm(d1x_mm, d1y_mm) * hypot_mm(d2x_mm, d2y_mm):
         ex_mm, ey_mm = b.x1_mm - a.x1_mm, b.y1_mm - a.y1_mm
         t = (ex_mm * d2y_mm - ey_mm * d2x_mm) / den_mm2
         u = (ex_mm * d1y_mm - ey_mm * d1x_mm) / den_mm2

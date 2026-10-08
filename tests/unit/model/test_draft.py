@@ -6,7 +6,7 @@ from embodic.model.draft import DesignDraft, DraftIncomplete, blank_draft, draft
 from embodic.model.fields import field_for, field_specs
 from embodic.model.vocabulary import TopologyKind
 
-from .designs import EXAMPLES, spiral_design
+from .designs import EXAMPLES, serpentine_design, spiral_design
 
 SPIRAL_BLANK_MISSING = (
     "/name",
@@ -154,3 +154,16 @@ def test_every_required_pointer_of_a_blank_draft_has_a_widget(topology):
     assert isinstance(outcome, DraftIncomplete)
     orphans = [pointer for pointer in outcome.missing if field_for(pointer, draft.values).widget_id is None]
     assert orphans == []
+
+
+@pytest.mark.req("REQ-F-24", "REQ-F-37")
+def test_screw_pattern_without_hole_diameter_is_reported_missing_with_its_index():
+    """D-031a. Defect caught: a hole diameter looked up from size and fit instead of entered, or the gap unreported."""
+    design = serpentine_design()
+    values = dict(draft_from_design(design).values)
+    assert values["/outline/screws/0/hole_diameter_mm"] == 3.4
+    del values["/outline/screws/0/hole_diameter_mm"]
+    outcome = parse_draft(DesignDraft(topology=design.topology, values=values))
+    assert isinstance(outcome, DraftIncomplete)
+    assert outcome.missing == ("/outline/screws/0/hole_diameter_mm",)
+    assert outcome.issues == ()

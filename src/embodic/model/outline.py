@@ -15,12 +15,17 @@ class ScrewFit(StrEnum):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ScrewPattern:
-    """Clearance holes from a fastener table (REQ-F-24). Table values need a cited source (Agent 3 F-20)."""
+    """Clearance holes of one fastener pattern (REQ-F-24, D-031a).
+
+    The user enters the hole diameter. `size` and `fit` label the holes and pick no value; fastener-table values ship
+    only as labelled example values with a cited source.
+    """
 
     size: str
     fit: ScrewFit
     count: int
     pitch_radius_mm: float
+    hole_diameter_mm: float
     angle_offset_rad: float = 0.0
 
 

@@ -199,6 +199,7 @@ _ROWS: Mapping[str, _Row] = types.MappingProxyType(
         "/outline/screws/*/fit": _Row(D, None, G.FASTENERS, "screw-table"),
         "/outline/screws/*/count": _Row(D, None, G.FASTENERS, "screw-table", _lim(POS, 1, 64), 1),
         "/outline/screws/*/pitch_radius_mm": _Row(D, Unit.MM, G.FASTENERS, "screw-table", _lim(POS), 0.5),
+        "/outline/screws/*/hole_diameter_mm": _Row(D, Unit.MM, G.FASTENERS, "param-screw-hole-diameter", _lim(POS)),
         "/outline/screws/*/angle_offset_rad": _Row(
             D, Unit.RAD, G.FASTENERS, "screw-table", _lim(low=-TURN_RAD, high=TURN_RAD)
         ),

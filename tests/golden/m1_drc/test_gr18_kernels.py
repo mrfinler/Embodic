@@ -11,7 +11,16 @@ from typing import Any
 
 import numpy as np
 import pytest
-from harness import KERNEL_MM, Comparison, GoldenCase, compare_scalar, load_area
+from harness import (
+    EXPECTED_DIFFS_DIR,
+    KERNEL_MM,
+    Comparison,
+    GoldenCase,
+    apply_allow_list,
+    compare_scalar,
+    load_allow_list,
+    load_area,
+)
 
 from embodic.drc import DrcCheckKind, min_distance_line_line, run_drc
 from embodic.drc.kernels import D, pad_closest
@@ -24,6 +33,7 @@ from embodic.model.vocabulary import ConnectionTopology, TopologyKind, ViaSpan
 pytestmark = [pytest.mark.req("REQ-F-10"), pytest.mark.filterwarnings("ignore:invalid value:RuntimeWarning")]
 
 CASES = load_area("m1")
+ALLOW = load_allow_list(EXPECTED_DIFFS_DIR / "m1.toml")
 DRC_FUNCTIONS = ("segSegDist", "padSegClearance", "padsClearance")
 RULES = DrcRules(
     trace_clearance_mm=0.2,
@@ -125,4 +135,5 @@ def test_gr18_covers_the_nine_pad_fixtures_and_the_segment_fixtures() -> None:
 def test_gr18_drc_kernel_matches_xcoil(case: GoldenCase, golden_report: Any) -> None:
     """Catches drift from Xcoil's segment and pad kernels beyond 1e-12 mm, or a wrong own-via exemption."""
     for i, call in enumerate(case.calls):
-        golden_report.check(f"{case.case_id}[{i}]", PORTS[case.fn](call.inputs, call.output))
+        result = apply_allow_list(PORTS[case.fn](call.inputs, call.output), case.case_id, ALLOW)
+        golden_report.check(f"{case.case_id}[{i}]", result)

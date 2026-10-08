@@ -52,9 +52,10 @@ def _write(tmp_path: Path, text: str) -> Path:
     return path
 
 
-def test_committed_m1_allow_list_parses_and_is_empty() -> None:
-    """Catch a malformed m1.toml, or an M1 deviation recorded without going through this schema."""
-    assert load_allow_list(EXPECTED_DIFFS_DIR / "m1.toml") == ()
+def test_committed_m1_allow_list_parses_and_holds_exactly_the_recorded_deviations() -> None:
+    """Catch a malformed m1.toml, or an M1 deviation added or dropped without a decision-log ruling."""
+    entries = load_allow_list(EXPECTED_DIFFS_DIR / "m1.toml")
+    assert [(e.id, e.case, e.eq_id) for e in entries] == [("XD-M1-002", "segsegdist-seeded-collinear", "EQ-30")]
 
 
 def test_allow_list_reads_every_field(tmp_path: Path) -> None:

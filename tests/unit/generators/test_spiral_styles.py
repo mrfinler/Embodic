@@ -130,5 +130,20 @@ def test_stadium_ends_are_refused_until_their_jog_is_specified(registry: Registr
     """
     refused = generate_spiral(_styled(default_design(), SideStyle.PARALLEL, EndStyle.STADIUM), registry)
     assert isinstance(refused, Unbuildable)
-    assert refused.issues[0].code == "UNBUILDABLE_SPIRAL_OPTION_NOT_IMPLEMENTED"
-    assert refused.issues[0].pointers == ("/winding/coil/end_style",)
+    assert [(i.code, i.pointers) for i in refused.issues] == [
+        ("UNBUILDABLE_UNSUPPORTED_END_STYLE", ("/winding/coil/end_style",))
+    ]
+
+
+@pytest.mark.req("REQ-F-06")
+def test_stadium_refusal_does_not_hide_another_unsupported_option(registry: Registry) -> None:
+    """Catches the end-style refusal returning alone: stadium ends with two parallel paths report both gaps."""
+    design = _styled(default_design(), SideStyle.PARALLEL, EndStyle.STADIUM)
+    assert isinstance(design.winding, SpiralWindingSpec)
+    design = dataclasses.replace(design, winding=dataclasses.replace(design.winding, parallel_paths=2))
+    refused = generate_spiral(design, registry)
+    assert isinstance(refused, Unbuildable)
+    assert [(i.code, i.pointers) for i in refused.issues] == [
+        ("UNBUILDABLE_UNSUPPORTED_END_STYLE", ("/winding/coil/end_style",)),
+        ("UNBUILDABLE_SPIRAL_OPTION_NOT_IMPLEMENTED", ("/winding/parallel_paths",)),
+    ]
