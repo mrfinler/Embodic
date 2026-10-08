@@ -1,4 +1,4 @@
-# Intentional deviations of the wave generator from Xcoil (U-M3b). None is allow-listed.
+# Intentional deviations of the wave generator from Xcoil (U-M3b; XD-WAVE-001 added by U-M3-fix2).
 # GR-21 compares every primitive within 1e-9 mm (tighter than the 1e-6 mm of test_plan.md GR-20/GR-21); GR-22 compares
 # Ke, eddy loss and the three-phase line quantities within 1e-9 relative; the phase resistance differs from Xcoil only by
 # the via barrel length, and test_gr22_results.py proves that by removing it. Two limits are logged in the reports, not
@@ -6,3 +6,12 @@
 # spline centres by 1e-11 mm (GR-23 compares those curves, not their parameters) and flips a chord count in the
 # overlap l6 m1 case (logged as indeterminate).
 schema_version = 1
+
+[[diff]]
+id = "XD-WAVE-001"
+case = "wave-analysis-overlap-l2-m3-p16-t2"
+path = "$"
+eq_id = "EQ-23"
+reason = "Status assumption (D-036 e), until Agent 2 confirms in U-E8. In the overlap wave with a star connection embodic counts the three tap stubs from the star ring to the inner terminals as phase link copper (PhaseLink roles, loss I_line^2 x R), and Xcoil sets its link sum to zero (engine.js l.2172, `link: [0, 0, 0]`), so it counts neither those stubs nor any link. embodic's interconnect loss is 0.007422 W against Xcoil's 0.005007 W (+48.2 %, measured on this case). Reclassifying the three PhaseLink roles as NeutralLead copper makes embodic equal Xcoil, so no other copper differs (test_gr22_overlap_star_difference_is_the_tap_stub_copper_and_nothing_else, verified by running it). Whether Xcoil's zero is intended or an omission is not established. The overlap delta connection is not covered: Xcoil leaves its interconnect bookkeeping unset there (engine.js l.2154) and the case is not compared."
+agent2_signoff = "pending: proposed by U-M3-fix2, not yet answered"
+agent4_signoff = "pending: proposed by U-M3-fix2, not yet answered"
