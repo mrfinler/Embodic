@@ -85,9 +85,9 @@ class ExportDialog(QDialog):
         self.problem = QLabel()
         self.problem.setObjectName("export-problem")
         self.problem.setProperty("class", "hint")
-        self.result = QLabel()
-        self.result.setObjectName("export-result")
-        self.result.setWordWrap(True)
+        self.result_text = QLabel()
+        self.result_text.setObjectName("export-result")
+        self.result_text.setWordWrap(True)
         self.open_folder = QPushButton(text("export.open-folder"))
         self.open_folder.setObjectName("btn-export-open-folder")
         self.open_folder.setVisible(False)
@@ -110,7 +110,7 @@ class ExportDialog(QDialog):
         layout.addWidget(checklist_title)
         layout.addWidget(self.checklist)
         layout.addWidget(self.problem)
-        layout.addWidget(self.result)
+        layout.addWidget(self.result_text)
         layout.addLayout(buttons)
         self.resize(560, 560)
         self._update_problem()
@@ -150,15 +150,15 @@ class ExportDialog(QDialog):
         try:
             result = self.vm.run(self.selected(), folder, confirmed_drc_errors=confirmed)
         except OSError as error:
-            self.result.setText(text("export.result.error", reason=error.strerror or str(error)))
+            self.result_text.setText(text("export.result.error", reason=error.strerror or str(error)))
             return
         if isinstance(result, ExportRefused):
             reason = "; ".join(issue.message for issue in result.issues[:1])
-            self.result.setText(text("export.result.refused", reason=reason))
+            self.result_text.setText(text("export.result.refused", reason=reason))
             return
         self.written = result
         names = "\n".join(path.name for path in result.files)
-        self.result.setText(f"{text('export.result.written', folder=result.folder)}\n{names}")
+        self.result_text.setText(f"{text('export.result.written', folder=result.folder)}\n{names}")
         self.open_folder.setVisible(True)
 
     def _open_folder(self) -> None:

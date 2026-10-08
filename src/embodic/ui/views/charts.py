@@ -115,7 +115,7 @@ class ChartWidget(QWidget):
         self.setObjectName(chart_id)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setMouseTracking(True)
-        self.setMinimumHeight(220)
+        self.setMinimumHeight(170)
         self.model: ChartModel | None = None
         self.tokens: ThemeTokens | None = None
         self.mode = PhaseRenderMode.COLOUR
@@ -133,6 +133,10 @@ class ChartWidget(QWidget):
             if self.cursor_index is not None and self.cursor_index >= len(model.xs):
                 self.cursor_index = None
         self.update()
+
+    def y_title(self) -> str:
+        """Return the y axis title with its one unit, drawn level above the axis so it is never clipped."""
+        return "" if self.model is None else f"{self.model.y_label} ({self.model.y_unit})"
 
     def stamp(self) -> str | None:
         """Return the stamp a drawing not produced by the engine carries (UI-32), or None for engine data."""
@@ -219,12 +223,7 @@ class ChartWidget(QWidget):
         painter.drawText(
             QPointF(rect.center().x() - metrics.horizontalAdvance(x_title) / 2, rect.bottom() + 34), x_title
         )
-        y_title = f"{model.y_label} ({model.y_unit})"
-        painter.save()
-        painter.translate(14, rect.center().y() + metrics.horizontalAdvance(y_title) / 2)
-        painter.rotate(-90)
-        painter.drawText(QPointF(0, 0), y_title)
-        painter.restore()
+        painter.drawText(QPointF(8, 18), self.y_title())
 
     def _draw_series(self, painter: QPainter, metrics: QFontMetricsF, to_px, rect: QRectF) -> None:
         assert self.model is not None and self.tokens is not None
@@ -249,7 +248,7 @@ class ChartWidget(QWidget):
         for label, y in zip(self.end_labels, spread_labels(ends, LABEL_GAP_PX), strict=True):
             painter.drawText(QPointF(rect.right() + 8, y + 4), label)
         if self.legend_labels:
-            x = rect.left()
+            x = 8 + metrics.horizontalAdvance(self.y_title()) + 24
             for series in model.series:
                 pen = series_pen(series, self.tokens, self.mode)
                 painter.setPen(pen)
@@ -323,11 +322,12 @@ class ChartWidget(QWidget):
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:  # noqa: N802 (Qt override)
         """Follow the mouse with the crosshair, snapped to the nearest sample."""
-        if self.model is None or not self.model.xs:
+        model = self.model
+        if model is None or not model.xs:
             return
         to_px, *_ = self._mapper()
         px = event.position().x()
-        self.cursor_index = min(range(len(self.model.xs)), key=lambda k: abs(to_px(self.model.xs[k], 0.0).x() - px))
+        self.cursor_index = min(range(len(model.xs)), key=lambda k: abs(to_px(model.xs[k], 0.0).x() - px))
         self.setToolTip("\n".join(self.crosshair_lines()))
         self.update()
 

@@ -100,7 +100,9 @@ def main(out_dir: Path) -> int:
         window.drc_tab.locate.click()
         grab(app, window, out_dir / "drc_wave_located_light.png")
 
-        dialog = window.show_export("export_bundle")
+        window.show_export("export_bundle")
+        dialog = window.export_dialog
+        assert dialog is not None
         dialog.folder.setText(export_dir)
         grab(app, dialog, out_dir / "export_dialog_wave_light.png")
         dialog.run_clicked()

@@ -9,7 +9,7 @@ import dataclasses
 import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal, TypeAlias
+from typing import Any, Literal, TypeAlias
 
 from embodic.errors import IssueCategory, Severity, message_for
 from embodic.model.vocabulary import Phase
@@ -294,9 +294,10 @@ def drc_table(outcome: ComputeOutcome | None) -> DrcTable | None:
         )
     warnings = sum(1 for i in outcome.issues if i.category is IssueCategory.DRC and i.severity is Severity.WARNING)
     failures = sum(r.violation_count for r in outcome.drc)
+    violations = [(board, v) for board, report in enumerate(outcome.drc, start=1) for v in report.violations]
     rows = tuple(
         DrcRow(
-            number=0,
+            number=number,
             board=board,
             severity="error",
             rule_code=v.kind.issue_code,
@@ -306,18 +307,17 @@ def drc_table(outcome: ComputeOutcome | None) -> DrcTable | None:
             layer_text=v.layer or text("drc.layer.all"),
             at_mm=v.at_mm,
         )
-        for board, report in enumerate(outcome.drc, start=1)
-        for v in report.violations
+        for number, (board, v) in enumerate(violations, start=1)
     )
-    rows = tuple(dataclasses.replace(r, number=n) for n, r in enumerate(rows, start=1))
+    state: CheckState = "fail" if failures else "pass"
     if failures == 0 and warnings == 0:
-        summary, state = text("drc.summary.pass"), "pass"
+        summary = text("drc.summary.pass")
     else:
         counts = {
             "failures": _count(failures, "drc.count.failure-one", "drc.count.failures"),
             "warnings": _count(warnings, "drc.count.warning-one", "drc.count.warnings"),
         }
-        summary, state = text("drc.summary.fail", **counts), "fail" if failures else "pass"
+        summary = text("drc.summary.fail", **counts)
     note = text("drc.truncated", shown=len(rows), total=failures) if len(rows) < failures else None
     return DrcTable(state=state, summary=summary, failure_count=failures, warning_count=warnings, rows=rows, note=note)
 
@@ -356,7 +356,7 @@ class ChartModel:
     computed: bool = True  # False stamps "Illustrative, not computed" (UI-32)
 
 
-def _meta(traceables: Sequence[Traceable[object]]) -> tuple[Status, tuple[str, ...], int, str | None]:
+def _meta(traceables: Sequence[Traceable[Any]]) -> tuple[Status, tuple[str, ...], int, str | None]:
     """Return the weakest badge, the EQ-IDs, the distinct assumed inputs and the first label of the traceables."""
     status = combine_status(*(t.status for t in traceables))
     eq_ids = tuple(dict.fromkeys(eq for t in traceables for eq in t.eq_ids))
@@ -389,7 +389,7 @@ def back_emf_chart(outcome: ComputeOutcome | None) -> ChartModel | None:
         return None
     speed = outcome.design.operating.speed_rpm
     curves = phase_fundamentals_v(analysis, speed)
-    used = [
+    used: list[Traceable[Any]] = [
         analysis.emf_waveform_v,
         *(t for p in analysis.phases for t in (p.ke_peak_v_s_per_rad, p.emf_phasor_angle_rad)),
     ]

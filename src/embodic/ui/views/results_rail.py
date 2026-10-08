@@ -57,7 +57,7 @@ class ResultsRail(QWidget):
         super().__init__()
         self.setObjectName("results-rail")
         self.vm = vm
-        layout = QVBoxLayout(self)
+        layout = self.body = QVBoxLayout(self)
         title = QLabel(text("shell.results-rail.title"))
         title.setProperty("class", "section-title")
         self.empty = QLabel(text("shell.results-rail.empty"))

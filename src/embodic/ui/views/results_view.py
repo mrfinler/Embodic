@@ -182,8 +182,9 @@ class ResultCard(QFrame):
     def _fill_how(self) -> None:
         while self.how_layout.count():
             item = self.how_layout.takeAt(0)
-            if item.widget() is not None:
-                item.widget().deleteLater()
+            widget = item.widget() if item is not None else None
+            if widget is not None:
+                widget.deleteLater()
         if self.row is None:
             return
         for section in disclosure(self.row, self._registry):
@@ -267,6 +268,10 @@ class ResultsTab(QWidget):
         self.pages.addWidget(content)
         QVBoxLayout(self).addWidget(self.pages)
 
+        self._dim_effect = QGraphicsOpacityEffect(self.grid_host)
+        self._dim_effect.setOpacity(COMPUTING_OPACITY)
+        self._dim_effect.setEnabled(False)
+        self.grid_host.setGraphicsEffect(self._dim_effect)
         self._dim = QTimer(self)
         self._dim.setSingleShot(True)
         self._dim.setInterval(COMPUTING_DIM_AFTER_MS)
@@ -282,16 +287,14 @@ class ResultsTab(QWidget):
     def set_computing(self, computing: bool) -> None:
         """Dim the shown values to 60 % once a compute has run for 300 ms; restore them when it ends."""
         if computing:
-            if not self._dim.isActive() and self.grid_host.graphicsEffect() is None:
+            if not self._dim.isActive() and not self._dim_effect.isEnabled():
                 self._dim.start()
             return
         self._dim.stop()
-        self.grid_host.setGraphicsEffect(None)
+        self._dim_effect.setEnabled(False)
 
     def _apply_dim(self) -> None:
-        effect = QGraphicsOpacityEffect(self.grid_host)
-        effect.setOpacity(COMPUTING_OPACITY)
-        self.grid_host.setGraphicsEffect(effect)
+        self._dim_effect.setEnabled(True)
 
     def _filter_changed(self) -> None:
         self.vm.set_status_filter(frozenset(s for s, box in self.filter_boxes.items() if box.isChecked()))
@@ -335,8 +338,13 @@ class ResultsTab(QWidget):
 class CompareTab(QWidget):
     """``tab-compare``: the stored reference against the current design; deltas carry sign and glyph."""
 
-    COLUMNS = ("compare.column.quantity", "compare.column.reference", "compare.column.current")
-    COLUMNS += ("compare.column.delta", "compare.column.unit")
+    COLUMNS = (
+        "compare.column.quantity",
+        "compare.column.reference",
+        "compare.column.current",
+        "compare.column.delta",
+        "compare.column.unit",
+    )
 
     def __init__(self, vm: CompareViewModel) -> None:
         super().__init__()
@@ -357,7 +365,9 @@ class CompareTab(QWidget):
         self.table = QTableWidget(0, len(self.COLUMNS))
         self.table.setObjectName("compare-table")
         self.table.setHorizontalHeaderLabels([text(c) for c in self.COLUMNS])
-        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        header = self.table.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.table.verticalHeader().setVisible(False)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.chart = ChartPanel("compare-chart")
@@ -413,6 +423,7 @@ class CompareTab(QWidget):
         cells = (row.label, row.reference_text, row.current_text, row.delta_text, row.unit_text)
         for c, value in enumerate(cells):
             item = QTableWidgetItem(value)
+            item.setToolTip(value)
             if c == 3:
                 item.setIcon(delta_icon(row.direction, self.tokens))
                 item.setData(Qt.ItemDataRole.AccessibleTextRole, f"{value}, {text(f'compare.delta.{row.direction}')}")

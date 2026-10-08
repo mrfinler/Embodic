@@ -29,7 +29,7 @@ def test_ui30_back_emf_chart_has_one_unit_legend_end_labels_data_table_and_badge
     panel = window.back_emf_tab.panels[0]
     chart = panel.chart
     assert chart.objectName() == "chart-backemf"
-    assert {chart.model.y_unit} == {"V"}
+    assert (chart.model.y_unit, chart.y_title()) == ("V", "Back-EMF (V)")
     assert chart.legend_labels == ("Phase A", "Phase B", "Phase C")
     assert chart.end_labels == ("A", "B", "C")
     assert panel.badge.label.property("status") == "not-tested" and panel.eq.text() == "EQ-18"
@@ -183,7 +183,7 @@ def test_ui29_export_with_drc_failures_lists_them_with_focus_on_cancel(make_wind
     qtbot.mouseClick(dialog.run, Qt.MouseButton.LeftButton)
     qtbot.mouseClick(find(dialog.confirm, QPushButton, "btn-export-confirm-run"), Qt.MouseButton.LeftButton)
     written = sorted(p.name for p in (tmp_path / "wave").iterdir())
-    assert written and sorted(dialog.result.text().splitlines()[1:]) == written
+    assert written and sorted(dialog.result_text.text().splitlines()[1:]) == written
 
 
 @pytest.mark.req("REQ-F-33")
@@ -201,7 +201,7 @@ def test_export_dialog_on_d08_writes_svg_dxf_pdf_readme_zip_and_lists_only_those
     dialog.folder.setText(str(tmp_path / "d08"))
     qtbot.mouseClick(dialog.run, Qt.MouseButton.LeftButton)
     on_disk = sorted(p.name for p in (tmp_path / "d08").iterdir())
-    assert sorted(dialog.result.text().splitlines()[1:]) == on_disk
+    assert sorted(dialog.result_text.text().splitlines()[1:]) == on_disk
     suffixes = sorted(name.split("spiral", 1)[-1] for name in on_disk if name != "README.txt")
     assert suffixes == [".dxf", ".embodic.json", ".svg", ".zip", "_outline.dxf", "_report.pdf"]
     assert "README.txt" in on_disk

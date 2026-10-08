@@ -31,7 +31,7 @@ from embodic.outcome import ComputeOutcome
 from embodic.ui.strings import text
 from embodic.ui.viewmodels.results import result_rows
 
-BUNDLE = "zip"
+BUNDLE: Literal["zip"] = "zip"
 ExportFormat: TypeAlias = ExportKind | Literal["zip"]
 CheckState: TypeAlias = Literal["pass", "fail", "warn"]
 
@@ -203,7 +203,7 @@ class ExportViewModel:
         if outcome is None:
             raise RuntimeError("no computed design to export")
         folder.mkdir(parents=True, exist_ok=True)
-        kinds = [o.choice for o in FORMAT_OPTIONS if o.choice in formats and o.choice != BUNDLE]
+        kinds = [o.choice for o in FORMAT_OPTIONS if o.choice in formats and isinstance(o.choice, ExportKind)]
         result = self.export(kinds, folder, confirmed_drc_errors=confirmed_drc_errors)
         if isinstance(result, ExportRefused):
             return result

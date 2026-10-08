@@ -1,6 +1,6 @@
 """The DRC tab (screens.md section 7) and Locate: zoom the canvas to a failure, dim copper, draw the ink marker."""
 
-from PySide6.QtCore import QModelIndex, QRectF, Qt, Signal
+from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QKeyEvent, QPainter, QPainterPath, QPen, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -40,7 +40,9 @@ class _FailBorder(QStyledItemDelegate):
         super().__init__()
         self.colour = colour
 
-    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
+    def paint(
+        self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex | QPersistentModelIndex
+    ) -> None:
         super().paint(painter, option, index)
         if index.column() == 0:
             painter.fillRect(option.rect.adjusted(0, 0, FAIL_BORDER_PX - option.rect.width(), 0), self.colour)

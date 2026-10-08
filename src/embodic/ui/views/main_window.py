@@ -208,7 +208,7 @@ class MainWindow(QMainWindow):
         rail = self.rail = ResultsRail(self.results, self.registry)
         rail.show_drc.connect(partial(self.show_results_tab, "tab-drc"))
         rail.open_equation.connect(self.show_equations)
-        rail_layout = rail.layout()
+        rail_layout = rail.body
         issues_title = QLabel(text("design.issues.title"))
         issues_title.setProperty("class", "section-title")
         self.issues_list = QListWidget()
@@ -292,13 +292,12 @@ class MainWindow(QMainWindow):
         shown, outdated = self.session.drawn(self.outcome.state.value)
         return (None, False) if shown is None else (shown.outcome, outdated)
 
-    def show_export(self, command: str) -> ExportDialog:
+    def show_export(self, command: str) -> None:
         """Open the Export dialog with the format of a toolstrip command checked."""
         dialog = ExportDialog(self.export_vm, PRESETS[command], self.tokens, self)
         dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         self.export_dialog = dialog
         dialog.open()
-        return dialog
 
     def _empty_page(self) -> QWidget:
         page = QWidget()
