@@ -77,7 +77,7 @@ from embodic.ui.views.new_design_dialog import NewDesignDialog
 from embodic.ui.views.phase_panel import PhasePanel
 from embodic.ui.views.results_rail import ResultsRail
 from embodic.ui.views.results_view import CompareTab, ResultsTab, focus_ring_qss
-from embodic.ui.views.toolstrip_bar import CommandTable, FocusRingTabBar, ToolstripBar
+from embodic.ui.views.toolstrip_bar import CommandTable, ToolstripBar
 
 logger = logging.getLogger(__name__)
 
@@ -178,8 +178,6 @@ class MainWindow(QMainWindow):
         inspector.setObjectName("inspector")
         self.inspector_tabs = QTabWidget()
         self.inspector_tabs.setObjectName("inspector-tabs")
-        self.inspector_tab_bar = FocusRingTabBar()
-        self.inspector_tabs.setTabBar(self.inspector_tab_bar)
         self.panels: dict[str, FieldPanel] = {}
         for panel in (
             CoilPanel(self.session),
@@ -234,8 +232,6 @@ class MainWindow(QMainWindow):
     def _results_tabs(self) -> QTabWidget:
         self.results_tabs = QTabWidget()
         self.results_tabs.setObjectName("results-tabs")
-        self.results_tab_bar = FocusRingTabBar()
-        self.results_tabs.setTabBar(self.results_tab_bar)
         self.results_tab = ResultsTab(self.results, self.focus_first_missing)
         self.results_tab.open_equation.connect(self.show_equations)
         self.drc_tab = DrcTab()
@@ -536,10 +532,6 @@ class MainWindow(QMainWindow):
         assert isinstance(app, QApplication)
         style.apply_theme(app, self.tokens)
         self.toolstrip.apply_theme(self.tokens)
-        self.inspector_tab_bar.set_ring(self.tokens)
-        self.results_tab_bar.set_ring(self.tokens)
-        ring = f"{self.tokens.focus_ring_px}px solid {self.tokens.colours['focus-ring']}"
-        self.issues_list.setStyleSheet(f"QListWidget#issues-list:focus {{ border: {ring}; }}")
         for region in (self.results_tabs, self.rail):
             region.setStyleSheet(focus_ring_qss(self.tokens))
         self._render()
