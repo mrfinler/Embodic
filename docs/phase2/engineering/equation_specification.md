@@ -234,6 +234,9 @@ This note adds no input and leaves the registry status of EQ-05 unchanged.
 - Sources: D08 eq. 3.37 to 3.38 p.45 (EV-08); D10 eq. 8 p.4 (EV-28); D15 eq. 10 p.7 (EV-44).
 - Variables: L, w, t [mm]; T [°C]; R [Ω].
 - Validity: DC, w and t below δ/3 (EQ-13). Limitations: finished copper thickness is supplier dependent.
+- Off-board conductors (revision 2026-10-09 (U-E8)). The external leads of a per-phase stack and of an overlap delta
+  closure are not PCB traces. They need the ρ_T L/A form with a wire or connector area and stay outside P_ic until
+  their inputs exist (open_positions_m3.md section 3, source gap G39).
 - Reference: CF-04 1000 × 0.5 mm × 34.8 µm: 0.990862069 Ω (20 °C), 1.146625586 Ω (60 °C); Xcoil constant gives
   0.990804598 Ω (−5.8e-5). CF-10 version 3 D08 coil-layer 0.043091 Ω at 50 °C; CF-11 default coil-layer 0.396502 Ω at
   20 °C.
@@ -451,6 +454,12 @@ This note adds no input and leaves the registry status of EQ-05 unchanged.
   That P_ic exceeds the physical value by I_line² R_pad (inferred); the size of R_pad on any example is not tested.
   With a four-wire drive the lead carries the neutral current, not I_line (inferred); embodic has no four-wire mode
   (unresolved). Excluding the lead would change the gate to `reuse with change` (open, Fable decides).
+- Overlap wave (revision 2026-10-09 (U-E8), open_positions_m3.md section 1). Star: each tap stub from a minus terminal
+  to the ring is the only copper between that phase and the star point, so it carries I_line and belongs in l_k
+  (verified by run and Xcoil's own rule l.1367 to 1368). Xcoil's overlap path zeroes l_k (l.2172), an omission
+  (inferred); XD-WAVE-001 records the difference. Delta: the closure is off-board, and the three line leads s_k carry
+  I_ph when the external jumper lands on the line pad, or I_line when it lands on the plus terminal via. The branch
+  I_line²Σs is then an upper bound (inferred); the physical value is unresolved until the spec names the closure point.
 - Sources: network identities; engine.js `applyConnection` lines 1418 to 1429, `interconnectResistance` 1361 to 1374.
 - Variables: R_k phase, l_k link, s_k line stub, n_i neutral-ring segment resistances [Ω].
 - Validity: DC. Limitations: none beyond EQ-10.

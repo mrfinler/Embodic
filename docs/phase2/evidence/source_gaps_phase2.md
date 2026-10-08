@@ -96,3 +96,12 @@ New entries are EV-94 to EV-105 in `evidence_register.json`. Web pages were read
 | G37: involute property | The property is read ("A perpendicular to the involute surface is always tangent to the base circle") and the parametric form is read (MathWorld). No textbook was opened. The rotated-copy normal spacing r_b Δφ is on neither page | EV-104, EV-105 | The property and the equation of P(t) are `verified (extract)`. The r_b Δφ spacing stays a derivation (CF-08 reproduces it) | A textbook entry (Beyer, Gray, Lawrence are cited by MathWorld and were not opened) |
 
 Searches that did not give evidence: no PCB-laminate datasheet with a density was opened (370HR has none). A search for a PTFE manufacturer sheet returned distributors only. A search for a rotor-steel density of 7.85 returned the 1018 sheet at 7.87.
+
+## Revision 2026-10-09 (U-E8): gaps G38 and G39
+
+No new EV row. This unit read no external source; both rows record what open_positions_m3.md needs.
+
+| Gap | Result | EV ids | Label now | What remains |
+|---|---|---|---|---|
+| G38: same-node gap below the clearance rule | Measured: serpentine strands-3 leaves 0.1091 mm between a strand end and the terminal via of the same phase (rule 0.200 mm, D-006). The evidence register holds no fabricator or standard text on how a gap between copper of one node is treated | none | `unresolved` | A fabricator capability page or DFM rule that states the minimum gap it etches for the copper weight in use, and whether it checks gaps within one net |
+| G39: per-board interconnect inputs | A per-phase stack needs the resistance of each board-to-node conductor (open_positions_m3.md section 3). The register holds the copper constants (EV-53) but no wire-gauge area table and no connector contact-resistance datasheet | EV-53 | `assumption` for any gauge area, contact resistance or lead temperature | A wire-gauge standard table, the datasheet of the connector the user picks, and the user's lead lengths |
