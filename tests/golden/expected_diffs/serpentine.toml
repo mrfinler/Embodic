@@ -1,0 +1,68 @@
+# Intentional differences between embodic and Xcoil v3 for the serpentine golden cases (owner: U-M3a, then via Fable).
+# Schema and semantics: tools/golden/README.md, section "Allow-lists".
+# The signoff fields hold the worker's proposal until Agent 2 and Agent 4 answer through Fable.
+
+schema_version = 1
+
+[[diff]]
+id = "XD-SER-002-01"
+case = "layout-seeded-03"
+path = "$.verdict"
+eq_id = "EQ-30"
+reason = "With more than one strand per turn the strands start and end on the V and T bus arcs mid-path, and the terminal via sits at the middle of the T bus (Xcoil buildCanonical l.505-507, drcLayer touchesBus l.608). Xcoil skips the first and last 1.6 pitch of a strand next to its bus. D-006 rules 2 and 3 exempt only the end group of a path, so embodic reports the bus against the strand ends and the via as an overlap. Open question Q-SER-2: cut the bus arcs at the junctions as the star ring is cut (deviation D-1 of the U-M3a report), or extend the DRC tap clause."
+agent2_signoff = "pending: proposed by U-M3a, not yet answered"
+agent4_signoff = "pending: proposed by U-M3a, not yet answered"
+
+[[diff]]
+id = "XD-SER-002-02"
+case = "layout-seeded-04"
+path = "$.verdict"
+eq_id = "EQ-30"
+reason = "With more than one strand per turn the strands start and end on the V and T bus arcs mid-path, and the terminal via sits at the middle of the T bus (Xcoil buildCanonical l.505-507, drcLayer touchesBus l.608). Xcoil skips the first and last 1.6 pitch of a strand next to its bus. D-006 rules 2 and 3 exempt only the end group of a path, so embodic reports the bus against the strand ends and the via as an overlap. Open question Q-SER-2: cut the bus arcs at the junctions as the star ring is cut (deviation D-1 of the U-M3a report), or extend the DRC tap clause."
+agent2_signoff = "pending: proposed by U-M3a, not yet answered"
+agent4_signoff = "pending: proposed by U-M3a, not yet answered"
+
+[[diff]]
+id = "XD-SER-002-03"
+case = "layout-seeded-08"
+path = "$.verdict"
+eq_id = "EQ-30"
+reason = "With more than one strand per turn the strands start and end on the V and T bus arcs mid-path, and the terminal via sits at the middle of the T bus (Xcoil buildCanonical l.505-507, drcLayer touchesBus l.608). Xcoil skips the first and last 1.6 pitch of a strand next to its bus. D-006 rules 2 and 3 exempt only the end group of a path, so embodic reports the bus against the strand ends and the via as an overlap. Open question Q-SER-2: cut the bus arcs at the junctions as the star ring is cut (deviation D-1 of the U-M3a report), or extend the DRC tap clause."
+agent2_signoff = "pending: proposed by U-M3a, not yet answered"
+agent4_signoff = "pending: proposed by U-M3a, not yet answered"
+
+[[diff]]
+id = "XD-SER-002-04"
+case = "layout-seeded-13"
+path = "$.verdict"
+eq_id = "EQ-30"
+reason = "With more than one strand per turn the strands start and end on the V and T bus arcs mid-path, and the terminal via sits at the middle of the T bus (Xcoil buildCanonical l.505-507, drcLayer touchesBus l.608). Xcoil skips the first and last 1.6 pitch of a strand next to its bus. D-006 rules 2 and 3 exempt only the end group of a path, so embodic reports the bus against the strand ends and the via as an overlap. Open question Q-SER-2: cut the bus arcs at the junctions as the star ring is cut (deviation D-1 of the U-M3a report), or extend the DRC tap clause."
+agent2_signoff = "pending: proposed by U-M3a, not yet answered"
+agent4_signoff = "pending: proposed by U-M3a, not yet answered"
+
+[[diff]]
+id = "XD-SER-002-05"
+case = "layout-seeded-19"
+path = "$.verdict"
+eq_id = "EQ-30"
+reason = "With more than one strand per turn the strands start and end on the V and T bus arcs mid-path, and the terminal via sits at the middle of the T bus (Xcoil buildCanonical l.505-507, drcLayer touchesBus l.608). Xcoil skips the first and last 1.6 pitch of a strand next to its bus. D-006 rules 2 and 3 exempt only the end group of a path, so embodic reports the bus against the strand ends and the via as an overlap. Open question Q-SER-2: cut the bus arcs at the junctions as the star ring is cut (deviation D-1 of the U-M3a report), or extend the DRC tap clause."
+agent2_signoff = "pending: proposed by U-M3a, not yet answered"
+agent4_signoff = "pending: proposed by U-M3a, not yet answered"
+
+[[diff]]
+id = "XD-SER-002-06"
+case = "layout-strands-3-turns-2"
+path = "$.verdict"
+eq_id = "EQ-30"
+reason = "With more than one strand per turn the strands start and end on the V and T bus arcs mid-path, and the terminal via sits at the middle of the T bus (Xcoil buildCanonical l.505-507, drcLayer touchesBus l.608). Xcoil skips the first and last 1.6 pitch of a strand next to its bus. D-006 rules 2 and 3 exempt only the end group of a path, so embodic reports the bus against the strand ends and the via as an overlap. Open question Q-SER-2: cut the bus arcs at the junctions as the star ring is cut (deviation D-1 of the U-M3a report), or extend the DRC tap clause."
+agent2_signoff = "pending: proposed by U-M3a, not yet answered"
+agent4_signoff = "pending: proposed by U-M3a, not yet answered"
+
+[[diff]]
+id = "XD-SER-003-07"
+case = "layout-seeded-16"
+path = "$.verdict"
+eq_id = "EQ-30"
+reason = "The first side of the strand is shorter than the trace width, so the fillet that follows lies inside the 1.6 pitch that Xcoil skips next to the V bus (drcLayer touchesBus l.608, skipSame = 1.6 (wMax + s)). embodic does not adopt that wider exemption (interfaces.md section 7, rule 1 note) and reports the fillet against the bus. Same class as XD-SER-002 with one strand."
+agent2_signoff = "pending: proposed by U-M3a, not yet answered"
+agent4_signoff = "pending: proposed by U-M3a, not yet answered"

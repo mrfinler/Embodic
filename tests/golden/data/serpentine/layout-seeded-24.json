@@ -3,6 +3,56 @@
     {
       "inputs": {"seed": 3024},
       "output": {
+        "analysis": {
+          "B1mid": 0.9660387788779025,
+          "Ke1": 0.02367381589276006,
+          "KtPerArms": 0.0167399157543325,
+          "KvRpmPerV": 403.3695551562557,
+          "Rphase": 1.155914956803073,
+          "activeLenPerLayer": 369.29900000000123,
+          "conductorsPerPhase": 48,
+          "connection": "open",
+          "currentDensity": 31.31949011870087,
+          "currentDensityPerPhaseAmp": 39.14936264837608,
+          "efficiency": 0.7376982223949746,
+          "emfLinePk": 3.718674304556615,
+          "emfPhasePk": 3.718674304556615,
+          "emfPhaseRms": 2.629499817776151,
+          "fe": 150,
+          "iDeltaCircRms": 0,
+          "iMaxIpc": 3.086315327353697,
+          "iMaxIpcPhase": 3.086315327353697,
+          "iPhaseRms": 0.8,
+          "kdAnalytic": 0.9973350087959892,
+          "keImbalance": 0,
+          "keLinePk": 0.02367381589276006,
+          "kw1": 0.9959473867635072,
+          "lossTotal": 0.7479724965859951,
+          "motorConstant": 0.015570061442825791,
+          "omegaM": 157.07963267948966,
+          "pCirc": 0,
+          "pCu": 0.7397855723539669,
+          "pDeltaCirc": 0,
+          "pEddy": 0.008186924232028105,
+          "pInterconnect": 0,
+          "pOut": 2.1035998542209216,
+          "phases": [
+            {
+              "Ke": [0.02367381589276006, 0.00430776364932694, 0.0008280371514364323, 0.00007724922238588907, 0.00025553365380953495, 0.00021524158745791662, 0.0001303311815034415],
+              "R": 1.155914956803073,
+              "Rextra": 0.0014136049858804749,
+              "Rtrace": 1.1545013518171927,
+              "name": "A",
+              "pCirc": 0
+            }
+          ],
+          "rLineLine": 1.155914956803073,
+          "seriesTurnsPerPhase": 4,
+          "skinDepth": 5.804266509468336,
+          "thd": 0.18594118753611102,
+          "torque": 0.013391932603466003,
+          "traceLenPerLayer": 784.9437273194336
+        },
         "boardThickness": 1.6,
         "canon": [
           {

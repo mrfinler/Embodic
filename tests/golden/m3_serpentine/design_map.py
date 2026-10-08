@@ -31,6 +31,7 @@ ENUMS = {
     "/connection/topology": ConnectionTopology,
 }
 OUTLINE_SCALE, BORE_SCALE = 1.2, 0.85  # Xcoil outlineScale and innerScale defaults
+ANALYSIS_SEGMENT_MM = 0.5  # Xcoil analyze discretises with hMax 0.5 mm (engine.js l.887)
 
 
 @cache
@@ -74,5 +75,6 @@ def design_from_xcoil(p: Mapping[str, Any], r_min_all: float, r_max_all: float) 
         bore=CircleOutline(radius_mm=BORE_SCALE * r_min_all),
         screws=(),
     )
-    design = replace(design, stackup=stackup, outline=outline)
+    analysis = replace(design.analysis, max_segment_mm=ANALYSIS_SEGMENT_MM)
+    design = replace(design, stackup=stackup, outline=outline, analysis=analysis)
     return replace(design, connection=replace(design.connection, neutral_pad=True))

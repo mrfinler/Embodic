@@ -6,8 +6,8 @@
   "fields": [
     {"xcoil": "poles", "pointers": ["/rotor/poles"]},
     {"xcoil": "phases", "pointers": ["/phases"]},
-    {"xcoil": "rIn", "pointers": ["/winding/r_inner_mm"]},
-    {"xcoil": "rOut", "pointers": ["/winding/r_outer_mm"]},
+    {"xcoil": "rIn", "pointers": ["/winding/r_inner_mm", "/rotor/magnet/r_inner_mm"]},
+    {"xcoil": "rOut", "pointers": ["/winding/r_outer_mm", "/rotor/magnet/r_outer_mm"]},
     {"xcoil": "turns", "pointers": ["/winding/turns"]},
     {"xcoil": "strands", "pointers": ["/winding/strands"]},
     {"xcoil": "traceWidth", "pointers": ["/winding/trace_width_mm"]},
@@ -36,7 +36,9 @@
   "derived": [
     {"pointer": "/stackup/layers", "rule": "even stack-up of N copper layers (generate_even_stackup): N = phases x layersPerPhase for single, layersPerPhase for perPhase; copper thickness = copperOzOuter x 0.0348 mm, board thickness = boardThickness"},
     {"pointer": "/connection/neutral_pad", "value": true, "reason": "Xcoil always draws the N pad of a star connection (engine.js l.1313)"},
-    {"pointer": "/outline", "rule": "circle of radius outlineScale x rMaxAll and bore innerScale x rMinAll from the Xcoil layout, no screws: embodic takes absolute outline inputs, Xcoil scale factors (engine.js l.1101)"}
+    {"pointer": "/outline", "rule": "circle of radius outlineScale x rMaxAll and bore innerScale x rMinAll from the Xcoil layout, no screws: embodic takes absolute outline inputs, Xcoil scale factors (engine.js l.1101)"},
+    {"pointer": "/analysis/max_segment_mm", "value": 0.5, "reason": "Xcoil analyze discretises the strands with hMax 0.5 mm (engine.js l.887); Ke agrees to 1e-14 relative only with the same chords"},
+    {"pointer": "/rotor/magnet", "rule": "arc magnet spanning rIn to rOut (Xcoil magnetAuto, engine.js l.130); other rotor and operating values equal Xcoil's defaults in tests/unit/model/designs.py"}
   ],
   "not_mapped": [
     {"xcoil": "padShape", "reason": "ConnectionSpec has round pads only; Xcoil default round"},

@@ -60,6 +60,15 @@ function drcSummary(drc) {
   };
 }
 
+// GR-22 inputs: the phase and total results that embodic's analysis reproduces (engine.js analyze l.880-1017).
+function analysisSummary(a) {
+  if (!a) return null;
+  return {
+    ...scalars(a),
+    phases: a.phases.map((ph) => ({ name: ph.name, Ke: ph.Ke, R: ph.R, Rtrace: ph.Rtrace, Rextra: ph.Rextra, pCirc: ph.pCirc })),
+  };
+}
+
 function rawLayout(E, params) {
   const result = E.compute(params);
   const out = {
@@ -98,6 +107,7 @@ function rawLayout(E, params) {
       : null,
     canon: L.canon.map(canonSummary),
     drc: drcSummary(result.drc),
+    analysis: analysisSummary(result.analysis),
     derived: result.derived,
   };
 }

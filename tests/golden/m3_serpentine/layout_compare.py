@@ -1,8 +1,8 @@
 """GR-20 comparators: one embodic board against the matching part of Xcoil's raw layout.
 
 Xcoil makes one object per interconnect link (tap stubs and ring arc together). The port cuts the star ring at its
-middle tap so that the tap is an end node under D-006 rule 3 (XD-SER-001); ``merge_ring_cuts`` joins the two arcs
-again before the primitive streams are compared.
+middle tap so that the tap is an end node under D-006 rule 3 (deviation D-1 of the U-M3a report).
+``merge_ring_cuts`` joins the two arcs again before the primitive streams are compared.
 """
 
 import math

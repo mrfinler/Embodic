@@ -163,6 +163,7 @@ class _BoardIds:
     """Ids of one board's copper, by the keys the circuit needs."""
 
     strands: Mapping[tuple[int, int, str], tuple[int, ...]]
+    buses: Mapping[tuple[int, int, str, str], int]
     links: Mapping[tuple[int, int], int]
     vias: Mapping[tuple[int, int, str], int]
 
@@ -203,6 +204,7 @@ def _board_paths(layers: Sequence[LayerPlan], names: Sequence[str]) -> tuple[lis
 
 def _board_ids(layers: Sequence[LayerPlan], paths: Sequence[CopperPath], vias: Sequence[ViaPlan]) -> _BoardIds:
     by_key: dict[tuple[int, int, str], list[int]] = {}
+    buses: dict[tuple[int, int, str, str], int] = {}
     links: dict[tuple[int, int], int] = {}
     cursor = 0
     for lp in layers:
@@ -210,11 +212,13 @@ def _board_ids(layers: Sequence[LayerPlan], paths: Sequence[CopperPath], vias: S
             slot = lp.slot
             if spec.kind == "strand":
                 by_key.setdefault((slot.phase, slot.pair, slot.role), []).append(paths[cursor].id)
+            elif spec.kind in ("vbus", "tbus"):
+                buses[(slot.phase, slot.pair, slot.role, spec.kind)] = paths[cursor].id
             elif spec.kind == "link":
                 links[(slot.phase, slot.pair)] = paths[cursor].id
             cursor += 1
     via_ids: dict[tuple[int, int, str], int] = {(v.phase, v.pair, v.kind): index for index, v in enumerate(vias)}
-    return _BoardIds(strands={k: tuple(v) for k, v in by_key.items()}, links=links, vias=via_ids)
+    return _BoardIds(strands={k: tuple(v) for k, v in by_key.items()}, buses=buses, links=links, vias=via_ids)
 
 
 def _group(members: Sequence[tuple[tuple[int, ...], tuple[int, ...]]]) -> ParallelGroup:
@@ -222,10 +226,20 @@ def _group(members: Sequence[tuple[tuple[int, ...], tuple[int, ...]]]) -> Parall
 
 
 def _phase_circuit(d: Frame, k: int, ids: _BoardIds) -> PhaseCircuit:
-    """Return the groups in series from T1 to T2: X layer, V via, Y layer, series link (Xcoil analyze l.949)."""
+    """Return the groups in series from T1 to T2: T bus, strands and V bus of an X layer, V via, Y layer, link.
 
-    def layer_group(pairs: Sequence[int], role: str) -> ParallelGroup:
-        return _group([((ids.strands[(k, q, role)][s],), ()) for q in pairs for s in range(d.j)])
+    Every winding path is a member of exactly one group (UT-GEN-01). Xcoil's analysis counts the strands only
+    (analyze l.949); the bus and link groups add the copper embodic's resistance and eddy loss count as well.
+    """
+
+    def layer_groups(pairs: Sequence[int], role: str) -> list[ParallelGroup]:
+        def bus(kind: str) -> list[ParallelGroup]:
+            found = [ids.buses[(k, q, role, kind)] for q in pairs if (k, q, role, kind) in ids.buses]
+            return [_group([((i,), ()) for i in found])] if found else []
+
+        strands = [_group([((ids.strands[(k, q, role)][s],), ()) for q in pairs for s in range(d.j)])]
+        # current flows T -> V on an X layer and V -> T on a Y layer
+        return [*bus("tbus"), *strands, *bus("vbus")] if role == "X" else [*bus("vbus"), *strands, *bus("tbus")]
 
     def via_group(pair: int) -> ParallelGroup:
         return _group([((), (ids.vias[(k, pair, "V")],))])
@@ -233,16 +247,16 @@ def _phase_circuit(d: Frame, k: int, ids: _BoardIds) -> PhaseCircuit:
     groups: list[ParallelGroup] = []
     if d.series:
         for q in range(d.n_pairs):
-            groups.append(layer_group([q], "X"))
+            groups += layer_groups([q], "X")
             if d.has_y:
-                groups += [via_group(q), layer_group([q], "Y")]
+                groups += [via_group(q), *layer_groups([q], "Y")]
                 if q < d.n_pairs - 1:
                     groups.append(_group([((ids.links[(k, q)],), (ids.vias[(k, q + 1, "T1")],))]))
     else:
         pairs = range(d.n_pairs)
-        groups.append(layer_group(pairs, "X"))
+        groups += layer_groups(pairs, "X")
         if d.has_y:
-            groups += [via_group(0), layer_group(pairs, "Y")]
+            groups += [via_group(0), *layer_groups(pairs, "Y")]
     return PhaseCircuit(phase=PHASES[k], groups=tuple(groups), terminal_net=LINE_NET[PHASES[k]])
 
 
