@@ -1,15 +1,18 @@
 """Seeded-defect lever: apply each named defect to a temporary copy of the instruments and confirm a test fails.
 
-Run from the repository root: ``python tests/independent/m1/mutants.py``. Exit status 1 when a mutant survives.
+Run from the repository root: ``python tests/independent/m1/mutants.py [word ...]``; words pick mutants by name.
+Exit status 1 when a mutant survives, 2 when the unmutated copy already fails.
 """
 
 import shutil
 import subprocess
 import sys
 import tempfile
+from collections.abc import Sequence
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[2]
 
 # (defect, file, original text, defective text)
 MUTANTS = [
@@ -39,6 +42,21 @@ MUTANTS = [
      "near = bool(owners[i] & owners[j])", "near = abs(min(owners[i]) - min(owners[j])) <= 1"),
     ("D-022c tap rule dropped", "drc_universe.py",
      "if path and _on_centreline(land, path):", "if False:"),
+    ("rule 2b whole path instead of per primitive (D-037a)", "drc_universe.py",
+     "yield from (frozenset((via.label, it.label)) for it in hits if it.net == via.net)",
+     "yield from (frozenset((via.label, o.label)) for it in hits if it.net == via.net "
+     "for o in traces.items if o.path == it.path)"),
+    ("rule 2b without the net test", "drc_universe.py", "for it in hits if it.net == via.net)", "for it in hits)"),
+    ("rule 2b reach is the pad diameter", "drc_universe.py",
+     "hits = traces.within(disc_centre(via), via.prim.width / 2)",
+     "hits = traces.within(disc_centre(via), via.prim.width)"),
+    ("rule 5 dropped", "drc_universe.py", "yield from _pairs(e.group, paths[pid])", "yield from ()"),
+    ("rule 5 without the net test", "drc_universe.py",
+     "if it.path != e.path and it.net == e.net}", "if it.path != e.path}"),
+    ("rule 5 exempts the whole stem path", "drc_universe.py",
+     "yield from _pairs(e.group, paths[pid])", "yield from _pairs(paths[e.path], paths[pid])"),
+    ("arc sweep read as counter-clockwise always", "drc_universe.py",
+     "turned = math.copysign(1.0, prim.sweep) * (", "turned = ("),
     ("continuity passes NaN", "continuity.py", "if not distance <= tol_mm:", "if distance > tol_mm:"),
     ("reader orders paths by file position", "board_dump_reader.py", "key=lambda p: p.seq", "key=lambda p: 0"),
     ("reader skips the end-point check", "board_dump_reader.py",
@@ -53,47 +71,65 @@ MUTANTS = [
 PYTEST_INI = "[pytest]\naddopts = --import-mode=importlib -p no:cacheprovider\nmarkers =\n    req(*ids): REQ IDs\n"
 
 
+def _mirror(tmp: Path) -> Path:
+    """Lay out ``tmp`` like the repository: everything linked except a fresh copy of ``tests/independent/m1``.
+
+    The instruments find the GR-19 fixtures through ``parents[3]`` of their own file, so a bare copy fails tests that
+    have nothing to do with the mutant.
+    """
+    src, dst = REPO, tmp
+    for part in ("tests", "independent"):
+        for entry in src.iterdir():
+            if entry.name != part:
+                (dst / entry.name).symlink_to(entry)
+        src, dst = src / part, dst / part
+        dst.mkdir()
+    for entry in src.iterdir():
+        if entry.name != "m1":
+            (dst / entry.name).symlink_to(entry)
+    work = dst / "m1"
+    shutil.copytree(HERE, work, ignore=shutil.ignore_patterns("__pycache__", "mutants.py"))
+    (tmp / "pytest.ini").write_text(PYTEST_INI, encoding="utf-8")
+    return work
+
+
+def _pytest(edit: tuple[str, str, str] | None) -> subprocess.CompletedProcess[str]:
+    """Run the m1 tests on a mirrored copy, with ``(file, original, defective)`` applied when given."""
+    with tempfile.TemporaryDirectory() as tmp:
+        work = _mirror(Path(tmp))
+        if edit is not None:
+            name, old, new = edit
+            target = work / name
+            source = target.read_text(encoding="utf-8")
+            if source.count(old) != 1:
+                raise SystemExit(f"original text must occur once in {name}: {old!r}")
+            target.write_text(source.replace(old, new), encoding="utf-8")
+        argv = [sys.executable, "-m", "pytest", str(work), "-q", "-x", "--rootdir", tmp, "-c", f"{tmp}/pytest.ini"]
+        return subprocess.run(argv, capture_output=True, text=True, cwd=tmp)
+
+
 def run_mutant(defect: str, name: str, old: str, new: str) -> tuple[bool, str]:
     """Return (killed, first failing test) for one mutant."""
-    with tempfile.TemporaryDirectory() as tmp:
-        work = Path(tmp) / "m1"
-        shutil.copytree(HERE, work, ignore=shutil.ignore_patterns("__pycache__", "mutants.py"))
-        (Path(tmp) / "pytest.ini").write_text(PYTEST_INI, encoding="utf-8")
-        target = work / name
-        source = target.read_text(encoding="utf-8")
-        if source.count(old) != 1:
-            raise SystemExit(f"{defect}: original text must occur once in {name}")
-        target.write_text(source.replace(old, new), encoding="utf-8")
-        result = subprocess.run(
-            [
-                sys.executable,
-                "-m",
-                "pytest",
-                str(work),
-                "-q",
-                "-x",
-                "--rootdir",
-                tmp,
-                "-c",
-                str(Path(tmp) / "pytest.ini"),
-            ],
-            capture_output=True,
-            text=True,
-        )
-        failed = [line for line in result.stdout.splitlines() if line.startswith("FAILED")]
-        return result.returncode == 1 and bool(failed), failed[0] if failed else result.stdout[-300:]
+    result = _pytest((name, old, new))
+    failed = [line for line in result.stdout.splitlines() if line.startswith("FAILED")]
+    return result.returncode == 1 and bool(failed), failed[0] if failed else result.stdout[-300:]
 
 
-def main() -> int:
-    """Run every mutant and print one line each."""
+def main(only: Sequence[str] = ()) -> int:
+    """Check the unmutated copy passes, then run every mutant (or those whose name holds one of ``only``)."""
+    base = _pytest(None)
+    if base.returncode != 0:
+        print(f"unmutated copy fails, no mutant can be judged:\n{base.stdout[-600:]}")
+        return 2
+    chosen = [m for m in MUTANTS if not only or any(word in m[0] for word in only)]
     survivors = 0
-    for defect, name, old, new in MUTANTS:
+    for defect, name, old, new in chosen:
         killed, detail = run_mutant(defect, name, old, new)
         survivors += not killed
-        print(f"{'killed  ' if killed else 'SURVIVED'} {defect}: {detail}")
-    print(f"{len(MUTANTS) - survivors}/{len(MUTANTS)} mutants killed")
+        print(f"{'killed  ' if killed else 'SURVIVED'} {defect}: {detail}", flush=True)
+    print(f"{len(chosen) - survivors}/{len(chosen)} mutants killed")
     return 1 if survivors else 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))
