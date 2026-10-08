@@ -120,7 +120,8 @@ class OutcomeFailed:
 OutcomeState: TypeAlias = OutcomeEmpty | OutcomeComputing | OutcomeReady | OutcomeFailed
 
 
-def _shown(state: OutcomeState) -> OutcomeReady | None:
+def shown_result(state: OutcomeState) -> OutcomeReady | None:
+    """Return the result on screen in a state: the latest, or the one kept while computing or after a crash."""
     if isinstance(state, OutcomeReady):
         return state
     return None if isinstance(state, OutcomeEmpty) else state.previous
@@ -150,7 +151,7 @@ class OutcomeViewModel:
         if self.project is None:
             return
         self._latest_id += 1
-        self.state.set(OutcomeComputing(previous=_shown(self.state.value)))
+        self.state.set(OutcomeComputing(previous=shown_result(self.state.value)))
         request = ComputeRequest(
             request_id=self._latest_id, design=self.project.design, provenance=project_provenance(self.project)
         )
@@ -172,7 +173,7 @@ class OutcomeViewModel:
         """Take a worker crash report for the latest request."""
         if request_id != self._latest_id:
             return
-        self.state.set(OutcomeFailed(correlation_id=correlation_id, previous=_shown(self.state.value)))
+        self.state.set(OutcomeFailed(correlation_id=correlation_id, previous=shown_result(self.state.value)))
 
     def set_layer_visible(self, layer: str, visible: bool) -> None:
         """Show or hide one copper layer in the geometry view."""
