@@ -2,7 +2,8 @@ Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5
 
 # embodic design specification v1 (Phase 2, PySide6 desktop)
 
-Date 2026-10-04, revised 2026-10-09 (U-S4d: sections 3.3, 3.4, 5 and 8 follow the rulings of `m4_review.md`).
+Date 2026-10-04, revised 2026-10-09 (U-S4d: sections 3.3, 3.4, 5 and 8 follow the rulings of `m4_review.md`),
+revised 2026-10-09 (U-S4e: sections 3.3, 4 and 5 follow rulings b, e, f and h of `m4_review_2.md`).
 Supersedes `docs/phase1/design/design_spec_draft.md` for everything Phase 2 builds. Companion files:
 
 - `screens.md` gives every screen with its widget table and state rules.
@@ -137,6 +138,21 @@ spot is taken. Placement reruns after each zoom or resize step, and a skipped la
 copper. Serpentine phases get 4 labels at fit zoom, one per quadrant, on the outermost end turn. Files use the fit-zoom
 set at page scale. The canvas, the SVG and the PDF take labels and eye discs from one module, so they cannot differ.
 
+Label placement additions (U-S4e ruling h, `assumption` until U-M4c-4 tests them):
+
+- The forced labels are the first label of each phase and sign, not of each phase: A+, A−, B+, B−, C+, C− for wave and
+  the first positive and first negative coil of each phase for spiral. At fit zoom the wave example placed every other
+  belt label, so all visible labels read "+" while the belts alternate (`verified` by comparing
+  `u-m4c-3_canvas_wave_light.png` with the 3x shot, where "A−", "B−" and "C−" show). Serpentine has no sign and keeps
+  one forced label per phase.
+- Every phase whose copper shows in the view has a label inside the view. When none of its anchors is in the view,
+  the label goes on that phase's visible copper nearest the view centre, with no leader.
+- A leader and its label box lie inside the view, grown inward by 2 px. When the leader target is outside, the label
+  takes the nearest free in-view spot on the same phase's copper.
+- The canvas keeps fit zoom through a resize, a splitter drag and a tab switch until the user zooms or pans; Fit (F)
+  returns to it. On main fd190c1 a resize after load left the D08 ring 40 px wide in a 598 x 124 px canvas
+  (`verified`, `tools/design/layout_probe.py --fonts --shots`).
+
 ### 3.4 Accessibility mode (greyscale and hatching)
 
 Greyscale mode keeps every cue of section 3.3: labels and eye fills are what identify phase and polarity; the grey
@@ -165,8 +181,28 @@ Phase A is the strongest step in both themes. Validator `--ordinal` passes both 
 - Agent 3 bundles the font files under `resources/fonts/` (outside my write scope) and registers them with
   `QFontDatabase.addApplicationFont` before the style sheet loads. Fallbacks: Segoe UI, then the platform sans; Cascadia
   Mono, Consolas, then monospace. No font is fetched at run time.
-- Glyph coverage for µ, Ω, °, −, ≈ and the narrow no-break space in both fonts is `unresolved`. Agent 3 checks it with
-  fontTools at bundling. Status glyphs never depend on the font: they are SVG icons (`status-*`, `check-*`).
+- Glyph coverage: µ, Ω, °, − and the middle dot print from the bundled fonts (`verified` by U-M4f with pypdf on the
+  D08 report). JetBrains Mono 2.304 has no U+202F (U-M4f, two strict xfails). Status glyphs never depend on the font:
+  they are SVG icons (`status-*`, `check-*`).
+- Number and unit (U-S4e ruling e1). Every single-string form (PDF, SVG footer, tooltip, Copy trace, status bar) puts
+  U+00A0 between a number and its unit: "1.34 µH" never breaks between number and unit, and both bundled fonts have
+  the glyph. The space is never dropped, because "1.34µH" reads as one token. In the widgets the value and the unit are
+  separate labels (`res-<key>-value`, `res-<key>-unit`), so no character is involved.
+- Weights (U-S4e ruling e2). The style sheet uses 400 and 600 (five `font-weight: 600` rules in
+  `tools/design/theme_template.qss`) and no 500. Qt ignores the `wght` axis of `InterVariable.ttf`, so 600 is
+  synthetic or lost: in `shell_fonts_light.png` "Key results" and "Issues" render at body weight (`verified` by
+  looking). Agent 3 bundles the static `Inter-Regular.ttf` and `Inter-SemiBold.ttf` of the same Inter 4.1 release (SIL
+  OFL 1.1, the same `LICENSE.txt`; path in the release archive `extras/ttf/`, `inferred`, Agent 3 confirms and records
+  the SHA-256 in `FONTS.md`) and removes `InterVariable.ttf`. The PDF embeds the same two files, so its headings use
+  real SemiBold instead of faux bold.
+- Font credit in the PDF (U-S4e ruling f). No per-page footer credit. The report ends with one colophon line after the
+  last table: "Set in Inter and JetBrains Mono, SIL Open Font License 1.1." The OFL says its conditions do not reach
+  "any document created using the fonts" (`verified`, condition 5 as quoted in `dependency_licences.md` §Fonts), so the
+  line is a courtesy, not a licence condition. Whether a whole embedded file makes the PDF a "copy" under condition 2
+  stays a legal question for Agent 5 (`unresolved`).
+- Every capture and layout test registers the bundled fonts first (`register_fonts`), because the fallback font is
+  wider: the 277 px header widths of the U-M4c-3 xfails were measured in "Sans Serif", and with Inter the inspector tab
+  bar fits at 327 px but not at 300 px (`verified`, `tools/design/layout_probe.py` with and without `--fonts`).
 - Sentence case everywhere. No uppercase micro-labels.
 - Body is 13 px instead of the Phase 1 14 px. Inter at 13 px has a larger x-height than Segoe UI at 14 px (assumption,
   not measured), and the toolstrip needs the width.
@@ -181,11 +217,20 @@ Phase A is the strongest step in both themes. Validator `--ordinal` passes both 
 | Window width | Layout | Panes |
 |---|---|---|
 | 960 to 1279 px | Two panes | Inspector 300 px, centre (canvas or results tabs) fills. The results rail becomes the "Key results" tab beside the canvas (U-M4d builds it with `results-tabs`; U-S4d ruling f: the 960 x 540 shot with three panes clipped values, badges and units). No card ever shrinks below its size hint; a pane that runs out of height scrolls. |
-| 1280 px and wider | Three panes | Inspector 340 px, centre fills, results rail 360 px. Splitters let the user resize; widths persist per user. |
+| 1280 px and wider | Three panes | Inspector 340 px, centre fills, results rail 360 px. Splitters let the user resize; widths persist per user. On main fd190c1 the panes are 327, 598 and 347 px at 1280 x 800 (`verified`, `layout_probe.py --fonts`); the start widths are 340 and 360 (U-S4e ruling c). |
 | Minimum | 960 x 540 px | `QMainWindow.setMinimumSize(960, 540)`. Below 1100 px toolstrip labels of small buttons collapse to icons, large buttons keep labels. At 540 px height the inspector and rail scroll inside their own `QScrollArea`. |
 
 Rows from top: toolstrip (about 96 px with captions), quick-access row folded into the toolstrip's File section,
 work area, status bar 24 px.
+
+Vertical split of the centre pane (U-S4e ruling b). The canvas is what the user designs, so it gets the larger share.
+
+| Rule | Value |
+|---|---|
+| Default | `centre-split` gives the canvas page 60 % and `results-tabs` 40 % of the height below the layer toggles. The view sets the sizes explicitly on first show and on each resize until the user drags the handle; the size hint of a results page never moves the split. On main fd190c1 the cards' size hint gives the results 524 of 648 px at 1280 x 800 and leaves the canvas 124 px (`verified`, `layout_probe.py --fonts`). |
+| Minimums | Canvas page 240 px (legend 80 px plus a ring that holds the labels); results panel 180 px (tab bar plus one card row). Neither side collapses (`setCollapsible(False)`). |
+| Compact height | When the window client area is under 620 px tall, both minimums do not fit (toolstrip 125, status bar 24, toggles 40, 240 + 180). The canvas page then becomes the first tab, "Drawing", of `results-tabs`, before "Key results", and `centre-split` holds only the tabs. "Drawing" is the current tab after a load. **Locate** in `tab-drc` switches to it. This is the width rule turned on its side: below 1280 px wide the rail joins the tabs, below 620 px tall the canvas does. At 960 x 540 the Drawing tab gives the canvas about 320 px instead of 112 (`verified` for 112 on main). |
+| Stored position | After a drag, the canvas share (0 to 1) is stored per user as `layout/canvas_share` and restored, clamped to the minimums. Pixels are not stored, because the window size changes. Nothing is stored in compact height. |
 
 Region object names (stable): `toolstrip`, `inspector`, `inspector-tabs`, `fig-canvas`, `results-tabs`,
 `results-rail`, `statusbar`. F6 and Shift+F6 cycle the regions in this order.
