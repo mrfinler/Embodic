@@ -443,6 +443,31 @@ objectName that no table defines.
 | `param-topology-hint` | Hint under the topology buttons | declared |
 | `tab-board-group-fasteners` | Fasteners group box; group boxes are `<tab>-group-<group>` | declared |
 
+Names that U-M4c-3, U-M4d and U-M4d-fix set (U-S4e ruling a). Each is declared with the part it names; none needed a
+rename.
+
+| objectName | Part | Status |
+|---|---|---|
+| `centre-split` | Vertical splitter of the canvas page and `results-tabs` (design_spec 5, U-S4e ruling b) | declared |
+| `rail-scroll` | Scroll area of `results-rail`; it is the "Key results" tab below 1280 px | declared |
+| `btn-rail-drc` | "DRC" button on the `rail-drc` card; opens `tab-drc` (section 6.1) | declared |
+| `results-empty` | Sentence of `tab-results` before the draft parses (section 6) | declared |
+| `btn-results-first-missing` | Its "Go to first missing field" button (section 6) | declared |
+| `results-scroll` | Scroll area of the result card grid (section 6) | declared |
+| `results-stale` | Stamp "Last valid results" (section 6) | declared |
+| `drc-summary-icon` | `check-*` glyph of `drc-summary` | declared |
+| `drc-truncated` | Hint under `drc-table` when the list is cut | declared |
+| `compare-caption`, `compare-empty` | Caption and empty sentence of `tab-compare` (section 10) | declared |
+| `dlg-compare-confirm`, `btn-compare-replace` | Confirmation before `btn-set-reference` replaces the reference, and its Replace button | declared |
+| `dlg-export-confirm` | Export confirmation with DRC failures (section 11, UX-AC-18) | declared |
+| `export-confirm-list`, `btn-export-confirm-cancel`, `btn-export-confirm-run` | Its failure list, Cancel (initial focus) and Export anyway | declared |
+| `btn-export-browse` | Browse button of `export-folder` | declared |
+| `export-problem` | Hint in `dlg-export` when the export cannot run | declared |
+| `btn-export-open-folder`, `btn-export-close` | Open folder and Close of `export-result` | declared |
+| `guide-toc`, `guide-body` | Topic tree and body of `dlg-guide` (section 12) | declared |
+| `layer-pairs-notice-text`, `btn-layer-pairs-undo` | Sentence and Undo of `layer-pairs-notice` (section 4) | declared |
+| `param-rotation-mode-row` | Row container of `param-rotation-mode` | declared |
+
 ## 15. Requests to other owners
 
 screens.md names these changes; each owner applies them through Fable. U-M2a-fix closed the v2 requests for widget
