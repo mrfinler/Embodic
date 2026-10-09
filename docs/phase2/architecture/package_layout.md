@@ -35,6 +35,16 @@ Revision 2026-10-09 (U-D10, claude-sonnet-5-5, D-039 a and c, D-040; the tree of
   wheel and the PyInstaller folder must carry at M5, as Agent 5 recorded them in
   `docs/phase2/evidence/dependency_licences.md`.
 
+Revision 2026-10-09 (U-D11, claude-sonnet-5-5, D-039 a, D-040 and U-S4e ruling e2; the tree of main 9776555 was read
+for every item).
+
+- §1. `resources/fonts/` holds the two static Inter faces, `Inter/Inter-Regular.ttf` and `Inter/Inter-SemiBold.ttf`, and
+  no variable file (U-M4e-1 deleted it). The tree also lists `ui/app.py`'s `qt_application`, the
+  one place that starts Qt with the fonts registered, `tests/ui/conftest.py` and `tools/design/`.
+- §4. The pytest row names the hang guard `timeout = 900`.
+- §5. The table gains the `pytest-timeout` row, which U-D10 left open (D-034). §5.1 is unchanged: the wheel and the
+  folder still carry the same licence files, because both Inter files are under the one `Inter/LICENSE.txt`.
+
 ## 1. Repository tree
 
 ```
@@ -94,19 +104,22 @@ embodic/
                                  results_view.py results_rail.py charts.py status_badge.py checks_view.py
                                  export_view.py dialogs.py equation_view.py examples_gallery.py
       workers.py                 QThreadPool compute worker, debounce, latest-wins cancellation
-      app.py                     QApplication, theme, logging, crash handler, autosave, entry point `embodic`
+      app.py                     QApplication (`qt_application` registers the fonts), theme, canvas share store, logging,
+                                 crash handler, autosave, entry point `embodic`
   resources/                     shipped in the wheel as embodic/_resources (hatchling force-include)
     icons/                       monochrome SVG drawn with currentColor; file stem = ToolstripAction.icon (Agent 1)
     themes/                      light.json, dark.json derived from Agent 1 tokens.json (Agent 1)
-    fonts/                       Inter/InterVariable.ttf and LICENSE.txt; JetBrainsMono/JetBrainsMono-Regular.ttf,
-                                 JetBrainsMono-Medium.ttf and OFL.txt (SIL OFL 1.1, D-039 a); FONTS.md names the
-                                 release, source URL and SHA-256 of every file. Read through resource_root(); no font
-                                 is fetched at run time
+    fonts/                       Inter/Inter-Regular.ttf, Inter/Inter-SemiBold.ttf and Inter/LICENSE.txt (static
+                                 faces of Inter v4.1, no variable file, U-S4e ruling e2);
+                                 JetBrainsMono/JetBrainsMono-Regular.ttf, JetBrainsMono-Medium.ttf and OFL.txt (SIL
+                                 OFL 1.1, D-039 a); FONTS.md names the release, source URL and SHA-256 of every file.
+                                 Read through resource_root(); no font is fetched at run time
     examples/                    <example_id>.embodic.json, one file per example with its own title block;
                                  no shared index file, list_examples() scans the folder (U-M2f, U-M3a, U-M3b)
     evidence/                    equations.v1.json, evidence.v1.json, synced copies (tools/sync_registry.py)
   tests/
     conftest.py                  markers: req, eq, slow, manual; offscreen Qt for tests/ui
+    ui/conftest.py               offscreen platform and a session fixture that registers the bundled fonts
     unit/<package>/              Agent 3 units; embodic_io/ for embodic.io (io is a stdlib name)
     unit/ui/<area>/              view-model tests; unit/ui/ holds an __init__.py (U-M4b)
     golden/harness/              comparators, tolerance map, non-finite decoding
@@ -126,6 +139,8 @@ embodic/
     golden/cases/<area>.json     case lists, one file per owning unit
     golden/param_map/<topology>.json  embodic field -> Xcoil parameter names (serpentine, wave)
     contrast_check.py            AX-01, AX-08, AX-09 from resources/themes and resources/icons
+    design/                      Agent 1's rerunnable scripts (D-021): build_themes.py, build_icons.py, check_*.py,
+                                 layout_probe.py (widths of the panes and tables), qss_smoke.py, render_sheet.py
     build_bundle.py              PyInstaller one-folder attempt (stretch)
   docs/                          role folders; docs/install/INSTALL.md (English) and INSTALL_TH.md (Fable)
 ```
@@ -273,7 +288,7 @@ physics, DRC and geometry (MT-06). Code that needs rounding calls `embodic.units
 |---|---|---|
 | ruff | `target-version`, `line-length`, rule sets, scope | `py311`, 120, `E,F,W,I,N,UP,B,C90,D,RUF`; `mccabe.max-complexity = 10`; pydocstyle convention `numpy`; `extend-exclude = ["docs"]`, because the role folders hold other agents' check scripts in their own style and no gate reads them as product code |
 | mypy | strict on | `src/embodic` except `embodic.ui.views`, `embodic.ui.app`, `embodic.ui.workers` (Qt stubs vary across PySide6 versions; checked non-strict) |
-| pytest | markers, default options | `req`, `eq`, `slow`, `manual`; `-p no:cacheprovider` on CI; `QT_QPA_PLATFORM=offscreen` set in `tests/ui/conftest.py` |
+| pytest | markers, default options | `req`, `eq`, `slow`, `manual`; `-p no:cacheprovider` on CI; `QT_QPA_PLATFORM=offscreen` set in `tests/ui/conftest.py`; `timeout = 900` s per test (pytest-timeout, `pyproject.toml` l.91) |
 | coverage | scope, thresholds | `src/embodic` minus Qt views; 90 % lines, 80 % branches (REQ-N-10, `assumption`) |
 
 ## 5. Dependencies
@@ -305,6 +320,7 @@ test (U-M1a resource-root check, PK tests) runs offline with `pip wheel --no-bui
 | mypy | 2.4.0 | `>=2.4,<3` | MIT | >= 3.10 | dev | REQ-N-08 strict typing of the core |
 | hypothesis | 6.168.3 | `>=6.168,<7` | MPL-2.0 | >= 3.10 | dev | property tests PR-01 to PR-14 (brief: "DRC never under-reports", rotation symmetry) |
 | pytest-cov | 7.1.0 | `>=7,<8` | MIT | >= 3.9 | dev | REQ-N-10 coverage gate |
+| pytest-timeout | 2.4.0 | `>=2.4,<3` | MIT | >= 3.7 | dev | hang guard: a test that hangs fails with its stack after `timeout = 900` s (`pyproject.toml` l.91 and its comment) instead of stalling the gate. Pin read from the installed 2.4.0 metadata (`verified` by `importlib.metadata`, 2026-10-09). Licence MIT in the installed PyPI metadata and in Agent 5's row (`dependency_licences.md` l.44). The line entered `pyproject.toml` (l.26) in commit 073d081 (`git log -S`); this row is added by U-D11 |
 | ezdxf | 1.4.4 | `>=1.4,<2` | MIT (classifier) | >= 3.10 | dev (test-only) | independent DXF parser and audit for UT-EXP-02; never imported by `src` |
 | pypdf | 6.19.0 | `>=6,<7` | BSD-3-Clause | >= 3.9 | dev (test-only) | independent PDF parser for UT-EXP-03 |
 | fonttools | 4.66.1 | `>=4.60,<5` | MIT | >= 3.11 | dev (test-only) | independent reader of the bundled TrueType files: the oracle for the stdlib parser of `io/pdf_writer.py` and for the glyph coverage test of `resources/fonts`; never imported by `src`. Licence read from PyPI metadata by Agent 5 (EV-108, `dependency_licences.md`); the Python range read from the installed 4.66.1 metadata (`verified` by running `importlib.metadata`, 2026-10-09). Added by U-M4f, row added by U-D10 |
