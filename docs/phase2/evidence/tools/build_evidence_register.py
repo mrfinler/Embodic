@@ -20,7 +20,7 @@ OUT = ROOT / "docs/phase2/evidence/evidence_register.json"
 PREPARED_BY = (
     "Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5 (rows EV-01 to EV-83); "
     "claude-sonnet-5-5 (rows EV-84 to EV-93, unit U-S3b; rows EV-94 to EV-105, unit U-S3c; "
-    "rows EV-106 to EV-108, unit U-S5a)"
+    "rows EV-106 to EV-108, unit U-S5a; row EV-106 revised, unit U-S5b)"
 )
 ACCESSED_DEFAULT = "2026-10-04"
 ACCESSED = {

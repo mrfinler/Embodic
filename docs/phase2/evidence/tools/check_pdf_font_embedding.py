@@ -1,6 +1,8 @@
 """Check that the PDF report embeds each bundled font file whole and byte for byte (D-039 b, OFL condition 2 reading).
 
-Rerun from the repository root: PYTHONPATH=src python docs/phase2/evidence/tools/check_pdf_font_embedding.py
+Rerun from the repository root, with an optional path to a report PDF:
+    PYTHONPATH=src python docs/phase2/evidence/tools/check_pdf_font_embedding.py [report.pdf]
+Without the path the script writes a D08 report itself. With it the script checks that PDF.
 Needs the dev extra (pypdf, fontTools). Exit 1 when an embedded font stream differs from the file in resources/fonts,
 when a bundled font that the writer names is missing from the PDF, or when a font file's SHA-256 differs from FONTS.md.
 """
@@ -20,7 +22,7 @@ from fontTools.ttLib import TTFont
 from embodic.api import ComputeOutcome, compute_project
 from embodic.io.examples import examples_dir
 from embodic.io.exporters import ExportSummary
-from embodic.io.pdf_writer import MONO_FILE, SANS_FILE
+from embodic.io.pdf_writer import MONO_FILE, SANS_FILE, SEMIBOLD_FILE
 from embodic.io.report import write_report_pdf
 from embodic.paths import resource_root
 
@@ -49,16 +51,20 @@ def embedded_fonts(pdf: Path) -> dict[str, bytes]:
     return found
 
 
-def main() -> int:
+def fresh_report_fonts() -> dict[str, bytes]:
     outcome = compute_project(examples_dir() / f"{EXAMPLE}.embodic.json")
     assert isinstance(outcome, ComputeOutcome), outcome
-    failures: list[str] = []
     with tempfile.TemporaryDirectory() as tmp:
         summary = write_report_pdf(outcome, Path(tmp) / "report.pdf")
         assert isinstance(summary, ExportSummary), summary
-        embedded = embedded_fonts(summary.path)
+        return embedded_fonts(summary.path)
+
+
+def main(argv: list[str]) -> int:
+    failures: list[str] = []
+    embedded = embedded_fonts(Path(argv[1])) if len(argv) > 1 else fresh_report_fonts()
     recorded = fonts_md_hashes()
-    for relative in (SANS_FILE, MONO_FILE):
+    for relative in (SANS_FILE, SEMIBOLD_FILE, MONO_FILE):
         disk = (FONTS / relative).read_bytes()
         name = TTFont(io.BytesIO(disk))["name"].getDebugName(6)
         stream = embedded.get(f"/{name}")
@@ -80,4 +86,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv))
