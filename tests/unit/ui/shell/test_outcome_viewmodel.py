@@ -3,6 +3,7 @@
 Qt-free: the submitter is a list, and results are fed back by hand in any order.
 """
 
+import dataclasses
 import math
 import re
 
@@ -16,12 +17,15 @@ from embodic.io.project import load_project, project_from_example, project_prove
 from embodic.model.vocabulary import Phase
 from embodic.results.status import Status
 from embodic.ui.viewmodels.outcome import (
+    GeometryScene,
     OutcomeComputing,
     OutcomeEmpty,
     OutcomeFailed,
     OutcomeViewModel,
+    board_letters,
     eyes_shown,
     ready_state,
+    scene_of_board,
 )
 
 D08 = "spiral_12c10p_d08"
@@ -102,8 +106,7 @@ def test_summary_strip_shows_verdicts_and_badges_from_the_outcome(d08_ready):
     """Catches a hard-coded badge or verdict: every value and status must come from the outcome (D-007)."""
     items = {item.key: item for item in d08_ready.summary}
     analysis = d08_ready.outcome.analysis
-    assert list(items) == ["sum-ok", "sum-drc", "sum-ke", "sum-r-phase"]
-    assert (items["sum-ok"].state, items["sum-drc"].state) == ("pass", "pass")
+    assert list(items) == ["sum-ke", "sum-r-phase"]
     assert items["sum-ke"].status is analysis.ke_line_peak_v_s_per_rad.status
     assert items["sum-r-phase"].status is analysis.resistance_phase_operating_ohm.status
     assert items["sum-ke"].assumed_count == len(analysis.ke_line_peak_v_s_per_rad.assumed_inputs)
@@ -190,3 +193,84 @@ def test_ui04_hiding_a_layer_is_recorded_and_showing_it_again_restores_it():
     assert vm.hidden_layers.value == frozenset({"L2"})
     vm.set_layer_visible("L2", True)
     assert vm.hidden_layers.value == frozenset()
+
+
+@pytest.fixture
+def three_boards(d08_ready):
+    """Return a vm that shows three boards: the D08 board three times, which is enough to step through them."""
+    scene = d08_ready.scene
+    triple = GeometryScene(boards=scene.boards * 3, layers=scene.layers, marks=scene.marks * 3)
+    ready = dataclasses.replace(d08_ready, scene=triple)
+    submitter = ListSubmitter()
+    vm = OutcomeViewModel(submitter)
+    vm.open_example(D08)
+    vm.on_finished(submitter.requests[-1].request_id, ready)
+    return vm
+
+
+@pytest.mark.req("REQ-F-13")
+def test_board_letters_exist_only_for_a_scene_of_more_than_one_board(d08_ready, three_boards):
+    """Catches a picker offered for a one-board design, or letters that do not follow the board count."""
+    assert board_letters(None) == board_letters(d08_ready.scene) == ()
+    assert board_letters(three_boards.state.value.scene) == (Phase.A, Phase.B, Phase.C)
+
+
+@pytest.mark.req("REQ-F-13")
+def test_scene_of_board_keeps_only_the_chosen_board_and_its_marks(three_boards):
+    """Catches a picker choice that draws every board anyway, or marks that belong to another board."""
+    scene = three_boards.state.value.scene
+    assert scene_of_board(scene, None) is scene
+    only = scene_of_board(scene, 1)
+    assert only.boards == (scene.boards[1],)
+    assert only.marks == (scene.marks[1],)
+    assert only.layers == scene.boards[1].copper_layers
+
+
+@pytest.mark.req("REQ-F-13", "REQ-N-12")
+def test_page_up_and_page_down_step_the_picker_and_stop_at_both_ends(three_boards):
+    """Catches a step that wraps from the last board to All boards, or one that runs past either end."""
+    vm = three_boards
+    picked = []
+    for delta in (1, 1, 1, 1, -1, -1, -1, -1, -1):
+        vm.step_board(delta)
+        picked.append(vm.board.value)
+    assert picked == [0, 1, 2, 2, 1, 0, None, None, None]
+
+
+@pytest.mark.req("REQ-F-13")
+def test_a_one_board_design_ignores_the_picker(d08_ready):
+    """Catches Page Down or Locate selecting board 1 of a design that has no picker."""
+    submitter = ListSubmitter()
+    vm = OutcomeViewModel(submitter)
+    vm.open_example(D08)
+    vm.on_finished(submitter.requests[-1].request_id, d08_ready)
+    vm.step_board(1)
+    vm.select_board(0)
+    assert vm.board.value is None
+
+
+@pytest.mark.req("REQ-F-13")
+def test_a_new_result_with_fewer_boards_resets_the_picker_to_all_boards(three_boards, d08_ready):
+    """Catches a stale picker index that points past the boards of the next design and draws nothing."""
+    vm = three_boards
+    vm.select_board(2)
+    vm.compute_now()
+    vm.on_finished(vm._latest_id, d08_ready)
+    assert vm.board.value is None
+
+
+@pytest.mark.req("REQ-F-13", "REQ-N-12")
+def test_bracket_keys_solo_the_previous_or_next_layer_and_all_layers_lie_between(three_boards):
+    """Catches a solo that hides the wrong layers, never returns to all layers, or ignores direction."""
+    vm = three_boards
+    assert vm.state.value.scene.layers == ("L1", "L2")
+    forward = []
+    for _ in range(4):
+        vm.step_layer_solo(1)
+        forward.append(vm.hidden_layers.value)
+    assert forward == [frozenset({"L2"}), frozenset({"L1"}), frozenset(), frozenset({"L2"})]
+    backward = []
+    for _ in range(3):
+        vm.step_layer_solo(-1)
+        backward.append(vm.hidden_layers.value)
+    assert backward == [frozenset(), frozenset({"L1"}), frozenset({"L2"})]

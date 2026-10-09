@@ -11,6 +11,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Literal, TypeAlias
 
+from embodic.drc import DrcReport
 from embodic.errors import IssueCategory, Severity, ValidationIssue, message_for
 from embodic.model.vocabulary import Phase
 from embodic.outcome import ComputeOutcome
@@ -267,6 +268,7 @@ class DrcRow:
     required_text: str
     layer_text: str
     at_mm: tuple[float, float]
+    board_text: str = ""  # phase letter of the board, "" when the design has one board
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -279,10 +281,18 @@ class DrcTable:
     warning_count: int
     rows: tuple[DrcRow, ...]
     note: str | None
+    boards: tuple[Phase, ...] = ()  # the letter of each board when the design has more than one
 
 
 def _count(n: int, one: str, many: str) -> str:
     return text(one) if n == 1 else text(many, count=n)
+
+
+def _board_verdict(letter: Phase, report: DrcReport) -> str:
+    if report.violation_count == 0:
+        return text("drc.board.pass", letter=letter.value)
+    failures = _count(report.violation_count, "drc.count.failure-one", "drc.count.failures")
+    return text("drc.board.fail", letter=letter.value, failures=failures)
 
 
 def drc_table(outcome: ComputeOutcome | None) -> DrcTable | None:
@@ -295,6 +305,7 @@ def drc_table(outcome: ComputeOutcome | None) -> DrcTable | None:
         )
     warnings = sum(1 for i in outcome.issues if i.category is IssueCategory.DRC and i.severity is Severity.WARNING)
     failures = sum(r.violation_count for r in outcome.drc)
+    letters = tuple(Phase)[: len(outcome.drc)] if len(outcome.drc) > 1 else ()
     violations = [(board, v) for board, report in enumerate(outcome.drc, start=1) for v in report.violations]
     rows = tuple(
         DrcRow(
@@ -307,6 +318,7 @@ def drc_table(outcome: ComputeOutcome | None) -> DrcTable | None:
             required_text=format_quantity(v.required_mm, Unit.MM, significant=DRC_FIGURES),
             layer_text=v.layer or text("drc.layer.all"),
             at_mm=v.at_mm,
+            board_text=letters[board - 1].value if letters else "",
         )
         for number, (board, v) in enumerate(violations, start=1)
     )
@@ -319,8 +331,19 @@ def drc_table(outcome: ComputeOutcome | None) -> DrcTable | None:
             "warnings": _count(warnings, "drc.count.warning-one", "drc.count.warnings"),
         }
         summary = text("drc.summary.fail", **counts)
+    if letters:
+        verdicts = ", ".join(_board_verdict(letter, r) for letter, r in zip(letters, outcome.drc, strict=True))
+        summary = text("drc.summary.boards", summary=summary, boards=verdicts)
     note = text("drc.truncated", shown=len(rows), total=failures) if len(rows) < failures else None
-    return DrcTable(state=state, summary=summary, failure_count=failures, warning_count=warnings, rows=rows, note=note)
+    return DrcTable(
+        state=state,
+        summary=summary,
+        failure_count=failures,
+        warning_count=warnings,
+        rows=rows,
+        note=note,
+        boards=letters,
+    )
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

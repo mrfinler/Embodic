@@ -58,6 +58,10 @@ def test_every_symbol_is_written_in_the_equation_specification() -> None:
         ("kt_n_m_per_a", "Torque constant per line current, rms Kt"),
         ("current_density_a_per_mm2", "Current density J"),
         ("loss_copper_w", "Copper loss P_Cu"),
+        ("efficiency", "Efficiency, electromagnetic only η"),
+        ("skin_depth_mm", "Skin depth δ"),
+        ("temperature_rise_k", "Temperature rise, first-order estimate ΔT"),
+        ("loss_delta_circulating_w", "Delta circulating-current loss P_δ,circ"),
         ("ke_line_peak_v_s_per_rad", "Line back-EMF constant, peak"),
         ("emf_phase_rms_v", "Phase back-EMF, rms"),
     ],
@@ -75,5 +79,6 @@ def test_the_pdf_key_results_title_carries_the_symbol(tmp_path: Path) -> None:
     text = "\n".join(page.extract_text() for page in pypdf.PdfReader(summary.path).pages)
     rows = text.split("Key results", 1)[1].split("DRC summary", 1)[0].splitlines()
     assert any(row.startswith("Phase resistance at operating temperature R_ph ") for row in rows)
+    assert any(row.startswith("Efficiency, electromagnetic only η ") for row in rows)
     peak = next(row for row in rows if row.startswith("Line back-EMF constant, peak"))
     assert peak.startswith("Line back-EMF constant, peak 3"), peak

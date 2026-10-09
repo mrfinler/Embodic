@@ -10,8 +10,20 @@ from embodic.paths import resource_root
 from embodic.ui.fonts import FONT_FILES, font_file
 
 FONTS_DIR = resource_root() / "fonts"
-# The characters embodic prints in units and values: µ, Ω, °, minus, ≈, middle dot and the narrow no-break space.
-REQUIRED = {"µ": 0x00B5, "Ω": 0x03A9, "°": 0x00B0, "−": 0x2212, "≈": 0x2248, "·": 0x00B7, "NNBSP": 0x202F}
+# The characters embodic prints in units, values and quantity symbols: µ, Ω, °, minus, ≈, middle dot, the narrow
+# no-break space and the Greek η, δ, Δ of results/labels.py.
+REQUIRED = {
+    "µ": 0x00B5,
+    "Ω": 0x03A9,
+    "°": 0x00B0,
+    "−": 0x2212,
+    "≈": 0x2248,
+    "·": 0x00B7,
+    "NNBSP": 0x202F,
+    "eta": 0x03B7,
+    "delta": 0x03B4,
+    "Delta": 0x0394,
+}
 # JetBrains Mono 2.304 has no U+202F glyph (verified with fontTools); embodic prints none today.
 KNOWN_GAPS = {("JetBrainsMono/JetBrainsMono-Regular.ttf", 0x202F), ("JetBrainsMono/JetBrainsMono-Medium.ttf", 0x202F)}
 FILES = [relative for files in FONT_FILES.values() for relative in files]

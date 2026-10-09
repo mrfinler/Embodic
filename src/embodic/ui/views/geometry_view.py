@@ -139,6 +139,8 @@ class GeometryView(QGraphicsView):
     """Draws a GeometryScene; layers in ``hidden`` are left out of the scene, not merely hidden."""
 
     cursor_moved = Signal(float, float)
+    board_step = Signal(int)  # Page Up (-1) and Page Down (+1): the board picker's previous and next item
+    layer_step = Signal(int)  # [ (-1) and ] (+1): the previous and next layer solo
 
     def __init__(self) -> None:
         super().__init__()
@@ -429,7 +431,7 @@ class GeometryView(QGraphicsView):
         self.zoom_by(ZOOM_STEP if event.angleDelta().y() > 0 else 1 / ZOOM_STEP)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:  # noqa: N802 (Qt override)
-        """Arrow keys pan (Shift five times as far); +, - and 0 zoom (design_spec.md section 10)."""
+        """Arrow keys pan (Shift five times as far); +, - and 0 zoom; Page Up and Down and [ and ] step (spec 10)."""
         key = Qt.Key(event.key())
         pan = {Qt.Key.Key_Left: (-1, 0), Qt.Key.Key_Right: (1, 0), Qt.Key.Key_Up: (0, -1), Qt.Key.Key_Down: (0, 1)}
         if key in pan:
@@ -443,6 +445,10 @@ class GeometryView(QGraphicsView):
             self.zoom_by(1 / ZOOM_STEP)
         elif key == Qt.Key.Key_0:
             self.fit_view()
+        elif key in (Qt.Key.Key_PageUp, Qt.Key.Key_PageDown):
+            self.board_step.emit(1 if key == Qt.Key.Key_PageDown else -1)
+        elif key in (Qt.Key.Key_BracketLeft, Qt.Key.Key_BracketRight):
+            self.layer_step.emit(1 if key == Qt.Key.Key_BracketRight else -1)
         else:
             super().keyPressEvent(event)
 

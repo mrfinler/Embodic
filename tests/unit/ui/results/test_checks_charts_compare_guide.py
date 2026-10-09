@@ -1,6 +1,7 @@
 """DRC table, chart models, comparison and the equation register (UI-10, UI-17, UI-30, UI-34). Qt-free."""
 
 import cmath
+import dataclasses
 import math
 
 import numpy as np
@@ -45,6 +46,31 @@ def test_drc_table_of_a_passing_design_says_passed(d08):
     table = drc_table(d08)
     assert (table.state, table.summary, table.rows) == ("pass", "DRC: passed, no failures", ())
     assert drc_table(None) is None
+
+
+@pytest.mark.req("REQ-F-33")
+def test_drc_table_of_a_stack_names_every_board_and_lists_failures_whatever_the_picker_shows(wave):
+    """Catches a summary without the per-board verdicts, a failure row without its board, or a hidden board."""
+    report = wave.drc[0]
+    clean = dataclasses.replace(report, passed=True, violations=(), violation_count=0)
+    two = dataclasses.replace(report, violations=report.violations[:2], violation_count=2)
+    table = drc_table(dataclasses.replace(wave, drc=(clean, two, clean)))
+    assert table.summary == "DRC: 2 failures, 0 warnings. Board A pass, Board B 2 failures, Board C pass."
+    assert table.boards == (Phase.A, Phase.B, Phase.C)
+    assert [(row.board, row.board_text) for row in table.rows] == [(2, "B"), (2, "B")]
+    one = dataclasses.replace(report, violations=report.violations[:1], violation_count=1)
+    assert "Board A 1 failure," in drc_table(dataclasses.replace(wave, drc=(one, clean))).summary
+    assert drc_table(dataclasses.replace(wave, drc=(clean, clean))).summary.endswith(
+        "DRC: passed, no failures. Board A pass, Board B pass."
+    )
+
+
+@pytest.mark.req("REQ-F-33")
+def test_drc_table_of_one_board_has_no_board_column_text(wave, d08):
+    """Catches a Board letter or a per-board sentence on a design that has one board."""
+    table = drc_table(wave)
+    assert table.boards == () and {row.board_text for row in table.rows} == {""}
+    assert drc_table(d08).summary == "DRC: passed, no failures"
 
 
 def fundamental(waveform):

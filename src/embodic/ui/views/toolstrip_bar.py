@@ -2,9 +2,10 @@
 
 from collections.abc import Callable, Mapping
 
-from PySide6.QtCore import QEvent, QObject, QSize, Qt
-from PySide6.QtGui import QAction, QKeySequence
+from PySide6.QtCore import QEvent, QObject, QRect, QSize, Qt, Signal
+from PySide6.QtGui import QAction, QColor, QIcon, QKeySequence, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
+    QComboBox,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -16,13 +17,18 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from embodic.model.vocabulary import Phase
 from embodic.ui.strings import text
 from embodic.ui.theme import ThemeTokens
 from embodic.ui.toolstrip import TOOLSTRIP, ToolstripAction, ToolstripTab
+from embodic.ui.viewmodels.appearance import PhaseRenderMode
 from embodic.ui.views.style import themed_icon
 
 # None marks a command a later build implements: its button stays visible, disabled, with the reason.
 CommandTable = Mapping[str, Callable[[], None] | None]
+
+SWATCH_PX = 16
+SWATCH_BORDER_PX = 2
 
 _MOVE_KEYS = {Qt.Key.Key_Left: -1, Qt.Key.Key_Right: 1, Qt.Key.Key_Up: -1, Qt.Key.Key_Down: 1}
 
@@ -37,6 +43,24 @@ def tooltip(action: ToolstripAction, available: bool) -> str:
     head = f"{label} ({action.shortcut})." if action.shortcut else f"{label}."
     sentence = text(f"{action.id}.tooltip") if available else text("toolstrip.unavailable.reason")
     return f"{head} {sentence}"
+
+
+def board_swatch(letter: Phase, tokens: ThemeTokens, mode: PhaseRenderMode) -> QIcon:
+    """Return the swatch of a board item: the phase letter in ink on a surface square edged in the phase colour.
+
+    The letter carries the meaning; the edge repeats it in colour, or in the phase's grey in greyscale mode (D-011).
+    """
+    style = tokens.phase_style(letter)
+    edge = QColor(style.colour_hex if mode is PhaseRenderMode.COLOUR else style.grey_hex)
+    pixmap = QPixmap(SWATCH_PX, SWATCH_PX)
+    pixmap.fill(QColor(tokens.colours["surface"]))
+    painter = QPainter(pixmap)
+    painter.setPen(QPen(edge, 2 * SWATCH_BORDER_PX))
+    painter.drawRect(0, 0, SWATCH_PX - 1, SWATCH_PX - 1)
+    painter.setPen(QColor(tokens.colours["text-1"]))
+    painter.drawText(QRect(0, 0, SWATCH_PX, SWATCH_PX), Qt.AlignmentFlag.AlignCenter, letter.value)
+    painter.end()
+    return QIcon(pixmap)
 
 
 class _ArrowKeys(QObject):
@@ -61,7 +85,13 @@ class _ArrowKeys(QObject):
 
 
 class ToolstripBar(QToolBar):
-    """The toolstrip; every TOOLSTRIP row becomes a QAction (shortcut, command) and a QToolButton (objectName = id)."""
+    """The toolstrip; every TOOLSTRIP row becomes a QAction (shortcut, command) and a QToolButton (objectName = id).
+
+    The View tab also holds the board picker (screens.md section 4.1). It is a view choice, not an action, so it has
+    no TOOLSTRIP row.
+    """
+
+    board_selected = Signal(object)  # int index of the board, or None for "All boards"
 
     def __init__(self, commands: CommandTable, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -74,6 +104,9 @@ class ToolstripBar(QToolBar):
         self.actions_by_id: dict[str, QAction] = {}
         self.buttons: dict[str, QToolButton] = {}
         self._filters: list[_ArrowKeys] = []
+        self.board_picker = QComboBox()
+        self._offered: tuple[tuple[Phase, ...], str, PhaseRenderMode] | None = None
+        self.board_section = QFrame()
         self.tabs = QTabBar()
         self.tabs.setObjectName("toolstrip-tabs")
         self.tabs.setExpanding(False)
@@ -139,12 +172,52 @@ class ToolstripBar(QToolBar):
             button = self._button(row, self._action(row, commands[row.command]))
             groups[row.group].addWidget(button)
             page_buttons.append(button)
+        if tab is ToolstripTab.VIEW:
+            row_layout.addWidget(self._board_section())
         row_layout.addStretch(1)
         arrows = _ArrowKeys(page_buttons)
         for button in page_buttons:
             button.installEventFilter(arrows)
         self._filters.append(arrows)
         return page
+
+    def _board_section(self) -> QFrame:
+        section = self.board_section
+        section.setProperty("class", "ts-section")
+        section.setObjectName("ts-section-board")
+        column = QVBoxLayout(section)
+        column.setContentsMargins(0, 0, 0, 0)
+        picker = self.board_picker
+        picker.setObjectName("board-picker")
+        picker.setAccessibleName(text("shell.board-picker.accessible"))
+        picker.setToolTip(text("shell.board-picker.tooltip"))
+        picker.setIconSize(QSize(SWATCH_PX, SWATCH_PX))
+        picker.currentIndexChanged.connect(lambda _: self.board_selected.emit(picker.currentData()))
+        caption = QLabel(text("toolstrip.group-board.label"))
+        caption.setProperty("class", "ts-caption")
+        caption.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        column.addWidget(picker)
+        column.addWidget(caption)
+        section.setVisible(False)
+        return section
+
+    def show_boards(
+        self, letters: tuple[Phase, ...], choice: int | None, tokens: ThemeTokens, mode: PhaseRenderMode
+    ) -> None:
+        """Offer "All boards" and one item per board letter, or hide the picker when the design has one board."""
+        picker = self.board_picker
+        picker.blockSignals(True)
+        offered = (letters, tokens.name, mode)
+        if offered != self._offered:
+            self._offered = offered
+            picker.clear()
+            picker.addItem(text("shell.board-picker.all"), None)
+            for index, letter in enumerate(letters):
+                label = text("shell.board-picker.item", letter=letter.value)
+                picker.addItem(board_swatch(letter, tokens, mode), label, index)
+        picker.setCurrentIndex(0 if choice is None else choice + 1)
+        picker.blockSignals(False)
+        self.board_section.setVisible(bool(letters))
 
     def show_tab(self, tab: ToolstripTab) -> None:
         """Bring one tab to the front."""

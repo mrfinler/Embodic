@@ -13,7 +13,7 @@ from embodic.results.status import Status
 from embodic.ui.views.geometry_view import DATA_KIND
 
 D08, WAVE = "spiral_12c10p_d08", "wave_16p_example"
-DRC_COLUMNS = ("number", "severity", "rule", "message", "measured", "required", "layer")
+DRC_COLUMNS = ("number", "board", "severity", "rule", "message", "measured", "required", "layer")
 CELL_MARGIN_PX = 3  # Fusion item text margin on each side (PM_FocusFrameHMargin + 1)
 
 
