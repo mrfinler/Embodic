@@ -252,7 +252,8 @@ class LayerPanel(FieldPanel):
     def _show_pairs(self, table: QTableWidget) -> None:
         """One row per pair slot; a deleted pair stays dimmed with "No coil"; the rotation cell carries its chip."""
         spec = FIELD_BY_KEY[f"{PAIRS_POINTER}/*/rotation_rad"]
-        rows, tips = [], {}
+        rows: list[tuple[str, ...]] = []
+        tips: dict[int, str] = {}
         for r, slot in enumerate(self._slots):
             rotation = display_text(spec, slot.pair.rotation_rad) if slot.pair else text("layer-list.no-coil")
             rows.append(
@@ -268,6 +269,7 @@ class LayerPanel(FieldPanel):
             if slot.pair is None:
                 for c in range(table.columnCount()):
                     item = table.item(r, c)
+                    assert item is not None
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEnabled)
                 table.removeCellWidget(r, ROTATION_COLUMN)
                 continue
@@ -275,10 +277,10 @@ class LayerPanel(FieldPanel):
             chip = None if row is None else row.provenance
             word = "" if chip is None else text(f"design.prov.{chip.provenance.value}")
             table.setCellWidget(r, ROTATION_COLUMN, _value_with_chip(rows[r][ROTATION_COLUMN], word))
-            table.item(r, ROTATION_COLUMN).setText("")
-            table.item(r, ROTATION_COLUMN).setData(
-                Qt.ItemDataRole.AccessibleTextRole, f"{rows[r][ROTATION_COLUMN]} {word}"
-            )
+            cell = table.item(r, ROTATION_COLUMN)
+            assert cell is not None
+            cell.setText("")
+            cell.setData(Qt.ItemDataRole.AccessibleTextRole, f"{rows[r][ROTATION_COLUMN]} {word}")
         fit_rows(table)
         fit_width(table)
 

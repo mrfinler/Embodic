@@ -747,11 +747,11 @@ class DesignSession:
         pairs = list_items(values, PAIRS_POINTER)
         if not 0 <= position < len(pairs):
             return
-        removed = pairs.pop(position)
-        number = removed["index"] + 1 if isinstance(removed.get("index"), int) else position + 1
-        groups = [kept for group in series_groups(values) if (kept := [i for i in group if i != removed.get("index")])]
+        index = pairs.pop(position).get("index")
+        number = index + 1 if isinstance(index, int) else position + 1
+        groups = [kept for group in series_groups(values) if (kept := [i for i in group if i != index])]
         listed: list[JsonValue] = [*pairs]
-        grouped: list[JsonValue] = [*groups]
+        grouped: list[JsonValue] = [list[JsonValue](group) for group in groups]
         notice = text("pair-list.removed", number=number)
         self._edit({PAIRS_POINTER: listed, SERIES_GROUPS_POINTER: grouped}, pairs_notice=notice)
 
@@ -764,7 +764,7 @@ class DesignSession:
             groups[group].append(index)
         else:
             groups.append([index])
-        kept: list[JsonValue] = [g for g in groups if g]
+        kept: list[JsonValue] = [list[JsonValue](g) for g in groups if g]
         self.edit(SERIES_GROUPS_POINTER, kept)
 
     def add_screw_pattern(self) -> None:
