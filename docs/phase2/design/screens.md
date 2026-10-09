@@ -2,7 +2,9 @@ Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5
 
 # embodic screens v2.2 (Phase 2, PySide6)
 
-Date 2026-10-08, revised 2026-10-09 (U-S4d): rulings of `m4_review.md` applied to the conventions and sections 1, 2,
+Date 2026-10-08, revised 2026-10-09 (U-S4e): rulings a, c, d and g of `m4_review_2.md` applied to sections 4, 5, 6,
+7, 14a and 16 (`pair-list`, the screw fields, the card grid, the DRC columns, 26 declared names, example titles).
+Revised 2026-10-09 (U-S4d): rulings of `m4_review.md` applied to the conventions and sections 1, 2,
 3, 4, 5, 6.1 (new) and 14a (new). Read with `design_spec.md` (tokens, toolstrip, hooks, keyboard map). v2 applied rows R1 to R14 of
 `docs/phase2/architecture/screen_model_reconciliation.md` to sections 1 to 5, 6 and 7. v2.1 (U-S4c) follows the model
 after U-M2a-fix and U-M2a-fix2 and decisions D-024, D-025d and D-031:
@@ -149,8 +151,9 @@ State rules:
 | `param-via-pad` | "Via pad", mm | `/vias/pad_mm` | spiral, serpentine, wave | required | `INVALID_VIA_RING` |
 | `param-vias-per-transition` | "Vias per transition" | `/vias/vias_per_transition` | spiral, serpentine, wave | default | none |
 | `param-via-plating` | "Via plating", µm | `/vias/plating_um` | spiral, serpentine, wave | required, property | none |
-| `layer-list` | QTableView: Layer, Kind, Thickness (µm); spiral adds Pair and Rotation (°). Columns size to their header; no sideways scroll at 300 px. The series group is set from the row's context menu, the joins-via layer shows in the row tooltip, and layer visibility stays with the canvas toggles (U-S4d g1). Delete removes the selected pair (spiral) | `/stackup/layers`, `/stackup/layers/*/kind`, `/stackup/layers/*/name`, `/stackup/layers/*/thickness_mm`, `/stackup/layers/*/material`, `/winding/layers/pairs`, `/winding/layers/pairs/*/index`, `/winding/layers/pairs/*/layer_in`, `/winding/layers/pairs/*/layer_out`, `/winding/layers/pairs/*/phases`, `/winding/layers/series_groups` | spiral, serpentine, wave | required | `INVALID_STACKUP_NO_COPPER`, `INVALID_LAYER_NAME_DUPLICATE`, `INVALID_PAIR_LAYER_UNKNOWN`, `INVALID_PAIR_LAYER_SAME`, `INVALID_PAIR_INDEX_DUPLICATE`, `INVALID_SERIES_GROUPS`, `RANGE_SPIRAL_COPPER_COUNT_ODD` (WARNING), `INVALID_SERPENTINE_COPPER_COUNT` |
-| `layer-pairs-notice` | QFrame[class="notice"] under `layer-list`: one sentence and an **Undo** button | derived: what `derive_layer_pairs` changed in the last edit | spiral | hidden | none |
+| `layer-list` | QTableView of the stack-up: Layer, Kind, Thickness (µm). Kind reads "Copper" or "Dielectric" in full, never elided. Columns size to their content; no sideways scroll at 300 px (U-S4e ruling c). Layer visibility stays with the canvas toggles (U-S4d g1). Delete removes the selected layer row | `/stackup/layers`, `/stackup/layers/*/kind`, `/stackup/layers/*/name`, `/stackup/layers/*/thickness_mm`, `/stackup/layers/*/material` | spiral, serpentine, wave | required | `INVALID_STACKUP_NO_COPPER`, `INVALID_LAYER_NAME_DUPLICATE`, `RANGE_SPIRAL_COPPER_COUNT_ODD` (WARNING), `INVALID_SERPENTINE_COPPER_COUNT` |
+| `pair-list` | QTableView of the layer pairs under `layer-list`, caption "Layer pairs": Pair (the number, "1" is index 0), Layers ("L1, L2"), Rotation (°) with the provenance chip in the cell. One row per pair the copper count makes; a deleted pair keeps its row dimmed with "No coil" in the Rotation cell. The row tooltip names the vias ("Pair 1 joins L1 and L2 through vias."); the row context menu sets the series group. Delete removes the selected pair (U-S4e ruling c) | `/winding/layers/pairs`, `/winding/layers/pairs/*/index`, `/winding/layers/pairs/*/layer_in`, `/winding/layers/pairs/*/layer_out`, `/winding/layers/pairs/*/phases`, `/winding/layers/series_groups` | spiral | required | `INVALID_PAIR_LAYER_UNKNOWN`, `INVALID_PAIR_LAYER_SAME`, `INVALID_PAIR_INDEX_DUPLICATE`, `INVALID_SERIES_GROUPS` |
+| `layer-pairs-notice` | QFrame[class="notice"] under `pair-list`: one sentence and an **Undo** button | derived: what `derive_layer_pairs` changed in the last edit | spiral | hidden | none |
 
 State rules:
 
@@ -163,11 +166,13 @@ State rules:
   phase. With one board per phase the stack-up describes one board, so the count equals layers per phase
   (`INVALID_SERPENTINE_COPPER_COUNT`). `param-layer-count` offers only the value that applies. Today the model checks
   the count only for one board per phase (`validate.py` `_serpentine_layers`, `verified` by reading).
-- The pair columns of `layer-list` (Pair, Rotation) show for spiral only. The pair column shows the pair index plus one
-  ("Pair 1" is index 0). The row context menu "Series group" edits `/winding/layers/series_groups`.
+- `pair-list` shows for spiral only. Its Pair column shows the pair index plus one ("1" is index 0). The row context
+  menu "Series group" edits `/winding/layers/series_groups`. Pairs are their own rows because a pair spans two copper
+  layers: in one table with the stack-up, each pair showed twice and Delete on a layer row removed a pair, not the
+  layer (U-S4e ruling c).
 - Rotation mode (R4) reads the current pair rotations. None writes 0 to every pair. Alternate writes pi/Q to every
   second pair, Q being the coil count (option M3, UT-GEO-11). Custom shows `param-pair-rotation`, which edits the pair
-  selected in `layer-list`; the other modes hide it.
+  selected in `pair-list`; the other modes hide it.
 - The field check `INVALID_VIA_RING` compares the via pad with the drill. The DRC check `DRC_ANNULAR_RING` compares
   pad minus drill with twice `param-min-ring` and reports in the DRC table. A design can pass the first and fail the
   second (R13).
@@ -187,14 +192,14 @@ Layer pairs follow the copper count (spiral, D-024, D-025d):
 - `layer-pairs-notice` names what the edit changed, for example "Layer pairs: 3. Pair 3 added with the default
   rotation." or "Layer pairs: 1. Pair 2 removed: the stack-up has 2 copper layers." **Undo** reverts the whole edit,
   the copper count included (UX-AC-12). The notice hides at the next edit.
-- Delete on a selected pair row removes that pair, not its copper layers. The two layers show "No coil" in the pair
-  column, and `layer-pairs-notice` reads "Pair 2 removed. It returns with default values when the copper layer count
+- Delete on a selected `pair-list` row removes that pair, not its copper layers. The row stays, dimmed, with "No coil"
+  in the Rotation cell, and `layer-pairs-notice` reads "Pair 2 removed. It returns with default values when the copper layer count
   changes." The count is the structure, so a later count change derives the pair again (Fable ruling on U-M2a-fix2).
   Today this fails for a pair that is not the last one: `derive_layer_pairs` keys the surviving pairs by list
   position, so the pairs after the deleted one shift and the next derivation repeats an index
   (`checks/pair_delete_probe.py` exits 1, `verified` by running on 2026-10-08; DEF-S4c-01).
-- An odd copper count leaves the last copper layer without a pair. Its pair column reads "No coil", and
-  `layer-list-error` shows the WARNING text of `RANGE_SPIRAL_COPPER_COUNT_ODD`: "Spiral coils use copper layers in
+- An odd copper count leaves the last copper layer without a pair. `pair-list` has no row for it, its `layer-list` row
+  tooltip reads "No coil: this copper layer has no partner.", and `layer-list-error` shows the WARNING text of `RANGE_SPIRAL_COPPER_COUNT_ODD`: "Spiral coils use copper layers in
   pairs; with an odd count one copper layer carries no coil." Compute still runs. `param-layer-count` offers only even
   counts, so an odd count comes from a `layer-list` edit or a loaded file.
 - After a count change, rotation mode reads the rotations again. A new pair at the default rotation can turn Alternate
@@ -259,8 +264,10 @@ One `QGroupBox` per group, in this order. Every row applies to all three topolog
 | `param-bore-across-flats` | Outline | "Bore across flats", mm | `/outline/bore/across_flats_mm` (polygon) | required | none |
 | `param-bore-corner-radius` | Outline | "Bore corner radius", mm | `/outline/bore/corner_radius_mm` (polygon) | default | none |
 | `param-bore-rotation` | Outline | "Bore rotation", degrees | `/outline/bore/rotation_rad` (polygon) | default | none |
-| `screw-table` | Fasteners | QTableView: size, fit, hole diameter (mm, read-only), count, pitch radius (mm), angle offset (degrees); one row per screw pattern | `/outline/screws`, `/outline/screws/*/size`, `/outline/screws/*/fit`, `/outline/screws/*/count`, `/outline/screws/*/pitch_radius_mm`, `/outline/screws/*/angle_offset_rad` | default (no patterns) | DRC `DRC_COPPER_HOLE` |
+| `screw-table` | Fasteners | QTableView: Size, Count, Pitch radius (mm); one row per screw pattern. Columns size to their content; no sideways scroll at 300 px (U-S4e ruling c) | `/outline/screws`, `/outline/screws/*/size`, `/outline/screws/*/count`, `/outline/screws/*/pitch_radius_mm` | default (no patterns) | DRC `DRC_COPPER_HOLE` |
+| `param-screw-fit` | Fasteners | "Fit of the selected pattern", QComboBox | `/outline/screws/*/fit` | default | none |
 | `param-screw-hole-diameter` | Fasteners | "Hole diameter of the selected pattern", mm | `/outline/screws/*/hole_diameter_mm` | required when a pattern exists, no default (D-031a) | none |
+| `param-screw-angle-offset` | Fasteners | "Angle offset of the selected pattern", degrees | `/outline/screws/*/angle_offset_rad` | default | none |
 | `btn-screw-add` | Fasteners | QToolButton "Add pattern" | command | none | none |
 | `btn-screw-remove` | Fasteners | QToolButton "Remove pattern" | command | none | none |
 | `param-copper-weight` | Stack-up and manufacturing | "Copper weight", oz | view model: stack-up generator writes `/stackup/layers` | empty | none |
@@ -300,10 +307,11 @@ State rules:
 - The arc rows of the magnet show for Arc, the block rows for Block.
 - `screw-table` starts with no rows. Each new row starts with its required cells empty. An example ported from the
   two Xcoil rings has two rows (R6).
-- `param-screw-hole-diameter` edits the pattern selected in `screw-table`, as `param-pair-rotation` does for pairs. It
-  is a field and not a table cell because a required value needs the unit label, the provenance chip, the "Required"
-  hint and the error label, and a cell carries none of them. It is hidden while the table has no rows. A new pattern
-  starts with the hole diameter empty, and its read-only cell reads "Required". **Go to first missing field** selects
+- `param-screw-fit`, `param-screw-hole-diameter` and `param-screw-angle-offset` edit the pattern selected in
+  `screw-table`, as `param-pair-rotation` does for pairs. They are fields and not table cells because each needs the
+  unit label, the provenance chip, the hint and the error label, and a cell carries none of them; six cells also
+  needed 315 px where the 300 px inspector leaves about 240 (U-S4e ruling c, measured with `tools/design/layout_probe.py`).
+  They hide while the table has no rows. A new pattern starts with the hole diameter empty and "Required". **Go to first missing field** selects
   the row and focuses the field. The UI fills no ISO 273 value; such values ship only as labelled example values once
   Agent 5 cites the source (D-031a, U-S3b).
 - Rotor and magnets shows the pole count of `param-poles` read-only.
@@ -333,7 +341,9 @@ State rules: until `parse_draft` returns `DesignParameters` the tab shows one se
 required field is valid." and the button `btn-results-first-missing` "Go to first missing field", which runs the
 command of `btn-first-missing` (R11). While computing, values dim to 60 % after 300 ms and the status bar
 reads "Updating"; previous values stay until new ones arrive. Invalid input keeps the last valid results dimmed with
-`stale=true` and the stamp "Last valid results". Keys from Phase 1 stay: `r-phase`, `ke`, `kt`, `ls`, `dt`, `j`.
+`stale=true` and the stamp "Last valid results". Card grid (U-S4e ruling d): columns = the largest n with
+n x 280 px + (n − 1) x 8 px within the viewport width after the vertical scroll bar; cards share the width equally and
+reflow on resize. The grid never scrolls sideways and never places a card past the viewport edge. Keys from Phase 1 stay: `r-phase`, `ke`, `kt`, `ls`, `dt`, `j`.
 
 ### 6.1 Status cards of the results rail (U-S4d e)
 
@@ -352,11 +362,15 @@ contradiction. `issues-list` takes the title "Input issues" and the empty text "
 | objectName | Qt widget | Binding key | Behaviour |
 |---|---|---|---|
 | `drc-summary` | QLabel[class="check-state"] with `check-pass` or `check-fail` icon | `drc.passed`, `drc.violation_count` | "DRC: 2 failures, 1 warning" |
-| `drc-table` | QTableView: severity icon, rule code, message, measured, required, layer | `drc.violations` | Rows with `state=fail` get a 4 px fail border. Enter or double-click = Locate. |
+| `drc-table` | QTableView: severity glyph (24 px, no word), Message, Measured (mm), Required (mm), Layer | `drc.violations` | Rows with `state=fail` get a 4 px fail border. Enter or double-click = Locate. The rule code and the severity word go to the row tooltip and the accessible description ("Error. DRC_TRACE_VIA. A trace is closer to a via than the via clearance rule. Measured 0.199965 mm, required 0.2 mm, layer L1."); Ctrl+C copies the row with the code. No row-number column. |
 | `btn-drc-locate` | QPushButton | selected row | Zooms the canvas to `at_mm`, dims copper to 35 %, draws the ink marker |
 | `drc-rule-note` | QLabel[class="hint"] | static | "A violation is reported when clearance < rule − 1e-6 mm (D-006)." |
 
-The message column shows the catalogue text of the violation's `DRC_*` code (R14). The ANNULAR_RING row is where the
+The message column shows the catalogue text of the violation's `DRC_*` code (R14). Column budget (U-S4e ruling d):
+the glyph column is 24 px; Measured, Required and Layer size to their content, numbers right-aligned in JetBrains Mono
+with the unit in the header only; Message stretches, holds at least 200 px and wraps to two lines. The fixed columns
+need about 250 px, so the table never scrolls sideways in a centre pane of 480 px or more, which every window from
+960 px wide gives. The glyph shape (`check-fail`, `check-warn`) and the fail border carry the severity without colour. The ANNULAR_RING row is where the
 relation pad minus drill of at least twice the minimum annular ring appears (R13).
 
 ## 8. Back-EMF (`tab-back-emf`) and 9. Torque-speed (`tab-torque-speed`)
@@ -427,7 +441,7 @@ objectName that no table defines.
 | `issues-list` | QListWidget of the input issues in the rail (section 6.1) | ratified |
 | `fig-stale` | Stamp "Last valid drawing" on the canvas | ratified |
 | `dlg-examples` | Examples gallery dialog | ratified |
-| `examples-list` | Its list; items `example-<id>` | ratified |
+| `examples-list` | Its list; items `example-<id>`. Titles follow U-S4e ruling g ("Spiral, 12 coils, 16 poles"); a selected item draws title and note in `text-inverse` | ratified |
 | `dlg-recovery` | Recovery offer after an unclean exit (UI-21) | ratified |
 | `btn-recover`, `btn-discard-recovery` | Its two buttons | declared |
 | `btn-load-example`, `btn-cancel-examples` | Examples gallery buttons | declared |
@@ -500,8 +514,8 @@ the same script fails when this table drifts. A cell names the widget that fills
 | `/connection/ring_width_mm` | `param-ring-width` | `param-ring-width` | `param-ring-width` |
 | `/connection/terminal_pad_mm` | `param-terminal-pad` | `param-terminal-pad` | `param-terminal-pad` |
 | `/connection/terminal_drill_mm` | `param-terminal-drill` | `param-terminal-drill` | `param-terminal-drill` |
-| `/winding/layers/pairs` | `layer-list` | not required | not required |
-| `/winding/layers/series_groups` | `layer-list` | not required | not required |
+| `/winding/layers/pairs` | `pair-list` | not required | not required |
+| `/winding/layers/series_groups` | `pair-list` | not required | not required |
 | `/vias/drill_mm` | `param-via-drill` | `param-via-drill` | `param-via-drill` |
 | `/vias/pad_mm` | `param-via-pad` | `param-via-pad` | `param-via-pad` |
 | `/vias/plating_um` | `param-via-plating` | `param-via-plating` | `param-via-plating` |
