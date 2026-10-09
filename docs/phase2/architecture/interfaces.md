@@ -2946,6 +2946,9 @@ colour. The SVG writer and the PDF report apply the same rules in both render mo
   (`svg_document`, l.304; `test_footer_fits_inside_the_drawing`, `test_svg.py` l.161).
 - Run on main fd190c1: the greyscale D08 SVG holds 12 `coil-label` texts, 12 `coil-label-halo` texts, 12 clipped eye
   groups and no `stroke-dasharray`. The D08 report extracts as text with `A2−`, `502 mΩ`, `434 mΩ` and `1.34 µH`.
+- No test asserts the halo: a search of `tests` for "halo" finds nothing. Fable rasterised the greyscale D08 SVG and saw
+  the labels with their halos, the eye swatches and an intact footer (U-M4f report, Fable's notes). The halo is
+  `verified` by reading and by that look, `not tested` by code.
 
 ## 10. `embodic.outcome` and `embodic.api`: the compute facade
 
