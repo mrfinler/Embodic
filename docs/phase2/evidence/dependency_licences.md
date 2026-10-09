@@ -1,4 +1,4 @@
-Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5. Revised 2026-10-08 (U-S3c) by Agent 5, model: claude-sonnet-5-5. Revised 2026-10-09 (U-S5a) by Agent 5, model: claude-sonnet-5-5.
+Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5. Revised 2026-10-08 (U-S3c) by Agent 5, model: claude-sonnet-5-5. Revised 2026-10-09 (U-S5a) by Agent 5, model: claude-sonnet-5-5. Revised 2026-10-09 (U-S5b: static Inter files) by Agent 5, model: claude-sonnet-5-5.
 
 # Dependency licences (Phase 2)
 
@@ -181,19 +181,28 @@ bundled.
 
 ### Bundled files
 
-All files below were hashed with `sha256sum` in the U-S5a worktree (main 3d70170) on 2026-10-09. The five hashes equal
-the ones in `resources/fonts/FONTS.md`. Each file was also downloaded again from its source URL at the release tag and
-hashed. Every pair is identical (`verified`). The sizes are the byte counts of the files.
+All files below were hashed with `sha256sum` in the U-S5b worktree (main 9776555) on 2026-10-09. The six hashes equal
+the ones in `resources/fonts/FONTS.md`. U-M4e-1 (U-S4e ruling e2) replaced `Inter/InterVariable.ttf` with the two static
+Inter files, because Qt ignores the `wght` axis. In U-S5b the release archive `Inter-4.1.zip` was downloaded from
+github.com (33707794 bytes, SHA-256 `9883fdd4a49d4fb66bd8177ba6625ef9a64aa45899767dde3d36aa425756b11e`, the value in
+`FONTS.md`). `cmp` found `Inter/Inter-Regular.ttf` and `Inter/Inter-SemiBold.ttf` byte-identical to the archive members
+`extras/ttf/Inter-Regular.ttf` and `extras/ttf/Inter-SemiBold.ttf`. The archive member `LICENSE.txt` and the file at
+https://raw.githubusercontent.com/rsms/inter/v4.1/LICENSE.txt have the same SHA-256 as `Inter/LICENSE.txt`. All of this
+is `verified`. The JetBrains Mono files were not downloaded again in U-S5b. Their hashes were measured on disk and equal
+`FONTS.md`. Their equality with the upstream files at tag v2.304 was `verified` in U-S5a. The sizes are the byte counts
+of the files.
 
 | File | Version | Copyright line (first line of the licence text) | Reserved Font Name | Bytes | SHA-256 | EV |
 |---|---|---|---|---|---|---|
-| `Inter/InterVariable.ttf` | Inter Variable, "Version 4.001;git-9221beed3", tag v4.1 | n/a (font) | none | 879708 | `4989b125924991b90d05b2d16e0e388c48f7d5bb8b30539bbf9c755278d0ccaf` | EV-106 |
+| `Inter/Inter-Regular.ttf` | Inter Regular, "Version 4.001;git-9221beed3", release v4.1 | n/a (font) | none | 411640 | `40d692fce188e4471e2b3cba937be967878f631ad3ebbbdcd587687c7ebe0c82` | EV-106 |
+| `Inter/Inter-SemiBold.ttf` | Inter SemiBold, "Version 4.001;git-9221beed3", release v4.1 | n/a (font) | none | 419744 | `78a843fade9d4612a5567302fb595b56976eb5fcebf4fea5a5912d638bafcde3` | EV-106 |
 | `Inter/LICENSE.txt` | SIL OFL 1.1 | "Copyright (c) 2016 The Inter Project Authors (https://github.com/rsms/inter)" | none | 4380 | `262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a` | EV-106 |
 | `JetBrainsMono/JetBrainsMono-Regular.ttf` | "Version 2.304", tag v2.304 | n/a (font) | none | 273900 | `a0bf60ef0f83c5ed4d7a75d45838548b1f6873372dfac88f71804491898d138f` | EV-107 |
 | `JetBrainsMono/JetBrainsMono-Medium.ttf` | "Version 2.304", tag v2.304 | n/a (font) | none | 273860 | `31c92d01a8a08528b718a43addf0ad3df0af2ca4b7b3290a452f70f358e14d3d` | EV-107 |
 | `JetBrainsMono/OFL.txt` | SIL OFL 1.1 | "Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/JetBrainsMono)" | none | 4399 | `30f0c136e3c88e422d0791acd97238870f9054a9729bc34cf2ff0d4ed8cac4ad` | EV-107 |
 
-Source URLs (the same as in `FONTS.md`): `https://raw.githubusercontent.com/rsms/inter/v4.1/docs/font-files/InterVariable.ttf`,
+Source URLs (the same as in `FONTS.md`): `https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip` (members
+`extras/ttf/Inter-Regular.ttf` and `extras/ttf/Inter-SemiBold.ttf`),
 `https://raw.githubusercontent.com/rsms/inter/v4.1/LICENSE.txt`,
 `https://raw.githubusercontent.com/JetBrains/JetBrainsMono/v2.304/fonts/ttf/JetBrainsMono-Regular.ttf`,
 `https://raw.githubusercontent.com/JetBrains/JetBrainsMono/v2.304/fonts/ttf/JetBrainsMono-Medium.ttf` and
@@ -202,11 +211,11 @@ because no reserved name follows the copyright line in either licence text (see 
 
 ### Candidates from Phase 1
 
-The table of candidates in the earlier version of this section is closed. Inter was not a Phase 1 candidate and is new.
+The table of candidates in the earlier version of this section is closed. Inter was not a Phase 1 candidate and is new. U-S5a recorded it as Inter Variable. Since U-M4e-1 the bundled files are the static Regular and SemiBold.
 
 | Font | Phase 1 row | Reserved Font Name | D-039 outcome |
 |---|---|---|---|
-| Inter Variable v4.1 | none (added in U-S5a) | none listed | chosen, EV-106 |
+| Inter v4.1, static Regular and SemiBold | none (added in U-S5a) | none listed | chosen, EV-106 |
 | JetBrains Mono v2.304 (Regular, Medium) | EV-75 (read on the `master` branch) | none listed | chosen, EV-107 reads the file shipped |
 | Noto Sans | EV-72 | none listed | not chosen, not bundled |
 | Liberation Sans, Liberation Mono | EV-73 | Liberation | not chosen, not bundled |
@@ -241,7 +250,7 @@ The Phase 1 note read "A PDF report that embeds a subset of an RFN font is a mod
 to the bundled fonts, for two reasons.
 
 1. Neither font has a Reserved Font Name (above).
-2. The writer does not subset. `src/embodic/io/pdf_writer.py` on main 3d70170 (`verified` by reading the code):
+2. The writer does not subset. `src/embodic/io/pdf_writer.py` on main 9776555 (`verified` by reading the code; the line numbers below were re-read in U-S5b):
    `bundled_font` (l.143 to 145) reads the file bytes. `parse_truetype` (l.120 to 139) keeps them unchanged as
    `data=data`. `_embed` (l.223 to 246) writes them with `file_id = stream(ttf.data, f" /Length1 {len(ttf.data)}")`
    (l.229), references that stream as `/FontFile2` in the descriptor (l.234), and wraps it in a `Type0` font with
@@ -249,27 +258,34 @@ to the bundled fonts, for two reasons.
    361) compresses with `zlib.compress` and `/FlateDecode`, which loses no byte. The module docstring (l.3 to 4) says the
    same.
 
-The check script `docs/phase2/evidence/tools/check_pdf_font_embedding.py` reproduces this by running the real exporter
-(`write_report_pdf` on the packaged example `spiral_12c10p_d08`), decoding each `FontFile2` stream with pypdf and hashing
-it (`verified`, run 2026-10-09):
+The check script `docs/phase2/evidence/tools/check_pdf_font_embedding.py` reproduces this by decoding each `FontFile2`
+stream of a report PDF with pypdf and hashing it. The script takes the PDF path as an optional argument. Without one it
+runs the real exporter (`write_report_pdf` on the packaged example `spiral_12c10p_d08`) itself. In U-S5b the PDF came
+from a separate six-line script that calls `write_report_pdf` on that example, and the checker read it from its path
+(`verified`, run 2026-10-09 on main 9776555). A second run without the argument printed the same text.
 
 ```
-Inter/InterVariable.ttf: disk 4989b125924991b90d05b2d16e0e388c48f7d5bb8b30539bbf9c755278d0ccaf bytes 879708
-  embedded /InterVariable: 4989b125924991b90d05b2d16e0e388c48f7d5bb8b30539bbf9c755278d0ccaf bytes 879708
+Inter/Inter-Regular.ttf: disk 40d692fce188e4471e2b3cba937be967878f631ad3ebbbdcd587687c7ebe0c82 bytes 411640
+  embedded /Inter-Regular: 40d692fce188e4471e2b3cba937be967878f631ad3ebbbdcd587687c7ebe0c82 bytes 411640
+  identical to disk: True | FONTS.md hash matches disk: True
+Inter/Inter-SemiBold.ttf: disk 78a843fade9d4612a5567302fb595b56976eb5fcebf4fea5a5912d638bafcde3 bytes 419744
+  embedded /Inter-SemiBold: 78a843fade9d4612a5567302fb595b56976eb5fcebf4fea5a5912d638bafcde3 bytes 419744
   identical to disk: True | FONTS.md hash matches disk: True
 JetBrainsMono/JetBrainsMono-Regular.ttf: disk a0bf60ef0f83c5ed4d7a75d45838548b1f6873372dfac88f71804491898d138f bytes 273900
   embedded /JetBrainsMono-Regular: a0bf60ef0f83c5ed4d7a75d45838548b1f6873372dfac88f71804491898d138f bytes 273900
   identical to disk: True | FONTS.md hash matches disk: True
-fonts in the PDF: ['/InterVariable', '/JetBrainsMono-Regular']
+fonts in the PDF: ['/Inter-Regular', '/Inter-SemiBold', '/JetBrainsMono-Regular']
 ```
 
-The PDF embeds the Inter file and JetBrains Mono Regular only. JetBrains Mono Medium is used by the UI and is not in the
-PDF. Bold text in the PDF is the regular face drawn with a stroke (`PdfDocument._style`, `2 Tr`), so no instance of the
-variable font is made. When the check meets a changed byte it fails: a one-byte change to a copy of `InterVariable.ttf`
-printed `identical to disk: False | FONTS.md hash matches disk: False` and exit code 1.
+The PDF embeds Inter Regular, Inter SemiBold and JetBrains Mono Regular. `PdfDocument.text` and `PdfDocument.row` draw
+bold text in Inter SemiBold (`pdf_writer.py` l.288 and l.311; font constants l.22 to 25), so no stroke trick and no
+variable-font instance is involved. JetBrains Mono Medium is used by the UI and is not in the PDF. When the check
+meets a changed byte it fails. A one-byte change (byte 1000 flipped) in a copy of `Inter-SemiBold.ttf`, with the checker
+pointed at that copy of `resources/fonts`, printed `identical to disk: False | FONTS.md hash matches disk: False` for
+that file and exit code 1 (`verified`, run 2026-10-09).
 
-Each embedded copy keeps the font's own `name` table (`verified`, the script prints it). Name ID 0 of Inter reads
-"Copyright 2016 The Inter Project Authors". Name ID 13 reads "This Font Software is licensed under the SIL Open Font
+Each embedded copy keeps the font's own `name` table (`verified`, the script prints it). Name ID 0 of both Inter faces reads
+"Copyright 2016 The Inter Project Authors". Name ID 13 of both reads "This Font Software is licensed under the SIL Open Font
 License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL". JetBrains Mono carries
 "Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/JetBrainsMono)" and the same sentence
 with `https://scripts.sil.org/OFL`.
@@ -283,22 +299,23 @@ with `https://scripts.sil.org/OFL`.
    and `THIRD_PARTY_LICENSES.md` carry both full texts. A credit line in the report footer is a design call for Fable
    and Agent 1.
 2. The repository has no licence file for embodic itself (the root of main 3d70170 holds `CHANGELOG.md`, `README.md`,
-   `pyproject.toml` and the folders; the wheel built from it has no licence member except the fonts). REQ-N-19 asks for a
-   recorded licence "compatible with the embodic licence". Which licence embodic uses is a decision for the user.
+   `pyproject.toml` and the folders; the wheel built from it has no licence member except the fonts). U-S5b listed the root
+   of main 9776555 and the wheel built from it again, and found the same (`verified`). REQ-N-19 asks for a recorded licence
+   "compatible with the embodic licence". Which licence embodic uses is a decision for the user.
 
 ## What the M5 packages must carry
 
 The facts in the "Present today" column come from a wheel built on 2026-10-09 with
-`pip wheel --no-build-isolation --no-deps .` from main 3d70170, listed with `zipfile` (`verified`). The wheel carries all
+`pip wheel --no-build-isolation --no-deps .` from main 9776555 (U-S5b), listed with `unzip -l` (`verified`). The wheel carries all
 of `resources/` at `embodic/_resources/` through `[tool.hatch.build.targets.wheel.force-include]`.
 
 ### Wheel (pip into a venv, D-015 default)
 
 | File in the wheel | Why | Present today |
 |---|---|---|
-| `embodic/_resources/fonts/Inter/LICENSE.txt` | OFL condition 2, next to `InterVariable.ttf` | yes, 4380 bytes |
+| `embodic/_resources/fonts/Inter/LICENSE.txt` | OFL condition 2, next to `Inter-Regular.ttf` and `Inter-SemiBold.ttf` | yes, 4380 bytes |
 | `embodic/_resources/fonts/JetBrainsMono/OFL.txt` | OFL condition 2, next to both JetBrains Mono files | yes, 4399 bytes |
-| `embodic/_resources/fonts/FONTS.md` | source URLs and hashes of the font files | yes, 2951 bytes |
+| `embodic/_resources/fonts/FONTS.md` | source URLs and hashes of the font files | yes, 3812 bytes |
 | `THIRD_PARTY_LICENSES.md` (REQ-N-19, `package_layout.md` line 35, U-M5b) | licence, copyright line and pin of NumPy, PySide6-Essentials, shiboken6, Inter and JetBrains Mono, and the notice that Qt is used under LGPL-3.0 | no. The file does not exist and the wheel has no licence member besides the fonts |
 | embodic's own licence file | REQ-N-19 | no. Open point 2 above |
 

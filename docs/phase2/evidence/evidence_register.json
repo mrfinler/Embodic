@@ -1,5 +1,5 @@
 {
-  "prepared_by": "Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5 (rows EV-01 to EV-83); claude-sonnet-5-5 (rows EV-84 to EV-93, unit U-S3b; rows EV-94 to EV-105, unit U-S3c; rows EV-106 to EV-108, unit U-S5a)",
+  "prepared_by": "Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5 (rows EV-01 to EV-83); claude-sonnet-5-5 (rows EV-84 to EV-93, unit U-S3b; rows EV-94 to EV-105, unit U-S3c; rows EV-106 to EV-108, unit U-S5a; row EV-106 revised, unit U-S5b)",
   "schema": "embodic evidence register",
   "schema_version": 1,
   "generated_by": "docs/phase2/evidence/tools/build_evidence_register.py",
@@ -10,7 +10,7 @@
     },
     {
       "path": "docs/phase2/evidence/evidence_register.md",
-      "sha256": "ce91aca4d76418d395239972837f96da95db13275201566668bbd1de154cd63b"
+      "sha256": "453f8f447e185435629fb754ae41bad8f615f1fd2587db5274b5c0fb48a1f54f"
     },
     {
       "path": "docs/phase1/engineering/equation_registry_draft.json",
@@ -5784,7 +5784,7 @@
     },
     {
       "id": "EV-106",
-      "claim": "The licence text shipped beside Inter Variable v4.1 is the SIL Open Font License, Version 1.1. Its first line is \"Copyright (c) 2016 The Inter Project Authors (https://github.com/rsms/inter)\", followed by \"This Font Software is licensed under the SIL Open Font License, Version 1.1.\" No reserved font name follows the copyright line. Condition 2 reads \"Original or Modified Versions of the Font Software may be bundled, redistributed and/or sold with any software, provided that each copy contains the above copyright notice and this license. These can be included either as stand-alone text files, human-readable headers or in the appropriate machine-readable metadata fields within text or binary files as long as those fields can be easily viewed by the user.\" Condition 1: \"Neither the Font Software nor any of its individual components, in Original or Modified Versions, may be sold by itself.\" The preamble: \"The requirement for fonts to remain under this license does not apply to any document created using the fonts or their derivatives.\"",
+      "claim": "The licence text shipped beside the static Inter v4.1 font files Inter-Regular.ttf and Inter-SemiBold.ttf is the SIL Open Font License, Version 1.1. Its first line is \"Copyright (c) 2016 The Inter Project Authors (https://github.com/rsms/inter)\", followed by \"This Font Software is licensed under the SIL Open Font License, Version 1.1.\" No reserved font name follows the copyright line. Condition 2 reads \"Original or Modified Versions of the Font Software may be bundled, redistributed and/or sold with any software, provided that each copy contains the above copyright notice and this license. These can be included either as stand-alone text files, human-readable headers or in the appropriate machine-readable metadata fields within text or binary files as long as those fields can be easily viewed by the user.\" Condition 1: \"Neither the Font Software nor any of its individual components, in Original or Modified Versions, may be sold by itself.\" The preamble: \"The requirement for fonts to remain under this license does not apply to any document created using the fonts or their derivatives.\"",
       "kind": "source_claim",
       "source": {
         "document": "LIC-INTER-OFL-4.1",
@@ -5797,17 +5797,18 @@
         "LIC-INTER-OFL-4.1"
       ],
       "location": {
-        "text": "resources/fonts/Inter/LICENSE.txt, 4380 bytes, SHA-256 262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a; upstream https://raw.githubusercontent.com/rsms/inter/v4.1/LICENSE.txt has the same SHA-256. The font file is resources/fonts/Inter/InterVariable.ttf, SHA-256 4989b125924991b90d05b2d16e0e388c48f7d5bb8b30539bbf9c755278d0ccaf",
+        "text": "resources/fonts/Inter/LICENSE.txt, 4380 bytes, SHA-256 262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a; upstream https://raw.githubusercontent.com/rsms/inter/v4.1/LICENSE.txt has the same SHA-256, and so has the member LICENSE.txt of the release archive. The font files are resources/fonts/Inter/Inter-Regular.ttf, 411640 bytes, SHA-256 40d692fce188e4471e2b3cba937be967878f631ad3ebbbdcd587687c7ebe0c82, and resources/fonts/Inter/Inter-SemiBold.ttf, 419744 bytes, SHA-256 78a843fade9d4612a5567302fb595b56976eb5fcebf4fea5a5912d638bafcde3. Both are byte-identical to the members extras/ttf/Inter-Regular.ttf and extras/ttf/Inter-SemiBold.ttf of https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip (33707794 bytes, SHA-256 9883fdd4a49d4fb66bd8177ba6625ef9a64aa45899767dde3d36aa425756b11e)",
         "pages_pdf": [],
         "pages_printed": null,
         "urls": [
+          "https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip",
           "https://raw.githubusercontent.com/rsms/inter/v4.1/LICENSE.txt"
         ]
       },
       "read_method": "source_read",
       "applies": {
         "judgement": "yes",
-        "note": "yes (D-039 a bundles Inter Variable under this licence and ships the text beside the font; the wheel and the PyInstaller folder must carry the same file; reading condition 2 for a PDF that embeds the font is inferred and open, see dependency_licences.md section Fonts)",
+        "note": "yes (D-039 a bundles Inter under this licence and ships the text beside the font files; U-M4e-1 replaced InterVariable.ttf with Inter-Regular.ttf and Inter-SemiBold.ttf, U-S4e ruling e2; the wheel and the PyInstaller folder must carry the same file; reading condition 2 for a PDF that embeds the fonts is inferred and open, see dependency_licences.md section Fonts)",
         "status": "inferred"
       },
       "status": "verified",
