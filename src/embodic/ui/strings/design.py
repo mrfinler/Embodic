@@ -203,8 +203,6 @@ STRINGS: Mapping[str, str] = {
     "design.notice.undo": "Undo",
     "design.notice.empty-value": "empty",
     "design.issue.apply": "Apply {value}",
-    "design.issues.title": "Issues",
-    "design.issues.none": "No issues.",
     "design.stale.drafting": "Outdated: the drawing shows the last complete design. {count} required fields left.",
     "design.stale.invalid": "Outdated: the drawing shows the last valid design. Fix the issues listed.",
     "design.stale.computing": "Updating the drawing.",

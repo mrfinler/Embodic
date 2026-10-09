@@ -33,8 +33,6 @@ from embodic.results.status import Status
 from embodic.ui.strings import text
 from embodic.ui.viewmodels.observable import Observable
 
-CheckState: TypeAlias = Literal["pass", "fail"]
-
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ComputeRequest:
@@ -59,7 +57,6 @@ class SummaryItem:
     key: str  # objectName of the cell
     label: str
     value_text: str
-    state: CheckState | None  # check text with glyph and word
     status: Status | None  # trust badge from the data (D-007)
     assumed_count: int | None
 
@@ -190,38 +187,15 @@ def _traceable_item(key: str, label_key: str, t: Traceable[float] | None) -> Sum
         key=key,
         label=text(label_key),
         value_text=text("shell.sum.no-value") if t is None else format_value(t),
-        state=None,
         status=None if t is None else t.status,
         assumed_count=None if t is None else len(t.assumed_inputs),
     )
 
 
-def _drc_item(outcome: ComputeOutcome) -> SummaryItem:
-    state: CheckState | None = None
-    value = text("shell.sum-drc.not-run")
-    if outcome.drc is not None:
-        failures = sum(report.violation_count for report in outcome.drc)
-        value = text("shell.sum-drc.pass") if failures == 0 else text("shell.sum-drc.fail", count=failures)
-        state = "pass" if failures == 0 else "fail"
-    return SummaryItem(
-        key="sum-drc", label=text("shell.sum-drc.label"), value_text=value, state=state, status=None, assumed_count=None
-    )
-
-
 def summarise(outcome: ComputeOutcome) -> tuple[SummaryItem, ...]:
-    """Return the summary strip: ok, DRC verdict, Ke line peak and R phase with their trust badges."""
+    """Return the summary strip: Ke line peak and R phase with their trust badges."""
     analysis = outcome.analysis
-    ok = SummaryItem(
-        key="sum-ok",
-        label=text("shell.sum-ok.label"),
-        value_text=text("shell.sum-ok.pass" if outcome.ok else "shell.sum-ok.fail"),
-        state="pass" if outcome.ok else "fail",
-        status=None,
-        assumed_count=None,
-    )
     return (
-        ok,
-        _drc_item(outcome),
         _traceable_item("sum-ke", "shell.sum-ke.label", analysis.ke_line_peak_v_s_per_rad if analysis else None),
         _traceable_item(
             "sum-r-phase", "shell.sum-r-phase.label", analysis.resistance_phase_operating_ohm if analysis else None

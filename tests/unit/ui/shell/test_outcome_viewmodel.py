@@ -102,8 +102,7 @@ def test_summary_strip_shows_verdicts_and_badges_from_the_outcome(d08_ready):
     """Catches a hard-coded badge or verdict: every value and status must come from the outcome (D-007)."""
     items = {item.key: item for item in d08_ready.summary}
     analysis = d08_ready.outcome.analysis
-    assert list(items) == ["sum-ok", "sum-drc", "sum-ke", "sum-r-phase"]
-    assert (items["sum-ok"].state, items["sum-drc"].state) == ("pass", "pass")
+    assert list(items) == ["sum-ke", "sum-r-phase"]
     assert items["sum-ke"].status is analysis.ke_line_peak_v_s_per_rad.status
     assert items["sum-r-phase"].status is analysis.resistance_phase_operating_ohm.status
     assert items["sum-ke"].assumed_count == len(analysis.ke_line_peak_v_s_per_rad.assumed_inputs)
