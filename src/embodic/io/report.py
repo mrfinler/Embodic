@@ -53,6 +53,7 @@ HATCH_PITCH_PT = 0.4 * 72 / 25.4  # 0.4 mm on paper (design_spec.md section 3.3)
 HATCH_STROKE_PT = 0.3
 EYE_TINT = 0.1
 SWATCH_R_PT = 4.0
+COLOPHON = "Set in Inter and JetBrains Mono, SIL Open Font License 1.1."  # design_spec.md section 4, ruling f
 
 
 def value_text(value: float, unit: Unit, *, significant: int = 3) -> str:
@@ -310,6 +311,8 @@ def write_report_pdf(
     _key_results(flow, outcome.analysis)
     _drc(flow, outcome)
     _inputs(flow, outcome)
+    flow.y -= ROW / 2
+    flow.row([(MARGIN, COLOPHON)])
     inks = phase_inks()
     for index, board in enumerate(boards, start=1):
         _drawing(doc, index, board, inks, mode is PhaseRenderMode.GREYSCALE_HATCH)

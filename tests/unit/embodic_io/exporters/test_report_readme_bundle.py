@@ -79,7 +79,7 @@ def test_ut_exp_03_report_prints_units_as_the_ui_does(
     assert re.search(r"\d µH ", text), "no inductance in µH"
     assert not re.search(r"\bohm\b", text) and "Helvetica" not in str(reader.pages[0]["/Resources"])
     fonts = {f["/BaseFont"]: f for f in (ref.get_object() for ref in reader.pages[0]["/Resources"]["/Font"].values())}
-    assert set(fonts) == {"/InterVariable", "/JetBrainsMono-Regular"}
+    assert set(fonts) == {"/Inter-Regular", "/Inter-SemiBold", "/JetBrainsMono-Regular"}
     for font in fonts.values():
         (descendant,) = font["/DescendantFonts"]
         descriptor = descendant.get_object()["/FontDescriptor"]
@@ -89,6 +89,37 @@ def test_ut_exp_03_report_prints_units_as_the_ui_does(
             "/CIDFontType2",
         )
         assert "/FontFile2" in descriptor and "/ToUnicode" in font
+
+
+def test_ruling_e2_report_headings_use_the_semibold_file_and_no_faux_bold(
+    outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path
+) -> None:
+    """U-S4e ruling e2. Catches headings drawn as stroked Regular (text render mode 2) instead of Inter SemiBold."""
+    summary = write_report_pdf(outcome_of("spiral_12c10p_d08"), tmp_path / "report.pdf")
+    assert isinstance(summary, ExportSummary), summary
+    reader = pypdf.PdfReader(summary.path)
+    for page in reader.pages:
+        assert not re.search(rb"\b2 Tr\b", page.get_contents().get_data()), "faux bold text render mode"
+    headings: list[str] = []
+    reader.pages[0].extract_text(
+        visitor_text=lambda text, _cm, _tm, font, _size: (
+            headings.append(text) if font is not None and font.get("/BaseFont") == "/Inter-SemiBold" else None
+        )
+    )
+    assert {"embodic design report", "Key results", "DRC summary", "Inputs"} <= set(headings)
+
+
+def test_ruling_f_report_ends_its_tables_with_one_colophon_line_and_no_page_footer(
+    outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path
+) -> None:
+    """U-S4e ruling f. Catches a missing font credit, or a credit repeated as a footer on every page."""
+    summary = write_report_pdf(outcome_of("spiral_12c10p_d08"), tmp_path / "report.pdf")
+    assert isinstance(summary, ExportSummary), summary
+    _, text = _pdf_text(summary.path)
+    colophon = "Set in Inter and JetBrains Mono, SIL Open Font License 1.1."
+    assert text.count(colophon) == 1
+    after_inputs = text.split("\nInputs\n", 1)[1]
+    assert colophon in after_inputs and "Board 1 drawing" in after_inputs.split(colophon, 1)[1]
 
 
 @pytest.mark.parametrize("mode", list(PhaseRenderMode))
