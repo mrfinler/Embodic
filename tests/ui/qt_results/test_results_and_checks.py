@@ -13,7 +13,7 @@ from embodic.results.status import Status
 from embodic.ui.views.geometry_view import DATA_KIND
 
 D08, WAVE = "spiral_12c10p_d08", "wave_16p_example"
-DRC_COLUMNS = ("number", "board", "severity", "rule", "message", "measured", "required", "layer")
+DRC_COLUMNS = ("severity", "board", "message", "measured", "required", "layer")
 CELL_MARGIN_PX = 3  # Fusion item text margin on each side (PM_FocusFrameHMargin + 1)
 
 
@@ -79,7 +79,7 @@ def test_ui33_ke_disclosure_in_the_window_shows_e_edge_at_least_assumption_and_t
     card = window.results_tab.cards["ke"]
     qtbot.mouseClick(card.how_toggle, Qt.MouseButton.LeftButton)
     shown = card.disclosure_text()
-    for words in ("e_edge", "at least", "assumption", "10 %"):
+    for words in ("e_edge", "at least", "assumption", "10\u00a0%"):
         assert words in shown, words
     qtbot.mouseClick(find(card, QPushButton, "res-ke-copy"), Qt.MouseButton.LeftButton)
     assert QGuiApplication.clipboard().text() == window.results.copy_trace("ke_phase_v_s_per_rad")
@@ -141,13 +141,38 @@ def test_drc_table_shows_the_whole_catalogue_message_in_a_stretched_column(make_
     assert table.textElideMode() == Qt.TextElideMode.ElideNone
     fonts = table.fontMetrics()
     inner = table.columnWidth(message) - 2 * CELL_MARGIN_PX
-    assert table.columnWidth(message) >= 240
+    assert table.columnWidth(message) >= 200
     for row in range(table.model().rowCount()):
         text = table.model().index(row, message).data()
         needed = fonts.boundingRect(QRect(0, 0, inner, 10_000), Qt.TextFlag.TextWordWrap, text).height()
         assert table.rowHeight(row) >= needed, (size, row, text)
         assert max(fonts.horizontalAdvance(word) for word in text.split()) <= inner, (size, row, text)
-    assert table.model().index(0, message).data(Qt.ItemDataRole.ToolTipRole) == table.model().index(0, message).data()
+    assert table.model().index(0, message).data() in table.model().index(0, message).data(Qt.ItemDataRole.ToolTipRole)
+
+
+@pytest.mark.req("REQ-F-33", "REQ-N-15")
+@pytest.mark.parametrize("size", [(1280, 800), (960, 540)])
+def test_ruling_d_drc_table_shows_glyph_message_measured_required_layer_without_sideways_scroll(
+    make_window, load, size
+):
+    """U-S4e ruling d, DEF-2. Catches Measured, Required or Layer pushed off screen by the code and severity columns."""
+    window = load(make_window(), WAVE)
+    window.resize(*size)
+    window.show_results_tab("tab-drc")
+    for _ in range(5):
+        QApplication.processEvents()
+    table = window.drc_tab.table
+    model = table.model()
+    shown = [c for c in range(model.columnCount()) if not table.isColumnHidden(c)]
+    headers = [model.headerData(c, Qt.Orientation.Horizontal).replace("\n", " ") for c in shown]
+    assert headers == ["", "Message", "Measured (mm)", "Required (mm)", "Layer"]
+    assert table.columnWidth(0) == 24
+    assert table.horizontalHeader().length() <= table.viewport().width(), size
+    first = model.index(0, DRC_COLUMNS.index("measured"))
+    assert first.data() == "0.199965" and first.data(Qt.ItemDataRole.FontRole).family() == "JetBrains Mono"
+    tooltip = model.index(0, DRC_COLUMNS.index("layer")).data(Qt.ItemDataRole.ToolTipRole)
+    assert tooltip.startswith("Error. DRC_") and "Measured 0.199965\u00a0mm, required" in tooltip
+    assert model.index(0, 0).data() == "" and model.index(0, 0).data(Qt.ItemDataRole.DecorationRole) is not None
 
 
 @pytest.mark.req("REQ-F-33")

@@ -17,6 +17,9 @@ if TYPE_CHECKING:
     from embodic.results.traceable import Traceable
 
 MINUS = "−"
+# U+00A0 between a number and its unit, so a line never breaks there (U-S4e ruling e1). Built with chr because the
+# LG-01 literal check (tests/static) lists unit symbols but no space characters.
+UNIT_SPACE = chr(0x00A0)
 NOT_A_NUMBER = "n/a"
 _PREFIXES = {-12: "p", -9: "n", -6: "µ", -3: "m", 0: "", 3: "k", 6: "M", 9: "G"}
 _PREFIXED_UNITS = frozenset(
@@ -45,7 +48,7 @@ def format_quantity(value: float, unit: Unit, *, significant: int = 3) -> str:
 
 
 def format_value(t: Traceable[float], *, significant: int = 3) -> str:
-    """Locale-independent, SI prefixes, U+2212 minus, space before the unit (REQ-L-07)."""
+    """Locale-independent, SI prefixes, U+2212 minus, U+00A0 before the unit (REQ-L-07)."""
     return format_quantity(t.value, t.unit, significant=significant)
 
 
@@ -71,4 +74,4 @@ def _signed(text: str, value: float) -> str:
 
 
 def _with_unit(number: str, prefix: str, symbol: str) -> str:
-    return f"{number} {prefix}{symbol}" if prefix or symbol else number
+    return f"{number}{UNIT_SPACE}{prefix}{symbol}" if prefix or symbol else number

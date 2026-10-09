@@ -35,7 +35,7 @@ from embodic.model.schema import design_values
 from embodic.model.vocabulary import Phase
 from embodic.outcome import ComputeOutcome
 from embodic.results import AnalysisResult
-from embodic.results.formatting import format_quantity
+from embodic.results.formatting import UNIT_SPACE, format_quantity
 from embodic.results.labels import quantity_title
 from embodic.results.traceable import Traceable
 from embodic.units import Unit
@@ -53,15 +53,16 @@ HATCH_PITCH_PT = 0.4 * 72 / 25.4  # 0.4 mm on paper (design_spec.md section 3.3)
 HATCH_STROKE_PT = 0.3
 EYE_TINT = 0.1
 SWATCH_R_PT = 4.0
+COLOPHON = "Set in Inter and JetBrains Mono, SIL Open Font License 1.1."  # design_spec.md section 4, ruling f
 
 
 def value_text(value: float, unit: Unit, *, significant: int = 3) -> str:
     """Return a value with its unit; a dimensionless value says so, a missing number keeps its unit."""
     symbol = unit.display() or DIMENSIONLESS
     if not math.isfinite(value):
-        return f"n/a {symbol}"
+        return f"n/a{UNIT_SPACE}{symbol}"
     text = format_quantity(value, unit, significant=significant)
-    return text if unit.display() else f"{text} {DIMENSIONLESS}"
+    return text if unit.display() else f"{text}{UNIT_SPACE}{DIMENSIONLESS}"
 
 
 def key_results(analysis: AnalysisResult) -> tuple[tuple[str, Traceable[float]], ...]:
@@ -130,7 +131,8 @@ def _drc(flow: _Flow, outcome: ComputeOutcome) -> None:
         return
     for board, report in enumerate(outcome.drc, start=1):
         verdict = "passed" if report.passed else f"FAILED, {report.violation_count} violations"
-        flow.row([(MARGIN, f"Board {board}: {verdict} (method {report.method}, epsilon {report.epsilon_mm} mm)")])
+        epsilon = f"{report.epsilon_mm}{UNIT_SPACE}mm"
+        flow.row([(MARGIN, f"Board {board}: {verdict} (method {report.method}, epsilon {epsilon})")])
         flow.row(
             [(MARGIN, "Check"), (MARGIN + 130, "Least measured"), (MARGIN + 240, "Required"), (MARGIN + 330, "Pairs")],
             bold=True,
@@ -160,7 +162,7 @@ def _inputs(flow: _Flow, outcome: ComputeOutcome) -> None:
         unit = field_for(pointer, values).unit
         text = json.dumps(value, ensure_ascii=False) if not isinstance(value, str) else value
         if unit is not None and isinstance(value, int | float) and not isinstance(value, bool):
-            text = f"{text} {unit.display() or DIMENSIONLESS}"
+            text = f"{text}{UNIT_SPACE}{unit.display() or DIMENSIONLESS}"
         entry = outcome.provenance.get(pointer)
         provenance = entry.provenance.value if entry is not None else "not recorded"
         flow.row([(MARGIN, pointer), (MARGIN + 230, text[:60]), (MARGIN + 380, provenance)], mono=(0, 1))
@@ -310,6 +312,8 @@ def write_report_pdf(
     _key_results(flow, outcome.analysis)
     _drc(flow, outcome)
     _inputs(flow, outcome)
+    flow.y -= ROW / 2
+    flow.row([(MARGIN, COLOPHON)])
     inks = phase_inks()
     for index, board in enumerate(boards, start=1):
         _drawing(doc, index, board, inks, mode is PhaseRenderMode.GREYSCALE_HATCH)

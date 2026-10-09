@@ -1,5 +1,7 @@
 """UT-IO-08: every packaged example loads, validates and computes with no ERROR issue; titles say "Example"."""
 
+import json
+import re
 from pathlib import Path
 
 import pytest
@@ -7,7 +9,7 @@ import pytest
 from embodic.api import compute
 from embodic.errors import Severity
 from embodic.io.examples import examples_dir, list_examples, load_example
-from embodic.io.project import ProjectFile, project_provenance
+from embodic.io.project import ProjectFile, project_provenance, save_project
 from embodic.model.provenance import ExampleValue
 from embodic.model.validate import validate_design
 from embodic.model.vocabulary import TopologyKind
@@ -19,6 +21,11 @@ from .make_examples import write_examples
 SPIRAL_EXAMPLES = {"spiral_12c16p_default", "spiral_12c10p_d08", "spiral_12c14p"}
 
 
+OTHER_PROGRAM_OR_PATH = re.compile(r"xcoil|kicad|engine\.js|docs/|resources/|\.json|[A-Za-z]:\\|/home/|/Users/", re.I)
+# The serpentine title is written by tests/unit/generators/serpentine/make_example.py (U-S4e ruling g, open).
+SERPENTINE_TITLE_NAMES_XCOIL = pytest.mark.xfail(strict=True, reason="the serpentine example title names Xcoil")
+
+
 @pytest.mark.req("REQ-F-25", "REQ-F-38")
 def test_ut_io_08_spiral_examples_are_packaged_with_example_titles() -> None:
     """Catches a missing example file or a title without the word "Example" (D-014)."""
@@ -27,6 +34,27 @@ def test_ut_io_08_spiral_examples_are_packaged_with_example_titles() -> None:
     for info in infos.values():
         assert "Example" in info.title
     assert {infos[i].topology for i in SPIRAL_EXAMPLES} == {TopologyKind.SPIRAL}
+
+
+@pytest.mark.req("REQ-F-25", "REQ-F-38")
+@pytest.mark.parametrize(
+    "example_id",
+    [
+        pytest.param(i, marks=SERPENTINE_TITLE_NAMES_XCOIL) if i.startswith("serpentine") else i
+        for i in sorted(p.name.split(".")[0] for p in examples_dir().glob("*.embodic.json"))
+    ],
+)
+def test_ux_ac_03_an_exported_example_names_no_other_program_and_no_repository_path(
+    example_id: str, tmp_path: Path
+) -> None:
+    """UX-AC-03. Catches "Xcoil", "engine.js" or a repository path in what a user sees or saves of an example."""
+    info = next(info for info in list_examples() if info.example_id == example_id)
+    ref, design = load_example(example_id)
+    save_project(tmp_path / "saved.embodic.json", ProjectFile(design=design, origin=ref))
+    saved = json.loads((tmp_path / "saved.embodic.json").read_text(encoding="utf-8"))
+    shown = [info.title, info.display_note, saved["design"]["name"]]
+    assert [text for text in shown if OTHER_PROGRAM_OR_PATH.search(text)] == []
+    assert "example" not in saved, "the provenance note stays in the packaged file only"
 
 
 @pytest.mark.req("REQ-F-25", "REQ-F-38")

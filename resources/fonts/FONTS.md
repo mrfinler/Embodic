@@ -1,4 +1,4 @@
-Prepared by: Agent 3 (Senior Software), unit U-M4f - model: claude-opus-5-5
+Prepared by: Agent 3 (Senior Software), units U-M4f and U-M4e-1 - model: claude-opus-5-5
 
 # Bundled fonts
 
@@ -7,7 +7,8 @@ families are licensed under the SIL Open Font License 1.1; the licence text ship
 
 | File | Family, version (name table ID 5) | Source URL | SHA-256 |
 |---|---|---|---|
-| `Inter/InterVariable.ttf` | Inter Variable, "Version 4.001;git-9221beed3" (release tag v4.1; axes opsz 14 to 32, wght 100 to 900, default wght 400) | https://raw.githubusercontent.com/rsms/inter/v4.1/docs/font-files/InterVariable.ttf | `4989b125924991b90d05b2d16e0e388c48f7d5bb8b30539bbf9c755278d0ccaf` |
+| `Inter/Inter-Regular.ttf` | Inter Regular (family Inter, weight class 400), "Version 4.001;git-9221beed3" (release v4.1) | https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip, member `extras/ttf/Inter-Regular.ttf` | `40d692fce188e4471e2b3cba937be967878f631ad3ebbbdcd587687c7ebe0c82` |
+| `Inter/Inter-SemiBold.ttf` | Inter SemiBold (typographic family Inter, subfamily SemiBold, weight class 600), "Version 4.001;git-9221beed3" (release v4.1) | https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip, member `extras/ttf/Inter-SemiBold.ttf` | `78a843fade9d4612a5567302fb595b56976eb5fcebf4fea5a5912d638bafcde3` |
 | `Inter/LICENSE.txt` | SIL OFL 1.1, Inter v4.1 | https://raw.githubusercontent.com/rsms/inter/v4.1/LICENSE.txt | `262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a` |
 | `JetBrainsMono/JetBrainsMono-Regular.ttf` | JetBrains Mono Regular, "Version 2.304" (release tag v2.304) | https://raw.githubusercontent.com/JetBrains/JetBrainsMono/v2.304/fonts/ttf/JetBrainsMono-Regular.ttf | `a0bf60ef0f83c5ed4d7a75d45838548b1f6873372dfac88f71804491898d138f` |
 | `JetBrainsMono/JetBrainsMono-Medium.ttf` | JetBrains Mono Medium, "Version 2.304" (release tag v2.304) | https://raw.githubusercontent.com/JetBrains/JetBrainsMono/v2.304/fonts/ttf/JetBrainsMono-Medium.ttf | `31c92d01a8a08528b718a43addf0ad3df0af2ca4b7b3290a452f70f358e14d3d` |
@@ -24,9 +25,15 @@ families are licensed under the SIL Open Font License 1.1; the licence text ship
   (`verified` by measuring; equality with the files inside the release ZIPs is `not tested`).
 - The version strings were read from each file's `name` table with fontTools (`verified`).
 
+- U-M4e-1 (2026-10-09, U-S4e ruling e2) replaced `Inter/InterVariable.ttf` with the two static files above, because Qt
+  ignores the `wght` axis and weight 600 rendered at body weight. The release archive `Inter-4.1.zip` (SHA-256
+  `9883fdd4a49d4fb66bd8177ba6625ef9a64aa45899767dde3d36aa425756b11e`, 33 707 794 bytes) downloaded from github.com
+  this time. Its `InterVariable.ttf` and `LICENSE.txt` have the same SHA-256 as the files U-M4f took from
+  raw.githubusercontent.com (`verified` with `sha256sum`), so the licence text above is the release's own.
+
 ## Glyph coverage
 
-`tests/unit/ui/fonts/test_font_files.py` checks the glyphs embodic prints (µ, Ω, °, U+2212, ≈, ·, U+202F) in both
-families with fontTools. Inter covers all of them. JetBrains Mono 2.304 has no U+202F (narrow no-break space) glyph
-(`verified` with fontTools); embodic does not print U+202F today, and that test case is a strict expected failure so a
-font that adds the glyph turns it into a pass to review.
+`tests/unit/ui/fonts/test_font_files.py` checks the glyphs embodic prints (µ, Ω, °, U+2212, ≈, ·, U+00A0, η, δ, Δ)
+in every bundled file with fontTools; all files cover all of them (`verified` by running). Number and unit are joined
+by U+00A0 (U-S4e ruling e1). JetBrains Mono 2.304 has no U+202F (narrow no-break space), which is why embodic does
+not use it.

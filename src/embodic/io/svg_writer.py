@@ -34,11 +34,12 @@ from embodic.io.exporters import (
 from embodic.io.pdf_writer import SANS_FILE, bundled_font
 from embodic.model.vocabulary import Phase
 from embodic.outcome import ComputeOutcome
+from embodic.results.formatting import UNIT_SPACE
 
 MARGIN_MM = 2.0
 LEGEND_ROW_MM = 4.0
 FONT_MM = 2.5
-FONT_FAMILY = "Inter, 'Inter Variable', 'Segoe UI', sans-serif"
+FONT_FAMILY = "Inter, 'Segoe UI', sans-serif"
 LABEL_MM = 2.2
 LABEL_HALO_MM = 0.5
 LEADER_MM = 0.15
@@ -130,7 +131,7 @@ def _phase_key(path: CopperPath) -> int:
 def _copper(svg: _Svg, prefix: str, board: Layout, inks: dict[Phase | None, PhaseInk], grey: bool) -> None:
     for layer in board.copper_layers:
         on_layer = sorted((p for p in board.paths if p.layer == layer), key=_phase_key)
-        label = f"Copper {layer} (z = {_n(board.copper_z_mm[layer])} mm)"
+        label = f"Copper {layer} (z = {_n(board.copper_z_mm[layer])}{UNIT_SPACE}mm)"
         svg.out.append(
             f'<g id="{prefix}-cu-{layer}" class="layer" data-layer={quoteattr(layer)} data-label={quoteattr(label)}>'
         )

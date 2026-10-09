@@ -10,11 +10,14 @@ from pathlib import Path
 from typing import Literal, Protocol, TypeAlias
 
 from embodic.geometry.labels import (
+    MINUS,
     Box,
+    CopperSpots,
     LabelAnchor,
     PlacedLabel,
     TextSize,
     Viewport,
+    copper_spots,
     label_anchors,
     pad_boxes,
     place_labels,
@@ -25,7 +28,7 @@ from embodic.io.examples import load_example
 from embodic.io.project import ProjectFile, project_from_example, project_provenance, save_project
 from embodic.model.design import DesignParameters
 from embodic.model.provenance import ProvenanceMap
-from embodic.model.vocabulary import Phase
+from embodic.model.vocabulary import Phase, TopologyKind
 from embodic.outcome import ComputeOutcome
 from embodic.results import Traceable
 from embodic.results.formatting import format_value
@@ -73,6 +76,7 @@ class BoardMarks:
     coils: tuple[CoilMark, ...]  # every coil on every layer, with its eye disc
     pads: tuple[Box, ...]  # labels keep clear of these
     label_of_path: Mapping[int, str]
+    copper: CopperSpots  # where a label may move when its anchor or leader would leave the view
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -257,6 +261,7 @@ def board_marks(board: Layout) -> BoardMarks:
         coils=tuple(coil_marks(board)),
         pads=pad_boxes(board),
         label_of_path=_label_of_path(board, anchors),
+        copper=copper_spots(board),
     )
 
 
@@ -284,6 +289,12 @@ def _inside(view: Viewport, x_mm: float, y_mm: float, size_px: tuple[float, floa
     )
 
 
+def _group(anchor: LabelAnchor) -> tuple[Phase, str]:
+    """Return the phase and sign a label names; serpentine labels have no sign."""
+    sign = anchor.text[-1] if anchor.text[-1] in ("+", MINUS) else ""
+    return anchor.phase, sign
+
+
 def place_in_view(
     anchors: Sequence[LabelAnchor],
     *,
@@ -291,33 +302,25 @@ def place_in_view(
     text_size: TextSize,
     obstacles: Sequence[Box],
     ring_outer_mm: float,
+    copper: CopperSpots,
 ) -> tuple[PlacedLabel, ...]:
     """Place labels so that each phase with copper in view names itself inside the view, at every zoom and pan.
 
-    `place_labels` always places the first label of a phase, moving it outside the ring when its spot is taken; in a
-    zoomed or short view that spot can lie beyond the view edge. The first label of each phase is therefore the first
-    of its anchors (in ruling b's priority) that lies in view, and the next one is tried while it lands outside. A label
-    outside the view is not returned: its copper's tooltip still names it.
+    The forced label of each phase and sign is its first anchor in view, so a zoomed view names the copper it shows.
+    A group with no anchor in view keeps its own forced label, which `place_labels` moves onto the phase's copper in
+    view; `place_labels` also names a phase that shows copper but no anchor (U-S4e ruling h).
     """
-    candidates = {
-        phase: [a for a in anchors if a.phase is phase and _inside(view, a.x_mm, a.y_mm)]
-        for phase in dict.fromkeys(a.phase for a in anchors)
-    }
-    choice = dict.fromkeys(candidates, 0)
-    placed: tuple[PlacedLabel, ...] = ()
-    for _ in range(max((len(c) for c in candidates.values()), default=0) or 1):
-        firsts = {id(c[choice[phase]]) for phase, c in candidates.items() if c}
-        ordered = [replace(a, first_of_phase=True) for a in anchors if id(a) in firsts]
-        ordered += [replace(a, first_of_phase=False) for a in anchors if id(a) not in firsts]
-        placed = place_labels(ordered, view=view, text_size=text_size, obstacles=obstacles, ring_outer_mm=ring_outer_mm)
-        placed = tuple(p for p in placed if _inside(view, p.x_mm, p.y_mm, text_size(p.text)))
-        named = {p.phase for p in placed}
-        lost = [phase for phase, c in candidates.items() if c and phase not in named and choice[phase] + 1 < len(c)]
-        if not lost:
-            break
-        for phase in lost:
-            choice[phase] += 1
-    return placed
+    seen = [a for a in anchors if _inside(view, a.x_mm, a.y_mm)]
+    groups = {_group(a) for a in seen}
+    firsts = {id(next(a for a in seen if _group(a) == group)) for group in groups}
+    forced = [replace(a, forced=True) for a in seen if id(a) in firsts]
+    forced += [a for a in anchors if a.forced and _group(a) not in groups]
+    rest = [
+        replace(a, forced=False) for a in anchors if id(a) not in firsts and not (a.forced and _group(a) not in groups)
+    ]
+    return place_labels(
+        forced + rest, view=view, text_size=text_size, obstacles=obstacles, ring_outer_mm=ring_outer_mm, copper=copper
+    )
 
 
 def _layers_of(boards: Sequence[Layout]) -> tuple[str, ...]:
@@ -364,6 +367,19 @@ def coil_count(scene: GeometryScene) -> int:
             if p.phase is not None and p.element is not None
         }
     )
+
+
+def counts_text(scene: GeometryScene, topology: TopologyKind) -> str:
+    """Return `st-counts`: layers, then coils for spiral or phases otherwise, then vias; a stack counts its boards."""
+    vias = sum(len(board.vias) for board in scene.boards)
+    phases = len({p.phase for board in scene.boards for p in board.paths if p.phase is not None})
+    if len(scene.boards) > 1:
+        return text(
+            "shell.st-counts.stack", boards=len(scene.boards), layers=len(scene.layers), phases=phases, vias=vias
+        )
+    if topology is TopologyKind.SPIRAL:
+        return text("shell.st-counts.spiral", layers=len(scene.layers), coils=coil_count(scene), vias=vias)
+    return text("shell.st-counts.phases", layers=len(scene.layers), phases=phases, vias=vias)
 
 
 def ready_state(outcome: ComputeOutcome) -> OutcomeReady:

@@ -2,7 +2,6 @@
 
 from collections.abc import Mapping
 
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -35,15 +34,13 @@ from embodic.ui.views.coil_panel import FieldEditor, FieldPanel, choice_text, fi
 
 BORE_CHOICES = ("none", "circle", "polygon")
 HOLE_WIDGET = "param-screw-hole-diameter"
-SCREW_COLUMNS = (
-    ("size", "size"),
-    ("fit", "fit"),
-    ("hole_diameter_mm", "hole"),
-    ("count", "count"),
-    ("pitch_radius_mm", "pitch-radius"),
-    ("angle_offset_rad", "angle-offset"),
-)
-_READ_ONLY_LEAF = "hole_diameter_mm"  # a required value needs its own field with unit, chip and error (screens.md 5)
+SCREW_COLUMNS = (("size", "size"), ("count", "count"), ("pitch_radius_mm", "pitch-radius"))
+# Each needs its unit, chip, hint and error label, which a cell cannot carry, so it is a field (U-S4e ruling c).
+PATTERN_FIELDS = {
+    "param-screw-fit": "fit",
+    HOLE_WIDGET: "hole_diameter_mm",
+    "param-screw-angle-offset": "angle_offset_rad",
+}
 
 
 def _name(widget: QWidget | None) -> str:
@@ -117,7 +114,6 @@ class BoardRotorPanel(FieldPanel):
         remove.setObjectName("btn-screw-remove")
         remove.setText(text("btn-screw-remove.label"))
         remove.clicked.connect(lambda: self.session.remove_screw_pattern(table.currentRow()))
-        hole = FieldEditor(HOLE_WIDGET, FIELD_BY_KEY[f"{SCREWS_POINTER}/*/hole_diameter_mm"], self.session)
         buttons = QHBoxLayout()
         buttons.addWidget(add)
         buttons.addWidget(remove)
@@ -125,8 +121,11 @@ class BoardRotorPanel(FieldPanel):
         column = QVBoxLayout(box)
         column.addWidget(table)
         column.addLayout(buttons)
-        column.addWidget(hole)
-        self.helpers.update({"screw-table": table, "btn-screw-remove": remove, HOLE_WIDGET: hole})
+        self.helpers.update({"screw-table": table, "btn-screw-remove": remove})
+        for widget_id, leaf in PATTERN_FIELDS.items():
+            editor = FieldEditor(widget_id, FIELD_BY_KEY[f"{SCREWS_POINTER}/*/{leaf}"], self.session)
+            column.addWidget(editor)
+            self.helpers[widget_id] = editor
         return box
 
     def _edit_cell(self, item: QTableWidgetItem) -> None:
@@ -147,7 +146,7 @@ class BoardRotorPanel(FieldPanel):
         document = self.session.document
         if widget_id == HOLE_WIDGET and isinstance(table, QTableWidget) and document is not None:
             patterns = screw_patterns(document.draft.values)
-            first = next((k for k, pattern in enumerate(patterns) if _READ_ONLY_LEAF not in pattern), 0)
+            first = next((k for k, pattern in enumerate(patterns) if "hole_diameter_mm" not in pattern), 0)
             table.selectRow(first)
         return super().focus_widget(widget_id)
 
@@ -189,8 +188,8 @@ class BoardRotorPanel(FieldPanel):
                 edit.setText("" if value is None else f"{value:.6g}")
 
     def _show_screws(self, values: Mapping[str, JsonValue]) -> None:
-        table, hole, remove = (self.helpers.get(name) for name in ("screw-table", HOLE_WIDGET, "btn-screw-remove"))
-        if not isinstance(table, QTableWidget) or not isinstance(hole, FieldEditor) or remove is None:
+        table, remove = self.helpers.get("screw-table"), self.helpers.get("btn-screw-remove")
+        if not isinstance(table, QTableWidget) or remove is None:
             return
         patterns = screw_patterns(values)
         selected = len(patterns) - 1 if len(patterns) > table.rowCount() else table.currentRow()
@@ -199,15 +198,7 @@ class BoardRotorPanel(FieldPanel):
         for r, pattern in enumerate(patterns):
             for c, (leaf, _) in enumerate(SCREW_COLUMNS):
                 spec = FIELD_BY_KEY[f"{SCREWS_POINTER}/*/{leaf}"]
-                value = pattern.get(leaf, spec.neutral_value)
-                shown = choice_text(value) if spec.value_type is ValueType.CHOICE and value is not None else ""
-                shown = shown or display_text(spec, value)
-                if leaf == _READ_ONLY_LEAF and value is None:
-                    shown = text("design.required.hint")
-                item = QTableWidgetItem(shown)
-                if leaf == _READ_ONLY_LEAF:
-                    item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-                table.setItem(r, c, item)
+                table.setItem(r, c, QTableWidgetItem(display_text(spec, pattern.get(leaf, spec.neutral_value))))
         if patterns and not 0 <= selected < len(patterns):
             selected = len(patterns) - 1
         if patterns:
@@ -216,8 +207,11 @@ class BoardRotorPanel(FieldPanel):
         fit_rows(table)
         fit_width(table)
         remove.setEnabled(bool(patterns))
-        if patterns:
-            row = self.session.item_row(HOLE_WIDGET, f"{SCREWS_POINTER}/{selected}/hole_diameter_mm")
-            assert row is not None
-            hole.show_row(row, str(self._topology))
-        hole.setVisible(bool(patterns))
+        for widget_id, leaf in PATTERN_FIELDS.items():
+            editor = self.helpers[widget_id]
+            assert isinstance(editor, FieldEditor)
+            if patterns:
+                row = self.session.item_row(widget_id, f"{SCREWS_POINTER}/{selected}/{leaf}")
+                assert row is not None
+                editor.show_row(row, str(self._topology))
+            editor.setVisible(bool(patterns))

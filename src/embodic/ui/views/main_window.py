@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
 
-from PySide6.QtCore import QPoint, Qt
+from PySide6.QtCore import QEvent, QObject, QPoint, Qt
 from PySide6.QtGui import QAction, QCloseEvent, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
@@ -35,14 +35,21 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from embodic.errors import ValidationIssue
+from embodic.errors import Severity, ValidationIssue
 from embodic.io.examples import list_examples
 from embodic.model.vocabulary import TopologyKind
 from embodic.outcome import ComputeOutcome
 from embodic.results import Registry
+from embodic.results.formatting import UNIT_SPACE
 from embodic.ui.strings import text
 from embodic.ui.theme import ThemeName, ThemeTokens, load_theme, resolve_theme
-from embodic.ui.viewmodels.appearance import AppearanceViewModel
+from embodic.ui.viewmodels.appearance import (
+    CANVAS_MIN_PX,
+    COMPACT_BELOW_PX,
+    RESULTS_MIN_PX,
+    AppearanceViewModel,
+    split_sizes,
+)
 from embodic.ui.viewmodels.export import PRESETS, ExportViewModel
 from embodic.ui.viewmodels.outcome import (
     OutcomeComputing,
@@ -52,7 +59,7 @@ from embodic.ui.viewmodels.outcome import (
     OutcomeState,
     OutcomeViewModel,
     board_letters,
-    coil_count,
+    counts_text,
     scene_of_board,
 )
 from embodic.ui.viewmodels.results import (
@@ -152,6 +159,7 @@ class MainWindow(QMainWindow):
         session.state.subscribe(lambda _: self._on_session())
         session.issues.subscribe(lambda _: self._show_issues())
         session.notice.subscribe(lambda _: self._show_notice())
+        session.opened.subscribe(lambda _: self._show_drawing())
         for action_id, available in (("act-undo", session.can_undo), ("act-redo", session.can_redo)):
             action = self.toolstrip.actions_by_id[action_id]
             action.setEnabled(available.value)
@@ -168,10 +176,10 @@ class MainWindow(QMainWindow):
         self._on_session()
 
     def _commands(self) -> CommandTable:
-        pending = ["open_project"]
         session = self.session
-        implemented: CommandTable = {
+        return {
             "new_design": self.show_new_design,
+            "open_project": self.open_project_dialog,
             "undo": session.undo,
             "redo": session.redo,
             **{f"set_topology_{t.value}": partial(session.set_topology, t) for t in TopologyKind},
@@ -186,13 +194,14 @@ class MainWindow(QMainWindow):
             "show_equations": self.show_equations,
             **{command: partial(self.show_export, command) for command in PRESETS},
         }
-        return {**dict.fromkeys(pending), **implemented}
 
     def _work_area(self) -> QWidget:
         inspector = QWidget()
         inspector.setObjectName("inspector")
         self.inspector_tabs = QTabWidget()
         self.inspector_tabs.setObjectName("inspector-tabs")
+        # 8 px a side instead of the template's 10, so the four tabs fit the 300 px inspector (U-S4e ruling h)
+        self.inspector_tabs.setStyleSheet("QTabBar::tab { padding-left: 8px; padding-right: 8px; }")
         self.panels: dict[str, FieldPanel] = {}
         for panel in (
             CoilPanel(self.session),
@@ -212,10 +221,15 @@ class MainWindow(QMainWindow):
         self.centre.addWidget(self._empty_page())
         self.centre_split = QSplitter(Qt.Orientation.Vertical)
         self.centre_split.setObjectName("centre-split")
-        self.centre_split.addWidget(self._canvas_page())
+        self.canvas_page = self._canvas_page()
+        self.canvas_page.setMinimumHeight(CANVAS_MIN_PX)
+        self.centre_split.addWidget(self.canvas_page)
         self.centre_split.addWidget(self._results_tabs())
-        self.centre_split.setStretchFactor(0, 3)
-        self.centre_split.setStretchFactor(1, 2)
+        self.results_tabs.setMinimumHeight(RESULTS_MIN_PX)
+        for index in range(2):
+            self.centre_split.setCollapsible(index, False)
+        self.centre_split.splitterMoved.connect(lambda *_: self.appearance.set_canvas_share(*self.centre_split.sizes()))
+        self.centre_split.installEventFilter(self)
         self.centre.addWidget(self.centre_split)
 
         rail = self.rail = ResultsRail(self.results, self.registry)
@@ -268,9 +282,15 @@ class MainWindow(QMainWindow):
         return self.results_tabs
 
     def _locate(self, row: DrcRow) -> None:
-        """Show the failure's board in the picker, then zoom to it (screens.md section 4.1)."""
+        """Show the failure's board in the picker, then the drawing, then zoom to it (screens.md section 4.1)."""
         self.outcome.select_board(row.board - 1)
+        self._show_drawing()
         locate_on_canvas(self.canvas, row, self.tokens)
+
+    def _show_drawing(self) -> None:
+        """Bring the "Drawing" tab forward when the canvas is one (compact height, design_spec.md section 5)."""
+        if self.results_tabs.indexOf(self.canvas_page) >= 0:
+            self.results_tabs.setCurrentWidget(self.canvas_page)
 
     def _shortcuts(self) -> None:
         for keys, slot in (
@@ -505,7 +525,7 @@ class MainWindow(QMainWindow):
 
     def examples_gallery(self) -> ExamplesGallery:
         """Return the Examples gallery for this window's session."""
-        gallery = ExamplesGallery(self.session, self)
+        gallery = ExamplesGallery(self.session, self, tokens=self.tokens)
         gallery.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         return gallery
 
@@ -620,13 +640,8 @@ class MainWindow(QMainWindow):
         ink = self.tokens.colours["text-1"]
         self.status["st-drc"].setText(f'<a href="tab-drc" style="color: {ink}; text-decoration: underline">{word}</a>')
         scene = shown.scene
-        if scene is None:
-            self.status["st-counts"].setText("")
-            return
-        vias = sum(len(board.vias) for board in scene.boards)
-        self.status["st-counts"].setText(
-            text("shell.st-counts.text", layers=len(scene.layers), coils=coil_count(scene), vias=vias)
-        )
+        topology = shown.outcome.design.topology
+        self.status["st-counts"].setText("" if scene is None else counts_text(scene, topology))
 
     def _render_results(
         self, state: OutcomeState, outcome: ComputeOutcome | None, table: DrcTable | None, outdated: bool
@@ -657,7 +672,8 @@ class MainWindow(QMainWindow):
             box.blockSignals(False)
 
     def _show_cursor(self, x_mm: float, y_mm: float) -> None:
-        self.status["st-cursor"].setText(text("shell.st-cursor.text", x=f"{x_mm:.2f}", y=f"{y_mm:.2f}"))
+        x, y = (f"{value:.2f}{UNIT_SPACE}mm" for value in (x_mm, y_mm))
+        self.status["st-cursor"].setText(text("shell.st-cursor.text", x=x, y=y))
 
     def examples_menu(self) -> QMenu:
         """Return a menu with one entry per packaged example."""
@@ -676,6 +692,24 @@ class MainWindow(QMainWindow):
         """Open the examples menu under its button."""
         anchor = anchor or self.toolstrip.buttons["act-examples"]
         self.examples_menu().popup(anchor.mapToGlobal(QPoint(0, anchor.height())))
+
+    def open_project_dialog(self) -> None:
+        """Ask for a project file and open it (Ctrl+O, F21)."""
+        name, _ = QFileDialog.getOpenFileName(self, text("shell.open.title"), "", text("shell.open.filter"))
+        if name:
+            self.open_project_file(Path(name))
+
+    def open_project_file(self, path: Path) -> QMessageBox | None:
+        """Open a project file in the inspector; a file that does not load says why and changes nothing."""
+        issues = self.session.open_project(path)
+        errors = [found.message for found in issues if found.severity is Severity.ERROR]
+        if not errors:
+            return None
+        body = text("shell.open.refused", name=path.name, reasons=" ".join(errors))
+        ok = QMessageBox.StandardButton.Ok
+        dialog = QMessageBox(QMessageBox.Icon.Warning, text("shell.open.title"), body, ok, self)
+        dialog.open()
+        return dialog
 
     def save_project_dialog(self) -> None:
         """Ask for a file name and save the open project."""
@@ -719,19 +753,39 @@ class MainWindow(QMainWindow):
             self.report_internal_error(correlation_id)
 
     def _place_rail(self, wide: bool) -> None:
-        """From 1280 px the rail is the third pane; below it the rail is the first results tab (design_spec.md 5)."""
+        """From 1280 px the rail is the third pane; below it the rail is the results tab after the drawing's."""
         index = self.results_tabs.indexOf(self.rail_scroll)
         if wide and index >= 0:
             self.results_tabs.removeTab(index)
             self.splitter.addWidget(self.rail_scroll)
             self.rail_scroll.show()
         elif not wide and index < 0:
-            self.results_tabs.insertTab(0, self.rail_scroll, text("shell.results-rail.title"))
+            first = self.results_tabs.indexOf(self.canvas_page) + 1
+            self.results_tabs.insertTab(first, self.rail_scroll, text("shell.results-rail.title"))
+
+    def _place_canvas(self, compact: bool) -> None:
+        """Under 620 px client height the canvas is the first results tab, "Drawing" (design_spec.md section 5)."""
+        index = self.results_tabs.indexOf(self.canvas_page)
+        if compact and index < 0:
+            self.results_tabs.insertTab(0, self.canvas_page, text("shell.drawing.title"))
+            self.results_tabs.setCurrentIndex(0)
+        elif not compact and index >= 0:
+            self.results_tabs.removeTab(index)
+            self.centre_split.insertWidget(0, self.canvas_page)
+            self.canvas_page.show()
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802 (Qt override)
+        """Give the canvas its share of `centre-split` on every resize; a results page's size hint never moves it."""
+        split = self.centre_split
+        if watched is split and event.type() == QEvent.Type.Resize and split.count() == 2:
+            split.setSizes(list(split_sizes(split.height() - split.handleWidth(), self.appearance.canvas_share)))
+        return super().eventFilter(watched, event)
 
     def resizeEvent(self, event) -> None:  # noqa: N802 (Qt override)
-        """Size the panes for the two-pane and three-pane widths (design_spec.md section 5)."""
+        """Size the panes for the two-pane and three-pane widths and the compact height (design_spec.md section 5)."""
         super().resizeEvent(event)
         wide = self.width() >= THREE_PANE_FROM_PX
+        self._place_canvas(self.height() < COMPACT_BELOW_PX)
         self._place_rail(wide)
         panes = self.splitter.width() - self.splitter.handleWidth() * (self.splitter.count() - 1)
         inspector = INSPECTOR_PX[wide]

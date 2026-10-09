@@ -15,6 +15,7 @@ from embodic.ui.views.style import icons_dir
 from embodic.ui.views.toolstrip_bar import ToolstripBar, UnknownCommandError
 
 IMPLEMENTED = {"save_project", "show_examples", "compute_now", "cycle_theme", "toggle_phase_render_mode", "fit_view"}
+IMPLEMENTED |= {"open_project"}  # U-M4e-1 (F21)
 IMPLEMENTED |= {"new_design", "set_connection_star", "set_connection_delta"}  # U-M4c session commands
 IMPLEMENTED |= {f"set_topology_{name}" for name in ("spiral", "serpentine", "wave")}
 IMPLEMENTED |= {"show_checks", "show_equations"}  # U-M4d results area

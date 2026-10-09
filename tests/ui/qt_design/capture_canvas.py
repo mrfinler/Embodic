@@ -9,10 +9,9 @@ import tempfile
 from pathlib import Path
 
 from PySide6.QtCore import QSettings
-from PySide6.QtWidgets import QApplication
 from tests.ui.qt_design.capture_screens import EXAMPLES, SIZE_PX, settle
 
-from embodic.ui.app import QSettingsStore, create_shell
+from embodic.ui.app import QSettingsStore, create_shell, qt_application
 from embodic.ui.theme import ThemeName
 from embodic.ui.views.main_window import ShellPaths
 
@@ -21,7 +20,7 @@ CANVAS_PX = 520
 
 def main(out_dir: Path) -> int:
     """Write the screenshots into out_dir; return 0."""
-    app = QApplication.instance() or QApplication(sys.argv[:1])
+    app = qt_application()
     out_dir.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as scratch:
         store = QSettingsStore(QSettings(str(Path(scratch) / "settings.ini"), QSettings.Format.IniFormat))

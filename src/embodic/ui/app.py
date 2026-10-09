@@ -35,6 +35,7 @@ logger = logging.getLogger("embodic")
 SETTINGS_ORG = "embodic"
 SETTINGS_APP = "embodic"
 THEME_KEY = "appearance/theme"
+CANVAS_SHARE_KEY = "layout/canvas_share"
 SMOKE_EXAMPLE = "spiral_12c10p_d08"
 SCREEN_SIZES_PX = ((1280, 800), (960, 540))
 SMOKE_TIMEOUT_S = 60.0
@@ -54,6 +55,18 @@ class QSettingsStore:
     def save_theme(self, value: str) -> None:
         """Store the theme choice and write it to disk."""
         self._settings.setValue(THEME_KEY, value)
+        self._settings.sync()
+
+    def load_canvas_share(self) -> float | None:
+        """Return the stored canvas share, or None when nothing readable is stored."""
+        try:
+            return float(self._settings.value(CANVAS_SHARE_KEY))
+        except (TypeError, ValueError):
+            return None
+
+    def save_canvas_share(self, value: float) -> None:
+        """Store the canvas share and write it to disk."""
+        self._settings.setValue(CANVAS_SHARE_KEY, value)
         self._settings.sync()
 
 
@@ -168,17 +181,28 @@ def run_smoke(app: QApplication, window: MainWindow, screenshot_dir: Path | None
     return 0
 
 
+def qt_application() -> QApplication:
+    """Return the running application; start one with the bundled fonts registered when there is none.
+
+    The app and every screenshot lever start Qt here, so captures render in the fonts users see.
+    """
+    app = QApplication.instance()
+    if app is None:
+        app = QApplication(sys.argv[:1])
+        register_fonts(QFontDatabase.addApplicationFont, app)
+    assert isinstance(app, QApplication)
+    return app
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Start the desktop app."""
     parser = argparse.ArgumentParser(prog="embodic", description="Design PCB stator coils.")
     parser.add_argument("--smoke", action="store_true", help="open, load the D08 example, compute, grab and quit")
     parser.add_argument("--screenshot-dir", type=Path, default=None, help="with --smoke: save window screenshots")
     args = parser.parse_args(argv)
-    app = QApplication.instance() or QApplication(sys.argv[:1])
-    assert isinstance(app, QApplication)
+    app = qt_application()
     app.setOrganizationName(SETTINGS_ORG)
     app.setApplicationName(SETTINGS_APP)
-    register_fonts(QFontDatabase.addApplicationFont, app)
     data_dir = app_data_dir()
     setup_logging(data_dir / "logs")
     paths = ShellPaths(recovery_dir=data_dir / "recovery")

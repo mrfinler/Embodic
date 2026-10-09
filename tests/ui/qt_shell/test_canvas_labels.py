@@ -189,3 +189,63 @@ def test_drc_locate_marker_survives_the_label_placement_of_later_zoom_steps(show
     canvas.zoom_by(0.8)
     assert len(_items(canvas, "drc-marker")) == 1
     assert {round(item.opacity(), 2) for item in _items(canvas, "copper")} == {0.35}
+
+
+def _phases_with_copper_in_view(canvas):
+    """Return the phases whose copper shape meets the view (interconnect copper has no phase)."""
+    seen = canvas.mapToScene(canvas.viewport().rect()).boundingRect()
+    return {item.data(DATA_PHASE) for item in canvas.scene().items(seen) if item.data(DATA_KIND) == "copper"} - {""}
+
+
+@pytest.mark.req("REQ-N-23")
+def test_ruling_h_the_wave_fit_view_labels_both_signs_of_every_phase(shown):
+    """U-S4e ruling h. Catches the fit view of main fd190c1 where every label read "+" while the belts alternate."""
+    window = shown("wave_16p_example", tall=False)
+    texts = {label for label, _, _ in _assert_ux_ac_27(window.canvas, "wave_16p_example")}
+    assert {f"{p}{s}" for p in "ABC" for s in "+−"} <= texts
+
+
+@pytest.mark.req("REQ-N-23")
+@pytest.mark.parametrize("example_id", ["spiral_12c10p_d08", "wave_16p_example"])
+@pytest.mark.parametrize("corner", [(1, 1), (-1, 1), (0, -1)])
+def test_ruling_h_every_phase_with_copper_in_view_has_a_label_and_leaders_stay_inside(shown, example_id, corner):
+    """U-S4e ruling h. Catches a zoomed view that shows a phase's copper but no label, or a leader leaving the view."""
+    window = shown(example_id, tall=False)
+    canvas = window.canvas
+    canvas.zoom_by(4.0)
+    r = max(board.envelope_mm[1] for board in window.outcome.state.value.scene.boards) * 0.7
+    canvas.centerOn(corner[0] * r, -corner[1] * r)
+    QApplication.processEvents()
+    boxes = _label_boxes(canvas)
+    labelled = {phase for _, phase, _ in boxes}
+    assert _phases_with_copper_in_view(canvas) <= labelled, (example_id, corner)
+    view = QRectF(canvas.viewport().rect()).adjusted(2, 2, -2, -2)
+    for leader in _items(canvas, "leader"):
+        line = leader.line()
+        for end in (line.p1(), line.p2()):
+            assert view.contains(QPointF(canvas.mapFromScene(end))), (example_id, corner)
+    assert [(label, box) for label, _, box in boxes if not QRectF(canvas.viewport().rect()).contains(box)] == []
+
+
+@pytest.mark.req("REQ-N-15")
+def test_ruling_h_the_canvas_keeps_fit_zoom_through_a_resize_until_the_user_zooms(shown):
+    """U-S4e ruling h. Catches the 40 px ring left in a 598 x 124 px canvas after a resize on main fd190c1."""
+    window = shown("spiral_12c10p_d08", tall=False)
+    canvas = window.canvas
+
+    def ring_px():
+        return canvas.mapFromScene(canvas._extent).boundingRect().height()
+
+    for size in ((1280, 800), (1600, 1000), (1100, 700)):
+        window.resize(*size)
+        QApplication.processEvents()
+        assert ring_px() >= 0.9 * min(canvas.viewport().width(), canvas.viewport().height()), size
+    canvas.zoom_by(2.0)
+    zoomed = canvas.transform().m11()
+    window.resize(1300, 820)
+    QApplication.processEvents()
+    assert canvas.transform().m11() == zoomed, "a user zoom survives a resize"
+    canvas.fit_view()
+    window.resize(1500, 900)
+    QApplication.processEvents()
+    assert ring_px() >= 0.9 * min(canvas.viewport().width(), canvas.viewport().height())

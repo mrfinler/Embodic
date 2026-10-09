@@ -12,6 +12,12 @@ class _MemoryStore:
     def load_theme(self) -> str | None:
         return None
 
+    def load_canvas_share(self) -> float | None:
+        return None
+
+    def save_canvas_share(self, value: float) -> None:
+        pass
+
     def save_theme(self, value: str) -> None:
         pass
 

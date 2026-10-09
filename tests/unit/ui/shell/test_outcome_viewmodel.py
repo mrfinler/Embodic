@@ -23,6 +23,7 @@ from embodic.ui.viewmodels.outcome import (
     OutcomeFailed,
     OutcomeViewModel,
     board_letters,
+    counts_text,
     eyes_shown,
     ready_state,
     scene_of_board,
@@ -111,8 +112,8 @@ def test_summary_strip_shows_verdicts_and_badges_from_the_outcome(d08_ready):
     assert items["sum-r-phase"].status is analysis.resistance_phase_operating_ohm.status
     assert items["sum-ke"].assumed_count == len(analysis.ke_line_peak_v_s_per_rad.assumed_inputs)
     # D08 values from the engine on main 8a297a0 (verified by running compute): 30.9 mV s/rad, 502 mOhm.
-    assert items["sum-ke"].value_text == "30.9 mV·s/rad"
-    assert items["sum-r-phase"].value_text == "502 mΩ"
+    assert items["sum-ke"].value_text == "30.9\u00a0mV·s/rad"
+    assert items["sum-r-phase"].value_text == "502\u00a0mΩ"
     assert all(item.status is None or isinstance(item.status, Status) for item in items.values())
 
 
@@ -274,3 +275,19 @@ def test_bracket_keys_solo_the_previous_or_next_layer_and_all_layers_lie_between
         vm.step_layer_solo(-1)
         backward.append(vm.hidden_layers.value)
     assert backward == [frozenset(), frozenset({"L1"}), frozenset({"L2"})]
+
+
+@pytest.mark.req("REQ-N-15")
+@pytest.mark.parametrize(
+    ("example", "expected"),
+    [
+        ("spiral_12c10p_d08", r"2 layers, 12 coils, \d+ vias"),
+        ("serpentine_16p_example", r"\d layers, 3 phases, \d+ vias"),
+        ("wave_16p_example", r"\d layers, 3 phases, \d+ vias"),
+    ],
+)
+def test_ruling_h_st_counts_names_coils_for_spiral_only(example, expected):
+    """U-S4e ruling h. Catches "96 coils" for a wave winding, whose belts are not coils."""
+    project = project_from_example(load_example(example))
+    shown = ready_state(compute(project.design, project_provenance(project)))
+    assert re.fullmatch(expected, counts_text(shown.scene, project.design.topology))

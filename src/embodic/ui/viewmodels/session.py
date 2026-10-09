@@ -58,6 +58,7 @@ STACKUP_POINTER = "/stackup/layers"
 BORE_POINTER = "/outline/bore"
 ASSIGNMENT_POINTER = "/winding/assignment"
 PAIRS_POINTER = "/winding/layers/pairs"
+SERIES_GROUPS_POINTER = "/winding/layers/series_groups"
 SCREWS_POINTER = "/outline/screws"
 COIL_COUNT_POINTER = "/winding/coil/coil_count"
 BALANCE_HINT_OPTIONS = 3  # balanced coil counts the unbalanced hint offers, nearest to the entered count first
@@ -369,6 +370,7 @@ def tab_of_widget(widget_id: str, topology: TopologyKind) -> str:
         "param-layer-count": "tab-layers",
         "param-wave-layers": "tab-layers",
         "layer-list": "tab-layers",
+        "pair-list": "tab-layers",
         "param-copper-weight": "tab-board",
         "param-board-thickness": "tab-board",
         "param-bore": "tab-board",
@@ -546,12 +548,24 @@ def layer_pairs_notice(old: Mapping[str, JsonValue], new: Mapping[str, JsonValue
     return " ".join(sentences)
 
 
+def list_items(values: Mapping[str, JsonValue], pointer: str) -> list[dict[str, JsonValue]]:
+    """Return what the draft holds for each item of the list at ``pointer``, by leaf name, in list order."""
+    items: list[dict[str, JsonValue]] = []
+    while any(p.startswith(base := f"{pointer}/{len(items)}/") for p in values):
+        items.append({p[len(base) :]: v for p, v in values.items() if p.startswith(base)})
+    return items
+
+
 def screw_patterns(values: Mapping[str, JsonValue]) -> list[dict[str, JsonValue]]:
     """Return what the draft holds for each screw pattern, by leaf name, in list order."""
-    patterns: list[dict[str, JsonValue]] = []
-    while any(p.startswith(base := f"{SCREWS_POINTER}/{len(patterns)}/") for p in values):
-        patterns.append({p[len(base) :]: v for p, v in values.items() if p.startswith(base)})
-    return patterns
+    return list_items(values, SCREWS_POINTER)
+
+
+def series_groups(values: Mapping[str, JsonValue]) -> list[list[int]]:
+    """Return the series groups of a spiral draft as lists of pair indices."""
+    groups = values.get(SERIES_GROUPS_POINTER)
+    listed = groups if isinstance(groups, list) else []
+    return [[i for i in group if isinstance(i, int)] for group in listed if isinstance(group, list)]
 
 
 def assignment_mode(values: Mapping[str, JsonValue]) -> AssignmentMode:
@@ -649,6 +663,7 @@ class DesignSession:
         self.can_redo: Observable[bool] = Observable(False)
         self.notice: Observable[EditNotice | None] = Observable(None)
         self.pairs_notice: Observable[str | None] = Observable(None)
+        self.opened: Observable[int] = Observable(0)  # counts the designs opened; the shell shows the drawing
         self.issues: Observable[tuple[ValidationIssue, ...]] = Observable(())
         self.document: SessionDocument | None = None
         self._undo: list[SessionDocument | None] = []
@@ -690,6 +705,9 @@ class DesignSession:
 
     def edit_many(self, changes: Mapping[str, JsonValue]) -> None:
         """Set several values as one undoable edit; a stack-up change re-derives the spiral layer pairs (D-024)."""
+        self._edit(changes)
+
+    def _edit(self, changes: Mapping[str, JsonValue], *, pairs_notice: str | None = None) -> None:
         document = self.document
         if document is None:
             return
@@ -707,7 +725,7 @@ class DesignSession:
         measurements = tuple(
             m for m in document.measurements if m.pointer in new and new[m.pointer] == old.get(m.pointer)
         )
-        notice = layer_pairs_notice(old, new) if stackup else None
+        notice = layer_pairs_notice(old, new) if stackup else pairs_notice
         self._commit(dataclasses.replace(document, draft=draft, measurements=measurements), pairs_notice=notice)
 
     def set_rotation_mode(self, mode: RotationMode) -> None:
@@ -720,6 +738,34 @@ class DesignSession:
             return
         rotations = alternate_rotations(len(layer_pairs(values)), step)
         self.edit_many({f"{PAIRS_POINTER}/{k}/rotation_rad": rotation for k, rotation in enumerate(rotations)})
+
+    def delete_pair(self, position: int) -> None:
+        """Remove the listed pair at ``position``, not its copper layers; a copper count change derives it again."""
+        if self.document is None:
+            return
+        values = self.document.draft.values
+        pairs = list_items(values, PAIRS_POINTER)
+        if not 0 <= position < len(pairs):
+            return
+        index = pairs.pop(position).get("index")
+        number = index + 1 if isinstance(index, int) else position + 1
+        groups = [kept for group in series_groups(values) if (kept := [i for i in group if i != index])]
+        listed: list[JsonValue] = [*pairs]
+        grouped: list[JsonValue] = [list[JsonValue](group) for group in groups]
+        notice = text("pair-list.removed", number=number)
+        self._edit({PAIRS_POINTER: listed, SERIES_GROUPS_POINTER: grouped}, pairs_notice=notice)
+
+    def set_series_group(self, index: int, group: int | None) -> None:
+        """Move pair ``index`` into series group ``group`` (list position), or into a group of its own for None."""
+        if self.document is None:
+            return
+        groups = [[i for i in g if i != index] for g in series_groups(self.document.draft.values)]
+        if group is not None and 0 <= group < len(groups):
+            groups[group].append(index)
+        else:
+            groups.append([index])
+        kept: list[JsonValue] = [list[JsonValue](g) for g in groups if g]
+        self.edit(SERIES_GROUPS_POINTER, kept)
 
     def add_screw_pattern(self) -> None:
         """Add a screw pattern with its required values empty (screens.md section 5)."""
@@ -944,6 +990,7 @@ class DesignSession:
         """Open another design: the drawing of the one before is not an outdated view of it."""
         self._drawn = None
         self._commit(document)
+        self.opened.set(self.opened.value + 1)
 
     def _commit(
         self, document: SessionDocument | None, *, record: bool = True, pairs_notice: str | None = None

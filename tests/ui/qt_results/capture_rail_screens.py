@@ -13,7 +13,7 @@ from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import QApplication
 from tests.ui.qt_results.capture_screens import D08, WAVE, grab, settle
 
-from embodic.ui.app import QSettingsStore, create_shell
+from embodic.ui.app import QSettingsStore, create_shell, qt_application
 from embodic.ui.views.main_window import MainWindow, ShellPaths
 
 
@@ -31,7 +31,7 @@ def show_size(app: QApplication, window: MainWindow, size: tuple[int, int]) -> N
 
 def main(out_dir: Path) -> int:
     """Write the shots into out_dir; return 0."""
-    app = QApplication.instance() or QApplication(sys.argv[:1])
+    app = qt_application()
     out_dir.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as scratch:
         store = QSettingsStore(QSettings(str(Path(scratch) / "settings.ini"), QSettings.Format.IniFormat))

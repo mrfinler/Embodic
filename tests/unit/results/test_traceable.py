@@ -95,7 +95,7 @@ def test_traceable_tag_lists_exactly_the_assumed_inputs_dominant_first(packaged)
         ("/operating/winding_temperature_degc", "example", Status.ASSUMPTION, False),
         ("constant:rho_20", "registry_constant", Status.INFERRED, False),
     ]
-    assert result.assumed_inputs[0].value_text == "0.0350 mm"
+    assert result.assumed_inputs[0].value_text == "0.0350\u00a0mm"
 
 
 def registry_with_thickness_field() -> Registry:
@@ -182,7 +182,7 @@ def test_traceable_how_computed_names_status_reasons_inputs_and_tag(packaged):
     """Catches a disclosure missing the reasons, the input provenance or the tag count."""
     text = traced("r", 1.0, Unit.OHM, eq_ids=["EQ-10"], inputs=R_INPUTS, registry=packaged).how_computed()
     assert "Status: not tested (EQ-10 verified; EQ-10 tests not passed in this build)" in text
-    assert f"{THICKNESS} = 0.0350 mm (example)" in text
+    assert f"{THICKNESS} = 0.0350\u00a0mm (example)" in text
     assert "Assumed inputs (5):" in text
     assert "Tolerance: +/-8 % vs measured DC resistance" in text
 

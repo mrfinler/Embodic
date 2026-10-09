@@ -19,10 +19,10 @@ from embodic.paths import resource_root
 
 PAGE_W = 595.28
 PAGE_H = 841.89
-SANS_FILE = "Inter/InterVariable.ttf"
+SANS_FILE = "Inter/Inter-Regular.ttf"
+SEMIBOLD_FILE = "Inter/Inter-SemiBold.ttf"
 MONO_FILE = "JetBrainsMono/JetBrainsMono-Regular.ttf"
-SANS, MONO = "F1", "F2"
-BOLD_STROKE = 0.035  # stroke width per point of size that turns the regular face into the bold text style
+SANS, MONO, SEMIBOLD = "F1", "F2", "F3"
 
 
 def _f(value: float) -> str:
@@ -252,7 +252,11 @@ class PdfDocument:
 
     pages: list[list[bytes]] = field(default_factory=list)
     fonts: dict[str, TrueTypeFont] = field(
-        default_factory=lambda: {SANS: bundled_font(SANS_FILE), MONO: bundled_font(MONO_FILE)}
+        default_factory=lambda: {
+            SANS: bundled_font(SANS_FILE),
+            MONO: bundled_font(MONO_FILE),
+            SEMIBOLD: bundled_font(SEMIBOLD_FILE),
+        }
     )
     used: dict[str, dict[int, str]] = field(default_factory=dict)  # font -> glyph id -> the character it shows
 
@@ -279,17 +283,12 @@ class PdfDocument:
         """Return the advance width of ``text`` in points."""
         return self.fonts[MONO if mono else SANS].width_pt(text, size)
 
-    @staticmethod
-    def _style(size: float, bold: bool, grey: float) -> str:
-        if not bold:
-            return f"{_f(grey)} g 0 Tr"
-        return f"{_f(grey)} g {_f(grey)} G 2 Tr {_f(size * BOLD_STROKE)} w"
-
     def text(self, x: float, y: float, text: str, *, size: float = 9.0, bold: bool = False, grey: float = 0.0) -> None:
-        """Show one line of text with its baseline start at (x, y) points."""
+        """Show one line of text with its baseline start at (x, y) points; ``bold`` sets it in Inter SemiBold."""
+        font = SEMIBOLD if bold else SANS
         self.pages[-1].append(
-            f"BT {self._style(size, bold, grey)} /{SANS} {_f(size)} Tf {_f(x)} {_f(y)} Td ".encode("ascii")
-            + self.glyphs(SANS, text)
+            f"BT {_f(grey)} g 0 Tr /{font} {_f(size)} Tf {_f(x)} {_f(y)} Td ".encode("ascii")
+            + self.glyphs(font, text)
             + b" Tj ET"
         )
 
@@ -304,11 +303,12 @@ class PdfDocument:
     ) -> None:
         """Show table cells on one baseline in one text object, so text extraction keeps them on one line.
 
-        ``mono`` names the cells (by index) set in the monospaced font: values, units and codes.
+        ``mono`` names the cells (by index) set in the monospaced font: values, units and codes. ``bold`` sets the
+        other cells in Inter SemiBold.
         """
-        parts, here = [f"BT {self._style(size, bold, 0.0)}".encode("ascii")], 0.0
+        parts, here = [b"BT 0 g 0 Tr"], 0.0
         for k, (x, text) in enumerate(cells):
-            font = MONO if k in mono else SANS
+            font = MONO if k in mono else SEMIBOLD if bold else SANS
             move = f"{_f(x)} {_f(y)}" if k == 0 else f"{_f(x - here)} 0"
             parts.append(f"/{font} {_f(size)} Tf {move} Td ".encode("ascii") + self.glyphs(font, text) + b" Tj")
             here = x

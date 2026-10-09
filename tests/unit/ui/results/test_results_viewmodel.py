@@ -93,7 +93,7 @@ def test_ui33_ke_disclosure_states_e_edge_at_least_assumption_and_the_10_percent
     row = rows_by_quantity(d08)["ke_phase_v_s_per_rad"]
     limitations = {s.title: s.lines for s in disclosure(row, registry)}["Limitations"]
     assert limitations == (
-        "EC-05 radial edge leakage (graded): e_edge is at least 1.74 % (lower bound). Badge cap above 10 % "
+        "EC-05 radial edge leakage (graded): e_edge is at least 1.74\u00a0% (lower bound). Badge cap above 10\u00a0% "
         "(assumption). Calibration inferred; transfer to this design assumption.",
     )
 

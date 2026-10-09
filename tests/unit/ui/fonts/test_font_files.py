@@ -10,8 +10,8 @@ from embodic.paths import resource_root
 from embodic.ui.fonts import FONT_FILES, font_file
 
 FONTS_DIR = resource_root() / "fonts"
-# The characters embodic prints in units, values and quantity symbols: µ, Ω, °, minus, ≈, middle dot, the narrow
-# no-break space and the Greek η, δ, Δ of results/labels.py.
+# The characters embodic prints in units, values and quantity symbols: µ, Ω, °, minus, ≈, middle dot, the no-break
+# space between number and unit (U-S4e ruling e1) and the Greek η, δ, Δ of results/labels.py.
 REQUIRED = {
     "µ": 0x00B5,
     "Ω": 0x03A9,
@@ -19,23 +19,19 @@ REQUIRED = {
     "−": 0x2212,
     "≈": 0x2248,
     "·": 0x00B7,
-    "NNBSP": 0x202F,
+    "NBSP": 0x00A0,
     "eta": 0x03B7,
     "delta": 0x03B4,
     "Delta": 0x0394,
 }
-# JetBrains Mono 2.304 has no U+202F glyph (verified with fontTools); embodic prints none today.
-KNOWN_GAPS = {("JetBrainsMono/JetBrainsMono-Regular.ttf", 0x202F), ("JetBrainsMono/JetBrainsMono-Medium.ttf", 0x202F)}
 FILES = [relative for files in FONT_FILES.values() for relative in files]
 
 
-def _case(relative: str, name: str, code: int) -> object:
-    marks = [pytest.mark.xfail(strict=True, reason="no U+202F in this font")] if (relative, code) in KNOWN_GAPS else []
-    return pytest.param(relative, code, id=f"{relative.split('/')[-1]}-{name}", marks=marks)
-
-
 @pytest.mark.req("REQ-L-07")
-@pytest.mark.parametrize(("relative", "code"), [_case(r, n, c) for r in FILES for n, c in REQUIRED.items()])
+@pytest.mark.parametrize(
+    ("relative", "code"),
+    [pytest.param(r, c, id=f"{r.split('/')[-1]}-{n}") for r in FILES for n, c in REQUIRED.items()],
+)
 def test_bundled_font_has_the_glyphs_embodic_prints(relative: str, code: int) -> None:
     """Catches a font that would show a unit symbol as a box or fall back to another family."""
     cmap = TTFont(font_file(relative), lazy=True).getBestCmap()

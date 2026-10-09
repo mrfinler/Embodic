@@ -10,14 +10,14 @@ from typing import Protocol, TypeVar
 
 from embodic.paths import resource_root
 
-INTER = "Inter Variable"  # the family name inside InterVariable.ttf, which Qt registers
+INTER = "Inter"  # the typographic family of both static files; Qt registers SemiBold as its 600 style
 JETBRAINS_MONO = "JetBrains Mono"
 UI_FALLBACKS = ("Segoe UI",)  # then the platform sans, which Qt picks when none of these exists
 MONO_FALLBACKS = ("Cascadia Mono", "Consolas", "monospace")
 BODY_PX = 13
 
 FONT_FILES = {
-    INTER: ("Inter/InterVariable.ttf",),
+    INTER: ("Inter/Inter-Regular.ttf", "Inter/Inter-SemiBold.ttf"),
     JETBRAINS_MONO: ("JetBrainsMono/JetBrainsMono-Regular.ttf", "JetBrainsMono/JetBrainsMono-Medium.ttf"),
 }
 

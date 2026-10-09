@@ -7,7 +7,7 @@ import math
 
 import pytest
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QInputDialog, QTableWidget, QToolButton
+from PySide6.QtWidgets import QInputDialog, QLabel, QTableWidget, QToolButton
 from tests.ui.qt_design.conftest import enter, find
 from tests.ui.qt_design.test_editing import no_compute
 
@@ -46,6 +46,12 @@ def test_segment_fields_are_exclusive_tool_buttons_that_write_their_binding_key(
             assert [c for c, b in segment.buttons.items() if b.isChecked()] == [choice]
 
 
+def rotation_cell(table: QTableWidget, row: int) -> tuple[str, str]:
+    """Return the value and the provenance chip a `pair-list` rotation cell shows."""
+    value, chip = table.cellWidget(row, 2).findChildren(QLabel)
+    return value.text(), chip.text()
+
+
 @pytest.mark.req("REQ-F-32")
 def test_the_layer_list_header_shows_every_column_title_in_full(make_shell):
     """Catches a truncated header such as "Thickness (µ..." (U-M4c screenshot finding), or one past the visible edge."""
@@ -55,7 +61,7 @@ def test_the_layer_list_header_shows_every_column_title_in_full(make_shell):
     table = find(window, "layer-list")
     header = table.horizontalHeader()
     shown = [c for c in range(header.count()) if not header.isSectionHidden(c)]
-    assert len(shown) == 5
+    assert len(shown) == 3
     assert all(header.sectionSize(c) >= header.sectionSizeHint(c) for c in shown)
     thickness = [table.horizontalHeaderItem(c).text().replace("\n", " ") for c in shown].index("Thickness (µm)")
     assert header.sectionViewportPosition(thickness) + header.sectionSize(thickness) <= table.viewport().width()
@@ -77,15 +83,13 @@ def test_pair_rotation_mode_and_the_selected_pair_field_edit_the_pair_rotations(
         "Layer pairs: 3. Pairs 1, 2 and 3 added with the default rotation."
     )
     enter(qtbot, window, "param-rotation-mode", "alternate")
-    table: QTableWidget = find(window, "layer-list")
-    rotation_column = 4
-    copper_rows = [r for r in range(table.rowCount()) if table.item(r, 1).text() == "Copper"]
-    assert [table.item(r, rotation_column).text() for r in copper_rows] == ["0", "0", "15", "15", "0", "0"]
+    table: QTableWidget = find(window, "pair-list")
+    assert [rotation_cell(table, r)[0] for r in range(table.rowCount())] == ["0", "15", "0"]
     assert not notice.isVisibleTo(window.panels["tab-layers"])
     rotation = find(window, "param-pair-rotation")
     assert not rotation.isVisibleTo(window.panels["tab-layers"])
     enter(qtbot, window, "param-rotation-mode", "custom")
-    table.selectRow(copper_rows[4])
+    table.selectRow(2)
     assert rotation.isVisibleTo(window.panels["tab-layers"])
     enter(qtbot, window, "param-pair-rotation", "7.5")
     assert [pair.rotation_rad for pair in layer_pairs(session.document.draft.values)] == [
@@ -105,36 +109,40 @@ def test_pair_rotation_mode_and_the_selected_pair_field_edit_the_pair_rotations(
 
 
 @pytest.mark.req("REQ-F-24")
-def test_the_screw_table_adds_edits_and_removes_patterns_with_the_hole_diameter_as_its_own_field(make_shell, qtbot):
-    """Catches a row that cannot be added or edited, a UI-filled hole diameter (D-031a), or one for another row."""
+def test_ruling_c_the_screw_table_has_three_columns_and_the_selected_pattern_its_own_fields(make_shell, qtbot):
+    """Catches an uneditable row, a UI-filled hole (D-031a), a field writing another pattern, fit back in the table."""
     window = make_shell(compute_fn=no_compute).window
     session = window.session
     session.load_example(WAVE)
     table: QTableWidget = find(window, "screw-table")
+    headers = [table.horizontalHeaderItem(c).text().replace("\n", " ") for c in range(table.columnCount())]
+    assert headers == ["Size", "Count", "Pitch radius (mm)"]
     patterns = table.rowCount()
     assert patterns >= 1
     hole = find(window, "param-screw-hole-diameter")
-    assert hole.text() == table.item(0, 2).text()
+    assert hole.text() == "3.4"
     qtbot.mouseClick(find(window, "btn-screw-add"), Qt.MouseButton.LeftButton)
-    assert table.rowCount() == patterns + 1
-    assert table.item(patterns, 2).text() == "Required"
+    assert table.rowCount() == patterns + 1 and table.currentRow() == patterns
     assert hole.text() == "" and find(window, "param-screw-hole-diameter-hint").text() == "Required"
-    for column, typed in ((0, "M3"), (1, "Normal"), (3, "4"), (4, "30")):
+    for column, typed in ((0, "M3"), (1, "4"), (2, "30")):
         table.item(patterns, column).setText(typed)
+    enter(qtbot, window, "param-screw-fit", "normal")
     enter(qtbot, window, "param-screw-hole-diameter", "3.4")
+    enter(qtbot, window, "param-screw-angle-offset", "15")
     values = session.document.draft.values
     base = f"/outline/screws/{patterns}/"
-    assert [values[base + leaf] for leaf in ("size", "fit", "count", "pitch_radius_mm", "hole_diameter_mm")] == [
-        "M3",
-        "normal",
-        4,
-        30.0,
-        3.4,
-    ]
+    leaves = ("size", "fit", "count", "pitch_radius_mm", "hole_diameter_mm")
+    assert [values[base + leaf] for leaf in leaves] == ["M3", "normal", 4, 30.0, 3.4]
+    assert values[base + "angle_offset_rad"] == pytest.approx(math.radians(15))
+    assert find(window, "param-screw-angle-offset-prov").text() == "user"
     assert isinstance(session.state.value, SessionComputed)
     qtbot.mouseClick(find(window, "btn-screw-remove"), Qt.MouseButton.LeftButton)
     assert table.rowCount() == patterns
     assert f"{base}size" not in session.document.draft.values
+    while table.rowCount():
+        qtbot.mouseClick(find(window, "btn-screw-remove"), Qt.MouseButton.LeftButton)
+    panel = window.panels["tab-board"]
+    assert not any(find(window, name).isVisibleTo(panel) for name in ("param-screw-fit", "param-screw-angle-offset"))
 
 
 @pytest.mark.req("REQ-F-21")

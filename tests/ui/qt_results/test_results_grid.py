@@ -34,3 +34,6 @@ def test_no_result_card_is_cut_off_at_the_right_of_the_grid(make_window, load, s
     assert len(right_edges) == 30
     assert {k: x for k, x in right_edges.items() if x > viewport.width()} == {}
     assert all(card.width() >= CARD_MIN_WIDTH_PX for card in tab.cards.values())
+    columns = len(set(right_edges.values()))
+    card = max(CARD_MIN_WIDTH_PX, *(c.minimumSizeHint().width() for c in tab.cards.values()))
+    assert (columns + 1) * card + columns * 8 > viewport.width(), "one more column would fit"

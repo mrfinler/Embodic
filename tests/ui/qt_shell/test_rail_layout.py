@@ -92,3 +92,24 @@ def test_ux_ac_21_no_rail_widget_is_clipped_at_the_smallest_and_the_default_size
         settle()
     assert clipped(window) == []
     assert not window.rail_scroll.horizontalScrollBar().isVisible()
+
+
+@pytest.mark.req("REQ-N-15")
+def test_ruling_c_at_1280_px_the_panes_start_at_340_and_360_px(d08_shell):
+    """Catches 327 and 347 px panes: the results filter row's minimum width squeezed both sides (main fd190c1)."""
+    window = d08_shell.window
+    resize(window, (1280, 800))
+    inspector, centre, rail = window.splitter.sizes()
+    assert (inspector, rail) == (340, 360)
+    assert centre >= window.centre.minimumSizeHint().width()
+
+
+@pytest.mark.req("REQ-N-15")
+def test_ruling_h_the_inspector_tab_bar_fits_the_300_px_inspector_in_inter(d08_shell):
+    """U-S4e ruling h. Catches scroll arrows on the inspector tabs at the two-pane width (Inter, 10 px tab padding)."""
+    window = d08_shell.window
+    resize(window, (960, 540))
+    bar = window.inspector_tabs.tabBar()
+    assert window.splitter.sizes()[0] == 300
+    assert [bar.tabText(i) for i in range(bar.count())] == ["Coil", "Phases", "Layers", "Board"]
+    assert sum(bar.tabRect(i).width() for i in range(bar.count())) <= bar.width()
