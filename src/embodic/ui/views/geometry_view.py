@@ -156,6 +156,8 @@ class GeometryView(QGraphicsView):
         self.setScene(QGraphicsScene(self))
         self.viewport().setFocusProxy(self)
         self._fit_scale = 1.0
+        self._fitted = True  # at fit zoom until the user zooms or pans; a resize then fits again (U-S4e ruling h)
+        self._press_scroll = (0, 0)
         self._tokens: ThemeTokens | None = None
         self._geometry: GeometryScene | None = None
         self._mode = PhaseRenderMode.COLOUR
@@ -301,12 +303,17 @@ class GeometryView(QGraphicsView):
         obstacles = [box for _, m in shown for box in m.pads]
         if (legend := self._legend_box_mm()) is not None:
             obstacles.append(legend)
+        copper: dict[Phase, list[tuple[float, float]]] = {}
+        for _, marks in shown:
+            for phase, spots in marks.copper.items():
+                copper.setdefault(phase, []).extend(spots)
         placed = place_in_view(
-            [a for a in anchors if a.first_of_phase] + [a for a in anchors if not a.first_of_phase],
+            anchors,
             view=self._viewport_mm(),
             text_size=self._text_size,
             obstacles=obstacles,
             ring_outer_mm=max(board.envelope_mm[1] for board, _ in shown),
+            copper=copper,
         )
         for label in placed:
             self._draw_label(label)
@@ -407,6 +414,7 @@ class GeometryView(QGraphicsView):
         self.resetTransform()
         self.fitInView(self._extent, Qt.AspectRatioMode.KeepAspectRatio)
         self._fit_scale = self.transform().m11()
+        self._fitted = True
         self.place_labels()
 
     def zoom_by(self, factor: float) -> None:
@@ -414,12 +422,27 @@ class GeometryView(QGraphicsView):
         target = min(max(self.zoom_factor() * factor, ZOOM_MIN), ZOOM_MAX)
         step = target / self.zoom_factor()
         self.scale(step, step)
+        self._fitted = False
         self.place_labels()
 
     def resizeEvent(self, event: QResizeEvent) -> None:  # noqa: N802 (Qt override)
-        """Place the labels again for the new viewport."""
+        """Fit again while the view is at fit zoom (a resize, splitter drag or tab switch); else place the labels."""
         super().resizeEvent(event)
-        self.place_labels()
+        if self._fitted:
+            self.fit_view()
+        else:
+            self.place_labels()
+
+    def mousePressEvent(self, event: QMouseEvent) -> None:  # noqa: N802 (Qt override)
+        """Remember the scroll position, so a drag that pans leaves fit zoom."""
+        self._press_scroll = (self.horizontalScrollBar().value(), self.verticalScrollBar().value())
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # noqa: N802 (Qt override)
+        """End a drag; one that moved the view leaves fit zoom."""
+        super().mouseReleaseEvent(event)
+        if (self.horizontalScrollBar().value(), self.verticalScrollBar().value()) != self._press_scroll:
+            self._fitted = False
 
     def scrollContentsBy(self, dx: int, dy: int) -> None:  # noqa: N802 (Qt override)
         """Place the labels again after a pan step: the view edge decides which labels fit."""
@@ -437,6 +460,7 @@ class GeometryView(QGraphicsView):
         if key in pan:
             step = (self.viewport().width() // 10) * (5 if event.modifiers() & Qt.KeyboardModifier.ShiftModifier else 1)
             dx, dy = pan[key]
+            self._fitted = False
             self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() + dx * step)
             self.verticalScrollBar().setValue(self.verticalScrollBar().value() + dy * step)
         elif key in (Qt.Key.Key_Plus, Qt.Key.Key_Equal):

@@ -6,20 +6,21 @@ boxes are measured in viewport pixels, so the 2 px gap holds at every zoom.
 """
 
 import math
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import groupby
 
 from embodic.geometry.layout import Layout
 from embodic.geometry.marks import coil_marks, top_layer_of_each_phase
 from embodic.geometry.paths import CopperPath
-from embodic.geometry.primitives import Primitive, PrimitiveRole
+from embodic.geometry.primitives import Arc, Line, Primitive, PrimitiveRole, primitive_length_mm
 from embodic.model.vocabulary import Phase, TopologyKind
 
 MINUS = "−"  # the width of "+", unlike the hyphen (F22)
 GAP_PX = 2.0
 SERPENTINE_QUADRANTS = 4
 LEADER_STEPS = 8  # candidate spots outside the ring, each one label height further out
+SPOT_PITCH_MM = 1.0  # spacing of the copper spots a moved label may take
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -30,7 +31,7 @@ class LabelAnchor:
     text: str  # spiral "A1+", "A2−"; wave "A+" per belt; serpentine "A"
     x_mm: float
     y_mm: float
-    first_of_phase: bool  # always placed, with a leader when its own spot is taken
+    forced: bool  # the first of its phase and sign: always placed, inside the view (U-S4e ruling h)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -100,15 +101,18 @@ def _sign(polarity: int) -> str:
 
 
 def _spiral(layout: Layout, layers: dict[Phase, str]) -> Iterator[LabelAnchor]:
-    for mark in coil_marks(layout):
+    seen: set[tuple[Phase, int]] = set()
+    for mark in sorted(coil_marks(layout), key=lambda m: m.number):
         if layers.get(mark.phase) == mark.layer:
+            group = (mark.phase, mark.polarity)
             yield LabelAnchor(
                 phase=mark.phase,
                 text=f"{mark.phase.value}{mark.number}{_sign(mark.polarity)}",
                 x_mm=mark.cx_mm,
                 y_mm=mark.cy_mm,
-                first_of_phase=mark.number == 1,
+                forced=group not in seen,
             )
+            seen.add(group)
 
 
 def _midpoint(p: Primitive) -> tuple[float, float]:
@@ -129,7 +133,7 @@ def _belt_key(side: _Side) -> tuple[Phase | None, int]:
 
 def _wave(layout: Layout, layers: dict[Phase, str]) -> Iterator[LabelAnchor]:
     """One label per phase belt: a run of angularly adjacent radial sides with the same phase and polarity."""
-    seen: set[Phase] = set()
+    seen: set[tuple[Phase, int]] = set()
     for layer in dict.fromkeys(layers.values()):
         sides = sorted(
             (
@@ -149,9 +153,13 @@ def _wave(layout: Layout, layers: dict[Phase, str]) -> Iterator[LabelAnchor]:
             assert phase is not None
             x, y = belt[len(belt) // 2][1]
             yield LabelAnchor(
-                phase=phase, text=f"{phase.value}{_sign(polarity)}", x_mm=x, y_mm=y, first_of_phase=phase not in seen
+                phase=phase,
+                text=f"{phase.value}{_sign(polarity)}",
+                x_mm=x,
+                y_mm=y,
+                forced=(phase, polarity) not in seen,
             )
-            seen.add(phase)
+            seen.add((phase, polarity))
 
 
 def _serpentine(layout: Layout, layers: dict[Phase, str]) -> Iterator[LabelAnchor]:
@@ -170,19 +178,44 @@ def _serpentine(layout: Layout, layers: dict[Phase, str]) -> Iterator[LabelAncho
             middle = (quadrant + 0.5) * math.tau / SERPENTINE_QUADRANTS
             best = min(outer, key=lambda q: abs((_angle(_midpoint(q)) - middle + math.pi) % math.tau - math.pi))
             x, y = _midpoint(best)
-            yield LabelAnchor(phase=phase, text=phase.value, x_mm=x, y_mm=y, first_of_phase=quadrant == 0)
+            yield LabelAnchor(phase=phase, text=phase.value, x_mm=x, y_mm=y, forced=quadrant == 0)
 
 
 _BY_TOPOLOGY = {TopologyKind.SPIRAL: _spiral, TopologyKind.WAVE: _wave, TopologyKind.SERPENTINE: _serpentine}
 
 
 def label_anchors(layout: Layout) -> tuple[LabelAnchor, ...]:
-    """Return the labels of one board in priority order: the first of each phase, then every label in index order.
+    """Return the labels of one board in priority order: the first of each phase and sign, then the rest in order.
 
     Each phase is labelled on the top layer that carries it (``top_layer_of_each_phase``).
     """
     anchors = list(_BY_TOPOLOGY[layout.topology](layout, top_layer_of_each_phase(layout)))
-    return tuple(a for a in anchors if a.first_of_phase) + tuple(a for a in anchors if not a.first_of_phase)
+    return tuple(a for a in anchors if a.forced) + tuple(a for a in anchors if not a.forced)
+
+
+CopperSpots = Mapping[Phase, Sequence[tuple[float, float]]]  # points on each phase's copper, board mm
+
+
+def _along(q: Primitive) -> Iterator[tuple[float, float]]:
+    steps = max(2, math.ceil(primitive_length_mm(q) / SPOT_PITCH_MM))
+    for k in range(steps + 1):
+        t = k / steps
+        if isinstance(q, Line):
+            yield q.x1_mm + t * (q.x2_mm - q.x1_mm), q.y1_mm + t * (q.y2_mm - q.y1_mm)
+        else:
+            assert isinstance(q, Arc)
+            yield q.point_at(q.start_rad + t * q.sweep_rad)
+
+
+def copper_spots(layout: Layout) -> dict[Phase, tuple[tuple[float, float], ...]]:
+    """Return points 1 mm apart along each phase's copper on the layer it is labelled on: where a label may move."""
+    layers = top_layer_of_each_phase(layout)
+    spots: dict[Phase, list[tuple[float, float]]] = {}
+    for path in layout.paths:
+        if path.phase is not None and layers.get(path.phase) == path.layer:
+            for q in path.primitives:
+                spots.setdefault(path.phase, []).extend(_along(q))
+    return {phase: tuple(points) for phase, points in spots.items()}
 
 
 def pad_boxes(layout: Layout) -> tuple[Box, ...]:
@@ -214,6 +247,69 @@ def _leader_spots(
         yield r * math.cos(angle), r * math.sin(angle)
 
 
+def _distance(a: tuple[float, float], b: tuple[float, float]) -> float:
+    return math.hypot(a[0] - b[0], a[1] - b[1])
+
+
+Point = tuple[float, float]
+
+
+class _Placer:
+    """The boxes taken so far in one view, and the labels placed."""
+
+    def __init__(self, view: Viewport, text_size: TextSize, obstacles: Sequence[Box]) -> None:
+        self.view, self.text_size = view, text_size
+        self.gap_mm = GAP_PX / view.px_per_mm
+        self.taken = list(obstacles)
+        self.placed: list[PlacedLabel] = []
+
+    def in_view(self, point: Point) -> bool:
+        """Return True when the point lies in the view shrunk by the 2 px gap."""
+        v, gap, (x, y) = self.view, self.gap_mm, point
+        return v.x_min_mm + gap <= x <= v.x_max_mm - gap and v.y_min_mm + gap <= y <= v.y_max_mm - gap
+
+    def free(self, text: str, spot: Point) -> bool:
+        """Return True when the label's box, grown by 2 px, lies in the view and meets nothing taken."""
+        grown = _box(*spot, self.text_size(text), self.view.px_per_mm).grown(self.gap_mm)
+        return grown.inside(self.view) and not any(grown.meets(other) for other in self.taken)
+
+    def first_free(self, text: str, spots: Iterable[Point]) -> Point | None:
+        """Return the first spot where the label is free."""
+        return next((spot for spot in spots if self.free(text, spot)), None)
+
+    def place(self, phase: Phase, text: str, spot: Point, leader: tuple[Point, Point] | None = None) -> None:
+        """Take the label's box and record the label."""
+        box = _box(*spot, self.text_size(text), self.view.px_per_mm)
+        self.taken.append(box)
+        x_mid, y_mid = (box.x_min_mm + box.x_max_mm) / 2, (box.y_min_mm + box.y_max_mm) / 2
+        self.placed.append(PlacedLabel(phase=phase, text=text, x_mm=x_mid, y_mm=y_mid, leader=leader))
+
+    def place_forced(self, anchor: LabelAnchor, ring_outer_mm: float, copper: Sequence[Point]) -> None:
+        """Place a forced label whose own spot is taken: a leader inside the view, else its phase's nearest copper."""
+        own = (anchor.x_mm, anchor.y_mm)
+        if self.in_view(own):
+            size = self.text_size(anchor.text)
+            out = self.first_free(anchor.text, _leader_spots(anchor, ring_outer_mm, size, self.view.px_per_mm))
+            if out is not None:
+                self.place(anchor.phase, anchor.text, out, (own, out))
+                return
+        near = self.first_free(anchor.text, sorted(copper, key=lambda spot: _distance(spot, own)))
+        if near is not None:
+            self.place(anchor.phase, anchor.text, near)
+        elif self.in_view(own):
+            self.place(anchor.phase, anchor.text, own)
+
+    def name_unlabelled(self, phase: Phase, anchors: Sequence[LabelAnchor], copper: Sequence[Point]) -> None:
+        """Label a phase that shows copper but no label, on the free copper spot nearest the view centre."""
+        v = self.view
+        centre = ((v.x_min_mm + v.x_max_mm) / 2, (v.y_min_mm + v.y_max_mm) / 2)
+        for spot in sorted(copper, key=lambda point: _distance(point, centre)):
+            text = min(anchors, key=lambda a: _distance((a.x_mm, a.y_mm), spot)).text
+            if self.free(text, spot):
+                self.place(phase, text, spot)
+                return
+
+
 def place_labels(
     anchors: Iterable[LabelAnchor],
     *,
@@ -221,33 +317,26 @@ def place_labels(
     text_size: TextSize,
     obstacles: Sequence[Box],
     ring_outer_mm: float,
+    copper: CopperSpots | None = None,
 ) -> tuple[PlacedLabel, ...]:
-    """Place labels in the given priority order and return those that show.
+    """Place labels in the given priority order and return those that show, every one inside the view.
 
-    A label whose box, grown by 2 px, meets a placed label, an obstacle or the viewport edge is skipped. The first
-    label of each phase always places: when its spot is taken it moves outside the ring on its own direction, with a
-    leader back to its anchor.
+    A label whose box, grown by 2 px, meets a placed label, an obstacle or the viewport edge is skipped. A forced label
+    (the first of its phase and sign) always places: on its anchor when that is free, else outside the ring on its
+    own direction with a leader when anchor and label both lie in the view, else on the free ``copper`` spot of its
+    phase nearest its anchor. Last, every phase with a ``copper`` spot in the view but no label gets one, on the free
+    spot nearest the view centre, named like its nearest anchor (U-S4e ruling h).
     """
-    gap_mm = GAP_PX / view.px_per_mm
-    taken = list(obstacles)
-    placed: list[PlacedLabel] = []
-
-    def free(box: Box) -> bool:
-        grown = box.grown(gap_mm)
-        return grown.inside(view) and not any(grown.meets(other) for other in taken)
-
-    for anchor in anchors:
-        size = text_size(anchor.text)
-        box = _box(anchor.x_mm, anchor.y_mm, size, view.px_per_mm)
-        leader = None
-        if not free(box):
-            if not anchor.first_of_phase:
-                continue
-            spots = list(_leader_spots(anchor, ring_outer_mm, size, view.px_per_mm))
-            x, y = next((s for s in spots if free(_box(*s, size, view.px_per_mm))), spots[0])
-            box = _box(x, y, size, view.px_per_mm)
-            leader = ((anchor.x_mm, anchor.y_mm), (x, y))
-        taken.append(box)
-        x_mid, y_mid = (box.x_min_mm + box.x_max_mm) / 2, (box.y_min_mm + box.y_max_mm) / 2
-        placed.append(PlacedLabel(phase=anchor.phase, text=anchor.text, x_mm=x_mid, y_mm=y_mid, leader=leader))
-    return tuple(placed)
+    placer = _Placer(view, text_size, obstacles)
+    ordered = list(anchors)
+    visible = {phase: [p for p in points if placer.in_view(p)] for phase, points in (copper or {}).items()}
+    for anchor in ordered:
+        if placer.free(anchor.text, (anchor.x_mm, anchor.y_mm)):
+            placer.place(anchor.phase, anchor.text, (anchor.x_mm, anchor.y_mm))
+        elif anchor.forced:
+            placer.place_forced(anchor, ring_outer_mm, visible.get(anchor.phase, ()))
+    for phase, points in visible.items():
+        own = [a for a in ordered if a.phase is phase]
+        if points and own and not any(label.phase is phase for label in placer.placed):
+            placer.name_unlabelled(phase, own, points)
+    return tuple(placer.placed)
