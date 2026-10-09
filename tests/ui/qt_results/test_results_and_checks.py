@@ -79,7 +79,7 @@ def test_ui33_ke_disclosure_in_the_window_shows_e_edge_at_least_assumption_and_t
     card = window.results_tab.cards["ke"]
     qtbot.mouseClick(card.how_toggle, Qt.MouseButton.LeftButton)
     shown = card.disclosure_text()
-    for words in ("e_edge", "at least", "assumption", "10 %"):
+    for words in ("e_edge", "at least", "assumption", "10\u00a0%"):
         assert words in shown, words
     qtbot.mouseClick(find(card, QPushButton, "res-ke-copy"), Qt.MouseButton.LeftButton)
     assert QGuiApplication.clipboard().text() == window.results.copy_trace("ke_phase_v_s_per_rad")
