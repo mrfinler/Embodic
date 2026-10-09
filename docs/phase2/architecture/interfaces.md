@@ -58,6 +58,12 @@ module `embodic.results.labels` (D-038e). §9.3 states the engine version, the D
 `write_bundle` returns, and which import of `PhaseRenderMode` is canonical (D-038d). §11 widens the
 `ThemeTokens.colours` comment to the status tokens (D-038a) and names the theme generator.
 
+Revision 2026-10-09 (U-D10, claude-sonnet-5-5, D-039 and D-040; the code on main fd190c1 was read for every item): §3 adds
+`QUANTITY_SYMBOLS` and `quantity_title` and records D-040. §5 adds the shared drawing data `embodic.geometry.marks` and
+`embodic.geometry.labels`. §6 adds the shared input guard `unusable_sizes` and the two codes of DEF-M3b-03. §9.1 adds
+`ExampleInfo.display_note`. §9.3 adds the PDF writer's `TrueTypeFont` and `MissingGlyphError` and the drawing rules of
+D-039 c. §11 adds `register_fonts`, the results rail rule below 1280 px and `ResultRow.title`. §13 adds point 9.
+
 ## 0. Rules for every public boundary
 
 - Lengths are millimetres (`_mm`), angles radians (`_rad`) inside the core, temperature °C (`_degc`), current A (`_a`),
@@ -1276,6 +1282,38 @@ QUANTITY_LABELS: Mapping[str, str]  # AnalysisResult field name -> English label
   §11 reads the same mapping for `ResultRow.label`, so the rail, the cards and the PDF name a quantity alike and UI
   strings do not repeat the labels. No code builds `ResultRow` on main 3acb044; U-M4d does.
 
+Revision 2026-10-09 (U-D10, D-039 e, D-040; `src/embodic/results/labels.py` and `tests/unit/results/test_labels.py` on
+main fd190c1, `verified` by reading). Card and report titles carry the symbol that the equation specification writes
+(U-M4d-fix).
+
+```python
+QUANTITY_SYMBOLS: Mapping[str, str]  # AnalysisResult field name -> symbol exactly as equation_specification.md writes it
+
+
+def quantity_title(quantity: str) -> str:
+    """The label, then the symbol when one is stated, for example "Copper loss P_Cu"."""
+```
+
+- `QUANTITY_SYMBOLS` sits beside `QUANTITY_LABELS` (`labels.py` l.10 and l.54) and holds 21 symbols on main fd190c1.
+  Each entry carries the specification line in a comment, for example `Ke_ph` (l.219) and `R_ph` (l.422). A field with no
+  stated symbol has no entry: the peak line constant, the rms phase EMF, THD (an abbreviation) and the IPC current (the
+  bare "I" of EQ-15), as the comment at l.50 says. The mapping is read-only.
+- `quantity_title` (l.81) returns the label alone for a field without a symbol. The results view-model reads it for
+  `ResultRow.title` (§11, `ui/viewmodels/results.py` l.76) and the PDF Key results table prints it (`io/report.py`
+  l.118). `embodic.results` exports only `QUANTITY_LABELS`, so callers import the other two names from
+  `embodic.results.labels`.
+- `test_symbols_belong_to_labelled_fields` (`test_labels.py` l.42) keeps every symbol key a labelled field. 
+  `test_every_symbol_is_written_in_the_equation_specification` (l.47) searches the specification for each symbol, so
+  an invented symbol fails.
+- Four stated symbols are held back: eta (spec l.509), delta (l.326), Delta T (l.373) and P_delta,circ (l.509). LG-01
+  rejects Greek letters outside `ALLOWED_SYMBOLS` (`tests/static/test_lg_language.py` l.9), and that set holds
+  `°µΩ²³·−×±≤≥√` only. D-040 (Fable) lets LG-01 admit the Greek letters the equation specification uses, in
+  `src/embodic/results/labels.py` only. The decision text is the 2026-10-09T11:40Z line of the store's `decisions.tsv`.
+  It is not in `decision_log.md` on main fd190c1 (`verified` by grep), and Fable records it there. U-M4c-4 (b) adds the
+  four symbols to `QUANTITY_SYMBOLS` and a test that the lint still rejects a Greek letter in any other module. Until
+  that unit merges, main holds 21 symbols. The brief of U-D10 names the letters η, δ, Δ and ρ. The four held-back
+  symbols need η, δ and Δ. Whether the allow-list also admits ρ is U-M4c-4's reading (`unresolved` here).
+
 ## 4. `embodic.winding`: spiral phase plan
 
 Used by the spiral generator only. Exact integer arithmetic (EQ-08 `replace`).
@@ -1855,6 +1893,147 @@ also the stitch via of an end group with more than one pair. Each `ParallelGroup
 group, and its members enter at ring via g and leave at ring via g + 1. The generator on main e1536b8 places these
 vias; whether the fan between them passes DRC is §6.
 
+Revision 2026-10-09 (U-D10, D-039 c and d; `src/embodic/geometry/marks.py` and `labels.py` on main fd190c1, `verified`
+by reading and by running both on the D08 example). Shared drawing data. The canvas, the SVG writer and the PDF report
+draw the same coil marks and the same labels from two modules of `embodic.geometry`, so a drawing on screen and a drawing
+in a file cannot differ (m4_review.md ruling a 3). Both modules are pure and import no Qt. `geometry` imports nothing
+from `io` or `ui` (contract C1).
+
+```python
+# embodic.geometry.marks (U-M4f)
+EYE_MARGIN: float  # 0.85: the eye disc keeps this fraction of the free radius around its centre
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class CoilMark:
+    layer: str
+    phase: Phase
+    number: int  # 1, 2, ... within the phase, in element order
+    polarity: int  # +1, -1, or 0 for a coil without polarity
+    label: str  # "A1+", "B2-" with the ASCII hyphen; the text a drawing prints is LabelAnchor.text
+    cx_mm: float
+    cy_mm: float
+    eye_radius_mm: float  # 0.0 = label only, no eye fill
+
+
+def point_primitive_distance_mm(x_mm: float, y_mm: float, p: Primitive) -> float: ...
+def coil_marks(layout: Layout) -> Iterator[CoilMark]: ...
+def top_layer_of_each_phase(layout: Layout) -> dict[Phase, str]: ...
+def hatch_chords(cx_mm: float, cy_mm: float, r_mm: float, angle_deg: float,
+                 spacing_mm: float) -> list[tuple[tuple[float, float], tuple[float, float]]]: ...
+def eye_marks(layout: Layout) -> tuple[CoilMark, ...]: ...
+
+
+# embodic.geometry.labels (U-M4f)
+MINUS: str  # U+2212, the width of "+" unlike the hyphen
+GAP_PX: float  # 2.0
+SERPENTINE_QUADRANTS: int  # 4
+LEADER_STEPS: int  # 8
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class LabelAnchor:
+    phase: Phase
+    text: str  # spiral "A1+", "A2−"; wave "A+" per belt; serpentine "A"
+    x_mm: float
+    y_mm: float
+    first_of_phase: bool  # always placed, with a leader when its own spot is taken
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Viewport:
+    x_min_mm: float
+    y_min_mm: float
+    x_max_mm: float
+    y_max_mm: float
+    px_per_mm: float
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Box:
+    x_min_mm: float
+    y_min_mm: float
+    x_max_mm: float
+    y_max_mm: float
+
+    def grown(self, by_mm: float) -> Box: ...
+    def meets(self, other: Box) -> bool: ...
+    def inside(self, view: Viewport) -> bool: ...
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class PlacedLabel:
+    phase: Phase
+    text: str
+    x_mm: float  # the label centre
+    y_mm: float
+    leader: tuple[tuple[float, float], tuple[float, float]] | None  # (anchor, label centre), board mm
+
+
+TextSize: TypeAlias = Callable[[str], tuple[float, float]]  # text -> (width, height) in viewport pixels
+
+
+def label_anchors(layout: Layout) -> tuple[LabelAnchor, ...]: ...
+def pad_boxes(layout: Layout) -> tuple[Box, ...]: ...
+def place_labels(anchors: Iterable[LabelAnchor], *, view: Viewport, text_size: TextSize,
+                 obstacles: Sequence[Box], ring_outer_mm: float) -> tuple[PlacedLabel, ...]: ...
+```
+
+Coil marks (`geometry/marks.py`).
+
+- `CoilMark` (l.23) is one coil on one layer. `coil_marks` (l.94) yields one per coil per copper layer, layer by layer,
+  then by (phase, element, polarity). The D08 example gives 24 marks, which is 12 coils on 2 layers.
+- The number counts the coils of one phase in element order from 1 (`_coil_number`, l.85). It restarts in each phase,
+  so D08 has A1 to A4, B1 to B4 and C1 to C4.
+- `CoilMark.label` is the phase letter, the number and the sign, with the ASCII hyphen for minus (l.106). The labels
+  module writes the sign with `MINUS` (U+2212). No code under `src/embodic` reads `CoilMark.label` on main fd190c1
+  (`verified` by grep), so the hyphen text reaches no drawing.
+- Only a spiral coil has an eye disc. Its radius is `EYE_MARGIN` (l.18) times the free radius around the eye centre,
+  so a fill never touches a trace edge. A wave or serpentine mark sits at the start of its first primitive and has
+  radius 0.0 (label only).
+- `top_layer_of_each_phase` (l.124) gives, per phase, the first copper layer in stack order that carries that phase. A
+  drawing names and fills each phase on that layer. A spiral or wave board names all three phases on its top layer. A
+  serpentine board with one phase per layer pair names each phase on the upper layer of its own pair.
+- `eye_marks` (l.154) returns the marks with an eye disc on the top layer of their phase, which is the set a drawing
+  fills (12 for D08). `hatch_chords` (l.139) returns parallel chords of a disc at an angle and a spacing, each ending
+  on the circle.
+
+Labels (`geometry/labels.py`). `label_anchors` (l.179) returns the labels of one board in priority order: the first
+label of each phase, then the rest in index order. Each label sits on the top layer of its phase. Text and count follow
+the topology (D-039 d, UX-AC-27).
+
+| Topology | Text | Count | `first_of_phase` | Anchor |
+|---|---|---|---|---|
+| spiral | `A1+`, `A2−` | one per coil on the top layer of its phase | the coil with number 1 | the eye centre |
+| wave | `A+`, `A−` | one per belt, a run of radial sides next to each other with the same phase and polarity; a belt that crosses angle 0 is one belt (l.145) | the first belt of the phase | the middle side of the belt |
+| serpentine | `A` | `SERPENTINE_QUADRANTS` (l.21) per phase | quadrant 0 | the outermost end turn nearest the middle of the 90 degree quadrant |
+
+- `place_labels` (l.217) takes the anchors in priority order, a `Viewport`, a `text_size` callback, the obstacles and
+  `ring_outer_mm`. It returns the `PlacedLabel` values that show. `pad_boxes` (l.188) gives one box per terminal pad,
+  the obstacles the files pass.
+- A label is skipped when its box, grown by `GAP_PX` (l.20), meets a placed label, an obstacle or the viewport edge.
+  Boxes are measured in viewport pixels, so the gap holds at every zoom.
+- The first label of each phase always places. When its spot is taken, the label moves outward along the direction of
+  its own anchor, to the first free spot of `LEADER_STEPS` (l.22) spots outside `ring_outer_mm`, each one label height
+  further out. When none is free it takes the first spot. `PlacedLabel.leader` then holds the line from the anchor to
+  the label centre.
+- Coordinates are board millimetres with y up. The caller chooses the scale and the text measure:
+
+| Caller | Scale | Where |
+|---|---|---|
+| SVG writer | 1:1 on the page, 96 CSS px per 25.4 mm; Inter advance widths | `_board_labels`, `io/svg_writer.py` l.231 |
+| PDF report | one point per viewport pixel at the page scale; Inter advance widths | `_labels`, `io/report.py` l.259 |
+| Canvas | the zoom of the view, placed again after every zoom, pan and resize step | `place_labels`, `ui/views/geometry_view.py` l.289 |
+
+- `place_in_view` (`ui/viewmodels/outcome.py` l.281) is the canvas's own step on top of `place_labels`. The first
+  label of a phase is the first of its anchors that lies in view, and a label outside the view is dropped. The hover
+  tooltip of its copper still names it. This is view-model behaviour (§11) and not part of `embodic.geometry`.
+- Open (U-M4c-3 report). The anchor set comes from the fit-zoom layout, so a zoomed view can show a phase with no
+  label, and the leader fallback ignores the view edge. Agent 1 rules on it in U-S4e (h). It is `unresolved` here.
+- Tests. `tests/unit/geometry/marks/test_labels.py` pins the text, the order, the 2 px gap, the pad and edge skips and
+  the leader (l.29 to l.105). `tests/ui/qt_shell/test_canvas_labels.py` pins no overlap at fit zoom and 3x
+  (`test_ux_ac_27_labels_never_overlap_and_name_every_phase_at_fit_zoom_and_3x`, l.77).
+
 
 ## 6. `embodic.generators`: plug-in interface (ADR-0012)
 
@@ -1947,6 +2126,42 @@ for all three cases.
 
 Xcoil's overlap branch `else if (wantIc)` (l.2190) follows `if (wantIc || conn === 'open')` and never runs. The wave
 condition is the one its message states (`wave/generate.py` l.104-108 docstring; U-M3-fix2 report, `inferred`).
+
+Revision 2026-10-09 (U-D10, D-030, DEF-M3b-03; `generators/base.py`, `generators/wave/generate.py`,
+`generators/wave/involute.py`, `generators/serpentine/generate.py` and both catalogue modules on main fd190c1,
+`verified` by reading and by running the new tests). The wave and serpentine ports refuse the inputs D-030 bounds
+before they build any geometry (U-M3-fix3).
+
+```python
+def unusable_sizes(positive: Mapping[str, float], trace_pointer: str, width_mm: float, rules: DrcRules) -> list[str]:
+    """Pointers of sizes no geometry can be built from (D-030), so a generator refuses before it builds anything."""
+```
+
+- Defect. On main 3d70170 the wave fuzz test failed with `ZeroDivisionError` in `biarc` for a denormal width
+  (w = 1.175494351e-38 with both end points equal). The serpentine port had no fuzz test, and the new one found a
+  `ZeroDivisionError` in `serpentine/frame.py` with zero poles (U-M3-fix3 report, `verified` there by reproduction).
+- `unusable_sizes` (`generators/base.py` l.26) returns the pointer of every entry of `positive` that is not finite and
+  above 0. It also returns `trace_pointer` when the width is not finite, not above 0, or below
+  `DrcRules.min_trace_width_mm` by the D-006 test (`violates`, `drc/report.py` l.54). A width exactly at the minimum is
+  accepted.
+- `_out_of_range` of the wave port (`wave/generate.py` l.63) and of the serpentine port (`serpentine/generate.py`
+  l.95) call it. The spiral generator keeps an inline copy of the same guard. U-M4c-4 (d) moves it to the shared
+  helper with its behaviour and codes unchanged.
+
+| Code | Port | Returned when | Pointers | Source |
+|---|---|---|---|---|
+| `UNBUILDABLE_WAVE_INPUT_OUT_OF_RANGE` | wave | `_out_of_range` finds a pointer: an unusable size, an outer radius not above the inner, a negative fillet, turns outside 1 to `MAX_TURNS` (200), poles outside 2 to `MAX_POLES` (200) or odd, or poles × phases × turns above `MAX_SLOTS` (2400) | the pointers found | `wave/generate.py` l.218; `catalogue/wave.py` l.27 |
+| `UNBUILDABLE_WAVE_END_TURN_DEGENERATE` | wave | `biarc` raises `DegenerateBiarcError` where Xcoil divides by zero: the two end points coincide, or the tangents are equal (c at most 1e-12) and the chord is perpendicular to them (`wave/involute.py` l.18 and l.82-83) | `/winding/r_inner_mm`, `/winding/turns` | `wave/generate.py` l.228-229; `catalogue/wave.py` l.28 |
+| `UNBUILDABLE_SERPENTINE_INPUT_OUT_OF_RANGE` | serpentine | `_out_of_range` finds a pointer: an unusable size, an outer radius not above the inner, a negative fillet, a start angle that is not finite, turns or strands below 1, turns × strands above `TRACES_MAX` (400), poles below 2, or layers per phase below 1 | the pointers found | `serpentine/generate.py` l.415-416; `catalogue/serpentine.py` l.22 |
+
+- The tests. The wave fuzz test is `test_fuzzed_inputs_give_a_stack_or_unbuildable_never_an_exception`
+  (`tests/unit/generators/wave/test_wave_generate.py` l.321). Its explicit `@example` for the denormal case (l.306)
+  stays, so Hypothesis replays the case without a database. The serpentine fuzz test has the same name in
+  `tests/unit/generators/serpentine/test_serpentine_inputs.py` (l.88), with the same explicit `@example` (l.73). Both
+  are UT-GEN-01 for their port (test_plan.md §5.1).
+- Open (U-M3-fix3 report). D-030 bounds the trace width only. A tiny positive clearance, pad or end width still
+  reaches the degenerate end turn, and the wave port then returns `UNBUILDABLE_WAVE_END_TURN_DEGENERATE`. A DRC lower
+  bound for clearance and pad would refuse earlier. Whether to add one is Agent 2's and Agent 6's call (§13 point 9).
 
 
 ## 7. `embodic.drc`
@@ -2492,12 +2707,21 @@ class ExampleInfo:
     example_id: str
     title: str  # English, shown in the Examples gallery with the word "Example"
     topology: TopologyKind
-    source_note: str  # e.g. "Agent 2 default 12/16 (assumption)", "D08 thesis configuration (oracle O1)"
+    source_note: str  # e.g. "Agent 2 default 12/16 (assumption)", "D08 thesis configuration (oracle O1)"; provenance, never shown
+    display_note: str  # what the gallery shows: no other program's name and no repository path (UX-AC-03)
 
 
 def list_examples() -> tuple[ExampleInfo, ...]: ...
 def load_example(example_id: str) -> tuple[ExampleRef, DesignParameters]: ...
 ```
+
+Revision 2026-10-09 (U-D10, ruling g 4, UX-AC-03; `src/embodic/io/examples.py` on main fd190c1, `verified` by reading).
+`ExampleInfo` has a fifth field, `display_note`. The Examples gallery shows `display_note` and never `source_note`. The
+`source_note` keeps the provenance in the example file (for example "D08 thesis configuration (oracle O1)"), and it may
+name another program or a repository path. `display_note` may not (UX-AC-03). `list_examples` takes it from the table
+`DISPLAY_NOTES` (`examples.py` l.20), which has one entry per packaged example id, and a missing id raises `KeyError`.
+Titles still come from the example files (`title` is `meta["title"]`); the serpentine example title names the reference
+program, and a strict xfail records it (test_plan.md §5.6).
 
 ### 9.2 Board dump (Agent 3 format, frozen here as v1)
 
@@ -2645,6 +2869,83 @@ below on the packaged examples). What the exporters do, as the code implements i
   from there. §11 uses it through `AppearanceViewModel`. The four import contracts hold with this import (`lint-imports`
   reports 4 kept on main 3acb044). `test_phase_render_mode.py` l.19 shows that the view-model hands the writers their
   own enum member.
+
+Revision 2026-10-09 (U-D10, D-039 b and c; `src/embodic/io/pdf_writer.py`, `svg_writer.py` and `report.py` on main
+fd190c1, `verified` by reading and by running the writers on the D08 example). The PDF report embeds the bundled fonts,
+and both drawing writers draw labels, eye fills and a legend from the shared data of §5.
+
+```python
+# embodic.io.pdf_writer (U-M4f)
+@dataclass(frozen=True, slots=True, kw_only=True)
+class TrueTypeFont:
+    postscript_name: str
+    data: bytes  # the whole font file, embedded as FontFile2
+    units_per_em: int
+    advances: tuple[int, ...]  # advance width of each glyph id, font units
+    glyph_of: Mapping[int, int]  # code point -> glyph id
+    bbox: tuple[int, int, int, int]
+    ascent: int
+    descent: int
+    cap_height: int
+
+    def width_pt(self, text: str, size: float) -> float: ...
+    def missing(self, text: str) -> str:
+        """The characters of text the font has no glyph for, each once, in order."""
+
+
+def parse_truetype(data: bytes) -> TrueTypeFont: ...
+def bundled_font(relative: str) -> TrueTypeFont:
+    """A file of resources/fonts, parsed once per process."""
+
+
+class MissingGlyphError(Exception):
+    issue: ValidationIssue  # INVALID_EXPORT_GLYPH_MISSING, ERROR; value = "U+0E01 ..."; hint = font name and text
+
+    def __init__(self, font: TrueTypeFont, missing: str, text: str) -> None: ...
+```
+
+- Embedding (D-039 b). Each font is a `Type0` font with the `Identity-H` encoding and a `CIDFontType2` descendant. Its
+  `FontFile2` is the whole TrueType file, with no subsetting (`_embed`, `pdf_writer.py` l.223). Widths come from `hmtx`,
+  glyph ids from the font's own `cmap`, and a `ToUnicode` CMap lets a reader extract the text. `PdfDocument.glyphs`
+  (l.267) writes each text as a hex string of glyph ids. The two files are `SANS_FILE` (Inter variable) and
+  `MONO_FILE` (JetBrains Mono Regular), l.22-23, read through `embodic.paths.resource_root`.
+- The parser. `parse_truetype` (l.120) reads `head`, `hhea`, `maxp`, `hmtx`, `cmap` (formats 4 and 12, format 12
+  first), `OS/2` and `name` with `struct`. The module imports the standard library and `embodic` only: `python -X
+  importtime -c "import embodic.io.pdf_writer"` loads no third-party module and not numpy. fontTools (MIT, test side
+  only) is the oracle of `test_reader_maps_every_code_point_and_width_as_fonttools_does`
+  (`tests/unit/embodic_io/exporters/test_pdf_fonts.py` l.19).
+- Bold is synthetic. The report draws bold as the regular face with a stroke (`BOLD_STROKE`, l.25, text render mode 2).
+- A missing glyph stops the export. `TrueTypeFont.missing` (l.51) lists the characters the font lacks, and `glyphs`
+  raises `MissingGlyphError` (l.148, raised l.270-271) before it writes anything for that text. The error carries a
+  `ValidationIssue` with code `INVALID_EXPORT_GLYPH_MISSING` (`catalogue/exporters.py` l.11). A character is never
+  dropped or replaced (D-039 b, ruling g 7). `test_ut_exp_03_a_character_without_a_glyph_fails_instead_of_vanishing`
+  (`test_report_readme_bundle.py` l.113) feeds U+0E01 and reads the code and the value `U+0E01`.
+- The error is an exception, not a returned refusal. No code catches it (`verified` by grep: only `pdf_writer.py`
+  names it), so `write_report_pdf` raises it where its signature promises `ExportSummary | ExportRefused`. The report's
+  own texts hold characters the bundled fonts cover, which the D08 run confirms. Whether the writer should return an
+  `ExportRefused` with a new reason is open (§13 point 9).
+
+Drawing rules (D-039 c, REQ-N-14, REQ-N-23, UX-AC-05). A greyscale or print export names every phase without its
+colour. The SVG writer and the PDF report apply the same rules in both render modes:
+
+- Labels. Every label that `place_labels` places at the page scale is drawn over a paper-coloured halo. The SVG holds a
+  `<text class="coil-label-halo">` with a `#ffffff` stroke of `LABEL_HALO_MM` (0.5) under each
+  `<text class="coil-label">` of `LABEL_MM` (2.2) (`_labels`, `svg_writer.py` l.242). The halo is a separate text
+  because QSvgRenderer ignores `paint-order` (U-M4f report). A leader is a line of `LEADER_MM` (0.15). The PDF draws the
+  halo and the label with `PdfDocument.haloed_text` (l.317), `LABEL_PT` 6.5 and `LABEL_HALO_PT` 1.6 (`report.py` l.50).
+- Eye fills. Phase A gets a tint of 10 percent (`EYE_TINT`). Phase B gets a hatch at 45 degrees and phase C at 135
+  degrees (`PhaseInk.hatch_deg`, `exporters.py` l.170), with 0.4 mm between lines at 1:1 (`HATCH_PITCH_MM`). The fill
+  is clipped to the eye disc, by `clipPath` in the SVG (`_eye`, l.200) and by a `W n` clip in the PDF (`report.py`
+  l.208). Only the top layer of each phase is filled (`eye_marks`, §5).
+- Copper is solid. No element of a drawing has a dash pattern, copper and legend bars included
+  (`test_drawings_never_dash_copper_or_legend_bars`, `test_svg.py` l.152;
+  `test_report_drawing_labels_every_coil_and_never_dashes`, `test_report_readme_bundle.py` l.95).
+- Legend. Each phase has a solid copper bar in its ink, an eye swatch with the same tint or hatch, and the text "Phase
+  A" (`_legend`, `svg_writer.py` l.270; `report.py` l.285).
+- Footer. The SVG width is the larger of the drawing and the footer text, so the stamp is never clipped
+  (`svg_document`, l.304; `test_footer_fits_inside_the_drawing`, `test_svg.py` l.161).
+- Run on main fd190c1: the greyscale D08 SVG holds 12 `coil-label` texts, 12 `coil-label-halo` texts, 12 clipped eye
+  groups and no `stroke-dasharray`. The D08 report extracts as text with `A2−`, `502 mΩ`, `434 mΩ` and `1.34 µH`.
 
 ## 10. `embodic.outcome` and `embodic.api`: the compute facade
 
@@ -2866,6 +3167,7 @@ class ResultRow:
 
     quantity: str
     label: str
+    title: str  # the label, then the symbol the equation specification states (QUANTITY_SYMBOLS, §3)
     value_text: str
     unit_text: str
     status: Status
@@ -2920,6 +3222,46 @@ Revision 2026-10-09 (U-D9, D-038a; `src/embodic/ui/theme.py`, `tools/design/buil
 - `load_theme` (`theme.py` l.126) reads `resources/themes/<name>.json`. `tools/design/build_themes.py` writes that file
   (`theme_tokens`, l.64) with the QSS and the glyphs from `resources/themes/tokens.json`, the one source of colours.
   Running the generator twice leaves `git status` clean.
+
+Revision 2026-10-09 (U-D10, D-039 a and e; `src/embodic/ui/fonts.py`, `ui/views/main_window.py`, `ui/viewmodels/results.py`
+and `ui/strings/shell.py` on main fd190c1, `verified` by reading and by running `tests/ui/qt_shell/test_fonts.py` and
+`test_rail_layout.py`, which pass). Fonts and the results rail.
+
+```python
+# embodic.ui.fonts (U-M4f). Imports no Qt (contract C2): the app passes Qt's loader and the application in.
+INTER: str  # "Inter Variable", the family name inside InterVariable.ttf
+JETBRAINS_MONO: str  # "JetBrains Mono"
+UI_FALLBACKS: tuple[str, ...]  # ("Segoe UI",), then the platform sans
+MONO_FALLBACKS: tuple[str, ...]  # ("Cascadia Mono", "Consolas", "monospace")
+BODY_PX: int  # 13
+FONT_FILES: Mapping[str, tuple[str, ...]]  # family -> files relative to resources/fonts
+
+
+def font_file(relative: str) -> Path: ...
+def register_fonts(add_font: Callable[[str], int], application: FontApplication[F]) -> None:
+    """Load every bundled file and make Inter 13 px the application font. RuntimeError when Qt cannot load a file."""
+```
+
+- `register_fonts` (`fonts.py` l.57) loads the four files of `FONT_FILES` through the loader it receives, sets the
+  application font to Inter at 13 px with Segoe UI after it, and names the substitutes for JetBrains Mono. `app.py`
+  calls it once at start-up with `QFontDatabase.addApplicationFont` (l.181). A file Qt cannot load raises
+  `RuntimeError`, because the install is broken. No font is fetched at run time (D-039 a). The files, their licences
+  and their SHA-256 values are in `resources/fonts/FONTS.md`.
+- Qt ignores the `wght` axis of the variable Inter file, so weights 500 and 600 are synthetic (U-M4f report,
+  `inferred`). Agent 1 rules in U-S4e (e) on static weights.
+- The results rail (D-039 e, UX-AC-21). From 1280 px window width (`THREE_PANE_FROM_PX`, `main_window.py` l.91) the
+  rail is the third pane of the splitter, 360 px wide (`RAIL_PX`, l.93), inside a `QScrollArea` named `rail-scroll`
+  (l.234-235). Below 1280 px the same widget is the first tab of `results-tabs`, titled by the string
+  `shell.results-rail.title`, "Key results" (`strings/shell.py` l.76). `_place_rail` (l.707) moves it on every
+  `resizeEvent`, so the rail never appears in both places. The inspector is 300 px in the two-pane layout and 340 px in
+  the three-pane layout (`INSPECTOR_PX`, l.92). The rail shows an "Inputs" card and a "DRC" card with glyphs in place of
+  the earlier "Design" card (D-039 e; `results_rail.py` l.1, `strings/results.py` l.15). Tests: `test_ux_ac_21_from_1280_px_the_rail_is_the_third_pane_inside_a_scroll_area`
+  (`tests/ui/qt_shell/test_rail_layout.py` l.43) and its three siblings at l.56, l.70 and l.86.
+- `ResultRow` gains `title: str`, the label followed by the specification symbol (§3, `quantity_title`). The stub of
+  this section lists the field.
+- Known gaps (U-M4d-fix report, not tested here). At 1280 x 800 the Results tab card grid is clipped at the right
+  (DEF-1) and the DRC table scrolls sideways to its Measured, Required and Layer columns (DEF-2). U-M4c-4 (e) fixes
+  the grid. U-S4e (d) rules on the table.
 
 ## 12. `embodic.cli`
 
@@ -2990,3 +3332,15 @@ both.
    DRC-clean, and the `RANGE_SERPENTINE_INTERCONNECT_BOARDS` warning (§6). Its Ke is finite (0.0707654 V·s/rad,
    Fable's acceptance probe), and D-037b states that this is not a claim of accuracy. The status here is the decision's
    label. Whether the `Traceable` status fields of that outcome say `unresolved` is not checked by U-D8 (`unresolved`).
+
+9. Open points after the M4-3 and M4-4 units (revision 2026-10-09, U-D10; main fd190c1, `verified` by reading unless the
+   row says otherwise).
+
+| Item | State on main fd190c1 | Owner |
+|---|---|---|
+| A glyph the report font lacks: exception or refusal (§9.3) | `MissingGlyphError` propagates out of `write_report_pdf`. `ExportRefused.reason` has no value for it. U-M4f asked whether to add `"missing_glyph"` and could not, because `io/exporters.py` was outside its scope | Fable decides; the change is an `io` unit's |
+| Greek symbols in result titles (§3, D-040) | Four symbols are held back and 21 are in `QUANTITY_SYMBOLS`. D-040 is not yet in `decision_log.md` | U-M4c-4 (b); Fable records D-040 |
+| Lower DRC bounds for clearance, pad and end width in the wave and serpentine guards (§6) | D-030 gives a bound for the trace width only. A tiny positive clearance, pad or end width reaches `UNBUILDABLE_WAVE_END_TURN_DEGENERATE`. A serpentine of 400 traces took up to 16 s (U-M3-fix3 report, measured there) | Agent 2 and Agent 6 for the bound; the 16 s goes to the Phase 5 performance list (Fable's note on the report) |
+| Spiral generator still has its own input guard (§6) | inline copy in `generators/spiral/generate.py` | U-M4c-4 (d) |
+| Label anchors are fixed at fit zoom (§5) | a zoomed view can show a phase with no label, and the leader fallback ignores the view edge | Agent 1, U-S4e (h) |
+| `CoilMark.label` keeps the ASCII hyphen while `LabelAnchor.text` uses U+2212 (§5) | no code reads `CoilMark.label`. Whether to delete the field or switch it to `MINUS` is not decided (`unresolved`) | Agent 3, with the next `geometry` unit |

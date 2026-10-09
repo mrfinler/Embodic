@@ -152,8 +152,9 @@ def check_interfaces(errors: list[str]) -> int:
 
 
 def parse_units() -> list[dict[str, object]]:
+    """Read the section 1 rows only: a section 8 row may carry a U-M4f style ID and has 7 columns, not 11."""
     units = []
-    for cells in table_rows(WORK.read_text(encoding="utf-8")):
+    for cells in table_rows(section(WORK.read_text(encoding="utf-8"), 1)):
         if not re.fullmatch(r"U-(M\d[a-z]|V\d|F\d)", cells[0]):
             continue
         if len(cells) != 11:
