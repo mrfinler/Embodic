@@ -110,11 +110,33 @@ def test_screens_v2_widgets_bind_their_field(key, widget_id):
 
 
 @pytest.mark.req("REQ-N-24")
-def test_screw_patterns_bind_to_the_screw_table():
-    """R6, D-031a. Defect caught: a screw leaf bound to the removed `param-screw-fit` or to no widget."""
-    screws = [spec for spec in FIELDS if spec.pointer.startswith("/outline/screws")]
-    assert len(screws) == 7
-    assert {spec.widget_id for spec in screws if not spec.pointer.endswith("/hole_diameter_mm")} == {"screw-table"}
+def test_ruling_c_screw_leaves_bind_to_the_three_column_table_or_their_own_field():
+    """U-S4e ruling c. Defect caught: fit or angle offset left in the table cells, or a leaf bound to no widget."""
+    screws = {spec.pointer: spec.widget_id for spec in FIELDS if spec.pointer.startswith("/outline/screws")}
+    assert screws == {
+        "/outline/screws": "screw-table",
+        "/outline/screws/*/size": "screw-table",
+        "/outline/screws/*/count": "screw-table",
+        "/outline/screws/*/pitch_radius_mm": "screw-table",
+        "/outline/screws/*/fit": "param-screw-fit",
+        "/outline/screws/*/hole_diameter_mm": "param-screw-hole-diameter",
+        "/outline/screws/*/angle_offset_rad": "param-screw-angle-offset",
+    }
+
+
+@pytest.mark.req("REQ-N-24")
+def test_ruling_c_pair_pointers_bind_to_the_pair_list_and_the_rotation_field():
+    """U-S4e ruling c. Defect caught: a pair pointer still bound to `layer-list`, whose rows are layers, not pairs."""
+    pairs = {spec.pointer: spec.widget_id for spec in FIELDS if spec.pointer.startswith("/winding/layers/")}
+    assert pairs == {
+        "/winding/layers/pairs": "pair-list",
+        "/winding/layers/pairs/*/index": "pair-list",
+        "/winding/layers/pairs/*/layer_in": "pair-list",
+        "/winding/layers/pairs/*/layer_out": "pair-list",
+        "/winding/layers/pairs/*/phases": "pair-list",
+        "/winding/layers/pairs/*/rotation_rad": "param-pair-rotation",
+        "/winding/layers/series_groups": "pair-list",
+    }
 
 
 @pytest.mark.req("REQ-F-24", "REQ-N-24")

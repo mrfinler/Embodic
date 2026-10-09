@@ -157,13 +157,13 @@ _ROWS: Mapping[str, _Row] = types.MappingProxyType(
         "/winding/layer_order": _Row(D, None, G.LAYERS, "param-layer-order"),
         "/winding/stack_mode": _Row(D, None, G.LAYERS, "param-stack-mode"),
         "/winding/board_gap_mm": _Row(D, Unit.MM, G.LAYERS, "param-board-gap", _lim(NONNEG, 0, 10), 0.05),
-        "/winding/layers/pairs": _Row(D, None, G.LAYERS, "layer-list"),
-        "/winding/layers/pairs/*/index": _Row(D, None, G.LAYERS, "layer-list", _lim(NONNEG)),
-        "/winding/layers/pairs/*/layer_in": _Row(D, None, G.LAYERS, "layer-list"),
-        "/winding/layers/pairs/*/layer_out": _Row(D, None, G.LAYERS, "layer-list"),
+        "/winding/layers/pairs": _Row(D, None, G.LAYERS, "pair-list"),
+        "/winding/layers/pairs/*/index": _Row(D, None, G.LAYERS, "pair-list", _lim(NONNEG)),
+        "/winding/layers/pairs/*/layer_in": _Row(D, None, G.LAYERS, "pair-list"),
+        "/winding/layers/pairs/*/layer_out": _Row(D, None, G.LAYERS, "pair-list"),
         "/winding/layers/pairs/*/rotation_rad": _Row(D, Unit.RAD, G.LAYERS, "param-pair-rotation"),
-        "/winding/layers/pairs/*/phases": _Row(D, None, G.LAYERS, "layer-list"),
-        "/winding/layers/series_groups": _Row(D, None, G.LAYERS, "layer-list"),
+        "/winding/layers/pairs/*/phases": _Row(D, None, G.LAYERS, "pair-list"),
+        "/winding/layers/series_groups": _Row(D, None, G.LAYERS, "pair-list"),
         "/vias/drill_mm": _Row(D, Unit.MM, G.LAYERS, "param-via-drill", _lim(POS, 0.1, 5), 0.05),
         "/vias/pad_mm": _Row(D, Unit.MM, G.LAYERS, "param-via-pad", _lim(POS, 0.2, 10), 0.05),
         "/vias/plating_um": _Row(P, Unit.UM, G.LAYERS, "param-via-plating", _lim(POS), 1),
@@ -198,12 +198,12 @@ _ROWS: Mapping[str, _Row] = types.MappingProxyType(
         # Fasteners (Xcoil screw count 1..64, angle -360..360 deg)
         "/outline/screws": _Row(D, None, G.FASTENERS, "screw-table"),
         "/outline/screws/*/size": _Row(D, None, G.FASTENERS, "screw-table"),
-        "/outline/screws/*/fit": _Row(D, None, G.FASTENERS, "screw-table"),
+        "/outline/screws/*/fit": _Row(D, None, G.FASTENERS, "param-screw-fit"),
         "/outline/screws/*/count": _Row(D, None, G.FASTENERS, "screw-table", _lim(POS, 1, 64), 1),
         "/outline/screws/*/pitch_radius_mm": _Row(D, Unit.MM, G.FASTENERS, "screw-table", _lim(POS), 0.5),
         "/outline/screws/*/hole_diameter_mm": _Row(D, Unit.MM, G.FASTENERS, "param-screw-hole-diameter", _lim(POS)),
         "/outline/screws/*/angle_offset_rad": _Row(
-            D, Unit.RAD, G.FASTENERS, "screw-table", _lim(low=-TURN_RAD, high=TURN_RAD)
+            D, Unit.RAD, G.FASTENERS, "param-screw-angle-offset", _lim(low=-TURN_RAD, high=TURN_RAD)
         ),
         # Stack-up (Xcoil copperOz 0.25..10 oz, here as finished thickness)
         "/stackup/layers": _Row(D, None, G.STACKUP, "layer-list"),

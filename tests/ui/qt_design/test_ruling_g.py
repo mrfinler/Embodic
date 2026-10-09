@@ -50,31 +50,32 @@ def _layers_tab_at_300_px(make_shell, wait_computed):
 
 
 @pytest.mark.req("REQ-N-15")
-def test_ruling_g1_layer_list_has_the_ruled_columns_and_the_row_tooltip_names_the_pair_vias(make_shell, wait_computed):
-    """Catches a show column, a renamed or missing column (F11) or a pair row without its vias."""
+def test_ruling_c_layer_list_holds_layers_and_pair_list_the_pairs_with_their_vias(make_shell, wait_computed):
+    """U-S4e ruling c. Catches pair columns back in the layer list, or a pair row without its vias tooltip."""
     table = _layers_tab_at_300_px(make_shell, wait_computed)
-    assert [line.replace("\n", " ") for line in _header_lines(table)] == [
-        "Layer",
-        "Kind",
-        "Thickness (µm)",
-        "Pair",
-        "Rotation (°)",
-    ]
-    copper = [r for r in range(table.rowCount()) if table.item(r, 1).text() == "Copper"]
-    assert [table.item(r, 0).toolTip() for r in copper] == ["Pair 1 joins L1 and L2 through vias."] * 2
+    assert [line.replace("\n", " ") for line in _header_lines(table)] == ["Layer", "Kind", "Thickness (µm)"]
+    pairs = table.window().findChild(QTableWidget, "pair-list")
+    assert [line.replace("\n", " ") for line in _header_lines(pairs)] == ["Pair", "Layers", "Rotation (°)"]
+    assert [pairs.item(r, 1).text() for r in range(pairs.rowCount())] == ["L1, L2"]
+    assert pairs.item(0, 0).toolTip() == "Pair 1 joins L1 and L2 through vias."
 
 
 @pytest.mark.req("REQ-N-15")
-@pytest.mark.xfail(strict=True, reason="five header-wide columns need about 277 px; the 300 px inspector leaves 248")
-def test_ruling_g1_spiral_layer_list_fits_the_300_px_inspector_without_sideways_scroll(make_shell, wait_computed):
-    """Records the open part of ruling g 1: at 300 px the spiral columns overflow by about 29 px."""
-    _fits_without_sideways_scroll(_layers_tab_at_300_px(make_shell, wait_computed))
+def test_ruling_c_layer_and_pair_lists_fit_the_300_px_inspector_with_kind_in_full(make_shell, wait_computed):
+    """U-S4e ruling c. Catches "Cop…" and "Diel…" in the Kind column, or either table scrolling sideways at 300 px."""
+    table = _layers_tab_at_300_px(make_shell, wait_computed)
+    _fits_without_sideways_scroll(table)
+    _fits_without_sideways_scroll(table.window().findChild(QTableWidget, "pair-list"))
+    metrics = table.fontMetrics()
+    for r in range(table.rowCount()):
+        kind = table.item(r, 1).text()
+        assert kind in ("Copper", "Dielectric")
+        assert table.columnWidth(1) >= metrics.horizontalAdvance(kind) + 14, kind
 
 
 @pytest.mark.req("REQ-N-15")
-@pytest.mark.xfail(strict=True, reason="six header-wide columns need about 277 px; the 300 px inspector leaves 274")
 def test_screw_table_fits_the_300_px_inspector_without_sideways_scroll(make_shell, wait_computed):
-    """Catches the screw table scrolling sideways in the two-pane layout (U-M4c-2 open question)."""
+    """Catches the screw table scrolling sideways in the two-pane layout (U-M4c-2 open question, U-S4e ruling c)."""
     window = make_shell().window
     window.session.load_example(WAVE)
     wait_computed(window)
