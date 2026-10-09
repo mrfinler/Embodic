@@ -2137,8 +2137,9 @@ def unusable_sizes(positive: Mapping[str, float], trace_pointer: str, width_mm: 
     """Pointers of sizes no geometry can be built from (D-030), so a generator refuses before it builds anything."""
 ```
 
-- Defect. On main 3d70170 the wave fuzz test failed with `ZeroDivisionError` in `biarc` for a denormal width
-  (w = 1.175494351e-38 with both end points equal). The serpentine port had no fuzz test, and the new one found a
+- Defect. On main 3d70170 the merged gate failed the wave fuzz test with `ZeroDivisionError` in `biarc` for a denormal
+  width (w = 1.175494351e-38 with both end points equal). The draw depended on Hypothesis: a rerun with an empty
+  database passed, and only the explicit `@example` reproduced it. The serpentine port had no fuzz test, and the new one found a
   `ZeroDivisionError` in `serpentine/frame.py` with zero poles (U-M3-fix3 report, `verified` there by reproduction).
 - `unusable_sizes` (`generators/base.py` l.26) returns the pointer of every entry of `positive` that is not finite and
   above 0. It also returns `trace_pointer` when the width is not finite, not above 0, or below
