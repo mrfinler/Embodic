@@ -94,7 +94,7 @@ STRINGS: Mapping[str, str] = {
     "chart.data-table": "Data table",
     "chart.illustrative": "Illustrative, not computed",
     "chart.legend.phase": "Phase {phase}",
-    "chart.backemf.title": "Back-EMF per phase, fundamental, at {speed} rpm",
+    "chart.backemf.title": "Back-EMF per phase, fundamental, at {speed}\u00a0rpm",
     "chart.backemf.x": "Electrical angle",
     "chart.backemf.y": "Back-EMF",
     "chart.backemf.note": (

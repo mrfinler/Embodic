@@ -36,7 +36,7 @@ def test_drc_table_of_the_wave_example_lists_every_failure_with_catalogue_text(w
     first = table.rows[0]
     assert (first.number, first.rule_code, first.layer_text) == (1, "DRC_TRACE_VIA", "L1")
     assert first.message == message_for("DRC_TRACE_VIA")
-    assert (first.measured_text, first.required_text) == ("0.199965 mm", "0.200000 mm")
+    assert (first.measured_text, first.required_text) == ("0.199965\u00a0mm", "0.200000\u00a0mm")
     assert first.at_mm == wave.drc[0].violations[0].at_mm
 
 

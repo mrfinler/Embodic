@@ -103,7 +103,7 @@ STRINGS: Mapping[str, str] = {
     "shell.st-drc.none": "DRC: not run",
     "shell.st-counts.text": "{layers} layers, {coils} coils, {vias} vias",
     "shell.st-units.text": "mm",
-    "shell.st-cursor.text": "x {x} mm, y {y} mm",
+    "shell.st-cursor.text": "x {x}\u00a0mm, y {y}\u00a0mm",
     "shell.fig-canvas.accessible": "Geometry view of the stator board",
     "shell.legend.phase": "Phase {phase}",
     "shell.error.title": "Internal error",

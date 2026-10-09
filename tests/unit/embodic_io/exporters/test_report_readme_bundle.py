@@ -75,8 +75,9 @@ def test_ut_exp_03_report_prints_units_as_the_ui_does(
     assert isinstance(summary, ExportSummary), summary
     reader, text = _pdf_text(summary.path)
     # D08 values from compute on main c4c9e8f (verified by running the summary strip test): 502 mΩ, 30.9 mV·s/rad.
-    assert "502 mΩ" in text and "30.9 mV·s/rad" in text
-    assert re.search(r"\d µH ", text), "no inductance in µH"
+    assert "502\u00a0mΩ" in text and "30.9\u00a0mV·s/rad" in text
+    assert re.search(r"\d\u00a0µH ", text), "no inductance in µH"
+    assert not re.search(r"\d (mm|mΩ|µH|V|A|W|%)\b", text), "a plain space between a number and its unit"
     assert not re.search(r"\bohm\b", text) and "Helvetica" not in str(reader.pages[0]["/Resources"])
     fonts = {f["/BaseFont"]: f for f in (ref.get_object() for ref in reader.pages[0]["/Resources"]["/Font"].values())}
     assert set(fonts) == {"/Inter-Regular", "/Inter-SemiBold", "/JetBrainsMono-Regular"}

@@ -130,7 +130,7 @@ def _phase_key(path: CopperPath) -> int:
 def _copper(svg: _Svg, prefix: str, board: Layout, inks: dict[Phase | None, PhaseInk], grey: bool) -> None:
     for layer in board.copper_layers:
         on_layer = sorted((p for p in board.paths if p.layer == layer), key=_phase_key)
-        label = f"Copper {layer} (z = {_n(board.copper_z_mm[layer])} mm)"
+        label = f"Copper {layer} (z = {_n(board.copper_z_mm[layer])}\u00a0mm)"
         svg.out.append(
             f'<g id="{prefix}-cu-{layer}" class="layer" data-layer={quoteattr(layer)} data-label={quoteattr(label)}>'
         )

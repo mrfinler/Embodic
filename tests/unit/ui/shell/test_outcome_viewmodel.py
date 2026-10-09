@@ -111,8 +111,8 @@ def test_summary_strip_shows_verdicts_and_badges_from_the_outcome(d08_ready):
     assert items["sum-r-phase"].status is analysis.resistance_phase_operating_ohm.status
     assert items["sum-ke"].assumed_count == len(analysis.ke_line_peak_v_s_per_rad.assumed_inputs)
     # D08 values from the engine on main 8a297a0 (verified by running compute): 30.9 mV s/rad, 502 mOhm.
-    assert items["sum-ke"].value_text == "30.9 mV·s/rad"
-    assert items["sum-r-phase"].value_text == "502 mΩ"
+    assert items["sum-ke"].value_text == "30.9\u00a0mV·s/rad"
+    assert items["sum-r-phase"].value_text == "502\u00a0mΩ"
     assert all(item.status is None or isinstance(item.status, Status) for item in items.values())
 
 

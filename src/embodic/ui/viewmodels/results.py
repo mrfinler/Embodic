@@ -17,7 +17,7 @@ from embodic.model.vocabulary import Phase
 from embodic.outcome import ComputeOutcome
 from embodic.physics.waveform import XCOIL_WAVEFORM_SAMPLES, emf_waveform_v
 from embodic.results import QUANTITY_LABELS, AnalysisResult, Registry, Traceable
-from embodic.results.formatting import MINUS, NOT_A_NUMBER, format_quantity
+from embodic.results.formatting import MINUS, NOT_A_NUMBER, UNIT_SPACE, format_quantity
 from embodic.results.labels import quantity_title
 from embodic.results.status import Status, ValidityEffect, ValidityFlag, combine_status
 from embodic.results.traceable import AssumedInput
@@ -48,7 +48,7 @@ def split_value(value: float, unit: Unit) -> tuple[str, str]:
     shown = format_quantity(value, unit)
     if shown == NOT_A_NUMBER:
         return shown, unit.display() or text("results.unit.dimensionless")
-    number, _, unit_text = shown.partition(" ")
+    number, _, unit_text = shown.partition(UNIT_SPACE)
     return number, unit_text or text("results.unit.dimensionless")
 
 
@@ -131,9 +131,9 @@ def check_text(flag: ValidityFlag, registry: Registry) -> str:
         name=spec.name,
         metric=metric_name,
         bound=text(f"results.how.bound.{flag.metric_bound.value}"),
-        value=f"{format_quantity(flag.metric * 100, Unit.ONE)} %",
+        value=f"{format_quantity(flag.metric * 100, Unit.ONE)}{UNIT_SPACE}%",
         bound_name=flag.metric_bound.value.replace("_", " "),
-        threshold=f"{spec.threshold * 100:g} %",
+        threshold=f"{spec.threshold * 100:g}{UNIT_SPACE}%",
         threshold_status=flag.threshold_status or spec.threshold_status,
         calibration_status=flag.calibration_status or spec.calibration_status,
         transfer_status=flag.transfer_status or spec.transfer_status,
