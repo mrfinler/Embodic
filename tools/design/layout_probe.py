@@ -19,7 +19,6 @@ from pathlib import Path
 from PySide6.QtCore import QSettings
 from PySide6.QtGui import QFontDatabase
 from PySide6.QtWidgets import QAbstractScrollArea, QApplication, QTabBar, QTableView
-
 from tests.ui.qt_results.capture_screens import settle
 
 from embodic.ui.app import QSettingsStore, create_shell
@@ -51,7 +50,8 @@ def _probe(app: QApplication, window: MainWindow, size: tuple[int, int], state: 
         f"{size[0]}x{size[1]} {state}: panes={window.splitter.sizes()} canvas/results={split} "
         f"inspector_tabs_scroll={_tabs_scroll(window.inspector_tabs.tabBar())} "
         f"results_tabs_scroll={_tabs_scroll(window.results_tabs.tabBar())} "
-        f"layer-list={_overflow(find(QTableView, 'layer-list'))} screw-table={_overflow(find(QTableView, 'screw-table'))} "
+        f"layer-list={_overflow(find(QTableView, 'layer-list'))} "
+        f"screw-table={_overflow(find(QTableView, 'screw-table'))} "
         f"drc-table={_overflow(find(QTableView, 'drc-table'))} "
         f"results-scroll={_overflow(find(QAbstractScrollArea, 'results-scroll'))}"
     )
@@ -60,6 +60,7 @@ def _probe(app: QApplication, window: MainWindow, size: tuple[int, int], state: 
 
 
 def main() -> int:
+    """Probe both examples at 1280 x 800 and 960 x 540; return 0."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--fonts", action="store_true", help="register the bundled fonts as app.py does")
     parser.add_argument("--shots", type=Path, default=None)
