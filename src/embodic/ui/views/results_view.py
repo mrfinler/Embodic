@@ -51,7 +51,8 @@ from embodic.ui.views.status_badge import AssumptionTag, EqChip, StatusBadge, ba
 COMPUTING_DIM_AFTER_MS = 300
 COMPUTING_OPACITY = 0.6
 REVEAL_MS = 120
-CARD_MIN_WIDTH_PX = 300
+CARD_MIN_WIDTH_PX = 280  # screens.md section 6, U-S4e ruling d
+CARD_GAP_PX = 8
 
 
 # Agent 1's style sheets ring buttons and fields; the chips, tags and scroll areas of the results area need it too.
@@ -256,6 +257,7 @@ class ResultsTab(QWidget):
         self.stale_stamp.setVisible(False)
         self.grid_host = QWidget()
         self.grid = QGridLayout(self.grid_host)
+        self.grid.setHorizontalSpacing(CARD_GAP_PX)
         self.grid.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.card_scroll = QScrollArea()
         self.card_scroll.setObjectName("results-scroll")
@@ -340,8 +342,9 @@ class ResultsTab(QWidget):
         bar = self.style().pixelMetric(QStyle.PixelMetric.PM_ScrollBarExtent, None, self.card_scroll)
         margins = self.grid.contentsMargins()
         usable = scroll_width - 2 * self.card_scroll.frameWidth() - bar - margins.left() - margins.right()
-        gap = max(0, self.grid.horizontalSpacing())
-        return max(1, (usable + gap) // (CARD_MIN_WIDTH_PX + gap))
+        # A card whose content needs more than 280 px sets the column width, so no card is ever squeezed or cut.
+        card = max([CARD_MIN_WIDTH_PX, *(c.minimumSizeHint().width() for c in self.cards.values())])
+        return max(1, (usable + CARD_GAP_PX) // (card + CARD_GAP_PX))
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802 (Qt override)
         """Fit as many card columns as the scroll area allows, with its scroll bar, at every resize."""

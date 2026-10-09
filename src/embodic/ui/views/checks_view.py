@@ -3,7 +3,9 @@
 from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QRectF, Qt, Signal
 from PySide6.QtGui import (
     QColor,
+    QFont,
     QKeyEvent,
+    QKeySequence,
     QPainter,
     QPainterPath,
     QPen,
@@ -13,6 +15,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import (
     QAbstractItemView,
+    QApplication,
     QGraphicsItem,
     QGraphicsPathItem,
     QGraphicsPixmapItem,
@@ -28,6 +31,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from embodic.results.formatting import UNIT_SPACE
+from embodic.ui.fonts import JETBRAINS_MONO
 from embodic.ui.strings import text
 from embodic.ui.theme import ThemeTokens
 from embodic.ui.viewmodels.results import DrcRow, DrcTable
@@ -35,12 +40,13 @@ from embodic.ui.views.geometry_view import DATA_KIND, GeometryView
 from embodic.ui.views.status_badge import repolish
 from embodic.ui.views.style import themed_icon
 
-COLUMNS = ("number", "board", "severity", "rule", "message", "measured", "required", "layer")
+COLUMNS = ("severity", "board", "message", "measured", "required", "layer")  # screens.md section 7, ruling d
+GLYPH_PX = 24
 LOCATED_COPPER_OPACITY = 0.35
 LOCATE_ZOOM = 12.0
 MARKER_RADIUS_PX = 10
 FAIL_BORDER_PX = 4
-MESSAGE_MIN_PX = 240  # the longest catalogue message wraps to four lines at this width
+MESSAGE_MIN_PX = 200
 
 
 class _FailBorder(QStyledItemDelegate):
@@ -77,6 +83,12 @@ class _DrcTableView(QTableView):
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             self.locate.emit()
             return
+        if event.matches(QKeySequence.StandardKey.Copy):
+            index = self.currentIndex()
+            row = self.model().index(index.row(), 0).data(Qt.ItemDataRole.UserRole) if index.isValid() else None
+            if isinstance(row, DrcRow):
+                QApplication.clipboard().setText(row_description(row))
+            return
         super().keyPressEvent(event)
 
 
@@ -110,6 +122,7 @@ class DrcTab(QWidget):
         self.table.verticalHeader().setVisible(False)
         self.table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.table.setTextElideMode(Qt.TextElideMode.ElideNone)
+        self.table.horizontalHeader().setMinimumSectionSize(GLYPH_PX)
         self.table.doubleClicked.connect(lambda _: self.locate_selected())
         self.table.locate.connect(self.locate_selected)
         self.locate = QPushButton(text("drc.locate"))
@@ -154,22 +167,26 @@ class DrcTab(QWidget):
         rows = table.rows if table is not None else ()
         self.model.setRowCount(0)
         fail_icon = themed_icon("check-fail", tokens)
+        mono = QFont(JETBRAINS_MONO)
         for row in rows:
-            cells = [
-                QStandardItem(str(row.number)),
-                QStandardItem(row.board_text),
-                QStandardItem(text("drc.severity.error")),
-            ]
-            cells += [QStandardItem(v) for v in (row.rule_code, row.message, row.measured_text, row.required_text)]
-            cells.append(QStandardItem(row.layer_text))
-            cells[COLUMNS.index("message")].setToolTip(row.message)
+            numbers = (row.measured_text.partition(UNIT_SPACE)[0], row.required_text.partition(UNIT_SPACE)[0])
+            cells = [QStandardItem(v) for v in ("", row.board_text, row.message, *numbers, row.layer_text)]
+            described = row_description(row)
+            for cell in cells:
+                cell.setToolTip(described)
+                cell.setData(described, Qt.ItemDataRole.AccessibleDescriptionRole)
+            for cell in cells[COLUMNS.index("measured") : COLUMNS.index("required") + 1]:
+                cell.setFont(mono)
+                cell.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
             if fail_icon is not None:
-                cells[COLUMNS.index("severity")].setIcon(fail_icon)
+                cells[0].setIcon(fail_icon)
+            cells[0].setData(text("drc.severity.error"), Qt.ItemDataRole.AccessibleTextRole)
             cells[0].setData(row, Qt.ItemDataRole.UserRole)
             cells[0].setData("fail", Qt.ItemDataRole.UserRole + 1)
             self.model.appendRow(cells)
         self.table.setColumnHidden(COLUMNS.index("board"), table is None or not table.boards)
         self.table.resizeColumnsToContents()
+        self.table.setColumnWidth(0, GLYPH_PX)
         self.table.fit_message_column()
         self.locate.setEnabled(False)
 
@@ -186,6 +203,18 @@ class DrcTab(QWidget):
         row = self.selected_row()
         if row is not None:
             self.locate_requested.emit(row)
+
+
+def row_description(row: DrcRow) -> str:
+    """Return the severity word, rule code, message and numbers of a row: its tooltip, accessible text and copy."""
+    return text(
+        "drc.row.description",
+        code=row.rule_code,
+        message=row.message,
+        measured=row.measured_text,
+        required=row.required_text,
+        layer=row.layer_text,
+    )
 
 
 def locate_on_canvas(canvas: GeometryView, row: DrcRow, tokens: ThemeTokens) -> None:
