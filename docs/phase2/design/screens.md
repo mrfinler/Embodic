@@ -426,7 +426,8 @@ of the focused field (field `whatsThis` holds the topic id).
 
 ## 14. Status bar (`statusbar`)
 
-`st-compute` (Ready, Updating, Error), `st-drc` (link to `tab-drc`), `st-counts` (layers, coils, vias), `st-units` (mm),
+`st-compute` (Ready, Updating, Error), `st-drc` (link to `tab-drc`), `st-counts` (layers; coils for spiral, phases for
+serpentine and wave, U-S4e ruling h; vias), `st-units` (mm),
 `st-cursor` (x, y in mm, mono). The status bar announces "Results updated, DRC: 1 failure" at most once per second through
 `QAccessible` (assumption: Agent 3 checks NVDA on Windows).
 
