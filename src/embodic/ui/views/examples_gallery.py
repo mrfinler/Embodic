@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 
 from embodic.io.examples import list_examples
 from embodic.ui.strings import text
+from embodic.ui.theme import ThemeTokens
 from embodic.ui.viewmodels.session import DesignSession
 
 MIN_SIZE_PX = (560, 400)
@@ -42,9 +43,10 @@ def example_card(title: str, note: str) -> QWidget:
 class ExamplesGallery(QDialog):
     """Lists `list_examples()`; loading one opens it as a new design whose values carry `example` chips."""
 
-    def __init__(self, session: DesignSession, parent: QWidget | None = None) -> None:
+    def __init__(self, session: DesignSession, parent: QWidget | None = None, *, tokens: ThemeTokens) -> None:
         super().__init__(parent)
         self.session = session
+        self.tokens = tokens
         self.setObjectName("dlg-examples")
         self.setWindowTitle(text("dlg-examples.title"))
         self.setMinimumSize(*MIN_SIZE_PX)
@@ -64,6 +66,7 @@ class ExamplesGallery(QDialog):
             item.setSizeHint(card.sizeHint())
             self.list.addItem(item)
             self.list.setItemWidget(item, card)
+        self.list.currentRowChanged.connect(lambda _row: self._ink_selection())
         self.list.setCurrentRow(0)
         self.list.itemActivated.connect(lambda _item: self.load_selected())
         self.load = QPushButton(text("dlg-examples.load"))
@@ -82,6 +85,14 @@ class ExamplesGallery(QDialog):
         layout.addWidget(intro)
         layout.addWidget(self.list, 1)
         layout.addLayout(actions)
+
+    def _ink_selection(self) -> None:
+        """Draw the selected item's title and note in text-inverse on the inverse selection (UX-AC-08, ruling h)."""
+        inverse = self.tokens.colours["text-inverse"]
+        for row in range(self.list.count()):
+            selected = row == self.list.currentRow()
+            for label in self.list.itemWidget(self.list.item(row)).findChildren(QLabel):
+                label.setStyleSheet(f"color: {inverse};" if selected else "")
 
     def example_ids(self) -> list[str]:
         """Return the example ids in list order."""

@@ -25,7 +25,7 @@ from embodic.io.examples import load_example
 from embodic.io.project import ProjectFile, project_from_example, project_provenance, save_project
 from embodic.model.design import DesignParameters
 from embodic.model.provenance import ProvenanceMap
-from embodic.model.vocabulary import Phase
+from embodic.model.vocabulary import Phase, TopologyKind
 from embodic.outcome import ComputeOutcome
 from embodic.results import Traceable
 from embodic.results.formatting import format_value
@@ -364,6 +364,19 @@ def coil_count(scene: GeometryScene) -> int:
             if p.phase is not None and p.element is not None
         }
     )
+
+
+def counts_text(scene: GeometryScene, topology: TopologyKind) -> str:
+    """Return `st-counts`: layers, then coils for spiral or phases otherwise, then vias; a stack counts its boards."""
+    vias = sum(len(board.vias) for board in scene.boards)
+    phases = len({p.phase for board in scene.boards for p in board.paths if p.phase is not None})
+    if len(scene.boards) > 1:
+        return text(
+            "shell.st-counts.stack", boards=len(scene.boards), layers=len(scene.layers), phases=phases, vias=vias
+        )
+    if topology is TopologyKind.SPIRAL:
+        return text("shell.st-counts.spiral", layers=len(scene.layers), coils=coil_count(scene), vias=vias)
+    return text("shell.st-counts.phases", layers=len(scene.layers), phases=phases, vias=vias)
 
 
 def ready_state(outcome: ComputeOutcome) -> OutcomeReady:

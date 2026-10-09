@@ -1,6 +1,7 @@
 """Board picker of a one-board-per-phase design (screens.md section 4.1, UX board picker)."""
 
 import dataclasses
+import re
 
 import pytest
 from PySide6.QtCore import Qt
@@ -206,3 +207,9 @@ def test_the_drc_table_of_one_board_hides_its_board_column(make_shell, wait_comp
     tab = window.drc_tab
     headers = [tab.model.headerData(c, Qt.Orientation.Horizontal) for c in range(tab.model.columnCount())]
     assert tab.table.isColumnHidden(headers.index("Board"))
+
+
+@pytest.mark.req("REQ-N-15")
+def test_ruling_h_st_counts_of_a_stack_counts_its_boards(per_phase):
+    """U-S4e ruling h, screens.md 4.1. Catches "3 coils" in the status bar of a serpentine stack of three boards."""
+    assert re.fullmatch(r"3 boards, 2 copper layers each, 3 phases, \d+ vias", find(per_phase, "st-counts").text())

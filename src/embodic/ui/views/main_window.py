@@ -58,7 +58,7 @@ from embodic.ui.viewmodels.outcome import (
     OutcomeState,
     OutcomeViewModel,
     board_letters,
-    coil_count,
+    counts_text,
     scene_of_board,
 )
 from embodic.ui.viewmodels.results import (
@@ -200,6 +200,8 @@ class MainWindow(QMainWindow):
         inspector.setObjectName("inspector")
         self.inspector_tabs = QTabWidget()
         self.inspector_tabs.setObjectName("inspector-tabs")
+        # 8 px a side instead of the template's 10, so the four tabs fit the 300 px inspector (U-S4e ruling h)
+        self.inspector_tabs.setStyleSheet("QTabBar::tab { padding-left: 8px; padding-right: 8px; }")
         self.panels: dict[str, FieldPanel] = {}
         for panel in (
             CoilPanel(self.session),
@@ -523,7 +525,7 @@ class MainWindow(QMainWindow):
 
     def examples_gallery(self) -> ExamplesGallery:
         """Return the Examples gallery for this window's session."""
-        gallery = ExamplesGallery(self.session, self)
+        gallery = ExamplesGallery(self.session, self, tokens=self.tokens)
         gallery.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         return gallery
 
@@ -638,13 +640,8 @@ class MainWindow(QMainWindow):
         ink = self.tokens.colours["text-1"]
         self.status["st-drc"].setText(f'<a href="tab-drc" style="color: {ink}; text-decoration: underline">{word}</a>')
         scene = shown.scene
-        if scene is None:
-            self.status["st-counts"].setText("")
-            return
-        vias = sum(len(board.vias) for board in scene.boards)
-        self.status["st-counts"].setText(
-            text("shell.st-counts.text", layers=len(scene.layers), coils=coil_count(scene), vias=vias)
-        )
+        topology = shown.outcome.design.topology
+        self.status["st-counts"].setText("" if scene is None else counts_text(scene, topology))
 
     def _render_results(
         self, state: OutcomeState, outcome: ComputeOutcome | None, table: DrcTable | None, outdated: bool

@@ -148,6 +148,25 @@ def test_ruling_g4_example_items_show_a_600_title_over_a_text3_note_free_of_othe
 
 
 @pytest.mark.req("REQ-F-25")
+def test_ruling_h_the_selected_example_draws_title_and_note_in_text_inverse(make_shell):
+    """U-S4e ruling h, UX-AC-08. Catches the #666666 note on the #151515 selection (3.18:1, needs 4.5:1)."""
+    window = make_shell().window
+    gallery = window.examples_gallery()
+    gallery.show()
+    items = gallery.findChild(QListWidget, "examples-list")
+    items.setCurrentRow(1)
+    QApplication.processEvents()
+    inverse, hint = window.tokens.colours["text-inverse"], window.tokens.colours["text-3"]
+    for row in range(items.count()):
+        for label in items.itemWidget(items.item(row)).findChildren(QLabel):
+            ink = label.palette().color(label.foregroundRole()).name()
+            assert (ink == inverse) is (row == 1), (row, label.text(), ink)
+    note = items.itemWidget(items.item(0)).findChildren(QLabel)[1]
+    assert note.palette().color(note.foregroundRole()).name() == hint
+    gallery.close()
+
+
+@pytest.mark.req("REQ-F-25")
 @pytest.mark.xfail(strict=True, reason="the serpentine example title names Xcoil; titles live in the example files")
 def test_ux_ac_03_example_titles_name_no_other_program(make_shell):
     """Records DEF: 'Example: 16-pole serpentine (Xcoil default)' is shown as an example title (UX-AC-03)."""
