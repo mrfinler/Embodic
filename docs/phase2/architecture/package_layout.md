@@ -26,6 +26,15 @@ Revision 2026-10-05 (U-D2, corrections from the W1 and W2 reports):
 Revision 2026-10-09 (U-D9, D-038e; `src/embodic/results/labels.py` on main 3acb044, `verified` by reading). §1 lists
 `results/labels.py`.
 
+Revision 2026-10-09 (U-D10, claude-sonnet-5-5, D-039 a and c, D-040; the tree of main fd190c1 was read for every item).
+
+- §1. The tree lists `geometry/marks.py` and `geometry/labels.py` (the drawing data the canvas and the exporters share),
+  `ui/fonts.py` and `resources/fonts/`. `results/labels.py` now also holds `QUANTITY_SYMBOLS` and `quantity_title`
+  (interfaces.md §3).
+- §5. The table gains the `fonttools` row (dev, test side only). A new subsection 5.1 lists the licence files that the
+  wheel and the PyInstaller folder must carry at M5, as Agent 5 recorded them in
+  `docs/phase2/evidence/dependency_licences.md`.
+
 ## 1. Repository tree
 
 ```
@@ -51,12 +60,14 @@ embodic/
                                  winding_specs.py schema.py (type-hint walk: leaves, JSON conversion, pointers)
                                  fields.py draft.py provenance.py validate.py
     results/                     status.py traceable.py registry.py analysis_result.py formatting.py labels.py
-                                 (QUANTITY_LABELS, D-038e)
+                                 (QUANTITY_LABELS, D-038e; QUANTITY_SYMBOLS and quantity_title, D-039 e)
     winding/                     feasibility.py star_of_slots.py winding_factors.py plan.py
     geometry/                    merged (U-M1b): primitives.py transforms.py discretise.py paths.py (CopperPath,
                                  COINCIDENCE_MM) circuit.py layout.py arrays.py hashing.py distance.py grid.py
                                  (Xcoil ptSegDist, segSegDist, makeGrid, gridQuery ports)
                                  planned (U-M2d): outline.py fasteners.py details.py (TopologyDetail records)
+                                 marks.py labels.py (U-M4f, D-039 c and d): coil numbering, the eye disc and the
+                                 collision-free label placement that the canvas and the exporters share; Qt-free
     generators/                  __init__.py (GENERATORS, build_layout)  base.py (Generator protocol, details)
       spiral/                    artwork.py turns.py placement.py vias.py interconnect.py generate.py
       serpentine/                port of Xcoil serpentine (module split mirrors engine.js sections)
@@ -74,6 +85,7 @@ embodic/
     cli/                         __main__.py commands.py
     ui/
       strings/                   __init__.py (merges, rejects duplicate keys) shell.py design.py results.py export.py
+      fonts.py                   register_fonts, FONT_FILES, family stacks (Qt-free; app.py passes Qt's loader in)
       theme.py                   ThemeTokens, load_theme, resolve_theme (Qt-free)
       toolstrip.py               TOOLSTRIP action table (Qt-free)
       viewmodels/                observable.py session.py outcome.py results.py export.py appearance.py (Qt-free)
@@ -86,6 +98,10 @@ embodic/
   resources/                     shipped in the wheel as embodic/_resources (hatchling force-include)
     icons/                       monochrome SVG drawn with currentColor; file stem = ToolstripAction.icon (Agent 1)
     themes/                      light.json, dark.json derived from Agent 1 tokens.json (Agent 1)
+    fonts/                       Inter/InterVariable.ttf and LICENSE.txt; JetBrainsMono/JetBrainsMono-Regular.ttf,
+                                 JetBrainsMono-Medium.ttf and OFL.txt (SIL OFL 1.1, D-039 a); FONTS.md names the
+                                 release, source URL and SHA-256 of every file. Read through resource_root(); no font
+                                 is fetched at run time
     examples/                    <example_id>.embodic.json, one file per example with its own title block;
                                  no shared index file, list_examples() scans the folder (U-M2f, U-M3a, U-M3b)
     evidence/                    equations.v1.json, evidence.v1.json, synced copies (tools/sync_registry.py)
@@ -291,6 +307,7 @@ test (U-M1a resource-root check, PK tests) runs offline with `pip wheel --no-bui
 | pytest-cov | 7.1.0 | `>=7,<8` | MIT | >= 3.9 | dev | REQ-N-10 coverage gate |
 | ezdxf | 1.4.4 | `>=1.4,<2` | MIT (classifier) | >= 3.10 | dev (test-only) | independent DXF parser and audit for UT-EXP-02; never imported by `src` |
 | pypdf | 6.19.0 | `>=6,<7` | BSD-3-Clause | >= 3.9 | dev (test-only) | independent PDF parser for UT-EXP-03 |
+| fonttools | 4.66.1 | `>=4.60,<5` | MIT | >= 3.11 | dev (test-only) | independent reader of the bundled TrueType files: the oracle for the stdlib parser of `io/pdf_writer.py` and for the glyph coverage test of `resources/fonts`; never imported by `src`. Licence read from PyPI metadata by Agent 5 (EV-108, `dependency_licences.md`); the Python range read from the installed 4.66.1 metadata (`verified` by running `importlib.metadata`, 2026-10-09). Added by U-M4f, row added by U-D10 |
 | jsonschema | 4.26.0 | `>=4.23,<5` | MIT | >= 3.10 | dev (test-only) | keeps the published project schema and the hand-written loader in step (UT-IO-03) |
 | hatchling | 1.32.4 | `>=1.27,<2` | MIT | >= 3.10 | dev (build backend) | already the `[build-system]` backend; in `dev` as well so that the wheel test needs no network. Read from https://pypi.org/pypi/hatchling/json on 2026-10-04 (`verified (PyPI metadata)`); Agent 5's licence register does not list it yet |
 | PyInstaller | 6.22.3 | `>=6.22,<7` | GPLv2-or-later with the bootloader exception (Agent 3, PyPI text) | >= 3.8, < 3.16 | build (stretch) | one-folder Windows bundle attempt (D-015); build tool only, nothing of it enters `src` |
@@ -301,3 +318,28 @@ Not used, with the reason: reportlab (the PDF writer is a port of Xcoil's own de
 (D-009). Adding any other package needs a reason recorded here and Fable's approval.
 
 The Python standard library covers JSON, hashing, ZIP, XML parsing in tests, logging and `importlib.resources`.
+
+### 5.1 Licence files the packages carry (M5)
+
+Agent 5 recorded this list in `docs/phase2/evidence/dependency_licences.md` (§What the M5 packages must carry, U-S5a).
+This table repeats the file names so that U-M5b and U-M5c find them next to the dependency table. The reasons and the
+quoted licence text stay in that file. "Today" is Agent 5's reading of a wheel built from main 3d70170 with
+`pip wheel --no-build-isolation --no-deps .`; no PyInstaller build exists yet.
+
+| Package | File | Today |
+|---|---|---|
+| wheel | `embodic/_resources/fonts/Inter/LICENSE.txt` and `embodic/_resources/fonts/JetBrainsMono/OFL.txt` (OFL condition 2, beside the fonts) | present |
+| wheel | `embodic/_resources/fonts/FONTS.md` | present |
+| wheel | `THIRD_PARTY_LICENSES.md` (REQ-N-19, U-M5b): licence, copyright line and pin of NumPy, PySide6-Essentials, shiboken6, Inter and JetBrains Mono, and the notice that Qt is used under LGPL-3.0 | absent |
+| wheel | embodic's own licence file | absent. The user decides which licence (dependency_licences.md, open point 2) |
+| PyInstaller folder | the four font files with `LICENSE.txt` and `OFL.txt` beside them; the spec `datas` entry takes the text files as well as `*.ttf` | no build exists |
+| PyInstaller folder | `licenses/LGPL-3.0.txt` and `licenses/GPL-3.0.txt` (LGPL-3.0 section 4 b) | absent. The PySide6-Essentials wheel carries only `LicenseRef-Qt-Commercial.txt` |
+| PyInstaller folder | `THIRD_PARTY_LICENSES.md` with a prominent notice that the application uses Qt under LGPL-3.0 | absent |
+| PyInstaller folder | the Qt libraries as separate files, and embodic's source with the bundle (LGPL-3.0 section 4 d) | one-folder keeps each Qt library a separate file (`inferred`). Route 1 (a) against a bundled Qt copy is `unresolved` |
+| PyInstaller folder | a written offer, or the files, for the Qt 6.11.2 and PySide6 6.11.2 source | absent |
+| PyInstaller folder | `licenses/numpy/LICENSE.txt` | absent |
+| PyInstaller folder | `licenses/PYTHON-LICENSE.txt` (PSF License Agreement section 2) | absent |
+| PyInstaller folder | Qt's third-party component notices for the bundled modules | not read: the proxy refused doc.qt.io on 2026-10-09. M5 reads it |
+
+The folder does not carry fontTools or any other dev tool. The PyInstaller bootloader adds no obligation
+(dependency_licences.md, §Distribution obligations, item 7).
