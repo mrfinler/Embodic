@@ -14,7 +14,7 @@ from embodic.model.validate import validate_design
 from embodic.model.vocabulary import TopologyKind
 from embodic.model.winding_specs import WaveStyle, WaveWindingSpec
 
-from .make_example import EXAMPLE_ID, write_example
+from .make_example import EXAMPLE_ID, TITLE, write_example
 
 pytestmark = pytest.mark.req("REQ-F-35", "REQ-F-25")
 
@@ -33,10 +33,10 @@ def wired(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-def test_the_wave_example_is_packaged_with_an_example_title() -> None:
-    """Catches a missing file, a title without the word "Example" (D-014) or a wrong topology label."""
+def test_the_wave_example_is_packaged_with_its_display_title() -> None:
+    """Catches a missing file, a title other than the builder's ruling g title, or a wrong topology label."""
     info = {i.example_id: i for i in list_examples()}[EXAMPLE_ID]
-    assert "Example" in info.title and info.topology is TopologyKind.WAVE
+    assert info.title == TITLE and info.topology is TopologyKind.WAVE
 
 
 def test_the_packaged_file_equals_the_generator_output(tmp_path: Path) -> None:

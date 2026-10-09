@@ -19,10 +19,10 @@ from .make_example import EXAMPLE_ID, TITLE, write_example
 pytestmark = pytest.mark.req("REQ-F-25", "REQ-F-34")
 
 
-def test_the_example_is_listed_with_an_example_title() -> None:
-    """Catches a missing file, a title without "Example" (D-014) or a wrong topology."""
+def test_the_example_is_listed_with_its_display_title() -> None:
+    """Catches a missing file, a title other than the builder's ruling g title, or a wrong topology."""
     info = next(i for i in list_examples() if i.example_id == EXAMPLE_ID)
-    assert info.title == TITLE and "Example" in info.title
+    assert info.title == TITLE
     assert info.topology is TopologyKind.SERPENTINE
 
 

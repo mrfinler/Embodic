@@ -180,7 +180,7 @@
  "design_hash": "sha256:3fa7f90783e1d3e9a1ec1b4d886f8fddf3a48404a32a669faf913d55527e469f",
  "example": {
   "source_note": "Xcoil default serpentine preset (engine.js l.19-97), example values (assumption)",
-  "title": "Example: 16-pole serpentine (Xcoil default)"
+  "title": "Serpentine, 16 poles"
  },
  "format": "embodic-project",
  "origin_example": {

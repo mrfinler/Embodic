@@ -1013,7 +1013,6 @@
      "type": "string"
     },
     "title": {
-     "pattern": "Example",
      "type": "string"
     }
    },

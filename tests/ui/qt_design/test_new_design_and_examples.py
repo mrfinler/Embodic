@@ -196,7 +196,6 @@ def test_ui22_example_load_marks_every_field_example_and_set_back_restores_it(ma
     gallery = window.findChild(QDialog, "dlg-examples")
     assert gallery is not None and gallery.isVisible()
     assert gallery.example_ids() == [info.example_id for info in list_examples()]
-    assert all("Example" in info.title for info in list_examples())
     gallery.list.setCurrentRow(gallery.example_ids().index(D08))
     qtbot.mouseClick(find(gallery, "btn-load-example"), Qt.MouseButton.LeftButton)
     wait_computed(window)
@@ -211,7 +210,7 @@ def test_ui22_example_load_marks_every_field_example_and_set_back_restores_it(ma
     assert visible_chips(window)["param-via-drill"] == "example"
     wait_computed(window)
     assert badges(window) == before
-    assert window.windowTitle().endswith("(from example Example: UGent D08 12-coil 10-pole spiral) - embodic")
+    assert window.windowTitle().endswith("(from example Spiral, 12 coils, 10 poles (D08)) - embodic")
 
 
 @pytest.mark.req("REQ-F-25")

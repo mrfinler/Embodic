@@ -62,19 +62,26 @@ def rounded_design(design: DesignParameters) -> DesignParameters:
     return parsed
 
 
+# Display titles of U-S4e ruling g (m4_review_2.md). `/name` is part of the design and of its hash, so the design names
+# stay as they were: a new name would re-key every saved `origin_example` reference. Open decision (U-M4e-1b report).
+DESIGN_NAMES = {
+    "spiral_12c16p_default": "Example: 12-coil 16-pole spiral (default)",
+    "spiral_12c10p_d08": "Example: UGent D08 12-coil 10-pole spiral",
+    "spiral_12c14p": "Example: 12-coil 14-pole spiral",
+}
 EXAMPLES: dict[str, tuple[str, str, Callable[[], DesignParameters]]] = {
     "spiral_12c16p_default": (
-        "Example: 12-coil 16-pole spiral (default)",
+        "Spiral, 12 coils, 16 poles",
         "CF-11 default 12/16 spiral, example values (assumption), docs/phase2/engineering/oracle_cases.json CF-11",
         default_design,
     ),
     "spiral_12c10p_d08": (
-        "Example: UGent D08 12-coil 10-pole spiral",
+        "Spiral, 12 coils, 10 poles (D08)",
         "D08 thesis configuration (oracle O1-D08, OR-01); the 66 mm circle board and 10 mm bore are an assumption",
         d08_design,
     ),
     "spiral_12c14p": (
-        "Example: 12-coil 14-pole spiral",
+        "Spiral, 12 coils, 14 poles",
         "CF-11 copper with 14 poles on a 104 mm board, example values (assumption)",
         _spiral_12c14p,
     ),
@@ -85,7 +92,7 @@ def write_examples(folder: Path) -> list[Path]:
     """Write every example file into `folder` and return the paths."""
     written = []
     for example_id, (title, source_note, build) in EXAMPLES.items():
-        design = rounded_design(dataclasses.replace(build(), name=title))
+        design = rounded_design(dataclasses.replace(build(), name=DESIGN_NAMES[example_id]))
         ref = ExampleRef(example_id=example_id, example_sha256=design_hash(design))
         provenance = derive_provenance(design, (ref, design), ())
         document = project_document(ProjectFile(design=design, origin=ref), provenance, saved_utc=SAVED_UTC)

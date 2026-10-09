@@ -128,7 +128,7 @@
  "design_hash": "sha256:294f2a10cad44a4e13824d097697547f8c162e6f279a9d7cb2f09c45f3d2c66c",
  "example": {
   "source_note": "Xcoil v3 default wave preset with turns 2 (D-016), example values (assumption); board, bore and screw circle follow Xcoil's outline rules at this copper envelope",
-  "title": "Example: 16-pole wave winding (involute, 2 turns)"
+  "title": "Wave, 16 poles, involute"
  },
  "format": "embodic-project",
  "origin_example": {

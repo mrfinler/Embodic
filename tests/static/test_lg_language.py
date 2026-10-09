@@ -9,7 +9,8 @@ THAI_FIRST, THAI_LAST = 0x0E00, 0x0E7F
 ALLOWED_SYMBOLS = frozenset("°µΩ²³·−×±≤≥√")
 # Symbols one module may add (D-040): the Greek letters equation_specification.md writes in the quantity symbols that
 # results/labels.py shows (delta l.326, Delta T l.373, eta and P_delta,circ l.509). No other module may use them.
-MODULE_SYMBOLS = {"embodic.results.labels": frozenset("ηδΔ")}
+# U+00A0 (D-040c) joins a number and its unit in results/formatting.py, so a line never breaks there (REQ-L-07).
+MODULE_SYMBOLS = {"embodic.results.labels": frozenset("ηδΔ"), "embodic.results.formatting": frozenset("\u00a0")}
 
 
 def is_thai(char: str) -> bool:
@@ -88,6 +89,18 @@ def test_lg01_admits_the_spec_greek_letters_in_the_label_module_only(planted):
     ]
     assert [v.split(": ", 1)[1] for v in check_string_literals([elsewhere])] == [
         "non-English characters U+0394, U+03B4, U+03B7; software text is English"
+    ]
+
+
+@pytest.mark.req("REQ-L-01")
+def test_lg01_admits_the_no_break_space_in_the_formatting_module_only(planted):
+    """D-040c. Catches an allowance that leaked to every module, or none at all for the unit joiner."""
+    source = 'JOIN = "5\u00a0mm"\n'
+    formatting = planted("embodic.results.formatting", source)
+    elsewhere = planted("embodic.errors", source)
+    assert check_string_literals([formatting]) == []
+    assert [v.split(": ", 1)[1] for v in check_string_literals([elsewhere])] == [
+        "non-English characters U+00A0; software text is English"
     ]
 
 
