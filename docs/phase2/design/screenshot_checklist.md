@@ -2,7 +2,8 @@ Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5
 
 # M4 screenshot checklist
 
-Date 2026-10-09, revised 2026-10-09 (U-S4d: S35 for `screens.md` section 6.1). The user asked to see a screenshot of every screen before M4 acceptance. This file lists each shot:
+Date 2026-10-09, revised 2026-10-09 (U-S4d: S35 for `screens.md` section 6.1), revised 2026-10-09 (U-S4e: S36 to S38;
+every capture registers the bundled fonts first, `design_spec.md` 4). The user asked to see a screenshot of every screen before M4 acceptance. This file lists each shot:
 the screen and state, the example to load, the theme, the window size, what the shot must show, and the objectName
 that has keyboard focus when the shot is taken. Section numbers are those of `screens.md` v2.1; "shell" rows cover the
 window parts that U-M4b builds and that `screens.md` describes through `design_spec.md` sections 3, 5 and 6.
@@ -53,6 +54,9 @@ How to take a shot (assumption until U-M4e writes the verify skill):
 | S32 | 12 | Guide at an equation entry | `spiral_12c16p_default`, F1 on a field | L, D | 1280 x 800 | Topic tree, body with EQ-ID, formula, sources with page, status | `guide-toc` | U-M4d (assumption) |
 | S33 | 13 | Tests dialog after a run | nothing | L | 1280 x 800 | Table with result icon and word per test, summary line | `tests-table` | U-M4d (assumption) |
 | S34 | 14 | Status bar crop with a DRC failure | the S25 design | L, D | 1280 x 800 | `st-compute`, `st-drc` link, `st-counts`, `st-units`, `st-cursor` | `statusbar` | U-M4b (`st-compute`, `st-units`, `st-cursor`), U-M4d (`st-drc`, `st-counts`) |
+| S36 | 4 | Layers tab, spiral, stack-up and layer pairs at two-pane width | `spiral_12c14p` | L | 960 x 540 | `layer-list` with Kind in full, `pair-list` below it with Rotation chips, no sideways scroll | `pair-list` | U-M4e |
+| S37 | 7 | DRC failures at three-pane width | `wave_16p_example` | L | 1280 x 800 | Glyph, Message, Measured (mm), Required (mm), Layer all visible, no sideways scroll | `drc-table` | U-M4e |
+| S38 | shell | Compact height: canvas as the Drawing tab | `spiral_12c10p_d08` | L, D | 960 x 540 | "Drawing" first tab and current, ring at fit filling the tab, legend not clipped | `fig-canvas` | U-M4e |
 | S35 | 6.1 | Rail status cards with DRC failures | `wave_16p_example` | L, D | 1280 x 800, 960 x 540 | "Inputs" with `check-pass` "No input issues", "DRC" with `check-fail` "186 failures", no "Design" card; at 960 the cards sit in the Key results tab, nothing clipped | `rail-drc` | U-M4d |
 
 Rows S01 to S10 are 10 rows and 22 shots; U-M4b can take them once its shell runs. `tools/design/check_checklist.py`
