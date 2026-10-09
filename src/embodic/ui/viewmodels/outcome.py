@@ -137,6 +137,7 @@ class OutcomeViewModel:
         self.project: ProjectFile | None = None
         self.state: Observable[OutcomeState] = Observable(OutcomeEmpty())
         self.hidden_layers: Observable[frozenset[str]] = Observable(frozenset())
+        self.board: Observable[int | None] = Observable(None)  # board picker: None is "All boards" (screens.md 4.1)
 
     def open_example(self, example_id: str) -> None:
         """Open a packaged example and compute it."""
@@ -168,6 +169,8 @@ class OutcomeViewModel:
         """Take a worker result built by `ready_state`; a superseded or cancelled one is dropped."""
         if request_id != self._latest_id or ready is None:
             return
+        if self.board.value is not None and self.board.value >= len(board_letters(ready.scene)):
+            self.board.set(None)
         self.state.set(ready)
 
     def on_failed(self, request_id: int, correlation_id: str) -> None:
@@ -180,6 +183,35 @@ class OutcomeViewModel:
         """Show or hide one copper layer in the geometry view."""
         hidden = self.hidden_layers.value
         self.hidden_layers.set(hidden - {layer} if visible else hidden | {layer})
+
+    def _scene(self) -> GeometryScene | None:
+        ready = shown_result(self.state.value)
+        return None if ready is None else ready.scene
+
+    def select_board(self, index: int | None) -> None:
+        """Pick the board the canvas draws, or None for all boards; a design with one board always draws it."""
+        count = len(board_letters(self._scene()))
+        self.board.set(index if index is not None and index < count else None)
+
+    def step_board(self, delta: int) -> None:
+        """Page Up and Page Down on the canvas: the previous or next picker item, stopping at the ends."""
+        count = len(board_letters(self._scene()))
+        if count:
+            picked = -1 if self.board.value is None else self.board.value  # -1 is the item "All boards"
+            picked = min(max(picked + delta, -1), count - 1)
+            self.select_board(None if picked < 0 else picked)
+
+    def step_layer_solo(self, delta: int) -> None:
+        """`[` and `]` on the canvas: solo the previous or next layer of the drawn boards; all layers lie between."""
+        scene = self._scene()
+        if scene is None:
+            return
+        layers = scene_of_board(scene, self.board.value).layers
+        visible = [layer for layer in layers if layer not in self.hidden_layers.value]
+        stops = [None, *layers]
+        here = stops.index(visible[0]) if len(visible) == 1 and len(layers) > 1 else 0
+        solo = stops[(here + delta) % len(stops)]
+        self.hidden_layers.set(frozenset() if solo is None else frozenset(scene.layers) - {solo})
 
 
 def _traceable_item(key: str, label_key: str, t: Traceable[float] | None) -> SummaryItem:
@@ -288,13 +320,32 @@ def place_in_view(
     return placed
 
 
+def _layers_of(boards: Sequence[Layout]) -> tuple[str, ...]:
+    return tuple(dict.fromkeys(layer for board in boards for layer in board.copper_layers))
+
+
 def geometry_scene(outcome: ComputeOutcome) -> GeometryScene | None:
     """Return what the geometry view draws, or None when no board was built."""
     if outcome.boards is None:
         return None
     boards = outcome.boards.boards
-    layers = tuple(dict.fromkeys(layer for board in boards for layer in board.copper_layers))
-    return GeometryScene(boards=boards, layers=layers, marks=tuple(board_marks(board) for board in boards))
+    return GeometryScene(boards=boards, layers=_layers_of(boards), marks=tuple(board_marks(board) for board in boards))
+
+
+def board_letters(scene: GeometryScene | None) -> tuple[Phase, ...]:
+    """Return the phase letter of each board when the design has more than one, else ().
+
+    Board k of a per-phase stack holds phase k (interfaces.md section 5), so the letters are the first phases.
+    """
+    return () if scene is None or len(scene.boards) < 2 else tuple(Phase)[: len(scene.boards)]
+
+
+def scene_of_board(scene: GeometryScene, board: int | None) -> GeometryScene:
+    """Return what the canvas draws for a picker choice: every board, or board ``board`` alone (screens.md 4.1)."""
+    if board is None:
+        return scene
+    boards = (scene.boards[board],)
+    return GeometryScene(boards=boards, layers=_layers_of(boards), marks=(scene.marks[board],))
 
 
 def phases_drawn(boards: Sequence[Layout]) -> tuple[Phase, ...]:

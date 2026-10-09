@@ -51,10 +51,13 @@ from embodic.ui.viewmodels.outcome import (
     OutcomeReady,
     OutcomeState,
     OutcomeViewModel,
+    board_letters,
     coil_count,
+    scene_of_board,
 )
 from embodic.ui.viewmodels.results import (
     CompareViewModel,
+    DrcRow,
     DrcTable,
     ResultsViewModel,
     drc_card,
@@ -145,6 +148,7 @@ class MainWindow(QMainWindow):
         self._status_bar()
         outcome.state.subscribe(lambda _: self._render())
         outcome.hidden_layers.subscribe(lambda _: self._render())
+        outcome.board.subscribe(lambda _: self._render())
         session.state.subscribe(lambda _: self._on_session())
         session.issues.subscribe(lambda _: self._show_issues())
         session.notice.subscribe(lambda _: self._show_notice())
@@ -155,6 +159,9 @@ class MainWindow(QMainWindow):
         appearance.theme.subscribe(lambda _: self.apply_theme())
         appearance.phase_render_mode.subscribe(lambda _: self._render())
         self.canvas.cursor_moved.connect(self._show_cursor)
+        self.canvas.board_step.connect(outcome.step_board)
+        self.canvas.layer_step.connect(outcome.step_layer_solo)
+        self.toolstrip.board_selected.connect(outcome.select_board)
         self._shortcuts()
         self.apply_theme()
         self._show_issues()
@@ -250,7 +257,7 @@ class MainWindow(QMainWindow):
         self.results_tab = ResultsTab(self.results, self.focus_first_missing)
         self.results_tab.open_equation.connect(self.show_equations)
         self.drc_tab = DrcTab()
-        self.drc_tab.locate_requested.connect(lambda row: locate_on_canvas(self.canvas, row, self.tokens))
+        self.drc_tab.locate_requested.connect(self._locate)
         self.back_emf_tab = BackEmfTab()
         self.torque_speed_tab = TorqueSpeedTab()
         self.compare_tab = CompareTab(self.compare)
@@ -259,6 +266,11 @@ class MainWindow(QMainWindow):
         for panel in (*self.back_emf_tab.panels, *self.torque_speed_tab.panels, self.compare_tab.chart):
             panel.eq.activated.connect(self.show_equations)
         return self.results_tabs
+
+    def _locate(self, row: DrcRow) -> None:
+        """Show the failure's board in the picker, then zoom to it (screens.md section 4.1)."""
+        self.outcome.select_board(row.board - 1)
+        locate_on_canvas(self.canvas, row, self.tokens)
 
     def _shortcuts(self) -> None:
         for keys, slot in (
@@ -579,19 +591,21 @@ class MainWindow(QMainWindow):
             self.toolstrip.actions_by_id[action_id].setEnabled(shown is not None)
         self.layer_bar.setVisible(shown is not None and shown.scene is not None)
         self.canvas_blank.setVisible(shown is None and not empty)
+        scene = None if shown is None else shown.scene
+        letters = board_letters(scene)
+        board = self.outcome.board.value if self.outcome.board.value in range(len(letters)) else None
+        self.toolstrip.show_boards(letters, board, self.tokens, self.appearance.phase_render_mode.value)
         if shown is None:
             self.status["st-drc"].setText(text("shell.st-drc.none"))
             self.status["st-counts"].setText("")
-            self._sync_layer_boxes(())
-            self.canvas.show_geometry(
-                None, self.tokens, self.appearance.phase_render_mode.value, self.outcome.hidden_layers.value
-            )
-            return
-        self._show_counts(shown)
-        scene = shown.scene
+        else:
+            self._show_counts(shown)
         self._sync_layer_boxes(scene.layers if scene else ())
         self.canvas.show_geometry(
-            scene, self.tokens, self.appearance.phase_render_mode.value, self.outcome.hidden_layers.value
+            None if scene is None else scene_of_board(scene, board),
+            self.tokens,
+            self.appearance.phase_render_mode.value,
+            self.outcome.hidden_layers.value,
         )
 
     def _show_counts(self, shown: OutcomeReady) -> None:

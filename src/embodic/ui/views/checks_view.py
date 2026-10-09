@@ -35,7 +35,7 @@ from embodic.ui.views.geometry_view import DATA_KIND, GeometryView
 from embodic.ui.views.status_badge import repolish
 from embodic.ui.views.style import themed_icon
 
-COLUMNS = ("number", "severity", "rule", "message", "measured", "required", "layer")
+COLUMNS = ("number", "board", "severity", "rule", "message", "measured", "required", "layer")
 LOCATED_COPPER_OPACITY = 0.35
 LOCATE_ZOOM = 12.0
 MARKER_RADIUS_PX = 10
@@ -95,6 +95,7 @@ class DrcTab(QWidget):
         self.summary = QLabel(text("drc.empty"))
         self.summary.setObjectName("drc-summary")
         self.summary.setProperty("class", "check-state")
+        self.summary.setWordWrap(True)  # a stack's summary names every board
         self.note = QLabel()
         self.note.setObjectName("drc-truncated")
         self.note.setProperty("class", "hint")
@@ -154,15 +155,20 @@ class DrcTab(QWidget):
         self.model.setRowCount(0)
         fail_icon = themed_icon("check-fail", tokens)
         for row in rows:
-            cells = [QStandardItem(str(row.number)), QStandardItem(text("drc.severity.error"))]
+            cells = [
+                QStandardItem(str(row.number)),
+                QStandardItem(row.board_text),
+                QStandardItem(text("drc.severity.error")),
+            ]
             cells += [QStandardItem(v) for v in (row.rule_code, row.message, row.measured_text, row.required_text)]
             cells.append(QStandardItem(row.layer_text))
-            cells[3].setToolTip(row.message)
+            cells[COLUMNS.index("message")].setToolTip(row.message)
             if fail_icon is not None:
-                cells[1].setIcon(fail_icon)
+                cells[COLUMNS.index("severity")].setIcon(fail_icon)
             cells[0].setData(row, Qt.ItemDataRole.UserRole)
             cells[0].setData("fail", Qt.ItemDataRole.UserRole + 1)
             self.model.appendRow(cells)
+        self.table.setColumnHidden(COLUMNS.index("board"), table is None or not table.boards)
         self.table.resizeColumnsToContents()
         self.table.fit_message_column()
         self.locate.setEnabled(False)

@@ -7,7 +7,7 @@ disclosure; every part reads the `ResultRow`, never a constant (D-007).
 from collections.abc import Callable
 
 from PySide6.QtCore import QEasingCurve, QEvent, QObject, QPropertyAnimation, Qt, QTimer, Signal
-from PySide6.QtGui import QGuiApplication
+from PySide6.QtGui import QGuiApplication, QResizeEvent
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -257,15 +257,15 @@ class ResultsTab(QWidget):
         self.grid_host = QWidget()
         self.grid = QGridLayout(self.grid_host)
         self.grid.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.scroll = QScrollArea()
-        self.scroll.setObjectName("results-scroll")
-        self.scroll.setWidgetResizable(True)
-        self.scroll.setWidget(self.grid_host)
-        self.scroll.installEventFilter(self)
+        self.card_scroll = QScrollArea()
+        self.card_scroll.setObjectName("results-scroll")
+        self.card_scroll.setWidgetResizable(True)
+        self.card_scroll.setWidget(self.grid_host)
+        self.card_scroll.installEventFilter(self)
         content_layout = QVBoxLayout(content)
         content_layout.addLayout(filters)
         content_layout.addWidget(self.stale_stamp)
-        content_layout.addWidget(self.scroll, 1)
+        content_layout.addWidget(self.card_scroll, 1)
         self.pages.addWidget(empty)
         self.pages.addWidget(content)
         QVBoxLayout(self).addWidget(self.pages)
@@ -319,7 +319,7 @@ class ResultsTab(QWidget):
                 card.open_equation.connect(self.open_equation)
                 self.cards[key] = card
             card.show_row(row, self.tokens, stale=self.vm.stale.value)
-        self._layout_cards(self.scroll.width(), force=True)
+        self._layout_cards(self.card_scroll.width(), force=True)
 
     def _layout_cards(self, scroll_width: int, *, force: bool = False) -> None:
         columns = self._columns_that_fit(scroll_width)
@@ -333,15 +333,15 @@ class ResultsTab(QWidget):
 
     def _columns_that_fit(self, scroll_width: int) -> int:
         """Return how many cards of at least CARD_MIN_WIDTH_PX fit a scroll area of this width beside its scroll bar."""
-        bar = self.style().pixelMetric(QStyle.PixelMetric.PM_ScrollBarExtent, None, self.scroll)
+        bar = self.style().pixelMetric(QStyle.PixelMetric.PM_ScrollBarExtent, None, self.card_scroll)
         margins = self.grid.contentsMargins()
-        usable = scroll_width - 2 * self.scroll.frameWidth() - bar - margins.left() - margins.right()
+        usable = scroll_width - 2 * self.card_scroll.frameWidth() - bar - margins.left() - margins.right()
         gap = max(0, self.grid.horizontalSpacing())
         return max(1, (usable + gap) // (CARD_MIN_WIDTH_PX + gap))
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802 (Qt override)
         """Fit as many card columns as the scroll area allows, with its scroll bar, at every resize."""
-        if watched is self.scroll and event.type() == QEvent.Type.Resize:
+        if watched is self.card_scroll and isinstance(event, QResizeEvent):
             self._layout_cards(event.size().width())
         return super().eventFilter(watched, event)
 
