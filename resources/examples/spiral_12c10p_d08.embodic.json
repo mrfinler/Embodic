@@ -147,7 +147,7 @@
  "design_hash": "sha256:709ea86cd9d17998d231ae2beef79d813063afb6b2ff183ea9fa9050dd989761",
  "example": {
   "source_note": "D08 thesis configuration (oracle O1-D08, OR-01); the 66 mm circle board and 10 mm bore are an assumption",
-  "title": "Example: UGent D08 12-coil 10-pole spiral"
+  "title": "Spiral, 12 coils, 10 poles (D08)"
  },
  "format": "embodic-project",
  "origin_example": {

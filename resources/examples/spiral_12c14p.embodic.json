@@ -150,7 +150,7 @@
  "design_hash": "sha256:546ef0545182cfadb46815ec535a51e4827eeb2126ea7b70c96b58f3538e0c90",
  "example": {
   "source_note": "CF-11 copper with 14 poles on a 104 mm board, example values (assumption)",
-  "title": "Example: 12-coil 14-pole spiral"
+  "title": "Spiral, 12 coils, 14 poles"
  },
  "format": "embodic-project",
  "origin_example": {

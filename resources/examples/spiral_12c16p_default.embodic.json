@@ -150,7 +150,7 @@
  "design_hash": "sha256:42b702746410833c6c52e3083613705fab52bce6c7865c216d61e7b8ba1dea58",
  "example": {
   "source_note": "CF-11 default 12/16 spiral, example values (assumption), docs/phase2/engineering/oracle_cases.json CF-11",
-  "title": "Example: 12-coil 16-pole spiral (default)"
+  "title": "Spiral, 12 coils, 16 poles"
  },
  "format": "embodic-project",
  "origin_example": {

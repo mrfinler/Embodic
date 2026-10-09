@@ -13,6 +13,13 @@ from embodic.ui.views.coil_panel import CHIP_PX, FieldEditor
 D08 = "spiral_12c10p_d08"
 WAVE = "wave_16p_example"
 FORBIDDEN = re.compile(r"xcoil|kicad|engine\.js|docs/|\.json", re.IGNORECASE)
+RULING_G_TITLES = [
+    "Serpentine, 16 poles",
+    "Spiral, 12 coils, 10 poles (D08)",
+    "Spiral, 12 coils, 14 poles",
+    "Spiral, 12 coils, 16 poles",
+    "Wave, 16 poles, involute",
+]
 
 
 def _two_pane(window):
@@ -167,13 +174,13 @@ def test_ruling_h_the_selected_example_draws_title_and_note_in_text_inverse(make
 
 
 @pytest.mark.req("REQ-F-25")
-@pytest.mark.xfail(strict=True, reason="the serpentine example title names Xcoil; titles live in the example files")
-def test_ux_ac_03_example_titles_name_no_other_program(make_shell):
-    """Records DEF: 'Example: 16-pole serpentine (Xcoil default)' is shown as an example title (UX-AC-03)."""
+def test_ux_ac_03_example_titles_are_the_ruling_g_list_and_name_no_other_program(make_shell):
+    """Catches an old title ("Example: ... (Xcoil default)") in the gallery, or a title that names another program."""
     window = make_shell().window
     gallery = window.examples_gallery()
     items = gallery.findChild(QListWidget, "examples-list")
     titles = [items.itemWidget(items.item(row)).findChildren(QLabel)[0].text() for row in range(items.count())]
+    assert sorted(titles) == RULING_G_TITLES
     assert not [t for t in titles if FORBIDDEN.search(t)]
 
 

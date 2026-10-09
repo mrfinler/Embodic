@@ -20,7 +20,9 @@ from embodic.model.provenance import ExampleRef, derive_provenance
 
 SAVED_UTC = "2026-10-08T00:00:00Z"  # fixed, so a rerun rewrites identical files
 EXAMPLE_ID = "wave_16p_example"
-TITLE = "Example: 16-pole wave winding (involute, 2 turns)"
+TITLE = "Wave, 16 poles, involute"  # U-S4e ruling g
+# `/name` is hashed with the design, so it keeps its old text; see DESIGN_NAMES in make_examples.py.
+DESIGN_NAME = "Example: 16-pole wave winding (involute, 2 turns)"
 SOURCE_NOTE = (
     "Xcoil v3 default wave preset with turns 2 (D-016), example values (assumption); "
     "board, bore and screw circle follow Xcoil's outline rules at this copper envelope"
@@ -37,7 +39,7 @@ def wave_example() -> DesignParameters:
     assert all(isinstance(s, ScrewPattern) for s in screws)
     return dataclasses.replace(
         base,
-        name=TITLE,
+        name=DESIGN_NAME,
         winding=dataclasses.replace(base.winding, turns=2),
         outline=dataclasses.replace(
             base.outline, board=CircleOutline(radius_mm=BOARD_RADIUS_MM), bore=CircleOutline(radius_mm=BORE_RADIUS_MM),
