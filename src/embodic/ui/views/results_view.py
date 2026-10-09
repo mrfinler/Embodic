@@ -263,12 +263,16 @@ class ResultsTab(QWidget):
         self.card_scroll.setWidget(self.grid_host)
         self.card_scroll.installEventFilter(self)
         content_layout = QVBoxLayout(content)
+        # No side margins: the filter row then fits the 572 px centre pane of a 1280 px window (U-S4e ruling c).
+        content_layout.setContentsMargins(0, 8, 0, 0)
         content_layout.addLayout(filters)
         content_layout.addWidget(self.stale_stamp)
         content_layout.addWidget(self.card_scroll, 1)
         self.pages.addWidget(empty)
         self.pages.addWidget(content)
-        QVBoxLayout(self).addWidget(self.pages)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.addWidget(self.pages)
 
         self._dim_effect = QGraphicsOpacityEffect(self.grid_host)
         self._dim_effect.setOpacity(COMPUTING_OPACITY)
