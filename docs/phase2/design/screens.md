@@ -1,8 +1,9 @@
-Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5
+Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5; section 14a row `ts-section-board` and rulings i, j: claude-sonnet-5-5 (U-S4f)
 
-# embodic screens v2.2 (Phase 2, PySide6)
+# embodic screens v2.3 (Phase 2, PySide6)
 
-Date 2026-10-08, revised 2026-10-09 (U-S4e): rulings a, c, d and g of `m4_review_2.md` applied to sections 4, 5, 6,
+Date 2026-10-08, revised 2026-10-09 (U-S4f): `ts-section-board` declared in 14a; rulings i and j of
+`m4_review_2.md` section 5 applied to sections 4 and 5 (screw buttons, last table column). Revised 2026-10-09 (U-S4e): rulings a, c, d and g of `m4_review_2.md` applied to sections 4, 5, 6,
 7, 14a and 16 (`pair-list`, the screw fields, the card grid, the DRC columns, 26 declared names, example titles).
 Revised 2026-10-09 (U-S4d): rulings of `m4_review.md` applied to the conventions and sections 1, 2,
 3, 4, 5, 6.1 (new) and 14a (new). Read with `design_spec.md` (tokens, toolstrip, hooks, keyboard map). v2 applied rows R1 to R14 of
@@ -151,8 +152,8 @@ State rules:
 | `param-via-pad` | "Via pad", mm | `/vias/pad_mm` | spiral, serpentine, wave | required | `INVALID_VIA_RING` |
 | `param-vias-per-transition` | "Vias per transition" | `/vias/vias_per_transition` | spiral, serpentine, wave | default | none |
 | `param-via-plating` | "Via plating", µm | `/vias/plating_um` | spiral, serpentine, wave | required, property | none |
-| `layer-list` | QTableView of the stack-up: Layer, Kind, Thickness (µm). Kind reads "Copper" or "Dielectric" in full, never elided. Columns size to their content; no sideways scroll at 300 px (U-S4e ruling c). Layer visibility stays with the canvas toggles (U-S4d g1). Delete removes the selected layer row | `/stackup/layers`, `/stackup/layers/*/kind`, `/stackup/layers/*/name`, `/stackup/layers/*/thickness_mm`, `/stackup/layers/*/material` | spiral, serpentine, wave | required | `INVALID_STACKUP_NO_COPPER`, `INVALID_LAYER_NAME_DUPLICATE`, `RANGE_SPIRAL_COPPER_COUNT_ODD` (WARNING), `INVALID_SERPENTINE_COPPER_COUNT` |
-| `pair-list` | QTableView of the layer pairs under `layer-list`, caption "Layer pairs": Pair (the number, "1" is index 0), Layers ("L1, L2"), Rotation (°) with the provenance chip in the cell. One row per pair the copper count makes; a deleted pair keeps its row dimmed with "No coil" in the Rotation cell. The row tooltip names the vias ("Pair 1 joins L1 and L2 through vias."); the row context menu sets the series group. Delete removes the selected pair (U-S4e ruling c) | `/winding/layers/pairs`, `/winding/layers/pairs/*/index`, `/winding/layers/pairs/*/layer_in`, `/winding/layers/pairs/*/layer_out`, `/winding/layers/pairs/*/phases`, `/winding/layers/series_groups` | spiral | required | `INVALID_PAIR_LAYER_UNKNOWN`, `INVALID_PAIR_LAYER_SAME`, `INVALID_PAIR_INDEX_DUPLICATE`, `INVALID_SERIES_GROUPS` |
+| `layer-list` | QTableView of the stack-up: Layer, Kind, Thickness (µm). Kind reads "Copper" or "Dielectric" in full, never elided. Columns size to their content and the last one takes the remaining width, so the header has no empty cell; no sideways scroll at 300 px (U-S4e ruling c, U-S4f ruling j). Layer visibility stays with the canvas toggles (U-S4d g1). Delete removes the selected layer row | `/stackup/layers`, `/stackup/layers/*/kind`, `/stackup/layers/*/name`, `/stackup/layers/*/thickness_mm`, `/stackup/layers/*/material` | spiral, serpentine, wave | required | `INVALID_STACKUP_NO_COPPER`, `INVALID_LAYER_NAME_DUPLICATE`, `RANGE_SPIRAL_COPPER_COUNT_ODD` (WARNING), `INVALID_SERPENTINE_COPPER_COUNT` |
+| `pair-list` | QTableView of the layer pairs under `layer-list`, caption "Layer pairs": Pair (the number, "1" is index 0), Layers ("L1, L2"), Rotation (°) with the provenance chip in the cell. One row per pair the copper count makes; a deleted pair keeps its row dimmed with "No coil" in the Rotation cell. The row tooltip names the vias ("Pair 1 joins L1 and L2 through vias."); the row context menu sets the series group. The chip is `prov-chip` with its `provenance` property, as in the form rows. The last column takes the remaining width (U-S4f ruling j). Delete removes the selected pair (U-S4e ruling c) | `/winding/layers/pairs`, `/winding/layers/pairs/*/index`, `/winding/layers/pairs/*/layer_in`, `/winding/layers/pairs/*/layer_out`, `/winding/layers/pairs/*/phases`, `/winding/layers/series_groups` | spiral | required | `INVALID_PAIR_LAYER_UNKNOWN`, `INVALID_PAIR_LAYER_SAME`, `INVALID_PAIR_INDEX_DUPLICATE`, `INVALID_SERIES_GROUPS` |
 | `layer-pairs-notice` | QFrame[class="notice"] under `pair-list`: one sentence and an **Undo** button | derived: what `derive_layer_pairs` changed in the last edit | spiral | hidden | none |
 
 State rules:
@@ -264,12 +265,12 @@ One `QGroupBox` per group, in this order. Every row applies to all three topolog
 | `param-bore-across-flats` | Outline | "Bore across flats", mm | `/outline/bore/across_flats_mm` (polygon) | required | none |
 | `param-bore-corner-radius` | Outline | "Bore corner radius", mm | `/outline/bore/corner_radius_mm` (polygon) | default | none |
 | `param-bore-rotation` | Outline | "Bore rotation", degrees | `/outline/bore/rotation_rad` (polygon) | default | none |
-| `screw-table` | Fasteners | QTableView: Size, Count, Pitch radius (mm); one row per screw pattern. Columns size to their content; no sideways scroll at 300 px (U-S4e ruling c) | `/outline/screws`, `/outline/screws/*/size`, `/outline/screws/*/count`, `/outline/screws/*/pitch_radius_mm` | default (no patterns) | DRC `DRC_COPPER_HOLE` |
+| `screw-table` | Fasteners | QTableView: Size, Count, Pitch radius (mm); one row per screw pattern. Columns size to their content and the last one takes the remaining width; no sideways scroll at 300 px (U-S4e ruling c, U-S4f ruling j) | `/outline/screws`, `/outline/screws/*/size`, `/outline/screws/*/count`, `/outline/screws/*/pitch_radius_mm` | default (no patterns) | DRC `DRC_COPPER_HOLE` |
 | `param-screw-fit` | Fasteners | "Fit of the selected pattern", QComboBox | `/outline/screws/*/fit` | default | none |
 | `param-screw-hole-diameter` | Fasteners | "Hole diameter of the selected pattern", mm | `/outline/screws/*/hole_diameter_mm` | required when a pattern exists, no default (D-031a) | none |
 | `param-screw-angle-offset` | Fasteners | "Angle offset of the selected pattern", degrees | `/outline/screws/*/angle_offset_rad` | default | none |
-| `btn-screw-add` | Fasteners | QToolButton "Add pattern" | command | none | none |
-| `btn-screw-remove` | Fasteners | QToolButton "Remove pattern" | command | none | none |
+| `btn-screw-add` | Fasteners | QPushButton "Add pattern", secondary boundary like `btn-drc-locate` (U-S4f ruling i) | command | none | none |
+| `btn-screw-remove` | Fasteners | QPushButton "Remove pattern", secondary boundary (U-S4f ruling i) | command | none | none |
 | `param-copper-weight` | Stack-up and manufacturing | "Copper weight", oz | view model: stack-up generator writes `/stackup/layers` | empty | none |
 | `param-board-thickness` | Stack-up and manufacturing | "Board thickness", mm | view model: stack-up generator writes `/stackup/layers` | empty | none |
 | `param-min-trace` | Stack-up and manufacturing | "Minimum trace width", mm | `/drc_rules/min_trace_width_mm` | required | DRC `DRC_MIN_WIDTH` |
@@ -482,6 +483,12 @@ rename.
 | `guide-toc`, `guide-body` | Topic tree and body of `dlg-guide` (section 12) | declared |
 | `layer-pairs-notice-text`, `btn-layer-pairs-undo` | Sentence and Undo of `layer-pairs-notice` (section 4) | declared |
 | `param-rotation-mode-row` | Row container of `param-rotation-mode` | declared |
+
+Name that U-M4c-4 set (U-S4f; principle model-the-domain, one row per name). It names a part, so no rename.
+
+| objectName | Part | Status |
+|---|---|---|
+| `ts-section-board` | Frame in the toolstrip View tab that holds `board-picker` and its "Board" caption (section 4.1). Built by hand, not from a `TOOLSTRIP` group, because a combo box is not an action. Hidden while the design has one board | declared |
 
 ## 15. Requests to other owners
 
