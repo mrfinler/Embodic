@@ -38,7 +38,7 @@ from embodic.outcome import ComputeOutcome
 MARGIN_MM = 2.0
 LEGEND_ROW_MM = 4.0
 FONT_MM = 2.5
-FONT_FAMILY = "Inter, 'Inter Variable', 'Segoe UI', sans-serif"
+FONT_FAMILY = "Inter, 'Segoe UI', sans-serif"
 LABEL_MM = 2.2
 LABEL_HALO_MM = 0.5
 LEADER_MM = 0.15

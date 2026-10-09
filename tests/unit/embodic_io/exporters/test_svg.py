@@ -165,7 +165,7 @@ def test_footer_fits_inside_the_drawing(
     _, root = _written(outcome_of(example_id), tmp_path, PhaseRenderMode.COLOUR)
     x_min, _, width, _ = map(float, root.get("viewBox", "").split())
     (stamp,) = _classes(root, "stamp")
-    font = TTFont(resource_root() / "fonts" / "Inter" / "InterVariable.ttf")
+    font = TTFont(resource_root() / "fonts" / "Inter" / "Inter-Regular.ttf")
     cmap, hmtx = font.getBestCmap(), font["hmtx"]
     size = float(root.find(f"{SVG}g[@id='legend']").get("font-size"))
     text_mm = sum(hmtx[cmap[ord(c)]][0] for c in stamp.text or "") * size / font["head"].unitsPerEm

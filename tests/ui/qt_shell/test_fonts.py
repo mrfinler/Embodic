@@ -30,3 +30,12 @@ def test_registration_provides_jetbrains_mono_for_the_style_sheet(registered) ->
     """Catches a missing mono family: values, units and codes the style sheet sets in it would fall back."""
     assert {INTER, JETBRAINS_MONO} <= set(QFontDatabase.families())
     assert QFontInfo(QFont(JETBRAINS_MONO)).family() == JETBRAINS_MONO
+
+
+def test_ruling_e2_weight_600_resolves_to_the_bundled_semibold_face(registered) -> None:
+    """U-S4e ruling e2. Catches a 600 rule that Qt draws at body weight or as synthetic bold of the Regular file."""
+    assert {"Regular", "SemiBold"} <= set(QFontDatabase.styles(INTER))
+    heading = QFont(INTER)
+    heading.setWeight(QFont.Weight.DemiBold)
+    info = QFontInfo(heading)
+    assert (info.family(), info.styleName(), info.weight()) == (INTER, "SemiBold", 600)
