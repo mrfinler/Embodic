@@ -5,14 +5,23 @@ import pytest
 from embodic.ui.strings import STRINGS, merge
 from embodic.ui.theme import ThemeName
 from embodic.ui.toolstrip import TOOLSTRIP, ToolstripTab
-from embodic.ui.viewmodels.appearance import AppearanceViewModel, PhaseRenderMode
+from embodic.ui.viewmodels.appearance import AppearanceViewModel, PhaseRenderMode, split_sizes
 
 
 class MemoryStore:
     """Settings store that lives as long as the test."""
 
-    def __init__(self, value=None):
+    def __init__(self, value=None, share=None):
         self.value = value
+        self.share = share
+
+    def load_canvas_share(self):
+        """Return the stored canvas share."""
+        return self.share
+
+    def save_canvas_share(self, value):
+        """Store the canvas share."""
+        self.share = value
 
     def load_theme(self):
         """Return the stored choice."""
@@ -77,3 +86,25 @@ def test_string_tables_with_one_key_twice_are_refused():
     """Catches a later area's table silently overriding a shell string."""
     with pytest.raises(ValueError, match=r"act-new\.label"):
         merge({"act-new.label": "New"}, {"act-new.label": "Create"})
+
+
+@pytest.mark.req("REQ-N-15")
+@pytest.mark.parametrize(
+    ("total_px", "share", "expected"),
+    [(600, 0.6, (360, 240)), (500, 0.9, (320, 180)), (500, 0.1, (240, 260)), (420, 0.6, (240, 180))],
+)
+def test_ruling_b_centre_split_gives_the_canvas_its_share_within_both_minimums(total_px, share, expected):
+    """U-S4e ruling b. Catches a split that ignores the share or squeezes canvas below 240 px or results below 180."""
+    assert split_sizes(total_px, share) == expected
+
+
+@pytest.mark.req("REQ-N-15")
+def test_ruling_b_canvas_share_starts_at_60_percent_and_a_drag_survives_a_restart_as_a_fraction():
+    """U-S4e ruling b. Catches a share stored in pixels, a drag that is not stored, or a bad stored value used."""
+    store = MemoryStore()
+    assert AppearanceViewModel(store).canvas_share == 0.6
+    AppearanceViewModel(store).set_canvas_share(300, 200)
+    assert store.share == 0.6 and AppearanceViewModel(store).canvas_share == 0.6
+    AppearanceViewModel(store).set_canvas_share(150, 350)
+    assert AppearanceViewModel(store).canvas_share == 0.3
+    assert AppearanceViewModel(MemoryStore(share=7.0)).canvas_share == 0.6

@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
 
-from PySide6.QtCore import QPoint, Qt
+from PySide6.QtCore import QEvent, QObject, QPoint, Qt
 from PySide6.QtGui import QAction, QCloseEvent, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
@@ -42,7 +42,13 @@ from embodic.outcome import ComputeOutcome
 from embodic.results import Registry
 from embodic.ui.strings import text
 from embodic.ui.theme import ThemeName, ThemeTokens, load_theme, resolve_theme
-from embodic.ui.viewmodels.appearance import AppearanceViewModel
+from embodic.ui.viewmodels.appearance import (
+    CANVAS_MIN_PX,
+    COMPACT_BELOW_PX,
+    RESULTS_MIN_PX,
+    AppearanceViewModel,
+    split_sizes,
+)
 from embodic.ui.viewmodels.export import PRESETS, ExportViewModel
 from embodic.ui.viewmodels.outcome import (
     OutcomeComputing,
@@ -152,6 +158,7 @@ class MainWindow(QMainWindow):
         session.state.subscribe(lambda _: self._on_session())
         session.issues.subscribe(lambda _: self._show_issues())
         session.notice.subscribe(lambda _: self._show_notice())
+        session.opened.subscribe(lambda _: self._show_drawing())
         for action_id, available in (("act-undo", session.can_undo), ("act-redo", session.can_redo)):
             action = self.toolstrip.actions_by_id[action_id]
             action.setEnabled(available.value)
@@ -212,10 +219,15 @@ class MainWindow(QMainWindow):
         self.centre.addWidget(self._empty_page())
         self.centre_split = QSplitter(Qt.Orientation.Vertical)
         self.centre_split.setObjectName("centre-split")
-        self.centre_split.addWidget(self._canvas_page())
+        self.canvas_page = self._canvas_page()
+        self.canvas_page.setMinimumHeight(CANVAS_MIN_PX)
+        self.centre_split.addWidget(self.canvas_page)
         self.centre_split.addWidget(self._results_tabs())
-        self.centre_split.setStretchFactor(0, 3)
-        self.centre_split.setStretchFactor(1, 2)
+        self.results_tabs.setMinimumHeight(RESULTS_MIN_PX)
+        for index in range(2):
+            self.centre_split.setCollapsible(index, False)
+        self.centre_split.splitterMoved.connect(lambda *_: self.appearance.set_canvas_share(*self.centre_split.sizes()))
+        self.centre_split.installEventFilter(self)
         self.centre.addWidget(self.centre_split)
 
         rail = self.rail = ResultsRail(self.results, self.registry)
@@ -268,9 +280,15 @@ class MainWindow(QMainWindow):
         return self.results_tabs
 
     def _locate(self, row: DrcRow) -> None:
-        """Show the failure's board in the picker, then zoom to it (screens.md section 4.1)."""
+        """Show the failure's board in the picker, then the drawing, then zoom to it (screens.md section 4.1)."""
         self.outcome.select_board(row.board - 1)
+        self._show_drawing()
         locate_on_canvas(self.canvas, row, self.tokens)
+
+    def _show_drawing(self) -> None:
+        """Bring the "Drawing" tab forward when the canvas is one (compact height, design_spec.md section 5)."""
+        if self.results_tabs.indexOf(self.canvas_page) >= 0:
+            self.results_tabs.setCurrentWidget(self.canvas_page)
 
     def _shortcuts(self) -> None:
         for keys, slot in (
@@ -719,19 +737,39 @@ class MainWindow(QMainWindow):
             self.report_internal_error(correlation_id)
 
     def _place_rail(self, wide: bool) -> None:
-        """From 1280 px the rail is the third pane; below it the rail is the first results tab (design_spec.md 5)."""
+        """From 1280 px the rail is the third pane; below it the rail is the results tab after the drawing's."""
         index = self.results_tabs.indexOf(self.rail_scroll)
         if wide and index >= 0:
             self.results_tabs.removeTab(index)
             self.splitter.addWidget(self.rail_scroll)
             self.rail_scroll.show()
         elif not wide and index < 0:
-            self.results_tabs.insertTab(0, self.rail_scroll, text("shell.results-rail.title"))
+            first = self.results_tabs.indexOf(self.canvas_page) + 1
+            self.results_tabs.insertTab(first, self.rail_scroll, text("shell.results-rail.title"))
+
+    def _place_canvas(self, compact: bool) -> None:
+        """Under 620 px client height the canvas is the first results tab, "Drawing" (design_spec.md section 5)."""
+        index = self.results_tabs.indexOf(self.canvas_page)
+        if compact and index < 0:
+            self.results_tabs.insertTab(0, self.canvas_page, text("shell.drawing.title"))
+            self.results_tabs.setCurrentIndex(0)
+        elif not compact and index >= 0:
+            self.results_tabs.removeTab(index)
+            self.centre_split.insertWidget(0, self.canvas_page)
+            self.canvas_page.show()
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802 (Qt override)
+        """Give the canvas its share of `centre-split` on every resize; a results page's size hint never moves it."""
+        split = self.centre_split
+        if watched is split and event.type() == QEvent.Type.Resize and split.count() == 2:
+            split.setSizes(list(split_sizes(split.height() - split.handleWidth(), self.appearance.canvas_share)))
+        return super().eventFilter(watched, event)
 
     def resizeEvent(self, event) -> None:  # noqa: N802 (Qt override)
-        """Size the panes for the two-pane and three-pane widths (design_spec.md section 5)."""
+        """Size the panes for the two-pane and three-pane widths and the compact height (design_spec.md section 5)."""
         super().resizeEvent(event)
         wide = self.width() >= THREE_PANE_FROM_PX
+        self._place_canvas(self.height() < COMPACT_BELOW_PX)
         self._place_rail(wide)
         panes = self.splitter.width() - self.splitter.handleWidth() * (self.splitter.count() - 1)
         inspector = INSPECTOR_PX[wide]

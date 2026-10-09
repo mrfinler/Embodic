@@ -15,7 +15,7 @@ from PySide6.QtCore import QSettings, QStandardPaths
 from PySide6.QtWidgets import QApplication
 
 from embodic.api import compute
-from embodic.ui.app import QSettingsStore, create_shell
+from embodic.ui.app import QSettingsStore, create_shell, qt_application
 from embodic.ui.theme import ThemeName
 from embodic.ui.toolstrip import ToolstripTab
 from embodic.ui.viewmodels.session import SessionComputed
@@ -39,7 +39,7 @@ def wait_computed(app: QApplication, window) -> None:
 
 def main(out_dir: Path) -> int:
     """Write the two screenshots into out_dir; return 0."""
-    app = QApplication.instance() or QApplication(sys.argv[:1])
+    app = qt_application()
     QStandardPaths.setTestModeEnabled(True)
     out_dir.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as scratch:

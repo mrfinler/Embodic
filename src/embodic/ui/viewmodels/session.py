@@ -649,6 +649,7 @@ class DesignSession:
         self.can_redo: Observable[bool] = Observable(False)
         self.notice: Observable[EditNotice | None] = Observable(None)
         self.pairs_notice: Observable[str | None] = Observable(None)
+        self.opened: Observable[int] = Observable(0)  # counts the designs opened; the shell shows the drawing
         self.issues: Observable[tuple[ValidationIssue, ...]] = Observable(())
         self.document: SessionDocument | None = None
         self._undo: list[SessionDocument | None] = []
@@ -944,6 +945,7 @@ class DesignSession:
         """Open another design: the drawing of the one before is not an outdated view of it."""
         self._drawn = None
         self._commit(document)
+        self.opened.set(self.opened.value + 1)
 
     def _commit(
         self, document: SessionDocument | None, *, record: bool = True, pairs_notice: str | None = None

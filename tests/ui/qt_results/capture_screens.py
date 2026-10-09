@@ -13,7 +13,7 @@ from pathlib import Path
 from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import QApplication, QWidget
 
-from embodic.ui.app import QSettingsStore, create_shell
+from embodic.ui.app import QSettingsStore, create_shell, qt_application
 from embodic.ui.theme import ThemeName
 from embodic.ui.viewmodels.outcome import OutcomeReady
 from embodic.ui.viewmodels.session import SessionComputed
@@ -58,7 +58,7 @@ def tab(window: MainWindow, tab_id: str, app: QApplication, canvas_px: int = 300
 
 def main(out_dir: Path) -> int:
     """Write every screenshot into out_dir; return 0."""
-    app = QApplication.instance() or QApplication(sys.argv[:1])
+    app = qt_application()
     out_dir.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as scratch, tempfile.TemporaryDirectory(dir="/tmp") as export_dir:
         store = QSettingsStore(QSettings(str(Path(scratch) / "settings.ini"), QSettings.Format.IniFormat))
