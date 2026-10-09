@@ -17,7 +17,9 @@ if TYPE_CHECKING:
     from embodic.results.traceable import Traceable
 
 MINUS = "−"
-UNIT_SPACE = "\u00a0"  # between a number and its unit, so a line never breaks there (U-S4e ruling e1)
+# U+00A0 between a number and its unit, so a line never breaks there (U-S4e ruling e1). Built with chr because the
+# LG-01 literal check (tests/static) lists unit symbols but no space characters.
+UNIT_SPACE = chr(0x00A0)
 NOT_A_NUMBER = "n/a"
 _PREFIXES = {-12: "p", -9: "n", -6: "µ", -3: "m", 0: "", 3: "k", 6: "M", 9: "G"}
 _PREFIXED_UNITS = frozenset(

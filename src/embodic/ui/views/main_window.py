@@ -40,6 +40,7 @@ from embodic.io.examples import list_examples
 from embodic.model.vocabulary import TopologyKind
 from embodic.outcome import ComputeOutcome
 from embodic.results import Registry
+from embodic.results.formatting import UNIT_SPACE
 from embodic.ui.strings import text
 from embodic.ui.theme import ThemeName, ThemeTokens, load_theme, resolve_theme
 from embodic.ui.viewmodels.appearance import (
@@ -671,7 +672,8 @@ class MainWindow(QMainWindow):
             box.blockSignals(False)
 
     def _show_cursor(self, x_mm: float, y_mm: float) -> None:
-        self.status["st-cursor"].setText(text("shell.st-cursor.text", x=f"{x_mm:.2f}", y=f"{y_mm:.2f}"))
+        x, y = (f"{value:.2f}{UNIT_SPACE}mm" for value in (x_mm, y_mm))
+        self.status["st-cursor"].setText(text("shell.st-cursor.text", x=x, y=y))
 
     def examples_menu(self) -> QMenu:
         """Return a menu with one entry per packaged example."""

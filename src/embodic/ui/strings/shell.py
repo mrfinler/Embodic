@@ -105,7 +105,7 @@ STRINGS: Mapping[str, str] = {
     "shell.st-counts.phases": "{layers} layers, {phases} phases, {vias} vias",
     "shell.st-counts.stack": "{boards} boards, {layers} copper layers each, {phases} phases, {vias} vias",
     "shell.st-units.text": "mm",
-    "shell.st-cursor.text": "x {x}\u00a0mm, y {y}\u00a0mm",
+    "shell.st-cursor.text": "x {x}, y {y}",
     "shell.fig-canvas.accessible": "Geometry view of the stator board",
     "shell.legend.phase": "Phase {phase}",
     "shell.error.title": "Internal error",

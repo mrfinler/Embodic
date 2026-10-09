@@ -443,7 +443,7 @@ def back_emf_chart(outcome: ComputeOutcome | None) -> ChartModel | None:
     samples = XCOIL_WAVEFORM_SAMPLES
     return ChartModel(
         chart_id="chart-backemf",
-        title=text("chart.backemf.title", speed=format_quantity(speed, Unit.ONE)),
+        title=text("chart.backemf.title", speed=f"{format_quantity(speed, Unit.ONE)}{UNIT_SPACE}rpm"),
         x_label=text("chart.backemf.x"),
         x_unit="°",
         y_label=text("chart.backemf.y"),
