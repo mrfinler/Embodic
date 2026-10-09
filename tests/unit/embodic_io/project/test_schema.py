@@ -87,6 +87,9 @@ ACCEPTED: dict[str, Mutation] = {
     "measured property": _provenance("/operating/winding_temperature_degc", {"provenance": "user"}),
     "example entry": _provenance("/rotor/poles", {"provenance": "example", "example_id": "spiral_12c16p_default"}),
     "default entry": _provenance("/name", {"provenance": "default"}),
+    "example title without the word Example": _set(
+        "/example", {"title": "Spiral, 12 coils, 16 poles", "source_note": "CF-11, example values (assumption)"}
+    ),
 }
 REFUSED: dict[str, Mutation] = {
     "format other": _set("/format", "kicad"),
@@ -158,7 +161,7 @@ def test_ut_io_03_examples_and_saved_files_validate(tmp_path: Path, monkeypatch:
     ("name", "expected"), [(n, True) for n in ACCEPTED] + [(n, False) for n in REFUSED], ids=lambda v: str(v)
 )
 def test_ut_io_03_loader_and_schema_agree_on_mutated_files(tmp_path: Path, name: str, expected: bool) -> None:
-    """Catches a loader and a schema that disagree on what a valid file is (51 mutations of one saved project)."""
+    """Catches a loader and a schema that disagree on what a valid file is (52 mutations of one saved project)."""
     document = copy.deepcopy(_base_document(tmp_path))
     {**ACCEPTED, **REFUSED}[name](document)
     schema_accepts = not list(_validator().iter_errors(document))

@@ -169,7 +169,7 @@ def build_schema() -> dict[str, Any]:
             "example": {
                 "type": "object",
                 "required": ["title", "source_note"],
-                "properties": {"title": {"type": "string", "pattern": "Example"}, "source_note": {"type": "string"}},
+                "properties": {"title": {"type": "string"}, "source_note": {"type": "string"}},
                 "additionalProperties": False,
             },
         },

@@ -34,7 +34,7 @@ class ExampleInfo:
     """What the Examples gallery shows for one example."""
 
     example_id: str
-    title: str  # English, shown in the Examples gallery with the word "Example"
+    title: str  # English display title shown in the Examples gallery (ruling g: no "Example", no other program)
     topology: TopologyKind
     source_note: str  # provenance kept in the file, e.g. "D08 thesis configuration (oracle O1)"; never shown
     display_note: str  # what the gallery shows: no other program's name and no repository path (UX-AC-03)
