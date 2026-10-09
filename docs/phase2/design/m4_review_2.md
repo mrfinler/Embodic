@@ -1,4 +1,4 @@
-Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5
+Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5; sections 4 and 5: claude-sonnet-5-5 (U-S4f)
 
 # Second M4 design review and rulings (U-S4e)
 
@@ -90,3 +90,84 @@ scrolls, the tab becomes "Board" with the group boxes unchanged. Captures regist
 | U-M4e | 10 | Gallery selection text in `text-inverse`; `st-counts` wording; inspector tab bar fit; `register_fonts` in every capture lever and the UI test fixtures; recapture S36 to S38. | h |
 | U-M4e | 11 | Enable Open (F21, carried from U-S4d). | carried |
 | U-M4c-4 | 1 | Forced labels per phase and sign; in-view label per phase; leaders inside the view; fit kept through resize. | h |
+
+## 4. Verification of the change requests (U-S4f)
+
+Date 2026-10-09, on main 9776555. Reviewed: the 8 shots of U-M4e-1 in `/mnt/user-data/outputs/m4e1/`, taken by
+`tests/ui/qt_shell/capture_u_m4e.py`. Numbers come from `checks/shot_measure.py`, which reads pixels. The PDF is not in
+that folder, so I ran the same lever into a scratch folder and read the file with `pdffonts` and `pdftotext`. A finding is
+`verified` by looking at the shot named or by the output quoted. What a still image cannot show is `not tested`.
+
+```
+$ QT_QPA_PLATFORM=offscreen .venv/bin/python docs/phase2/design/checks/shot_measure.py /mnt/user-data/outputs/m4e1
+1280 x 800 panes: {'inspector': 340, 'rail': 360}, canvas share 0.601 (target 0.59 to 0.61)
+gallery selected title: background (21, 21, 21), text (255, 255, 255), contrast 18.26:1 (needs 4.5:1)
+gallery selected note: background (20, 20, 20), text (255, 255, 255), contrast 18.42:1 (needs 4.5:1)
+gallery unselected note: background (255, 255, 255), text (102, 102, 102), contrast 5.74:1 (needs 4.5:1)
+no findings
+$ pdffonts u-m4e_report_d08.pdf
+Inter-Regular, JetBrainsMono-Regular, Inter-SemiBold: CID TrueType, embedded yes, subset no (3 fonts)
+```
+
+### 4.1 Screens
+
+| # | Screen (shot) | UX-AC | Result | Finding |
+|---|---|---|---|---|
+| V1 | Canvas 60/40, D08, 1280 x 800 (`canvas-60-40`) | UX-AC-21, 05, 27 | pass | Inspector 340, rail 360, canvas page 0.601 of the centre height (392 of 652 px), results 259 px. 12 labels with sign, legend whole, ring fills the canvas. `st-counts` reads "12 coils". |
+| V2 | Drawing tab, light, 960 x 540 | UX-AC-21 | pass | "Drawing" is the first and current tab; canvas 314 px tall (rows 203 to 517); inspector 300 px with "Coil Phases Layers Board" and no scroll arrows; seven centre tabs fit. |
+| V3 | Drawing tab, dark, 960 x 540 | UX-AC-21, 08 | pass | Same geometry in the dark theme; focus ring is white. Label contrast on the dark canvas `not tested`. |
+| V4 | Layers tab, D08 and 12c14p, 960 x 540 | UX-AC-21 | finding, minor | `layer-list` shows Layer, Kind ("Copper", "Dielectric" in full), Thickness; `pair-list` shows Pair, Layers, Rotation. No sideways bar. F1 and F2 below. |
+| V5 | Board tab and DRC tab, wave, 1280 x 800 | UX-AC-21, 27, 08 | finding, moderate | `screw-table` has three columns; fit and hole diameter fields show; the angle offset field is below the fold. DRC shows glyph, Message (two lines), Measured, Required, Layer with numbers right-aligned in mono; no sideways bar. Wave fit zoom shows A+, B+, C+ and A−, B−, C− with leaders inside the view. F1 and F3. |
+| V6 | Gallery, second item selected | UX-AC-08, 03 | finding, major | Selection text is 18.3:1 (pass). The five titles are the old ones: "Example: 16-pole serpentine (Xcoil default)", "Example: UGent D08 12-coil 10-pole spiral", "Example: 12-coil 14-pole spiral", "Example: 12-coil 16-pole spiral (default)", "Example: 16-pole wave winding (involute, 2 turns)". UX-AC-03 fails on "Xcoil", "Example", "default" and the institution name. Ruling g is request 9. |
+| V7 | PDF page 1 | UX-AC-18, 05 | pass | µH, mΩ, mV·s/rad, Ω, η, δ, ΔT, A/mm² and √W print; headings read as SemiBold, values in JetBrains Mono. |
+| V8 | All eight shots | UX-AC-11, checklist Focus | finding, moderate | The 2 px focus ring sits on the toolstrip Home tab in every shot. The Focus cell of S36 to S38 (`pair-list`, `fig-canvas`) is unmet. F4. |
+
+8 rows: 4 pass, 4 findings (1 major, 2 moderate, 1 minor). Section 4.2 lists the six distinct findings.
+
+### 4.2 Findings
+
+| Id | Severity | Finding | Fix | Unit |
+|---|---|---|---|---|
+| F1 | minor | `layer-list`, `pair-list` and `screw-table` end in an empty header cell and leave a blank band under the last row (crops of V4 and V5). | Ruling j: the last column takes the remaining width. | UI worker |
+| F2 | minor | The `example` chip in `pair-list` draws a solid black border and black text. `_value_with_chip` (`layer_panel.py` lines 330 to 343) sets `class` but not `provenance`, so `QLabel[class="prov-chip"]` (`theme_template.qss` line 108) applies and the dashed `example` rule (line 109) does not. `verified` by reading code and looking. | Set the `provenance` property from the row's chip, as `coil_panel.py` line 301 does. | UI worker |
+| F3 | moderate | "Add pattern" and "Remove pattern" read as plain text. They are `QToolButton`, whose rule has a transparent border (`theme_template.qss` line 8). UX-AC-08 asks 3:1 for control boundaries. | Ruling i. | UI worker |
+| F4 | moderate | Focus ring on the Home tab in all shots. | Checklist rule "Focus" (`screenshot_checklist.md`). | U-M4e-2 |
+| F5 | major | Request 9 is not in this build. | U-M4e-1b carries it (D-041a). | U-M4e-1b |
+| F6 | minor | At 1280 the rail says "No input issues" twice, once in `rail-inputs` and once in the empty `issues-list`. Section 6.1 specifies both texts, so this is a proposal only: hide `issues-list` and its title while `rail-inputs` passes. No spec text changed. | Fable decides. | none yet |
+
+### 4.3 Status of the change requests 1 to 12
+
+| # | Request | Status | Evidence |
+|---|---|---|---|
+| 1 | Vertical split, Drawing tab, stored share, fit through resize | done for what a shot shows | `verified`: share 0.601, minimums met, "Drawing" first at 960 x 540. `not tested`: `layout/canvas_share` restored after restart, fit after a resize (S41). |
+| 2 | Start widths 340 and 360 | done | `verified` from pixels: 340 and 360 at 1280, 300 at 960. |
+| 3 | `pair-list` split out | done for layout | `verified`: two tables, Kind in full. `not tested`: Delete, series-group menu, via tooltip, `param-pair-rotation` selection, `widget_id`. F2 open. |
+| 4 | Screw table of three columns and two fields | partly seen | `verified`: three columns, fit and hole diameter visible. `not tested`: `param-screw-angle-offset` (below the fold), `widget_id`. F3 open. |
+| 5 | DRC column budget and card grid | done at 1280 | `verified`: DRC columns fit without a sideways bar; at 1280 the card grid shows one column that ends inside the scroll bar (`inferred`: two columns need 568 px, the viewport has about 550). `not tested`: card grid at 960 and 1600 x 900, DRC at 960. |
+| 6 | U+00A0 between number and unit | `not tested` from shots | A still image and `pdftotext` cannot tell U+00A0 from a space. Source line `UNIT_SPACE = chr(0x00A0)` in `results/formatting.py` line 22 is `verified` by reading. Agent 4 tests it. |
+| 7 | Static Inter, no variable file, PDF embeds both | done | `verified`: UI headings and table headers render at SemiBold; `pdffonts` lists Inter-Regular, Inter-SemiBold, JetBrainsMono-Regular, embedded, no variable font. `not tested`: `FONTS.md` hashes, EV-106 (Agent 5). |
+| 8 | PDF colophon line | done | `verified`: `pdftotext` finds "Set in Inter and JetBrains Mono, SIL Open Font License 1.1." once, on page 3 after the last table, and on no other page. |
+| 9 | Retitle the five examples | not done in this build | `verified` by looking at V6. U-M4e-1b. |
+| 10 | Gallery text, `st-counts`, tab bar fit, fonts in levers, recapture S36 to S38 | done, recapture partial | `verified`: 18.3:1 selection text; "12 coils" (spiral) and "3 phases" (wave); four inspector tabs fit at 300 px; all six levers call `qt_application()`. `not tested`: "3 boards" for a stack. Recapture: S36 and S38 shots exist, S37 only inside the Board tab shot; Focus unmet (F4). |
+| 11 | Enable Open | seen enabled | `verified`: Open draws at text colour while Redo is grey, in every shot. `not tested`: opening a file. |
+| 12 | Label rules of ruling h | done at fit | `verified`: D08 shows 12 labels; wave shows both signs of each phase. `not tested`: 3x zoom, a label per phase in view, resize (S07, S41). |
+
+Request 12 is also change request U-M4c-4 1 of section 3.
+
+## 5. Rulings from the verification (U-S4f)
+
+i. Principle experience-first (a control shows its boundary). `screens.md` 5: `btn-screw-add` and `btn-screw-remove` are
+`QPushButton` with the secondary boundary of `btn-drc-locate`. UX-AC-08. The objectNames stay.
+
+j. Principle experience-first (get the details right). `screens.md` 4 and 5: the last column of `layer-list`, `pair-list`
+and `screw-table` takes the remaining width, so no header cell is empty. UX-AC-21.
+
+## 6. Change requests from the verification
+
+| Unit | Request | Finding or ruling |
+|---|---|---|
+| UI worker before the recapture (Fable names it) | `provenance` property on the `pair-list` chip; `QPushButton` for the two screw buttons; last-column stretch in the three tables. Test each: chip style, button class, empty header cell. | F2, i, j |
+| U-M4e-1b | Retitle the five examples, flip the UX-AC-03 xfails. | F5, g |
+| U-M4e-2 | Take the 41 rows of `screenshot_checklist.md` with focus set, fonts registered through `qt_application()`, and the 16 missing levers written. Show `param-screw-angle-offset` in S20. Add the last text page of the PDF and `pdffonts` to S40. Run `shot_measure.py` on S36, S38, S39. | F4, V5, V7 |
+| Agent 4 | Test what is `not tested` above: requests 1 (stored share, resize), 3 (Delete, menu, tooltip), 4 (`widget_id`), 5 (960 and 1600 x 900), 6, 10 (stack count), 11, 12. | section 4.3 |
+| Agent 5 | EV-106 after the static fonts (request 7). | request 7 |
