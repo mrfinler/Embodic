@@ -35,7 +35,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from embodic.errors import ValidationIssue
+from embodic.errors import Severity, ValidationIssue
 from embodic.io.examples import list_examples
 from embodic.model.vocabulary import TopologyKind
 from embodic.outcome import ComputeOutcome
@@ -175,10 +175,10 @@ class MainWindow(QMainWindow):
         self._on_session()
 
     def _commands(self) -> CommandTable:
-        pending = ["open_project"]
         session = self.session
-        implemented: CommandTable = {
+        return {
             "new_design": self.show_new_design,
+            "open_project": self.open_project_dialog,
             "undo": session.undo,
             "redo": session.redo,
             **{f"set_topology_{t.value}": partial(session.set_topology, t) for t in TopologyKind},
@@ -193,7 +193,6 @@ class MainWindow(QMainWindow):
             "show_equations": self.show_equations,
             **{command: partial(self.show_export, command) for command in PRESETS},
         }
-        return {**dict.fromkeys(pending), **implemented}
 
     def _work_area(self) -> QWidget:
         inspector = QWidget()
@@ -691,6 +690,24 @@ class MainWindow(QMainWindow):
         """Open the examples menu under its button."""
         anchor = anchor or self.toolstrip.buttons["act-examples"]
         self.examples_menu().popup(anchor.mapToGlobal(QPoint(0, anchor.height())))
+
+    def open_project_dialog(self) -> None:
+        """Ask for a project file and open it (Ctrl+O, F21)."""
+        name, _ = QFileDialog.getOpenFileName(self, text("shell.open.title"), "", text("shell.open.filter"))
+        if name:
+            self.open_project_file(Path(name))
+
+    def open_project_file(self, path: Path) -> QMessageBox | None:
+        """Open a project file in the inspector; a file that does not load says why and changes nothing."""
+        issues = self.session.open_project(path)
+        errors = [found.message for found in issues if found.severity is Severity.ERROR]
+        if not errors:
+            return None
+        body = text("shell.open.refused", name=path.name, reasons=" ".join(errors))
+        ok = QMessageBox.StandardButton.Ok
+        dialog = QMessageBox(QMessageBox.Icon.Warning, text("shell.open.title"), body, ok, self)
+        dialog.open()
+        return dialog
 
     def save_project_dialog(self) -> None:
         """Ask for a file name and save the open project."""

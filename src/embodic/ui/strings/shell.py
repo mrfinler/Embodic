@@ -115,6 +115,9 @@ STRINGS: Mapping[str, str] = {
         "Reference for the log file: {correlation_id}"
     ),
     "shell.error.not-saved": "no file (no design was open)",
+    "shell.open.title": "Open project",
+    "shell.open.filter": "embodic project (*.embodic.json *.json)",
+    "shell.open.refused": "{name} was not opened. {reasons}",
     "shell.save.title": "Save project",
     "shell.save.filter": "embodic project (*.embodic.json)",
 }
