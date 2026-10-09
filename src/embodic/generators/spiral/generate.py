@@ -20,8 +20,8 @@ from enum import StrEnum
 from types import MappingProxyType
 
 from embodic.drc import run_drc
-from embodic.drc.report import violates
 from embodic.errors import IssueCategory, Severity, Unbuildable, ValidationIssue, message_for
+from embodic.generators.base import unusable_sizes
 from embodic.generators.fasteners import keep_out_issues
 from embodic.generators.spiral.artwork import CoilArtwork, coil_artwork, sharp_artwork
 from embodic.generators.spiral.chain import BusRings, CoilEnds, End, PhaseChain, chain_coils, norm_angle
@@ -109,10 +109,7 @@ def _out_of_range(design: DesignParameters, spec: SpiralWindingSpec) -> tuple[st
         "/vias/pad_mm": vias.pad_mm,
         "/connection/ring_width_mm": design.connection.ring_width_mm,
     }
-    bad = [p for p, v in positive.items() if not (math.isfinite(v) and v > 0)]
-    width_mm = coil.trace_width_mm
-    if not (math.isfinite(width_mm) and width_mm > 0) or violates(width_mm, design.drc_rules.min_trace_width_mm):
-        bad.append("/winding/coil/trace_width_mm")
+    bad = unusable_sizes(positive, "/winding/coil/trace_width_mm", coil.trace_width_mm, design.drc_rules)
     non_negative = {
         "/winding/coil/coil_gap_mm": coil.coil_gap_mm,
         "/winding/coil/min_side_length_mm": 0.0 if coil.min_side_length_mm is None else coil.min_side_length_mm,
