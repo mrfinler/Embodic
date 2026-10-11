@@ -1,4 +1,4 @@
-Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5; sections 4 and 5: claude-sonnet-5-5 (U-S4f)
+Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5; sections 4 and 5: claude-sonnet-5-5 (U-S4f); section 7: claude-opus-5-5 (U-S4g)
 
 # Second M4 design review and rulings (U-S4e)
 
@@ -171,3 +171,113 @@ and `screw-table` takes the remaining width, so no header cell is empty. UX-AC-2
 | U-M4e-2 | Take the 41 rows of `screenshot_checklist.md` with focus set, fonts registered through `qt_application()`, and the 16 missing levers written. Show `param-screw-angle-offset` in S20. Add the last text page of the PDF and `pdffonts` to S40. Run `shot_measure.py` on S36, S38, S39. | F4, V5, V7 |
 | Agent 4 | Test what is `not tested` above: requests 1 (stored share, resize), 3 (Delete, menu, tooltip), 4 (`widget_id`), 5 (960 and 1600 x 900), 6, 10 (stack count), 11, 12. | section 4.3 |
 | Agent 5 | EV-106 after the static fonts (request 7). | request 7 |
+
+## 7. Acceptance-set review (revision 2026-10-12 (U-S4g))
+
+Reviewed on main 4fda98d: the 82 files of U-M4e-2 in `/mnt/user-data/outputs/m4accept/` (40 rows; S33 has no shot).
+A row is `verified` by looking at its PNG unless the row quotes a pixel read or a command. What a still image cannot
+show is `not tested`. Agent 4 checks behaviour in U-V4. Severity: critical (wrong or unreadable content), major (the row's
+point is missing), moderate (the user meets a wrong or confusing state), minor (polish).
+
+### 7.1 Review table
+
+| Row | UX-AC | Result | Finding |
+|---|---|---|---|
+| S01 | 13, 21 | pass | Empty centre with New design and Examples; "Ready". Minor: the `toolstrip` Focus cell shows no ring (a toolbar takes no ring). |
+| S02 | 09, 11 | pass | Every `TOOLSTRIP` action of each tab, Redo greyed, ring on the Focus action in all five shots. |
+| S03 | 21 | pass | Nothing clipped at 960. Minor: Focus cell as S01. |
+| S04 | 05, 27 | pass | Phase colours, 12 labels, legend, summary strip, ring on `fig-canvas`. |
+| S05 | 07, 06 | finding, major | Light: grey ladder and labels. Dark: full colour (pixel (540, 340) reads (119, 43, 19)). The lever keeps `act-greyscale` checked and switches the theme, so the theme switch, or the reload, drops greyscale while the toggle stays on (`inferred` from `capture_acceptance.py` lines 198 to 210). |
+| S06 | 27 | pass | Ribbons per phase; A, B, C four times each. |
+| S07 | 27, 05 | pass | Fit: both signs of each phase, leaders inside the view. 3x: B+ and B− in view. |
+| S08 | 10 | pass | L2 copper absent, its toggle unchecked with the ring. |
+| S09 | 09 | finding, major | No tooltip in either theme: `grab()` leaves out top-level popups. Rule Popups. |
+| S10 | 12 (UI-12) | pass | English message, reference id, recovery note. Minor: the lever's sandbox shows as `%USERPROFILE%/S10/recovery`. |
+| S11 | 13 | pass | Empty name with ring, three topology buttons, "No example (blank)", Create disabled. |
+| S12 | 13, 11 | finding, moderate | Create design is enabled, but its focus ring cannot show: the primary focus rule draws a 2 px `focus-ring` border on a `surface-inverse` fill, and both are #141414 in light and #f2f2f2 in dark (`verified`, `resources/themes/light.qss` and `dark.qss` line 88). WCAG 2.4.7. Same in S29. |
+| S13 | 13, 15 | finding, moderate | "37 required fields left" and the button show, but the rail says "No input issues." and the results area shows no missing list. S21 the same. |
+| S14 | 15, 14 | finding, moderate | Fail border, message and `user` chip show. The bar says "0 required fields left" beside an enabled Go to first missing field, and the stale banner says "0 required fields left" for an invalid field. S23 the same. |
+| S15 | 16 | pass | Wave fields only, no gaps, ring on `param-r-inner`. Serpentine shot likewise. |
+| S16 | 16 | pass | Phase segment with ring, connection buttons. |
+| S17 | 21, 25 | finding, minor | `pair-list` is cut at the bottom of the inspector. The cell asked for `default` chips; an example load gives `example`, which is correct. Cell corrected. |
+| S18 | 16 | finding, moderate | The combo is closed, so no "in parallel" item shows. Rule Popups. |
+| S19 | 26 | finding, moderate | Picker on "Board B", one board drawn. The `issues-list` message runs off the right edge with a sideways bar (UX-AC-21). |
+| S20 | 21 | finding, moderate | All fields of the cell in view. The lever adds an empty pattern, so the shot shows "5 required fields left" and stale results; the new pattern's angle offset shows a `user` chip nobody typed (`not tested` whether the lever typed it). Cell corrected. |
+| S21 | 15 | finding, moderate | Same as S13. |
+| S22 | 01, 02, 21 | finding, critical | 1280: cards, EQ chip, tag, section open. 960, both themes: the open "How was this computed" section prints lines over each other ("Assumptions" twice, "Limitations" over a list line). Text overlapping text is unreadable; `inferred` cause: word-wrapped labels keep the height of the wider layout. |
+| S23 | 15 | finding, major | "Last valid results" shows, but the cards are not dimmed: the value text reads (20, 20, 20) in S23 and in the fresh S02 (pixel read). Bar text as S14. |
+| S24 | 18 | pass | Pass summary with `check-pass` icon and rule note. Minor: `drc-summary` is a label and takes no ring. |
+| S25 | 18 | finding, minor | Fail rows with border, marker zoom, copper dimmed. Measured prints "0.200000", Required "3.00000": different decimals in one table. |
+| S26 | 19 | finding, minor | Three line styles, legend, end labels, meta row. The data table is below the fold. |
+| S27 | 19 | finding, major | Empty state "needs a DC-link voltage": the example leaves it empty. Cell corrected (24 V). |
+| S28 | 20 | finding, major | Empty shot passes. Reference shot: `compare-table` gets one row of height with a sideways bar, the first column reads "iant" and "Ph…", and the "Data table" label prints over the chart. |
+| S29 | 18, 08 | finding, moderate | Boxes, folder, stamp, DRC line. "Browse" draws no boundary (UX-AC-08, as F3). Export's ring cannot show (S12). |
+| S30 | 18 | finding, minor | Failures listed, ring on Cancel. Lines show the code "DRC_TRACE_TRACE" instead of the message, decimals as S25. |
+| S31 | 18 | finding, minor | File list and Open folder show; the "Before you export" list above is cut after two lines. |
+| S32 | 02 | finding, moderate | Tree, EQ-18, sources with page, status. Rows "Label None" and "Implementation None" print Python `None`; "Dominant assumptions" is two rows; formulas are ASCII ("sqrt(sum_{n>1} Ke_n^2)"). |
+| S34 | screens 14 | pass | `st-compute`, `st-drc` link, `st-counts`, `st-units`. Minor: `st-cursor` is empty without a pointer over the canvas. |
+| S35 | 21 | pass | "No input issues", "186 failures", no Design card; Key results tab at 960. |
+| S36 | 21 | pass | Kind in full, dashed `example` chip, no empty header cell, no sideways bar. |
+| S37 | 21 | pass | Five columns, no sideways bar. |
+| S38 | 21 | pass | Drawing tab current, ring fills it, legend whole. |
+| S39 | 03, 08 | finding, minor | Titles follow ruling g; selection readable in both themes. Notes still say "Default ... preset" and "2 turns", which ruling g took out of the titles. |
+| S40 | 05, 18 | pass | Units print, SemiBold headings, `pdffonts` lists the three fonts embedded. The colophon ends page 4 after the legend (`pdftotext`), which meets ruling f; the cell said "after the last table" and is corrected. |
+| S41 | 27 | pass | Ring fills the 960 x 700 canvas, legend whole, labels unchanged. |
+
+40 rows: 19 pass, 21 findings (1 critical, 5 major, 9 moderate, 6 minor).
+
+Rows not to show the user yet: S05, S09, S18, S20, S22, S23, S27, S28. Each misses the thing its row exists to show.
+The other 32 can be shown now with the minor notes above. The packaged wave example opens with 186 DRC failures (S07,
+S15, S18, S35, S37). That is engineering, not layout, but the user will ask; Fable decides whether the cover note
+explains it or Agent 2 changes the example.
+
+### 7.2 Rulings
+
+k. Target size (DEF-M4e2-01 to 03). Principle experience-first (a 2 px or 12 px cost buys a target every user can hit).
+`design_spec.md` 5 and UX-AC-28. Source: W3C, Understanding SC 2.5.8 Target Size (Minimum),
+https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html (`verified`, fetched 2026-10-12): "The size of the
+target for pointer inputs is at least 24 by 24 CSS pixels, except when:" Spacing, Equivalent, Inline, User agent control,
+Essential. A Qt logical pixel stands for the CSS pixel (`assumption`, the same as REQ-N-13).
+
+- k1 (DEF-M4e2-01). Fix: `eq-chip` and `asm-tag` 24 px tall, and the badge beside them too, so the row keeps one height.
+  Inline does not apply: the chips are not "in a sentence" and their height comes from their own padding, not "the
+  line-height of non-target text". Spacing would pass for a chip wider than 24 px, but `design_spec.md` 5 claims no
+  exception, and the cost is 2 px.
+- k2 (DEF-M4e2-02). Fix: a check box or radio button accepts a click anywhere in a 32 px tall row, indicator and label
+  (Phase 1 `design_review_notes.md` item 13; P8 32 px controls). QSS alone cannot do it: with `min-height: 32px` or
+  `padding: 8px 2px` the widget grows to 36 or 38 px but `SE_CheckBoxClickRect` stays 79 x 20, and `hitButton` uses
+  that rectangle (`verified`, scratch probe on `light.qss`). The fix makes the click rectangle the widget rectangle.
+- k3 (DEF-M4e2-03). Fix: scroll bars 24 px wide, handle margin 2 px. No exception applies. User agent control needs a
+  size "determined by the user agent and ... not modified by the author"; the template sets `width: 12px`. Spacing
+  fails: the handle's 24 px circle reaches 6 px into the viewport, where table rows and fields are targets, and a track
+  segment shorter than 24 px touches the handle. Equivalent needs "a different control on the same page"; the wheel and
+  Page Down are not controls. With a 24 px bar the inspector at 960 keeps 276 px of content, so U-M4e-3 reruns
+  `layout_probe.py --fonts` and the UX-AC-21 sideways-scroll asserts.
+
+l. S33 Tests dialog. Agreed with Fable's D-042 draft. Principle experience-first (every control must be justified): a
+Tests entry with no bundled test set either does nothing or shows a table that proves nothing. `screens.md` 13 and
+`design_spec.md` 6 mark the dialog and `btn-tests` M5; the checklist row stays, marked M5. The build has no Tests action
+(`verified`: no `act-tests` in `src/embodic/ui/toolstrip.py`), so nothing needs hiding now.
+
+### 7.3 Change requests for U-M4e-3 (Agent 3)
+
+| # | Severity | Request | Row, ruling |
+|---|---|---|---|
+| 1 | critical | Re-lay out the open "How was this computed" section when its width changes, so no line prints over another. Test: open R_ph at 960 x 540, assert no two text labels of the section intersect. | S22 |
+| 2 | major | Greyscale survives a theme switch and a reload while `act-greyscale` is checked. Reproduce: load 12c16p, light, check greyscale, switch to dark; the canvas is in colour. Test: sample a copper pixel equals `phase-a-grey` of the dark theme. | S05, UX-AC-06, 07 |
+| 3 | major | `compare-table` takes the height of its rows (up to the pane), no sideways bar at 1280, Quantity column stretches; the chart below starts under the table. | S28 |
+| 4 | major | Stale cards dim value, unit and badge (UX-AC-15). | S23 |
+| 5 | major | Lever: rule Popups (tooltip, combo list); S20 fills its pattern; S27 sets 24 V; S17 scrolls to `pair-list`. Recapture S05, S09, S17, S18, S20, S22, S23, S27, S28. | S09, S18, S20, S27 |
+| 6 | moderate | Ruling k: chips 24 px; check box click rectangle = widget rectangle, row 32 px; scroll bars 24 px. Flip the four strict xfails; AX-04 counts what `hitButton` accepts. | k |
+| 7 | moderate | Blank draft: `rail-inputs` and `issues-list` report the missing required fields instead of "No input issues.". At 0 missing, hide the required-field bar; the stale banner names invalid fields ("1 field is invalid"). | S13, S14, S21, S23 |
+| 8 | moderate | `issues-list` wraps long messages; no sideways bar. | S19 |
+| 9 | moderate | "Browse" becomes a secondary `QPushButton` (as ruling i). | S29 |
+| 10 | moderate | Guide: hide a row whose value is empty instead of printing `None`; one "Dominant assumptions" row listing both. | S32 |
+| 11 | minor | DRC numbers: the same decimals in Measured and Required (six, as S37); the export confirmation lists the message, not the code. | S25, S30 |
+| 12 | minor | New fastener pattern: angle offset starts with a `default` chip unless typed. Check first; close if the lever typed it. | S20 |
+
+Template change for Fable to route (the file is mine, but U-M4e-3 changes the template for k3): the primary button's
+focus state needs a ring that differs from its fill without a new colour, such as a 2 px `surface` gap inside the 2 px
+`focus-ring` border (`background-clip: padding`). Verify with `qss_smoke.py` and a grab of S12 before merging (S12, S29,
+WCAG 2.4.7). Proposals for M5, no spec change yet: typeset formulas in the Guide and the How section; label assumption
+keys instead of JSON pointers; drop "Default" and "2 turns" from the example notes.

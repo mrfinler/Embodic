@@ -195,8 +195,8 @@ Phase A is the strongest step in both themes. Validator `--ordinal` passes both 
   OFL 1.1, the same `LICENSE.txt`; path in the release archive `extras/ttf/`, `inferred`, Agent 3 confirms and records
   the SHA-256 in `FONTS.md`) and removes `InterVariable.ttf`. The PDF embeds the same two files, so its headings use
   real SemiBold instead of faux bold.
-- Font credit in the PDF (U-S4e ruling f). No per-page footer credit. The report ends with one colophon line after the
-  last table: "Set in Inter and JetBrains Mono, SIL Open Font License 1.1." The OFL says its conditions do not reach
+- Font credit in the PDF (U-S4e ruling f). No per-page footer credit. The report ends with one colophon line, on its
+  last page, after the drawing legend (U-S4g): "Set in Inter and JetBrains Mono, SIL Open Font License 1.1." The OFL says its conditions do not reach
   "any document created using the fonts" (`verified`, condition 5 as quoted in `dependency_licences.md` §Fonts), so the
   line is a courtesy, not a licence condition. Whether a whole embedded file makes the PDF a "copy" under condition 2
   stays a legal question for Agent 5 (`unresolved`).
@@ -210,7 +210,9 @@ Phase A is the strongest step in both themes. Validator `--ordinal` passes both 
 ## 5. Spacing, shape and layout
 
 - Spacing scale: 2, 4, 8, 12, 16, 24, 32, 48 px. Radius: 4 px controls, 6 px cards, 10 px dialogs, 8 px chips and badges.
-  Control height 32 px. Hit targets 24 x 24 px or more.
+  Control height 32 px. Hit targets 24 x 24 px or more, with no WCAG 2.5.8 exception claimed (U-S4g ruling k):
+  clickable chips (`eq-chip`, `asm-tag`) and the badge beside them are 24 px tall; a check box or radio button
+  accepts a click anywhere in its 32 px tall row, indicator and label together; scroll bars are 24 px wide.
 - Qt ignores a border radius larger than half the widget height. Chips and badges therefore use 1 px vertical padding and
   an 8 px radius (`verified` in the smoke render: chips with 0 px padding drew square corners).
 
@@ -283,7 +285,7 @@ succeeded for the current input; "has reference" means a reference design is sto
 | Verify | `btn-back-emf` | `back-emf` | Back-EMF | small | none | Back-EMF waveform per phase. | always |
 | Verify | `btn-torque-speed` | `torque-speed` | Torque-speed | small | none | Torque-speed characteristic. | always |
 | Verify | `btn-compare` | `compare` | Compare | small | none | Compare the design with the stored reference. | always (empty state offers "Set current as reference") |
-| Verify | `btn-tests` | `tests` | Tests | small | none | Run the built-in self-tests. | always |
+| Verify | `btn-tests` | `tests` | Tests | small | none | Run the built-in self-tests. | M5 only (U-S4g ruling l); absent before |
 | Help | `btn-guide` | `guide` | Guide | large | F1 | Design guide and reference. | always |
 | Help | `btn-equations` | `equations` | Equations | small | none | Equation register with sources. | always |
 | Help | `btn-shortcuts` | `shortcuts` | Shortcuts | small | Ctrl+/ | Keyboard shortcuts. | always |
