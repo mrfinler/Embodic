@@ -159,3 +159,34 @@ def test_ui26_canvas_background_follows_the_theme(d08_shell):
     window = d08_shell.window
     window.appearance.set_theme(ThemeName.DARK)
     assert window.canvas.backgroundBrush().color() == QColor(load_theme("dark").colours["canvas"])
+
+
+def _canvas_colours(window):
+    image = window.canvas.viewport().grab().toImage()
+    step = 2
+    return {
+        image.pixelColor(x, y).name() for x in range(0, image.width(), step) for y in range(0, image.height(), step)
+    }
+
+
+@pytest.mark.req("REQ-N-23", "REQ-N-27")
+def test_s05_greyscale_survives_a_theme_switch_and_a_reload_while_act_greyscale_is_checked(make_shell, wait_ready):
+    """m4_review_2.md 7.3 #2: catches a toggle that does not show its state, so a second toggle turns colour back on."""
+    shell = make_shell()
+    window = shell.window
+    window.appearance.set_theme(ThemeName.LIGHT)
+    window.outcome.open_example("spiral_12c16p_default")
+    wait_ready(window)
+    action = window.toolstrip.actions_by_id["act-greyscale"]
+    action.trigger()
+    assert action.isChecked()
+    window.appearance.set_theme(ThemeName.DARK)
+    window.outcome.open_example("spiral_12c16p_default")
+    wait_ready(window)
+    if not action.isChecked():
+        action.trigger()
+    dark = {s.phase: s for s in load_theme("dark").phases}
+    colours = _canvas_colours(window)
+    assert action.isChecked()
+    assert dark[Phase.A].grey_hex in colours
+    assert dark[Phase.A].colour_hex not in colours
