@@ -140,12 +140,22 @@ def test_tick_labels_use_the_unicode_minus():
 
 @pytest.mark.req("REQ-F-17", "REQ-L-08")
 def test_ui10_compare_current_column_equals_the_single_design_results(d08, spiral_14p):
-    """Catches a comparison that recomputes or reformats a value differently from the Results tab."""
+    """Catches a comparison that recomputes or reformats a value differently from the Results tab.
+
+    A cell joins number and unit with U+00A0 (ruling e1); a unitless value is the number alone, its unit column says
+    "dimensionless".
+    """
+
+    def cell(single):
+        unit = single.traceable.unit.display()
+        return f"{single.value_text}\u00a0{single.unit_text}" if unit else single.value_text
+
     rows = {r.quantity: r for r in compare_rows(d08, spiral_14p)}
     for single in result_rows(spiral_14p.analysis):
-        assert rows[single.quantity].current_text == f"{single.value_text} {single.unit_text}"
+        assert rows[single.quantity].current_text == cell(single)
     for single in result_rows(d08.analysis):
-        assert rows[single.quantity].reference_text == f"{single.value_text} {single.unit_text}"
+        assert rows[single.quantity].reference_text == cell(single)
+    assert rows["winding_factor_1"].unit_text == "dimensionless"
 
 
 @pytest.mark.req("REQ-L-08")

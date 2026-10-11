@@ -3,7 +3,7 @@
 import dataclasses
 
 import pytest
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QPoint, QRect, Qt
 from PySide6.QtWidgets import QApplication, QCheckBox, QMessageBox, QPushButton
 from tests.ui.qt_results.conftest import find
 
@@ -116,7 +116,7 @@ def test_ui10_ui34_compare_shows_reference_and_current_with_integer_counts_and_g
     table = tab.table
     rows = {table.item(r, 0).text(): r for r in range(table.rowCount())}
     peak = window.results.row("ke_line_peak_v_s_per_rad")
-    assert table.item(rows[peak.label], 2).text() == f"{peak.value_text} {peak.unit_text}"
+    assert table.item(rows[peak.label], 2).text() == f"{peak.value_text}\u00a0{peak.unit_text}"
     for label in ("Copper layers", "Coils", "Vias", "DRC failures"):
         r = rows[label]
         assert table.item(r, 1).text().isdigit() and table.item(r, 2).text().isdigit()
@@ -221,3 +221,33 @@ def test_export_commands_wait_for_a_computed_design(make_window):
         actions[a].isEnabled() for a in ("act-export-svg", "act-export-dxf", "act-export-pdf", "act-export-all")
     )
     assert actions["act-drc"].isEnabled() and actions["act-equations"].isEnabled()
+
+
+CELL_MARGIN_PX = 3  # Fusion item text margin on each side (PM_FocusFrameHMargin + 1)
+
+
+@pytest.mark.req("REQ-F-17", "REQ-N-15")
+@pytest.mark.parametrize("size", [(1280, 800), (1600, 900)])
+def test_s28_compare_table_takes_its_rows_up_to_the_pane_and_the_chart_starts_below(make_window, load, qtbot, size):
+    """U-S4g S28. Catches a one-row table with a sideways bar, a cut Quantity column, or the chart drawn over itself."""
+    window = load(make_window(), D08)
+    window.resize(*size)
+    tab = window.compare_tab
+    window.show_results_tab("tab-compare")
+    qtbot.mouseClick(tab.set_reference, Qt.MouseButton.LeftButton)
+    load(window, D14)
+    for _ in range(10):
+        QApplication.processEvents()
+    table, chart = tab.table, tab.chart
+    rows = sum(map(table.rowHeight, range(table.rowCount())))
+    full = table.horizontalHeader().height() + rows + 2 * table.frameWidth()
+    pane = table.parentWidget().visibleRegion().boundingRect().height()
+    assert table.visibleRegion().boundingRect().height() == min(full, pane), (full, pane)
+    assert not table.horizontalScrollBar().isVisible()
+    fonts, inner = table.fontMetrics(), table.columnWidth(0) - 2 * CELL_MARGIN_PX
+    for row in range(table.rowCount()):
+        label = table.item(row, 0).text()
+        wrapped = fonts.boundingRect(QRect(0, 0, inner, 10_000), Qt.TextFlag.TextWordWrap, label)
+        assert wrapped.width() <= inner and table.rowHeight(row) >= wrapped.height(), (row, label, wrapped, inner)
+    assert chart.mapTo(window, QPoint(0, 0)).y() >= table.mapTo(window, QPoint(0, table.height())).y()
+    assert chart.height() >= chart.minimumSizeHint().height()

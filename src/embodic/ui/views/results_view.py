@@ -401,17 +401,32 @@ class CompareTab(QWidget):
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self.table.setTextElideMode(Qt.TextElideMode.ElideNone)
         self.table.verticalHeader().setVisible(False)
+        self.table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.chart = ChartPanel("compare-chart")
+        # Table and chart scroll as one page: the table takes the height of its rows up to the visible pane and the
+        # chart follows below it at its own height, so neither is squeezed over the other (U-S4g S28).
+        page = QWidget()
+        page_layout = QVBoxLayout(page)
+        page_layout.setContentsMargins(0, 0, 0, 0)
+        page_layout.addWidget(self.table)
+        page_layout.addWidget(self.chart)
+        page_layout.addStretch(1)
+        self.scroll = QScrollArea()
+        self.scroll.setObjectName("compare-scroll")
+        self.scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setWidget(page)
+        self.scroll.installEventFilter(self)
         top = QHBoxLayout()
         top.addWidget(self.set_reference)
         top.addWidget(self.caption, 1)
         layout = QVBoxLayout(self)
         layout.addLayout(top)
         layout.addWidget(self.empty)
-        layout.addWidget(self.table, 3)
-        layout.addWidget(self.chart, 2)
+        layout.addWidget(self.scroll, 1)
         vm.reference.subscribe(lambda _: self.refresh())
         self.confirm: QWidget | None = None
 
@@ -441,6 +456,7 @@ class CompareTab(QWidget):
         self.empty.setText(text("compare.empty") if reference is None else text("compare.no-current"))
         self.table.setVisible(ready)
         self.chart.setVisible(ready)
+        self.scroll.setVisible(ready)
         self.caption.setText("" if reference is None else text("compare.reference.caption", name=reference.design.name))
         if not ready or self.tokens is None:
             return
@@ -450,6 +466,20 @@ class CompareTab(QWidget):
         for r, row in enumerate(rows):
             self._fill(r, row)
         self.chart.show_chart(compare_chart(reference, current), self.tokens)
+        self._fit_table()
+
+    def _fit_table(self) -> None:
+        """Give the table the height of its header and rows, at most the height of the visible pane."""
+        frame = 2 * self.table.frameWidth()
+        rows = sum(self.table.rowHeight(r) for r in range(self.table.rowCount()))
+        full = self.table.horizontalHeader().height() + rows + frame
+        self.table.setFixedHeight(min(full, max(self.scroll.viewport().height(), 0)))
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802 (Qt override)
+        """Fit the table again whenever the pane changes size."""
+        if watched is self.scroll and isinstance(event, QResizeEvent):
+            QTimer.singleShot(0, self._fit_table)
+        return super().eventFilter(watched, event)
 
     def _fill(self, r: int, row: CompareRow) -> None:
         assert self.tokens is not None

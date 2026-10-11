@@ -546,7 +546,11 @@ Direction: TypeAlias = Literal["up", "down", "same"]
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class CompareRow:
-    """One quantity of the reference and the current design."""
+    """One quantity of the reference and the current design.
+
+    A value cell joins number and unit with U+00A0 (ruling e1); a unitless value leaves "dimensionless" to the unit
+    column, so the value columns stay narrow enough for the Quantity column (U-S4g S28).
+    """
 
     quantity: str
     label: str
@@ -591,9 +595,9 @@ def compare_rows(reference: ComputeOutcome, current: ComputeOutcome) -> tuple[Co
                 CompareRow(
                     quantity=cur.quantity,
                     label=cur.label,
-                    reference_text=" ".join(split_value(ref.traceable.value, unit)),
-                    current_text=f"{cur.value_text} {cur.unit_text}",
-                    delta_text=_signed(" ".join(split_value(delta, unit)), delta),
+                    reference_text=format_quantity(ref.traceable.value, unit),
+                    current_text=format_quantity(cur.traceable.value, unit),
+                    delta_text=_signed(format_quantity(delta, unit), delta),
                     direction=_direction(delta),
                     unit_text=unit.display() or text("results.unit.dimensionless"),
                 )
