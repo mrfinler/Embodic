@@ -11,13 +11,14 @@ from embodic.geometry.labels import (
     Box,
     LabelAnchor,
     Viewport,
+    copper_reach_mm,
     copper_spots,
     label_anchors,
     pad_boxes,
     place_labels,
 )
 from embodic.geometry.layout import Layout
-from embodic.geometry.primitives import PrimitiveRole
+from embodic.geometry.primitives import Arc, Line, PrimitiveRole, primitive_length_mm
 from embodic.io.examples import examples_dir
 from embodic.model.vocabulary import Phase
 
@@ -174,3 +175,112 @@ def test_copper_spots_lie_on_each_phase_top_layer_copper() -> None:
     for phase, points in spots.items():
         ends = {q.start_point() for p in board.paths if p.phase is phase for q in p.primitives}
         assert points and ends & set(points), phase
+
+
+@functools.cache
+def _drawn_copper(example_id: str) -> tuple[tuple[Phase, float, tuple[float, float, float, float], tuple], ...]:
+    """Return each phase primitive as points 0.02 mm apart on its centre line, with its half width and bounding box.
+
+    Every layer counts: the canvas draws them all.
+    """
+    board = _board(example_id)
+    found = []
+    for path in board.paths:
+        for q in path.primitives:
+            if path.phase is None:
+                continue
+            steps = max(2, math.ceil(primitive_length_mm(q) / 0.02))
+            points = []
+            for k in range(steps + 1):
+                t = k / steps
+                if isinstance(q, Line):
+                    points.append((q.x1_mm + t * (q.x2_mm - q.x1_mm), q.y1_mm + t * (q.y2_mm - q.y1_mm)))
+                else:
+                    assert isinstance(q, Arc)
+                    points.append(q.point_at(q.start_rad + t * q.sweep_rad))
+            xs, ys = [x for x, _ in points], [y for _, y in points]
+            found.append((path.phase, q.width_mm / 2, (min(xs), min(ys), max(xs), max(ys)), tuple(points)))
+    return tuple(found)
+
+
+def _phases_with_copper_in(example_id: str, view: Viewport) -> set[Phase]:
+    """Return the phases whose drawn copper (centre line grown by half its width) meets the view."""
+    found = set()
+    for phase, half, (x0, y0, x1, y1), points in _drawn_copper(example_id):
+        if phase in found or x1 + half < view.x_min_mm or x0 - half > view.x_max_mm:
+            continue
+        if y1 + half < view.y_min_mm or y0 - half > view.y_max_mm:
+            continue
+        for x, y in points:
+            dx = max(view.x_min_mm - x, 0.0, x - view.x_max_mm)
+            dy = max(view.y_min_mm - y, 0.0, y - view.y_max_mm)
+            if math.hypot(dx, dy) < half:
+                found.add(phase)
+                break
+    return found
+
+
+def _canvas_size(text: str) -> tuple[float, float]:
+    return 24.5, 14.6  # the canvas font's widest spiral label, measured in the failing case
+
+
+@functools.cache
+def _anchors(example_id: str) -> tuple[LabelAnchor, ...]:
+    return label_anchors(_board(example_id))
+
+
+def _assert_ruling_h(example_id: str, view: Viewport, obstacles: list[Box]) -> None:
+    board = _board(example_id)
+    placed = place_labels(
+        _anchors(example_id),
+        view=view,
+        text_size=_canvas_size,
+        obstacles=obstacles,
+        ring_outer_mm=board.envelope_mm[1],
+        copper=copper_spots(board),
+        copper_reach_mm=copper_reach_mm(board),
+    )
+    in_view = _phases_with_copper_in(example_id, view)
+    assert in_view <= {p.phase for p in placed}
+    for p in placed:
+        w, h = (s / view.px_per_mm for s in _canvas_size(p.text))
+        assert view.x_min_mm <= p.x_mm - w / 2 and p.x_mm + w / 2 <= view.x_max_mm, p
+        assert view.y_min_mm <= p.y_mm - h / 2 and p.y_mm + h / 2 <= view.y_max_mm, p
+
+
+# The canvas of the failing Qt case (1280 x 800 window, zoom 4, centred low on the D08 ring): 576 x 331 px.
+D08_CORNER = Viewport(
+    x_min_mm=-29.064220183486242,
+    y_min_mm=-60.75229357798165,
+    x_max_mm=29.064220183486242,
+    y_max_mm=-27.34862385321101,
+    px_per_mm=9.909090909090908,
+)
+D08_LEGEND = Box(
+    x_min_mm=-28.256880733944957, y_min_mm=-35.42201834862386, x_max_mm=-17.86238532110092, y_max_mm=-28.155963302752294
+)
+
+
+def test_ruling_h_a_phase_whose_trace_only_crosses_a_corner_of_the_view_is_named() -> None:
+    """U-S4e ruling h. Catches DEF-M4e3b-02: a 2 mm trace that shows in a corner while its centre line stays outside.
+
+    Phase B's copper cut the top-right corner of the zoomed D08 view by 11 px, but every copper spot lay 0.26 mm or
+    more outside, and B went unlabelled.
+    """
+    assert Phase.B in _phases_with_copper_in("spiral_12c10p_d08", D08_CORNER)
+    _assert_ruling_h("spiral_12c10p_d08", D08_CORNER, [*pad_boxes(_board("spiral_12c10p_d08")), D08_LEGEND])
+
+
+@pytest.mark.parametrize("width_px", [160, 240, 320])
+def test_ruling_h_every_phase_with_copper_in_a_smaller_canvas_is_named(width_px) -> None:
+    """U-S4e ruling h. Catches the same edge miss in smaller canvases panned around the D08 ring at zoom 4."""
+    board = _board("spiral_12c10p_d08")
+    px = D08_CORNER.px_per_mm
+    half_w, half_h = width_px / 2 / px, width_px * 0.3 / px
+    r = board.envelope_mm[1] * 0.7
+    for k in range(24):
+        cx, cy = r * math.cos(k * math.tau / 24), r * math.sin(k * math.tau / 24)
+        view = Viewport(
+            x_min_mm=cx - half_w, y_min_mm=cy - half_h, x_max_mm=cx + half_w, y_max_mm=cy + half_h, px_per_mm=px
+        )
+        _assert_ruling_h("spiral_12c10p_d08", view, list(pad_boxes(board)))

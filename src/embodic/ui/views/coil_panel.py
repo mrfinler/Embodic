@@ -39,10 +39,11 @@ from embodic.ui.viewmodels.session import (
     feasibility_hints,
     parse_text,
 )
+from embodic.ui.views.widgets import check_box
 
 MIN_INPUT_PX = 72
 CHIP_COLUMN_PX = 72  # "example" and "default" fit; "measured" grows its row
-CHIP_PX = 20
+CHIP_PX = 24  # UX-AC-28, m4_review_2.md ruling k1
 TITLED_GROUPS = frozenset(
     {
         FieldGroup.OUTLINE,
@@ -197,6 +198,8 @@ class FieldEditor(QWidget):
         column.addLayout(line)
         column.addWidget(self.error)
         column.addWidget(self.hint)
+        self.label.setText(label_text(widget_id, "", str(spec.variant)))
+        announce(self.input, self.label.text(), self.unit.text())
 
     def _make_input(self, spec: FieldSpec) -> QWidget:
         if spec.value_type is ValueType.CHOICE and self.widget_id in SEGMENT_WIDGETS:
@@ -212,7 +215,7 @@ class FieldEditor(QWidget):
             box.activated.connect(lambda index: self._commit(box.itemData(index)))
             return box
         if spec.value_type is ValueType.BOOL:
-            check = QCheckBox()
+            check = check_box()
             check.clicked.connect(lambda checked: self._commit(bool(checked)))
             return check
         edit = QLineEdit()
@@ -271,8 +274,7 @@ class FieldEditor(QWidget):
         self._show_value(row)
         self._show_chip(row)
         self._show_message(row)
-        self.input.setAccessibleName(self.label.text())
-        self.input.setAccessibleDescription(" ".join(t for t in (self.unit.text(), self.hint.text()) if t))
+        announce(self.input, self.label.text(), " ".join(t for t in (self.unit.text(), self.hint.text()) if t))
 
     def _show_value(self, row: FieldRow) -> None:
         if isinstance(self.input, Segment):
@@ -493,8 +495,23 @@ def fit_width(table: QTableWidget) -> None:
     _apply_widths(table)
 
 
+def announce(control: QWidget, label: str, details: str = "") -> None:
+    """Name an input after its label; its description carries the unit and hint (WCAG 3.3.2, 4.1.2).
+
+    Qt on Linux announces a combo box by its current choice and a segment button by its option, never by the
+    accessible name, so their descriptions start with the label too.
+    """
+    labelled = ", ".join(t for t in (label, details) if t)
+    control.setAccessibleName(label)
+    control.setAccessibleDescription(labelled if isinstance(control, QComboBox) else details)
+    if isinstance(control, Segment):
+        for button in control.buttons.values():
+            button.setAccessibleDescription(labelled)
+
+
 def label_above(caption: str, control: QWidget) -> QWidget:
     """Return a helper row with its label above the control, as every field row has it (ruling g 2, F17)."""
+    announce(control, caption)
     row = QWidget()
     column = QVBoxLayout(row)
     column.setContentsMargins(0, 0, 0, 0)

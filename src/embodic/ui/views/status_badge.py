@@ -45,10 +45,10 @@ class StatusBadge(QWidget):
         self.status: Status | None = None
 
     def show_status(self, status: Status, reasons: tuple[str, ...], tokens: ThemeTokens) -> None:
-        """Show one status from the data (D-007); ``unresolved`` reads "estimate"."""
+        """Show one status from the data (D-007) by its word, as the PDF prints it (D-042c)."""
         self.status = status
         prop = badge_property(status)
-        self.label.setText(text(f"shell.badge.{prop}"))
+        self.label.setText(status.value)
         self.label.setProperty("status", prop)
         self.label.setAccessibleName(f"Status: {status.value}")
         self.label.setToolTip("; ".join(reasons))

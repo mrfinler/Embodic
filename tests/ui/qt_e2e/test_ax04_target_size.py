@@ -1,7 +1,7 @@
 """AX-04: every visible interactive widget has a clickable area of at least 24 x 24 px (WCAG 2.2 SC 2.5.8, REQ-N-13).
 
-A check box or radio button is measured by its click rectangle, indicator and label together, which must reach 32 px
-(phase 1 design review item 13; design_spec.md section "Control height 32 px. Hit targets 24 x 24 px or more").
+A check box or radio button is measured by the area its ``hitButton`` accepts, which must reach 32 px (UX-AC-28,
+m4_review_2.md ruling k2; design_spec.md section "Control height 32 px. Hit targets 24 x 24 px or more").
 The screens walked: the empty session, D08 with each inspector tab, each results tab and each toolstrip tab, and the
 New design, Examples and Export dialogs, at 1280 x 800.
 """
@@ -9,7 +9,7 @@ New design, Examples and Export dialogs, at 1280 x 800.
 from dataclasses import dataclass
 
 import pytest
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QPoint, Qt
 from PySide6.QtWidgets import (
     QAbstractButton,
     QAbstractItemView,
@@ -50,16 +50,8 @@ class Target:
         return min(self.width, self.height) < self.needed
 
 
-# Open defects found by this test on 2026-10-11 (U-M4e-2); the views and the QSS template are outside its scope.
-KNOWN_UNDERSIZED = {
-    "EqChip": "DEF-M4e2-01: EQ chips are 22 px tall (status_badge.py)",
-    "AssumptionTag": "DEF-M4e2-01: assumption tags are 22 px tall (status_badge.py)",
-    "QCheckBox": "DEF-M4e2-02: check box click rectangles are 20 px tall (results filters, layer toggles, exports)",
-    "QScrollBar": "DEF-M4e2-03: scroll bars are 12 px wide (theme_template.qss); WCAG's spacing exception is unruled",
-}
-
-
-def _check_rect(box: QCheckBox | QRadioButton) -> tuple[int, int]:
+def _hit_extent(box: QCheckBox | QRadioButton) -> tuple[int, int]:
+    """Return how wide and tall the area ``hitButton`` accepts is, on the lines through the style's click rectangle."""
     option = QStyleOptionButton()
     box.initStyleOption(option)
     element = (
@@ -67,8 +59,10 @@ def _check_rect(box: QCheckBox | QRadioButton) -> tuple[int, int]:
         if isinstance(box, QCheckBox)
         else QStyle.SubElement.SE_RadioButtonClickRect
     )
-    rect = box.style().subElementRect(element, option, box)
-    return rect.width(), rect.height()
+    centre = box.style().subElementRect(element, option, box).center()
+    width = sum(box.hitButton(QPoint(x, centre.y())) for x in range(box.width()))
+    height = sum(box.hitButton(QPoint(centre.x(), y)) for y in range(box.height()))
+    return width, height
 
 
 def _is_target(widget: QWidget) -> bool:
@@ -90,7 +84,8 @@ def targets(screen: str, root: QWidget) -> list[Target]:
             continue
         kind, name = type(widget).__name__, widget.objectName() or type(widget).__name__
         if isinstance(widget, (QCheckBox, QRadioButton)):
-            found.append(Target(screen, name, kind, *_check_rect(widget), CHECK_LABEL_MIN_PX))
+            kind = "QCheckBox" if isinstance(widget, QCheckBox) else "QRadioButton"
+            found.append(Target(screen, name, kind, *_hit_extent(widget), CHECK_LABEL_MIN_PX))
         elif isinstance(widget, QTabBar):
             for i in range(widget.count()):
                 rect = widget.tabRect(i)
@@ -132,19 +127,44 @@ def walk_screens(window, wait_drawn, qtbot) -> list[Target]:
 
 
 @pytest.mark.req("REQ-N-13")
-def test_ax04_every_interactive_widget_outside_the_open_defects_reaches_24_px_and_check_labels_32_px(
-    window, wait_drawn, qtbot
-):
-    """Catches a new undersized button, field, combo or tab; the open defects are the strict xfail below."""
+def test_ax04_every_interactive_widget_reaches_24_px_and_check_rows_32_px(window, wait_drawn, qtbot):
+    """Catches an undersized button, field, combo, tab, chip or scroll bar, or a check row under 32 px (DEF-M4e2-0x)."""
     found = walk_screens(window, wait_drawn, qtbot)
     assert len(found) > 150, "the walk reached the screens"
-    assert [t for t in found if t.undersized and t.kind not in KNOWN_UNDERSIZED] == []
+    assert {t.kind for t in found} >= {"EqChip", "AssumptionTag", "QCheckBox", "QScrollBar"}, "the walk met each kind"
+    assert [t for t in found if t.undersized] == []
 
 
 @pytest.mark.req("REQ-N-13")
-@pytest.mark.parametrize("kind", sorted(KNOWN_UNDERSIZED))
-def test_ax04_open_target_size_defects(kind, window, wait_drawn, qtbot, request):
-    """Fails while the defect stands; the strict mark makes the fix remove it."""
-    request.applymarker(pytest.mark.xfail(strict=True, reason=KNOWN_UNDERSIZED[kind]))
+def test_ax04_check_rows_take_a_click_in_their_whole_32_px_rectangle(window, wait_drawn, qtbot):
+    """DEF-M4e2-02. Catches a check box on any walked screen that accepts clicks only on its indicator and label."""
     found = walk_screens(window, wait_drawn, qtbot)
-    assert [t for t in found if t.kind == kind and t.undersized] == []
+    assert [t for t in found if t.kind == "QCheckBox" and t.undersized] == []
+
+
+@pytest.mark.req("REQ-N-13")
+def test_ax04_a_click_anywhere_in_a_check_row_toggles_the_box(window, wait_drawn, qtbot):
+    """UX-AC-28: catches a check box that takes a click only on its indicator and label, not the whole 32 px row."""
+    window.session.load_example(D08)
+    wait_drawn(window)
+    box = window.layer_boxes["L1"]
+    assert box.height() >= CHECK_LABEL_MIN_PX
+    for point in (QPoint(1, 1), QPoint(box.width() - 2, box.height() - 2)):
+        before = box.isChecked()
+        qtbot.mouseClick(box, Qt.MouseButton.LeftButton, pos=point)
+        assert box.isChecked() is not before, point
+
+
+@pytest.mark.req("REQ-N-13")
+def test_ax04_a_click_on_the_label_text_toggles_the_box(window, wait_drawn, qtbot):
+    """UX-AC-28: catches a whole-row hit test that loses the label itself, the target users aim at first."""
+    window.session.load_example(D08)
+    wait_drawn(window)
+    box = window.layer_boxes["L1"]
+    option = QStyleOptionButton()
+    box.initStyleOption(option)
+    label = box.style().subElementRect(QStyle.SubElement.SE_CheckBoxContents, option, box)
+    assert label.width() > 0 and box.rect().contains(label.center())
+    before = box.isChecked()
+    qtbot.mouseClick(box, Qt.MouseButton.LeftButton, pos=label.center())
+    assert box.isChecked() is not before

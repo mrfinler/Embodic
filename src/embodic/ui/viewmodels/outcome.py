@@ -1,4 +1,4 @@
-"""What the shell shows of one compute: state machine, summary strip and the drawable geometry. Qt-free.
+"""What the shell shows of one compute: state machine and the drawable geometry. Qt-free.
 
 Every compute request carries a growing id. The worker cancels the run it supersedes, and this view-model drops any
 result whose id is not the latest, so a late result can never replace a newer one (latest wins, REQ-N-02).
@@ -17,6 +17,7 @@ from embodic.geometry.labels import (
     PlacedLabel,
     TextSize,
     Viewport,
+    copper_reach_mm,
     copper_spots,
     label_anchors,
     pad_boxes,
@@ -30,9 +31,6 @@ from embodic.model.design import DesignParameters
 from embodic.model.provenance import ProvenanceMap
 from embodic.model.vocabulary import Phase, TopologyKind
 from embodic.outcome import ComputeOutcome
-from embodic.results import Traceable
-from embodic.results.formatting import format_value
-from embodic.results.status import Status
 from embodic.ui.strings import text
 from embodic.ui.viewmodels.observable import Observable
 
@@ -54,17 +52,6 @@ class ComputeSubmitter(Protocol):
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class SummaryItem:
-    """One cell of the summary strip."""
-
-    key: str  # objectName of the cell
-    label: str
-    value_text: str
-    status: Status | None  # trust badge from the data (D-007)
-    assumed_count: int | None
-
-
-@dataclass(frozen=True, slots=True, kw_only=True)
 class BoardMarks:
     """What the view draws over one board's copper, from the module the exports use too (ruling a 3, ruling b).
 
@@ -77,6 +64,7 @@ class BoardMarks:
     pads: tuple[Box, ...]  # labels keep clear of these
     label_of_path: Mapping[int, str]
     copper: CopperSpots  # where a label may move when its anchor or leader would leave the view
+    copper_reach_mm: float  # how far drawn copper reaches past its nearest copper spot
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -101,7 +89,6 @@ class OutcomeReady:
 
     state: Literal["ready"] = "ready"
     outcome: ComputeOutcome
-    summary: tuple[SummaryItem, ...]
     scene: GeometryScene | None
 
 
@@ -218,27 +205,6 @@ class OutcomeViewModel:
         self.hidden_layers.set(frozenset() if solo is None else frozenset(scene.layers) - {solo})
 
 
-def _traceable_item(key: str, label_key: str, t: Traceable[float] | None) -> SummaryItem:
-    return SummaryItem(
-        key=key,
-        label=text(label_key),
-        value_text=text("shell.sum.no-value") if t is None else format_value(t),
-        status=None if t is None else t.status,
-        assumed_count=None if t is None else len(t.assumed_inputs),
-    )
-
-
-def summarise(outcome: ComputeOutcome) -> tuple[SummaryItem, ...]:
-    """Return the summary strip: Ke line peak and R phase with their trust badges."""
-    analysis = outcome.analysis
-    return (
-        _traceable_item("sum-ke", "shell.sum-ke.label", analysis.ke_line_peak_v_s_per_rad if analysis else None),
-        _traceable_item(
-            "sum-r-phase", "shell.sum-r-phase.label", analysis.resistance_phase_operating_ohm if analysis else None
-        ),
-    )
-
-
 def _label_of_path(board: Layout, anchors: tuple[LabelAnchor, ...]) -> dict[int, str]:
     """Return, per copper path, the text of the label anchored on it or, for a spiral eye, inside its innermost turn."""
     layers = top_layer_of_each_phase(board)
@@ -262,6 +228,7 @@ def board_marks(board: Layout) -> BoardMarks:
         pads=pad_boxes(board),
         label_of_path=_label_of_path(board, anchors),
         copper=copper_spots(board),
+        copper_reach_mm=copper_reach_mm(board),
     )
 
 
@@ -303,6 +270,7 @@ def place_in_view(
     obstacles: Sequence[Box],
     ring_outer_mm: float,
     copper: CopperSpots,
+    copper_reach_mm: float,
 ) -> tuple[PlacedLabel, ...]:
     """Place labels so that each phase with copper in view names itself inside the view, at every zoom and pan.
 
@@ -319,7 +287,13 @@ def place_in_view(
         replace(a, forced=False) for a in anchors if id(a) not in firsts and not (a.forced and _group(a) not in groups)
     ]
     return place_labels(
-        forced + rest, view=view, text_size=text_size, obstacles=obstacles, ring_outer_mm=ring_outer_mm, copper=copper
+        forced + rest,
+        view=view,
+        text_size=text_size,
+        obstacles=obstacles,
+        ring_outer_mm=ring_outer_mm,
+        copper=copper,
+        copper_reach_mm=copper_reach_mm,
     )
 
 
@@ -384,4 +358,4 @@ def counts_text(scene: GeometryScene, topology: TopologyKind) -> str:
 
 def ready_state(outcome: ComputeOutcome) -> OutcomeReady:
     """Build what the shell shows of an outcome; the worker calls this off the GUI thread."""
-    return OutcomeReady(outcome=outcome, summary=summarise(outcome), scene=geometry_scene(outcome))
+    return OutcomeReady(outcome=outcome, scene=geometry_scene(outcome))

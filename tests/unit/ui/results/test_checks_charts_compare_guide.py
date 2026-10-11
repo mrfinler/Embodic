@@ -140,12 +140,22 @@ def test_tick_labels_use_the_unicode_minus():
 
 @pytest.mark.req("REQ-F-17", "REQ-L-08")
 def test_ui10_compare_current_column_equals_the_single_design_results(d08, spiral_14p):
-    """Catches a comparison that recomputes or reformats a value differently from the Results tab."""
+    """Catches a comparison that recomputes or reformats a value differently from the Results tab.
+
+    A cell joins number and unit with U+00A0 (ruling e1); a unitless value is the number alone, its unit column says
+    "dimensionless".
+    """
+
+    def cell(single):
+        unit = single.traceable.unit.display()
+        return f"{single.value_text}\u00a0{single.unit_text}" if unit else single.value_text
+
     rows = {r.quantity: r for r in compare_rows(d08, spiral_14p)}
     for single in result_rows(spiral_14p.analysis):
-        assert rows[single.quantity].current_text == f"{single.value_text} {single.unit_text}"
+        assert rows[single.quantity].current_text == cell(single)
     for single in result_rows(d08.analysis):
-        assert rows[single.quantity].reference_text == f"{single.value_text} {single.unit_text}"
+        assert rows[single.quantity].reference_text == cell(single)
+    assert rows["winding_factor_1"].unit_text == "dimensionless"
 
 
 @pytest.mark.req("REQ-L-08")
@@ -193,8 +203,22 @@ def test_ui17_every_register_entry_shows_the_registry_content(registry):
             assert any(v.startswith(f"{ev_id}: ") and (ev is None or ev.location in v) for v in values), ev_id
         for test_id in entry.tests:
             assert ("Tests", test_id) in rows
-        for assumption in entry.dominant_assumptions:
-            assert ("Dominant assumptions", assumption) in rows
+        listed = [v for h, v in rows if h == "Dominant assumptions"]
+        assert all(any(assumption in v for v in listed) for assumption in entry.dominant_assumptions), eq_id
+
+
+@pytest.mark.req("REQ-F-26")
+def test_s32_register_hides_empty_fields_and_lists_dominant_assumptions_in_one_row(registry):
+    """U-S4g S32. Catches "Label None" or "Implementation None" (Python's None printed), or one row per assumption."""
+    with_two = [eq for eq, e in registry.equations.items() if len(e.dominant_assumptions) > 1]
+    without_label = [eq for eq, e in registry.equations.items() if not e.label or not e.implementation]
+    assert with_two and without_label, "precondition: the register has both kinds of entry"
+    for eq_id, entry in registry.equations.items():
+        rows = equation_topic(eq_id, registry).rows
+        assert [(h, v) for h, v in rows if not v.strip() or v == "None"] == [], eq_id
+        listed = [v for h, v in rows if h == "Dominant assumptions"]
+        assert len(listed) == (1 if entry.dominant_assumptions else 0), eq_id
+        assert all(a in listed[0].splitlines() for a in entry.dominant_assumptions), eq_id
 
 
 @pytest.mark.req("REQ-F-26")
@@ -209,3 +233,13 @@ def test_ui17_guide_tree_has_the_four_groups_and_every_equation(registry):
         START_TOPIC,
         START_TOPIC,
     )
+
+
+@pytest.mark.req("REQ-F-33")
+def test_drc_measured_and_required_print_the_same_six_decimals(wave):
+    """U-S4g S25. Catches "0.200000" beside "3.00000": six figures give a value of 3 mm one decimal fewer."""
+    first = wave.drc[0].violations[0]
+    widened = dataclasses.replace(first, measured_mm=0.2, required_mm=3.0)
+    report = dataclasses.replace(wave.drc[0], violations=(widened, *wave.drc[0].violations[1:]))
+    row = drc_table(dataclasses.replace(wave, drc=(report, *wave.drc[1:]))).rows[0]
+    assert (row.measured_text, row.required_text) == ("0.200000\u00a0mm", "3.000000\u00a0mm")

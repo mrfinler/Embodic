@@ -18,4 +18,4 @@ after opening its tab. The canvas zooms with `window.canvas.zoom_by(3)` and fits
 
 ## Gotchas
 
-A toolstrip button on a hidden tab is not visible, so open its tab first. Offscreen Qt draws no tooltip (S09).
+A toolstrip button on a hidden tab is not visible, so open its tab first. A tooltip or an open combo list is a top-level window that `grab()` leaves out: show it with `QToolTip.showText` or `showPopup()`, and `Run.save` paints it over the window (S09, S18). PySide reports these windows as `QLabel` and `QFrame`; `metaObject().className()` gives `QTipLabel` and `QComboBoxPrivateContainer`.

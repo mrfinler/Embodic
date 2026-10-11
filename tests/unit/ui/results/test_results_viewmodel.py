@@ -149,3 +149,18 @@ def test_card_keys_keep_the_phase1_ids():
     phase1 += ["temperature_rise_k", "current_density_a_per_mm2"]
     assert [result_key(q) for q in phase1] == ["r-phase", "ke", "kt", "ls", "dt", "j"]
     assert result_key("loss_total_w") == "loss-total-w"
+
+
+@pytest.mark.req("REQ-N-15")
+def test_def_uv4_07_a_row_names_label_value_unit_and_status_in_one_accessible_text(d08):
+    """WCAG 4.1.2. Catches a result whose announced name lacks its quantity, number, unit or trust status."""
+    rows = rows_by_quantity(d08)
+    assert rows["resistance_phase_operating_ohm"].accessible_name == (
+        "Phase resistance at operating temperature R_ph, 502 milliohm, not tested"
+    )
+    assert rows["winding_factor_1"].accessible_name == (
+        "Fundamental winding factor k_w1, 0.483 dimensionless, not tested"
+    )
+    assert rows["inductance_estimate_h"].accessible_name == (
+        "Inductance, estimate L_m, 1.34 microhenry, unresolved, estimate"
+    )

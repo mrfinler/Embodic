@@ -92,13 +92,17 @@ class ResultsRail(QWidget):
     def show_cards(self, cards: tuple[StatusCard, ...] | None, tokens: ThemeTokens, *, stale: bool) -> None:
         """Show the verdicts and the key cards of the outcome on screen; None shows the empty sentence."""
         self.empty.setVisible(cards is None)
-        for widget in (*self.checks.values(), *self.cards.values()):
-            widget.setVisible(cards is not None)
-        if cards is None:
+        shown = {card.key: card for card in cards or ()}
+        for key, check in self.checks.items():
+            check.setVisible(key in shown)
+            if key in shown:
+                check.show_card(shown[key], tokens)
+        drc = shown.get("rail-drc")
+        self.drc_link.setVisible(drc is not None and drc.state == "fail")
+        for card in self.cards.values():
+            card.setVisible(drc is not None)
+        if drc is None:
             return
-        for card in cards:
-            self.checks[card.key].show_card(card, tokens)
-        self.drc_link.setVisible(any(card.key == "rail-drc" and card.state == "fail" for card in cards))
         for key, quantity in KEY_CARDS.items():
             try:
                 row = self.vm.row(quantity)

@@ -7,7 +7,8 @@ import math
 
 import pytest
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QInputDialog, QLabel, QTableWidget, QToolButton
+from PySide6.QtGui import QAccessible
+from PySide6.QtWidgets import QComboBox, QInputDialog, QLabel, QLineEdit, QTableWidget, QToolButton
 from tests.ui.qt_design.conftest import enter, find
 from tests.ui.qt_design.test_editing import no_compute
 
@@ -192,3 +193,37 @@ def test_phase_balance_status_and_manual_assignment_follow_the_winding_plan(make
     enter(qtbot, window, "param-coil-count", "11")
     wait_computed(window)
     assert status.text() == "Not balanced: choose 9, 12 or 15 coils."
+
+
+def _announced(widget) -> str:
+    iface = QAccessible.queryAccessibleInterface(widget)
+    return f"{iface.text(QAccessible.Text.Name)} | {iface.text(QAccessible.Text.Description)}"
+
+
+@pytest.mark.req("REQ-N-16")
+def test_def_uv4_05_06_combo_boxes_segment_buttons_and_pattern_fields_announce_their_field_label(
+    make_shell, wait_computed
+):
+    """WCAG 3.3.2, 4.1.2 (AX-06 proxy). Catches an input announced without its field label.
+
+    On e693046 a combo box or segment button announced only its value ("Circle", "Delta") and the screw pattern fields
+    announced nothing.
+    """
+    window = make_shell().window
+    window.session.load_example(D08)
+    wait_computed(window)
+    captions = {label.buddy(): label.text() for label in window.findChildren(QLabel) if label.buddy() is not None}
+    inputs = []
+    for widget in window.findChildren(QComboBox) + window.findChildren(QToolButton) + window.findChildren(QLineEdit):
+        owner = widget.parentWidget() if isinstance(widget.parentWidget(), Segment) else widget
+        if owner.objectName().startswith("param-") and (owner is not widget or not isinstance(widget, QToolButton)):
+            inputs.append((widget, owner))
+    kinds = {type(widget).__name__ for widget, _ in inputs}
+    assert {"QComboBox", "QToolButton", "QLineEdit"} <= kinds, kinds
+    assert {"param-screw-angle-offset", "param-screw-hole-diameter"} <= {owner.objectName() for _, owner in inputs}
+    unnamed = [
+        (owner.objectName(), widget.text() if isinstance(widget, QToolButton) else "", _announced(widget))
+        for widget, owner in inputs
+        if captions.get(owner, "") == "" or captions[owner] not in _announced(widget)
+    ]
+    assert unnamed == []

@@ -48,6 +48,7 @@ from embodic.ui.viewmodels.appearance import (
     COMPACT_BELOW_PX,
     RESULTS_MIN_PX,
     AppearanceViewModel,
+    PhaseRenderMode,
     split_sizes,
 )
 from embodic.ui.viewmodels.export import PRESETS, ExportViewModel
@@ -67,6 +68,7 @@ from embodic.ui.viewmodels.results import (
     DrcRow,
     DrcTable,
     ResultsViewModel,
+    StatusCard,
     drc_card,
     drc_table,
     inputs_card,
@@ -83,7 +85,7 @@ from embodic.ui.views import style
 from embodic.ui.views.board_rotor_panel import BoardRotorPanel
 from embodic.ui.views.charts import BackEmfTab, TorqueSpeedTab
 from embodic.ui.views.checks_view import DrcTab, locate_on_canvas
-from embodic.ui.views.coil_panel import CoilPanel, FieldPanel
+from embodic.ui.views.coil_panel import CoilPanel, FieldPanel, label_text
 from embodic.ui.views.equation_view import GuideWindow
 from embodic.ui.views.examples_gallery import ExamplesGallery
 from embodic.ui.views.export_view import ExportDialog
@@ -94,6 +96,7 @@ from embodic.ui.views.phase_panel import PhasePanel
 from embodic.ui.views.results_rail import ResultsRail
 from embodic.ui.views.results_view import CompareTab, ResultsTab, focus_ring_qss
 from embodic.ui.views.toolstrip_bar import CommandTable, ToolstripBar
+from embodic.ui.views.widgets import check_box
 
 logger = logging.getLogger(__name__)
 
@@ -166,6 +169,11 @@ class MainWindow(QMainWindow):
             available.subscribe(action.setEnabled)
         appearance.theme.subscribe(lambda _: self.apply_theme())
         appearance.phase_render_mode.subscribe(lambda _: self._render())
+        greyscale = self.toolstrip.actions_by_id["act-greyscale"]
+        greyscale.setCheckable(True)
+        appearance.phase_render_mode.subscribe(
+            lambda mode: greyscale.setChecked(mode is PhaseRenderMode.GREYSCALE_HATCH)
+        )
         self.canvas.cursor_moved.connect(self._show_cursor)
         self.canvas.board_step.connect(outcome.step_board)
         self.canvas.layer_step.connect(outcome.step_layer_solo)
@@ -243,6 +251,9 @@ class MainWindow(QMainWindow):
         self.issues_list.itemActivated.connect(self._issue_activated)
         self.issues_list.itemClicked.connect(self._issue_activated)
         self.issues_list.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.MinimumExpanding)
+        self.issues_list.setWordWrap(True)
+        self.issues_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.issues_list.setResizeMode(QListWidget.ResizeMode.Adjust)
         self.issue_apply = QPushButton()
         self.issue_apply.setObjectName("btn-apply-suggestion")
         self.issue_apply.clicked.connect(self._apply_selected_suggestion)
@@ -437,19 +448,32 @@ class MainWindow(QMainWindow):
         self.required_count.setText(
             text("new-required-count.one") if missing == 1 else text("new-required-count.text", count=missing)
         )
-        self.required_bar.setVisible(drafting)
+        self.required_bar.setVisible(missing > 0)
         compute = self.toolstrip.actions_by_id["act-compute"]
         compute.setEnabled(not drafting)
         head = text("act-compute.label") + f" ({compute.shortcut().toString()})."
-        reason = f"{self.required_count.text()}." if drafting else text("act-compute.tooltip")
+        if missing:
+            reason = f"{self.required_count.text()}."
+        elif drafting:
+            reason = self._invalid_fields_text()
+        else:
+            reason = text("act-compute.tooltip")
         compute.setToolTip(f"{head} {reason}")
         self.setWindowTitle(self.session.title())
+        self._show_issues()
         self._render()
+
+    def _invalid_fields_text(self) -> str:
+        fields = {found.pointers[0] for found in self.session.issues.value if found.pointers}
+        count = len(fields)
+        return text("design.stale.invalid-one") if count == 1 else text("design.stale.invalid-many", count=count)
 
     def _show_stale(self, outdated: bool) -> None:
         state = self.session.state.value
-        if isinstance(state, SessionDrafting):
+        if isinstance(state, SessionDrafting) and state.missing:
             message = text("design.stale.drafting", count=len(state.missing))
+        elif isinstance(state, SessionDrafting):
+            message = self._invalid_fields_text()
         else:
             message = text("design.stale.invalid")
         self.stale_label.setText(message)
@@ -457,12 +481,21 @@ class MainWindow(QMainWindow):
 
     def _show_issues(self) -> None:
         self.issues_list.clear()
+        state = self.session.state.value
+        missing = state.missing if isinstance(state, SessionDrafting) else ()
+        if isinstance(state, SessionDrafting):
+            for pointer in state.missing:
+                widget_id = widget_for_pointer(pointer, state.draft) or pointer
+                label = label_text(widget_id, state.draft.topology.value)
+                item = QListWidgetItem(text("rail.issues.missing", label=label))
+                item.setData(Qt.ItemDataRole.UserRole, pointer)
+                self.issues_list.addItem(item)
         for found in self.session.issues.value:
             item = QListWidgetItem(found.message)
             item.setData(Qt.ItemDataRole.UserRole, found)
             item.setToolTip(found.code)
             self.issues_list.addItem(item)
-        if not self.session.issues.value:
+        if not self.session.issues.value and not missing:
             self.issues_list.addItem(QListWidgetItem(text("rail.issues.none")))
         self._show_apply()
 
@@ -485,7 +518,9 @@ class MainWindow(QMainWindow):
 
     def _issue_activated(self, item: QListWidgetItem) -> None:
         found = item.data(Qt.ItemDataRole.UserRole)
-        if isinstance(found, ValidationIssue) and found.pointers:
+        if isinstance(found, str):
+            self.focus_pointer(found)
+        elif isinstance(found, ValidationIssue) and found.pointers:
             self.focus_pointer(found.pointers[0])
 
     def _show_notice(self) -> None:
@@ -605,7 +640,12 @@ class MainWindow(QMainWindow):
         outcome = shown.outcome if shown else None
         table = drc_table(outcome)
         self._render_results(state, outcome, table, outdated)
-        cards = None if table is None else (inputs_card(self.session.issues.value), drc_card(table))
+        session_state = self.session.state.value
+        missing = len(session_state.missing) if isinstance(session_state, SessionDrafting) else 0
+        inputs = inputs_card(self.session.issues.value, missing)
+        cards: tuple[StatusCard, ...] | None = (inputs,) if inputs.state == "fail" else None
+        if table is not None:
+            cards = (inputs, drc_card(table))
         self.rail.show_cards(cards, self.tokens, stale=outdated)
         for action_id in EXPORT_ACTIONS:
             self.toolstrip.actions_by_id[action_id].setEnabled(shown is not None)
@@ -661,7 +701,7 @@ class MainWindow(QMainWindow):
                 box.deleteLater()
             self.layer_boxes = {}
             for index, layer in enumerate(layers):
-                box = QCheckBox(layer)
+                box = check_box(layer)
                 box.setObjectName(f"layer-{layer}")
                 box.toggled.connect(lambda checked, name=layer: self.outcome.set_layer_visible(name, checked))
                 self.layer_bar_layout.insertWidget(1 + index, box)

@@ -7,6 +7,8 @@ shows are the same text as ``shell.sum-ke.label`` and ``shell.sum-r-phase.label`
 from collections.abc import Mapping
 from types import MappingProxyType
 
+from embodic.results.formatting import UNIT_SPACE
+
 QUANTITY_LABELS: Mapping[str, str] = MappingProxyType(
     {
         "ke_phase_v_s_per_rad": "Phase back-EMF constant, fundamental",  # EQ-09 Ke_ph
@@ -15,7 +17,7 @@ QUANTITY_LABELS: Mapping[str, str] = MappingProxyType(
         "kt_n_m_per_a": "Torque constant per line current, rms",  # EQ-09 Kt
         "kv_rpm_per_v": "Speed constant",  # EQ-09 K_v
         "winding_factor_1": "Fundamental winding factor",  # EQ-08 k_w1
-        "resistance_phase_20c_ohm": "Phase resistance at 20 °C",  # EQ-10
+        "resistance_phase_20c_ohm": f"Phase resistance at 20{UNIT_SPACE}°C",  # EQ-10
         "resistance_phase_operating_ohm": "Phase resistance at operating temperature",  # EQ-10
         "resistance_line_ohm": "Line-to-line resistance",  # EQ-23
         "emf_phase_rms_v": "Phase back-EMF, rms",

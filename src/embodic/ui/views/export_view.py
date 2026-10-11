@@ -14,7 +14,6 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QPushButton,
-    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -25,6 +24,7 @@ from embodic.ui.theme import ThemeTokens
 from embodic.ui.viewmodels.export import FORMAT_OPTIONS, ExportFormat, ExportViewModel, ExportWritten, selection_problem
 from embodic.ui.views.dialogs import ExportConfirmDialog
 from embodic.ui.views.style import themed_icon
+from embodic.ui.views.widgets import check_box
 
 CHECK_ICONS = {"pass": "check-pass", "fail": "check-fail", "warn": "check-warn"}
 
@@ -48,7 +48,7 @@ class ExportDialog(QDialog):
         title.setProperty("class", "section-title")
         formats.addWidget(title)
         for option in FORMAT_OPTIONS:
-            box = QCheckBox(option.label)
+            box = check_box(option.label)
             box.setObjectName(option.widget_id)
             reason = unavailable.get(option.choice)
             box.setEnabled(reason is None)
@@ -61,9 +61,8 @@ class ExportDialog(QDialog):
         self.folder.setObjectName("export-folder")
         self.folder.setPlaceholderText(text("export.folder.placeholder"))
         self.folder.textChanged.connect(self._update_problem)
-        browse = QToolButton()
+        browse = QPushButton(text("export.folder.browse"))  # secondary: the QPushButton boundary (ruling i)
         browse.setObjectName("btn-export-browse")
-        browse.setText(text("export.folder.browse"))
         browse.clicked.connect(self._browse)
         folder_line = QHBoxLayout()
         folder_line.addWidget(QLabel(text("export.folder")))

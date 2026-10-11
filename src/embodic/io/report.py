@@ -42,7 +42,7 @@ from embodic.units import Unit
 
 MARGIN = 50.0
 ROW = 11.0
-DIMENSIONLESS = "(dimensionless)"
+DIMENSIONLESS = "dimensionless"  # the word the result cards print (D-042d)
 INK = "#141414"
 LAND = "#666666"
 DRILL = "#ffffff"

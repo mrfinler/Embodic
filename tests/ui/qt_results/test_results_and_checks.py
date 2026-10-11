@@ -4,12 +4,13 @@ import dataclasses
 
 import pytest
 from PySide6.QtCore import QPropertyAnimation, QRect, Qt
-from PySide6.QtGui import QGuiApplication
+from PySide6.QtGui import QAccessible, QGuiApplication, qGray
 from PySide6.QtWidgets import QApplication, QLabel, QListWidget, QPushButton, QWidget
 from tests.ui.qt_results.conftest import find
 
 from embodic.api import compute
 from embodic.results.status import Status
+from embodic.ui.theme import ThemeName
 from embodic.ui.views.geometry_view import DATA_KIND
 
 D08, WAVE = "spiral_12c10p_d08", "wave_16p_example"
@@ -59,17 +60,21 @@ def test_ui06_the_badge_comes_from_the_data(make_window, load):
 
 
 @pytest.mark.req("REQ-F-11", "REQ-F-20", "REQ-T-05")
-def test_ui07_estimate_cards_show_the_estimate_badge_and_their_label(make_window, load):
-    """Catches an EQ-14 or EQ-15 card without its label or with a stronger badge."""
+def test_ui07_estimate_cards_show_the_status_word_and_their_label_beside_it(make_window, load):
+    """UI-07, D-042c, DEF-UV4-04. Catches a card without its label, a stronger badge, or "estimate" as the badge."""
     cards = load(make_window(), D08).results_tab.cards
     ls, ipc = cards["ls"], cards["ipc-guideline-current-a"]
     assert (ls.badge.label.property("status"), ls.badge.label.text(), ls.estimate.text()) == (
         "unresolved",
-        "estimate",
+        "unresolved",
         "estimate",
     )
     assert ls.badge.label.accessibleName() == "Status: unresolved"
-    assert (ipc.badge.label.property("status"), ipc.estimate.text()) == ("unresolved", "guideline (unverified)")
+    assert (ipc.badge.label.property("status"), ipc.badge.label.text(), ipc.estimate.text()) == (
+        "unresolved",
+        "unresolved",
+        "guideline (unverified)",
+    )
 
 
 @pytest.mark.req("REQ-T-16", "REQ-T-13")
@@ -226,3 +231,75 @@ def test_inputs_card_counts_the_issues_of_the_input_issues_list(make_window, loa
     value = find(window, QLabel, "rail-inputs-value")
     assert value.text() == (f"{len(listed)} input issues" if len(listed) > 1 else "1 input issue")
     assert value.property("state") == "fail"
+
+
+def overlapping_labels(host: QWidget) -> list[tuple[str, str]]:
+    """Return each pair of visible, non-empty labels under ``host`` whose rectangles intersect (in host coordinates)."""
+    boxes = [
+        (label.text()[:40], QRect(label.mapTo(host, label.rect().topLeft()), label.size()))
+        for label in host.findChildren(QLabel)
+        if label.isVisibleTo(host) and label.text()
+    ]
+    return [(a, b) for i, (a, ra) in enumerate(boxes) for b, rb in boxes[i + 1 :] if ra.intersects(rb)]
+
+
+@pytest.mark.req("REQ-T-13", "REQ-N-15")
+@pytest.mark.parametrize("size", [(960, 540), (1280, 800), (1600, 900)])
+def test_open_disclosure_lays_out_again_at_each_width_so_no_line_prints_over_another(make_window, load, size):
+    """U-S4g S22 (critical). Catches section lines of an earlier layout left on screen over the new ones.
+
+    The S22 lever opens R_ph, then resizes and switches theme with the section open; it pumps events without an event
+    loop, so a label waiting for ``deleteLater`` stays visible. The check runs at that same point.
+    Under 620 px tall the resize brings the Drawing tab forward, so the Results tab comes back before the check: a
+    hidden tab is never laid out, and the check read its stale or default geometry (order dependent).
+    """
+    QApplication.setEffectEnabled(Qt.UIEffect.UI_General, False)
+    window = load(make_window(), D08)
+    window.show_results_tab("tab-results")
+    card = window.results_tab.cards["r-phase"]
+    card.how_toggle.click()
+    window.resize(*size)
+    window.show_results_tab("tab-results")
+    window.appearance.set_theme(ThemeName.DARK)
+    for _ in range(10):
+        QApplication.processEvents()
+    assert "Assumptions" in card.disclosure_text(), "precondition: the section is open"
+    assert overlapping_labels(window.results_tab.grid_host) == []
+
+
+@pytest.mark.req("REQ-N-15")
+def test_def_uv4_07_every_result_card_announces_label_value_unit_and_status(make_window, load):
+    """WCAG 4.1.2, AX-06 proxy. Catches a card whose accessible name is empty or lacks the number, unit or status."""
+    window = load(make_window(), D08)
+    names = {}
+    for key, card in window.results_tab.cards.items():
+        iface = QAccessible.queryAccessibleInterface(card)
+        names[key] = iface.text(QAccessible.Text.Name)
+        row = card.row
+        assert names[key].startswith(f"{row.title}, {row.value_text} "), key
+        assert f", {row.status.value}" in names[key][len(row.title) :], key
+    assert len(names) == 30
+    assert names["r-phase"] == "Phase resistance at operating temperature R_ph, 502 milliohm, not tested"
+    value = QAccessible.queryAccessibleInterface(find(window.results_tab, QLabel, "res-r-phase-value"))
+    assert value.text(QAccessible.Text.Name) == "502"
+
+
+def darkest_grey(card: QWidget, part: QWidget) -> int:
+    """Return the darkest grey level the card paints inside one of its parts (0 black, 255 white)."""
+    image = card.grab(QRect(part.mapTo(card, part.rect().topLeft()), part.size())).toImage()
+    return min(qGray(image.pixel(x, y)) for x in range(image.width()) for y in range(image.height()))
+
+
+@pytest.mark.req("REQ-F-14")
+def test_ux_ac_15_stale_cards_dim_value_unit_and_badge(make_window, load):
+    """U-S4g S23. Catches last valid results drawn at full ink, so they read as current (value read 20, 20, 20)."""
+    window = load(make_window(), D08)
+    window.show_results_tab("tab-results")
+    card = window.results_tab.cards["r-phase"]
+    parts = {"value": card.value, "unit": card.unit, "badge": card.badge}
+    fresh = {name: darkest_grey(card, part) for name, part in parts.items()}
+    window.results.show(window.session.current_outcome().analysis, stale=True)
+    QApplication.processEvents()
+    assert window.results_tab.stale_stamp.isVisible(), "precondition: the results are marked stale"
+    stale = {name: darkest_grey(card, part) for name, part in parts.items()}
+    assert {name: stale[name] - fresh[name] >= 40 for name in parts} == dict.fromkeys(parts, True), (fresh, stale)

@@ -1,6 +1,7 @@
 """UT-UNI-03 and UT-RES-04: engineering number formatting, locale independence and unit symbols (REQ-L-07)."""
 
 import json
+import math
 import shutil
 import subprocess
 import sys
@@ -9,7 +10,7 @@ from pathlib import Path
 import pytest
 
 import embodic
-from embodic.results.formatting import format_quantity, format_value
+from embodic.results.formatting import UNIT_SPACE, format_fixed, format_quantity, format_value, spoken_quantity
 from embodic.results.traceable import traced
 from embodic.units import Unit
 
@@ -91,3 +92,40 @@ def test_formatting_identical_under_german_and_thai_locale(compiled_locales, loc
     )
     assert completed.returncode == 0, completed.stderr
     assert json.loads(completed.stdout) == [format_quantity(v, Unit(u)) for v, u in values]
+
+
+@pytest.mark.req("REQ-N-16", "REQ-L-07")
+@pytest.mark.parametrize(
+    ("value", "unit", "spoken"),
+    [
+        (0.502, Unit.OHM, "502 milliohm"),
+        (0.0181, Unit.V_S_PER_RAD, "18.1 millivolt-second per radian"),
+        (1.34e-6, Unit.H, "1.34 microhenry"),
+        (9.59, Unit.K, "9.59 kelvin"),
+        (47.9, Unit.A_PER_MM2, "47.9 ampere per square millimetre"),
+        (-2.5, Unit.W, "−2.50 watt"),
+        (0.483, Unit.ONE, "0.483"),
+    ],
+)
+def test_spoken_quantity_names_the_prefix_and_unit_in_words(value, unit, spoken):
+    """DEF-UV4-07. Catches a screen-reader text that reads a symbol ("m ohm") or a prefix that differs from the card."""
+    assert spoken_quantity(value, unit) == spoken
+    number = format_quantity(value, unit).partition(UNIT_SPACE)[0]
+    assert spoken.startswith(number + " ") or spoken == number
+
+
+@pytest.mark.req("REQ-N-16")
+def test_every_unit_has_words():
+    """Catches a unit added to `Unit` without its spoken words, which would fail only when a result first uses it."""
+    assert [u for u in Unit if spoken_quantity(1.0, u) == "1.00" and u.display()] == []
+
+
+@pytest.mark.req("REQ-L-07", "REQ-F-33")
+@pytest.mark.parametrize(
+    ("value", "text"),
+    [(0.2, "0.200000\u00a0mm"), (3.0, "3.000000\u00a0mm"), (0.199965, "0.199965\u00a0mm"), (-1.5, "−1.500000\u00a0mm")],
+)
+def test_format_fixed_prints_a_set_number_of_decimals(value, text):
+    """Catches a DRC column whose numbers change decimals with their size (S25)."""
+    assert format_fixed(value, Unit.MM, decimals=6) == text
+    assert format_fixed(math.nan, Unit.MM, decimals=6) == "n/a"

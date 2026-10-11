@@ -207,6 +207,8 @@ STRINGS: Mapping[str, str] = {
     "design.issue.apply": "Apply {value}",
     "design.stale.drafting": "Outdated: the drawing shows the last complete design. {count} required fields left.",
     "design.stale.invalid": "Outdated: the drawing shows the last valid design. Fix the issues listed.",
+    "design.stale.invalid-one": "Outdated: the drawing shows the last valid design. 1 field is invalid.",
+    "design.stale.invalid-many": "Outdated: the drawing shows the last valid design. {count} fields are invalid.",
     "design.stale.computing": "Updating the drawing.",
     "design.hint.straight-ends": "Not used with straight ends.",
     "design.hint.board-gap": "Used only with one board per phase.",
