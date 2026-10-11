@@ -1,4 +1,4 @@
-Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5; sections 4 and 5: claude-sonnet-5-5 (U-S4f); section 7: claude-opus-5-5 (U-S4g)
+Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5; sections 4 and 5: claude-sonnet-5-5 (U-S4f); section 7: claude-opus-5-5 (U-S4g); section 8: claude-opus-5-5 (U-S4h)
 
 # Second M4 design review and rulings (U-S4e)
 
@@ -281,3 +281,97 @@ focus state needs a ring that differs from its fill without a new colour, such a
 `focus-ring` border (`background-clip: padding`). Verify with `qss_smoke.py` and a grab of S12 before merging (S12, S29,
 WCAG 2.4.7). Proposals for M5, no spec change yet: typeset formulas in the Guide and the How section; label assumption
 keys instead of JSON pointers; drop "Default" and "2 turns" from the example notes.
+
+## 8. Final check (revision 2026-10-12 (U-S4h))
+
+Reviewed on main 1d2cee9: the 82 files in `/mnt/user-data/outputs/m4accept/`, captured on unit/U-M4e-3c head 207fd47
+(40 rows; S33 is M5 by D-042a). Method and severities as section 7. U-M4e-4 recaptures S13, S14, S20 and S21
+(DEF-M4e3c-01 provenance chip, "Copper layers" twice in the missing list), so those rows are `pending`. I opened one
+shot per row, both themes for S09 and S22. Not reopened this pass: S03, S04, S06, S15, and the second theme of S12,
+S29, S32 and S39; their section 7 result stands, `not tested` here.
+
+### 8.1 Section 7 findings
+
+| Row | Section 7 | Now | Evidence |
+|---|---|---|---|
+| S05 | major | closed | Dark shot: grey ladder, hatched legend swatches. |
+| S09 | major | closed | Tooltip "Theme. Switch the colour theme: light, dark, then follow the system." in both themes. |
+| S12 | moderate | closed | Light: ring, 2 px gap, then the fill on Create design. |
+| S13, S14, S20, S21 | moderate | pending | U-M4e-4. |
+| S17 | minor | closed | `pair-list` in view: pair 1, L1 and L2, rotation 0 with `example` chip. |
+| S18 | moderate | closed | Combo list open with "4 (2 in parallel)". Minor: the list shows three and a half items. |
+| S19 | moderate | closed | The `issues-list` message wraps on two lines; no sideways bar. New finding N4. |
+| S22 | critical | closed | 960 x 540, both themes: Assumptions, Limitations and Validation state print once each, no line over another. |
+| S23 | major | closed | Value, unit and badge dimmed; banner "1 field is invalid"; no required-field bar. Contrast: ruling m. |
+| S25 | minor | closed | Measured "0.200000", Required "3.000000". |
+| S26 | minor | accepted | Data table below the fold; the tab scrolls. No change. |
+| S27 | major | closed | 24 V `user` chip; torque curve drawn, `unresolved` badge with "estimate". |
+| S28 | major | partly closed | Table takes its rows, no sideways bar, no "iant". New findings N1 and N2. The chart below is out of the shot (`not tested`). |
+| S29 | moderate | closed | Browse is a bordered button; Export shows ring, gap, fill. |
+| S30 | minor | partly closed | Lines print the message, not the code. New finding N3. |
+| S31 | minor | open | "Before you export" still cut after three lines, with about 50 px empty below the list. |
+| S32 | moderate | closed | No `None` rows; one "Dominant assumptions" row with both entries. ASCII formulas stay an M5 proposal. |
+| S39 | minor | open | Notes still say "Default ... preset" and "2 turns" (M5 proposal, not routed). |
+| S01, S03, S10, S24, S34 | minor notes | accepted | Unchanged and acceptable: a toolbar takes no ring, the S10 path is the lever's sandbox, `drc-summary` is a label, `st-cursor` is empty without a pointer. |
+
+New findings:
+
+- N1 (S28, moderate). The first Quantity cell reads "Phase back-EMF constant," and the rest is cut: the row is two
+  lines tall and the text needs three. Quantity is about 100 px wide while Delta takes about 140 px; section 7.3
+  request 3 asked Quantity to stretch.
+- N2 (S28, moderate). The Unit column prints "V·s/rad" beside cells that print "26.4 mV·s/rad". Two units for one
+  number. Every numeric cell already carries its unit (U-M4e-3a), so the Unit column only adds the contradiction.
+- N3 (S30, moderate). Export-confirmation lines run off the right edge behind a sideways bar; "3.000000 mm required" is
+  cut. The same defect `issues-list` had in S19.
+- N4 (S19, minor, `inferred`). The rail shows "1 input issue" in `status-fail` with the fail glyph for advice the user
+  cannot fix ("One board per phase: make the star connection between boards externally."). If that issue is a note,
+  it should not count as a failing input.
+
+### 8.2 Rows fit to show the user now
+
+35 of 40: S01 to S12, S15 to S19, S22 to S27, S29 to S32, S34 to S41, with the minor notes above. Hold S28 until N1
+and N2 are fixed: the table is the row's point and its first label is cut. Pending: S13, S14, S20, S21. The wave
+example still opens with 186 DRC failures (D-034, Fable tells the user).
+
+### 8.3 Rulings
+
+m. Stale dimming (UX-AC-15). Principle experience-first (get the details right): while a field is invalid the user
+reads the last valid values to see what the fix will change, so the dim must not cost legibility. The WCAG 2.2 SC
+1.4.3 exception covers text "part of an inactive user interface component" (`verified`, fetched 2026-10-12 from
+https://www.w3.org/TR/WCAG22/#contrast-minimum). A stale card is content, not a control, and its "How was this
+computed" disclosure stays operable, so the exception does not apply and 4.5:1 does. The current dim is a 0.6
+`QGraphicsOpacityEffect` (`src/embodic/ui/views/results_view.py` line 55) over the `bg-app` card fill. Computed from
+`tokens.json` (`verified`, scratch script, WCAG 2.x luminance): light unit `text-3` x 0.6 gives #a0a0a0 at 2.44:1
+(U-M4e-3a measured 2.41:1); dark unit gives #666666 at 3.34:1, so dark fails too. Ruling: dim by token, never by
+opacity. On a stale card the value, unit, badge word and badge glyph use `text-3` (5.36:1 light, 7.33:1 dark on
+`bg-app`), the badge outline uses `border-control` (3.44:1 and 4.66:1, non-text 3:1), the verified badge drops its
+`surface-inverse` fill, and the card keeps `bg-app`. All four pairs are already rows of appendix A, so `contrast.py`
+guards them; no new colour. The value still steps from 17.2:1 to 5.36:1, a visible dim, and the "Last valid results"
+stamp carries the state in words. The same reason keeps the drawing undimmed: phase colours must hold 3:1 against the
+canvas, and the "Outdated" banner names the state, which is what S23 shows. Changes `design_spec.md` 3.1 and 8,
+UX-AC-15.
+
+n. Compact height (U-M4e-3c open question). Principle experience-first (get the details right): a resize is not a
+request to change what the user reads; a user on Results who snaps the window to half height keeps Results. Today
+`_place_canvas` calls `setCurrentIndex(0)` (`main_window.py` line 811). Ruling: keep the user's tab. Entering compact
+height keeps the current tab of `results-tabs`; Drawing becomes current only when keyboard focus is inside the canvas
+page, because a focused widget on a hidden tab has no visible focus (WCAG 2.4.7). A load still makes Drawing current,
+and Locate still switches to it. Leaving compact height removes Drawing; if it was current, the first remaining tab
+becomes current (the `QTabBar` default). Changes `design_spec.md` 5 (Compact height row) and UX-AC-21.
+
+### 8.4 Change requests
+
+| # | Severity | Request | Target | Row, ruling |
+|---|---|---|---|---|
+| 1 | major | Remove `STALE_OPACITY` and its effect. Add to the template: `QFrame[class="result-card"][stale="true"] QLabel[class="result-value"]`, `...[class="result-unit"]` and the badge glyph `{ color: @text-3; }`; `QFrame[class="result-card"][stale="true"] QLabel[class="badge"] { color: @text-3; border-color: @border-control; }`; the verified badge in a stale card `{ background-color: transparent; }`. Repolish the card's labels after setting `stale`. Test: grab a stale card in both themes, every value, unit and badge text pixel run at least 4.5:1 against the card fill. | `results_view.py`, `tools/design/theme_template.qss` (Agent 3 may edit these lines), `test_ux_ac_15_*` | S23, m |
+| 2 | moderate | Keep the current tab on entering compact height; Drawing only when `canvas_page` holds focus. Test: Results current at 1280 x 800, resize to 960 x 540, Results current; focus `fig-canvas`, resize back and down, Drawing current. | `main_window.py` `_place_canvas` | n |
+| 3 | moderate | Compare rows take the height of their wrapped Quantity text; Quantity stretches. Agent 1 recommends dropping the Unit column (each cell prints its unit), which also gives Quantity the width; `screens.md` `compare-table` row changes with it on Fable's go. | `compare-table`, `screens.md` | S28, N1, N2 |
+| 4 | moderate | The export-confirmation list wraps its lines; no sideways bar. M5 proposal: group identical failures with a count. | export confirmation | S30, N3 |
+| 5 | minor | Check the severity of the serpentine "one board per phase" issue; if it is a note, the rail does not count it as a failing input. | Inputs card | S19, N4 |
+
+### 8.5 Checks
+
+Run in the worktree on unit/U-S4h with `QT_QPA_PLATFORM=offscreen`: `screens_coverage.py`, `check_checklist.py`,
+`qss_smoke.py`, `contrast.py`, all exit 0 (output in the U-S4h report). `screens_coverage.py` first failed on main's
+code ("UI code sets an objectName no screens.md table defines: compare-scroll", added by U-M4e-3c df53bc8);
+`screens.md` 10 now declares it.

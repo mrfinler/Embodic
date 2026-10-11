@@ -3,7 +3,8 @@ Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5
 # embodic design specification v1 (Phase 2, PySide6 desktop)
 
 Date 2026-10-04, revised 2026-10-09 (U-S4d: sections 3.3, 3.4, 5 and 8 follow the rulings of `m4_review.md`),
-revised 2026-10-09 (U-S4e: sections 3.3, 4 and 5 follow rulings b, e, f and h of `m4_review_2.md`).
+revised 2026-10-09 (U-S4e: sections 3.3, 4 and 5 follow rulings b, e, f and h of `m4_review_2.md`),
+revised 2026-10-12 (U-S4h: sections 3.1, 5 and 8 follow rulings m and n of `m4_review_2.md` section 8).
 Supersedes `docs/phase1/design/design_spec_draft.md` for everything Phase 2 builds. Companion files:
 
 - `screens.md` gives every screen with its widget table and state rules.
@@ -62,11 +63,11 @@ token generator).
 | `board-fill` | `#f7f7f7` | `#202020` | PCB fill in the geometry view |
 | `divider` | `#dcdcdc` | `#2e2e2e` | Decorative separators only, never a control boundary |
 | `grid-line` | `#e6e6e6` | `#2a2a2a` | Chart grid, solid hairline |
-| `border-control` | `#858585` | `#7d7d7d` | Every input, combo, checkbox and button boundary; scrollbar handle |
+| `border-control` | `#858585` | `#7d7d7d` | Every input, combo, checkbox and button boundary; scrollbar handle; badge outline on a stale card |
 | `border-strong`, `focus-ring` | `#141414` | `#f2f2f2` | Focus 2 px, checked tool button, selected tab underline |
 | `text-1` | `#141414` | `#f2f2f2` | Primary text, icons |
 | `text-2` | `#454545` | `#c8c8c8` | Secondary text, tab labels |
-| `text-3` | `#666666` | `#a0a0a0` | Hints, units, captions |
+| `text-3` | `#666666` | `#a0a0a0` | Hints, units, captions; value, unit and badge text of a stale result card (U-S4h ruling m) |
 | `text-disabled` | `#9a9a9a` | `#6e6e6e` | Disabled text and icons (exempt from SC 1.4.3) |
 | `text-inverse` | `#ffffff` | `#141414` | Text on `surface-inverse` |
 | `status-pass` | `#2f6a47` | `#6fb38a` | Pass glyph and word |
@@ -231,7 +232,7 @@ Vertical split of the centre pane (U-S4e ruling b). The canvas is what the user 
 |---|---|
 | Default | `centre-split` gives the canvas page 60 % and `results-tabs` 40 % of the height below the layer toggles. The view sets the sizes explicitly on first show and on each resize until the user drags the handle; the size hint of a results page never moves the split. On main fd190c1 the cards' size hint gives the results 524 of 648 px at 1280 x 800 and leaves the canvas 124 px (`verified`, `layout_probe.py --fonts`). |
 | Minimums | Canvas page 240 px (legend 80 px plus a ring that holds the labels); results panel 180 px (tab bar plus one card row). Neither side collapses (`setCollapsible(False)`). |
-| Compact height | When the window client area is under 620 px tall, both minimums do not fit (toolstrip 125, status bar 24, toggles 40, 240 + 180). The canvas page then becomes the first tab, "Drawing", of `results-tabs`, before "Key results", and `centre-split` holds only the tabs. "Drawing" is the current tab after a load. **Locate** in `tab-drc` switches to it. This is the width rule turned on its side: below 1280 px wide the rail joins the tabs, below 620 px tall the canvas does. At 960 x 540 the Drawing tab gives the canvas about 320 px instead of 112 (`verified` for 112 on main). |
+| Compact height | When the window client area is under 620 px tall, both minimums do not fit (toolstrip 125, status bar 24, toggles 40, 240 + 180). The canvas page then becomes the first tab, "Drawing", of `results-tabs`, before "Key results", and `centre-split` holds only the tabs. "Drawing" is the current tab after a load. **Locate** in `tab-drc` switches to it. Resizing into compact height keeps the current tab of `results-tabs`; Drawing becomes current only when keyboard focus is inside the canvas page, so the focused widget stays visible (U-S4h ruling n). Leaving compact height removes Drawing; if it was current, the first remaining tab becomes current. This is the width rule turned on its side: below 1280 px wide the rail joins the tabs, below 620 px tall the canvas does. At 960 x 540 the Drawing tab gives the canvas about 320 px instead of 112 (`verified` for 112 on main). |
 | Stored position | After a drag, the canvas share (0 to 1) is stored per user as `layout/canvas_share` and restored, clamped to the minimums. Pixels are not stored, because the window size changes. Nothing is stored in compact height. |
 
 Region object names (stable): `toolstrip`, `inspector`, `inspector-tabs`, `fig-canvas`, `results-tabs`,
@@ -350,6 +351,10 @@ Rules:
   and the selector `QFrame[class="result-card"]`. Variant properties: `status` (badge), `provenance` (chip), `state`
   (check text, DRC row), `invalid` (field), `stale` (card). After changing a property call
   `w.style().unpolish(w); w.style().polish(w)`.
+- A stale card dims by token, never by opacity (U-S4h ruling m; stale results are content, so SC 1.4.3 applies): the
+  card keeps `bg-app`, its value, unit, badge word and badge glyph use `text-3`, the badge outline uses
+  `border-control`, and a verified badge drops its `surface-inverse` fill. Repolish the card's labels after setting
+  `stale`. The drawing is not dimmed; the "Outdated" banner names its state, and phase colours keep 3:1.
 
 | Hook | Widget | Purpose |
 |---|---|---|
