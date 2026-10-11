@@ -92,6 +92,7 @@ class _RowRadioButton(QRadioButton):
         return self.rect().contains(pos)
 
 
+STYLE_SET_PROPERTY = "embodic-target-size-style"
 ROW_TARGETS = {QCheckBox: _RowCheckBox, QRadioButton: _RowRadioButton}
 
 
@@ -116,7 +117,10 @@ def target_size_style() -> TargetSizeStyle:
 
 def apply_theme(app: QApplication, tokens: ThemeTokens) -> None:
     """Restyle every widget of the application with one theme."""
-    app.setStyle(target_size_style())
+    if not app.property(STYLE_SET_PROPERTY):
+        # Set once: a second setStyle under a style sheet deletes the old wrapper, which takes its base style with it.
+        app.setStyle(target_size_style())
+        app.setProperty(STYLE_SET_PROPERTY, True)
     QDir.setSearchPaths("theme", [str(themes_dir())])
     app.setPalette(palette_for(tokens))
     app.setStyleSheet((themes_dir() / f"{tokens.name}.qss").read_text(encoding="utf-8"))
