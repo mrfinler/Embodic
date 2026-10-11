@@ -250,6 +250,8 @@ def test_open_disclosure_lays_out_again_at_each_width_so_no_line_prints_over_ano
 
     The S22 lever opens R_ph, then resizes and switches theme with the section open; it pumps events without an event
     loop, so a label waiting for ``deleteLater`` stays visible. The check runs at that same point.
+    Under 620 px tall the resize brings the Drawing tab forward, so the Results tab comes back before the check: a
+    hidden tab is never laid out, and the check read its stale or default geometry (order dependent).
     """
     QApplication.setEffectEnabled(Qt.UIEffect.UI_General, False)
     window = load(make_window(), D08)
@@ -257,6 +259,7 @@ def test_open_disclosure_lays_out_again_at_each_width_so_no_line_prints_over_ano
     card = window.results_tab.cards["r-phase"]
     card.how_toggle.click()
     window.resize(*size)
+    window.show_results_tab("tab-results")
     window.appearance.set_theme(ThemeName.DARK)
     for _ in range(10):
         QApplication.processEvents()
