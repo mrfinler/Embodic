@@ -73,6 +73,13 @@ board picker, the vertical split of `centre-split` with `layout/canvas_share`, t
 fields, the DRC columns with the Board column, and corrects the font and rail text of the U-D10 revision. §13 closes three
 rows of point 9 and adds point 10.
 
+Revision 2026-10-11 (U-D12, claude-sonnet-5-5, D-040 c, D-041a, D-041b; the code on main 4fda98d was read for every item, after
+U-M4e-1b and U-M4e-2 merged). §3 states that `UNIT_SPACE` is the U+00A0 literal and that LG-01 admits it in
+`results/formatting.py` only. §9.1 closes the state paragraph of U-D11 (schema pattern removed, five titles set) and adds
+D-041b, the design name that equals the title, with the five moved design hashes. §9.3 moves the colophon to the end of
+the PDF (ruling f). §11 adds the screw push buttons (ruling i), the stretched last column (ruling j) and the provenance
+property of the pair-list chip (F2). §13 closes the open rows of point 10 and adds point 11.
+
 ## 0. Rules for every public boundary
 
 - Lengths are millimetres (`_mm`), angles radians (`_rad`) inside the core, temperature °C (`_degc`), current A (`_a`),
@@ -1338,13 +1345,12 @@ per-module allowance in LG-01.
   (`svg_writer.py` l.134), the results view-model (`ui/viewmodels/results.py` l.51, l.134, l.136, l.446), the DRC table
   (`ui/views/checks_view.py` l.172) and the cursor readout (`ui/views/main_window.py` l.675). A number and its unit
   never part at a line end.
-- `UNIT_SPACE` is `chr(0x00A0)` on main 9776555, because the literal check of LG-01 admits no space other than U+0020
-  (comment at `formatting.py` l.20-21). D-040 c moves the character into the same per-module table. LG-01 then admits
-  U+00A0 in `embodic.results.formatting` only, `UNIT_SPACE` becomes the literal, and the lint still rejects U+00A0 in
-  every other module. U-M4e-1b owns the change (store `briefs/U-M4e-1b.md`, in flight). `MODULE_SYMBOLS` has no
-  `embodic.results.formatting` entry on main 9776555 (`verified` by reading). D-040 c is not in the store's
-  `decisions.tsv` line of 2026-10-09T11:40Z, which holds a and b (`verified` by grep), so the wording here is the
-  brief's.
+- `UNIT_SPACE` is the U+00A0 literal on main 4fda98d (`results/formatting.py` l.22, with `# noqa: RUF001`). U-M4e-1b
+  replaced `chr(0x00A0)` by the character after LG-01 admitted it (revision 2026-10-11, U-D12, D-040 c, which
+  `docs/decision_log.md` l.46 records). `MODULE_SYMBOLS` (`tests/static/test_lg_language.py` l.13) has two entries,
+  `embodic.results.labels` for η, δ and Δ and `embodic.results.formatting` for U+00A0. Every other module still reports
+  U+00A0 as a non-English character. `test_lg01_admits_the_no_break_space_in_the_formatting_module_only` (l.96) plants
+  the character in `embodic.results.formatting`, where it passes, and in `embodic.errors`, where the message names U+00A0.
 - The unit tests expect the character: the `CASES` of `tests/unit/results/test_formatting.py` write `"1.00\u00a0kΩ"`,
   `"500\u00a0mΩ"` and the like, and `test_formatting_engineering_text` (l.44) compares against them.
 
@@ -2786,7 +2792,7 @@ Revision 2026-10-09 (U-D10, ruling g 4, UX-AC-03; `src/embodic/io/examples.py` o
 name another program or a repository path. `display_note` may not (UX-AC-03). `list_examples` takes it from the table
 `DISPLAY_NOTES` (`examples.py` l.20), which has one entry per packaged example id, and a missing id raises `KeyError`.
 Titles still come from the example files (`title` is `meta["title"]`); the serpentine example title names the reference
-program, and a strict xfail records it (test_plan.md §5.6).
+program, and a strict xfail records it (test_plan.md §5.6). Closed on main 4fda98d (revision 2026-10-11, U-D12, see below).
 
 Revision 2026-10-09 (U-D11, D-041a (Fable, 2026-10-09) and ruling g of `docs/phase2/design/m4_review_2.md`;
 `src/embodic/io/examples.py`, `resources/examples/*.embodic.json` and
@@ -2803,17 +2809,36 @@ Revision 2026-10-09 (U-D11, D-041a (Fable, 2026-10-09) and ruling g of `docs/pha
   poles, involute" (`wave_16p_example`). The ruling lists the five titles without ids; the pairing with the ids is
   `inferred` from the old titles in the files. The wave title drops "2 turns" because the field reads "Slots per phase
   belt".
-- State on main 9776555. The schema still holds `"pattern": "Example"` for `example.title`
-  (`project.v1.schema.json` l.1016), and the five files still carry the old titles, for example "Example: 16-pole
-  serpentine (Xcoil default)" (`verified` by reading the five `example` objects). U-M4e-1b (in flight) removes the
-  pattern, regenerates the files through the example builders and flips the strict xfails of test_plan.md §5.6. This
-  section states the rule, not the files. A title change does not change the design hash, because the hash covers the
-  design and not the `example` object (U-M4e-1b asserts it with the hashes before and after).
+- State on main 4fda98d (revision 2026-10-11, U-D12, `verified` by reading the schema and the five `example` objects). U-M4e-1b
+  removed the pattern: `example.title` is `{"type": "string"}` with no `pattern` (`project.v1.schema.json` l.1015), and the
+  five files carry the titles above, regenerated through the example builders. The titles are the `title` of each file's
+  `example` object. A title change does not change the design hash, because the hash covers the design and not the
+  `example` object (U-M4e-1b asserted it with the hashes before and after: 42b7027464, 546ef05451, 709ea86cd9,
+  3fa7f90783 and 294f2a10ca, for the 16-pole spiral, the 14-pole spiral, D08, the serpentine and the wave; `verified` by
+  `git grep` in the example files at 1b5c581).
 - Where the word was required. Only the published schema requires it. The loader knows the keys of the `example`
   object (`_EXAMPLE_KEYS`, `io/project.py` l.62) and checks no content, and `_parse` (`io/examples.py` l.52) reads
   `document["example"]` and parses the design. Removing the pattern therefore changes the schema and its tests, not the
   loader (`inferred` from a grep for "Example" in `io/project.py` and `io/examples.py`). `source_note` keeps
   provenance such as engine line numbers and is never shown (`DISPLAY_NOTES`, l.20; `list_examples`, l.64).
+
+Revision 2026-10-11 (U-D12, D-041b (Fable, 2026-10-09); `src/embodic/io/examples.py`, `resources/examples/*.embodic.json` and
+`tests/unit/embodic_io/project/test_examples.py` on main 4fda98d, `verified` by reading and by running the tests named).
+The design name of an example.
+
+- The rule. The design `/name` of each packaged example equals its display title. The window title and the export stem
+  show the name, so "Xcoil" and "Example" leave it too (D-041b). `test_d_041b_each_example_design_is_named_by_its_display_title`
+  (`test_examples.py` l.52) asserts `load_example(id)[1].name == title` for the five ids.
+- The hashes moved. `/name` is inside the design hash, so U-M4e-2 changed all five (D-041b): `sha256:ac4fab5d…`
+  (`spiral_12c16p_default`), `sha256:4a199702…` (`spiral_12c14p`), `sha256:327919a0…` (`spiral_12c10p_d08`),
+  `sha256:8ec4c234…` (`serpentine_16p_example`) and `sha256:3131a619…` (`wave_16p_example`). `EXAMPLE_HASHES`
+  (`test_examples.py` l.34) holds the full values, and `test_ut_io_08_the_packaged_design_hashes_are_pinned` (l.58)
+  compares them with `ExampleRef.example_sha256` of `load_example`. A unit that changes an example design edits that
+  table, because a saved project keeps the hash as its `origin_example`. The ten-digit values of the bullet above
+  are the hashes before D-041b.
+- What did not change. A name is not an engineering value: OR-01 and every golden are unaffected. The only keys that
+  changed in the five files are `/name` and the hash fields (U-M4e-2 report). Provenance stays in `source_note`, which the
+  gallery never shows (`display_note` does).
 
 ### 9.2 Board dump (Agent 3 format, frozen here as v1)
 
@@ -3044,19 +3069,23 @@ colour. The SVG writer and the PDF report apply the same rules in both render mo
   A" (`_legend`, `svg_writer.py` l.271; `report.py` l.287).
 - Footer. The SVG width is the larger of the drawing and the footer text, so the stamp is never clipped
   (`svg_document`, l.305; `test_footer_fits_inside_the_drawing`, `test_svg.py` l.161).
-- Colophon (revision 2026-10-09, U-D11; U-S4e ruling f, design_spec.md §4). `write_report_pdf` ends the text pages with
-  one line, `COLOPHON` (`report.py` l.56): "Set in Inter and JetBrains Mono, SIL Open Font License 1.1." It follows the
-  Inputs table after a half-row gap (l.315-316) and comes before the drawing pages, so it is the last line of the last
-  text page. There is no per-page footer. `test_ruling_f_report_ends_its_tables_with_one_colophon_line_and_no_page_footer`
-  (`test_report_readme_bundle.py` l.113) pins it. Ruling f says the line "ends the PDF" and design_spec.md §4 says "after
-  the last table". The code follows design_spec.md, and the drawing pages come after the line. Whether it should move
-  behind the drawing pages is `unresolved`. U-M4e-1b (c) is told to follow design_spec.md §4 and report.
+- Colophon (revision 2026-10-09, U-D11; U-S4e ruling f, design_spec.md §4; moved by U-M4e-2, revision 2026-10-11,
+  U-D12). `write_report_pdf` ends the PDF with one line, `COLOPHON` (`report.py` l.56): "Set in Inter and JetBrains
+  Mono, SIL Open Font License 1.1." The writer draws the Inputs table, then every board drawing, and then the line with
+  `doc.row(MARGIN, [(MARGIN, COLOPHON)])` (l.318). It is the last line of the last page, after the drawing pages. There is
+  no per-page footer. U-M4e-1 had put it after the Inputs table and before the drawings, following design_spec.md §4
+  ("after the last table"). Ruling f says the line "ends the PDF", and U-M4e-2 moved it (commit 92754c0).
+  `test_ruling_f_one_colophon_line_ends_the_whole_report_and_no_page_has_a_footer` (`test_report_readme_bundle.py` l.113)
+  pins it: the line occurs once, "Board 1 drawing" occurs before it, and it is the last line of the last page.
+  The question of U-D11 whether it should move behind the drawing pages is closed. design_spec.md §4 still says "after
+  the last table", and `docs/phase2/design` is Agent 1's file (`unresolved` whether Agent 1 amends it).
 - Number and unit (U-S4e ruling e1). Every value the report prints joins its number and unit with `UNIT_SPACE` (§3),
   so pypdf extracts U+00A0 between them.
 - Run on main fd190c1 and rerun on main 9776555 (U-D11, same counts): the greyscale D08 SVG holds 12 `coil-label` texts, 12 `coil-label-halo` texts, 12 clipped `eye`
   groups (plus 3 `legend-eye` swatches) and no `stroke-dasharray`. The D08 report extracts as text with `A2−`, `502\u00a0mΩ`, `434\u00a0mΩ` and `1.34\u00a0µH`, where `\u00a0` is the
   U+00A0 of `UNIT_SPACE` (§3), and the colophon line sits on page 3 of the four pages (`verified` by running
-  `write_report_pdf` on the D08 example on main 9776555 and extracting each page with pypdf).
+  `write_report_pdf` on the D08 example on main 9776555 and extracting each page with pypdf). On main 4fda98d the same run
+  gives four pages and the colophon as the last line of page 4 (`verified` by running it, 2026-10-11).
 - No test asserts the halo: a search of `tests` for "halo" finds nothing. Fable rasterised the greyscale D08 SVG and saw
   the labels with their halos, the eye swatches and an intact footer (U-M4f report, Fable's notes). The halo is
   `verified` by reading and by that look, `not tested` by code.
@@ -3544,6 +3573,31 @@ Gallery selection and window title are screens.md matters (ruling h): a selected
 `text-inverse` (`ExamplesGallery._ink_selection`, `ui/views/examples_gallery.py` l.89), pinned by
 `test_ruling_h_the_selected_example_draws_title_and_note_in_text_inverse` (`test_ruling_g.py` l.151).
 
+Revision 2026-10-11 (U-D12, claude-sonnet-5-5; `src/embodic/ui` on main 4fda98d read for every item). Three view changes of
+U-M4e-2 (`m4_review_2.md` §6) and one deletion. The tests that pin them are in `tests/ui/qt_e2e/test_review_2_fixes.py`
+(`test_plan.md` §5.3.1).
+
+- Ruling i (F3). `btn-screw-add` and `btn-screw-remove` are `QPushButton`, no longer `QToolButton`
+  (`board_rotor_panel.py` l.109 and l.113). They use the push-button style with a boundary of 3:1 against the pane
+  (UX-AC-08). `test_ruling_i_the_screw_buttons_are_push_buttons_with_a_3_to_1_boundary` (l.45) grabs both buttons and
+  measures the contrast.
+- Ruling j (F1). The last column of `layer-list`, `pair-list` and `screw-table` takes the remaining width, so no header
+  cell is empty. The call is `horizontalHeader().setStretchLastSection(True)` in `_fill` (`layer_panel.py` l.330, which
+  fills `layer-list` and `pair-list`), again for `pair-list` after its rotation cells are set (l.287), and for
+  `screw-table` (`board_rotor_panel.py` l.209). `test_ruling_j_the_last_column_takes_the_remaining_width_so_no_header_cell_is_empty`
+  (l.65) asserts `header.length() >= viewport.width()` at 1280 x 800 and 960 x 540.
+- F2. The rotation chip of a `pair-list` row carries the dynamic property `provenance` beside `class` = `prov-chip`
+  (`_value_with_chip`, `layer_panel.py` l.333, third argument; `setProperty` at l.342). The QSS rule
+  `QLabel[class="prov-chip"][provenance="example"]` (`tools/design/theme_template.qss` l.109) draws the dashed example
+  chip, and a chip without the property drew the solid default. `test_f2_the_pair_list_rotation_chip_carries_its_provenance_for_the_dashed_example_rule`
+  (l.27) loads `spiral_12c14p` and reads `{("example", "example")}` over the chips of its pair rows.
+- The string `shell.sum.assumptions` is deleted (`strings/shell.py`). No code read it (U-M4e-2 report).
+  `OutcomeReady.summary` stays, because `tests/unit/ui/shell/test_outcome_viewmodel.py` l.108 reads it. §13 point 11
+  carries its deletion.
+- Target sizes. The EQ chip, the assumption tag, the check box click rectangle and the scroll bar are below the AX-04
+  size on main 4fda98d (`test_plan.md` §5.6). §11 states no size for them yet, because the rulings are Agent 1's
+  (U-S4g) and the change is Agent 3's (U-M4e-3).
+
 ## 12. `embodic.cli`
 
 ```python
@@ -3639,3 +3693,21 @@ both.
 | `CoilMark.label` keeps the ASCII hyphen (§5) | No code under `src/embodic` reads it (`verified` by grep). Delete or switch to `MINUS` is not decided | Agent 3, with the next `geometry` unit |
 | A missing glyph raises out of `write_report_pdf` (§9.3) | Unchanged: only `pdf_writer.py` names `MissingGlyphError` (`verified` by grep) | Fable decides |
 | EV-106 names the variable file | Agent 5 updates it (U-S5b, in flight). The files and hashes are in `resources/fonts/FONTS.md` | U-S5b |
+
+11. Open points after U-M4e-1b and U-M4e-2 (revision 2026-10-11, U-D12; main 4fda98d, `verified` by reading unless the
+    row says otherwise).
+
+| Item | State on main 4fda98d | Owner |
+|---|---|---|
+| D-040 and D-041a are not in `decision_log.md` (point 10) | Closed. The log holds D-040 (l.46) and D-041 (l.47). It holds no D-042 (`verified` by grep). The store calls D-042 a draft: the Tests dialog is M5 work (`reports/U-M4e-2.md`, `briefs/U-S4g.md`). Its content is `unresolved` until Fable records it | Fable records D-042 |
+| LG-01 admits U+00A0 only after U-M4e-1b (§3) | Closed. `MODULE_SYMBOLS` has the entry `embodic.results.formatting`, and `UNIT_SPACE` is the literal | none |
+| Example titles (§9.1) | Closed. The schema pattern is gone, the five titles are set, and the two UX-AC-03 marks are removed (`test_plan.md` §5.6). D-041b moved the five design hashes (§9.1) | none |
+| REQ-F-38 (point 10) | The acceptance text is amended (`requirements.md`, D-041a). The statement still says examples are labelled "Example" wherever they appear, while the window title and the export stem now show the display title without the word (D-041b). Whether the statement names the chip and the gallery heading instead is `unresolved` | Fable with Agent 1 |
+| Colophon position (§9.3) | Closed. The line is the last line of the last page (ruling f). design_spec.md §4 (l.198) and `m4_review_2.md` l.149 still say "after the last table" | Agent 1 amends design_spec.md or leaves it (`unresolved`) |
+| EV-106 names the variable file | Closed by U-S5b (merge a1e08e3; commit e89cb2f "EV-106 and the font record describe the static Inter files") | none |
+| `CoilMark.label` keeps the ASCII hyphen; a missing glyph raises out of `write_report_pdf` | Not rechecked on main 4fda98d. The U-D11 rows stand | Agent 3; Fable decides |
+| DEF-M4e2-01 to DEF-M4e2-03: the EQ chip and assumption tag are 22 px tall, check box click rectangles 20 px, scroll bars 12 px wide | Four strict xfails (`test_plan.md` §5.6). Agent 1 rules fix or exception per defect in U-S4g, including whether WCAG's spacing exception applies to scroll bars | Agent 1 (U-S4g), Agent 3 fixes (U-M4e-3) |
+| `OutcomeReady.summary` (`ui/viewmodels/outcome.py` l.104) and the test that reads it (`tests/unit/ui/shell/test_outcome_viewmodel.py` l.108) | Kept by U-M4e-2, because that test was outside its scope. Fable's note on the report sends the deletion to U-M4e-3 | Agent 3 (U-M4e-3) |
+| The layer bar showed "L1 L2 L1 L2" once after several rows shared one window | `unresolved`. U-M4e-2 did not reproduce it in a fresh window (its report). U-V4 tries to reproduce it | Agent 4 (U-V4) |
+| S33, the Tests dialog (`tests-table`) | Not in this build, so row S33 of the checklist is not captured and the verify skill lists it as `not tested`. M5 carries the dialog (D-042 draft): it needs the `passed_tests` evidence packaged into `resources/evidence` and a test bundle in the wheel (D-034, `briefs/U-S4g.md`) | M5 (`work_breakdown.md` §8) |
+| Text clipping at 150 and 200 percent (UI-09), keyboard input in the native file dialog (AX-02) | `not tested` by a machine (`test_plan.md` §5.3.1) | Agent 1 reviews the grabs |
