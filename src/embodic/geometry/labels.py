@@ -220,6 +220,11 @@ def copper_spots(layout: Layout) -> dict[Phase, tuple[tuple[float, float], ...]]
     return {phase: tuple(points) for phase, points in spots.items()}
 
 
+def copper_reach_mm(layout: Layout) -> float:
+    """Return how far drawn copper reaches past its nearest copper spot: half the widest trace and half the pitch."""
+    return max(q.width_mm for path in layout.paths for q in path.primitives) / 2 + SPOT_PITCH_MM / 2
+
+
 def pad_boxes(layout: Layout) -> tuple[Box, ...]:
     """Return the bounding box of every terminal pad, which labels keep clear of."""
     return tuple(
@@ -254,6 +259,7 @@ def _distance(a: tuple[float, float], b: tuple[float, float]) -> float:
 
 
 Point = tuple[float, float]
+_ROUNDING_MM = 1e-9  # keeps a box pulled flush with the view edge inside it despite float rounding
 
 
 class _Placer:
@@ -301,14 +307,31 @@ class _Placer:
         elif self.in_view(own):
             self.place(anchor.phase, anchor.text, own)
 
+    def near(self, point: Point, reach_mm: float) -> bool:
+        """Return True when copper drawn up to ``reach_mm`` around the point can show in the view."""
+        v, (x, y) = self.view, point
+        return (
+            math.hypot(max(v.x_min_mm - x, 0.0, x - v.x_max_mm), max(v.y_min_mm - y, 0.0, y - v.y_max_mm)) <= reach_mm
+        )
+
+    def pulled_in(self, text: str, spot: Point) -> Point:
+        """Return the spot moved just far enough into the view for the label's box, grown by 2 px, to fit."""
+        v, (w_px, h_px) = self.view, self.text_size(text)
+        half_w = w_px / 2 / v.px_per_mm + self.gap_mm + _ROUNDING_MM
+        half_h = h_px / 2 / v.px_per_mm + self.gap_mm + _ROUNDING_MM
+        x = min(max(spot[0], v.x_min_mm + half_w), v.x_max_mm - half_w)
+        y = min(max(spot[1], v.y_min_mm + half_h), v.y_max_mm - half_h)
+        return x, y
+
     def name_unlabelled(self, phase: Phase, anchors: Sequence[LabelAnchor], copper: Sequence[Point]) -> None:
-        """Label a phase that shows copper but no label, on the free copper spot nearest the view centre."""
+        """Label a phase that shows copper but no label, on or beside the free copper spot nearest the view centre."""
         v = self.view
         centre = ((v.x_min_mm + v.x_max_mm) / 2, (v.y_min_mm + v.y_max_mm) / 2)
         for spot in sorted(copper, key=lambda point: _distance(point, centre)):
             text = min(anchors, key=lambda a: _distance((a.x_mm, a.y_mm), spot)).text
-            if self.free(text, spot):
-                self.place(phase, text, spot)
+            inside = self.pulled_in(text, spot)
+            if self.free(text, inside):
+                self.place(phase, text, inside)
                 return
 
 
@@ -320,6 +343,7 @@ def place_labels(
     obstacles: Sequence[Box],
     ring_outer_mm: float,
     copper: CopperSpots | None = None,
+    copper_reach_mm: float = 0.0,
 ) -> tuple[PlacedLabel, ...]:
     """Place labels in the given priority order and return those that show, every one inside the view.
 
@@ -327,8 +351,10 @@ def place_labels(
     by 2 px, meets a placed label, an obstacle or the viewport edge at every spot is skipped. A forced label
     (the first of its phase and sign) always places: on its anchor when that is free, else outside the ring on its
     own direction with a leader when anchor and label both lie in the view, else on the free ``copper`` spot of its
-    phase nearest its anchor. Last, every phase with a ``copper`` spot in the view but no label gets one, on the free
-    spot nearest the view centre, named like its nearest anchor (U-S4e ruling h).
+    phase nearest its anchor. Last, every phase whose copper shows in the view but has no label gets one, named like its
+    nearest anchor, on the free copper spot nearest the view centre, pulled into the view when the spot lies at or past
+    its edge. Copper shows when a spot lies within ``copper_reach_mm`` of the view: a wide trace crossing a corner shows
+    while its centre line stays outside (U-S4e ruling h).
     """
     placer = _Placer(view, text_size, obstacles)
     ordered = list(anchors)
@@ -339,8 +365,9 @@ def place_labels(
             placer.place(anchor.phase, anchor.text, spot)
         elif anchor.forced:
             placer.place_forced(anchor, ring_outer_mm, visible.get(anchor.phase, ()))
-    for phase, points in visible.items():
+    for phase, points in (copper or {}).items():
+        shows = [p for p in points if placer.near(p, copper_reach_mm)]
         own = [a for a in ordered if a.phase is phase]
-        if points and own and not any(label.phase is phase for label in placer.placed):
-            placer.name_unlabelled(phase, own, points)
+        if shows and own and not any(label.phase is phase for label in placer.placed):
+            placer.name_unlabelled(phase, own, shows)
     return tuple(placer.placed)

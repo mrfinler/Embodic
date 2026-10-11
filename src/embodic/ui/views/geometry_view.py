@@ -314,6 +314,7 @@ class GeometryView(QGraphicsView):
             obstacles=obstacles,
             ring_outer_mm=max(board.envelope_mm[1] for board, _ in shown),
             copper=copper,
+            copper_reach_mm=max(marks.copper_reach_mm for _, marks in shown),
         )
         for label in placed:
             self._draw_label(label)

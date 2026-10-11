@@ -17,6 +17,7 @@ from embodic.geometry.labels import (
     PlacedLabel,
     TextSize,
     Viewport,
+    copper_reach_mm,
     copper_spots,
     label_anchors,
     pad_boxes,
@@ -77,6 +78,7 @@ class BoardMarks:
     pads: tuple[Box, ...]  # labels keep clear of these
     label_of_path: Mapping[int, str]
     copper: CopperSpots  # where a label may move when its anchor or leader would leave the view
+    copper_reach_mm: float  # how far drawn copper reaches past its nearest copper spot
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -262,6 +264,7 @@ def board_marks(board: Layout) -> BoardMarks:
         pads=pad_boxes(board),
         label_of_path=_label_of_path(board, anchors),
         copper=copper_spots(board),
+        copper_reach_mm=copper_reach_mm(board),
     )
 
 
@@ -303,6 +306,7 @@ def place_in_view(
     obstacles: Sequence[Box],
     ring_outer_mm: float,
     copper: CopperSpots,
+    copper_reach_mm: float,
 ) -> tuple[PlacedLabel, ...]:
     """Place labels so that each phase with copper in view names itself inside the view, at every zoom and pan.
 
@@ -319,7 +323,13 @@ def place_in_view(
         replace(a, forced=False) for a in anchors if id(a) not in firsts and not (a.forced and _group(a) not in groups)
     ]
     return place_labels(
-        forced + rest, view=view, text_size=text_size, obstacles=obstacles, ring_outer_mm=ring_outer_mm, copper=copper
+        forced + rest,
+        view=view,
+        text_size=text_size,
+        obstacles=obstacles,
+        ring_outer_mm=ring_outer_mm,
+        copper=copper,
+        copper_reach_mm=copper_reach_mm,
     )
 
 
