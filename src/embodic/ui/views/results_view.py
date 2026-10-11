@@ -419,7 +419,7 @@ class CompareTab(QWidget):
         self.scroll.setFrameShape(QFrame.Shape.NoFrame)
         self.scroll.setWidgetResizable(True)
         self.scroll.setWidget(page)
-        self.scroll.installEventFilter(self)
+        self.scroll.viewport().installEventFilter(self)
         top = QHBoxLayout()
         top.addWidget(self.set_reference)
         top.addWidget(self.caption, 1)
@@ -454,8 +454,6 @@ class CompareTab(QWidget):
         ready = reference is not None and current is not None
         self.empty.setVisible(not ready)
         self.empty.setText(text("compare.empty") if reference is None else text("compare.no-current"))
-        self.table.setVisible(ready)
-        self.chart.setVisible(ready)
         self.scroll.setVisible(ready)
         self.caption.setText("" if reference is None else text("compare.reference.caption", name=reference.design.name))
         if not ready or self.tokens is None:
@@ -473,12 +471,12 @@ class CompareTab(QWidget):
         frame = 2 * self.table.frameWidth()
         rows = sum(self.table.rowHeight(r) for r in range(self.table.rowCount()))
         full = self.table.horizontalHeader().height() + rows + frame
-        self.table.setFixedHeight(min(full, max(self.scroll.viewport().height(), 0)))
+        self.table.setFixedHeight(min(full, self.scroll.viewport().height()))
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802 (Qt override)
         """Fit the table again whenever the pane changes size."""
-        if watched is self.scroll and isinstance(event, QResizeEvent):
-            QTimer.singleShot(0, self._fit_table)
+        if watched is self.scroll.viewport() and isinstance(event, QResizeEvent):
+            self._fit_table()
         return super().eventFilter(watched, event)
 
     def _fill(self, r: int, row: CompareRow) -> None:
