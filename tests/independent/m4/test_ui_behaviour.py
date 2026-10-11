@@ -7,7 +7,7 @@ import shutil
 import pypdf
 import pytest
 from PySide6.QtCore import QPointF, Qt
-from PySide6.QtGui import QContextMenuEvent
+from PySide6.QtGui import QAccessible, QContextMenuEvent
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import (
     QAbstractButton,
@@ -125,9 +125,6 @@ def test_results_cards_join_every_number_and_unit_with_nbsp(example_id, tmp_path
     assert joiner_faults(texts) == []
 
 
-@pytest.mark.xfail(
-    strict=True, reason="DEF-UV4-03: card title 'Phase resistance at 20 °C' joins 20 and °C with a space"
-)
 def test_results_card_titles_join_number_and_unit_with_nbsp(tmp_path):
     """Request 6 covers every displayed number and unit, titles included."""
     window = open_window(tmp_path)
@@ -138,7 +135,7 @@ def test_results_card_titles_join_number_and_unit_with_nbsp(tmp_path):
 
 
 def card_and_pdf_rows(tmp_path):
-    """Return the D08 cards as title -> (value, unit, badge) and the PDF key result rows."""
+    """Return the D08 cards as title -> (value, unit, badge, label) and the PDF key result rows."""
     window = open_window(tmp_path)
     load_example(window, "spiral_12c10p_d08")
     scroll = find(window, "results-scroll")
@@ -150,8 +147,10 @@ def card_and_pdf_rows(tmp_path):
             value = scroll.findChild(QLabel, f"{stem}-value")
             unit = scroll.findChild(QLabel, f"{stem}-unit")
             badge = scroll.findChild(QLabel, f"{stem}-badge")
+            label = scroll.findChild(QLabel, f"{stem}-label")
+            shown_label = label.text() if label is not None and label.isVisible() else ""
             if value and unit and badge:
-                cards[title.text()] = (value.text(), unit.text(), badge.text())
+                cards[title.text()] = (value.text(), unit.text(), badge.text(), shown_label)
     close(window)
     pdf = tmp_path / "d08.pdf"
     write_report_pdf(outcome_of("spiral_12c10p_d08"), pdf)
@@ -168,37 +167,39 @@ def pdf_row_for(rows, title):
 
 
 def test_pdf_key_results_print_the_value_and_unit_the_cards_show(tmp_path):
-    """Brief 1c. Catches a report whose number or unit text differs from the screen."""
+    """Brief 1c, D-042d. Catches a number or unit text that differs between report and screen ("dimensionless" too)."""
     cards, rows = card_and_pdf_rows(tmp_path)
     assert len(cards) >= 25, sorted(cards)
+    assert any(unit == "dimensionless" for _v, unit, _b, _l in cards.values()), "precondition: a dimensionless card"
     mismatched = [
         (title, pdf_row_for(rows, title), value, unit)
-        for title, (value, unit, _badge) in cards.items()
-        if unit != "dimensionless" and not pdf_row_for(rows, title).startswith(f"{value}{NBSP}{unit} ")
+        for title, (value, unit, _badge, _label) in cards.items()
+        if not pdf_row_for(rows, title).startswith(f"{value}{NBSP}{unit} ")
     ]
     assert mismatched == []
 
 
-@pytest.mark.xfail(strict=True, reason="DEF-UV4-04: card badge 'estimate' where the PDF prints status 'unresolved'")
-def test_pdf_key_results_print_the_status_word_the_cards_show(tmp_path):
-    """Brief 1c, same status word. Catches a report and a screen that disagree on how far to trust a value."""
+FIVE_STATUSES = {"verified", "inferred", "assumption", "unresolved", "not tested"}
+
+
+def test_pdf_key_results_print_the_status_word_and_label_the_cards_show(tmp_path):
+    """Brief 1c, D-042c. Catches a badge that is not a status word, or a status or label that differs from the PDF.
+
+    The PDF prints "unresolved (estimate)"; the card shows the badge "unresolved" with "estimate" beside it.
+    """
     cards, rows = card_and_pdf_rows(tmp_path)
-    mismatched = [
-        (title, badge, pdf_row_for(rows, title))
-        for title, (value, unit, badge) in cards.items()
-        if not re.search(r" " + re.escape(badge) + r"(?: \(.+\))?$", pdf_row_for(rows, title))
-    ]
+    assert {badge for _v, _u, badge, _l in cards.values()} <= FIVE_STATUSES
+    assert any(label for _v, _u, _b, label in cards.values()), "precondition: a labelled result"
+    mismatched = []
+    for title, (_value, _unit, badge, label) in cards.items():
+        row = pdf_row_for(rows, title)
+        if label:
+            ok = row.endswith(f" {badge} ({label})")
+        else:
+            ok = re.search(r" " + re.escape(badge) + r"(?: \((?:upper|lower) bound\))?$", row) is not None
+        if not ok:
+            mismatched.append((title, badge, label, row))
     assert mismatched == []
-
-
-@pytest.mark.xfail(strict=True, reason="DEF-UV4-02: PDF prints '(dimensionless)', the card prints 'dimensionless'")
-def test_pdf_prints_the_dimensionless_unit_text_the_cards_show(tmp_path):
-    """Brief 1c, same unit text as the UI. Catches a unit word that differs between screen and report."""
-    cards, rows = card_and_pdf_rows(tmp_path)
-    dimensionless = {t: c for t, c in cards.items() if c[1] == "dimensionless"}
-    assert dimensionless
-    for title, (value, unit, badge) in dimensionless.items():
-        assert pdf_row_for(rows, title).startswith(f"{value}{NBSP}{unit} {badge}"), title
 
 
 def test_serpentine_as_one_board_per_phase_reads_the_board_count(tmp_path):
@@ -403,3 +404,26 @@ def test_wave_canvas_labels_every_phase_in_view(zoom, centre_deg, tmp_path):
     close(window)
     assert phases, "precondition: copper in view"
     assert phases <= labels, f"zoom {zoom}: phases {sorted(phases)}, viewport {port}, labels {placed}"
+
+
+CARD_NAME = re.compile(r"^(.+), (−?[0-9.]+) ([^,]+), (verified|inferred|assumption|unresolved|not tested)(?:, (.+))?$")
+
+
+def test_every_result_card_names_its_value_unit_and_status_for_assistive_technology(tmp_path):
+    """AX-06 proxy (DEF-UV4-07). Catches a card a screen reader announces without its value, unit or status."""
+    window = open_window(tmp_path)
+    load_example(window, "spiral_12c10p_d08")
+    scroll = find(window, "results-scroll")
+    faults = []
+    cards = [w for w in scroll.findChildren(QWidget) if w.objectName().startswith("res-card-")]
+    for card in cards:
+        stem = "res-" + card.objectName()[len("res-card-") :]
+        name = QAccessible.queryAccessibleInterface(card).text(QAccessible.Text.Name)
+        m = CARD_NAME.match(name)
+        value = scroll.findChild(QLabel, f"{stem}-value").text()
+        badge = scroll.findChild(QLabel, f"{stem}-badge").text()
+        if not m or m.group(2) != value or m.group(4) != badge:
+            faults.append((card.objectName(), name, value, badge))
+    close(window)
+    assert len(cards) >= 25
+    assert faults == []

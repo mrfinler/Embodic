@@ -17,7 +17,14 @@ from embodic.model.vocabulary import Phase
 from embodic.outcome import ComputeOutcome
 from embodic.physics.waveform import XCOIL_WAVEFORM_SAMPLES, emf_waveform_v
 from embodic.results import QUANTITY_LABELS, AnalysisResult, Registry, Traceable
-from embodic.results.formatting import MINUS, NOT_A_NUMBER, UNIT_SPACE, format_quantity
+from embodic.results.formatting import (
+    MINUS,
+    NOT_A_NUMBER,
+    UNIT_SPACE,
+    format_fixed,
+    format_quantity,
+    spoken_quantity,
+)
 from embodic.results.labels import quantity_title
 from embodic.results.status import Status, ValidityEffect, ValidityFlag, combine_status
 from embodic.results.traceable import AssumedInput
@@ -34,8 +41,14 @@ PHASE1_KEYS: Mapping[str, str] = {
     "temperature_rise_k": "dt",
     "current_density_a_per_mm2": "j",
 }
-# DRC values print with six figures: D-006 has no slack band, so 0.199965 mm against 0.2 mm must read as different.
-DRC_FIGURES = 6
+# DRC lengths print with six decimals: D-006 has no slack band (epsilon <= 1e-6 mm), so 0.199965 mm against 0.2 mm
+# must read as different, and Measured and Required line up whatever their size (U-S4g S25).
+DRC_DECIMALS = 6
+
+
+def drc_length_text(mm: float) -> str:
+    """Return a DRC length as the DRC table and the export confirmation print it: "3.000000 mm"."""
+    return format_fixed(mm, Unit.MM, decimals=DRC_DECIMALS)
 
 
 def result_key(quantity: str) -> str:
@@ -65,7 +78,17 @@ class ResultRow:
     assumed_count: int
     eq_ids: tuple[str, ...]
     estimate_label: str | None
+    accessible_name: str  # what a screen reader announces for the card: title, value, unit and status in words
     traceable: Traceable[float]
+
+
+def accessible_name(title: str, t: Traceable[float]) -> str:
+    """Return "<title>, <value> <unit in words>, <status>[, <label>]"; a unitless value says "dimensionless"."""
+    spoken = spoken_quantity(t.value, t.unit)
+    if not t.unit.display() and math.isfinite(t.value):
+        spoken = f"{spoken} {text('results.unit.dimensionless')}"
+    parts = (title, spoken, t.status.value, *((t.label,) if t.label else ()))
+    return ", ".join(parts)
 
 
 def result_row(quantity: str, t: Traceable[float]) -> ResultRow:
@@ -81,6 +104,7 @@ def result_row(quantity: str, t: Traceable[float]) -> ResultRow:
         assumed_count=len(t.assumed_inputs),
         eq_ids=t.eq_ids,
         estimate_label=t.label,
+        accessible_name=accessible_name(quantity_title(quantity), t),
         traceable=t,
     )
 
@@ -176,6 +200,17 @@ def _source_lines(t: Traceable[float], registry: Registry) -> tuple[str, ...]:
     return tuple(lines)
 
 
+# Every disclosure has these sections in this order, whatever the row (a row without one says "None").
+DISCLOSURE_KEYS = (
+    "results.how.equation",
+    "results.how.inputs",
+    "results.how.assumptions",
+    "results.how.limitations",
+    "results.how.validity",
+    "results.how.sources",
+)
+
+
 def disclosure(row: ResultRow, registry: Registry) -> tuple[DisclosureSection, ...]:
     """Return the 'How was this computed' disclosure of a row (REQ-T-13).
 
@@ -195,15 +230,16 @@ def disclosure(row: ResultRow, registry: Registry) -> tuple[DisclosureSection, .
     if t.tolerance is not None:
         validity.append(text("results.how.tolerance", against=t.tolerance.against, source=t.tolerance.source_ref))
     sections = (
-        ("results.how.equation", equations or (text(f"results.how.kind-{t.kind_tag}"),)),
-        ("results.how.inputs", _input_lines(t)),
-        ("results.how.assumptions", tuple(assumed_input_text(a) for a in t.assumed_inputs)),
-        ("results.how.limitations", tuple(limitations)),
-        ("results.how.validity", tuple(validity)),
-        ("results.how.sources", _source_lines(t, registry)),
+        equations or (text(f"results.how.kind-{t.kind_tag}"),),
+        _input_lines(t),
+        tuple(assumed_input_text(a) for a in t.assumed_inputs),
+        tuple(limitations),
+        tuple(validity),
+        _source_lines(t, registry),
     )
     return tuple(
-        DisclosureSection(title=text(key), lines=lines or (text("results.how.none"),)) for key, lines in sections
+        DisclosureSection(title=text(key), lines=lines or (text("results.how.none"),))
+        for key, lines in zip(DISCLOSURE_KEYS, sections, strict=True)
     )
 
 
@@ -314,8 +350,8 @@ def drc_table(outcome: ComputeOutcome | None) -> DrcTable | None:
             severity="error",
             rule_code=v.kind.issue_code,
             message=message_for(v.kind.issue_code),
-            measured_text=format_quantity(v.measured_mm, Unit.MM, significant=DRC_FIGURES),
-            required_text=format_quantity(v.required_mm, Unit.MM, significant=DRC_FIGURES),
+            measured_text=drc_length_text(v.measured_mm),
+            required_text=drc_length_text(v.required_mm),
             layer_text=v.layer or text("drc.layer.all"),
             at_mm=v.at_mm,
             board_text=letters[board - 1].value if letters else "",
@@ -523,7 +559,11 @@ Direction: TypeAlias = Literal["up", "down", "same"]
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class CompareRow:
-    """One quantity of the reference and the current design."""
+    """One quantity of the reference and the current design.
+
+    A value cell joins number and unit with U+00A0 (ruling e1); a unitless value leaves "dimensionless" to the unit
+    column, so the value columns stay narrow enough for the Quantity column (U-S4g S28).
+    """
 
     quantity: str
     label: str
@@ -568,9 +608,9 @@ def compare_rows(reference: ComputeOutcome, current: ComputeOutcome) -> tuple[Co
                 CompareRow(
                     quantity=cur.quantity,
                     label=cur.label,
-                    reference_text=" ".join(split_value(ref.traceable.value, unit)),
-                    current_text=f"{cur.value_text} {cur.unit_text}",
-                    delta_text=_signed(" ".join(split_value(delta, unit)), delta),
+                    reference_text=format_quantity(ref.traceable.value, unit),
+                    current_text=format_quantity(cur.traceable.value, unit),
+                    delta_text=_signed(format_quantity(delta, unit), delta),
                     direction=_direction(delta),
                     unit_text=unit.display() or text("results.unit.dimensionless"),
                 )
@@ -647,7 +687,10 @@ START_TOPIC = "guide:start"
 
 
 def equation_topic(eq_id: str, registry: Registry) -> GuideTopic:
-    """Return the register entry of one equation exactly as the registry states it (UI-17)."""
+    """Return the register entry of one equation exactly as the registry states it (UI-17).
+
+    The dominant assumptions share one row, one per line.
+    """
     e = registry.equation(eq_id)
 
     def source(ev_id: str) -> str:
@@ -685,15 +728,16 @@ def equation_topic(eq_id: str, registry: Registry) -> GuideTopic:
         ("guide.eq.gate", e.gate.value),
         ("guide.eq.status", e.status.value),
         ("guide.eq.test-state", registry.test_state(eq_id).value),
-        ("guide.eq.label", e.label or text("results.how.none")),
+        ("guide.eq.label", e.label or ""),
         *(("guide.eq.sources", source(ev)) for ev in e.sources),
-        *(("guide.eq.assumptions", a) for a in e.dominant_assumptions),
+        ("guide.eq.assumptions", "\n".join(e.dominant_assumptions)),
         *(("guide.eq.checks", c) for c in checks),
         *(("guide.eq.tests", t) for t in e.tests),
         *(("guide.eq.constants", c) for c in constants),
-        ("guide.eq.implementation", e.implementation or text("results.how.none")),
+        ("guide.eq.implementation", e.implementation or ""),
     ]
-    return GuideTopic(topic_id=eq_id, title=f"{eq_id} {e.name}", rows=tuple((text(k), v) for k, v in rows))
+    shown = tuple((text(k), v) for k, v in rows if v)  # a field the registry leaves empty gets no row (S32)
+    return GuideTopic(topic_id=eq_id, title=f"{eq_id} {e.name}", rows=shown)
 
 
 def guide_groups(registry: Registry, keyboard_map: Sequence[tuple[str, str, str]]) -> tuple[GuideGroup, ...]:

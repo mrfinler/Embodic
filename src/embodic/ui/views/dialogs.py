@@ -15,22 +15,21 @@ from PySide6.QtWidgets import (
 )
 
 from embodic.drc import DrcViolation
-from embodic.results.formatting import format_quantity
+from embodic.errors import message_for
 from embodic.ui.strings import text
-from embodic.ui.viewmodels.results import DRC_FIGURES
-from embodic.units import Unit
+from embodic.ui.viewmodels.results import drc_length_text
 
 LISTED_FAILURES = 50
 
 
 def failure_line(v: DrcViolation) -> str:
-    """Return one failure of the confirmation list."""
+    """Return one failure of the confirmation list: the catalogue message, as the DRC table shows it, not the code."""
     return text(
         "export.confirm.row",
-        rule=v.kind.issue_code,
+        message=message_for(v.kind.issue_code),
         layer=v.layer or text("drc.layer.all"),
-        measured=format_quantity(v.measured_mm, Unit.MM, significant=DRC_FIGURES),
-        required=format_quantity(v.required_mm, Unit.MM, significant=DRC_FIGURES),
+        measured=drc_length_text(v.measured_mm),
+        required=drc_length_text(v.required_mm),
     )
 
 

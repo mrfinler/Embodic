@@ -27,7 +27,7 @@ from .conftest import WAVE
 pytestmark = pytest.mark.req("REQ-F-16", "REQ-F-33", "REQ-T-07", "REQ-T-14")
 
 STATUS = "|".join(re.escape(s.value) for s in Status)
-UNITS = {u.display() for u in Unit if u.display()} | {"(dimensionless)"}
+UNITS = {u.display() for u in Unit if u.display()} | {"dimensionless"}
 DRAWINGS = (ExportKind.SVG, ExportKind.DXF_COMPLETE, ExportKind.DXF_OUTLINE, ExportKind.PDF_REPORT)
 
 

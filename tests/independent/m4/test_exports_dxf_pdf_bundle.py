@@ -28,7 +28,7 @@ UNIT_TEXT = {
     "V_s_per_rad": "V·s/rad",
     "N_m_per_A": "N·m/A",
     "rpm_per_V": "rpm/V",
-    "one": "(dimensionless)",
+    "one": "dimensionless",
     "ohm": "Ω",
     "V": "V",
     "N_m": "N·m",

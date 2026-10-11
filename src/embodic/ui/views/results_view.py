@@ -34,6 +34,7 @@ from embodic.results.status import Status
 from embodic.ui.strings import text
 from embodic.ui.theme import ThemeTokens
 from embodic.ui.viewmodels.results import (
+    DISCLOSURE_KEYS,
     CompareRow,
     CompareViewModel,
     ResultRow,
@@ -50,6 +51,7 @@ from embodic.ui.views.status_badge import AssumptionTag, EqChip, StatusBadge, ba
 
 COMPUTING_DIM_AFTER_MS = 300
 COMPUTING_OPACITY = 0.6
+STALE_OPACITY = 0.6
 REVEAL_MS = 120
 CARD_MIN_WIDTH_PX = 280  # screens.md section 6, U-S4e ruling d
 CARD_GAP_PX = 8
@@ -124,11 +126,36 @@ class ResultCard(QFrame):
         self.how_toggle.toggled.connect(self._toggle_how)
         self.how = QFrame()
         self.how.setObjectName(f"{prefix}-how")
-        self.how_layout = QVBoxLayout(self.how)
-        self.how_layout.setContentsMargins(0, 4, 0, 0)
+        how_layout = QVBoxLayout(self.how)
+        how_layout.setContentsMargins(0, 4, 0, 0)
+        # The disclosure always has the same six sections, so its labels are made once and only their text changes:
+        # a rebuilt label waiting for deleteLater would stay on screen over its successor (U-S4g S22).
+        self.how_sections: list[tuple[QLabel, QLabel]] = []
+        for _ in DISCLOSURE_KEYS:
+            title = QLabel()
+            title.setProperty("class", "section-title")
+            body = QLabel()
+            body.setTextFormat(Qt.TextFormat.PlainText)
+            body.setWordWrap(True)
+            body.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+            how_layout.addWidget(title)
+            how_layout.addWidget(body)
+            self.how_sections.append((title, body))
+        copy = QPushButton(text("results.how.copy"))
+        copy.setObjectName(f"{prefix}-copy")
+        copy.clicked.connect(self._copy)
+        how_layout.addWidget(copy, 0, Qt.AlignmentFlag.AlignLeft)
         self.how.setVisible(False)
 
-        value_line = QHBoxLayout()
+        # Value, unit and badge dim together when the card shows a last valid result (UX-AC-15).
+        value_row = QWidget()
+        value_row.setObjectName(f"{prefix}-value-row")
+        self._stale_dim = QGraphicsOpacityEffect(value_row)
+        self._stale_dim.setOpacity(STALE_OPACITY)
+        self._stale_dim.setEnabled(False)
+        value_row.setGraphicsEffect(self._stale_dim)
+        value_line = QHBoxLayout(value_row)
+        value_line.setContentsMargins(0, 0, 0, 0)
         value_line.addWidget(self.value)
         value_line.addWidget(self.unit, 0, Qt.AlignmentFlag.AlignBaseline)
         value_line.addStretch(1)
@@ -140,7 +167,7 @@ class ResultCard(QFrame):
         meta.addStretch(1)
         layout = QVBoxLayout(self)
         layout.addWidget(self.title)
-        layout.addLayout(value_line)
+        layout.addWidget(value_row)
         layout.addLayout(meta)
         layout.addWidget(self.asm_list)
         layout.addWidget(self.how_toggle)
@@ -168,8 +195,10 @@ class ResultCard(QFrame):
         self.eq.show_eq(row.eq_ids, t.kind_tag)
         self.asm.show_count(row.assumed_count)
         self.asm_list.setText("\n".join(assumed_input_text(a) for a in t.assumed_inputs))
+        self.setAccessibleName(row.accessible_name)
         self.setWhatsThis(row.eq_ids[0] if row.eq_ids else "")
         self.setProperty("stale", "true" if stale else "false")
+        self._stale_dim.setEnabled(stale)
         repolish(self)
         if self.how_toggle.isChecked():
             self._fill_how()
@@ -181,26 +210,12 @@ class ResultCard(QFrame):
         set_revealed(self.how, shown)
 
     def _fill_how(self) -> None:
-        while self.how_layout.count():
-            item = self.how_layout.takeAt(0)
-            widget = item.widget() if item is not None else None
-            if widget is not None:
-                widget.deleteLater()
         if self.row is None:
             return
-        for section in disclosure(self.row, self._registry):
-            title = QLabel(section.title)
-            title.setProperty("class", "section-title")
-            body = QLabel("\n".join(section.lines))
-            body.setTextFormat(Qt.TextFormat.PlainText)
-            body.setWordWrap(True)
-            body.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-            self.how_layout.addWidget(title)
-            self.how_layout.addWidget(body)
-        copy = QPushButton(text("results.how.copy"))
-        copy.setObjectName(f"{self.prefix}-copy")
-        copy.clicked.connect(self._copy)
-        self.how_layout.addWidget(copy, 0, Qt.AlignmentFlag.AlignLeft)
+        sections = disclosure(self.row, self._registry)
+        for (title, body), section in zip(self.how_sections, sections, strict=True):
+            title.setText(section.title)
+            body.setText("\n".join(section.lines))
 
     def disclosure_text(self) -> str:
         """Return the text of the open disclosure, section by section (for tests and screen readers)."""
@@ -243,7 +258,7 @@ class ResultsTab(QWidget):
         filters.addWidget(QLabel(text("results.filter.label")))
         self.filter_boxes: dict[Status, QCheckBox] = {}
         for status in Status:
-            box = QCheckBox(text(f"shell.badge.{badge_property(status)}"))
+            box = QCheckBox(status.value)
             box.setObjectName(f"results-filter-{badge_property(status)}")
             box.setAccessibleName(f"Show {status.value} results")
             box.setChecked(True)
@@ -386,17 +401,32 @@ class CompareTab(QWidget):
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self.table.setTextElideMode(Qt.TextElideMode.ElideNone)
         self.table.verticalHeader().setVisible(False)
+        self.table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.chart = ChartPanel("compare-chart")
+        # Table and chart scroll as one page: the table takes the height of its rows up to the visible pane and the
+        # chart follows below it at its own height, so neither is squeezed over the other (U-S4g S28).
+        page = QWidget()
+        page_layout = QVBoxLayout(page)
+        page_layout.setContentsMargins(0, 0, 0, 0)
+        page_layout.addWidget(self.table)
+        page_layout.addWidget(self.chart)
+        page_layout.addStretch(1)
+        self.page_scroll = QScrollArea()
+        self.page_scroll.setObjectName("compare-scroll")
+        self.page_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.page_scroll.setWidgetResizable(True)
+        self.page_scroll.setWidget(page)
+        self.page_scroll.viewport().installEventFilter(self)
         top = QHBoxLayout()
         top.addWidget(self.set_reference)
         top.addWidget(self.caption, 1)
         layout = QVBoxLayout(self)
         layout.addLayout(top)
         layout.addWidget(self.empty)
-        layout.addWidget(self.table, 3)
-        layout.addWidget(self.chart, 2)
+        layout.addWidget(self.page_scroll, 1)
         vm.reference.subscribe(lambda _: self.refresh())
         self.confirm: QWidget | None = None
 
@@ -424,8 +454,7 @@ class CompareTab(QWidget):
         ready = reference is not None and current is not None
         self.empty.setVisible(not ready)
         self.empty.setText(text("compare.empty") if reference is None else text("compare.no-current"))
-        self.table.setVisible(ready)
-        self.chart.setVisible(ready)
+        self.page_scroll.setVisible(ready)
         self.caption.setText("" if reference is None else text("compare.reference.caption", name=reference.design.name))
         if not ready or self.tokens is None:
             return
@@ -435,6 +464,20 @@ class CompareTab(QWidget):
         for r, row in enumerate(rows):
             self._fill(r, row)
         self.chart.show_chart(compare_chart(reference, current), self.tokens)
+        self._fit_table()
+
+    def _fit_table(self) -> None:
+        """Give the table the height of its header and rows, at most the height of the visible pane."""
+        frame = 2 * self.table.frameWidth()
+        rows = sum(self.table.rowHeight(r) for r in range(self.table.rowCount()))
+        full = self.table.horizontalHeader().height() + rows + frame
+        self.table.setFixedHeight(min(full, self.page_scroll.viewport().height()))
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802 (Qt override)
+        """Fit the table again whenever the pane changes size."""
+        if watched is self.page_scroll.viewport() and isinstance(event, QResizeEvent):
+            self._fit_table()
+        return super().eventFilter(watched, event)
 
     def _fill(self, r: int, row: CompareRow) -> None:
         assert self.tokens is not None

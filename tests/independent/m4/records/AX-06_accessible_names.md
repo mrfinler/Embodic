@@ -84,36 +84,36 @@
 | param-vias-per-transition | QLineEdit | 1 | Vias per transition |  |
 | param-x-inward-sense-ccw | QToolButton | CCW | CCW |  |
 | param-x-inward-sense-cw | QToolButton | CW | CW |  |
-| res-card-dt | ResultCard |  |  |  |
-| res-card-edge-leakage-fraction | ResultCard |  |  |  |
-| res-card-efficiency | ResultCard |  |  |  |
-| res-card-emf-phase-rms-v | ResultCard |  |  |  |
-| res-card-ipc-guideline-current-a | ResultCard |  |  |  |
-| res-card-j | ResultCard |  |  |  |
-| res-card-ke | ResultCard |  |  |  |
-| res-card-ke-line-peak-v-s-per-rad | ResultCard |  |  |  |
-| res-card-ke-line-v-s-per-rad | ResultCard |  |  |  |
-| res-card-kt | ResultCard |  |  |  |
-| res-card-kv-rpm-per-v | ResultCard |  |  |  |
-| res-card-loss-circulating-w | ResultCard |  |  |  |
-| res-card-loss-copper-w | ResultCard |  |  |  |
-| res-card-loss-delta-circulating-w | ResultCard |  |  |  |
-| res-card-loss-eddy-w | ResultCard |  |  |  |
-| res-card-loss-interconnect-w | ResultCard |  |  |  |
-| res-card-loss-total-w | ResultCard |  |  |  |
-| res-card-ls | ResultCard |  |  |  |
-| res-card-mass-copper-g | ResultCard |  |  |  |
-| res-card-mass-laminate-g | ResultCard |  |  |  |
-| res-card-motor-constant-n-m-per-sqrt-w | ResultCard |  |  |  |
-| res-card-output-power-w | ResultCard |  |  |  |
-| res-card-r-phase | ResultCard |  |  |  |
-| res-card-resistance-line-ohm | ResultCard |  |  |  |
-| res-card-resistance-phase-20c-ohm | ResultCard |  |  |  |
-| res-card-skin-depth-mm | ResultCard |  |  |  |
-| res-card-thd-line | ResultCard |  |  |  |
-| res-card-thd-phase | ResultCard |  |  |  |
-| res-card-torque-n-m | ResultCard |  |  |  |
-| res-card-winding-factor-1 | ResultCard |  |  |  |
+| res-card-dt | ResultCard |  | Temperature rise, first-order estimate ΔT, 9.59 kelvin, not tested, upper bound |  |
+| res-card-edge-leakage-fraction | ResultCard |  | Radial edge leakage fraction e_edge, 0.0174 dimensionless, not tested, lower bound |  |
+| res-card-efficiency | ResultCard |  | Efficiency, electromagnetic only η, 0.611 dimensionless, not tested, upper bound |  |
+| res-card-emf-phase-rms-v | ResultCard |  | Phase back-EMF, rms, 1.34 volt, not tested |  |
+| res-card-ipc-guideline-current-a | ResultCard |  | IPC-2221 current capacity, guideline, 3.03 ampere, unresolved, guideline (unverified) |  |
+| res-card-j | ResultCard |  | Current density J, 47.9 ampere per square millimetre, not tested |  |
+| res-card-ke | ResultCard |  | Phase back-EMF constant, fundamental Ke_ph, 18.1 millivolt-second per radian, not tested |  |
+| res-card-ke-line-peak-v-s-per-rad | ResultCard |  | Line back-EMF constant, peak, 30.9 millivolt-second per radian, not tested |  |
+| res-card-ke-line-v-s-per-rad | ResultCard |  | Line back-EMF constant, fundamental Ke_LL, 31.4 millivolt-second per radian, not tested |  |
+| res-card-kt | ResultCard |  | Torque constant per line current, rms Kt, 38.4 millinewton-metre per ampere, not tested |  |
+| res-card-kv-rpm-per-v | ResultCard |  | Speed constant K_v, 304 rpm per volt, not tested |  |
+| res-card-loss-circulating-w | ResultCard |  | Circulating-current loss P_circ, 0 watt, not tested |  |
+| res-card-loss-copper-w | ResultCard |  | Copper loss P_Cu, 1.51 watt, not tested |  |
+| res-card-loss-delta-circulating-w | ResultCard |  | Delta circulating-current loss P_δ,circ, 0 watt, not tested, upper bound |  |
+| res-card-loss-eddy-w | ResultCard |  | Eddy-current loss P_eddy, 898 milliwatt, not tested |  |
+| res-card-loss-interconnect-w | ResultCard |  | Interconnect loss P_ic, 158 milliwatt, not tested |  |
+| res-card-loss-total-w | ResultCard |  | Total loss P_loss, 2.56 watt, not tested, upper bound |  |
+| res-card-ls | ResultCard |  | Inductance, estimate L_m, 1.34 microhenry, unresolved, estimate |  |
+| res-card-mass-copper-g | ResultCard |  | Copper mass m_Cu, 2.71 gram, not tested |  |
+| res-card-mass-laminate-g | ResultCard |  | Laminate mass m_lam, 14.3 gram, not tested |  |
+| res-card-motor-constant-n-m-per-sqrt-w | ResultCard |  | Motor constant K_m, 0.0313 newton-metre per square root watt, not tested |  |
+| res-card-output-power-w | ResultCard |  | Output power P_out, 4.02 watt, not tested |  |
+| res-card-r-phase | ResultCard |  | Phase resistance at operating temperature R_ph, 502 milliohm, not tested |  |
+| res-card-resistance-line-ohm | ResultCard |  | Line-to-line resistance R_LL, 1.11 ohm, not tested |  |
+| res-card-resistance-phase-20c-ohm | ResultCard |  | Phase resistance at 20&#160;°C R_ph, 434 milliohm, not tested |  |
+| res-card-skin-depth-mm | ResultCard |  | Skin depth δ, 7.79 millimetre, not tested |  |
+| res-card-thd-line | ResultCard |  | Total harmonic distortion, line, 0.00957 dimensionless, not tested |  |
+| res-card-thd-phase | ResultCard |  | Total harmonic distortion, phase, 0.0265 dimensionless, not tested |  |
+| res-card-torque-n-m | ResultCard |  | Torque T, 38.4 millinewton-metre, not tested |  |
+| res-card-winding-factor-1 | ResultCard |  | Fundamental winding factor k_w1, 0.483 dimensionless, not tested |  |
 | res-dt-value | QLabel | 9.59 | 9.59 |  |
 | res-edge-leakage-fraction-value | QLabel | 0.0174 | 0.0174 |  |
 | res-efficiency-value | QLabel | 0.611 | 0.611 |  |
