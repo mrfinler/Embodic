@@ -414,19 +414,19 @@ class CompareTab(QWidget):
         page_layout.addWidget(self.table)
         page_layout.addWidget(self.chart)
         page_layout.addStretch(1)
-        self.scroll = QScrollArea()
-        self.scroll.setObjectName("compare-scroll")
-        self.scroll.setFrameShape(QFrame.Shape.NoFrame)
-        self.scroll.setWidgetResizable(True)
-        self.scroll.setWidget(page)
-        self.scroll.viewport().installEventFilter(self)
+        self.page_scroll = QScrollArea()
+        self.page_scroll.setObjectName("compare-scroll")
+        self.page_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.page_scroll.setWidgetResizable(True)
+        self.page_scroll.setWidget(page)
+        self.page_scroll.viewport().installEventFilter(self)
         top = QHBoxLayout()
         top.addWidget(self.set_reference)
         top.addWidget(self.caption, 1)
         layout = QVBoxLayout(self)
         layout.addLayout(top)
         layout.addWidget(self.empty)
-        layout.addWidget(self.scroll, 1)
+        layout.addWidget(self.page_scroll, 1)
         vm.reference.subscribe(lambda _: self.refresh())
         self.confirm: QWidget | None = None
 
@@ -454,7 +454,7 @@ class CompareTab(QWidget):
         ready = reference is not None and current is not None
         self.empty.setVisible(not ready)
         self.empty.setText(text("compare.empty") if reference is None else text("compare.no-current"))
-        self.scroll.setVisible(ready)
+        self.page_scroll.setVisible(ready)
         self.caption.setText("" if reference is None else text("compare.reference.caption", name=reference.design.name))
         if not ready or self.tokens is None:
             return
@@ -471,11 +471,11 @@ class CompareTab(QWidget):
         frame = 2 * self.table.frameWidth()
         rows = sum(self.table.rowHeight(r) for r in range(self.table.rowCount()))
         full = self.table.horizontalHeader().height() + rows + frame
-        self.table.setFixedHeight(min(full, self.scroll.viewport().height()))
+        self.table.setFixedHeight(min(full, self.page_scroll.viewport().height()))
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802 (Qt override)
         """Fit the table again whenever the pane changes size."""
-        if watched is self.scroll.viewport() and isinstance(event, QResizeEvent):
+        if watched is self.page_scroll.viewport() and isinstance(event, QResizeEvent):
             self._fit_table()
         return super().eventFilter(watched, event)
 
