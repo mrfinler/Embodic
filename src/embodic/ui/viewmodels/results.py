@@ -687,7 +687,10 @@ START_TOPIC = "guide:start"
 
 
 def equation_topic(eq_id: str, registry: Registry) -> GuideTopic:
-    """Return the register entry of one equation exactly as the registry states it (UI-17)."""
+    """Return the register entry of one equation exactly as the registry states it (UI-17).
+
+    The dominant assumptions share one row, one per line.
+    """
     e = registry.equation(eq_id)
 
     def source(ev_id: str) -> str:
@@ -725,15 +728,16 @@ def equation_topic(eq_id: str, registry: Registry) -> GuideTopic:
         ("guide.eq.gate", e.gate.value),
         ("guide.eq.status", e.status.value),
         ("guide.eq.test-state", registry.test_state(eq_id).value),
-        ("guide.eq.label", e.label or text("results.how.none")),
+        ("guide.eq.label", e.label or ""),
         *(("guide.eq.sources", source(ev)) for ev in e.sources),
-        *(("guide.eq.assumptions", a) for a in e.dominant_assumptions),
+        ("guide.eq.assumptions", "\n".join(e.dominant_assumptions)),
         *(("guide.eq.checks", c) for c in checks),
         *(("guide.eq.tests", t) for t in e.tests),
         *(("guide.eq.constants", c) for c in constants),
-        ("guide.eq.implementation", e.implementation or text("results.how.none")),
+        ("guide.eq.implementation", e.implementation or ""),
     ]
-    return GuideTopic(topic_id=eq_id, title=f"{eq_id} {e.name}", rows=tuple((text(k), v) for k, v in rows))
+    shown = tuple((text(k), v) for k, v in rows if v)  # a field the registry leaves empty gets no row (S32)
+    return GuideTopic(topic_id=eq_id, title=f"{eq_id} {e.name}", rows=shown)
 
 
 def guide_groups(registry: Registry, keyboard_map: Sequence[tuple[str, str, str]]) -> tuple[GuideGroup, ...]:

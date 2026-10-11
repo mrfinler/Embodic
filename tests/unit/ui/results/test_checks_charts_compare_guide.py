@@ -203,8 +203,22 @@ def test_ui17_every_register_entry_shows_the_registry_content(registry):
             assert any(v.startswith(f"{ev_id}: ") and (ev is None or ev.location in v) for v in values), ev_id
         for test_id in entry.tests:
             assert ("Tests", test_id) in rows
-        for assumption in entry.dominant_assumptions:
-            assert ("Dominant assumptions", assumption) in rows
+        listed = [v for h, v in rows if h == "Dominant assumptions"]
+        assert all(any(assumption in v for v in listed) for assumption in entry.dominant_assumptions), eq_id
+
+
+@pytest.mark.req("REQ-F-26")
+def test_s32_register_hides_empty_fields_and_lists_dominant_assumptions_in_one_row(registry):
+    """U-S4g S32. Catches "Label None" or "Implementation None" (Python's None printed), or one row per assumption."""
+    with_two = [eq for eq, e in registry.equations.items() if len(e.dominant_assumptions) > 1]
+    without_label = [eq for eq, e in registry.equations.items() if not e.label or not e.implementation]
+    assert with_two and without_label, "precondition: the register has both kinds of entry"
+    for eq_id, entry in registry.equations.items():
+        rows = equation_topic(eq_id, registry).rows
+        assert [(h, v) for h, v in rows if not v.strip() or v == "None"] == [], eq_id
+        listed = [v for h, v in rows if h == "Dominant assumptions"]
+        assert len(listed) == (1 if entry.dominant_assumptions else 0), eq_id
+        assert all(a in listed[0].splitlines() for a in entry.dominant_assumptions), eq_id
 
 
 @pytest.mark.req("REQ-F-26")

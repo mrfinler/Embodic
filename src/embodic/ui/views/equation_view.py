@@ -18,14 +18,18 @@ TOPIC_ROLE = Qt.ItemDataRole.UserRole
 
 
 def topic_html(topic: GuideTopic) -> str:
-    """Return the body of a topic: its title, then one row per (heading, text), all escaped."""
+    """Return the body of a topic: its title, then one row per (heading, text), all escaped; a line break stays."""
     rows = "".join(
-        f"<tr><th align='left' valign='top'>{html.escape(head)}</th><td>{html.escape(value)}</td></tr>"
+        f"<tr><th align='left' valign='top'>{html.escape(head)}</th><td>{_lines(value)}</td></tr>"
         if head
-        else f"<tr><td colspan='2'>{html.escape(value)}</td></tr>"
+        else f"<tr><td colspan='2'>{_lines(value)}</td></tr>"
         for head, value in topic.rows
     )
     return f"<h2>{html.escape(topic.title)}</h2><table cellspacing='6'>{rows}</table>"
+
+
+def _lines(value: str) -> str:
+    return "<br>".join(html.escape(line) for line in value.split("\n"))
 
 
 class GuideWindow(QWidget):
