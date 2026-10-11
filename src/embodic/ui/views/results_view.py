@@ -34,6 +34,7 @@ from embodic.results.status import Status
 from embodic.ui.strings import text
 from embodic.ui.theme import ThemeTokens
 from embodic.ui.viewmodels.results import (
+    DISCLOSURE_KEYS,
     CompareRow,
     CompareViewModel,
     ResultRow,
@@ -124,8 +125,25 @@ class ResultCard(QFrame):
         self.how_toggle.toggled.connect(self._toggle_how)
         self.how = QFrame()
         self.how.setObjectName(f"{prefix}-how")
-        self.how_layout = QVBoxLayout(self.how)
-        self.how_layout.setContentsMargins(0, 4, 0, 0)
+        how_layout = QVBoxLayout(self.how)
+        how_layout.setContentsMargins(0, 4, 0, 0)
+        # The disclosure always has the same six sections, so its labels are made once and only their text changes:
+        # a rebuilt label waiting for deleteLater would stay on screen over its successor (U-S4g S22).
+        self.how_sections: list[tuple[QLabel, QLabel]] = []
+        for _ in DISCLOSURE_KEYS:
+            title = QLabel()
+            title.setProperty("class", "section-title")
+            body = QLabel()
+            body.setTextFormat(Qt.TextFormat.PlainText)
+            body.setWordWrap(True)
+            body.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+            how_layout.addWidget(title)
+            how_layout.addWidget(body)
+            self.how_sections.append((title, body))
+        copy = QPushButton(text("results.how.copy"))
+        copy.setObjectName(f"{prefix}-copy")
+        copy.clicked.connect(self._copy)
+        how_layout.addWidget(copy, 0, Qt.AlignmentFlag.AlignLeft)
         self.how.setVisible(False)
 
         value_line = QHBoxLayout()
@@ -181,26 +199,12 @@ class ResultCard(QFrame):
         set_revealed(self.how, shown)
 
     def _fill_how(self) -> None:
-        while self.how_layout.count():
-            item = self.how_layout.takeAt(0)
-            widget = item.widget() if item is not None else None
-            if widget is not None:
-                widget.deleteLater()
         if self.row is None:
             return
-        for section in disclosure(self.row, self._registry):
-            title = QLabel(section.title)
-            title.setProperty("class", "section-title")
-            body = QLabel("\n".join(section.lines))
-            body.setTextFormat(Qt.TextFormat.PlainText)
-            body.setWordWrap(True)
-            body.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-            self.how_layout.addWidget(title)
-            self.how_layout.addWidget(body)
-        copy = QPushButton(text("results.how.copy"))
-        copy.setObjectName(f"{self.prefix}-copy")
-        copy.clicked.connect(self._copy)
-        self.how_layout.addWidget(copy, 0, Qt.AlignmentFlag.AlignLeft)
+        sections = disclosure(self.row, self._registry)
+        for (title, body), section in zip(self.how_sections, sections, strict=True):
+            title.setText(section.title)
+            body.setText("\n".join(section.lines))
 
     def disclosure_text(self) -> str:
         """Return the text of the open disclosure, section by section (for tests and screen readers)."""

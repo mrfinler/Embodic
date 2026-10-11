@@ -10,6 +10,7 @@ from tests.ui.qt_results.conftest import find
 
 from embodic.api import compute
 from embodic.results.status import Status
+from embodic.ui.theme import ThemeName
 from embodic.ui.views.geometry_view import DATA_KIND
 
 D08, WAVE = "spiral_12c10p_d08", "wave_16p_example"
@@ -226,3 +227,34 @@ def test_inputs_card_counts_the_issues_of_the_input_issues_list(make_window, loa
     value = find(window, QLabel, "rail-inputs-value")
     assert value.text() == (f"{len(listed)} input issues" if len(listed) > 1 else "1 input issue")
     assert value.property("state") == "fail"
+
+
+def overlapping_labels(host: QWidget) -> list[tuple[str, str]]:
+    """Return each pair of visible, non-empty labels under ``host`` whose rectangles intersect (in host coordinates)."""
+    boxes = [
+        (label.text()[:40], QRect(label.mapTo(host, label.rect().topLeft()), label.size()))
+        for label in host.findChildren(QLabel)
+        if label.isVisibleTo(host) and label.text()
+    ]
+    return [(a, b) for i, (a, ra) in enumerate(boxes) for b, rb in boxes[i + 1 :] if ra.intersects(rb)]
+
+
+@pytest.mark.req("REQ-T-13", "REQ-N-15")
+@pytest.mark.parametrize("size", [(960, 540), (1280, 800), (1600, 900)])
+def test_open_disclosure_lays_out_again_at_each_width_so_no_line_prints_over_another(make_window, load, size):
+    """U-S4g S22 (critical). Catches section lines of an earlier layout left on screen over the new ones.
+
+    The S22 lever opens R_ph, then resizes and switches theme with the section open; it pumps events without an event
+    loop, so a label waiting for ``deleteLater`` stays visible. The check runs at that same point.
+    """
+    QApplication.setEffectEnabled(Qt.UIEffect.UI_General, False)
+    window = load(make_window(), D08)
+    window.show_results_tab("tab-results")
+    card = window.results_tab.cards["r-phase"]
+    card.how_toggle.click()
+    window.resize(*size)
+    window.appearance.set_theme(ThemeName.DARK)
+    for _ in range(10):
+        QApplication.processEvents()
+    assert "Assumptions" in card.disclosure_text(), "precondition: the section is open"
+    assert overlapping_labels(window.results_tab.grid_host) == []

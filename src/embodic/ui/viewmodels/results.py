@@ -176,6 +176,17 @@ def _source_lines(t: Traceable[float], registry: Registry) -> tuple[str, ...]:
     return tuple(lines)
 
 
+# Every disclosure has these sections in this order, whatever the row (a row without one says "None").
+DISCLOSURE_KEYS = (
+    "results.how.equation",
+    "results.how.inputs",
+    "results.how.assumptions",
+    "results.how.limitations",
+    "results.how.validity",
+    "results.how.sources",
+)
+
+
 def disclosure(row: ResultRow, registry: Registry) -> tuple[DisclosureSection, ...]:
     """Return the 'How was this computed' disclosure of a row (REQ-T-13).
 
@@ -195,15 +206,16 @@ def disclosure(row: ResultRow, registry: Registry) -> tuple[DisclosureSection, .
     if t.tolerance is not None:
         validity.append(text("results.how.tolerance", against=t.tolerance.against, source=t.tolerance.source_ref))
     sections = (
-        ("results.how.equation", equations or (text(f"results.how.kind-{t.kind_tag}"),)),
-        ("results.how.inputs", _input_lines(t)),
-        ("results.how.assumptions", tuple(assumed_input_text(a) for a in t.assumed_inputs)),
-        ("results.how.limitations", tuple(limitations)),
-        ("results.how.validity", tuple(validity)),
-        ("results.how.sources", _source_lines(t, registry)),
+        equations or (text(f"results.how.kind-{t.kind_tag}"),),
+        _input_lines(t),
+        tuple(assumed_input_text(a) for a in t.assumed_inputs),
+        tuple(limitations),
+        tuple(validity),
+        _source_lines(t, registry),
     )
     return tuple(
-        DisclosureSection(title=text(key), lines=lines or (text("results.how.none"),)) for key, lines in sections
+        DisclosureSection(title=text(key), lines=lines or (text("results.how.none"),))
+        for key, lines in zip(DISCLOSURE_KEYS, sections, strict=True)
     )
 
 
