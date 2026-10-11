@@ -86,7 +86,7 @@ def layer_tallies(layout) -> dict[tuple[str, str], LayerTally]:
 
 
 def drc_all_passed(outcome) -> bool:
-    """True when every board's DRC report lists no violation."""
+    """Return True when every board's DRC report lists no violation."""
     return outcome.drc is not None and all(len(r.violations) == 0 for r in outcome.drc)
 
 

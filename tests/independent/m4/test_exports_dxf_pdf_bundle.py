@@ -10,15 +10,15 @@ from dataclasses import fields
 import ezdxf
 import pypdf
 import pytest
-from conftest import EXAMPLE_STEMS, ROOT, drc_all_passed, example_document, layer_tallies, outcome_of
 
+from conftest import EXAMPLE_STEMS, ROOT, drc_all_passed, example_document, layer_tallies, outcome_of
 from embodic.io.bundle import write_bundle
 from embodic.io.dxf_writer import write_dxf
 from embodic.io.exporters import ExportKind, PhaseRenderMode
 from embodic.io.report import write_report_pdf
 from embodic.io.svg_writer import write_svg
 
-NBSP = " "
+NBSP = "\u00a0"
 COINCIDENT_MM = 1e-6
 PREFIX = {"": 1.0, "n": 1e-9, "µ": 1e-6, "m": 1e-3, "k": 1e3, "M": 1e6}
 # Own table of the unit text the UI prints for each canonical unit code of the key results.
@@ -48,6 +48,7 @@ COLOPHON = "Set in Inter and JetBrains Mono, SIL Open Font License 1.1."
 
 
 def dxf_of(stem: str, part: str, folder):
+    """Write one DXF part of an example once per session and parse it with ezdxf."""
     path = folder / f"{stem}_{part}.dxf"
     if not path.exists():
         result = write_dxf(outcome_of(stem), path, part, allow_drc_errors=True)
@@ -56,10 +57,12 @@ def dxf_of(stem: str, part: str, folder):
 
 
 def xy(v) -> tuple[float, float]:
+    """Return the plane coordinates of an ezdxf vector."""
     return (v.x, v.y)
 
 
 def entity_length(e) -> float:
+    """Return the length of a LINE, ARC or CIRCLE entity, mm."""
     kind = e.dxftype()
     if kind == "LINE":
         return math.dist(xy(e.dxf.start), xy(e.dxf.end))
@@ -98,6 +101,7 @@ def test_complete_dxf_has_every_primitive_and_the_copper_length_of_each_layer(st
 
 
 def end_points(e) -> list[tuple[float, float]]:
+    """Return the two end points of a LINE or ARC; a CIRCLE has none."""
     if e.dxftype() == "LINE":
         return [xy(e.dxf.start), xy(e.dxf.end)]
     if e.dxftype() == "ARC":
@@ -131,6 +135,7 @@ def test_screws_dxf_has_one_circle_per_hole_at_the_design_diameter(stem, export_
 
 
 def pdf_of(stem: str, folder):
+    """Write the report of an example once per session."""
     path = folder / f"{stem}_report.pdf"
     if not path.exists():
         result = write_report_pdf(outcome_of(stem), path)
@@ -139,6 +144,7 @@ def pdf_of(stem: str, folder):
 
 
 def key_result_rows(path) -> list[str]:
+    """Return the rows of the Key results table on page 1."""
     text = pypdf.PdfReader(path).pages[0].extract_text()
     lines = text.splitlines()
     start = lines.index("Quantity Value Status") + 1
@@ -147,6 +153,7 @@ def key_result_rows(path) -> list[str]:
 
 
 def scalar_traceables(analysis):
+    """Yield the scalar Traceable fields of an AnalysisResult in declaration order."""
     for f in fields(analysis):
         value = getattr(analysis, f.name)
         if hasattr(value, "unit") and isinstance(value.value, float):
@@ -154,6 +161,7 @@ def scalar_traceables(analysis):
 
 
 def three_significant(x: float) -> float:
+    """Round to three significant figures."""
     return 0.0 if x == 0 else float(f"{x:.3g}")
 
 
@@ -180,6 +188,7 @@ def test_key_results_print_each_value_to_three_figures_with_unit_and_status(stem
 
 
 def embedded_font_files(path) -> list[bytes]:
+    """Return each distinct FontFile2 stream embedded in the PDF."""
     reader = pypdf.PdfReader(path)
     found = []
     for page in reader.pages:
@@ -213,7 +222,13 @@ def test_colophon_is_the_last_line_of_the_report(stem, export_dir):
 
 def test_bundle_holds_the_selected_files_and_a_readme_naming_each(export_dir):
     """Catches a missing member, a stray temp path, or a README that omits a file it ships with."""
-    kinds = [ExportKind.SVG, ExportKind.DXF_COMPLETE, ExportKind.DXF_OUTLINE, ExportKind.PDF_REPORT, ExportKind.PROJECT_JSON]
+    kinds = [
+        ExportKind.SVG,
+        ExportKind.DXF_COMPLETE,
+        ExportKind.DXF_OUTLINE,
+        ExportKind.PDF_REPORT,
+        ExportKind.PROJECT_JSON,
+    ]
     path = export_dir / "d08_bundle.zip"
     result = write_bundle(outcome_of("spiral_12c10p_d08"), kinds, path)
     assert isinstance(result, tuple), result
@@ -234,7 +249,9 @@ GATED = {
     "dxf_complete": lambda o, p, ok: write_dxf(o, p / "w_c.dxf", "complete", allow_drc_errors=ok),
     "dxf_outline": lambda o, p, ok: write_dxf(o, p / "w_o.dxf", "outline", allow_drc_errors=ok),
     "dxf_screws": lambda o, p, ok: write_dxf(o, p / "w_s.dxf", "screws", allow_drc_errors=ok),
-    "bundle": lambda o, p, ok: write_bundle(o, [ExportKind.SVG, ExportKind.PDF_REPORT], p / "w.zip", allow_drc_errors=ok),
+    "bundle": lambda o, p, ok: write_bundle(
+        o, [ExportKind.SVG, ExportKind.PDF_REPORT], p / "w.zip", allow_drc_errors=ok
+    ),
 }
 
 

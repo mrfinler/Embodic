@@ -7,9 +7,9 @@ from collections import Counter
 from datetime import UTC, datetime, timedelta
 
 import pytest
-from conftest import EXAMPLE_STEMS, FULL_TURN, example_document, layer_tallies, outcome_of
 
 import embodic
+from conftest import EXAMPLE_STEMS, FULL_TURN, example_document, layer_tallies, outcome_of
 from embodic.io.exporters import PhaseRenderMode
 from embodic.io.svg_writer import write_svg
 
@@ -20,6 +20,7 @@ PAINT_ATTRIBUTES = {"stroke", "fill", "fill-opacity", "stroke-opacity", "opacity
 
 
 def svg_of(stem: str, mode: PhaseRenderMode, folder) -> ET.Element:
+    """Write one SVG of an example once per session and parse it."""
     path = folder / f"{stem}_{mode.value}.svg"
     if not path.exists():
         result = write_svg(outcome_of(stem), path, mode=mode, allow_drc_errors=True)
@@ -28,16 +29,19 @@ def svg_of(stem: str, mode: PhaseRenderMode, folder) -> ET.Element:
 
 
 def local(e: ET.Element) -> str:
+    """Return an element's tag without its namespace."""
     return e.tag.split("}")[-1]
 
 
 def by_id(root: ET.Element, ident: str) -> ET.Element:
+    """Return the single element with an id."""
     found = [e for e in root.iter() if e.get("id") == ident]
     assert len(found) == 1, f"one element with id {ident}, found {len(found)}"
     return found[0]
 
 
 def segment_commands(d: str) -> Counter:
+    """Count the path commands of an SVG path data string."""
     return Counter(c for c in re.findall(r"[A-Za-z]", d) if c not in "eE")
 
 
@@ -61,9 +65,7 @@ def test_copper_vias_pads_holes_per_board_layer_and_phase_equal_the_layout(stem,
                         cmds += segment_commands(p.get("d"))
                     row[1] += cmds["L"]
                     row[2] += cmds["A"]
-        want = {
-            key: [t.paths, t.lines, t.arcs + t.full_circles] for key, t in expected.items() if t.paths
-        }
+        want = {key: [t.paths, t.lines, t.arcs + t.full_circles] for key, t in expected.items() if t.paths}
         assert seen == want, f"board {k}: (paths, L, A) per (layer, phase)"
         vias = [e for e in by_id(root, f"b{k}-vias") if e.get("class") == "via"]
         pads = [e for e in by_id(root, f"b{k}-pads") if e.get("class") == "pad"]
@@ -79,8 +81,16 @@ def test_screw_holes_sit_where_the_design_puts_them(stem, export_dir):
     spec = example_document(stem)["design"]["outline"]["screws"][0]
     want = sorted(
         (
-            round(spec["pitch_radius_mm"] * math.cos(math.radians(spec["angle_offset_deg"]) + i * FULL_TURN / spec["count"]), 3),
-            round(spec["pitch_radius_mm"] * math.sin(math.radians(spec["angle_offset_deg"]) + i * FULL_TURN / spec["count"]), 3),
+            round(
+                spec["pitch_radius_mm"]
+                * math.cos(math.radians(spec["angle_offset_deg"]) + i * FULL_TURN / spec["count"]),
+                3,
+            ),
+            round(
+                spec["pitch_radius_mm"]
+                * math.sin(math.radians(spec["angle_offset_deg"]) + i * FULL_TURN / spec["count"]),
+                3,
+            ),
             spec["hole_diameter_mm"] / 2,
         )
         for i in range(spec["count"])
@@ -94,6 +104,7 @@ def test_screw_holes_sit_where_the_design_puts_them(stem, export_dir):
 
 
 def expected_spiral_labels(layout) -> Counter:
+    """Derive the spiral coil labels from the Layout: phase, number in element order, sign."""
     coils = sorted({(p.phase.value, p.element, p.polarity) for p in layout.paths if p.polarity != 0 and p.phase})
     number: Counter = Counter()
     labels: Counter = Counter()
@@ -110,6 +121,7 @@ SERPENTINE_LABELS = Counter({ph: 4 for ph in "ABC"})
 
 
 def label_texts(root: ET.Element) -> Counter:
+    """Count the coil-label texts of an SVG."""
     return Counter(e.text for e in root.iter() if e.get("class") == "coil-label")
 
 
@@ -156,6 +168,7 @@ def test_metadata_holds_version_hash_time_and_drc_verdict(stem, export_dir):
 
 
 def without_paint(e: ET.Element) -> tuple:
+    """Return an element tree with the paint attributes and the time stamp left out."""
     attrs = tuple(sorted((k, v) for k, v in e.attrib.items() if k not in PAINT_ATTRIBUTES and k != "generated_utc"))
     return (e.tag, attrs, (e.text or "").strip(), tuple(without_paint(c) for c in e))
 
