@@ -808,15 +808,26 @@ class MainWindow(QMainWindow):
             self.results_tabs.insertTab(first, self.rail_scroll, text("shell.results-rail.title"))
 
     def _place_canvas(self, compact: bool) -> None:
-        """Under 620 px client height the canvas is the first results tab, "Drawing" (design_spec.md section 5)."""
+        """Under 620 px client height the canvas is the first results tab, "Drawing" (design_spec.md section 5).
+
+        Entering compact height keeps the tab the user reads; Drawing comes forward only while keyboard focus is inside
+        the canvas page, since a focused widget on a hidden tab has no visible focus (U-S4h ruling n, WCAG 2.4.7).
+        """
         index = self.results_tabs.indexOf(self.canvas_page)
-        if compact and index < 0:
+        if compact == (index >= 0):
+            return
+        focus = QApplication.focusWidget()
+        held = focus if focus is not None and self.canvas_page.isAncestorOf(focus) else None
+        if compact:
             self.results_tabs.insertTab(0, self.canvas_page, text("shell.drawing.title"))
-            self.results_tabs.setCurrentIndex(0)
-        elif not compact and index >= 0:
+            if held is not None:
+                self.results_tabs.setCurrentIndex(0)
+        else:
             self.results_tabs.removeTab(index)
             self.centre_split.insertWidget(0, self.canvas_page)
             self.canvas_page.show()
+        if held is not None:
+            held.setFocus()
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802 (Qt override)
         """Give the canvas its share of `centre-split` on every resize; a results page's size hint never moves it."""
