@@ -27,8 +27,7 @@ SCALES = ("1", "1.5", "2")
 NOT_TESTED = {
     "UI-09 text clipping": "a judgement on the three scaling grabs; no machine check (Agent 1 reviews them)",
     "UI-20 rotor-angle overlay": "not implemented in this build (REQ-F-30 is a could)",
-    "S33 Tests dialog": "no Tests dialog (`tests-table`) exists in this build",
-    "S09 tooltip look": "offscreen Qt draws no tooltip; the shot shows the focus ring and the notes give the text",
+    "S33 Tests dialog": "moved to M5 (D-042a): no Tests dialog (`tests-table`) exists in this build",
     "U+00A0 between number and unit": "a still image cannot tell U+00A0 from a space",
     "S36 and S38 numbers": "shot_measure.py measures the 1280 x 800 panes and the gallery only",
     "keyboard in the file dialog": "the Windows build uses the native dialog; AX-02 opens through the Examples gallery",
