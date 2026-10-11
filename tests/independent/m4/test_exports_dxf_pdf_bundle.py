@@ -18,6 +18,8 @@ from embodic.io.exporters import ExportKind, PhaseRenderMode
 from embodic.io.report import write_report_pdf
 from embodic.io.svg_writer import write_svg
 
+pytestmark = pytest.mark.req("REQ-F-09", "REQ-F-16", "REQ-F-29", "REQ-F-33")
+
 NBSP = "\u00a0"
 COINCIDENT_MM = 1e-6
 PREFIX = {"": 1.0, "n": 1e-9, "µ": 1e-6, "m": 1e-3, "k": 1e3, "M": 1e6}

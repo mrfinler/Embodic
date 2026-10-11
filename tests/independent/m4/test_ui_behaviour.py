@@ -35,7 +35,10 @@ NBSP = "\u00a0"
 UNITS = r"(?:[nµmkM]?(?:V·s/rad|N·m/A|N·m/√W|N·m|rpm/V|Ω·m|Ω|W/\(m²·K\)|W|H|A/mm²|A|V|g|K|T|mm²|mm|µm|rad|°C|rpm))"
 NUMBER_UNIT = re.compile(r"(?<![\w/.])(−?\d+(?:\.\d+)?)([ \u2009\u202f\u00a0]?)(" + UNITS + r")(?![\w²³])")
 
-pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
+pytestmark = [
+    pytest.mark.req("REQ-F-13", "REQ-N-15"),
+    pytest.mark.filterwarnings("ignore::DeprecationWarning"),
+]
 
 
 def share(split: QSplitter) -> float:

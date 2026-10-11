@@ -16,6 +16,8 @@ from embodic.io.svg_writer import write_svg
 SVG = "{http://www.w3.org/2000/svg}"
 META = "{urn:embodic:export:1}"
 MINUS = "−"
+pytestmark = pytest.mark.req("REQ-F-16", "REQ-N-14", "REQ-N-23")
+
 PAINT_ATTRIBUTES = {"stroke", "fill", "fill-opacity", "stroke-opacity", "opacity", "style", "data-render-mode"}
 
 
@@ -26,11 +28,6 @@ def svg_of(stem: str, mode: PhaseRenderMode, folder) -> ET.Element:
         result = write_svg(outcome_of(stem), path, mode=mode, allow_drc_errors=True)
         assert hasattr(result, "path"), result
     return ET.parse(path).getroot()
-
-
-def local(e: ET.Element) -> str:
-    """Return an element's tag without its namespace."""
-    return e.tag.split("}")[-1]
 
 
 def by_id(root: ET.Element, ident: str) -> ET.Element:
