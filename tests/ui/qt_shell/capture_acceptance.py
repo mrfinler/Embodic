@@ -27,6 +27,7 @@ from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
+    QComboBox,
     QDialog,
     QLineEdit,
     QListWidget,
@@ -43,10 +44,11 @@ from embodic.ui.app import QSettingsStore, create_shell, qt_application
 from embodic.ui.theme import ThemeName
 from embodic.ui.toolstrip import ToolstripTab
 from embodic.ui.viewmodels.outcome import OutcomeReady
-from embodic.ui.viewmodels.session import SessionComputed
+from embodic.ui.viewmodels.session import SCREWS_POINTER, SessionComputed
 from embodic.ui.views.main_window import MainWindow, ShellPaths
 
 CF11, D08, C14 = "spiral_12c16p_default", "spiral_12c10p_d08", "spiral_12c14p"
+S20_PATTERN = {"size": "M3", "count": 6, "pitch_radius_mm": 45.0, "fit": "normal", "hole_diameter_mm": 3.4}
 SERP, WAVE = "serpentine_16p_example", "wave_16p_example"
 WIDE, SMALL = (1280, 800), (960, 540)
 L, D = ThemeName.LIGHT, ThemeName.DARK
@@ -126,8 +128,12 @@ class Run:
         self.files.append(name)
 
 
+POPUPS = ("QTipLabel", "QComboBoxPrivateContainer")  # top-level windows that grab() leaves out (checklist Popups)
+
+
 def _over(top: QWidget, window: QWidget) -> bool:
-    return type(top).__name__ == "QTipLabel" or (isinstance(top, QDialog) and top.parentWidget() is window)
+    # PySide wraps Qt's private popup classes as QLabel and QFrame, so the Qt class name tells them apart.
+    return top.metaObject().className() in POPUPS or (isinstance(top, QDialog) and top.parentWidget() is window)
 
 
 def _type(run: Run, name: str, value: str) -> None:
@@ -158,6 +164,8 @@ def _close_dialogs(run: Run) -> None:
     for top in QApplication.topLevelWidgets():
         if isinstance(top, QDialog) and top.isVisible():
             top.close()
+    for combo in run.window.findChildren(QComboBox):
+        combo.hidePopup()
     QToolTip.hideText()
     run.pump()
 
@@ -238,9 +246,10 @@ def _s09(run: Run) -> None:
         run.start(CF11, theme)
         run.window.toolstrip.show_tab(ToolstripTab.VIEW)
         run.focus("act-theme")
+        button = run.window.toolstrip.buttons["act-theme"]
+        QToolTip.showText(button.mapToGlobal(button.rect().bottomLeft()), button.toolTip(), button)
         run.save("S09", theme, WIDE)
-    tip = run.window.toolstrip.buttons["act-theme"].toolTip()
-    run.notes.append(f"not tested: offscreen Qt draws no tooltip; the act-theme tooltip text is {tip!r}")
+        _close_dialogs(run)
 
 
 def _s10(run: Run) -> None:
@@ -314,8 +323,9 @@ def _s16(run: Run) -> None:
 def _s17(run: Run) -> None:
     for theme in (L, D):
         run.start(C14, theme)
-        _inspector(run, "tab-layers")
+        layers = _inspector(run, "tab-layers")
         run.focus("param-layer-count")
+        layers.ensureWidgetVisible(run.widget("pair-list"))
         run.save("S17", theme, WIDE)
 
 
@@ -323,7 +333,11 @@ def _s18(run: Run) -> None:
     run.start(WAVE)
     _inspector(run, "tab-layers")
     run.focus("param-wave-layers")
+    combo = run.widget("param-wave-layers")
+    assert isinstance(combo, QComboBox)
+    combo.showPopup()
     run.save("S18", L, WIDE)
+    _close_dialogs(run)
 
 
 def _s19(run: Run) -> None:
@@ -344,9 +358,13 @@ def _s20(run: Run) -> None:
         board = _inspector(run, "tab-board")
         if run.widget("screw-table").rowCount() == 0:
             run.widget("btn-screw-add").click()
+            run.window.session.edit_many({f"{SCREWS_POINTER}/0/{leaf}": value for leaf, value in S20_PATTERN.items()})
             run.settle()
             if theme is L:
-                run.notes.append("the example has no screw pattern; btn-screw-add added one so its fields show")
+                run.notes.append(
+                    "btn-screw-add added a pattern, filled M3, 6, 45 mm, fit normal, 3.4 mm; the checklist's "
+                    "'Clearance' is no fit choice (close, normal, loose)"
+                )
         board.ensureWidgetVisible(run.widget("param-screw-angle-offset"))
         board.ensureWidgetVisible(run.widget("screw-table"))
         run.focus("param-screw-hole-diameter")
@@ -423,6 +441,7 @@ def _s26(run: Run) -> None:
 
 def _s27(run: Run) -> None:
     run.start(CF11)
+    _type(run, "param-dc-link", "24")
     _results(run, "tab-torque-speed")
     run.focus("chart-torque-speed")
     run.save("S27", L, WIDE)
