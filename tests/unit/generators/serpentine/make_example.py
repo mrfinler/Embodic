@@ -21,9 +21,7 @@ from embodic.model.provenance import ExampleRef, derive_provenance
 from embodic.results import load_registry
 
 EXAMPLE_ID = "serpentine_16p_example"
-TITLE = "Serpentine, 16 poles"  # U-S4e ruling g
-# `/name` is hashed with the design, so it keeps its old text; see DESIGN_NAMES in make_examples.py.
-DESIGN_NAME = "Example: 16-pole serpentine (Xcoil default)"
+TITLE = "Serpentine, 16 poles"  # U-S4e ruling g; D-041b: also the design `/name`
 SOURCE_NOTE = "Xcoil default serpentine preset (engine.js l.19-97), example values (assumption)"
 SAVED_UTC = "2026-10-08T00:00:00Z"  # fixed, so a rerun rewrites identical files
 OUTLINE_SCALE, BORE_SCALE = 1.2, 0.85  # Xcoil outlineScale and innerScale
@@ -50,7 +48,7 @@ def example_design() -> DesignParameters:
         board=CircleOutline(radius_mm=board_r), bore=CircleOutline(radius_mm=BORE_SCALE * r_min), screws=screws
     )
     drc = dataclasses.replace(base.drc_rules, trace_clearance_mm=0.2, via_clearance_mm=0.2)
-    return dataclasses.replace(base, name=DESIGN_NAME, outline=outline, drc_rules=drc)
+    return dataclasses.replace(base, name=TITLE, outline=outline, drc_rules=drc)
 
 
 def write_example(folder: Path) -> Path:

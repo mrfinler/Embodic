@@ -134,7 +134,7 @@ def test_ui10_ui34_compare_shows_reference_and_current_with_integer_counts_and_g
     confirm = window.findChild(QMessageBox, "dlg-compare-confirm")
     assert confirm is not None and confirm.defaultButton() is confirm.button(QMessageBox.StandardButton.Cancel)
     confirm.reject()
-    assert tab.vm.reference.value.design.name.endswith("D08 12-coil 10-pole spiral")
+    assert tab.vm.reference.value.design.name == "Spiral, 12 coils, 10 poles (D08)"
 
 
 @pytest.mark.req("REQ-F-26")

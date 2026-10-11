@@ -27,8 +27,8 @@ from embodic.model.vocabulary import TopologyKind
 BR = "/rotor/remanence_t"
 SOURCE = "magnet datasheet rev C, grade N42"
 CF11 = "spiral_12c16p_default"
-# Pinned 2026-10-08 from the packaged CF-11 example; a change means the canonical form or the example changed.
-CF11_HASH = "sha256:42b702746410833c6c52e3083613705fab52bce6c7865c216d61e7b8ba1dea58"
+# Pinned 2026-10-11 (D-041b) from the packaged CF-11 example; a change means the canonical form or the example changed.
+CF11_HASH = "sha256:ac4fab5db06f9e8f733dc495080deeddfe0bcf58faa31ebb7ec841c1b27d9c09"
 EXAMPLE_OBJECT = {"title": "Example of a test file", "source_note": "test"}
 
 
@@ -81,7 +81,7 @@ def test_ut_io_02_canonical_json_is_sorted_compact_and_in_degrees() -> None:
     """Catches whitespace, unsorted keys or radians in the hashed bytes, which would break cross-platform hashes."""
     _, design = load_example(CF11)
     text = canonical_json(design).decode()
-    assert " " not in text.replace("Example: 12-coil 16-pole spiral (default)", "")
+    assert " " not in text.replace("Spiral, 12 coils, 16 poles", "")
     assert '_rad"' not in text
     assert '"rotation_deg":' in text
     data = json.loads(text)

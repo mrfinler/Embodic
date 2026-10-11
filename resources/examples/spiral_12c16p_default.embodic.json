@@ -37,7 +37,7 @@
    "copper_temp_coeff_per_k": null,
    "laminate_density_g_per_cm3": null
   },
-  "name": "Example: 12-coil 16-pole spiral (default)",
+  "name": "Spiral, 12 coils, 16 poles",
   "operating": {
    "ambient_temperature_degc": 20.0,
    "convection_h_w_m2k": 10.0,
@@ -147,7 +147,7 @@
    "phase_sequence": "abc"
   }
  },
- "design_hash": "sha256:42b702746410833c6c52e3083613705fab52bce6c7865c216d61e7b8ba1dea58",
+ "design_hash": "sha256:ac4fab5db06f9e8f733dc495080deeddfe0bcf58faa31ebb7ec841c1b27d9c09",
  "example": {
   "source_note": "CF-11 default 12/16 spiral, example values (assumption), docs/phase2/engineering/oracle_cases.json CF-11",
   "title": "Spiral, 12 coils, 16 poles"
@@ -155,7 +155,7 @@
  "format": "embodic-project",
  "origin_example": {
   "example_id": "spiral_12c16p_default",
-  "example_sha256": "sha256:42b702746410833c6c52e3083613705fab52bce6c7865c216d61e7b8ba1dea58"
+  "example_sha256": "sha256:ac4fab5db06f9e8f733dc495080deeddfe0bcf58faa31ebb7ec841c1b27d9c09"
  },
  "provenance": {
   "/analysis/harmonics": {

@@ -37,7 +37,7 @@
    "copper_temp_coeff_per_k": null,
    "laminate_density_g_per_cm3": null
   },
-  "name": "Example: 12-coil 14-pole spiral",
+  "name": "Spiral, 12 coils, 14 poles",
   "operating": {
    "ambient_temperature_degc": 20.0,
    "convection_h_w_m2k": 10.0,
@@ -147,7 +147,7 @@
    "phase_sequence": "abc"
   }
  },
- "design_hash": "sha256:546ef0545182cfadb46815ec535a51e4827eeb2126ea7b70c96b58f3538e0c90",
+ "design_hash": "sha256:4a1997029f7063676bdb9eab703c462f4240d84916a5ddf3deec044fa4391bc1",
  "example": {
   "source_note": "CF-11 copper with 14 poles on a 104 mm board, example values (assumption)",
   "title": "Spiral, 12 coils, 14 poles"
@@ -155,7 +155,7 @@
  "format": "embodic-project",
  "origin_example": {
   "example_id": "spiral_12c14p",
-  "example_sha256": "sha256:546ef0545182cfadb46815ec535a51e4827eeb2126ea7b70c96b58f3538e0c90"
+  "example_sha256": "sha256:4a1997029f7063676bdb9eab703c462f4240d84916a5ddf3deec044fa4391bc1"
  },
  "provenance": {
   "/analysis/harmonics": {

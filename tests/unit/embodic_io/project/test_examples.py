@@ -30,18 +30,14 @@ RULING_G_TITLES = {
     "serpentine_16p_example": "Serpentine, 16 poles",
     "wave_16p_example": "Wave, 16 poles, involute",
 }
-# Pinned 2026-10-09 from the files before the ruling g retitle: a display title must not move a design hash.
-HASHES_BEFORE_RETITLE = {
-    "spiral_12c16p_default": "sha256:42b702746410833c6c52e3083613705fab52bce6c7865c216d61e7b8ba1dea58",
-    "spiral_12c14p": "sha256:546ef0545182cfadb46815ec535a51e4827eeb2126ea7b70c96b58f3538e0c90",
-    "spiral_12c10p_d08": "sha256:709ea86cd9d17998d231ae2beef79d813063afb6b2ff183ea9fa9050dd989761",
-    "serpentine_16p_example": "sha256:3fa7f90783e1d3e9a1ec1b4d886f8fddf3a48404a32a669faf913d55527e469f",
-    "wave_16p_example": "sha256:294f2a10cad44a4e13824d097697547f8c162e6f279a9d7cb2f09c45f3d2c66c",
+# D-041b: `/name` equals the display title, and `/name` is hashed with the design, so these moved with the rename.
+EXAMPLE_HASHES = {
+    "spiral_12c16p_default": "sha256:ac4fab5db06f9e8f733dc495080deeddfe0bcf58faa31ebb7ec841c1b27d9c09",
+    "spiral_12c14p": "sha256:4a1997029f7063676bdb9eab703c462f4240d84916a5ddf3deec044fa4391bc1",
+    "spiral_12c10p_d08": "sha256:327919a0eef55ce2c458635f6160047af7654ebd0a04e818ee225fd5f69615d8",
+    "serpentine_16p_example": "sha256:8ec4c23449a0be2bf4ee6ba337b72b2e93e5906e6b53ba8ba7c441d4872dd1ca",
+    "wave_16p_example": "sha256:3131a61975766c38984df5065b01f255875b79ebcfa831624c10c5db5d5c82e8",
 }
-# `/name` is hashed with the design, and the serpentine design name still holds the old title (open decision).
-SERPENTINE_DESIGN_NAME_NAMES_XCOIL = pytest.mark.xfail(
-    strict=True, reason="the serpentine design name (hashed with the design) still names Xcoil"
-)
 
 
 @pytest.mark.req("REQ-F-25", "REQ-F-38")
@@ -52,19 +48,22 @@ def test_ut_io_08_examples_are_packaged_with_the_ruling_g_display_titles() -> No
     assert {infos[i].topology for i in SPIRAL_EXAMPLES} == {TopologyKind.SPIRAL}
 
 
+@pytest.mark.req("REQ-F-25", "REQ-F-38")
+def test_d_041b_each_example_design_is_named_by_its_display_title() -> None:
+    """Catches a design name that still says "Example" or "Xcoil", which the window title and export stem show."""
+    assert {i: load_example(i)[1].name for i in RULING_G_TITLES} == RULING_G_TITLES
+
+
 @pytest.mark.req("REQ-F-25")
-def test_ut_io_08_a_display_title_does_not_move_the_design_hash() -> None:
-    """Catches a title copied into the design (`/name` is hashed), which re-keys saved references to the example."""
-    assert {i: load_example(i)[0].example_sha256 for i in RULING_G_TITLES} == HASHES_BEFORE_RETITLE
+def test_ut_io_08_the_packaged_design_hashes_are_pinned() -> None:
+    """Catches a builder change that moves an example design, which re-keys every saved reference to it."""
+    assert {i: load_example(i)[0].example_sha256 for i in RULING_G_TITLES} == EXAMPLE_HASHES
 
 
 @pytest.mark.req("REQ-F-25", "REQ-F-38")
 @pytest.mark.parametrize(
     "example_id",
-    [
-        pytest.param(i, marks=SERPENTINE_DESIGN_NAME_NAMES_XCOIL) if i.startswith("serpentine") else i
-        for i in sorted(p.name.split(".")[0] for p in examples_dir().glob("*.embodic.json"))
-    ],
+    sorted(p.name.split(".")[0] for p in examples_dir().glob("*.embodic.json")),
 )
 def test_ux_ac_03_an_exported_example_names_no_other_program_and_no_repository_path(
     example_id: str, tmp_path: Path

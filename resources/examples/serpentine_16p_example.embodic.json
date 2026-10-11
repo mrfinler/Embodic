@@ -37,7 +37,7 @@
    "copper_temp_coeff_per_k": null,
    "laminate_density_g_per_cm3": null
   },
-  "name": "Example: 16-pole serpentine (Xcoil default)",
+  "name": "Serpentine, 16 poles",
   "operating": {
    "ambient_temperature_degc": 25.0,
    "convection_h_w_m2k": 30.0,
@@ -177,7 +177,7 @@
    "turns": 4
   }
  },
- "design_hash": "sha256:3fa7f90783e1d3e9a1ec1b4d886f8fddf3a48404a32a669faf913d55527e469f",
+ "design_hash": "sha256:8ec4c23449a0be2bf4ee6ba337b72b2e93e5906e6b53ba8ba7c441d4872dd1ca",
  "example": {
   "source_note": "Xcoil default serpentine preset (engine.js l.19-97), example values (assumption)",
   "title": "Serpentine, 16 poles"
@@ -185,7 +185,7 @@
  "format": "embodic-project",
  "origin_example": {
   "example_id": "serpentine_16p_example",
-  "example_sha256": "sha256:3fa7f90783e1d3e9a1ec1b4d886f8fddf3a48404a32a669faf913d55527e469f"
+  "example_sha256": "sha256:8ec4c23449a0be2bf4ee6ba337b72b2e93e5906e6b53ba8ba7c441d4872dd1ca"
  },
  "provenance": {
   "/analysis/harmonics": {
