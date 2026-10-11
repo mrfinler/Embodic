@@ -51,6 +51,7 @@ from embodic.ui.views.status_badge import AssumptionTag, EqChip, StatusBadge, ba
 
 COMPUTING_DIM_AFTER_MS = 300
 COMPUTING_OPACITY = 0.6
+STALE_OPACITY = 0.6
 REVEAL_MS = 120
 CARD_MIN_WIDTH_PX = 280  # screens.md section 6, U-S4e ruling d
 CARD_GAP_PX = 8
@@ -146,7 +147,15 @@ class ResultCard(QFrame):
         how_layout.addWidget(copy, 0, Qt.AlignmentFlag.AlignLeft)
         self.how.setVisible(False)
 
-        value_line = QHBoxLayout()
+        # Value, unit and badge dim together when the card shows a last valid result (UX-AC-15).
+        value_row = QWidget()
+        value_row.setObjectName(f"{prefix}-value-row")
+        self._stale_dim = QGraphicsOpacityEffect(value_row)
+        self._stale_dim.setOpacity(STALE_OPACITY)
+        self._stale_dim.setEnabled(False)
+        value_row.setGraphicsEffect(self._stale_dim)
+        value_line = QHBoxLayout(value_row)
+        value_line.setContentsMargins(0, 0, 0, 0)
         value_line.addWidget(self.value)
         value_line.addWidget(self.unit, 0, Qt.AlignmentFlag.AlignBaseline)
         value_line.addStretch(1)
@@ -158,7 +167,7 @@ class ResultCard(QFrame):
         meta.addStretch(1)
         layout = QVBoxLayout(self)
         layout.addWidget(self.title)
-        layout.addLayout(value_line)
+        layout.addWidget(value_row)
         layout.addLayout(meta)
         layout.addWidget(self.asm_list)
         layout.addWidget(self.how_toggle)
@@ -189,6 +198,7 @@ class ResultCard(QFrame):
         self.setAccessibleName(row.accessible_name)
         self.setWhatsThis(row.eq_ids[0] if row.eq_ids else "")
         self.setProperty("stale", "true" if stale else "false")
+        self._stale_dim.setEnabled(stale)
         repolish(self)
         if self.how_toggle.isChecked():
             self._fill_how()

@@ -4,7 +4,7 @@ import dataclasses
 
 import pytest
 from PySide6.QtCore import QPropertyAnimation, QRect, Qt
-from PySide6.QtGui import QAccessible, QGuiApplication
+from PySide6.QtGui import QAccessible, QGuiApplication, qGray
 from PySide6.QtWidgets import QApplication, QLabel, QListWidget, QPushButton, QWidget
 from tests.ui.qt_results.conftest import find
 
@@ -279,3 +279,24 @@ def test_def_uv4_07_every_result_card_announces_label_value_unit_and_status(make
     assert names["r-phase"] == "Phase resistance at operating temperature R_ph, 502 milliohm, not tested"
     value = QAccessible.queryAccessibleInterface(find(window.results_tab, QLabel, "res-r-phase-value"))
     assert value.text(QAccessible.Text.Name) == "502"
+
+
+def darkest_grey(card: QWidget, part: QWidget) -> int:
+    """Return the darkest grey level the card paints inside one of its parts (0 black, 255 white)."""
+    image = card.grab(QRect(part.mapTo(card, part.rect().topLeft()), part.size())).toImage()
+    return min(qGray(image.pixel(x, y)) for x in range(image.width()) for y in range(image.height()))
+
+
+@pytest.mark.req("REQ-F-14")
+def test_ux_ac_15_stale_cards_dim_value_unit_and_badge(make_window, load):
+    """U-S4g S23. Catches last valid results drawn at full ink, so they read as current (value read 20, 20, 20)."""
+    window = load(make_window(), D08)
+    window.show_results_tab("tab-results")
+    card = window.results_tab.cards["r-phase"]
+    parts = {"value": card.value, "unit": card.unit, "badge": card.badge}
+    fresh = {name: darkest_grey(card, part) for name, part in parts.items()}
+    window.results.show(window.session.current_outcome().analysis, stale=True)
+    QApplication.processEvents()
+    assert window.results_tab.stale_stamp.isVisible(), "precondition: the results are marked stale"
+    stale = {name: darkest_grey(card, part) for name, part in parts.items()}
+    assert {name: stale[name] - fresh[name] >= 40 for name in parts} == dict.fromkeys(parts, True), (fresh, stale)
