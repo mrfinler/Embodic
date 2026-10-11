@@ -136,6 +136,9 @@ QLabel[class="badge"][status="inferred"] { border: 1px solid #f2f2f2; } /* borde
 QLabel[class="badge"][status="assumption"] { border: 1px dashed #f2f2f2; } /* border-strong */
 QLabel[class="badge"][status="unresolved"] { border: 1px dotted #f2f2f2; background-color: #232323; } /* border-strong, surface-sunken */
 QLabel[class="badge"][status="not-tested"] { border: 1px solid #7d7d7d; color: #c8c8c8; } /* border-control, text-2 */
+QFrame[class="result-card"][stale="true"] QLabel[class="result-value"], QFrame[class="result-card"][stale="true"] QLabel[class="result-unit"] { color: #a0a0a0; } /* text-3 */
+QFrame[class="result-card"][stale="true"] QLabel[class="badge"] { color: #a0a0a0; border-color: #7d7d7d; } /* text-3, border-control */
+QFrame[class="result-card"][stale="true"] QLabel[class="badge"][status="verified"] { background-color: transparent; }
 QToolButton[class="asm-tag"] { color: #c8c8c8; border: 1px dashed #c8c8c8; border-radius: 8px; padding: 1px 8px; font-size: 12px; min-height: 20px; } /* text-2 */
 QLabel[class="prov-chip"] { font-size: 12px; border-radius: 8px; padding: 1px 7px; color: #f2f2f2; border: 1px solid #f2f2f2; } /* text-1, border-strong */
 QLabel[class="prov-chip"][provenance="example"] { color: #c8c8c8; border: 1px dashed #c8c8c8; } /* text-2 */

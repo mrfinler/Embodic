@@ -7,7 +7,7 @@ disclosure; every part reads the `ResultRow`, never a constant (D-007).
 from collections.abc import Callable
 
 from PySide6.QtCore import QEasingCurve, QEvent, QObject, QPropertyAnimation, Qt, QTimer, Signal
-from PySide6.QtGui import QGuiApplication, QResizeEvent
+from PySide6.QtGui import QColor, QGuiApplication, QPainter, QPixmap, QResizeEvent
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -52,7 +52,6 @@ from embodic.ui.views.widgets import check_box
 
 COMPUTING_DIM_AFTER_MS = 300
 COMPUTING_OPACITY = 0.6
-STALE_OPACITY = 0.6
 REVEAL_MS = 120
 CARD_MIN_WIDTH_PX = 280  # screens.md section 6, U-S4e ruling d
 CARD_GAP_PX = 8
@@ -77,6 +76,15 @@ def focus_ring_qss(tokens: ThemeTokens) -> str:
 def animations_enabled() -> bool:
     """Return whether the OS allows UI animations (Qt reads the platform's effect setting into UI_General)."""
     return QApplication.isEffectEnabled(Qt.UIEffect.UI_General)
+
+
+def inked(pixmap: QPixmap, colour: str) -> QPixmap:
+    """Return the pixmap's shape drawn in one colour; a pixmap takes no colour from the style sheet."""
+    painter = QPainter(pixmap)
+    painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
+    painter.fillRect(pixmap.rect(), QColor(colour))
+    painter.end()
+    return pixmap
 
 
 def set_revealed(widget: QWidget, shown: bool) -> QPropertyAnimation | None:
@@ -151,15 +159,7 @@ class ResultCard(QFrame):
         how_layout.addWidget(copy, 0, Qt.AlignmentFlag.AlignLeft)
         self.how.setVisible(False)
 
-        # Value, unit and badge dim together when the card shows a last valid result (UX-AC-15).
-        value_row = QWidget()
-        value_row.setObjectName(f"{prefix}-value-row")
-        self._stale_dim = QGraphicsOpacityEffect(value_row)
-        self._stale_dim.setOpacity(STALE_OPACITY)
-        self._stale_dim.setEnabled(False)
-        value_row.setGraphicsEffect(self._stale_dim)
-        value_line = QHBoxLayout(value_row)
-        value_line.setContentsMargins(0, 0, 0, 0)
+        value_line = QHBoxLayout()
         value_line.addWidget(self.value)
         value_line.addWidget(self.unit, 0, Qt.AlignmentFlag.AlignBaseline)
         value_line.addStretch(1)
@@ -171,7 +171,7 @@ class ResultCard(QFrame):
         meta.addStretch(1)
         layout = QVBoxLayout(self)
         layout.addWidget(self.title)
-        layout.addWidget(value_row)
+        layout.addLayout(value_line)
         layout.addLayout(meta)
         layout.addWidget(self.asm_list)
         layout.addWidget(self.how_toggle)
@@ -202,8 +202,10 @@ class ResultCard(QFrame):
         self.setAccessibleName(row.accessible_name)
         self.setWhatsThis(row.eq_ids[0] if row.eq_ids else "")
         self.setProperty("stale", "true" if stale else "false")
-        self._stale_dim.setEnabled(stale)
-        repolish(self)
+        for widget in (self, self.value, self.unit, self.badge.label):
+            repolish(widget)
+        if stale:
+            self.badge.icon.setPixmap(inked(self.badge.icon.pixmap(), tokens.colours["text-3"]))
         if self.how_toggle.isChecked():
             self._fill_how()
 

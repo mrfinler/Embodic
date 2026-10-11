@@ -1,10 +1,13 @@
 """Results tab, rail, DRC tab and Locate in the window (UI-06, UI-07, UI-31, UI-33)."""
 
 import dataclasses
+import importlib.util
+from collections import Counter
+from pathlib import Path
 
 import pytest
 from PySide6.QtCore import QPropertyAnimation, QRect, Qt
-from PySide6.QtGui import QAccessible, QGuiApplication, qGray
+from PySide6.QtGui import QAccessible, QColor, QGuiApplication
 from PySide6.QtWidgets import QApplication, QLabel, QListWidget, QPushButton, QWidget
 from tests.ui.qt_results.conftest import find
 
@@ -17,6 +20,13 @@ from embodic.ui.views.style import themed_icon
 D08, WAVE, SERPENTINE = "spiral_12c10p_d08", "wave_16p_example", "serpentine_16p_example"
 DRC_COLUMNS = ("severity", "board", "message", "measured", "required", "layer")
 CELL_MARGIN_PX = 3  # Fusion item text margin on each side (PM_FocusFrameHMargin + 1)
+
+_CONTRAST_TOOL = Path(__file__).resolve().parents[3] / "tools" / "contrast_check.py"  # tools/ is not a package
+_spec = importlib.util.spec_from_file_location("contrast_check", _CONTRAST_TOOL)
+assert _spec is not None and _spec.loader is not None
+contrast_check = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(contrast_check)
+contrast_ratio = contrast_check.contrast_ratio
 
 
 @pytest.mark.req("REQ-T-01", "REQ-T-13", "REQ-F-13")
@@ -306,22 +316,65 @@ def test_def_uv4_07_every_result_card_announces_label_value_unit_and_status(make
     assert value.text(QAccessible.Text.Name) == "502"
 
 
-def darkest_grey(card: QWidget, part: QWidget) -> int:
-    """Return the darkest grey level the card paints inside one of its parts (0 black, 255 white)."""
+def colours_painted(card: QWidget, part: QWidget) -> set[str]:
+    """Return the colours (#rrggbb) the card paints inside one of its parts."""
     image = card.grab(QRect(part.mapTo(card, part.rect().topLeft()), part.size())).toImage()
-    return min(qGray(image.pixel(x, y)) for x in range(image.width()) for y in range(image.height()))
+    return {QColor(image.pixel(x, y)).name() for x in range(image.width()) for y in range(image.height())}
+
+
+def strongest_ink(card: QWidget, part: QWidget, fill: str) -> str:
+    """Return the colour the card paints inside a part that contrasts most with the fill: the text at full coverage."""
+    return max(colours_painted(card, part), key=lambda found: contrast_ratio(found, fill))
+
+
+def card_fill(card: QWidget) -> str:
+    """Return the colour that covers most of the card."""
+    image = card.grab().toImage()
+    counts = Counter(QColor(image.pixel(x, y)).name() for x in range(image.width()) for y in range(image.height()))
+    return counts.most_common(1)[0][0]
+
+
+# Light and dark values of text-1, text-3, bg-app and border-control, from design_spec.md appendix A (tokens.json).
+STALE_INK = {
+    ThemeName.LIGHT: {"text-1": "#141414", "text-3": "#666666", "bg-app": "#f7f7f7", "border-control": "#858585"},
+    ThemeName.DARK: {"text-1": "#f2f2f2", "text-3": "#a0a0a0", "bg-app": "#0f0f0f", "border-control": "#7d7d7d"},
+}
 
 
 @pytest.mark.req("REQ-F-14")
-def test_ux_ac_15_stale_cards_dim_value_unit_and_badge(make_window, load):
-    """U-S4g S23. Catches last valid results drawn at full ink, so they read as current (value read 20, 20, 20)."""
-    window = load(make_window(), D08)
+@pytest.mark.parametrize("theme", [ThemeName.LIGHT, ThemeName.DARK])
+def test_ux_ac_15_stale_cards_dim_value_unit_and_badge_by_token_and_keep_4_5_to_1(make_window, load, theme):
+    """U-S4h ruling m. Catches the 0.6 opacity dim (2.44:1 light, 3.34:1 dark) and a verified badge with its fill."""
+
+    def verified_ke(design, provenance, **kwargs):
+        outcome = compute(design, provenance, **kwargs)
+        t = dataclasses.replace(outcome.analysis.ke_phase_v_s_per_rad, status=Status.VERIFIED)
+        return dataclasses.replace(outcome, analysis=dataclasses.replace(outcome.analysis, ke_phase_v_s_per_rad=t))
+
+    window = load(make_window(verified_ke), D08)
+    window.appearance.set_theme(theme)
     window.show_results_tab("tab-results")
-    card = window.results_tab.cards["r-phase"]
-    parts = {"value": card.value, "unit": card.unit, "badge": card.badge}
-    fresh = {name: darkest_grey(card, part) for name, part in parts.items()}
+    ink = STALE_INK[theme]
+    cards = {"r-phase": window.results_tab.cards["r-phase"], "ke": window.results_tab.cards["ke"]}
+    assert cards["ke"].badge.label.property("status") == "verified", "precondition: one verified badge"
+    QApplication.processEvents()
+    fresh = {key: strongest_ink(card, card.value, card_fill(card)) for key, card in cards.items()}
+    assert fresh == dict.fromkeys(cards, ink["text-1"]), "precondition: a current value prints in text-1"
     window.results.show(window.session.current_outcome().analysis, stale=True)
     QApplication.processEvents()
     assert window.results_tab.stale_stamp.isVisible(), "precondition: the results are marked stale"
-    stale = {name: darkest_grey(card, part) for name, part in parts.items()}
-    assert {name: stale[name] - fresh[name] >= 40 for name in parts} == dict.fromkeys(parts, True), (fresh, stale)
+    for key, card in cards.items():
+        assert card_fill(card) == ink["bg-app"], key
+        parts = {"value": card.value, "unit": card.unit, "badge word": card.badge.label, "badge glyph": card.badge.icon}
+        assert card.badge.icon.isVisible(), key
+        printed = {name: strongest_ink(card, part, ink["bg-app"]) for name, part in parts.items()}
+        assert printed["value"] == ink["text-3"], key
+        # Small text may never reach full coverage, so its strongest pixel is a blend of text-3 and the fill: between
+        # the AA floor and text-3 itself. A text-1 pixel or a surface-inverse fill would sit above the ceiling.
+        ceiling = contrast_ratio(ink["text-3"], ink["bg-app"])
+        ratios = {name: contrast_ratio(found, ink["bg-app"]) for name, found in printed.items()}
+        assert {name: 4.5 <= ratio <= ceiling + 0.01 for name, ratio in ratios.items()} == dict.fromkeys(parts, True), (
+            key,
+            printed,
+        )
+        assert ink["border-control"] in colours_painted(card, card.badge.label), key
