@@ -94,6 +94,7 @@ def test_formatting_identical_under_german_and_thai_locale(compiled_locales, loc
     assert json.loads(completed.stdout) == [format_quantity(v, Unit(u)) for v, u in values]
 
 
+@pytest.mark.req("REQ-N-16", "REQ-L-07")
 @pytest.mark.parametrize(
     ("value", "unit", "spoken"),
     [
@@ -113,11 +114,13 @@ def test_spoken_quantity_names_the_prefix_and_unit_in_words(value, unit, spoken)
     assert spoken.startswith(number + " ") or spoken == number
 
 
+@pytest.mark.req("REQ-N-16")
 def test_every_unit_has_words():
     """Catches a unit added to `Unit` without its spoken words, which would fail only when a result first uses it."""
     assert [u for u in Unit if spoken_quantity(1.0, u) == "1.00" and u.display()] == []
 
 
+@pytest.mark.req("REQ-L-07", "REQ-F-33")
 @pytest.mark.parametrize(
     ("value", "text"),
     [(0.2, "0.200000\u00a0mm"), (3.0, "3.000000\u00a0mm"), (0.199965, "0.199965\u00a0mm"), (-1.5, "−1.500000\u00a0mm")],
