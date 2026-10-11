@@ -14,7 +14,7 @@ import dataclasses
 import functools
 import logging
 import math
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, TypeAlias
@@ -362,6 +362,14 @@ def widget_for_pointer(pointer: str, draft: DesignDraft) -> str | None:
     except KeyError:
         return None
     return spec.widget_id
+
+
+def missing_fields(draft: DesignDraft, missing: Sequence[str]) -> tuple[str, ...]:
+    """Return the first missing pointer of each control, in order: one control can fill several pointers (D-024)."""
+    first: dict[str, str] = {}
+    for pointer in missing:
+        first.setdefault(widget_for_pointer(pointer, draft) or pointer, pointer)
+    return tuple(first.values())
 
 
 def tab_of_widget(widget_id: str, topology: TopologyKind) -> str:
