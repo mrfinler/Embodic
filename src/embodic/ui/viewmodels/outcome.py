@@ -1,4 +1,4 @@
-"""What the shell shows of one compute: state machine, summary strip and the drawable geometry. Qt-free.
+"""What the shell shows of one compute: state machine and the drawable geometry. Qt-free.
 
 Every compute request carries a growing id. The worker cancels the run it supersedes, and this view-model drops any
 result whose id is not the latest, so a late result can never replace a newer one (latest wins, REQ-N-02).
@@ -31,9 +31,6 @@ from embodic.model.design import DesignParameters
 from embodic.model.provenance import ProvenanceMap
 from embodic.model.vocabulary import Phase, TopologyKind
 from embodic.outcome import ComputeOutcome
-from embodic.results import Traceable
-from embodic.results.formatting import format_value
-from embodic.results.status import Status
 from embodic.ui.strings import text
 from embodic.ui.viewmodels.observable import Observable
 
@@ -52,17 +49,6 @@ class ComputeSubmitter(Protocol):
 
     def submit(self, request: ComputeRequest) -> None:
         """Start a request and cancel the one still running."""
-
-
-@dataclass(frozen=True, slots=True, kw_only=True)
-class SummaryItem:
-    """One cell of the summary strip."""
-
-    key: str  # objectName of the cell
-    label: str
-    value_text: str
-    status: Status | None  # trust badge from the data (D-007)
-    assumed_count: int | None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -103,7 +89,6 @@ class OutcomeReady:
 
     state: Literal["ready"] = "ready"
     outcome: ComputeOutcome
-    summary: tuple[SummaryItem, ...]
     scene: GeometryScene | None
 
 
@@ -218,27 +203,6 @@ class OutcomeViewModel:
         here = stops.index(visible[0]) if len(visible) == 1 and len(layers) > 1 else 0
         solo = stops[(here + delta) % len(stops)]
         self.hidden_layers.set(frozenset() if solo is None else frozenset(scene.layers) - {solo})
-
-
-def _traceable_item(key: str, label_key: str, t: Traceable[float] | None) -> SummaryItem:
-    return SummaryItem(
-        key=key,
-        label=text(label_key),
-        value_text=text("shell.sum.no-value") if t is None else format_value(t),
-        status=None if t is None else t.status,
-        assumed_count=None if t is None else len(t.assumed_inputs),
-    )
-
-
-def summarise(outcome: ComputeOutcome) -> tuple[SummaryItem, ...]:
-    """Return the summary strip: Ke line peak and R phase with their trust badges."""
-    analysis = outcome.analysis
-    return (
-        _traceable_item("sum-ke", "shell.sum-ke.label", analysis.ke_line_peak_v_s_per_rad if analysis else None),
-        _traceable_item(
-            "sum-r-phase", "shell.sum-r-phase.label", analysis.resistance_phase_operating_ohm if analysis else None
-        ),
-    )
 
 
 def _label_of_path(board: Layout, anchors: tuple[LabelAnchor, ...]) -> dict[int, str]:
@@ -394,4 +358,4 @@ def counts_text(scene: GeometryScene, topology: TopologyKind) -> str:
 
 def ready_state(outcome: ComputeOutcome) -> OutcomeReady:
     """Build what the shell shows of an outcome; the worker calls this off the GUI thread."""
-    return OutcomeReady(outcome=outcome, summary=summarise(outcome), scene=geometry_scene(outcome))
+    return OutcomeReady(outcome=outcome, scene=geometry_scene(outcome))

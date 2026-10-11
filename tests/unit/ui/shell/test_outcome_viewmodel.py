@@ -15,7 +15,6 @@ from embodic.geometry.primitives import Line
 from embodic.io.examples import load_example
 from embodic.io.project import load_project, project_from_example, project_provenance
 from embodic.model.vocabulary import Phase
-from embodic.results.status import Status
 from embodic.ui.viewmodels.outcome import (
     GeometryScene,
     OutcomeComputing,
@@ -100,21 +99,6 @@ def test_ui12_save_project_writes_a_file_that_loads_back_as_the_same_design(tmp_
     loaded, issues = load_project(path)
     assert issues == ()
     assert loaded.design == vm.project.design
-
-
-@pytest.mark.req("REQ-F-13", "REQ-T-01")
-def test_summary_strip_shows_verdicts_and_badges_from_the_outcome(d08_ready):
-    """Catches a hard-coded badge or verdict: every value and status must come from the outcome (D-007)."""
-    items = {item.key: item for item in d08_ready.summary}
-    analysis = d08_ready.outcome.analysis
-    assert list(items) == ["sum-ke", "sum-r-phase"]
-    assert items["sum-ke"].status is analysis.ke_line_peak_v_s_per_rad.status
-    assert items["sum-r-phase"].status is analysis.resistance_phase_operating_ohm.status
-    assert items["sum-ke"].assumed_count == len(analysis.ke_line_peak_v_s_per_rad.assumed_inputs)
-    # D08 values from the engine on main 8a297a0 (verified by running compute): 30.9 mV s/rad, 502 mOhm.
-    assert items["sum-ke"].value_text == "30.9\u00a0mV·s/rad"
-    assert items["sum-r-phase"].value_text == "502\u00a0mΩ"
-    assert all(item.status is None or isinstance(item.status, Status) for item in items.values())
 
 
 def _dense_points(prim, count=400):
