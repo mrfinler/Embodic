@@ -1,16 +1,16 @@
-"""Every UI test renders in the bundled fonts, as the app and the screenshot levers do (design_spec.md section 4)."""
+"""Every UI test runs in the app's own QApplication: `qt_application` registers the bundled fonts (design_spec.md 4)."""
 
 import os
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pytest
-from PySide6.QtGui import QFontDatabase
 from PySide6.QtWidgets import QApplication
 
-from embodic.ui.fonts import register_fonts
+from embodic.ui.app import qt_application
 
 
 @pytest.fixture(scope="session", autouse=True)
-def _bundled_fonts(qapp: QApplication) -> None:
-    register_fonts(QFontDatabase.addApplicationFont, qapp)
+def qapp() -> QApplication:
+    """Replace pytest-qt's application with the one the app and the screenshot levers start."""
+    return qt_application()
