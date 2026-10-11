@@ -410,9 +410,10 @@ class CompareTab(QWidget):
         self.table.verticalHeader().setVisible(False)
         self.table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.chart = ChartPanel("compare-chart")
-        # Table and chart scroll as one page: the table takes the height of its rows up to the visible pane and the
-        # chart follows below it at its own height, so neither is squeezed over the other (U-S4g S28).
+        # Table and chart scroll as one page, each at its full height, so neither is squeezed over the other (U-S4g
+        # S28). A table with its own scroll bar would take a second 24 px from the Quantity column (ruling k).
         page = QWidget()
         page_layout = QVBoxLayout(page)
         page_layout.setContentsMargins(0, 0, 0, 0)
@@ -429,6 +430,9 @@ class CompareTab(QWidget):
         top.addWidget(self.set_reference)
         top.addWidget(self.caption, 1)
         layout = QVBoxLayout(self)
+        # No side margins, as in the Results tab: the Quantity column then keeps its longest word in the 572 px centre
+        # pane of a 1280 px window (U-S4e ruling c).
+        layout.setContentsMargins(0, 8, 0, 0)
         layout.addLayout(top)
         layout.addWidget(self.empty)
         layout.addWidget(self.page_scroll, 1)
@@ -472,14 +476,13 @@ class CompareTab(QWidget):
         self._fit_table()
 
     def _fit_table(self) -> None:
-        """Give the table the height of its header and rows, at most the height of the visible pane."""
+        """Give the table the height of its header and rows."""
         frame = 2 * self.table.frameWidth()
         rows = sum(self.table.rowHeight(r) for r in range(self.table.rowCount()))
-        full = self.table.horizontalHeader().height() + rows + frame
-        self.table.setFixedHeight(min(full, self.page_scroll.viewport().height()))
+        self.table.setFixedHeight(self.table.horizontalHeader().height() + rows + frame)
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802 (Qt override)
-        """Fit the table again whenever the pane changes size."""
+        """Fit the table again whenever the pane changes width, which wraps the quantity names again."""
         if watched is self.page_scroll.viewport() and isinstance(event, QResizeEvent):
             self._fit_table()
         return super().eventFilter(watched, event)
