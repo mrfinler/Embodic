@@ -17,11 +17,12 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from PySide6.QtCore import QPoint, QSettings, Qt
+from PySide6.QtCore import QEvent, QPoint, QSettings, Qt
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (
     QApplication,
@@ -69,8 +70,6 @@ class Run:
 
     def settle(self) -> None:
         """Wait until the current design's compute result is on screen, then fit the canvas."""
-        import time
-
         deadline = time.monotonic() + SETTLE_S
         while time.monotonic() < deadline:
             self.app.processEvents()
@@ -682,6 +681,7 @@ def main(argv: list[str]) -> int:
             _close_dialogs(run)
             run.window.close()
             run.window.deleteLater()
+            app.sendPostedEvents(None, QEvent.Type.DeferredDelete)  # no event loop runs, so delete now
             print(json.dumps({"row": row, "files": run.files, "notes": run.notes}), flush=True)
         shutil.rmtree(Path(scratch) / "acceptance-export", ignore_errors=True)
     return 0
