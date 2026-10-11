@@ -80,7 +80,7 @@ State rules:
 
 | objectName | Qt widget | Binding key | Rule |
 |---|---|---|---|
-| `new-required-count` | QLabel[class="hint"] | view model: number of `DraftIncomplete.missing` | "38 required fields left" (example count). Hidden once the draft parses. |
+| `new-required-count` | QLabel[class="hint"] | view model: number of controls in the missing list | "38 required fields left" (example count). Hidden once the draft parses. |
 | `btn-first-missing` | QPushButton "Go to first missing field" | command | Opens the tab and focuses the widget of the first missing pointer (`FieldSpec.widget_id`). For `/stackup/layers` it focuses the first empty stack-up generator input. |
 
 ## 2. Coil (inspector tab `tab-coil`)
@@ -392,7 +392,7 @@ Empty state: "Charts appear after the first compute." Charts never show efficien
 |---|---|---|
 | `compare-scroll` | QScrollArea | The one vertical scroll of the Compare page: table at the height of its rows, then the charts; no sideways bar (U-M4e-3c, recorded U-S4h) |
 | `btn-set-reference` | QPushButton | "Set current design as reference"; replaces the stored reference after confirmation |
-| `compare-table` | QTableView: quantity, reference, current, delta, unit | Delta as sign plus glyph (▲, ▼); words "better" or "worse" only when Engineering defines the preferred direction. No red or green. Integers without decimals. |
+| `compare-table` | QTableView: quantity, reference, current, delta | Delta as sign plus glyph (▲, ▼); words "better" or "worse" only when Engineering defines the preferred direction. No red or green. Integers without decimals. |
 | `compare-chart` | small multiples, one unit each | Reference dashed grey, current solid ink |
 
 Empty state: "No reference stored. Set the current design as the reference to compare later versions."

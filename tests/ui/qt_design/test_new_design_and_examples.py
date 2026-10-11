@@ -55,8 +55,8 @@ def test_ui24_blank_design_computes_once_when_the_last_required_field_is_filled(
     assert isinstance(state, SessionDrafting)
     assert window.windowTitle() == "Stator A - embodic"
     compute = window.toolstrip.actions_by_id["act-compute"]
-    assert (compute.isEnabled(), compute.toolTip()) == (False, "Compute (F5). 36 required fields left.")
-    assert find(window, "new-required-count").text() == "36 required fields left"
+    assert (compute.isEnabled(), compute.toolTip()) == (False, "Compute (F5). 34 required fields left.")
+    assert find(window, "new-required-count").text() == "34 required fields left"
     for widget_id in ("param-r-inner", "param-coil-count", "param-air-gap", "param-magnet-br", "param-min-trace"):
         assert find(window, widget_id).text() == "", widget_id
     values = draft_from_design(load_packaged(D08)[1]).values

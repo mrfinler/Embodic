@@ -445,7 +445,7 @@ class MainWindow(QMainWindow):
         for panel in self.panels.values():
             panel.refresh()
         drafting = isinstance(state, SessionDrafting)
-        missing = len(state.missing) if isinstance(state, SessionDrafting) else 0
+        missing = len(self._fields_left())
         self.required_count.setText(
             text("new-required-count.one") if missing == 1 else text("new-required-count.text", count=missing)
         )
@@ -464,6 +464,11 @@ class MainWindow(QMainWindow):
         self._show_issues()
         self._render()
 
+    def _fields_left(self) -> tuple[str, ...]:
+        """Return the first missing pointer of each control: the rows of the missing list and the count users read."""
+        state = self.session.state.value
+        return missing_fields(state.draft, state.missing) if isinstance(state, SessionDrafting) else ()
+
     def _invalid_fields_text(self) -> str:
         fields = {found.pointers[0] for found in self.session.issues.value if found.pointers}
         count = len(fields)
@@ -472,7 +477,7 @@ class MainWindow(QMainWindow):
     def _show_stale(self, outdated: bool) -> None:
         state = self.session.state.value
         if isinstance(state, SessionDrafting) and state.missing:
-            message = text("design.stale.drafting", count=len(state.missing))
+            message = text("design.stale.drafting", count=len(self._fields_left()))
         elif isinstance(state, SessionDrafting):
             message = self._invalid_fields_text()
         else:
@@ -485,7 +490,7 @@ class MainWindow(QMainWindow):
         state = self.session.state.value
         missing = state.missing if isinstance(state, SessionDrafting) else ()
         if isinstance(state, SessionDrafting):
-            for pointer in missing_fields(state.draft, state.missing):
+            for pointer in self._fields_left():
                 widget_id = widget_for_pointer(pointer, state.draft) or pointer
                 label = label_text(widget_id, state.draft.topology.value)
                 item = QListWidgetItem(text("rail.issues.missing", label=label))
@@ -641,9 +646,7 @@ class MainWindow(QMainWindow):
         outcome = shown.outcome if shown else None
         table = drc_table(outcome)
         self._render_results(state, outcome, table, outdated)
-        session_state = self.session.state.value
-        missing = len(session_state.missing) if isinstance(session_state, SessionDrafting) else 0
-        inputs = inputs_card(self.session.issues.value, missing)
+        inputs = inputs_card(self.session.issues.value, len(self._fields_left()))
         cards: tuple[StatusCard, ...] | None = (inputs,) if inputs.state == "fail" else None
         if table is not None:
             cards = (inputs, drc_card(table))
