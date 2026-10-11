@@ -419,6 +419,9 @@ of the focused field (field `whatsThis` holds the topic id).
 
 ## 13. Tests (`dlg-tests`)
 
+Milestone M5 (U-S4g ruling l, D-042 draft). The dialog needs the bundled test set and the packaged `passed_tests`
+evidence in the wheel (D-034). Until both ship, no toolstrip button, menu item or shortcut opens it.
+
 | objectName | Qt widget | Rule |
 |---|---|---|
 | `btn-tests-run` | QPushButton[class="primary"] | Runs the bundled self-tests in a worker; Esc or **Stop** cancels |

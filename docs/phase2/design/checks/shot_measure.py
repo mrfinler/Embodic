@@ -1,7 +1,8 @@
-# Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-sonnet-5-5
-"""Read pane geometry and text contrast from the U-M4e-1 screenshots; every number comes from pixels.
+# Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-sonnet-5-5; acceptance-set names: claude-opus-5-5 (U-S4g)
+"""Read pane geometry and text contrast from the U-M4e-1 or U-M4e-2 screenshots; every number comes from pixels.
 
     QT_QPA_PLATFORM=offscreen .venv/bin/python docs/phase2/design/checks/shot_measure.py /mnt/user-data/outputs/m4e1
+    QT_QPA_PLATFORM=offscreen .venv/bin/python docs/phase2/design/checks/shot_measure.py /mnt/user-data/outputs/m4accept
 
 The 1280 x 800 canvas shot gives the inspector and rail widths and the canvas share of the centre pane. The gallery shot
 gives the contrast of the selected item's title and note, and of an unselected note. A text colour is the pixel that
@@ -18,8 +19,9 @@ from pathlib import Path
 from PySide6.QtGui import QImage
 
 Rgb = tuple[int, int, int]
-CANVAS = "u-m4e_canvas-60-40_spiral_12c10p_d08_1280x800.png"
-GALLERY = "u-m4e_gallery-selected_light.png"
+# U-M4e-1 names first, then the acceptance-set rows (S22: canvas frame without a focus ring; S39: gallery).
+CANVAS = ("u-m4e_canvas-60-40_spiral_12c10p_d08_1280x800.png", "S22_light_1280x800.png")
+GALLERY = ("u-m4e_gallery-selected_light.png", "S39_light_dialog.png")
 TEXT_MIN = 4.5
 SHARE = (0.59, 0.61)
 WIDTHS = {"inspector": 340, "rail": 360}
@@ -87,10 +89,19 @@ def canvas_share(image: QImage) -> float:
     return (split - top) / (bottom - top)
 
 
+def shot(folder: Path, names: tuple[str, ...]) -> QImage:
+    """Return the first of ``names`` present in ``folder``."""
+    path = next((folder / n for n in names if (folder / n).is_file()), None)
+    if path is None:
+        sys.exit(f"none of {names} in {folder}")
+    print(f"reading {path.name}")
+    return QImage(str(path))
+
+
 def main(folder: Path) -> int:
     """Print the measurements and return 1 when one misses its criterion."""
     findings: list[str] = []
-    canvas = QImage(str(folder / CANVAS))
+    canvas = shot(folder, CANVAS)
     widths = pane_widths(canvas)
     share = canvas_share(canvas)
     print(f"1280 x 800 panes: {widths}, canvas share {share:.3f} (target {SHARE[0]} to {SHARE[1]})")
@@ -101,7 +112,7 @@ def main(folder: Path) -> int:
     ]
     if not SHARE[0] <= share <= SHARE[1]:
         findings.append(f"canvas share {share:.3f} outside {SHARE}")
-    gallery = QImage(str(folder / GALLERY))
+    gallery = shot(folder, GALLERY)
     bands = {
         "selected title": (28, 285, 98, 116),
         "selected note": (28, 520, 118, 150),
