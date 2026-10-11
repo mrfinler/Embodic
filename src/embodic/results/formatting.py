@@ -73,6 +73,13 @@ def format_quantity(value: float, unit: Unit, *, significant: int = 3) -> str:
     return _with_unit(number, _PREFIXES[shift] if shift else "", unit.display())
 
 
+def format_fixed(value: float, unit: Unit, *, decimals: int) -> str:
+    """Return ``value`` with a set number of decimals and no SI prefix, so a column of them lines up (DRC)."""
+    if not math.isfinite(value):
+        return NOT_A_NUMBER
+    return _with_unit(_signed(f"{abs(value):.{decimals}f}", value), "", unit.display())
+
+
 def spoken_quantity(value: float, unit: Unit, *, significant: int = 3) -> str:
     """Return the number of `format_quantity` and its prefix and unit in words, for a screen reader ("502 milliohm").
 

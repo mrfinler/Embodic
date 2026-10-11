@@ -179,7 +179,8 @@ def test_ui29_export_with_drc_failures_lists_them_with_focus_on_cancel(make_wind
     qtbot.waitUntil(lambda: QApplication.focusWidget() is confirm.cancel)
     assert confirm.cancel.isDefault() and not confirm.proceed.isDefault()
     assert confirm.failures.count() == 51 and confirm.failures.item(50).text() == "... and 136 more"
-    first = "DRC_TRACE_VIA on L1: 0.199965\u00a0mm measured, 0.200000\u00a0mm required"
+    message = "A trace is closer to a via than the via clearance rule."
+    first = f"{message} L1: 0.199965\u00a0mm measured, 0.200000\u00a0mm required."
     assert confirm.failures.item(0).text() == first
     qtbot.mouseClick(confirm.cancel, Qt.MouseButton.LeftButton)
     assert not (tmp_path / "wave").exists() or list((tmp_path / "wave").iterdir()) == []

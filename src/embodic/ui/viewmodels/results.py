@@ -17,7 +17,14 @@ from embodic.model.vocabulary import Phase
 from embodic.outcome import ComputeOutcome
 from embodic.physics.waveform import XCOIL_WAVEFORM_SAMPLES, emf_waveform_v
 from embodic.results import QUANTITY_LABELS, AnalysisResult, Registry, Traceable
-from embodic.results.formatting import MINUS, NOT_A_NUMBER, UNIT_SPACE, format_quantity, spoken_quantity
+from embodic.results.formatting import (
+    MINUS,
+    NOT_A_NUMBER,
+    UNIT_SPACE,
+    format_fixed,
+    format_quantity,
+    spoken_quantity,
+)
 from embodic.results.labels import quantity_title
 from embodic.results.status import Status, ValidityEffect, ValidityFlag, combine_status
 from embodic.results.traceable import AssumedInput
@@ -34,8 +41,14 @@ PHASE1_KEYS: Mapping[str, str] = {
     "temperature_rise_k": "dt",
     "current_density_a_per_mm2": "j",
 }
-# DRC values print with six figures: D-006 has no slack band, so 0.199965 mm against 0.2 mm must read as different.
-DRC_FIGURES = 6
+# DRC lengths print with six decimals: D-006 has no slack band (epsilon <= 1e-6 mm), so 0.199965 mm against 0.2 mm
+# must read as different, and Measured and Required line up whatever their size (U-S4g S25).
+DRC_DECIMALS = 6
+
+
+def drc_length_text(mm: float) -> str:
+    """Return a DRC length as the DRC table and the export confirmation print it: "3.000000 mm"."""
+    return format_fixed(mm, Unit.MM, decimals=DRC_DECIMALS)
 
 
 def result_key(quantity: str) -> str:
@@ -337,8 +350,8 @@ def drc_table(outcome: ComputeOutcome | None) -> DrcTable | None:
             severity="error",
             rule_code=v.kind.issue_code,
             message=message_for(v.kind.issue_code),
-            measured_text=format_quantity(v.measured_mm, Unit.MM, significant=DRC_FIGURES),
-            required_text=format_quantity(v.required_mm, Unit.MM, significant=DRC_FIGURES),
+            measured_text=drc_length_text(v.measured_mm),
+            required_text=drc_length_text(v.required_mm),
             layer_text=v.layer or text("drc.layer.all"),
             at_mm=v.at_mm,
             board_text=letters[board - 1].value if letters else "",
