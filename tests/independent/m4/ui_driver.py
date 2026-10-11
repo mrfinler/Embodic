@@ -5,7 +5,16 @@ from collections.abc import Callable
 from pathlib import Path
 
 from PySide6.QtCore import QSettings, Qt, QTimer
-from PySide6.QtWidgets import QApplication, QDialog, QFileDialog, QListWidget, QPushButton, QToolButton, QWidget
+from PySide6.QtWidgets import (
+    QApplication,
+    QDialog,
+    QFileDialog,
+    QLineEdit,
+    QListWidget,
+    QPushButton,
+    QToolButton,
+    QWidget,
+)
 
 from embodic.ui.app import QSettingsStore, create_shell, qt_application
 from embodic.ui.viewmodels.session import SessionComputed
@@ -78,15 +87,24 @@ def load_example(window, example_id: str) -> None:
 
 
 def answer_next_file_dialog(path: Path) -> None:
-    """Queue an answer for the next modal Qt file dialog, as a user typing a file name and pressing Open."""
+    """Queue an answer for the next modal Qt file dialog: type the full path into its file name box and press Open.
+
+    `selectFile` waits for the dialog's file model to read the folder and was seen to leave the selection empty, so
+    the driver types the path as a user does, and repeats until the dialog closes.
+    """
+    answered = [False]
 
     def answer() -> None:
         dialog = QApplication.activeModalWidget()
-        if not isinstance(dialog, QFileDialog):
-            QTimer.singleShot(20, answer)
+        if isinstance(dialog, QFileDialog):
+            name = dialog.findChild(QLineEdit, "fileNameEdit")
+            assert name is not None, "the Qt file dialog has a file name box"
+            name.setText(str(path))
+            dialog.accept()
+            answered[0] = True
+        elif answered[0]:
             return
-        dialog.selectFile(str(path))
-        dialog.accept()
+        QTimer.singleShot(100, answer)
 
     QTimer.singleShot(20, answer)
 
