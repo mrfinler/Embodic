@@ -289,6 +289,7 @@ class ResultsViewModel:
 
 
 CheckState: TypeAlias = Literal["pass", "fail", "not-run"]
+CardState: TypeAlias = CheckState | Literal["advice"]
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -388,16 +389,19 @@ class StatusCard:
 
     key: str  # objectName of the card
     title: str
-    state: CheckState
+    state: CardState
     word: str
 
 
 def inputs_card(issues: Sequence[ValidationIssue], missing: int = 0) -> StatusCard:
-    """Return the Inputs card; it counts the missing required fields and the issues the Input issues list shows."""
+    """Return the Inputs card: missing fields and errors fail it; warnings and notes are advice, shown as notes."""
+    errors = sum(1 for found in issues if found.severity is Severity.ERROR)
+    advice = len(issues) - errors
     words = [_count(missing, "new-required-count.one", "new-required-count.text")] if missing else []
-    words += [_count(len(issues), "rail.inputs.one", "rail.inputs.many")] if issues else []
+    words += [_count(errors, "rail.inputs.one", "rail.inputs.many")] if errors else []
+    words += [_count(advice, "rail.inputs.note-one", "rail.inputs.note-many")] if advice else []
     word = ", ".join(words) or text("rail.inputs.pass")
-    state: CheckState = "fail" if words else "pass"
+    state: CardState = "fail" if missing or errors else "advice" if advice else "pass"
     return StatusCard(key="rail-inputs", title=text("rail.inputs.label"), state=state, word=word)
 
 

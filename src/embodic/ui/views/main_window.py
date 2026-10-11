@@ -647,7 +647,7 @@ class MainWindow(QMainWindow):
         table = drc_table(outcome)
         self._render_results(state, outcome, table, outdated)
         inputs = inputs_card(self.session.issues.value, len(self._fields_left()))
-        cards: tuple[StatusCard, ...] | None = (inputs,) if inputs.state == "fail" else None
+        cards: tuple[StatusCard, ...] | None = (inputs,) if inputs.state != "pass" else None
         if table is not None:
             cards = (inputs, drc_card(table))
         self.rail.show_cards(cards, self.tokens, stale=outdated)

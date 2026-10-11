@@ -16,6 +16,8 @@ STRINGS: Mapping[str, str] = {
     "rail.inputs.pass": "No input issues",
     "rail.inputs.one": "1 input issue",
     "rail.inputs.many": "{count} input issues",
+    "rail.inputs.note-one": "1 input note",
+    "rail.inputs.note-many": "{count} input notes",
     "rail.issues.title": "Input issues",
     "rail.issues.none": "No input issues.",
     "rail.issues.missing": "{label}: required, no value yet.",

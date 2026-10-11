@@ -12,8 +12,9 @@ from embodic.api import compute
 from embodic.results.status import Status
 from embodic.ui.theme import ThemeName
 from embodic.ui.views.geometry_view import DATA_KIND
+from embodic.ui.views.style import themed_icon
 
-D08, WAVE = "spiral_12c10p_d08", "wave_16p_example"
+D08, WAVE, SERPENTINE = "spiral_12c10p_d08", "wave_16p_example", "serpentine_16p_example"
 DRC_COLUMNS = ("severity", "board", "message", "measured", "required", "layer")
 CELL_MARGIN_PX = 3  # Fusion item text margin on each side (PM_FocusFrameHMargin + 1)
 
@@ -231,6 +232,27 @@ def test_inputs_card_counts_the_issues_of_the_input_issues_list(make_window, loa
     value = find(window, QLabel, "rail-inputs-value")
     assert value.text() == (f"{len(listed)} input issues" if len(listed) > 1 else "1 input issue")
     assert value.property("state") == "fail"
+
+
+@pytest.mark.req("REQ-F-14")
+def test_inputs_card_shows_the_serpentine_one_board_per_phase_advice_as_a_note_with_the_warn_glyph(
+    make_window, load, qtbot
+):
+    """U-S4h N4. Catches advice counted as a failing input: "1 input issue" with the fail glyph for a warning."""
+    window = load(make_window(), SERPENTINE)
+    window.session.edit("/winding/stack_mode", "one_board_per_phase")
+    window.session.set_stackup_input("copper_count", 2)
+    qtbot.waitUntil(lambda: not window.session.state.value.computing)
+    advice = [i for i in window.session.issues.value if i.code == "RANGE_SERPENTINE_INTERCONNECT_BOARDS"]
+    assert [i.severity.value for i in advice] == ["warning"], "precondition: the advice is a warning"
+    assert all(i.severity.value != "error" for i in window.session.issues.value)
+    value = find(window, QLabel, "rail-inputs-value")
+    assert value.text() == "1 input note"
+    assert value.property("state") == "warn"
+    icon = find(window, QLabel, "rail-inputs-icon").pixmap().toImage()
+    for stem, same in (("check-warn", True), ("check-fail", False)):
+        drawn = themed_icon(stem, window.tokens).pixmap(16, 16).toImage()
+        assert (icon == drawn) is same, stem
 
 
 def overlapping_labels(host: QWidget) -> list[tuple[str, str]]:
