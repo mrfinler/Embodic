@@ -18,6 +18,7 @@ STRINGS: Mapping[str, str] = {
     "rail.inputs.many": "{count} input issues",
     "rail.issues.title": "Input issues",
     "rail.issues.none": "No input issues.",
+    "rail.issues.missing": "{label}: required, no value yet.",
     "results.empty.text": "Results appear when every required field is valid.",
     "results.empty.first-missing": "Go to first missing field",
     "results.stale.stamp": "Last valid results",

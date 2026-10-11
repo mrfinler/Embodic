@@ -392,10 +392,13 @@ class StatusCard:
     word: str
 
 
-def inputs_card(issues: Sequence[ValidationIssue]) -> StatusCard:
-    """Return the Inputs card; it counts the issues the Input issues list shows, so the two never disagree."""
-    word = _count(len(issues), "rail.inputs.one", "rail.inputs.many") if issues else text("rail.inputs.pass")
-    return StatusCard(key="rail-inputs", title=text("rail.inputs.label"), state="fail" if issues else "pass", word=word)
+def inputs_card(issues: Sequence[ValidationIssue], missing: int = 0) -> StatusCard:
+    """Return the Inputs card; it counts the missing required fields and the issues the Input issues list shows."""
+    words = [_count(missing, "new-required-count.one", "new-required-count.text")] if missing else []
+    words += [_count(len(issues), "rail.inputs.one", "rail.inputs.many")] if issues else []
+    word = ", ".join(words) or text("rail.inputs.pass")
+    state: CheckState = "fail" if words else "pass"
+    return StatusCard(key="rail-inputs", title=text("rail.inputs.label"), state=state, word=word)
 
 
 def drc_card(table: DrcTable) -> StatusCard:
