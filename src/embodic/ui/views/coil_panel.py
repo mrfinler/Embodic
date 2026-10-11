@@ -42,7 +42,7 @@ from embodic.ui.viewmodels.session import (
 
 MIN_INPUT_PX = 72
 CHIP_COLUMN_PX = 72  # "example" and "default" fit; "measured" grows its row
-CHIP_PX = 20
+CHIP_PX = 24  # UX-AC-28, m4_review_2.md ruling k1
 TITLED_GROUPS = frozenset(
     {
         FieldGroup.OUTLINE,

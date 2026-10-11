@@ -52,3 +52,29 @@ def test_ax03_every_focusable_control_shows_a_focus_ring(d08_shell, qtbot, theme
         if _ring_pixels(widget, ring) - before < 2 * min(widget.width(), widget.height()):
             missing.append(widget.objectName() or f"{type(widget).__name__} in {widget.parent().objectName()}")
     assert missing == [], missing
+
+
+@pytest.mark.req("REQ-N-12")
+@pytest.mark.parametrize("theme", [ThemeName.LIGHT, ThemeName.DARK])
+def test_s12_the_focused_primary_button_ring_is_parted_from_its_fill_by_a_gap(make_shell, qtbot, theme):
+    """WCAG 2.4.7, m4_review_2.md S12: catches a focus-ring border drawn in the fill's own colour, so no ring shows."""
+    window = make_shell().window
+    window.appearance.set_theme(theme)
+    dialog = window.new_design_dialog()
+    dialog.show()
+    qtbot.waitExposed(dialog)
+    dialog.name.setText("Ring")
+    next(iter(dialog.topology_buttons.values())).click()
+    button = dialog.create_button
+    assert button.isEnabled()
+    button.setFocus(Qt.FocusReason.TabFocusReason)
+    qtbot.waitUntil(button.hasFocus)
+    image = dialog.grab().toImage()
+    origin = button.mapTo(dialog, button.rect().topLeft())
+    row = [image.pixelColor(origin.x() + x, origin.y() + button.height() // 2).name() for x in range(6)]
+    colours = window.tokens.colours
+    ring, fill = colours["focus-ring"], colours["surface-inverse"]
+    assert row[0:2] == [ring, ring], row
+    assert ring not in row[2:4] and fill not in row[2:4], row
+    assert row[5] == fill, row
+    dialog.close()

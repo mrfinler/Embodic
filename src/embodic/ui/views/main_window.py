@@ -48,6 +48,7 @@ from embodic.ui.viewmodels.appearance import (
     COMPACT_BELOW_PX,
     RESULTS_MIN_PX,
     AppearanceViewModel,
+    PhaseRenderMode,
     split_sizes,
 )
 from embodic.ui.viewmodels.export import PRESETS, ExportViewModel
@@ -166,6 +167,11 @@ class MainWindow(QMainWindow):
             available.subscribe(action.setEnabled)
         appearance.theme.subscribe(lambda _: self.apply_theme())
         appearance.phase_render_mode.subscribe(lambda _: self._render())
+        greyscale = self.toolstrip.actions_by_id["act-greyscale"]
+        greyscale.setCheckable(True)
+        appearance.phase_render_mode.subscribe(
+            lambda mode: greyscale.setChecked(mode is PhaseRenderMode.GREYSCALE_HATCH)
+        )
         self.canvas.cursor_moved.connect(self._show_cursor)
         self.canvas.board_step.connect(outcome.step_board)
         self.canvas.layer_step.connect(outcome.step_layer_solo)
