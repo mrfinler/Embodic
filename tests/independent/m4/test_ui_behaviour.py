@@ -125,9 +125,6 @@ def test_results_cards_join_every_number_and_unit_with_nbsp(example_id, tmp_path
     assert joiner_faults(texts) == []
 
 
-@pytest.mark.xfail(
-    strict=True, reason="DEF-UV4-03: card title 'Phase resistance at 20 °C' joins 20 and °C with a space"
-)
 def test_results_card_titles_join_number_and_unit_with_nbsp(tmp_path):
     """Request 6 covers every displayed number and unit, titles included."""
     window = open_window(tmp_path)
@@ -179,7 +176,6 @@ def test_pdf_key_results_print_the_value_and_unit_the_cards_show(tmp_path):
     assert mismatched == []
 
 
-@pytest.mark.xfail(strict=True, reason="DEF-UV4-04: card badge 'estimate' where the PDF prints status 'unresolved'")
 def test_pdf_key_results_print_the_status_word_the_cards_show(tmp_path):
     """Brief 1c, same status word. Catches a report and a screen that disagree on how far to trust a value."""
     cards, rows = card_and_pdf_rows(tmp_path)
@@ -191,7 +187,6 @@ def test_pdf_key_results_print_the_status_word_the_cards_show(tmp_path):
     assert mismatched == []
 
 
-@pytest.mark.xfail(strict=True, reason="DEF-UV4-02: PDF prints '(dimensionless)', the card prints 'dimensionless'")
 def test_pdf_prints_the_dimensionless_unit_text_the_cards_show(tmp_path):
     """Brief 1c, same unit text as the UI. Catches a unit word that differs between screen and report."""
     cards, rows = card_and_pdf_rows(tmp_path)

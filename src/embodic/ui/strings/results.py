@@ -143,7 +143,7 @@ STRINGS: Mapping[str, str] = {
     "guide.status.verified": "Read in the source or reproduced by running something.",
     "guide.status.inferred": "Follows from verified facts by reasoning that was not reproduced.",
     "guide.status.assumption": "Taken as true without evidence for this design.",
-    "guide.status.unresolved": 'Not known yet; the badge reads "estimate".',
+    "guide.status.unresolved": 'Not known yet. The label beside the badge says what kind: "estimate", for example.',
     "guide.status.not-tested": "The tests linked to the equation have not passed in this build.",
     "guide.eq.name": "Name",
     "guide.eq.formula": "Formula",

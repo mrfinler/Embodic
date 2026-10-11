@@ -60,17 +60,21 @@ def test_ui06_the_badge_comes_from_the_data(make_window, load):
 
 
 @pytest.mark.req("REQ-F-11", "REQ-F-20", "REQ-T-05")
-def test_ui07_estimate_cards_show_the_estimate_badge_and_their_label(make_window, load):
-    """Catches an EQ-14 or EQ-15 card without its label or with a stronger badge."""
+def test_ui07_estimate_cards_show_the_status_word_and_their_label_beside_it(make_window, load):
+    """UI-07, D-042c, DEF-UV4-04. Catches a card without its label, a stronger badge, or "estimate" as the badge."""
     cards = load(make_window(), D08).results_tab.cards
     ls, ipc = cards["ls"], cards["ipc-guideline-current-a"]
     assert (ls.badge.label.property("status"), ls.badge.label.text(), ls.estimate.text()) == (
         "unresolved",
-        "estimate",
+        "unresolved",
         "estimate",
     )
     assert ls.badge.label.accessibleName() == "Status: unresolved"
-    assert (ipc.badge.label.property("status"), ipc.estimate.text()) == ("unresolved", "guideline (unverified)")
+    assert (ipc.badge.label.property("status"), ipc.badge.label.text(), ipc.estimate.text()) == (
+        "unresolved",
+        "unresolved",
+        "guideline (unverified)",
+    )
 
 
 @pytest.mark.req("REQ-T-16", "REQ-T-13")

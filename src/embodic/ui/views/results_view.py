@@ -247,7 +247,7 @@ class ResultsTab(QWidget):
         filters.addWidget(QLabel(text("results.filter.label")))
         self.filter_boxes: dict[Status, QCheckBox] = {}
         for status in Status:
-            box = QCheckBox(text(f"shell.badge.{badge_property(status)}"))
+            box = QCheckBox(status.value)
             box.setObjectName(f"results-filter-{badge_property(status)}")
             box.setAccessibleName(f"Show {status.value} results")
             box.setChecked(True)
