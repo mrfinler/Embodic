@@ -1,7 +1,8 @@
 """Per-field provenance derived from values, origin and measurements (interfaces.md section 2.4, D-007, D-019).
 
 The first matching rule gives a field's provenance: `measured` for a marked property field, `example` while the value
-equals the origin example's, `default` while a blank-origin optional field equals its neutral value, `user` otherwise.
+equals the origin example's, `default` while an optional field the origin holds no value for (a blank design, or a
+pointer the example lacks) equals its neutral value, `user` otherwise.
 """
 
 from collections.abc import Mapping, Sequence
@@ -87,7 +88,7 @@ def derive_provenance(
     origin: tuple[ExampleRef, DesignParameters] | None,
     measurements: Sequence[Measurement],
 ) -> dict[str, FieldProvenance]:
-    """Return the provenance of every concrete pointer; origin None means a blank design (rule 3 applies)."""
+    """Return the provenance of every concrete pointer; rule 3 applies where the origin holds no value (D-043a)."""
     values = design_values(design)
     origin_values = design_values(origin[1]) if origin is not None else {}
     sources = {m.pointer: m.source for m in measurements if _measurable(m.pointer, values) and m.source.strip()}
@@ -98,7 +99,7 @@ def derive_provenance(
             derived[pointer] = MeasuredValue(source=sources[pointer])
         elif origin is not None and pointer in origin_values and origin_values[pointer] == value:
             derived[pointer] = ExampleValue(example_id=origin[0].example_id)
-        elif origin is None and not spec.required and value == spec.neutral_value:
+        elif pointer not in origin_values and not spec.required and value == spec.neutral_value:
             derived[pointer] = DefaultValue()
         else:
             derived[pointer] = UserValue()

@@ -129,13 +129,7 @@ def test_8_issues_list_wraps_a_long_message_without_a_sideways_bar(make_shell, w
     assert rect.height() >= 3 * issues.fontMetrics().height(), rect
 
 
-# Open, needs a ruling (U-M4e-4): a blank design gives the new angle offset `default` (rule 3 of interfaces.md 2.4), but
-# D08 is an example origin, rule 3 needs a blank one, and the example holds no screw pattern, so rule 4 gives `user`.
-OPEN_DEF_M4E3C_01 = "DEF-M4e3c-01: a new fastener pattern's angle offset shows a user chip nobody typed"
-
-
 @pytest.mark.req("REQ-F-24")
-@pytest.mark.xfail(strict=True, reason=OPEN_DEF_M4E3C_01)
 def test_12_a_new_fastener_pattern_starts_its_angle_offset_with_a_default_chip(make_shell, wait_computed, qtbot):
     """Catches S20: a new pattern whose angle offset shows no chip, or a user chip for a value nobody typed."""
     window = make_shell().window

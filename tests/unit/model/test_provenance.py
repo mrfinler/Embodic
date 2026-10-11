@@ -2,10 +2,14 @@
 
 import dataclasses
 import itertools
+import json
 
 import pytest
 
 from embodic.errors import ValidationIssue
+from embodic.io.examples import examples_dir, list_examples, load_example
+from embodic.io.project import project_from_example, project_provenance, provenance_document
+from embodic.model.outline import ScrewFit, ScrewPattern
 from embodic.model.provenance import (
     DefaultValue,
     ExampleRef,
@@ -117,3 +121,58 @@ def test_value_change_drops_the_measurement():
     changed = _with_br(design, 1.25)
     assert drop_stale_measurements(design, changed, measurements) == (measurements[1],)
     assert derive_provenance(changed, None, drop_stale_measurements(design, changed, measurements))[BR] == UserValue()
+
+
+SCREW_ANGLE = "/outline/screws/0/angle_offset_rad"
+SCREW_COUNT = "/outline/screws/0/count"
+
+
+def _with_screws(design, *angle_offsets_rad):
+    patterns = tuple(
+        ScrewPattern(
+            size="M3",
+            fit=ScrewFit.NORMAL,
+            count=8,
+            pitch_radius_mm=44.5,
+            hole_diameter_mm=3.4,
+            angle_offset_rad=angle,
+        )
+        for angle in angle_offsets_rad
+    )
+    return dataclasses.replace(design, outline=dataclasses.replace(design.outline, screws=patterns))
+
+
+@pytest.mark.req("REQ-T-15")
+def test_d043a_a_field_the_origin_example_holds_no_value_for_is_default_while_at_its_neutral_value():
+    """DEF-M4e3c-01. Catches a user chip on an angle offset nobody typed, in a pattern added to a screwless example."""
+    example = _with_screws(spiral_design())
+    added = _with_screws(example, 0.0)
+    derived = derive_provenance(added, (REF, example), [])
+    assert derived[SCREW_ANGLE] == DefaultValue()
+    assert derived[SCREW_COUNT] == UserValue(), "a required field has no neutral value, so never `default`"
+
+
+@pytest.mark.req("REQ-T-15")
+def test_d043a_a_field_the_origin_example_holds_a_different_value_for_is_user_even_at_its_neutral_value():
+    """Catches `default` winning where the example's own value was changed back to the neutral one."""
+    example = _with_screws(spiral_design(), 0.2)
+    changed = _with_screws(example, 0.0)
+    assert derive_provenance(changed, (REF, example), [])[SCREW_ANGLE] == UserValue()
+
+
+@pytest.mark.req("REQ-T-15")
+def test_d043a_a_typed_value_of_a_field_the_origin_holds_nothing_for_is_user():
+    """Catches `default` kept after the user types a value that is not the neutral one."""
+    example = _with_screws(spiral_design())
+    typed = _with_screws(example, 0.1)
+    assert derive_provenance(typed, (REF, example), [])[SCREW_ANGLE] == UserValue()
+
+
+@pytest.mark.req("REQ-T-15")
+@pytest.mark.parametrize("example_id", [info.example_id for info in list_examples()])
+def test_d043a_an_unmodified_example_keeps_the_provenance_map_stored_in_its_file(example_id):
+    """Catches the new rule leaking into a design that is its origin: every stored entry stays `example`."""
+    stored = json.loads((examples_dir() / f"{example_id}.embodic.json").read_text(encoding="utf-8"))["provenance"]
+    project = project_from_example(load_example(example_id))
+    assert provenance_document(project_provenance(project)) == stored
+    assert {entry["provenance"] for entry in stored.values()} == {"example"}
