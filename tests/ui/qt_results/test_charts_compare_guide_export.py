@@ -205,7 +205,8 @@ def test_export_dialog_on_d08_writes_svg_dxf_pdf_readme_zip_and_lists_only_those
     qtbot.mouseClick(dialog.run, Qt.MouseButton.LeftButton)
     on_disk = sorted(p.name for p in (tmp_path / "d08").iterdir())
     assert sorted(dialog.result_text.text().splitlines()[1:]) == on_disk
-    suffixes = sorted(name.split("spiral", 1)[-1] for name in on_disk if name != "README.txt")
+    stem = "Spiral_12_coils_10_poles_D08"  # the export stem of the D08 design name (D-041b)
+    suffixes = sorted(name.removeprefix(stem) for name in on_disk if name != "README.txt")
     assert suffixes == [".dxf", ".embodic.json", ".svg", ".zip", "_outline.dxf", "_report.pdf"]
     assert "README.txt" in on_disk
     assert dialog.open_folder.isVisible()
