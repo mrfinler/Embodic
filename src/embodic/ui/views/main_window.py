@@ -78,6 +78,7 @@ from embodic.ui.viewmodels.session import (
     DesignSession,
     SessionDrafting,
     SessionEmpty,
+    missing_fields,
     tab_of_widget,
     widget_for_pointer,
 )
@@ -484,7 +485,7 @@ class MainWindow(QMainWindow):
         state = self.session.state.value
         missing = state.missing if isinstance(state, SessionDrafting) else ()
         if isinstance(state, SessionDrafting):
-            for pointer in state.missing:
+            for pointer in missing_fields(state.draft, state.missing):
                 widget_id = widget_for_pointer(pointer, state.draft) or pointer
                 label = label_text(widget_id, state.draft.topology.value)
                 item = QListWidgetItem(text("rail.issues.missing", label=label))

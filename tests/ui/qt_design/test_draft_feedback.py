@@ -39,13 +39,24 @@ def test_7_a_blank_draft_lists_its_missing_required_fields_in_the_rail(make_shel
     assert isinstance(state, SessionDrafting) and len(state.missing) > 1
     rows = listed(window)
     assert "No input issues." not in rows
-    assert len(rows) == len(state.missing)
+    assert len(rows) == len(state.missing) - 2, "one row per control: pairs and series groups share the stack-up's"
     coils = find(window, "param-coil-count-label").text()
     assert f"{coils}: required, no value yet." in rows
     card = find(window, "rail-inputs")
     assert card.isVisibleTo(window.rail)
     assert find(card, "rail-inputs-value").text() == f"{len(state.missing)} required fields left"
     assert find(card, "rail-inputs-value").property("state") == "fail"
+
+
+@pytest.mark.req("REQ-F-37")
+def test_7_a_control_that_fills_several_missing_pointers_gets_one_row(make_shell):
+    """Catches U-M4e-3c's open question: "Copper layers" listed once per pointer it fills (pairs, groups, stack-up)."""
+    window = make_shell(compute_fn=no_compute).window
+    window.session.new_design(TopologyKind.SPIRAL)
+    settle()
+    rows = listed(window)
+    assert rows.count("Copper layers: required, no value yet.") == 1
+    assert len(set(rows)) == len(rows)
 
 
 @pytest.mark.req("REQ-F-36", "REQ-F-37")
@@ -61,6 +72,19 @@ def test_7_an_issue_row_of_a_missing_field_focuses_that_field(make_shell, qtbot)
     issues.itemActivated.emit(row)
     settle()
     assert QApplication.focusWidget() is find(window, "param-coil-count")
+
+
+@pytest.mark.req("REQ-F-36", "REQ-F-37")
+def test_7_the_one_row_of_a_shared_control_focuses_that_control(make_shell):
+    """Catches a merged row that keeps a pointer no control answers to: "Copper layers" must open the Layers tab."""
+    window = make_shell(compute_fn=no_compute).window
+    window.session.new_design(TopologyKind.SPIRAL)
+    settle()
+    issues = find(window, "issues-list")
+    (row,) = [issues.item(r) for r in range(issues.count()) if issues.item(r).text().startswith("Copper layers:")]
+    issues.itemActivated.emit(row)
+    settle()
+    assert QApplication.focusWidget() is find(window, "param-layer-count")
 
 
 @pytest.mark.req("REQ-F-37")
@@ -105,8 +129,8 @@ def test_8_issues_list_wraps_a_long_message_without_a_sideways_bar(make_shell, w
     assert rect.height() >= 3 * issues.fontMetrics().height(), rect
 
 
-# Open: add_screw_pattern must write the angle offset (an empty pattern has no pointer), and provenance reads a
-# written value the example does not hold as `user`; the fix belongs in embodic.model.provenance (out of U-M4e-3c).
+# Open, needs a ruling (U-M4e-4): a blank design gives the new angle offset `default` (rule 3 of interfaces.md 2.4), but
+# D08 is an example origin, rule 3 needs a blank one, and the example holds no screw pattern, so rule 4 gives `user`.
 OPEN_DEF_M4E3C_01 = "DEF-M4e3c-01: a new fastener pattern's angle offset shows a user chip nobody typed"
 
 
