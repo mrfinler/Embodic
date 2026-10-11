@@ -2,7 +2,7 @@ Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5; section 1
 
 # embodic screens v2.3 (Phase 2, PySide6)
 
-Date 2026-10-08, revised 2026-10-09 (U-S4f): `ts-section-board` declared in 14a; rulings i and j of
+Date 2026-10-08, revised 2026-10-12 (U-S4h): `compare-scroll` declared in section 10. Revised 2026-10-09 (U-S4f): `ts-section-board` declared in 14a; rulings i and j of
 `m4_review_2.md` section 5 applied to sections 4 and 5 (screw buttons, last table column). Revised 2026-10-09 (U-S4e): rulings a, c, d and g of `m4_review_2.md` applied to sections 4, 5, 6,
 7, 14a and 16 (`pair-list`, the screw fields, the card grid, the DRC columns, 26 declared names, example titles).
 Revised 2026-10-09 (U-S4d): rulings of `m4_review.md` applied to the conventions and sections 1, 2,
@@ -390,6 +390,7 @@ Empty state: "Charts appear after the first compute." Charts never show efficien
 
 | objectName | Qt widget | Rule |
 |---|---|---|
+| `compare-scroll` | QScrollArea | The one vertical scroll of the Compare page: table at the height of its rows, then the charts; no sideways bar (U-M4e-3c, recorded U-S4h) |
 | `btn-set-reference` | QPushButton | "Set current design as reference"; replaces the stored reference after confirmation |
 | `compare-table` | QTableView: quantity, reference, current, delta, unit | Delta as sign plus glyph (▲, ▼); words "better" or "worse" only when Engineering defines the preferred direction. No red or green. Integers without decimals. |
 | `compare-chart` | small multiples, one unit each | Reference dashed grey, current solid ink |
