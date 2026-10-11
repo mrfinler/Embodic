@@ -4,7 +4,8 @@ import dataclasses
 
 import pytest
 from PySide6.QtCore import QPoint, QRect, Qt
-from PySide6.QtWidgets import QApplication, QCheckBox, QMessageBox, QPushButton
+from PySide6.QtGui import qGray
+from PySide6.QtWidgets import QApplication, QCheckBox, QMessageBox, QPushButton, QWidget
 from tests.ui.qt_results.conftest import find
 
 from embodic.results.status import Status
@@ -252,3 +253,19 @@ def test_s28_compare_table_takes_its_rows_up_to_the_pane_and_the_chart_starts_be
         assert wrapped.width() <= inner and table.rowHeight(row) >= wrapped.height(), (row, label, wrapped, inner)
     assert chart.mapTo(window, QPoint(0, 0)).y() >= table.mapTo(window, QPoint(0, table.height())).y()
     assert chart.height() >= chart.minimumSizeHint().height()
+
+
+@pytest.mark.req("REQ-F-33")
+def test_s29_browse_is_a_secondary_push_button_that_draws_its_boundary(make_window, load):
+    """U-S4g S29, ruling i, UX-AC-08. Catches a Browse control with no visible edge (a flat QToolButton)."""
+    window = load(make_window(), D08)
+    window.toolstrip.actions_by_id["act-export-all"].trigger()
+    dialog = window.export_dialog
+    browse = dialog.findChild(QWidget, "btn-export-browse")
+    assert isinstance(browse, QPushButton) and browse.text() == "Browse"
+    assert browse.property("class") != "primary"
+    image = browse.grab().toImage()
+    edge = min(qGray(image.pixel(image.width() // 2, y)) for y in range(2))
+    inside = qGray(image.pixel(4, image.height() // 2))
+    assert inside - edge >= 60, (edge, inside)
+    dialog.reject()

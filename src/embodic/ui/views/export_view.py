@@ -14,7 +14,6 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QPushButton,
-    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -61,9 +60,8 @@ class ExportDialog(QDialog):
         self.folder.setObjectName("export-folder")
         self.folder.setPlaceholderText(text("export.folder.placeholder"))
         self.folder.textChanged.connect(self._update_problem)
-        browse = QToolButton()
+        browse = QPushButton(text("export.folder.browse"))  # secondary: the QPushButton boundary (ruling i)
         browse.setObjectName("btn-export-browse")
-        browse.setText(text("export.folder.browse"))
         browse.clicked.connect(self._browse)
         folder_line = QHBoxLayout()
         folder_line.addWidget(QLabel(text("export.folder")))
