@@ -48,6 +48,7 @@ from embodic.ui.viewmodels.results import (
 from embodic.ui.views.charts import ChartPanel, delta_icon
 from embodic.ui.views.dialogs import confirm_replace_reference
 from embodic.ui.views.status_badge import AssumptionTag, EqChip, StatusBadge, badge_property, repolish
+from embodic.ui.views.widgets import check_box
 
 COMPUTING_DIM_AFTER_MS = 300
 COMPUTING_OPACITY = 0.6
@@ -262,7 +263,7 @@ class ResultsTab(QWidget):
         filters.addWidget(QLabel(text("results.filter.label")))
         self.filter_boxes: dict[Status, QCheckBox] = {}
         for status in Status:
-            box = QCheckBox(status.value)
+            box = check_box(status.value)
             box.setObjectName(f"results-filter-{badge_property(status)}")
             box.setAccessibleName(f"Show {status.value} results")
             box.setChecked(True)

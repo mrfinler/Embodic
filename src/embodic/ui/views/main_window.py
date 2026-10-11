@@ -95,6 +95,7 @@ from embodic.ui.views.phase_panel import PhasePanel
 from embodic.ui.views.results_rail import ResultsRail
 from embodic.ui.views.results_view import CompareTab, ResultsTab, focus_ring_qss
 from embodic.ui.views.toolstrip_bar import CommandTable, ToolstripBar
+from embodic.ui.views.widgets import check_box
 
 logger = logging.getLogger(__name__)
 
@@ -667,7 +668,7 @@ class MainWindow(QMainWindow):
                 box.deleteLater()
             self.layer_boxes = {}
             for index, layer in enumerate(layers):
-                box = QCheckBox(layer)
+                box = check_box(layer)
                 box.setObjectName(f"layer-{layer}")
                 box.toggled.connect(lambda checked, name=layer: self.outcome.set_layer_visible(name, checked))
                 self.layer_bar_layout.insertWidget(1 + index, box)

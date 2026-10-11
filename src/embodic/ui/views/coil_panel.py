@@ -39,6 +39,7 @@ from embodic.ui.viewmodels.session import (
     feasibility_hints,
     parse_text,
 )
+from embodic.ui.views.widgets import check_box
 
 MIN_INPUT_PX = 72
 CHIP_COLUMN_PX = 72  # "example" and "default" fit; "measured" grows its row
@@ -212,7 +213,7 @@ class FieldEditor(QWidget):
             box.activated.connect(lambda index: self._commit(box.itemData(index)))
             return box
         if spec.value_type is ValueType.BOOL:
-            check = QCheckBox()
+            check = check_box()
             check.clicked.connect(lambda checked: self._commit(bool(checked)))
             return check
         edit = QLineEdit()

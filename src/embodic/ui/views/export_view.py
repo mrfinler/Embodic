@@ -24,6 +24,7 @@ from embodic.ui.theme import ThemeTokens
 from embodic.ui.viewmodels.export import FORMAT_OPTIONS, ExportFormat, ExportViewModel, ExportWritten, selection_problem
 from embodic.ui.views.dialogs import ExportConfirmDialog
 from embodic.ui.views.style import themed_icon
+from embodic.ui.views.widgets import check_box
 
 CHECK_ICONS = {"pass": "check-pass", "fail": "check-fail", "warn": "check-warn"}
 
@@ -47,7 +48,7 @@ class ExportDialog(QDialog):
         title.setProperty("class", "section-title")
         formats.addWidget(title)
         for option in FORMAT_OPTIONS:
-            box = QCheckBox(option.label)
+            box = check_box(option.label)
             box.setObjectName(option.widget_id)
             reason = unavailable.get(option.choice)
             box.setEnabled(reason is None)
