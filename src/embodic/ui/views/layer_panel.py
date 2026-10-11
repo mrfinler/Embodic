@@ -16,7 +16,6 @@ from PySide6.QtWidgets import (
     QPushButton,
     QTableWidget,
     QTableWidgetItem,
-    QVBoxLayout,
     QWidget,
 )
 
@@ -109,7 +108,6 @@ class LayerPanel(FieldPanel):
             )
             count.addItem(label, copper)
         count.activated.connect(lambda index: self.session.set_stackup_input("copper_count", count.itemData(index)))
-        count.setAccessibleName(text(f"{name}.label"))
         form.addRow(label_above(text(f"{name}.label"), count))
         self.helpers["copper-count"] = count
         if document.draft.topology is TopologyKind.SPIRAL:
@@ -118,13 +116,8 @@ class LayerPanel(FieldPanel):
                 tuple(ROTATION_MODES),
                 lambda c: self._choose_rotation_mode(ROTATION_MODES[str(c)]),
             )
-            mode.setAccessibleName(text("param-rotation-mode.label"))
-            mode_row = QWidget()
+            mode_row = label_above(text("param-rotation-mode.label"), mode)
             mode_row.setObjectName("param-rotation-mode-row")
-            column = QVBoxLayout(mode_row)
-            column.setContentsMargins(0, 0, 0, 0)
-            column.addWidget(QLabel(text("param-rotation-mode.label")))
-            column.addWidget(mode)
             rotation = FieldEditor(ROTATION_WIDGET, FIELD_BY_KEY[f"{PAIRS_POINTER}/*/rotation_rad"], self.session)
             form.addRow(mode_row)
             form.addRow(rotation)

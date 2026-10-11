@@ -62,7 +62,6 @@ class BoardRotorPanel(FieldPanel):
             for choice in BORE_CHOICES:
                 bore.addItem(choice_text(choice), choice)
             bore.activated.connect(lambda index: self._choose_bore(bore.itemData(index)))
-            bore.setAccessibleName(text("param-bore.label"))
             self.helpers["param-bore"] = bore
             self._pending_bore = label_above(text("param-bore.label"), bore)
         if group is FieldGroup.MANUFACTURING:
@@ -75,7 +74,6 @@ class BoardRotorPanel(FieldPanel):
                 edit.setObjectName(name)
                 edit.setPlaceholderText(text("design.unit.oz") if field == "copper_oz" else text("design.unit.mm"))
                 edit.editingFinished.connect(lambda e=edit, f=field: self._stackup_input(e, f))
-                edit.setAccessibleName(text(f"{name}.label"))
                 form.addRow(label_above(text(f"{name}.label"), edit))
                 self.helpers[name] = edit
 

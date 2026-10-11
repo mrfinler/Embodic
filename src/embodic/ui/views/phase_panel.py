@@ -38,7 +38,6 @@ class PhasePanel(FieldPanel):
             tuple(ASSIGNMENT_MODES),
             lambda choice: self.session.set_assignment_mode(ASSIGNMENT_MODES[str(choice)]),
         )
-        mode.setAccessibleName(text("param-phase-assign-mode.label"))
         form.addRow(label_above(text("param-phase-assign-mode.label"), mode))
         self.helpers["param-phase-assign-mode"] = mode
 
