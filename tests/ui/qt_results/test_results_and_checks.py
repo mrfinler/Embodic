@@ -4,7 +4,7 @@ import dataclasses
 
 import pytest
 from PySide6.QtCore import QPropertyAnimation, QRect, Qt
-from PySide6.QtGui import QGuiApplication
+from PySide6.QtGui import QAccessible, QGuiApplication
 from PySide6.QtWidgets import QApplication, QLabel, QListWidget, QPushButton, QWidget
 from tests.ui.qt_results.conftest import find
 
@@ -262,3 +262,20 @@ def test_open_disclosure_lays_out_again_at_each_width_so_no_line_prints_over_ano
         QApplication.processEvents()
     assert "Assumptions" in card.disclosure_text(), "precondition: the section is open"
     assert overlapping_labels(window.results_tab.grid_host) == []
+
+
+@pytest.mark.req("REQ-N-15")
+def test_def_uv4_07_every_result_card_announces_label_value_unit_and_status(make_window, load):
+    """WCAG 4.1.2, AX-06 proxy. Catches a card whose accessible name is empty or lacks the number, unit or status."""
+    window = load(make_window(), D08)
+    names = {}
+    for key, card in window.results_tab.cards.items():
+        iface = QAccessible.queryAccessibleInterface(card)
+        names[key] = iface.text(QAccessible.Text.Name)
+        row = card.row
+        assert names[key].startswith(f"{row.title}, {row.value_text} "), key
+        assert f", {row.status.value}" in names[key][len(row.title) :], key
+    assert len(names) == 30
+    assert names["r-phase"] == "Phase resistance at operating temperature R_ph, 502 milliohm, not tested"
+    value = QAccessible.queryAccessibleInterface(find(window.results_tab, QLabel, "res-r-phase-value"))
+    assert value.text(QAccessible.Text.Name) == "502"

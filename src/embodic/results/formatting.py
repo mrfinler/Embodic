@@ -22,6 +22,38 @@ MINUS = "−"
 UNIT_SPACE = " "  # noqa: RUF001
 NOT_A_NUMBER = "n/a"
 _PREFIXES = {-12: "p", -9: "n", -6: "µ", -3: "m", 0: "", 3: "k", 6: "M", 9: "G"}
+_PREFIX_WORDS = {-12: "pico", -9: "nano", -6: "micro", -3: "milli", 0: "", 3: "kilo", 6: "mega", 9: "giga"}
+# What a screen reader says for each unit symbol (DEF-UV4-07); singular, as "502 milliohm".
+_UNIT_WORDS = {
+    Unit.MM: "millimetre",
+    Unit.MM2: "square millimetre",
+    Unit.M: "metre",
+    Unit.UM: "micrometre",
+    Unit.RAD: "radian",
+    Unit.T: "tesla",
+    Unit.V: "volt",
+    Unit.V_S_PER_RAD: "volt-second per radian",
+    Unit.N_M_PER_A: "newton-metre per ampere",
+    Unit.RPM_PER_V: "rpm per volt",
+    Unit.OHM: "ohm",
+    Unit.OHM_M: "ohm-metre",
+    Unit.H: "henry",
+    Unit.H_PER_M: "henry per metre",
+    Unit.W: "watt",
+    Unit.W_PER_M2_K: "watt per square metre kelvin",
+    Unit.A: "ampere",
+    Unit.A_PER_MM2: "ampere per square millimetre",
+    Unit.K: "kelvin",
+    Unit.PER_K: "per kelvin",
+    Unit.DEGC: "degree Celsius",
+    Unit.G: "gram",
+    Unit.G_PER_CM3: "gram per cubic centimetre",
+    Unit.N_M: "newton-metre",
+    Unit.N_M_PER_SQRT_W: "newton-metre per square root watt",
+    Unit.RPM: "rpm",
+    Unit.HZ: "hertz",
+    Unit.F_PER_M: "farad per metre",
+}
 _PREFIXED_UNITS = frozenset(
     {Unit.V, Unit.W, Unit.A, Unit.OHM, Unit.H, Unit.T, Unit.HZ, Unit.N_M, Unit.V_S_PER_RAD, Unit.N_M_PER_A, Unit.G}
 )
@@ -37,14 +69,30 @@ def format_quantity(value: float, unit: Unit, *, significant: int = 3) -> str:
         return NOT_A_NUMBER
     if unit is Unit.COUNT and value == int(value):
         return _signed(f"{abs(int(value))}", value)
-    symbol = unit.display()
+    number, shift = _number_and_shift(value, unit, significant)
+    return _with_unit(number, _PREFIXES[shift] if shift else "", unit.display())
+
+
+def spoken_quantity(value: float, unit: Unit, *, significant: int = 3) -> str:
+    """Return the number of `format_quantity` and its prefix and unit in words, for a screen reader ("502 milliohm").
+
+    A unit without a symbol (a ratio, a count) adds no words; NaN and infinities read ``n/a``.
+    """
+    if not math.isfinite(value) or (unit is Unit.COUNT and value == int(value)):
+        return format_quantity(value, unit, significant=significant)
+    number, shift = _number_and_shift(value, unit, significant)
+    words = _UNIT_WORDS.get(unit, "")
+    return f"{number} {_PREFIX_WORDS[shift]}{words}" if words else number
+
+
+def _number_and_shift(value: float, unit: Unit, significant: int) -> tuple[str, int]:
+    """Return the signed number text and the power of ten its SI prefix stands for (0 for none)."""
     if value == 0:
-        return _with_unit("0", "", symbol)
+        return "0", 0
     digits, exponent = _round_significant(abs(value), significant)
     shift = 3 * math.floor(exponent / 3) if unit in _PREFIXED_UNITS else 0
     shift = min(max(shift, min(_PREFIXES)), max(_PREFIXES))
-    text = _positional(digits, exponent - shift, significant)
-    return _with_unit(_signed(text, value), _PREFIXES[shift] if shift else "", symbol)
+    return _signed(_positional(digits, exponent - shift, significant), value), shift
 
 
 def format_value(t: Traceable[float], *, significant: int = 3) -> str:

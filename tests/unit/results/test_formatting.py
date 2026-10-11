@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 import embodic
-from embodic.results.formatting import format_quantity, format_value
+from embodic.results.formatting import UNIT_SPACE, format_quantity, format_value, spoken_quantity
 from embodic.results.traceable import traced
 from embodic.units import Unit
 
@@ -91,3 +91,27 @@ def test_formatting_identical_under_german_and_thai_locale(compiled_locales, loc
     )
     assert completed.returncode == 0, completed.stderr
     assert json.loads(completed.stdout) == [format_quantity(v, Unit(u)) for v, u in values]
+
+
+@pytest.mark.parametrize(
+    ("value", "unit", "spoken"),
+    [
+        (0.502, Unit.OHM, "502 milliohm"),
+        (0.0181, Unit.V_S_PER_RAD, "18.1 millivolt-second per radian"),
+        (1.34e-6, Unit.H, "1.34 microhenry"),
+        (9.59, Unit.K, "9.59 kelvin"),
+        (47.9, Unit.A_PER_MM2, "47.9 ampere per square millimetre"),
+        (-2.5, Unit.W, "−2.50 watt"),
+        (0.483, Unit.ONE, "0.483"),
+    ],
+)
+def test_spoken_quantity_names_the_prefix_and_unit_in_words(value, unit, spoken):
+    """DEF-UV4-07. Catches a screen-reader text that reads a symbol ("m ohm") or a prefix that differs from the card."""
+    assert spoken_quantity(value, unit) == spoken
+    number = format_quantity(value, unit).partition(UNIT_SPACE)[0]
+    assert spoken.startswith(number + " ") or spoken == number
+
+
+def test_every_unit_has_words():
+    """Catches a unit added to `Unit` without its spoken words, which would fail only when a result first uses it."""
+    assert [u for u in Unit if spoken_quantity(1.0, u) == "1.00" and u.display()] == []

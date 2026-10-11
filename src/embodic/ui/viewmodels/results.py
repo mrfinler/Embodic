@@ -17,7 +17,7 @@ from embodic.model.vocabulary import Phase
 from embodic.outcome import ComputeOutcome
 from embodic.physics.waveform import XCOIL_WAVEFORM_SAMPLES, emf_waveform_v
 from embodic.results import QUANTITY_LABELS, AnalysisResult, Registry, Traceable
-from embodic.results.formatting import MINUS, NOT_A_NUMBER, UNIT_SPACE, format_quantity
+from embodic.results.formatting import MINUS, NOT_A_NUMBER, UNIT_SPACE, format_quantity, spoken_quantity
 from embodic.results.labels import quantity_title
 from embodic.results.status import Status, ValidityEffect, ValidityFlag, combine_status
 from embodic.results.traceable import AssumedInput
@@ -65,7 +65,17 @@ class ResultRow:
     assumed_count: int
     eq_ids: tuple[str, ...]
     estimate_label: str | None
+    accessible_name: str  # what a screen reader announces for the card: title, value, unit and status in words
     traceable: Traceable[float]
+
+
+def accessible_name(title: str, t: Traceable[float]) -> str:
+    """Return "<title>, <value> <unit in words>, <status>[, <label>]"; a unitless value says "dimensionless"."""
+    spoken = spoken_quantity(t.value, t.unit)
+    if not t.unit.display() and math.isfinite(t.value):
+        spoken = f"{spoken} {text('results.unit.dimensionless')}"
+    parts = (title, spoken, t.status.value, *((t.label,) if t.label else ()))
+    return ", ".join(parts)
 
 
 def result_row(quantity: str, t: Traceable[float]) -> ResultRow:
@@ -81,6 +91,7 @@ def result_row(quantity: str, t: Traceable[float]) -> ResultRow:
         assumed_count=len(t.assumed_inputs),
         eq_ids=t.eq_ids,
         estimate_label=t.label,
+        accessible_name=accessible_name(quantity_title(quantity), t),
         traceable=t,
     )
 

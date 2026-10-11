@@ -186,6 +186,7 @@ class ResultCard(QFrame):
         self.eq.show_eq(row.eq_ids, t.kind_tag)
         self.asm.show_count(row.assumed_count)
         self.asm_list.setText("\n".join(assumed_input_text(a) for a in t.assumed_inputs))
+        self.setAccessibleName(row.accessible_name)
         self.setWhatsThis(row.eq_ids[0] if row.eq_ids else "")
         self.setProperty("stale", "true" if stale else "false")
         repolish(self)
