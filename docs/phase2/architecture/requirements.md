@@ -7,6 +7,12 @@ This file is the final requirement set for Phase 2. It carries, amends or withdr
 (`docs/PROJECT_BRIEF.md` §5, `docs/decision_log.md` D-008 to D-015). Full Phase 1 wording, sources and sub-criteria stay in
 the Phase 1 file; a row here that says "Phase 1 criteria" means criteria (a), (b), ... of the same ID there, unchanged.
 
+Revision 2026-10-11 (U-D12, claude-sonnet-5-5; D-041a and D-041b; main 4fda98d read for every item). The acceptance text of
+REQ-F-38 no longer requires "Example" in gallery titles, because `project.v1.schema.json` no longer requires it in
+`example.title` and the five packaged titles do not hold it (`test_ut_io_08_examples_are_packaged_with_the_ruling_g_display_titles`,
+`tests/unit/embodic_io/project/test_examples.py` l.44). The statement of the row is unchanged. No ID is new, and the
+test IDs of the row are unchanged.
+
 ## How to read the table
 
 - **Disp.** `carried` = unchanged; `amended` = changed by a Phase 2 decision (the statement here wins); `withdrawn` =
@@ -86,7 +92,7 @@ No ID changed.
 | REQ-F-35 | new | The wave generator shall be a faithful port of Xcoil v3's interleaved wave builder in the styles involute, jog, chord and overlap. | D-013; reference board is a wave winding (A2-TOP K1) | must | Layout-level golden regression per style with the GR-20 criteria; EMF and resistance on the same copper compared with Xcoil (GR-22, tolerance set by Agent 2 and 4). | M3 | embodic.generators.wave | GR-21, GR-22, GR-23, UT-GEN-04, PR-13, PR-14 |
 | REQ-F-36 | new | "New design" shall create a blank draft for the chosen topology in which every required field is empty and nothing is computed until all required fields have values. | D-014 | must | A blank draft has 0 required values and triggers 0 computes; filling the last required field triggers exactly one compute. | M4 | embodic.model | UT-MOD-01, UI-24, UT-SES-01 |
 | REQ-F-37 | new | The engine shall validate a draft field by field and list every missing required field, in form order, separately from invalid values. | D-014 | must | `parse_draft` returns DraftIncomplete with the exact missing pointer list for each topology's field table; present fields get INVALID issues; complete drafts round-trip through `draft_from_design`. | M2 | embodic.model | UT-MOD-01, UT-MOD-02, UT-MOD-03 |
-| REQ-F-38 | new | Examples shall be labelled "Example" wherever they appear, shall load as a new unsaved design whose fields carry `example` provenance, and shall never be overwritten by Save. | D-014 | must | Gallery titles contain "Example"; first Save after loading an example opens Save As; every field's provenance after load is `example`. | M4 | embodic.ui.viewmodels | UI-22, UT-IO-08 |
+| REQ-F-38 | new | Examples shall be labelled "Example" wherever they appear, shall load as a new unsaved design whose fields carry `example` provenance, and shall never be overwritten by Save. | D-014; D-041a, D-041b | must | The `example` provenance chip marks every field loaded from an example and the Examples gallery names the list, so a title does not need the word "Example" (D-041a). The design `/name` of each packaged example equals its display title (D-041b). First Save after loading an example opens Save As; every field's provenance after load is `example`. | M4 | embodic.ui.viewmodels | UI-22, UT-IO-08 |
 | REQ-F-39 | new | The desktop UI shall provide a MATLAB-style tabbed toolstrip in which every action has an original monochrome SVG icon, an English label, a tooltip and an accessible name, and is keyboard reachable. | D-012 | must | Every TOOLSTRIP entry resolves its command and icon file; arrow keys move within a tab; icons recolour with the theme. | M4 | embodic.ui.views | UI-25, AX-09 |
 | REQ-F-40 | new | The engine shall write any Layout as an `embodic.board-dump` v1 JSON file for the golden harness and Agent 4's independent checks. | Agent 3 port notes §7.5; Agent 4 request | must | embodic and Xcoil dumps parse with one reader; write, read, write is identical; non-finite values encoded. | M1 | embodic.io | GR-19 |
 

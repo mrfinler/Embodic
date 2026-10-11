@@ -67,6 +67,12 @@ test derives from its sources, D-040 b), UT-IO-08 (example titles are free Engli
 UI-04 and UI-27 (forced labels per phase and sign, line numbers after U-M4e-1). §5.4 amends LG-01 (the per-module
 allowance of D-040 a and c). §5.6 lists four strict xfails, not five, and two of them go when U-M4e-1b merges. No ID is new.
 
+Revision 2026-10-11 (U-D12, claude-sonnet-5-5, D-041a and D-041b; main 4fda98d read for every item, after U-M4e-1b and
+U-M4e-2 merged). §5.1 amends UT-IO-08 (the five display titles, the design name that equals the title, the pinned design
+hashes). §5.3.1 is new and says which tests under `tests/ui/qt_e2e/` cover AX-02, AX-04, UI-09 and the three walkthroughs,
+that UI-20 has no test, and that `.claude/skills/verify/verify.py --acceptance` is the UI verification entry point. §5.6
+now lists six strict xfails: the four of AX-04 and the two of DEF-M1V-03. The two UX-AC-03 marks are gone. No ID is new.
+
 ## 1. What changed and why
 
 | Change | Reason |
@@ -222,7 +228,7 @@ an empty `.hypothesis` database, so the example, not the random draw, is what ke
 | UT-RES-03 | Registry integrity (Phase 1 row, REQ-T-04). Amended 2026-10-09 (U-D11, D-040 b, U-M4c-4 f) | the packaged registries equal what their source documents give. `test_registry_packaged_counts_and_versions` (`tests/unit/results/test_registry.py` l.34) reads `expected_copies` of `tools/sync_registry.py` (l.51), which applies the filter that writes the copies to `docs/phase2/engineering/equation_registry.json` and `docs/phase2/evidence/evidence_register.json`. It compares the number of equations, the number of evidence entries and the version string (`v1+` and the first 12 hex digits of each copy's SHA-256) with `load_registry()`. The literal counts 30 and 108 are gone: they broke three times when Agent 5 added EV rows (store `decisions.tsv`, 2026-10-09T11:40Z). A stale packaged copy still fails, and Fable repairs it with `tools/sync_registry.py`. The helper `load_sync_tool` (`tests/unit/results/registries.py` l.26) loads that script for this test and for `test_sync_registry.py` |
 | UT-RES-07 | EC-05 labelling (DEF-23) | `edge_leakage_fraction.status == assumption`; the EC-05 ValidityFlag has `metric_bound = lower_bound`, calibration `inferred`, transfer and threshold `assumption`; affected results list the transfer assumption in their tag |
 | UT-IO-07 | Project file provenance and drafts | save and load keep origin example, per-field provenance and measurement sources; an incomplete draft loads as LoadedDraft with the same missing list; a stored `example` entry that disagrees with the packaged example is reported |
-| UT-IO-08 | Examples | every packaged example loads, validates and computes with no ERROR issue; every title contains "Example". Revision 2026-10-09 (U-D10, U-M4c-3): every example has a `display_note` that names no other program, no `engine.js` and no repository path (UX-AC-03; `test_ruling_g4_example_items_show_a_600_title_over_a_text3_note_free_of_other_programs`, `tests/ui/qt_design/test_ruling_g.py` l.132; interfaces.md §9.1). The title check of UX-AC-03 is a strict xfail (§5.6). Revision 2026-10-09 (U-D11, D-041a (Fable, 2026-10-09), U-S4e ruling g): a title is free English display text, so "every title contains "Example"" no longer holds. The criterion becomes: the title, the note and the saved design name of each example name no other program and no repository path, and the saved project holds no `example` object (`test_ux_ac_03_an_exported_example_names_no_other_program_and_no_repository_path`, `tests/unit/embodic_io/project/test_examples.py` l.47, one case per example file). UX-AC-03 (`docs/phase2/design/acceptance_criteria.md`) also asks that the five gallery titles equal the list of ruling g: "Spiral, 12 coils, 16 poles", "Spiral, 12 coils, 14 poles", "Spiral, 12 coils, 10 poles (D08)", "Serpentine, 16 poles", "Wave, 16 poles, involute". No test on main 9776555 asserts that equality (`verified` by reading `test_ruling_g.py` and `test_examples.py`), and the brief of U-M4e-1b asks for the files to carry those titles exactly, for the two xfails to flip and for a check that a title change leaves the design hash alone. A title change does not change the design hash. On main 9776555 `test_ut_io_08_spiral_examples_are_packaged_with_example_titles` (`test_examples.py` l.30) still asserts "Example" in each title, and U-M4e-1b (in flight) replaces it |
+| UT-IO-08 | Examples | every packaged example loads, validates and computes with no ERROR issue; every title contains "Example". Revision 2026-10-09 (U-D10, U-M4c-3): every example has a `display_note` that names no other program, no `engine.js` and no repository path (UX-AC-03; `test_ruling_g4_example_items_show_a_600_title_over_a_text3_note_free_of_other_programs`, `tests/ui/qt_design/test_ruling_g.py` l.132; interfaces.md §9.1). The title check of UX-AC-03 is a strict xfail (§5.6). Revision 2026-10-09 (U-D11, D-041a (Fable, 2026-10-09), U-S4e ruling g): a title is free English display text, so "every title contains "Example"" no longer holds. The criterion becomes: the title, the note and the saved design name of each example name no other program and no repository path, and the saved project holds no `example` object (`test_ux_ac_03_an_exported_example_names_no_other_program_and_no_repository_path`, `tests/unit/embodic_io/project/test_examples.py` l.47, one case per example file). UX-AC-03 (`docs/phase2/design/acceptance_criteria.md`) also asks that the five gallery titles equal the list of ruling g: "Spiral, 12 coils, 16 poles", "Spiral, 12 coils, 14 poles", "Spiral, 12 coils, 10 poles (D08)", "Serpentine, 16 poles", "Wave, 16 poles, involute". No test on main 9776555 asserts that equality (`verified` by reading `test_ruling_g.py` and `test_examples.py`), and the brief of U-M4e-1b asks for the files to carry those titles exactly, for the two xfails to flip and for a check that a title change leaves the design hash alone. A title change does not change the design hash. On main 9776555 `test_ut_io_08_spiral_examples_are_packaged_with_example_titles` (`test_examples.py` l.30) still asserts "Example" in each title, and U-M4e-1b (in flight) replaces it. Revision 2026-10-11 (U-D12, D-041a, D-041b; main 4fda98d, `verified` by reading, and by running the tests named here, 2026-10-11): the sentences above that say "still asserts", "in flight" or "no test" are closed. `test_ut_io_08_examples_are_packaged_with_the_ruling_g_display_titles` (`test_examples.py` l.44) asserts that the five titles equal the list of ruling g (`RULING_G_TITLES`, l.26). `test_d_041b_each_example_design_is_named_by_its_display_title` (l.52) asserts that `load_example(id)[1].name` equals the title, because D-041b makes the design `/name` equal the title (the window title and the export stem show it). `/name` is inside the design hash and the title is not, so U-M4e-1b left the five hashes unchanged and D-041b moved all five (`EXAMPLE_HASHES`, l.34). `test_ut_io_08_the_packaged_design_hashes_are_pinned` (l.58) pins them, and the unit that changes an example design edits that table. `test_ux_ac_03_an_exported_example_names_no_other_program_and_no_repository_path` is at l.68 and has no xfail mark. Run: `9 passed, 39 deselected` for `pytest tests/unit/embodic_io/project/test_examples.py tests/unit/embodic_io/exporters/test_report_readme_bundle.py -k "test_ut_io_08_examples_are_packaged or test_d_041b or hashes_are_pinned or ux_ac_03 or ruling_f"` (the filter also selects the five cases of UX-AC-03 and the colophon test) |
 | UT-EXP-01 | SVG | parses with `xml.etree`; path, via and pad counts equal the Layout; `<metadata>` holds the REQ-T-07 fields; phases carry class and label in both render modes. Revision 2026-10-09 (U-D10, D-039 c): in both render modes the D08 drawing holds the 12 `coil-label` texts with the D08 polarities and 12 eye fills clipped to their discs, with no hatch end outside the disc (`test_d08_drawing_labels_every_coil_and_fills_every_eye_clipped`, `test_svg.py` l.117); the B hatch lines are 0.4 mm apart at 1:1 (`test_d08_hatch_pitch_is_0_4_mm_at_1_to_1`, l.140); each phase has a legend swatch and the text "Phase A", "Phase B" or "Phase C" (l.102-106); no copper or legend bar has a dash pattern (l.152); the footer fits inside the drawing (l.161). The halo is a second `coil-label-halo` text under each label, which `tests/unit/embodic_io/exporters` does not assert (`not tested`) |
 | UT-EXP-02 | DXF complete, outline, screws | ezdxf audit 0 errors; outline file holds only outline and bore entities with every end point shared by exactly two entities; screws file holds only circles, count = holes |
 | UT-EXP-03 | PDF report | pypdf opens it; at least 1 page; text contains "Key results"; every reported value has a unit and a status word. Revision 2026-10-09 (U-D10, D-039 b and c): the embedded fonts print units as the UI does, so pypdf extracts `µH`, `mΩ` and the U+2212 minus (`test_ut_exp_03_report_prints_units_as_the_ui_does`, `test_report_readme_bundle.py` l.70); the drawing page holds the 12 D08 labels and the legend and no dash pattern (l.127); a character without a glyph fails the export with `INVALID_EXPORT_GLYPH_MISSING` and is never dropped (l.145); the stdlib font reader agrees with fontTools on every code point and width (`test_pdf_fonts.py` l.19). Revision 2026-10-09 (U-D11, U-S4e rulings e1, e2 and f): the extracted text joins every number and unit with U+00A0 (`502\u00a0mΩ`, `1.34\u00a0µH`) and holds no number, plain space and unit (l.70); the first page lists exactly three font resources, `Inter-Regular`, `Inter-SemiBold` and `JetBrainsMono-Regular`, each a Type0 font with Identity-H, a `FontFile2` and a `ToUnicode` map (l.70); the report headings use the SemiBold file and no stroke trick (`test_ruling_e2_report_headings_use_the_semibold_file_and_no_faux_bold`, l.95); the tables end with one colophon line and the report has no page footer (`test_ruling_f_report_ends_its_tables_with_one_colophon_line_and_no_page_footer`, l.113) |
@@ -263,6 +269,55 @@ an empty `.hypothesis` database, so the example, not the random draw, is what ke
 Phase 1 UI-01 and UI-08 are withdrawn (replaced by UI-23 and UI-22). The remaining Phase 1 UI tests run on the
 offscreen platform.
 
+### 5.3.1 End-to-end tests and the verify skill (revision 2026-10-11, U-D12)
+
+U-M4e-2 built `tests/ui/qt_e2e/` and `.claude/skills/verify/` on main 4fda98d (`verified` by reading the files). The
+tests start the app's own shell through `create_shell` (`conftest.py`, fixture `window`: 1280 x 800, light theme, a
+throwaway settings file) and find every widget by `objectName`. They run offscreen, so Windows behaviour is `not tested`.
+
+| ID | Test (file in `tests/ui/qt_e2e/`) | What it checks | `not tested` |
+|---|---|---|---|
+| AX-02 | `test_ax02_open_edit_three_inputs_recompute_open_eq_details_and_export_svg_with_the_keyboard_only` (`test_ax02_keyboard_only.py` l.43) | key events only, no pointer event: open D08 from the Examples gallery, type `param-speed`, `param-current` and `param-copper-temp`, recompute, open `res-r-phase-how`, open the guide at EQ-10, export one SVG | Keys inside the file dialog. The Windows build opens files in the native dialog, which an offscreen run cannot drive, so "open" is the gallery |
+| AX-04 | `test_ax04_every_interactive_widget_outside_the_open_defects_reaches_24_px_and_check_labels_32_px` (`test_ax04_target_size.py` l.135) and `test_ax04_open_target_size_defects` (l.146) | every visible, enabled button, tab, slider, field and focusable chip is at least 24 px on its smaller side, and a check box or radio button is measured by its click rectangle at 32 px. The screens are the empty session, D08 with each inspector, results and toolstrip tab, and the New design, Examples and Export dialogs, all at 1280 x 800. The first test passes today. The second is parametrised over `KNOWN_UNDERSIZED` (l.54) and holds the four strict xfails of §5.6 | WCAG's spacing exception for scroll bars is unruled (U-S4g) |
+| UI-09 | `test_ui09_the_window_renders_at_each_scale_factor` (`test_ui09_scaling.py` l.31) | one new process per `QT_SCALE_FACTOR` of 1, 1.5 and 2; the grab is 1280 x 800, 1920 x 1200 and 2560 x 1600 pixels. The grabs are kept for Agent 1 | "No clipped or overlapping text" is a judgement on the images, so it is `not tested` by code |
+| walkthroughs | `test_walkthrough_open_edit_recompute_inspect_export_save_and_reopen` (`test_walkthroughs.py` l.123), three cases | one user route per topology, listed below | typing into the file dialog. The cases answer it with `QFileDialog.selectFile` |
+| UX fixes of `m4_review_2.md` §6 | `test_f2_the_pair_list_rotation_chip_carries_its_provenance_for_the_dashed_example_rule` (`test_review_2_fixes.py` l.27), `test_ruling_i_the_screw_buttons_are_push_buttons_with_a_3_to_1_boundary` (l.45), `test_ruling_j_the_last_column_takes_the_remaining_width_so_no_header_cell_is_empty` (l.65, two sizes) | chip provenance, screw buttons, stretched last column at 1280 x 800 and 960 x 540 | |
+
+The three walkthroughs (`WALKTHROUGHS`, `test_walkthroughs.py`) cover the three topologies. Each case checks that the app
+starts in the empty session, opens a design, types the same three operating inputs, recomputes with `act-compute`, opens
+`res-r-phase-how`, shows the `tab-drc` tab, exports SVG and PDF, saves with `act-save`, edits one input, reopens with
+`act-open` and compares the design hash with the saved one.
+
+| Case | Opened from | Example |
+|---|---|---|
+| `spiral-d08` | the Examples gallery (`btn-empty-examples`) | `spiral_12c10p_d08` |
+| `serpentine` | New design (`btn-empty-new`), with the example as the starting values | `serpentine_16p_example` |
+| `wave` | the Examples gallery | `wave_16p_example` |
+
+The module docstring of `test_walkthroughs.py` calls the save and reopen step "the UI-21 path". UI-21 is the autosave and
+recovery test of Phase 1 (a process killed after an edit), and these cases do not kill a process. They cover REQ-F-15,
+REQ-F-31 and REQ-T-01 through their `req` marks, and UI-21 stays without an e2e test (`verified` by reading).
+
+UI-20 (rotor-angle overlay, REQ-F-30, priority `could`) has no test because the build has no overlay. Phase 1 wrote it
+"if implemented". A search of `src/embodic/ui` for "rotor angle" and "overlay" finds nothing (`verified` by grep), and
+`verify.py` lists it under `NOT_TESTED` (l.29). The row stays in the matrix and counts as not implemented, not as a
+pass. The U-M4e row of `work_breakdown.md` §1 listed UI-20 among the tests that pass, and its done predicate is amended there.
+
+The verify skill is the UI verification entry point. From the repository root:
+
+```
+.venv/bin/python .claude/skills/verify/verify.py --acceptance
+```
+
+It runs a read-only doctor, then `tests/ui/qt_e2e`, then the 41 rows of `docs/phase2/design/screenshot_checklist.md`
+through `tests/ui/qt_shell/capture_acceptance.py`, then the UI-09 grabs, then `shot_measure.py`. It writes PNGs and
+`report.json` to `build/verify/<UTC timestamp>/` and copies the shots to `build/screens/acceptance/`. The exit code is
+0 when the doctor passed, every e2e test passed or was a strict xfail, and every captured row has files. `report.json`
+carries a `not_tested` list with a reason per item (`NOT_TESTED`, `verify.py` l.27-35). `--doctor` runs the read-only checks only and
+`--rows S04 S07` captures only those rows. U-M4e-2 reported `12 passed, 4 xfailed` for the e2e step, `40 of 41` rows
+captured and `passed: true` (U-M4e-2 report, quoted). Row S33 is the one not captured: the build has no Tests dialog, and M5
+carries it (D-042 draft, `unresolved` until Fable records it; `work_breakdown.md` §8).
+
 ### 5.4 Static, language and accessibility gates
 
 | ID | Gate |
@@ -297,23 +352,36 @@ Gate wall time (revision 2026-10-08, U-D7, D-035h). The commit gate on main 4aec
 minutes (Fable's gate run, U-M3a report). U-M3b measured 269 s for 1490 tests on its branch. The time is not a gate
 criterion. Shortening it is a Phase 5 item.
 
-### 5.6 Strict xfails on main 9776555 (revision 2026-10-09, U-D11)
+### 5.6 Strict xfails on main 4fda98d (revision 2026-10-11, U-D12)
 
-Four test cases carry `xfail(strict=True)` on main 9776555 (U-D10 listed five on main fd190c1). Two are the UX-AC-03
-title cases, which U-M4e-1b removes. The other two are the cases of DEF-M1V-03. A strict xfail fails the run when it
-passes, so the owner removes the mark in the same change that fixes the cause. `grep -rn xfail tests` finds the
-markers. `pytest tests/ui/qt_design/test_ruling_g.py tests/unit/embodic_io/project/test_examples.py -q -rx` gives the
-two UX-AC-03 cases (counts in the report of U-D11). The DEF-M1V-03 cases sit in `tests/independent` and run in the
-commit gate profile (`tools/ci.py` ignores only `tests/performance` and `tests/packaging`).
+Six test cases carry `xfail(strict=True)` on main 4fda98d: four in AX-04 and two of DEF-M1V-03. The gate of U-M4e-2
+reported `6 xfailed`. A strict xfail fails the run when it passes, so the owner removes the mark in the same change
+that fixes the cause. `grep -rn xfail tests --include=*.py` finds the markers (and one docstring, `test_oracles.py`
+l.97). `pytest tests/ui/qt_e2e/test_ax04_target_size.py -rx` lists the four AX-04 cases with their reasons. The two
+DEF-M1V-03 cases sit in `tests/independent` and run in the commit gate profile (`tools/ci.py` ignores only
+`tests/performance` and `tests/packaging`).
 
 | Test | Mark reason | Ids it carries | Open point and owner |
 |---|---|---|---|
-| `test_ux_ac_03_example_titles_name_no_other_program` (`tests/ui/qt_design/test_ruling_g.py` l.170) | the serpentine example title names Xcoil; titles live in the example files | REQ-F-25, UX-AC-03 | U-M4e-1b retitles the five files (ruling g, D-041a, interfaces.md §9.1) and removes the mark |
-| `test_ux_ac_03_an_exported_example_names_no_other_program_and_no_repository_path[serpentine_16p_example]` (`tests/unit/embodic_io/project/test_examples.py`; the mark `SERPENTINE_TITLE_NAMES_XCOIL` is l.26 and is applied at l.43) | the serpentine example title names Xcoil | REQ-F-25, REQ-F-38, UX-AC-03 | the same unit removes the mark |
+| `test_ax04_open_target_size_defects[EqChip]` and `[AssumptionTag]` (`tests/ui/qt_e2e/test_ax04_target_size.py` l.146; the reasons are `KNOWN_UNDERSIZED`, l.54) | DEF-M4e2-01: the EQ chip and the "n assumptions" tag are 22 px tall (`status_badge.py`); the target is 24 px | REQ-N-13, AX-04 | Agent 1 rules fix or exception (U-S4g). Agent 3 fixes (U-M4e-3) and removes both marks |
+| `test_ax04_open_target_size_defects[QCheckBox]` (same function) | DEF-M4e2-02: check box click rectangles are 20 px tall in the results filters, the layer toggles and the export dialog; the target is 32 px for a check box with its label | REQ-N-13, AX-04 | the same two units |
+| `test_ax04_open_target_size_defects[QScrollBar]` (same function) | DEF-M4e2-03: scroll bars are 12 px wide (`theme_template.qss`); whether WCAG 2.2 SC 2.5.8's spacing exception applies to a scroll bar is unruled | REQ-N-13, AX-04 | Agent 1 rules (U-S4g); Agent 3 fixes if the ruling says fix (U-M4e-3) |
 | `test_every_dumped_object_is_a_continuous_path` for its second and third case (`tests/independent/m1/test_gr19_drc.py` l.79 builds the mark `_DEF_M1V_03`, applied at l.85) | DEF-M1V-03: the mapper puts each discontinuous Xcoil `ic` object into one `CopperPath` | the mapper defect described in §5 above this table | U-M1z (mapper), status open |
 
-After U-M4e-1b merges, the first two marks are gone and the list holds the DEF-M1V-03 cases only. The five marks of U-D10
-are closed as follows. The two U+202F cases passed after ruling e1 replaced U+202F by U+00A0
+The first test of AX-04, `test_ax04_every_interactive_widget_outside_the_open_defects_reaches_24_px_and_check_labels_32_px`
+(l.135), is not a xfail. It excludes the four kinds above, so a new undersized button, field, combo or tab fails it.
+`DEF-M4e2-01` to `DEF-M4e2-03` are the defect ids of U-M4e-2 (store `reports/U-M4e-2.md`). The test names three ids for
+four cases because DEF-M4e2-01 covers two widget classes.
+
+The two UX-AC-03 cases that this section listed on main 9776555 are closed. U-M4e-1b retitled the five examples and
+removed the mark on the title test. The mark on the serpentine export scan stayed, because the design `/name` still held
+the old title, which names Xcoil. D-041b made the name equal the display title in U-M4e-2, and the case passed, so
+U-M4e-2 removed the mark (U-M4e-2 report; `grep` finds no `SERPENTINE_TITLE_NAMES_XCOIL` in `tests`). The cases are now
+`test_ux_ac_03_example_titles_are_the_ruling_g_list_and_name_no_other_program` (`tests/ui/qt_design/test_ruling_g.py`
+l.177) and `test_ux_ac_03_an_exported_example_names_no_other_program_and_no_repository_path`
+(`tests/unit/embodic_io/project/test_examples.py` l.68, one case per example file).
+
+The five marks of U-D10 are closed as follows. The two U+202F cases passed after ruling e1 replaced U+202F by U+00A0
 (`test_font_files.py`, `KNOWN_GAPS` is gone, `verified` by grep). The two 300 px inspector tests passed after ruling c
 split `pair-list` out of `layer-list` and cut the screw table to three columns
 (`test_ruling_c_layer_and_pair_lists_fit_the_300_px_inspector_with_kind_in_full`, `test_ruling_g.py` l.64, and

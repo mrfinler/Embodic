@@ -45,6 +45,14 @@ for every item).
 - §5. The table gains the `pytest-timeout` row, which U-D10 left open (D-034). §5.1 is unchanged: the wheel and the
   folder still carry the same licence files, because both Inter files are under the one `Inter/LICENSE.txt`.
 
+Revision 2026-10-11 (U-D12, claude-sonnet-5-5, U-M4e-2; the tree of main 4fda98d was read for every item).
+
+- §1. The tree lists `.claude/skills/verify/`, the project verification skill. It is developer tooling in the repository.
+  The wheel does not carry it: `pyproject.toml` builds the wheel from `src/embodic` and force-includes `resources` only
+  (`[tool.hatch.build.targets.wheel]`, `verified` by reading), and `.claude/` is in neither. Whether a source
+  distribution carries it is `unresolved`, because `pyproject.toml` has no sdist section. The tree also lists the files of
+  `tests/ui/qt_e2e/` and `tests/ui/qt_shell/capture_acceptance.py`, the lever that the skill runs.
+
 ## 1. Repository tree
 
 ```
@@ -54,6 +62,12 @@ embodic/
   THIRD_PARTY_LICENSES.md        generated licence list (U-M5b)
   CHANGELOG.md
   .github/workflows/ci.yml       calls tools/ci.py (U-M1a)
+  .claude/skills/verify/         project verification skill (U-M4e-2). Developer tooling, not shipped in the wheel
+    SKILL.md                     how to drive the app offscreen: launch, doctor, drive, evidence, cleanup
+    verify.py                    --doctor, --rows, --acceptance. Runs tests/ui/qt_e2e, the 41 checklist rows and the
+                                 UI-09 grabs, then writes build/verify/<UTC timestamp>/ (build/ is git-ignored)
+    features/                    README.md (the feature map) and design_walkthrough.md, results_and_checks.md,
+                                 export_and_save.md, accessibility.md, canvas_and_shell.md
   requirements/                  lock files with hashes: py311.txt, py312.txt, py313.txt (+ -dev) (U-M5b)
   src/embodic/
     __init__.py                  __version__ only
@@ -119,7 +133,8 @@ embodic/
     evidence/                    equations.v1.json, evidence.v1.json, synced copies (tools/sync_registry.py)
   tests/
     conftest.py                  markers: req, eq, slow, manual; offscreen Qt for tests/ui
-    ui/conftest.py               offscreen platform and a session fixture that registers the bundled fonts
+    ui/conftest.py               offscreen platform and the autouse session fixture `qapp`, which returns `qt_application()`
+                                 so every UI test runs with the bundled fonts registered
     unit/<package>/              Agent 3 units; embodic_io/ for embodic.io (io is a stdlib name)
     unit/ui/<area>/              view-model tests; unit/ui/ holds an __init__.py (U-M4b)
     golden/harness/              comparators, tolerance map, non-finite decoding
@@ -127,6 +142,10 @@ embodic/
     golden/<milestone>_<area>/   comparison tests (m1_geometry, m1_drc, m1_layout, m2_physics, m3_serpentine, m3_wave)
     golden/expected_diffs/<area>.toml   one allow-list per owning unit
     ui/qt_<area>/                pytest-qt tests (qt_shell, qt_design, qt_results, qt_e2e)
+    ui/qt_e2e/                   U-M4e-2: conftest.py (fixtures `window`, `wait_drawn`), support.py (user actions by
+                                 objectName), test_walkthroughs.py, test_ax02_keyboard_only.py, test_ax04_target_size.py,
+                                 test_ui09_scaling.py, test_review_2_fixes.py (test_plan.md §5.3.1)
+    ui/qt_shell/capture_acceptance.py   the lever that grabs the 41 checklist rows and the UI-09 scales; verify.py runs it
     static/                      AST lints: MT-04 to MT-08, LG-01 to LG-08
     independent/                 Agent 4 only
     performance/  packaging/
