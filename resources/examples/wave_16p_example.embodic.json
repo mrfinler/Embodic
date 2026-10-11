@@ -37,7 +37,7 @@
    "copper_temp_coeff_per_k": null,
    "laminate_density_g_per_cm3": null
   },
-  "name": "Example: 16-pole wave winding (involute, 2 turns)",
+  "name": "Wave, 16 poles, involute",
   "operating": {
    "ambient_temperature_degc": 25.0,
    "convection_h_w_m2k": 30.0,
@@ -125,7 +125,7 @@
    "wave_style": "involute"
   }
  },
- "design_hash": "sha256:294f2a10cad44a4e13824d097697547f8c162e6f279a9d7cb2f09c45f3d2c66c",
+ "design_hash": "sha256:3131a61975766c38984df5065b01f255875b79ebcfa831624c10c5db5d5c82e8",
  "example": {
   "source_note": "Xcoil v3 default wave preset with turns 2 (D-016), example values (assumption); board, bore and screw circle follow Xcoil's outline rules at this copper envelope",
   "title": "Wave, 16 poles, involute"
@@ -133,7 +133,7 @@
  "format": "embodic-project",
  "origin_example": {
   "example_id": "wave_16p_example",
-  "example_sha256": "sha256:294f2a10cad44a4e13824d097697547f8c162e6f279a9d7cb2f09c45f3d2c66c"
+  "example_sha256": "sha256:3131a61975766c38984df5065b01f255875b79ebcfa831624c10c5db5d5c82e8"
  },
  "provenance": {
   "/analysis/harmonics": {

@@ -312,11 +312,10 @@ def write_report_pdf(
     _key_results(flow, outcome.analysis)
     _drc(flow, outcome)
     _inputs(flow, outcome)
-    flow.y -= ROW / 2
-    flow.row([(MARGIN, COLOPHON)])
     inks = phase_inks()
     for index, board in enumerate(boards, start=1):
         _drawing(doc, index, board, inks, mode is PhaseRenderMode.GREYSCALE_HATCH)
+    doc.row(MARGIN, [(MARGIN, COLOPHON)])
     info = {
         "Title": "embodic design report",
         "Producer": f"embodic {metadata.embodic_version}",

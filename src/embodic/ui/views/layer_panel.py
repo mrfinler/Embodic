@@ -275,14 +275,16 @@ class LayerPanel(FieldPanel):
                 continue
             row = self.session.item_row(ROTATION_WIDGET, f"{PAIRS_POINTER}/{slot.pair.position}/rotation_rad")
             chip = None if row is None else row.provenance
-            word = "" if chip is None else text(f"design.prov.{chip.provenance.value}")
-            table.setCellWidget(r, ROTATION_COLUMN, _value_with_chip(rows[r][ROTATION_COLUMN], word))
+            provenance = "" if chip is None else chip.provenance.value
+            word = text(f"design.prov.{provenance}") if provenance else ""
+            table.setCellWidget(r, ROTATION_COLUMN, _value_with_chip(rows[r][ROTATION_COLUMN], word, provenance))
             cell = table.item(r, ROTATION_COLUMN)
             assert cell is not None
             cell.setText("")
             cell.setData(Qt.ItemDataRole.AccessibleTextRole, f"{rows[r][ROTATION_COLUMN]} {word}")
         fit_rows(table)
         fit_width(table)
+        table.horizontalHeader().setStretchLastSection(True)
 
     def _show_rotation(self, table: QTableWidget) -> None:
         mode, mode_row, rotation = (
@@ -325,10 +327,11 @@ def _fill(table: QTableWidget, rows: list[tuple[str, ...]], tips: dict[int, str]
     table.blockSignals(False)
     fit_rows(table)
     fit_width(table)
+    table.horizontalHeader().setStretchLastSection(True)  # ruling j: no empty header cell
 
 
-def _value_with_chip(value: str, word: str) -> QWidget:
-    """Return a rotation cell: the value and its provenance chip (screens.md section 4)."""
+def _value_with_chip(value: str, word: str, provenance: str) -> QWidget:
+    """Return a rotation cell: the value and its provenance chip, styled per provenance (screens.md section 4)."""
     cell = QWidget()
     line = QHBoxLayout(cell)
     line.setContentsMargins(6, 0, 4, 0)
@@ -336,6 +339,7 @@ def _value_with_chip(value: str, word: str) -> QWidget:
     shown = QLabel(value)
     chip = QLabel(word)
     chip.setProperty("class", "prov-chip")
+    chip.setProperty("provenance", provenance)
     chip.setAlignment(Qt.AlignmentFlag.AlignCenter)
     repolish(chip)
     line.addWidget(shown)

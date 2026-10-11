@@ -10,9 +10,9 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
     QLineEdit,
+    QPushButton,
     QTableWidget,
     QTableWidgetItem,
-    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -106,11 +106,11 @@ class BoardRotorPanel(FieldPanel):
         table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         table.itemChanged.connect(self._edit_cell)
         table.itemSelectionChanged.connect(self.refresh_helpers)
-        add = QToolButton()
+        add = QPushButton()
         add.setObjectName("btn-screw-add")
         add.setText(text("btn-screw-add.label"))
         add.clicked.connect(self.session.add_screw_pattern)
-        remove = QToolButton()
+        remove = QPushButton()
         remove.setObjectName("btn-screw-remove")
         remove.setText(text("btn-screw-remove.label"))
         remove.clicked.connect(lambda: self.session.remove_screw_pattern(table.currentRow()))
@@ -206,6 +206,7 @@ class BoardRotorPanel(FieldPanel):
         table.blockSignals(False)
         fit_rows(table)
         fit_width(table)
+        table.horizontalHeader().setStretchLastSection(True)  # ruling j: no empty header cell
         remove.setEnabled(bool(patterns))
         for widget_id, leaf in PATTERN_FIELDS.items():
             editor = self.helpers[widget_id]

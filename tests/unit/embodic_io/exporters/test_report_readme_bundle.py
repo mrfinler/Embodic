@@ -110,17 +110,17 @@ def test_ruling_e2_report_headings_use_the_semibold_file_and_no_faux_bold(
     assert {"embodic design report", "Key results", "DRC summary", "Inputs"} <= set(headings)
 
 
-def test_ruling_f_report_ends_its_tables_with_one_colophon_line_and_no_page_footer(
+def test_ruling_f_one_colophon_line_ends_the_whole_report_and_no_page_has_a_footer(
     outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path
 ) -> None:
-    """U-S4e ruling f. Catches a missing font credit, or a credit repeated as a footer on every page."""
+    """U-S4e ruling f ("one colophon line ends the PDF"). Catches a missing or repeated credit, or a credit mid-PDF."""
     summary = write_report_pdf(outcome_of("spiral_12c10p_d08"), tmp_path / "report.pdf")
     assert isinstance(summary, ExportSummary), summary
-    _, text = _pdf_text(summary.path)
+    reader, text = _pdf_text(summary.path)
     colophon = "Set in Inter and JetBrains Mono, SIL Open Font License 1.1."
     assert text.count(colophon) == 1
-    after_inputs = text.split("\nInputs\n", 1)[1]
-    assert colophon in after_inputs and "Board 1 drawing" in after_inputs.split(colophon, 1)[1]
+    assert "Board 1 drawing" in text.split(colophon, 1)[0]
+    assert reader.pages[-1].extract_text().rstrip().splitlines()[-1] == colophon
 
 
 @pytest.mark.parametrize("mode", list(PhaseRenderMode))

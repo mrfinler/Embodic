@@ -37,7 +37,7 @@
    "copper_temp_coeff_per_k": null,
    "laminate_density_g_per_cm3": null
   },
-  "name": "Example: UGent D08 12-coil 10-pole spiral",
+  "name": "Spiral, 12 coils, 10 poles (D08)",
   "operating": {
    "ambient_temperature_degc": 20.0,
    "convection_h_w_m2k": 10.0,
@@ -144,7 +144,7 @@
    "phase_sequence": "abc"
   }
  },
- "design_hash": "sha256:709ea86cd9d17998d231ae2beef79d813063afb6b2ff183ea9fa9050dd989761",
+ "design_hash": "sha256:327919a0eef55ce2c458635f6160047af7654ebd0a04e818ee225fd5f69615d8",
  "example": {
   "source_note": "D08 thesis configuration (oracle O1-D08, OR-01); the 66 mm circle board and 10 mm bore are an assumption",
   "title": "Spiral, 12 coils, 10 poles (D08)"
@@ -152,7 +152,7 @@
  "format": "embodic-project",
  "origin_example": {
   "example_id": "spiral_12c10p_d08",
-  "example_sha256": "sha256:709ea86cd9d17998d231ae2beef79d813063afb6b2ff183ea9fa9050dd989761"
+  "example_sha256": "sha256:327919a0eef55ce2c458635f6160047af7654ebd0a04e818ee225fd5f69615d8"
  },
  "provenance": {
   "/analysis/harmonics": {

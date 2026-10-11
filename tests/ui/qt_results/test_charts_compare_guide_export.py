@@ -134,7 +134,7 @@ def test_ui10_ui34_compare_shows_reference_and_current_with_integer_counts_and_g
     confirm = window.findChild(QMessageBox, "dlg-compare-confirm")
     assert confirm is not None and confirm.defaultButton() is confirm.button(QMessageBox.StandardButton.Cancel)
     confirm.reject()
-    assert tab.vm.reference.value.design.name.endswith("D08 12-coil 10-pole spiral")
+    assert tab.vm.reference.value.design.name == "Spiral, 12 coils, 10 poles (D08)"
 
 
 @pytest.mark.req("REQ-F-26")
@@ -205,7 +205,8 @@ def test_export_dialog_on_d08_writes_svg_dxf_pdf_readme_zip_and_lists_only_those
     qtbot.mouseClick(dialog.run, Qt.MouseButton.LeftButton)
     on_disk = sorted(p.name for p in (tmp_path / "d08").iterdir())
     assert sorted(dialog.result_text.text().splitlines()[1:]) == on_disk
-    suffixes = sorted(name.split("spiral", 1)[-1] for name in on_disk if name != "README.txt")
+    stem = "Spiral_12_coils_10_poles_D08"  # the export stem of the D08 design name (D-041b)
+    suffixes = sorted(name.removeprefix(stem) for name in on_disk if name != "README.txt")
     assert suffixes == [".dxf", ".embodic.json", ".svg", ".zip", "_outline.dxf", "_report.pdf"]
     assert "README.txt" in on_disk
     assert dialog.open_folder.isVisible()

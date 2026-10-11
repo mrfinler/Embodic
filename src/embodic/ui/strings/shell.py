@@ -89,7 +89,6 @@ STRINGS: Mapping[str, str] = {
     "shell.sum-ke.label": "Line back-EMF constant, peak",
     "shell.sum-r-phase.label": "Phase resistance at operating temperature",
     "shell.sum.no-value": "Not computed",
-    "shell.sum.assumptions": "{count} assumptions",
     "shell.badge.verified": "verified",
     "shell.badge.inferred": "inferred",
     "shell.badge.assumption": "assumption",
