@@ -1,13 +1,12 @@
 """Apply a theme to the application: Fusion style, a QPalette from the tokens, Agent 1's style sheet, icons."""
 
 import logging
-from functools import cache
 from pathlib import Path
 
-from PySide6.QtCore import QByteArray, QDir, QPoint, QSize, Qt
+from PySide6.QtCore import QByteArray, QDir, QSize, Qt
 from PySide6.QtGui import QColor, QIcon, QPainter, QPalette, QPixmap
 from PySide6.QtSvg import QSvgRenderer
-from PySide6.QtWidgets import QApplication, QCheckBox, QProxyStyle, QRadioButton
+from PySide6.QtWidgets import QApplication
 
 from embodic.paths import resource_root
 from embodic.ui.theme import ThemeTokens, recolour_svg, themes_dir
@@ -82,45 +81,9 @@ def palette_for(tokens: ThemeTokens) -> QPalette:
     return palette
 
 
-class _RowCheckBox(QCheckBox):
-    def hitButton(self, pos: QPoint) -> bool:  # noqa: N802 (Qt override)
-        return self.rect().contains(pos)
-
-
-class _RowRadioButton(QRadioButton):
-    def hitButton(self, pos: QPoint) -> bool:  # noqa: N802 (Qt override)
-        return self.rect().contains(pos)
-
-
-STYLE_SET_PROPERTY = "embodic-target-size-style"
-ROW_TARGETS = {QCheckBox: _RowCheckBox, QRadioButton: _RowRadioButton}
-
-
-class TargetSizeStyle(QProxyStyle):
-    """Fusion, where a check box or radio button takes a click anywhere in its 32 px row (m4_review_2.md ruling k2)."""
-
-    def polish(self, arg):
-        """Polish as Fusion does; a plain check box or radio button also takes clicks in its whole rectangle."""
-        # Under a style sheet Qt computes SE_CheckBoxClickRect itself and never asks a proxy style, so the hit test
-        # has to live in the widget: re-class each plain box into a subclass whose hitButton covers its rectangle.
-        row_target = ROW_TARGETS.get(type(arg))
-        if row_target is not None:
-            arg.__class__ = row_target
-        return super().polish(arg)
-
-
-@cache
-def target_size_style() -> TargetSizeStyle:
-    """Return the one application style; cached because Qt calls its Python overrides only while it is referenced."""
-    return TargetSizeStyle("Fusion")
-
-
 def apply_theme(app: QApplication, tokens: ThemeTokens) -> None:
     """Restyle every widget of the application with one theme."""
-    if not app.property(STYLE_SET_PROPERTY):
-        # Set once: a second setStyle under a style sheet deletes the old wrapper, which takes its base style with it.
-        app.setStyle(target_size_style())
-        app.setProperty(STYLE_SET_PROPERTY, True)
+    app.setStyle("Fusion")
     QDir.setSearchPaths("theme", [str(themes_dir())])
     app.setPalette(palette_for(tokens))
     app.setStyleSheet((themes_dir() / f"{tokens.name}.qss").read_text(encoding="utf-8"))
