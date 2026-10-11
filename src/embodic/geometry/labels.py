@@ -32,6 +32,7 @@ class LabelAnchor:
     x_mm: float
     y_mm: float
     forced: bool  # the first of its phase and sign: always placed, inside the view (U-S4e ruling h)
+    along: tuple[tuple[float, float], ...] = ()  # further spots on the same copper, tried when the anchor is taken
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -124,7 +125,7 @@ def _angle(point: tuple[float, float]) -> float:
     return math.atan2(point[1], point[0]) % math.tau
 
 
-_Side = tuple[float, tuple[float, float], CopperPath]  # angle, midpoint, path
+_Side = tuple[float, tuple[float, float], CopperPath, Primitive]  # angle, midpoint, path, the side itself
 
 
 def _belt_key(side: _Side) -> tuple[Phase | None, int]:
@@ -137,7 +138,7 @@ def _wave(layout: Layout, layers: dict[Phase, str]) -> Iterator[LabelAnchor]:
     for layer in dict.fromkeys(layers.values()):
         sides = sorted(
             (
-                (_angle(_midpoint(q)), _midpoint(q), path)
+                (_angle(_midpoint(q)), _midpoint(q), path, q)
                 for path in layout.paths
                 if path.layer == layer and path.phase is not None and layers[path.phase] == layer
                 for q in path.primitives
@@ -151,13 +152,14 @@ def _wave(layout: Layout, layers: dict[Phase, str]) -> Iterator[LabelAnchor]:
         for belt in sorted(belts, key=lambda b: min(side[2].id for side in b)):
             phase, polarity = _belt_key(belt[0])
             assert phase is not None
-            x, y = belt[len(belt) // 2][1]
+            _, (x, y), _, side = belt[len(belt) // 2]
             yield LabelAnchor(
                 phase=phase,
                 text=f"{phase.value}{_sign(polarity)}",
                 x_mm=x,
                 y_mm=y,
                 forced=(phase, polarity) not in seen,
+                along=tuple(sorted(_along(side), key=lambda spot: _distance(spot, (x, y)))),
             )
             seen.add((phase, polarity))
 
@@ -321,7 +323,8 @@ def place_labels(
 ) -> tuple[PlacedLabel, ...]:
     """Place labels in the given priority order and return those that show, every one inside the view.
 
-    A label whose box, grown by 2 px, meets a placed label, an obstacle or the viewport edge is skipped. A forced label
+    A label tries its anchor, then the further spots on its own copper (a wave belt's middle side); one whose box, grown
+    by 2 px, meets a placed label, an obstacle or the viewport edge at every spot is skipped. A forced label
     (the first of its phase and sign) always places: on its anchor when that is free, else outside the ring on its
     own direction with a leader when anchor and label both lie in the view, else on the free ``copper`` spot of its
     phase nearest its anchor. Last, every phase with a ``copper`` spot in the view but no label gets one, on the free
@@ -331,8 +334,9 @@ def place_labels(
     ordered = list(anchors)
     visible = {phase: [p for p in points if placer.in_view(p)] for phase, points in (copper or {}).items()}
     for anchor in ordered:
-        if placer.free(anchor.text, (anchor.x_mm, anchor.y_mm)):
-            placer.place(anchor.phase, anchor.text, (anchor.x_mm, anchor.y_mm))
+        spot = placer.first_free(anchor.text, [(anchor.x_mm, anchor.y_mm), *anchor.along])
+        if spot is not None:
+            placer.place(anchor.phase, anchor.text, spot)
         elif anchor.forced:
             placer.place_forced(anchor, ring_outer_mm, visible.get(anchor.phase, ()))
     for phase, points in visible.items():

@@ -94,7 +94,10 @@ def test_ux_ac_27_labels_never_overlap_and_name_every_phase_at_fit_zoom_and_3x(s
 
 @pytest.mark.req("REQ-N-23")
 def test_ux_ac_27_wave_shows_more_labels_when_zoomed_in_and_places_them_again_after_a_resize(shown):
-    """Catches labels placed once at load: zooming in must add labels, a resize must place them for the new edge."""
+    """Catches labels placed once at load: zooming in must add labels, a resize must place them for the new edge.
+
+    At fit zoom every belt label places (DEF-UV4-01), so the resize starts from a view zoomed out below fit.
+    """
     window = shown("wave_16p_example")
     canvas = window.canvas
     at_fit = [item.pos() for item in _items(canvas, "label")]
@@ -105,10 +108,12 @@ def test_ux_ac_27_wave_shows_more_labels_when_zoomed_in_and_places_them_again_af
     zoomed = [item.pos() for item in _items(canvas, "label")]
     assert len(zoomed) > sum(region.contains(pos) for pos in at_fit)
     canvas.fit_view()
+    canvas.zoom_by(1 / 3)
+    zoomed_out = len(_items(canvas, "label"))
     window.resize(1600, 1000)
     window.centre_split.setSizes([800, 100])
     canvas.fit_view()
-    assert len(_items(canvas, "label")) > len(at_fit)
+    assert len(_items(canvas, "label")) > zoomed_out
     _assert_ux_ac_27(canvas, "wave_16p_example")
 
 

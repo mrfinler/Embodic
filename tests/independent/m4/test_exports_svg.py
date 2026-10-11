@@ -142,7 +142,6 @@ def test_serpentine_has_four_labels_per_phase(mode, export_dir):
     assert label_texts(svg_of("serpentine_16p_example", mode, export_dir)) == SERPENTINE_LABELS
 
 
-@pytest.mark.xfail(strict=True, reason="DEF-UV4-01: the wave SVG drops 4 of 48 belt labels at page scale")
 @pytest.mark.parametrize("mode", list(PhaseRenderMode))
 def test_wave_has_one_label_per_belt(mode, export_dir):
     """Catches a wave drawing that leaves a belt unnamed (brief 1a: per belt, D-039 d)."""
