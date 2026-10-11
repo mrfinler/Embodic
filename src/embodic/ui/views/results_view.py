@@ -55,6 +55,9 @@ STALE_OPACITY = 0.6
 REVEAL_MS = 120
 CARD_MIN_WIDTH_PX = 280  # screens.md section 6, U-S4e ruling d
 CARD_GAP_PX = 8
+# With each check box's own 4 px of border and padding, a 4 px gap leaves 12 px between one status and the next box,
+# and the row of five status words fits the 568 px results page of a 1280 px window (U-S4e ruling c).
+FILTER_GAP_PX = 4
 
 
 # Agent 1's style sheets ring buttons and fields; the chips, tags and scroll areas of the results area need it too.
@@ -255,6 +258,7 @@ class ResultsTab(QWidget):
 
         content = QWidget()
         filters = QHBoxLayout()
+        filters.setSpacing(FILTER_GAP_PX)
         filters.addWidget(QLabel(text("results.filter.label")))
         self.filter_boxes: dict[Status, QCheckBox] = {}
         for status in Status:
