@@ -10,6 +10,7 @@ from hypothesis import settings
 MARKERS = (
     "req(*req_ids): requirement IDs (REQ-x-nn) this test verifies; every test needs at least one (TR-02)",
     "eq(*eq_ids): equation IDs (EQ-nn) this test exercises",
+    "eqt(*eqt_ids): registry test IDs (EQT-nn-kind) this test realises (interfaces.md section 3.1)",
     "slow: longer than a few seconds; runs in the nightly and release profiles only",
     "manual: needs a human; never runs in CI",
 )
@@ -26,7 +27,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         "--req-report",
         metavar="PATH",
         default=None,
-        help="write one JSON record per test (node id, REQ and EQ markers, outcome) for tools/trace_matrix.py",
+        help="write one JSON record per test (node id, REQ, EQ and EQT markers, outcome) for tools/trace_matrix.py",
     )
 
 
@@ -40,7 +41,7 @@ def pytest_configure(config: pytest.Config) -> None:
 
 
 class ReqReport:
-    """Collect REQ/EQ markers at collection and the outcome of each test, then write them as JSON."""
+    """Collect REQ/EQ/EQT markers at collection and the outcome of each test, then write them as JSON."""
 
     def __init__(self, path: Path) -> None:
         self.path = path
@@ -54,6 +55,7 @@ class ReqReport:
                 "nodeid": item.nodeid,
                 "req": sorted({req for mark in item.iter_markers("req") for req in mark.args}),
                 "eq": sorted({eq for mark in item.iter_markers("eq") for eq in mark.args}),
+                "eqt": sorted({eqt for mark in item.iter_markers("eqt") for eqt in mark.args}),
                 "outcome": "not run",
             }
 

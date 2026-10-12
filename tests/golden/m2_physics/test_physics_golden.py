@@ -87,7 +87,26 @@ def test_every_physics_fixture_has_a_port() -> None:
     assert {case.fn for case in CASES.values()} <= set(PORTS) | LAYOUT_FNS
 
 
-@pytest.mark.parametrize("case_id", sorted(c for c, case in CASES.items() if case.fn in PORTS))
+# Registry test id (interfaces.md section 3.1) that a case of each Xcoil function realises.
+EQT_GR_BY_FN = {
+    "copperResistivity": "EQT-10-GR",
+    "traceResistance": "EQT-10-GR",
+    "viaBarrelArea": "EQT-11-GR",
+    "skinDepthMm": "EQT-13-GR",
+    "ipc2221Current": "EQT-15-GR",
+    "fieldHarmonic": "EQT-05-GR",
+    "applyConnection": "EQT-09-GR",
+}
+
+
+@pytest.mark.parametrize(
+    "case_id",
+    [
+        pytest.param(c, marks=pytest.mark.eqt(EQT_GR_BY_FN[case.fn]), id=c)
+        for c, case in sorted(CASES.items())
+        if case.fn in PORTS
+    ],
+)
 def test_physics_kernel_matches_xcoil(case_id: str) -> None:
     """Every call agrees with Xcoil within the kernel class (rel 1e-12); an infinity must match exactly."""
     case = CASES[case_id]

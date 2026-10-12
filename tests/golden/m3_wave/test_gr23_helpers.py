@@ -69,12 +69,14 @@ def _params(raw: Mapping[str, Any]) -> WaveParams:
     )  # fmt: skip
 
 
+@pytest.mark.eqt("EQT-24-GR")
 def test_invol_matches_xcoil(golden_report: Any) -> None:
     """Catches tan(a) + a or a sign slip in the involute function."""
     for i, c in enumerate(_calls("wave-helper-invol")):
         golden_report.check(f"invol/{i}", compare_scalar(c["value"], invol(c["alpha"]), KERNEL))
 
 
+@pytest.mark.eqt("EQT-24-GR")
 def test_involute_point_matches_xcoil(golden_report: Any) -> None:
     """Catches a swapped sine and cosine in the involute point."""
     for i, c in enumerate(_calls("wave-helper-involute-point")):
@@ -84,6 +86,7 @@ def test_involute_point_matches_xcoil(golden_report: Any) -> None:
         )
 
 
+@pytest.mark.eqt("EQT-24-GR")
 def test_biarc_matches_xcoil(golden_report: Any) -> None:
     """Catches a wrong joint point or arc direction of the biarc."""
     for i, c in enumerate(_calls("wave-helper-biarc")):
@@ -91,6 +94,7 @@ def test_biarc_matches_xcoil(golden_report: Any) -> None:
         _check(golden_report, f"biarc/{i}", c["prims"], list(out))
 
 
+@pytest.mark.eqt("EQT-24-GR")
 def test_involute_prims_match_xcoil() -> None:
     """Catches a wrong piece count (the deviation loop) or a spline that leaves the involute."""
     for i, c in enumerate(_calls("wave-helper-involute-prims")):
@@ -135,6 +139,7 @@ def _flat(summary: Mapping[str, Any], prefix: str = "") -> dict[str, float]:
     return flat
 
 
+@pytest.mark.eqt("EQT-01-GR", "EQT-24-GR")
 def test_derive_wave_matches_xcoil_frame_or_refusal(golden_report: Any) -> None:
     """Catches a changed branch order in the style derivation: same refusal codes, same via rings and spacings."""
     seen: set[str] = set()
@@ -156,6 +161,7 @@ def test_derive_wave_matches_xcoil_frame_or_refusal(golden_report: Any) -> None:
     assert seen == {"involute", "jog", "chord", "overlap", "refusal"}
 
 
+@pytest.mark.eqt("EQT-24-GR")
 def test_wave_track_matches_xcoil() -> None:
     """Catches a wrong end-turn, fillet or taper of the canonical track and of the shortened commutation track."""
     for i, c in enumerate(_calls("wave-helper-track")):
@@ -166,6 +172,7 @@ def test_wave_track_matches_xcoil() -> None:
             _check_curve(f"track/{i}/shift", c["shift"], wave_track(frame, frame.tau / 2 - frame.d_theta))
 
 
+@pytest.mark.eqt("EQT-01-GR", "EQT-08-GR")
 def test_belts_and_slot_angles_match_xcoil(golden_report: Any) -> None:
     """Catches a belt that maps to the wrong phase or sign, or a slot angle off by half a slot."""
     checked = 0

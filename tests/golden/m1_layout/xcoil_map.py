@@ -5,11 +5,12 @@ Xcoil's ``kind`` names (engine.js) map to ``PrimitiveRole`` as below. Serpentine
 """
 
 from collections.abc import Mapping
+from itertools import pairwise
 from typing import Any
 
 from embodic.geometry.circuit import Circuit
 from embodic.geometry.layout import BoardOutline, Hole, Layout, Pad, Via, ViaRole
-from embodic.geometry.paths import CopperPath
+from embodic.geometry.paths import COINCIDENCE_MM, CopperPath, joint_gaps_mm
 from embodic.geometry.primitives import Arc, Line, Primitive, PrimitiveRole
 from embodic.model.vocabulary import ConnectionTopology, Phase, TopologyKind, ViaSpan
 
@@ -71,28 +72,46 @@ def _phase_net(phase: Phase | None) -> str:
     return f"PHASE_{phase.value}" if phase else ""
 
 
-def _paths(raw: Mapping[str, Any]) -> tuple[CopperPath, ...]:
+def _chains(prims: tuple[Primitive, ...]) -> list[tuple[Primitive, ...]]:
+    """Cut a primitive run at every joint wider than COINCIDENCE_MM, so each piece is one continuous chain."""
+    cuts = [k + 1 for k, gap_mm in enumerate(joint_gaps_mm(prims)) if gap_mm > COINCIDENCE_MM]
+    bounds = [0, *cuts, len(prims)]
+    return [prims[start:stop] for start, stop in pairwise(bounds)]
+
+
+def _paths(raw: Mapping[str, Any]) -> tuple[tuple[CopperPath, ...], tuple[int, ...]]:
+    """(paths, interconnect path ids): one path per Xcoil object, and one per continuous chain of an ``ic`` object."""
     paths: list[CopperPath] = []
+    interconnect: list[int] = []
     for layer in raw["layers"]:
         for obj in layer["objs"]:
             phase = _phase(obj["phase"] if obj.get("phase") is not None and obj["phase"] >= 0 else layer["phase"])
             element = next((obj[k] for k in ("coil", "strand", "slot") if obj.get(k) is not None), None)
-            paths.append(
-                CopperPath(
-                    id=len(paths),
-                    layer=layer["name"],
-                    net=obj["net"] if obj["kind"] == "ic" else _phase_net(phase),
-                    primitives=tuple(prim_from_record(r) for r in obj["prims"]),
-                    phase=phase,
-                    element=element,
-                    polarity=0,
+            prims = tuple(prim_from_record(r) for r in obj["prims"])
+            is_ic = obj["kind"] == "ic"
+            for chain in _chains(prims) if is_ic else [prims]:
+                if is_ic:
+                    interconnect.append(len(paths))
+                paths.append(
+                    CopperPath(
+                        id=len(paths),
+                        layer=layer["name"],
+                        net=obj["net"] if is_ic else _phase_net(phase),
+                        primitives=chain,
+                        phase=phase,
+                        element=element,
+                        polarity=0,
+                    )
                 )
-            )
-    return tuple(paths)
+    return tuple(paths), tuple(interconnect)
 
 
 def layout_from_xcoil(raw: Mapping[str, Any]) -> Layout:
-    """Map ``xcoilRawLayout`` output to a Layout: one CopperPath per Xcoil object, in Xcoil's order.
+    """Map ``xcoilRawLayout`` output to a Layout: one CopperPath per Xcoil object or ``ic`` chain, in Xcoil's order.
+
+    An ``ic`` object becomes one CopperPath per continuous chain (a CopperPath is one chain, interfaces.md section 5):
+    Xcoil's star item holds the neutral ring and its stubs in one object, as the embodic serpentine and wave ports split
+    it (D-035b, DEF-M1V-03).
 
     Nets follow Xcoil's board export (engine.js l.2888-2907): phase copper, its links included, and every via are
     ``PHASE_<name>`` of their phase index; interconnect objects keep Xcoil's net (N, U, V, W, D0...).
@@ -102,7 +121,7 @@ def layout_from_xcoil(raw: Mapping[str, Any]) -> Layout:
     """
     names = tuple(layer["name"] for layer in raw["layers"])
     params = raw["params"]
-    paths = _paths(raw)
+    paths, interconnect = _paths(raw)
     vias = tuple(
         Via(
             id=i,
@@ -143,7 +162,6 @@ def layout_from_xcoil(raw: Mapping[str, Any]) -> Layout:
             for h in mech["holes"]
         ),
     )
-    interconnect = tuple(path.id for path, obj in zip(paths, _objects(raw), strict=True) if obj["kind"] == "ic")
     return Layout(
         topology=TOPOLOGY_BY_XCOIL[params["topology"]],
         copper_layers=names,
@@ -158,7 +176,3 @@ def layout_from_xcoil(raw: Mapping[str, Any]) -> Layout:
         symmetry=None,
         envelope_mm=(raw["rMinCu"], raw["rMaxCu"]),
     )
-
-
-def _objects(raw: Mapping[str, Any]) -> list[Mapping[str, Any]]:
-    return [obj for layer in raw["layers"] for obj in layer["objs"]]

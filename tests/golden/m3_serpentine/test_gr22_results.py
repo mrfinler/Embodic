@@ -111,6 +111,7 @@ def _strand_resistance_ohm(design: DesignParameters, stack: BoardStack, rho: flo
     return math.fsum(per_phase) / len(per_phase)
 
 
+@pytest.mark.eqt("EQT-12-GR")
 @pytest.mark.parametrize("case", CASES, ids=lambda c: c.case_id)
 def test_gr22_strand_eddy_loss_equals_xcoil(case: GoldenCase, registry: Registry, golden_report: Any) -> None:
     """Catches a wrong strand position, layer height or board offset: eddy loss over the same elements, 1e-9 rel."""
@@ -120,6 +121,7 @@ def test_gr22_strand_eddy_loss_equals_xcoil(case: GoldenCase, registry: Registry
     golden_report.check(case.case_id, compare_scalar(raw["analysis"]["pEddy"], mine, INTEGRATED))
 
 
+@pytest.mark.eqt("EQT-10-GR")
 @pytest.mark.parametrize("case", CASES, ids=lambda c: c.case_id)
 def test_gr22_strand_resistance_equals_xcoil(case: GoldenCase, registry: Registry, golden_report: Any) -> None:
     """Catches a wrong series-parallel grouping of the strands: Xcoil's Rtrace over the same elements, 1e-9 rel."""
@@ -141,6 +143,7 @@ def _mean_ke(result: AnalysisResult) -> float:
     return math.fsum(p.ke_peak_v_s_per_rad.value for p in result.phases) / len(result.phases)
 
 
+@pytest.mark.eqt("EQT-06-GR")
 @pytest.mark.parametrize("case", CASES, ids=lambda c: c.case_id)
 def test_gr22_phase_constant_equals_xcoil(case: GoldenCase, registry: Registry, golden_report: Any) -> None:
     """Catches a wrong copper element, phase shift or board z: Ke of the stack as built (DEF-M3a-01), 1e-9 rel."""

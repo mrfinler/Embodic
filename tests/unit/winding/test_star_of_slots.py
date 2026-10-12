@@ -76,6 +76,7 @@ def test_ut_wnd_03_12_16_pattern_all_positive() -> None:
     assert {c.polarity for c in assignment} == {1}
 
 
+@pytest.mark.eqt("EQT-08-CF09")
 @pytest.mark.parametrize("row", cf09_rows(), ids=lambda r: f"{r['Q']}-{r['poles']}")
 def test_cf09_patterns_and_balance(row: dict[str, Any]) -> None:
     """Every CF-09 oracle row: exact pattern, exact balance and the feasibility pre-check agree with the oracle file."""
@@ -106,6 +107,7 @@ def test_ut_wnd_06_q_is_an_exact_fraction_and_t_is_gcd() -> None:
             assert feasibility.periodicity == math.gcd(q, poles // 2)
 
 
+@pytest.mark.eqt("EQT-08-UT1")
 def test_ut_wnd_06_rule_and_exact_balance_agree_for_every_small_combination() -> None:
     """The exact phasor check confirms the textbook rule Q/(m t) integer wherever Q != 2p (EQ-08 assumption G24)."""
 

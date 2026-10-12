@@ -135,7 +135,24 @@ def test_gr17_every_m1_fixture_is_ported_or_owned_elsewhere() -> None:
     assert {case.fn for case in CASES.values()} == set(PORTS) | NOT_GEOMETRY
 
 
-@pytest.mark.parametrize("case", [c for c in CASES.values() if c.fn in PORTS], ids=lambda c: c.case_id)
+# Registry test ids (interfaces.md section 3.1): EQ-03 track length and EQ-30 DRC distance and grid kernels.
+EQT_GR_BY_FN = {
+    "primLength": "EQT-03-GR",
+    "primsLength": "EQT-03-GR",
+    "discretize": "EQT-03-GR",
+    "ptSegDist": "EQT-30-GR",
+    "segSegDist": "EQT-30-GR",
+    "makeGrid": "EQT-30-GR",
+    "gridQuery": "EQT-30-GR",
+}
+
+
+def _param(case: GoldenCase) -> Any:
+    marks = [pytest.mark.eqt(EQT_GR_BY_FN[case.fn])] if case.fn in EQT_GR_BY_FN else []
+    return pytest.param(case, marks=marks, id=case.case_id)
+
+
+@pytest.mark.parametrize("case", [_param(c) for c in CASES.values() if c.fn in PORTS])
 def test_gr17_kernel_matches_xcoil(case: GoldenCase, golden_report: Any) -> None:
     """Catches any port drift from Xcoil: a different count, coordinate (1e-12 mm), length or visiting order."""
     port = PORTS[case.fn]

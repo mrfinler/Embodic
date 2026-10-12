@@ -54,6 +54,7 @@ def test_ut_wnd_05_registry_reference_cases(registry: Registry) -> None:
     assert [values[1], values[3], values[5]] == pytest.approx([0.8660254, 0.0, 0.8660254], abs=5e-8)
 
 
+@pytest.mark.eqt("EQT-08-CF09")
 @pytest.mark.parametrize("row", cf09_rows(), ids=lambda r: f"{r['Q']}-{r['poles']}")
 def test_ut_wnd_05_cf09_distribution_factor(row: dict[str, Any]) -> None:
     """Catches a k_d that uses mechanical angles or the wrong phase set: k_d1 equals CF-09 to 1e-9."""

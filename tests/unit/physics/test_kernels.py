@@ -42,6 +42,7 @@ def _rotor(rotor_type: RotorType = RotorType.DOUBLE, *, poles: int = 2, air_gap_
     )
 
 
+@pytest.mark.eqt("EQT-05-CF01")
 @pytest.mark.req("REQ-F-07")
 def test_cf01_field_fundamental_equals_the_1d_magnetic_circuit() -> None:
     """CF-01 (EQ-05): B_z1 = (4/pi) sin(pi a/2) Br lm/(lm + mu_r G) = 1.162077823241657 T, rel 1e-9.
@@ -79,6 +80,7 @@ def test_field_is_mirrored_about_the_symmetry_plane() -> None:
     assert bt[0] == pytest.approx(bt[1], rel=1e-12)
 
 
+@pytest.mark.eqt("EQT-04-UT1")
 @pytest.mark.req("REQ-F-07")
 def test_ut_phy_02_block_magnet_pole_arc_ratio() -> None:
     """UT-PHY-02 (EQ-04): 6 mm wide block, 2p = 16: 0.853 / 0.547 / 0.402 at r 18 / 28 / 38 mm, +/-5e-4."""
@@ -98,6 +100,7 @@ def _track_arrays() -> LayoutArrays:
     )
 
 
+@pytest.mark.eqt("EQT-03-CF04", "EQT-10-CF04")
 def test_cf04_track_resistance_at_20_and_60_degc() -> None:
     """CF-04 (EQ-10): straight 1000 mm and 90 degree arc r 30 mm, 0.5 mm x 34.8 um, rel 1e-12.
 
@@ -113,6 +116,7 @@ def test_cf04_track_resistance_at_20_and_60_degc() -> None:
     assert r60[0] == pytest.approx(1.1466255862068966, rel=1e-12)
 
 
+@pytest.mark.eqt("EQT-11-CF04")
 def test_cf04_and_ut_phy_11_via_barrel_resistance() -> None:
     """CF-04 / UT-PHY-11 (EQ-11): drill 0.3 mm, plating 25 um.
 
@@ -126,6 +130,7 @@ def test_cf04_and_ut_phy_11_via_barrel_resistance() -> None:
     assert via_resistance_ohm(0.3, 25.0, 1.6, rho, 2) == pytest.approx(0.001277202792190775 / 2, rel=1e-12)
 
 
+@pytest.mark.eqt("EQT-09-CF06")
 def test_cf06_star_and_delta_constants() -> None:
     """CF-06 (EQ-09): Ke_ph 0.01 V*s/rad, rel 1e-12.
 
@@ -154,6 +159,7 @@ def test_ut_phy_15_ipc2221_guideline_current() -> None:
     assert ipc2221_current_a(0.5 * 0.0348, 20.0, internal=True) == pytest.approx(0.977, abs=1e-3)
 
 
+@pytest.mark.eqt("EQT-21-UT1")
 def test_ut_phy_17_loss_budget_current() -> None:
     """UT-PHY-17 (EQ-21): 4 W over 3 phases of 0.39 ohm -> 1.849 A (D08 Table 4.6 gives 1.84 A)."""
     assert loss_budget_current_a(4.0, 3, 0.39) == pytest.approx(1.849, abs=5e-4)

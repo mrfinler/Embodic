@@ -64,6 +64,7 @@ def test_the_fixtures_cover_open_windings_of_two_and_one_phase() -> None:
     assert {1, 2, 3} <= open_phases
 
 
+@pytest.mark.eqt("EQT-20-GR")
 @pytest.mark.parametrize("case_id", sorted(CASES))
 def test_torque_speed_curve_matches_xcoil(case_id: str) -> None:
     """Defect caught: a wrong inverter limit, torque constant, field-weakening scan or curve end point.

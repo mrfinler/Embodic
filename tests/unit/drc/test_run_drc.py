@@ -298,6 +298,7 @@ def test_ut_drc_04_junction_end_group_is_exempt_from_the_whole_trunk_path() -> N
     assert _junction_violations(branch, trunk) == set()
 
 
+@pytest.mark.eqt("EQT-30-UT1")
 def test_ut_drc_03_one_micron_intrusion_is_exactly_one_new_violation_at_its_place() -> None:
     """Catches slack in the rule (Xcoil's 0.004 mm) or epsilon 0: rule - 1 um fails, the rule itself passes."""
     clean = run_drc(layout(paths=_turns(0.2)), RULES)
@@ -312,6 +313,7 @@ def test_ut_drc_03_one_micron_intrusion_is_exactly_one_new_violation_at_its_plac
     assert math.hypot(*hit.at_mm) == pytest.approx(5.4 + 0.1 + 0.0995, abs=1e-9)
 
 
+@pytest.mark.eqt("EQT-30-UT1")
 def test_ut_drc_03_inside_epsilon_passes() -> None:
     """Catches an epsilon above 1e-6 mm turned into a hidden slack: 0.9 um below the rule still passes."""
     report = run_drc(layout(paths=_turns(0.2 - 0.9e-6, count=2)), RULES)

@@ -52,6 +52,7 @@ def _points(path: CopperPath) -> np.ndarray:
     return np.vstack([discretise(p, 0.05) for p in path.primitives])
 
 
+@pytest.mark.eqt("EQT-02-CF11", "EQT-03-CF11")
 @pytest.mark.req("REQ-F-06")
 def test_default_track_length_matches_cf11(board: Layout) -> None:
     """CF-11 worked example 1: 415.4808 mm per coil-layer (body + lead + stub), N = 10, eye-limited."""
@@ -63,6 +64,7 @@ def test_default_track_length_matches_cf11(board: Layout) -> None:
     assert detail.plan.pattern == "ACBACBACBACB"
 
 
+@pytest.mark.eqt("EQT-02-CF10", "EQT-03-CF10")
 @pytest.mark.req("REQ-F-06")
 def test_d08_builds_three_turns_with_the_half_closing(registry: Registry) -> None:
     """CF-10 worked example 2: N = 3 (2 full turns and the closing half turn), 160.2750 mm per coil-layer, no lead."""

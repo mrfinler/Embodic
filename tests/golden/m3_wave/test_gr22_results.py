@@ -94,6 +94,7 @@ def _check(report: Any, analysis_id: str, golden: list[float], actual: list[floa
     report.check(analysis_id, comparison)
 
 
+@pytest.mark.eqt("EQT-06-GR", "EQT-07-GR", "EQT-12-GR")
 @pytest.mark.parametrize("analysis_id", ANALYSES)
 def test_gr22_ke_per_phase_and_eddy_loss_match_xcoil(analysis_id: str, golden_report: Any) -> None:
     """Catches a wrong EMF sum (belt sign, element direction, layer copy) or eddy-loss integral: 1e-9 relative."""
@@ -108,6 +109,7 @@ def test_gr22_ke_per_phase_and_eddy_loss_match_xcoil(analysis_id: str, golden_re
     _check(golden_report, analysis_id, golden, actual, stack)
 
 
+@pytest.mark.eqt("EQT-07-GR", "EQT-09-GR", "EQT-18-GR")
 @pytest.mark.parametrize("analysis_id", [a for a, c in ANALYSES.items() if len(c.calls[0].output["phaseKe"]) == 3])
 def test_gr22_three_phase_line_quantities_match_xcoil(analysis_id: str, golden_report: Any) -> None:
     """Catches a wrong line constant, waveform synthesis or torque on a three-phase wave board."""
