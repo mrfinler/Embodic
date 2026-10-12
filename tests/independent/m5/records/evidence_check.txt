@@ -1,0 +1,16 @@
+PASS  installed evidence equals the wheel's: 52 ids
+INFO  registry: 30 equations, 63 distinct EQT ids
+INFO  report: 3125 records, outcomes {'passed': 3114, 'skipped': 11}
+INFO  my derivation: 52 passed of 63; carried by no test: 9; carried but not passed: ['EQT-05-O2', 'EQT-06-O2']
+PASS  no unknown eqt id in the report: []
+PASS  passed_tests equals my derivation: only in wheel [], only in mine []
+PASS  passed_tests is sorted: 
+PASS  realised_by equals my carrier lists: differing ids []
+PASS  embodic_version: file '0.0.1', installed __init__ '0.0.1'
+PASS  manifest copy_sha256 equals the shipped files: own ['a48aab13172f246df13f2f88b35539b465eef290c12518ed838f35fb31f38595', 'c01a66176ad650eb2268bf4c7592f18ea7439cf931745454dfeaffc8d2c30eef'], manifest ['a48aab13172f246df13f2f88b35539b465eef290c12518ed838f35fb31f38595', 'c01a66176ad650eb2268bf4c7592f18ea7439cf931745454dfeaffc8d2c30eef']
+PASS  registry_version: file 'v1+a48aab13172f.c01a66176ad6', mine 'v1+a48aab13172f.c01a66176ad6'
+PASS  gate_profile: 'release'
+PASS  build_id format: file '0.0.1+g5e74acc4e79b.20261012T212510Z', mine '0.0.1+g5e74acc4e79b.20261012T212510Z'
+PASS  source_sha256 vs installed package: file cfefe405be515c4ba107c38b02a5e5dbaacc220ccc1e0e5a70033d919f78baae, mine cfefe405be515c4ba107c38b02a5e5dbaacc220ccc1e0e5a70033d919f78baae over 179 files
+PASS  source_sha256 vs release source tree: mine cfefe405be515c4ba107c38b02a5e5dbaacc220ccc1e0e5a70033d919f78baae over 179 files
+0 failed checks: []

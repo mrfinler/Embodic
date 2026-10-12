@@ -1,0 +1,16 @@
+files before: 444, 232.4 MB, .py files: 0
+present  THIRD_PARTY_LICENSES.md (58509 bytes, sha256 b69f276b...ab5e)
+present  licenses/LGPL-3.0.txt (7651 bytes, sha256 da7eabb7...4768)
+present  licenses/GPL-3.0.txt (35147 bytes, sha256 8ceb4b9e...b903)
+present  licenses/PYTHON-LICENSE.txt (13936 bytes, sha256 3b2f81fe...a3bf)
+present  licenses/numpy/ (17 files, 92518 bytes)
+present  _internal/embodic/_resources/fonts/Inter/LICENSE.txt (4380 bytes, sha256 262481e8...935a)
+present  _internal/embodic/_resources/fonts/JetBrainsMono/OFL.txt (4399 bytes, sha256 30f0c136...c4ad)
+present  _internal/embodic/_resources/fonts/FONTS.md (3812 bytes, sha256 efc97c82...84db)
+present  source/embodic-0.0.1.tar.gz (18807803 bytes, sha256 24037ee7...dd87)
+absent   SOURCE.md
+absent   LICENSE
+absent   LICENSE.txt
+absent   licenses/qt-third-party
+frozen selftest exit 0: 45 tests: 45 passed, 0 failed
+folder unchanged by the run: True
