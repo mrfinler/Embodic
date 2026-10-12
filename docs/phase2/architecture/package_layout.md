@@ -63,6 +63,16 @@ every item, and a wheel and an sdist were built from a scratch copy of it).
 - §5. The lock tool is uv (row added). The new §5.2 fixes the wheel, sdist, lock files, README and install guide
   sections, the `THIRD_PARTY_LICENSES.md` structure, the PyInstaller one-folder layout and the PF baseline file.
 
+Revision 2026-10-13 (U-D14, claude-sonnet-5-5, D-045c, U-S5c; `pyproject.toml`, `src/embodic/ui` and the tree of main 6243163
+were read for every item).
+
+- §1. `ui/workers.py` is the target place of `SelfTestWorker`. On main 6243163 the class is in `ui/views/tests_dialog.py`,
+  and U-M5e moves it (interfaces.md §14).
+- §5.1. The bundle does not rely on LGPL route 1 (a): it complies with route 0 (U-S5c, `dependency_licences.md` R8). The
+  table gains the rows for embodic's source and the spec file with the build script (Agent 5's open point 6). The
+  PyInstaller result rows read "U-M5c records", because U-M5c checks the real folder in parallel with this revision.
+- §5.2. The folder tree names the spec file and the build script inside the sdist.
+
 ## 1. Repository tree
 
 ```
@@ -134,7 +144,8 @@ embodic/
                                  results_view.py results_rail.py charts.py status_badge.py checks_view.py
                                  export_view.py dialogs.py equation_view.py examples_gallery.py
                                  tests_dialog.py (`dlg-tests`, U-M5d)
-      workers.py                 QThreadPool compute worker, debounce, latest-wins cancellation; SelfTestWorker (U-M5d)
+      workers.py                 QThreadPool compute worker, debounce, latest-wins cancellation; SelfTestWorker
+                                 (target: U-M5e moves it here from views/tests_dialog.py)
       app.py                     QApplication (`qt_application` registers the fonts), theme, canvas share store, logging,
                                  crash handler, autosave, entry point `embodic`
   resources/                     shipped in the wheel as embodic/_resources (hatchling force-include)
@@ -389,7 +400,11 @@ The Python standard library covers JSON, hashing, ZIP, XML parsing in tests, log
 Agent 5 recorded this list in `docs/phase2/evidence/dependency_licences.md` (§What the M5 packages must carry, U-S5a).
 This table repeats the file names so that U-M5b and U-M5c find them next to the dependency table. The reasons and the
 quoted licence text stay in that file. "Today" is Agent 5's reading of a wheel built from main 3d70170 with
-`pip wheel --no-build-isolation --no-deps .`; no PyInstaller build exists yet.
+`pip wheel --no-build-isolation --no-deps .`; no PyInstaller build exists yet. Revision 2026-10-13 (U-D14): the
+PyInstaller rows read "U-M5c records", because U-M5c checks the real folder (listing, licence files, Qt libraries as
+separate files) in parallel with this revision, and only a build can fill them. The wheel rows still show Agent 5's
+reading of main 3d70170, and this unit did not reread them. `THIRD_PARTY_LICENSES.md` now exists at the repository root of
+main 6243163 (`verified` by `ls`), so its "absent" in the wheel row is out of date until a wheel is built and listed.
 
 | Package | File | Today |
 |---|---|---|
@@ -397,14 +412,16 @@ quoted licence text stay in that file. "Today" is Agent 5's reading of a wheel b
 | wheel | `embodic/_resources/fonts/FONTS.md` | present |
 | wheel | `THIRD_PARTY_LICENSES.md` (REQ-N-19, U-M5b): licence, copyright line and pin of NumPy, PySide6-Essentials, shiboken6, Inter and JetBrains Mono, and the notice that Qt is used under LGPL-3.0 | absent |
 | wheel | embodic's own licence file | absent. The user decides which licence (dependency_licences.md, open point 2) |
-| PyInstaller folder | the four font files with `LICENSE.txt` and `OFL.txt` beside them; the spec `datas` entry takes the text files as well as `*.ttf` | no build exists |
-| PyInstaller folder | `licenses/LGPL-3.0.txt` and `licenses/GPL-3.0.txt` (LGPL-3.0 section 4 b) | absent. The PySide6-Essentials wheel carries only `LicenseRef-Qt-Commercial.txt` |
-| PyInstaller folder | `THIRD_PARTY_LICENSES.md` with a prominent notice that the application uses Qt under LGPL-3.0 | absent |
-| PyInstaller folder | the Qt libraries as separate files, and embodic's source with the bundle (LGPL-3.0 section 4 d) | one-folder keeps each Qt library a separate file (`inferred`). Route 1 (a) against a bundled Qt copy is `unresolved` |
-| PyInstaller folder | a written offer, or the files, for the Qt 6.11.2 and PySide6 6.11.2 source | absent |
-| PyInstaller folder | `licenses/numpy/LICENSE.txt` | absent |
-| PyInstaller folder | `licenses/PYTHON-LICENSE.txt` (PSF License Agreement section 2) | absent |
-| PyInstaller folder | Qt's third-party component notices for the bundled modules | not read: the proxy refused doc.qt.io on 2026-10-09. M5 reads it |
+| PyInstaller folder | the four font files with `LICENSE.txt` and `OFL.txt` beside them; the spec `datas` entry takes the text files as well as `*.ttf` | U-M5c records |
+| PyInstaller folder | `licenses/LGPL-3.0.txt` and `licenses/GPL-3.0.txt` (LGPL-3.0 section 4 b) | U-M5c records. The PySide6-Essentials wheel carries only `LicenseRef-Qt-Commercial.txt`, so the texts come from elsewhere (`dependency_licences.md`, text sources) |
+| PyInstaller folder | `THIRD_PARTY_LICENSES.md` with a prominent notice that the application uses Qt under LGPL-3.0 | U-M5c records |
+| PyInstaller folder | the Qt libraries as separate files (LGPL-3.0 section 4 d, route 0) | one-folder keeps each Qt library a separate file (`inferred`); U-M5c records the listing. M5 complies with route 0 for the bundle and does not rely on route 1 (U-S5c; `dependency_licences.md` R8). Route 1 (a) against a bundled Qt copy stays `unresolved` as a reading, and nothing here depends on it. Route 1 is met only in the pip install, where Qt comes from PyPI |
+| PyInstaller folder | embodic's own source, as the sdist `embodic-<version>.tar.gz` at the top of the folder (§5.2). Route 0 needs it (`dependency_licences.md` R5 to R7) | U-M5c records |
+| PyInstaller folder | the spec file `packaging/pyinstaller/embodic.spec` and the build script `tools/build_bundle.py`. R7 asks that both be published, because LGPL-3.0 counts "utility programs needed for reproducing the Combined Work" as Application code | Neither file exists on main 6243163 (`ls packaging tools` shows no `packaging/` and no `build_bundle.py`, `verified`). Both ride inside the sdist, because `pyproject.toml` l.56-57 excludes only `.claude/` and `build/` from it (`inferred`: hatchling's default takes every other file git does not ignore). U-M5c records |
+| PyInstaller folder | a written offer, or the files, for the Qt 6.11.2 and PySide6 6.11.2 source | U-M5c records |
+| PyInstaller folder | `licenses/numpy/LICENSE.txt` | U-M5c records |
+| PyInstaller folder | `licenses/PYTHON-LICENSE.txt` (PSF License Agreement section 2) | U-M5c records |
+| PyInstaller folder | Qt's third-party component notices for the bundled modules | not read: the proxy refused doc.qt.io on 2026-10-09. M5 reads it; U-M5c records |
 
 The folder does not carry fontTools or any other dev tool. The PyInstaller bootloader adds no obligation
 (dependency_licences.md, §Distribution obligations, item 7).
@@ -496,7 +513,8 @@ dist/embodic/                    zipped for delivery; never published without th
   licenses/                      LGPL-3.0.txt, GPL-3.0.txt, numpy/LICENSE.txt, PYTHON-LICENSE.txt, the Qt
                                  third-party notices (§5.1)
   SOURCE.md                      the source offer or link wording of U-S5c, for Qt, PySide6 and embodic
-  embodic-<version>.tar.gz       embodic's sdist (LGPL-3.0 section 4 d, route 0, dependency_licences.md)
+  embodic-<version>.tar.gz       embodic's sdist (LGPL-3.0 section 4 d, route 0, dependency_licences.md); it holds
+                                 packaging/pyinstaller/embodic.spec and tools/build_bundle.py (R7)
 ```
 
 Whether `resource_root()` finds `_internal/embodic/_resources` in a frozen build is `unresolved`: `paths.py` l.24 to l.25 raises

@@ -1476,9 +1476,11 @@ def parse_passed_tests(document: object) -> PassedTestsEvidence | None:
 
 
 def package_source_sha256(package_dir: Path) -> str | None:
-    """SHA-256 over every *.py below package_dir outside __pycache__, in sorted relative POSIX path order; each entry is
-    the path, a NUL byte and the SHA-256 of the file's bytes. None when the folder holds no .py file (a frozen build).
-    The 168 files of src/embodic hash in 5 to 16 ms on this container (checks/selftest_probe.py, U-D13)."""
+    """One SHA-256 over every *.py below package_dir outside __pycache__, taken in the sorted order of the relative POSIX
+    path strings. For each file it takes in the UTF-8 bytes of that path, one NUL byte, and the raw 32-byte digest of the
+    file's bytes (the digest itself, not its hex text). Returns the 64 hex digits of the outer digest, or None when the
+    folder holds no .py file (a frozen build). The 168 files of src/embodic hash in 5 to 16 ms on this container
+    (checks/selftest_probe.py, U-D13). See the revision of 2026-10-13 below for the checked rule."""
 
 
 def evidence_applies(evidence: PassedTestsEvidence, *, embodic_version: str, registry_version: str,
@@ -1509,6 +1511,47 @@ Nothing else changes. A result with an empty chain (`input`, `derived`, `count`)
 The "n assumed inputs" tag (D-023), the provenance chips, the validity flags, labels such as "estimate", DRC and every
 number stay as they are. A source checkout without the file behaves exactly as main 7b9b4c9 does. Tests: UT-RES-08
 (reader), UT-RES-09 (badge change), TR-05 (writer) and PK-10 (wheel), in `test_plan.md` §5.7.
+
+Revision 2026-10-13 (U-D14, claude-sonnet-5-5; D-045f; `src/embodic/results/registry.py`, `tools/record_passed_tests.py`
+and `tools/ci.py` on main 6243163, `verified` by reading unless the text says it ran). Three points.
+
+The source hash, exactly. `package_source_sha256` (`registry.py` l.228-243) builds one SHA-256 object, then walks the
+`*.py` files below `package_dir` whose relative path has no `__pycache__` part, sorted by the relative POSIX path as a
+Python string. For each file it feeds the object, in this order:
+
+1. the UTF-8 bytes of the relative POSIX path,
+2. one NUL byte,
+3. `hashlib.sha256(file bytes).digest()`, the raw 32 bytes of that file's own digest.
+
+The result is the `hexdigest()` of the outer object, 64 lowercase hex digits. The U-M5b report describes the hash as "adds
+each file's raw 32-byte digest", which leaves out steps 1 and 2. The code is the rule, so the path and the NUL byte
+count. `checks/source_hash_rule.py` applies the three steps in a separate loop and compares the result with the function
+(`verified` by running `PYTHONPATH=src python3 docs/phase2/architecture/checks/source_hash_rule.py`, exit 0). On the 179
+files of `src/embodic` on main 6243163 both give `ae8cc9643477ef9221a7f7ed59fe8eec82309a7ca94bcd8f291ce7bfef33e0e4`.
+Two misreadings give other values, so the wording matters. The hex text of each file digest gives
+`0119f59eb7177d32ce1f803fca2c2d5ef8b6150d70ce686903a1a9b9edf8dcdf`. Leaving out the path and the NUL byte gives
+`1b5fd4865bd063a183f8fd35beed8828b71bc8c0848f82042740a5113334a6fd`. A renamed file changes the hash although its bytes
+stay the same. The value is a measurement of that tree, not a constant to pin.
+
+The profile key. The evidence file's key is `gate_profile`, in the table above, in `PassedTestsEvidence.gate_profile`
+(`registry.py` l.178 and l.193) and in the writer (`tools/record_passed_tests.py` l.88). The command-line flag of the
+writer is `--profile`; the JSON key is not `profile`. The value is `"release"`.
+
+A leftover evidence file (D-045f, DEF-U-M5b-01). A release run writes the file into the working tree, and the file
+stays there after the run. A later gate in the same tree must not read it. Behaviour the contract fixes:
+
+- A commit gate, a nightly gate and a plain pytest session never read a leftover evidence file. In those runs
+  `load_registry()` returns the registry as if no file existed: `passed_tests` is empty and `evidence_build_id` is None.
+- A test that needs evidence builds its own file in a temporary folder and passes that folder as `root`, as UT-RES-08
+  and UT-RES-09 already do. No test depends on the file of an earlier release run.
+- D-045f changes no other rule of §3.1. An installed wheel reads the file it carries, and the staleness rule above still
+  applies.
+
+Which mechanism achieves this is U-M5e's choice, and this contract names none. State on main 6243163: not implemented.
+`load_registry` reads `passed_tests.v1.json` whenever it exists and applies (`registry.py` l.270-291), and neither
+`tests/conftest.py` nor `tools/ci.py` mentions the file outside the release profile (`verified` by grep). U-M5e
+implements the behaviour. `test_plan.md` §5.7 has no test ID for it yet, and the owner of the plan adds one when U-M5e
+names its test.
 
 ## 4. `embodic.winding`: spiral phase plan
 
@@ -2405,6 +2448,9 @@ Revision 2026-10-08 (U-D4, D-022c): rule 2 gains the tap clause and the waiver l
 the note after the rule list.
 Revision 2026-10-09 (U-D8, D-036a, D-037a): rule 2 gains the same-net tap (rule 2b), and rule 5 states that the other
 path's centreline includes its end points. See the note after the rule list.
+Revision 2026-10-13 (U-D14, claude-sonnet-5-5, D-045g): no GR-19 pair depends on that end-point clause any more, because
+both GR-19 mappers now cut each Xcoil `ic` object into continuous chains. The rule text stays. See the note after the rule
+list.
 
 1. Neighbours in one path. Each primitive that is not a fillet or a taper is a main primitive and starts a new main
    index (Xcoil `mi`, `engine.js` `drcObjects` l.1697). A fillet or taper belongs to the main primitive it follows and
@@ -2466,9 +2512,34 @@ of such a via stay reported (D-036a, faithful port).
 Revision 2026-10-09 (U-D8, D-037a; U-V3b report; `tests/independent/README.md` on main 8a297a0, `verified` by
 reading). Rule 5 reading. `_junctions` (`items.py` l.272-287) measures the distance from a path end to the centreline of
 every primitive of the other same-net paths on its layer, end points included, and exempts the end group from every
-primitive of each path within `COINCIDENCE_MM`. Agent 4's independent model reads rule 5 the same way. One pair on
-each GR-19 layout depends on that reading. The start of path 16 (wave: 193) is the end of path 15 (wave: 192) and
-also lies on its primitive 2, both net `N`. Only rule 5 exempts that primitive, and `run_drc` exempts it too.
+primitive of each path within `COINCIDENCE_MM`. Agent 4's independent model reads rule 5 the same way. While an Xcoil
+`ic` object was mapped as one path, one pair on each of the serpentine and wave GR-19 layouts depended on that reading.
+The start of path 16 (wave: 193) was the end of path 15 (wave: 192) and also lay on its primitive 2, both net `N`. Only
+rule 5 exempted that primitive, and `run_drc` exempted it too. Those path numbers belong to the unsplit mapping, which
+the next revision replaces.
+
+Revision 2026-10-13 (U-D14, claude-sonnet-5-5, D-037a, D-045g; U-V1c and U-M5o reports; `tests/independent/README.md`
+l.91-98, `tests/golden/m1_layout/xcoil_map.py` l.75-107 and `src/embodic/drc/items.py` l.272-287 on main 6243163,
+`verified` by reading; the violation counts `verified` by running
+`PYTHONPATH=src python3 tests/golden/m1_drc/time_gr19_layouts.py --runs 1`). No GR-19 pair depends on the end-point
+clause of rule 5 any more.
+
+- Both GR-19 mappers cut each Xcoil `ic` object at every joint wider than `COINCIDENCE_MM`. Agent 4's harness does it
+  with `split_interconnect_chains` (U-V1c). The product mapper does it with `_chains` (U-M5o). Every star path is then one
+  primitive, so a stub that meets the end of another path falls under rule 3, not rule 5.
+- One pair per layout still needs rule 5, and it needs the T-junction clause, not the end-point reading. The neutral stub
+  path 16 (wave: 193) ends on the ring path 18 (wave: 195) between the ring's ends, both net `N` (README l.92-94).
+  `run_drc` exempts it too.
+- Agent 4 ran a scratch copy of `_tees` (`tests/independent/m1/drc_universe.py` l.236) that skips a hit at the other
+  path's end points. The split mapping gave 0 extra violations. The unsplit mapping gave exactly `path:15/prim:2` and
+  `path:192/prim:2` (README l.95-98, read, not rerun).
+- `run_drc` on the three GR-19 layouts of the product mapper reports sector 0, serpentine 0 and wave 186 violations
+  (wave: 6 `trace_trace` and 180 `trace_via`, `verified` by running the command above). Before the split the same
+  layouts gave 0, 3 and 190 (U-M5o report, read, not rerun).
+- The clause stays in the contract and in `_junctions`. No UT-DRC-04 case covers the end-point reading: cases 5a to 5d put
+  the end point in the middle of the trunk (`tests/independent/m1/test_exemption_model.py` l.99-125). The two M3 wave
+  boards that need rule 5 (README l.287) were not re-measured. The end-point reading is therefore `not tested` by a
+  dedicated case.
 
 Net test. Rules 2 to 5 (rule 5 added 2026-10-08, U-D7) apply only when both objects carry the same net, with one waiver (D-022 a, as revised by
 D-022c). Rules 2 and 3 also apply, whatever the net names and the via role, when one object is an interconnect path
@@ -2501,7 +2572,7 @@ is the independent check of rule 1.
 | 3 | UT-DRC-04 cases 3a (same-net ends at one via, pad or coincident point exempt) and 3b (different-net ends at a coincident point without a land reported) |
 | 3, waiver | UT-DRC-04 case 3c (interconnect end and phase path end on one via of any role, or one pad, exempt), near miss 3b |
 | 4 | UT-DRC-04 cases 4a (same-net via inside a pad exempt) and 4b (other-net via inside a pad reported) |
-| 5 (revision 2026-10-08, U-D7) | UT-DRC-04 cases 5a (end point on the middle of a same-net line exempt from that path), 5b (end point on the middle of a same-net arc exempt), 5c (the same T with the two paths on different nets reported) and 5d (the same-net end point 0.01 mm short of the centreline reported). The end-point reading (revision 2026-10-09, U-D8) has no UT-DRC-04 case; GR-19 in `tests/independent/m1/test_gr19_drc.py` covers it |
+| 5 (revision 2026-10-08, U-D7) | UT-DRC-04 cases 5a (end point on the middle of a same-net line exempt from that path), 5b (end point on the middle of a same-net arc exempt), 5c (the same T with the two paths on different nets reported) and 5d (the same-net end point 0.01 mm short of the centreline reported). The end-point reading (revision 2026-10-09, U-D8) has no UT-DRC-04 case. GR-19 in `tests/independent/m1/test_gr19_drc.py` covered it only while an Xcoil `ic` object was one path. Since the split (revision 2026-10-13, U-D14; U-V1c, U-M5o, D-045g) no GR-19 pair depends on it, so no test covers it (`not tested`; see the note after the rule list) |
 
 ```python
 DRC_EPSILON_MM: float = 1e-6
@@ -3397,6 +3468,7 @@ TOOLSTRIP: tuple[ToolstripAction, ...] = (
     ToolstripAction(id="act-theme", tab=ToolstripTab.VIEW, icon="theme", shortcut=None, command="cycle_theme", group="appearance"),
     ToolstripAction(id="act-greyscale", tab=ToolstripTab.VIEW, icon="greyscale", shortcut=None, command="toggle_phase_render_mode", group="appearance"),
     ToolstripAction(id="act-fit", tab=ToolstripTab.VIEW, icon="zoom-fit", shortcut="F", command="fit_view", group="view"),
+    ToolstripAction(id="act-tests", tab=ToolstripTab.VIEW, icon="check-pass", shortcut=None, command="show_tests", group="help"),
 )
 
 
@@ -3508,6 +3580,24 @@ class AppearanceViewModel(Protocol):
         """Remember the split a drag left as the fraction canvas / (canvas + results)."""
 ```
 
+Revision 2026-10-13 (U-D14, claude-sonnet-5-5, D-045c; `src/embodic/ui/toolstrip.py` l.144-146, `ui/strings/shell.py` l.23 and
+l.71-72 and `ui/views/main_window.py` l.207 and l.340 on main 6243163, `verified` by reading; the count `verified` by
+importing the module: `PYTHONPATH=src python3 -c "from embodic.ui.toolstrip import TOOLSTRIP; print(len(TOOLSTRIP))"`
+printed 22). The Tests dialog opens from the toolstrip action `act-tests`, the last row of `TOOLSTRIP` above.
+
+| Field | Value |
+|---|---|
+| `id` | `act-tests`, also the Qt object name and the prefix of the string keys `act-tests.label` ("Self-tests") and `act-tests.tooltip` |
+| `tab`, `group` | View tab, group `help` (`toolstrip.group-help.label` is "Help") |
+| `icon` | `check-pass` (`resources/icons/check-pass.svg` exists) |
+| `shortcut` | None |
+| `command` | `show_tests`, which `MainWindow.show_tests` implements. It creates the Tests dialog (`dlg-tests`) on first use and shows it. A run never touches the results or their badges (D-045d, §14) |
+
+`TOOLSTRIP` holds 22 actions: Home 6, Design 5, Analysis 3, Export 4 and View 4 (`verified` by running the same import
+with a count per `tab`). Before D-045c it held 21. UI-25 (`test_plan.md` §5.3) covers the new row with the others,
+because its tests loop over `TOOLSTRIP` (`tests/ui/qt_shell/test_toolstrip_and_start.py` l.48 and l.64-72, `7 passed`
+when run on main 6243163).
+
 Revision 2026-10-09 (U-D9, D-038a; `src/embodic/ui/theme.py`, `tools/design/build_themes.py` and
 `resources/themes/*.json` on main 3acb044, `verified` by reading and by running). Theme tokens and the theme generator:
 
@@ -3615,8 +3705,9 @@ Board picker (screens.md §4.1, U-M4c-4 a).
 
 - `board-picker` is a `QComboBox` (`ToolstripBar.board_picker`, `ui/views/toolstrip_bar.py` l.191) with the caption
   "Board" (`toolstrip.group-board.label`, `strings/shell.py` l.22), inside the frame `ts-section-board` (l.187) of the
-  View tab. It is not a `ToolstripAction`. `TOOLSTRIP` is unchanged: it still holds the 21 actions above (`verified` by
-  counting the rows in `ui/toolstrip.py`), because a picker has no command. The bar emits `board_selected` (l.94) with
+  View tab. It is not a `ToolstripAction`. `TOOLSTRIP` is unchanged by the picker: a picker has no command. It held the 21 actions then (`verified` by
+  counting the rows in `ui/toolstrip.py`), and holds the 22 actions above since D-045c added `act-tests` (revision 2026-10-13,
+  U-D14). The bar emits `board_selected` (l.94) with
   the index or None, and the window connects it to `OutcomeViewModel.select_board` (`main_window.py` l.172).
 - Items. "All boards" (data None) and one "Board A", "Board B" or "Board C" per board (`strings/shell.py` l.23-24).
   Each item has a swatch (`board_swatch`, l.48) that repeats the letter and turns grey in greyscale mode, so colour is
@@ -3780,6 +3871,31 @@ screens.md §13 ("45 tests: 45 passed, 0 failed"). The exit code is `ExitCode.OK
 that raises is a failed check, not exit code 3. `--json OUT` writes `selftest_to_json(report)`. Ctrl+C cancels through
 the `CancelToken`, prints the summary with the remaining checks as `not run`, and exits 1. Test: UT-CLI-03.
 
+`embodic-cli export` and the DRC verdict (revision 2026-10-13, U-D14, claude-sonnet-5-5; D-045e, D-038d;
+`src/embodic/cli/commands.py` l.189-241 on main 6243163, `verified` by reading, and by running each command below on
+`resources/examples/wave_16p_example.embodic.json`, which fails its DRC with 186 violations). The PDF report and the README
+document the DRC state, so they never wait for the confirmation of REQ-F-33. The drawings and the bundle do.
+
+| `--format` | Design fails the DRC | Output | Exit |
+|---|---|---|---|
+| `pdf`, `readme` | The file is written. `--allow-drc-errors` changes nothing | `Wrote <path>`, then `Design rule check: FAILED, 186 violations` | 0 |
+| `svg`, `dxf`, `dxf-outline`, `dxf-screws`, `bundle` | Nothing is written | on stderr: `DRC_EXPORT_NOT_CONFIRMED` with the violation count, one issue per failing check kind (`DRC_TRACE_TRACE` and `DRC_TRACE_VIA` here) and `DRC_CLI_EXPORT_REFUSED`, which names `--allow-drc-errors` | 2 |
+| the same five, with `--allow-drc-errors` | The file is written | `Wrote <path>`, then the warning `DRC_CLI_EXPORT_FORCED` with `value: 186` on stderr | 0 |
+
+When the DRC passes, `pdf` and `readme` print only the `Wrote` line and the other formats print no warning. The report
+itself prints the DRC result (§9.3). A refusal for another reason, `no_layout` or `no_screws`, exits 1 (`REFUSAL_EXIT`,
+`commands.py` l.199-203). `bundle` holds the drawings, the project JSON and the PDF report (`_bundle`, l.179-185), and
+`write_bundle` applies the gate to the whole archive (§9.3, revision U-D9), so the bundle keeps the refusal.
+
+What ran. The commands on the wave example printed the exit codes `pdf` 0, `readme` 0, `svg` 2, `dxf` 2, `bundle` 2 and
+`svg --allow-drc-errors` 0. `dxf-outline`, `dxf-screws` and the flag on `dxf` and `bundle` use the same code path
+(`commands.py` l.189-192 and l.232-238). This unit read that path and did not run those cases by hand. The tests are in
+`tests/unit/cli/test_export_command.py`: `test_a_failed_drc_refuses_drawings_and_the_bundle_without_confirmation` (all
+five gated formats), `test_d_045e_the_pdf_report_of_a_failed_drc_is_written_and_prints_the_drc_result`,
+`test_d_045e_the_readme_of_a_failed_drc_is_written_without_confirmation` and
+`test_allow_drc_errors_writes_the_file_and_warns`. The module gives `48 passed` (`verified` by running it). This table
+does not cover the GUI export dialog: U-M5d did not test its PDF button on a failed DRC (`not tested`).
+
 ## 13. Open interface points
 
 1. Closed 2026-10-05 (U-D3, D-016). `SerpentineWindingSpec` has `stack_mode` and `board_gap_mm` with their FIELDS rows
@@ -3885,6 +4001,19 @@ both.
 | The CI matrix | `.github/workflows/ci.yml` runs Python 3.11 and 3.12 only and installs `.[dev]`, so no Qt test runs in CI. REQ-N-05 names 3.11 to 3.13 (PK-01) | U-M5b |
 | The `eqt` markers | No test carries one on main 7b9b4c9, so the first evidence file lists no ID and every badge stays as today until U-M5o lands | U-M5o, Agent 2 reviews |
 | embodic's own licence | No `LICENSE` file. `package_layout.md` §5.2 reserves the place and says "pending the user's choice". This contract chooses nothing | the user |
+
+13. Open points after U-D14 (revision 2026-10-13, claude-sonnet-5-5; main 6243163, `verified` by reading unless the row
+    says otherwise).
+
+| Item | State on main 6243163 | Owner |
+|---|---|---|
+| S33, the Tests dialog, and the "test bundle" of D-042a (points 11 and 12) | Closed by D-045d. The bundle is the self-test catalogue of §14, and a self-test result never moves a result badge | none |
+| The entry point that opens `dlg-tests` (point 12) | Closed by D-045c. `act-tests` is the last row of `TOOLSTRIP` (§11), and `docs/phase2/design/screens.md` l.424 names the same entry | none |
+| DEF-M4e2-01 to DEF-M4e2-03 (point 11) | Closed. No `xfail` mark is left in `tests/ui/qt_e2e/test_ax04_target_size.py`, and the file gives `4 passed` (`verified` by running it, 41 s). `test_plan.md` §5.6 lists the one strict xfail that remains | none |
+| `embodic-cli export` and a failed DRC | Stated in §12 (D-045e): the PDF report and the README are written, the drawings and the bundle are refused with exit 2 unless `--allow-drc-errors`. The GUI export dialog is `not tested` for the PDF on a failed DRC | Agent 3 may add a UI test |
+| The rule 5 end-point reading (point 7, row "§7") | No GR-19 pair depends on it since U-V1c and U-M5o (§7, revision 2026-10-13), and no UT-DRC-04 case covers it. Whether to add one is not decided here | Fable decides; Agent 6 words the case |
+| A leftover evidence file (D-045f, §3.1) | The behaviour is fixed in §3.1. The code does not implement it on main 6243163. `test_plan.md` §5.7 has no test ID for it | U-M5e implements; Agent 6 adds the ID |
+| `SelfTestWorker` location (§14) | The class is in `ui/views/tests_dialog.py` on main 6243163. The contract location is `ui/workers.py` | U-M5e moves it |
 
 ## 14. `embodic.selftest`: self-tests for an installed build (revision 2026-10-12, U-D13; D-042a, screens.md §13)
 
@@ -4000,12 +4129,20 @@ exists in its file. A unit that changes a source value edits the catalogue in th
 
 The Tests dialog (screens.md §13). `embodic.ui.viewmodels.selftest.SelfTestViewModel` is Qt-free: `rows`
 (`Observable[tuple[SelfTestResult, ...]]`), `summary` (`Observable[str]`), `running` (`Observable[bool]`), `run()` and
-`stop()`. `embodic.ui.workers.SelfTestWorker` runs `run_selftests` on the `QThreadPool` with a fresh `CancelToken` and
+`stop()`. `embodic.ui.workers.SelfTestWorker` (the target location, see the note below) runs `run_selftests` on the `QThreadPool` with a fresh `CancelToken` and
 posts each `on_result` to the GUI thread. `embodic.ui.views.tests_dialog.TestsDialog` (`dlg-tests`) shows
 `btn-tests-run`, the `tests-table` columns of screens.md §13 (test ID, group, result icon with the verdict word,
 duration, message) and `tests-summary` ("45 tests: 45 passed, 0 failed"; after a cancel, "45 tests: 12 passed, 0
 failed, 33 not run"). Esc and **Stop** call `stop()`. The window stays responsive while checks run. Strings live in a new
 `embodic/ui/strings/selftest.py`. Test: UI-35.
+
+Where `SelfTestWorker` lives (revision 2026-10-13, U-D14, claude-sonnet-5-5; `src/embodic/ui/views/tests_dialog.py` l.53,
+`ui/views/main_window.py` l.100 and l.340-347, `ui/workers.py` and the U-M5d report, all on main 6243163, `verified` by
+reading and by grep). The contract location is `src/embodic/ui/workers.py`, next to the compute worker
+(`package_layout.md` §1). On main 6243163 the class is in `src/embodic/ui/views/tests_dialog.py` and `main_window.py`
+imports it from there, because U-M5d had no `workers.py` in its scope. U-M5e moves it to `ui/workers.py` in parallel with
+this revision. The move is target state, not on main yet, and this unit did not test it. A grep for `SelfTestWorker` on a
+tree from before that merge finds `tests_dialog.py`.
 
 Why a self-test result never moves a badge. The badge rule is a pure function of the registry and the design (D-007,
 `derive_badge`), and the registry's test state comes from the build's evidence (§3.1). A self-test run does not feed it,
