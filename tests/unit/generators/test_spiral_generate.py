@@ -71,8 +71,10 @@ def test_default_lead_stub_and_via_radii_match_cf11(board: Layout) -> None:
 
     Terminal vias sit at r_T = 38.5 mm (abs 1e-9) and centre vias at r_v = 30.7 mm (abs 1e-6).
 
-    Defect caught: a lead arc at the wrong radius, a terminal via on the bus width instead of max(pad, bw), or a stub
-    that absorbs length from the body (the 415.4808 mm total hides all three).
+    Defect caught: a terminal-via angle that drops the bus width (stub 0.7512 mm) or carries a margin (the 1e-6 rad of
+    DEF-UE10-02 moves the stub 1.5e-5 relative), or a stub that absorbs length from the body. The 415.4808 mm total
+    hides them. The bus width alone gives the same angle as max(pad, bw) here (bw 1.0 mm > pad 0.6 mm), so that
+    variant is not caught.
     """
     for path in _coil_paths(board, 0).values():
         lead_mm = sum(primitive_length_mm(p) for p in path.primitives if p.role is PrimitiveRole.LEAD)
