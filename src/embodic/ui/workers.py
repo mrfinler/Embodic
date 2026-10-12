@@ -1,18 +1,20 @@
-"""Runs compute off the GUI thread: one request at a time, a new request cancels the running one (REQ-N-02).
+"""Runs compute and the self-tests off the GUI thread (REQ-N-02, interfaces.md section 14).
 
-One worker thread (a QThreadPool of one) owns the StageCache, so the cache is never used by two threads at once.
-An exception from the engine is logged with a correlation id and reported to the GUI thread (REQ-N-18, UI-12).
+Compute: one request at a time, a new request cancels the running one. One worker thread (a QThreadPool of one) owns
+the StageCache, so the cache is never used by two threads at once. An exception from the engine is logged with a
+correlation id and reported to the GUI thread (REQ-N-18, UI-12).
 """
 
 import logging
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
-from PySide6.QtCore import QObject, QRunnable, QThreadPool, Signal
+from PySide6.QtCore import QObject, QRunnable, QThreadPool, Signal, Slot
 
 from embodic.api import StageCache, compute
 from embodic.drc import CancelToken
 from embodic.outcome import ComputeOutcome
+from embodic.selftest import SelfTestCheck, SelfTestReport, SelfTestResult, run_selftests
 from embodic.ui.viewmodels.outcome import ComputeRequest, ready_state
 
 logger = logging.getLogger(__name__)
@@ -65,3 +67,59 @@ class ComputeWorker(QObject):
         if self._cancel is not None:
             self._cancel.cancel()
         self._pool.waitForDone()
+
+
+class _SelfTestJob(QRunnable):
+    def __init__(self, worker: "SelfTestWorker", checks: Sequence[SelfTestCheck], cancel: CancelToken) -> None:
+        super().__init__()
+        self._worker, self._checks, self._cancel = worker, checks, cancel
+
+    def run(self) -> None:
+        try:
+            report = run_selftests(self._checks, cancel=self._cancel, on_result=self._worker.result.emit)
+        except Exception:
+            logger.exception("the self-test run failed")
+            self._worker.done.emit(None)
+            return
+        self._worker.done.emit(report)
+
+
+class SelfTestWorker(QObject):
+    """Implements SelfTestRunner with a one-thread pool; the signals bring each result to the GUI thread."""
+
+    result = Signal(object)  # SelfTestResult
+    done = Signal(object)  # SelfTestReport, or None when the run itself raised
+
+    def __init__(self, parent: QObject | None = None) -> None:
+        super().__init__(parent)
+        self._pool = QThreadPool(self)
+        self._pool.setMaxThreadCount(1)
+        self._on_result: Callable[[SelfTestResult], None] | None = None
+        self._on_done: Callable[[SelfTestReport | None], None] | None = None
+        self.result.connect(self._deliver_result)
+        self.done.connect(self._deliver_done)
+
+    def start(
+        self,
+        checks: Sequence[SelfTestCheck],
+        cancel: CancelToken,
+        on_result: Callable[[SelfTestResult], None],
+        on_done: Callable[[SelfTestReport | None], None],
+    ) -> None:
+        """Run the checks on the pool's thread."""
+        self._on_result, self._on_done = on_result, on_done
+        self._pool.start(_SelfTestJob(self, checks, cancel))
+
+    def wait(self) -> None:
+        """Block until the running check, if any, has finished."""
+        self._pool.waitForDone()
+
+    @Slot(object)
+    def _deliver_result(self, result: SelfTestResult) -> None:
+        if self._on_result is not None:
+            self._on_result(result)
+
+    @Slot(object)
+    def _deliver_done(self, report: SelfTestReport | None) -> None:
+        if self._on_done is not None:
+            self._on_done(report)

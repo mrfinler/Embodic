@@ -97,7 +97,7 @@ from embodic.ui.views.new_design_dialog import NewDesignDialog
 from embodic.ui.views.phase_panel import PhasePanel
 from embodic.ui.views.results_rail import ResultsRail
 from embodic.ui.views.results_view import CompareTab, ResultsTab, focus_ring_qss
-from embodic.ui.views.tests_dialog import SelfTestWorker, TestsDialog
+from embodic.ui.views.tests_dialog import TestsDialog, WaitingRunner
 from embodic.ui.views.toolstrip_bar import CommandTable, ToolstripBar
 from embodic.ui.views.widgets import check_box
 
@@ -136,10 +136,11 @@ class MainWindow(QMainWindow):
         on_close: Callable[[], None],
         *,
         registry: Registry,
+        selftests: WaitingRunner,
     ) -> None:
         super().__init__()
         self.appearance, self.outcome, self.session, self.paths = appearance, outcome, session, paths
-        self.registry = registry
+        self.registry, self.selftests = registry, selftests
         self.results = ResultsViewModel(registry)
         self.compare = CompareViewModel()
         self.export_vm = ExportViewModel(self._export_source)
@@ -340,8 +341,7 @@ class MainWindow(QMainWindow):
     def show_tests(self) -> None:
         """Open the Tests dialog (D-045c), created on first use; its runs never touch the results or their badges."""
         if self.tests_dialog is None:
-            worker = SelfTestWorker(self)
-            self.tests_dialog = TestsDialog(SelfTestViewModel(worker), worker, self.tokens, self)
+            self.tests_dialog = TestsDialog(SelfTestViewModel(self.selftests), self.selftests, self.tokens, self)
         self.tests_dialog.show()
         self.tests_dialog.raise_()
 

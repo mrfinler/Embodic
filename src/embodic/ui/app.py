@@ -28,7 +28,7 @@ from embodic.ui.viewmodels.appearance import AppearanceViewModel
 from embodic.ui.viewmodels.outcome import OutcomeReady, OutcomeViewModel
 from embodic.ui.viewmodels.session import AUTOSAVE_NAME, DesignSession
 from embodic.ui.views.main_window import MainWindow, ShellPaths, redact_home
-from embodic.ui.workers import ComputeFn, ComputeWorker
+from embodic.ui.workers import ComputeFn, ComputeWorker, SelfTestWorker
 
 logger = logging.getLogger("embodic")
 
@@ -117,14 +117,23 @@ def create_shell(
     compute_fn: ComputeFn = compute,
     prefers_dark: Callable[[], bool] = os_prefers_dark,
 ) -> Shell:
-    """Wire the view-models, the worker and the window."""
+    """Wire the view-models, the workers and the window."""
     worker = ComputeWorker(compute_fn)
+    selftests = SelfTestWorker()
     outcome = OutcomeViewModel(worker)
     session = DesignSession(outcome, autosave_path=paths.recovery_dir / AUTOSAVE_NAME)
     window = MainWindow(
-        AppearanceViewModel(store), outcome, session, paths, prefers_dark, worker.shutdown, registry=load_registry()
+        AppearanceViewModel(store),
+        outcome,
+        session,
+        paths,
+        prefers_dark,
+        worker.shutdown,
+        registry=load_registry(),
+        selftests=selftests,
     )
     worker.setParent(window)
+    selftests.setParent(window)
     worker.finished.connect(outcome.on_finished)
     worker.failed.connect(window.on_compute_failed)
     QGuiApplication.styleHints().colorSchemeChanged.connect(lambda _scheme: window.on_os_scheme_changed())
