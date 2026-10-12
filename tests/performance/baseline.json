@@ -1,0 +1,157 @@
+{
+ "cases": {
+  "PF-01 spiral_12c16p_default": {
+   "runs": 20,
+   "stage_s": {
+    "drc": {
+     "p50": 0.6199904490003973,
+     "p95": 0.8078892399989854
+    },
+    "geometry": {
+     "p50": 0.03969847400003346,
+     "p95": 0.06570674600152415
+    },
+    "physics": {
+     "p50": 1.5704897319992597,
+     "p95": 2.0819680010008597
+    },
+    "validate": {
+     "p50": 0.0008126079992507584,
+     "p95": 0.004968760000338079
+    }
+   },
+   "target": {
+    "p95_below_s": 1.0,
+    "p95_met": false,
+    "stage_budget_met": {
+     "drc": false,
+     "geometry": true,
+     "physics": false
+    },
+    "stage_budget_s": {
+     "drc": 0.4,
+     "geometry": 0.2,
+     "physics": 0.3
+    },
+    "status": "assumption"
+   },
+   "wall_s": {
+    "max": 3.5116720990008616,
+    "p50": 2.3059165539998503,
+    "p95": 3.353504291999343
+   }
+  },
+  "PF-02 large design": {
+   "design": "spiral_12c16p_default with coil_count 24, 12 copper layers (0.13 mm FR-4 between), 6 pairs",
+   "runs": 3,
+   "stage_s": {
+    "drc": {
+     "p50": 3.8893831349996617,
+     "p95": 4.013042615999439
+    },
+    "geometry": {
+     "p50": 0.3329735499992239,
+     "p95": 0.3533148130009067
+    },
+    "physics": {
+     "p50": 10.459820773001411,
+     "p95": 10.88532844600013
+    },
+    "validate": {
+     "p50": 0.00601009100137162,
+     "p95": 0.009828862999711419
+    }
+   },
+   "target": {
+    "below_s": 5.0,
+    "met": false,
+    "status": "assumption"
+   },
+   "wall_s": {
+    "max": 14.809712862001106,
+    "p50": 14.654832082998837,
+    "p95": 14.809712862001106
+   }
+  },
+  "PF-03 cold start offscreen": {
+   "platform": "offscreen (inferred for a desktop session)",
+   "runs": 3,
+   "target": {
+    "below_s": 3.0,
+    "met": true,
+    "status": "assumption"
+   },
+   "wall_s": {
+    "max": 2.6639542520006216,
+    "p50": 2.464008945000387
+   }
+  },
+  "PF-05 serpentine_16p_example": {
+   "runs": 5,
+   "stage_s": {
+    "drc": {
+     "p50": 0.44605066900112433,
+     "p95": 0.518640491000042
+    },
+    "geometry": {
+     "p50": 0.4731079499997577,
+     "p95": 0.5447361909991741
+    },
+    "physics": {
+     "p50": 1.1500886719986738,
+     "p95": 1.2155368849998922
+    },
+    "validate": {
+     "p50": 0.0053004490000603255,
+     "p95": 0.009303353999712272
+    }
+   },
+   "wall_s": {
+    "max": 2.177860994001094,
+    "p50": 2.1461019610014773,
+    "p95": 2.177860994001094
+   }
+  },
+  "PF-05 wave_16p_example": {
+   "runs": 5,
+   "stage_s": {
+    "drc": {
+     "p50": 1.81145817900142,
+     "p95": 2.208975327999724
+    },
+    "geometry": {
+     "p50": 0.1371879309990618,
+     "p95": 0.17154025099989667
+    },
+    "physics": {
+     "p50": 0.5623747350000485,
+     "p95": 0.8028992599993217
+    },
+    "validate": {
+     "p50": 0.0009491639993939316,
+     "p95": 0.009059356001671404
+    }
+   },
+   "wall_s": {
+    "max": 3.1862176600006933,
+    "p50": 2.522590343000047,
+    "p95": 3.1862176600006933
+   }
+  }
+ },
+ "embodic_version": "0.0.1",
+ "format": "embodic.pf-baseline",
+ "format_version": 1,
+ "git_commit": "c8346248cdbbfe3f9becd0307177650c453fda98",
+ "machine": {
+  "cpu_count": 2,
+  "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "load_average_1m_at_start": 3.7,
+  "machine": "x86_64",
+  "memory_gib": 7.84,
+  "numpy": "2.4.6",
+  "platform": "Linux-6.18.44-fc-v114-x86_64-with-glibc2.39",
+  "python": "3.11.15"
+ },
+ "recorded_utc": "2026-10-12T14:49:23Z"
+}
