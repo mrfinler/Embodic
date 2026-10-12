@@ -98,6 +98,7 @@ def _series_coil(groups: int) -> tuple[SeriesCoil, FullClosing]:
     return coil, closing
 
 
+@pytest.mark.eqt("EQT-25-UT1")
 @pytest.mark.req("REQ-F-03")
 def test_ut_geo_19_series_groups_get_their_own_centre_via_one_pitch_apart() -> None:
     """UT-GEO-19 (M2, G5 k centre vias): CF-11 with three series groups keeps 10 turns and r_v 30.7, 29.9, 29.1 mm.

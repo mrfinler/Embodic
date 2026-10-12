@@ -156,6 +156,20 @@ def test_ut_geo_04_centre_via_terminates_x_and_y(board: Layout) -> None:
             assert min(math.dist(e, (via.x_mm, via.y_mm)) for e in ends) <= 1e-9
 
 
+@pytest.mark.eqt("EQT-01-UT1")
+@pytest.mark.req("REQ-F-01")
+def test_eq01_centre_vias_sit_one_coil_pitch_of_2pi_over_q_apart(board: Layout) -> None:
+    """EQ-01 (Q 12, 2p 16): the 12 centre vias sit at first_coil_angle_rad + k pi/6, k 0 to 11, abs 1e-9 rad.
+
+    Defect caught: a coil pitch of pi/p (D08 eq. 3.27, valid only for Q = 2p) places them 22.5 degrees apart.
+    """
+    first = default_design().winding.coil.first_coil_angle_rad  # type: ignore[union-attr]
+    offsets = [(math.atan2(v.y_mm, v.x_mm) - first) % (2 * math.pi) for v in board.vias if v.role is ViaRole.CENTRE]
+    slots = [round(offset / (math.pi / 6)) for offset in offsets]
+    assert sorted(slot % 12 for slot in slots) == list(range(12))
+    assert [o - k * math.pi / 6 for o, k in zip(offsets, slots, strict=True)] == pytest.approx([0.0] * 12, abs=1e-9)
+
+
 @pytest.mark.req("REQ-F-01")
 def test_ut_geo_05_x_and_y_circulate_the_same_way(board: Layout) -> None:
     """UT-GEO-05: in current direction, X and Y wind the same way around the coil centre (equal turning angle)."""

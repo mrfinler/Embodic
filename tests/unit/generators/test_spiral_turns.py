@@ -114,6 +114,43 @@ def test_or_04_d08_builds_three_turns_with_the_half_closing(pad: float) -> None:
     assert radial_bound(frame) == pytest.approx(6.006993006993007, rel=1e-9)
 
 
+@pytest.mark.eqt("EQT-02-UT1")
+@pytest.mark.req("REQ-F-06")
+@pytest.mark.parametrize(
+    ("coil_count", "r_inner_mm", "r_outer_mm", "trace_mm", "clearance_mm", "loops"),
+    [(18, 18.0, 38.0, 0.5, 0.2, 7), (12, 18.0, 38.0, 0.5, 0.2, 11), (12, 11.47, 45.03, 2.06, 0.8, 3)],
+    ids=["18/16", "12/16", "D08"],
+)
+def test_eq02_loop_rule_admits_the_turn_count_of_the_text(
+    coil_count: int, r_inner_mm: float, r_outer_mm: float, trace_mm: float, clearance_mm: float, loops: int
+) -> None:
+    """EQ-02 text: the loop rule admits 7, 11 and 3 turns for 18/16, 12/16 and D08 (via pad 0.6 mm, gap = clearance).
+
+    Defect caught: a missing min_side_length = 2w rule, which admits an 8th turn on 18/16.
+    """
+    coil = SpiralCoilSpec(
+        coil_count=coil_count,
+        r_inner_mm=r_inner_mm,
+        r_outer_mm=r_outer_mm,
+        trace_width_mm=trace_mm,
+        clearance_mm=clearance_mm,
+        coil_gap_mm=clearance_mm,
+    )
+    assert len(loop_turns(CoilFrame.of(coil, 0.6))[0]) == loops
+
+
+@pytest.mark.eqt("EQT-25-UT1")
+@pytest.mark.req("REQ-F-06")
+def test_eq25_eye_holds_k_centre_vias_one_pitch_apart_up_to_three_on_cf11() -> None:
+    """EQ-25 eye rule on CF-11 at N = 10: 30.7 - 28.5914 = 2.1086 mm holds (k - 1) * 0.8 mm, so k = 1 to 3 fit, not 4.
+
+    Defect caught: k in place of k - 1 (three vias would need 2.4 mm), or a pitch below 0.7029 mm (four vias fit).
+    """
+    frame = _default_frame()
+    turns, _ = loop_turns(frame)
+    assert [eye(frame, turns, 10, vias=k).fits for k in (1, 2, 3, 4)] == [True, True, True, False]
+
+
 @pytest.mark.req("REQ-F-06")
 def test_full_closing_wins_at_equal_turns() -> None:
     """G5 choice: at N = 2 on D08 both closings fit, and the full one keeps the last left side."""
