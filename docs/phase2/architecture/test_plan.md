@@ -84,6 +84,12 @@ modules named below run). §5 closes DEF-M1V-03 and names F-OR07 as the one open
 is rewritten for main 6243163: one `xfail(strict=True)` mark (OR-07, two cases), the oracle results of D-045g, and the
 AX-04 and DEF-M1V-03 marks that are gone. §5.3.1 amends the AX-04 row for the same reason. No ID is new.
 
+Continuation of the same revision (U-D14, claude-sonnet-5-5, D-046; main 76f054b). §2 names the two real oracle files
+(`test_oracles.py`, `test_oracles_m5.py`) instead of a folder that does not exist. §5 states D-046f: the product mapper
+`layout_from_xcoil` keeps one path per Xcoil object and `split_ic_chains` is the GR-19 DRC reading. §5.1 names UT-DRC-04
+cases 5e and 5f as added by U-M5f. §5.6 is re-run on main 76f054b with the same results. §5.7 names the two tests of
+D-045f and D-046e and gives them no ID. §7 states the M2 exit as D-045b words it.
+
 ## 1. What changed and why
 
 | Change | Reason |
@@ -100,7 +106,7 @@ AX-04 and DEF-M1V-03 marks that are gone. §5.3.1 amends the AX-04 row for the s
 |---|---|---|---|
 | Unit (UT) | pytest 9.1.1 (MIT), pytest-cov 7.1.0 (MIT) | `tests/unit/<package>/` | every commit |
 | Golden (GR) | Node 22 dumper (dev only) + pytest comparators | `tools/golden/`, `tests/golden/` | every commit (fixtures committed; CI needs no Node) |
-| Oracle (OR) | pytest, `xfail` until prerequisites exist | `tests/unit/physics/oracles/` | every commit |
+| Oracle (OR) | pytest; one strict `xfail` (OR-07, F-OR07) and two skips (OR-03, OR-10), §5.6 | `tests/unit/physics/test_oracles.py` (OR-01) and `tests/unit/physics/test_oracles_m5.py` (OR-02, OR-03, OR-05 to OR-10) | every commit |
 | Property (PR), boundary (BV) | hypothesis 6.168.3 (MPL-2.0, dev only), pytest | `tests/unit/property/`, `tests/unit/boundary/` | fast profile per commit, long profile nightly |
 | UI | pytest-qt 4.5.0 (MIT), `QT_QPA_PLATFORM=offscreen` | `tests/ui/` | every commit |
 | Exports (UT-EXP) | ezdxf 1.4.4 (MIT), pypdf 6.19.0 (BSD-3-Clause), stdlib xml and zipfile; all test-only | `tests/unit/embodic_io/exporters/` | every commit |
@@ -197,22 +203,29 @@ Phase 1 UT-PHY-01 to UT-PHY-21 and OR-01 to OR-12 stay. Two changes apply.
 
 ## 5. New and amended tests
 
-Closed defect DEF-M1V-03 (revision 2026-10-13, U-D14; U-V1c and U-M5o reports, D-045g; main 6243163). Revision
+Closed defect DEF-M1V-03 (revision 2026-10-13, U-D14; U-V1c and U-M5o reports, D-045g, D-046f; main 6243163 and 76f054b). Revision
 2026-10-09 (U-D8) named it as the only open defect with a strict xfail: the GR-19 mapper put an Xcoil `ic` object into one
 `CopperPath` with gaps (11.28 mm on serpentine path 15, 22.11 mm on wave path 192). Two units closed it.
 
 - U-V1c split the `ic` objects in Agent 4's harness (`split_interconnect_chains`, `tests/independent/m1/gr19.py` l.68)
   and removed the strict xfail from `tests/independent/m1/test_gr19_drc.py`.
-- U-M5o made the same cut in the product mapper (`_chains`, `tests/golden/m1_layout/xcoil_map.py` l.75). The test
-  `test_gr19_every_path_is_one_continuous_chain` (`tests/golden/m1_layout/test_gr19_layouts.py` l.54) asserts it.
+- The product tests read the same cut through `split_ic_chains` (`tests/golden/m1_layout/xcoil_map.py` l.75), and
+  `layout_from_xcoil(split_ic_chains(raw))` is the GR-19 DRC reading. `test_gr19_every_path_is_one_continuous_chain`
+  (`tests/golden/m1_layout/test_gr19_layouts.py` l.66) asserts that every path of that reading is one chain.
+- `layout_from_xcoil` itself does not split (D-046f). It keeps one path per Xcoil object, Xcoil's circuit member, which the
+  physics goldens and Agent 4's DEF-M2e3-01 test pin. `test_gr19_physics_mapping_keeps_one_path_per_xcoil_object`
+  (l.55) asserts it. The first version of the cut sat inside `layout_from_xcoil` (U-M5o) and broke the physics goldens in
+  Fable's gate on 3e765f2 (D-046, sources).
 
-`grep -rn "xfail" tests --include=*.py` finds no mark in either file (`verified` by running it). The continuity tests pass:
-`7 passed, 45 deselected` from `pytest tests/independent/m1/test_gr19_drc.py tests/golden/m1_layout/test_gr19_layouts.py
--k "continuous or cut_only"`. `run_drc` on the three GR-19 layouts of the product mapper reports sector 0, serpentine 0
-and wave 186 violations (6 `trace_trace` and 180 `trace_via`), `verified` by running
-`PYTHONPATH=src python3 tests/golden/m1_drc/time_gr19_layouts.py --runs 1`. Before the split the counts were 0, 3 and 190
-(U-M5o report, not rerun). The 186 wave violations are the D-006 pairs of D-034 (`tests/independent/README.md`, U-V1c
-section). After the split no GR-19 pair depends on the end-point clause of rule 5 (interfaces.md §7).
+`grep -rn "xfail" tests --include=*.py` finds no mark in either file (`verified` by running it on main 76f054b). The
+continuity tests pass: `10 passed, 45 deselected` from `pytest tests/golden/m1_layout/test_gr19_layouts.py
+tests/independent/m1/test_gr19_drc.py -k "continuous or cut_only or one_path_per"`. `run_drc` on the three GR-19 layouts
+of the DRC reading reports sector 0, serpentine 0 and wave 186 violations (6 `trace_trace` and 180 `trace_via`),
+`verified` by running `PYTHONPATH=src python3 tests/golden/m1_drc/time_gr19_layouts.py --runs 1` on main 76f054b. The
+counts are the D-045g counts and D-046f did not change them. Before the split the counts were 0, 3 and 190 (U-M5o report,
+not rerun). The 186 wave violations are the D-006 pairs of D-034 (`tests/independent/README.md`, U-V1c section). After the
+split no GR-19 pair depends on the end-point clause of rule 5 (interfaces.md §7), and U-M5f adds UT-DRC-04 cases 5e and 5f
+for that clause (§5.1).
 
 The one finding that keeps a strict xfail is F-OR07, the OR-07 band miss of D-045a (§5.6).
 
@@ -235,7 +248,7 @@ an empty `.hypothesis` database, so the example, not the random draw, is what ke
 | UT-GEO-24 | New 2026-10-08 (U-D4, D-031c): first coil angle any finite | a spiral design with `first_coil_angle_rad` = 1.0, 1.0 + 2 pi, and 1.0 - 2 pi builds in every case, and coil 0's axis and every primitive end point agree within 1e-9 rad and 1e-9 mm; the model accepts the value as typed and the project file stores it unchanged |
 | UT-GEO-25 | New 2026-10-08 (U-D4, D-031b): closing of the last turn | `SpiralDetail.turn_limit.closing` equals the closing the generator built: `half` for the D08 example (3 turns, D-030) and `full` for a design whose G5 eye fits; the value is not a `FIELDS` pointer and is absent from the project file |
 | UT-UNI-01 | Amended 2026-10-04: unit conversions and rounding | deg and rad, mm and m, rpm and rad/s, mil² and mm² round trips within 2 ulp of the input (`math.ulp`), not exact (requirements.md revision note); `js_round` gives 3, -2, 1, 0, -1, 0 for 2.5, -2.5, 0.5, -0.5, -1.5, 0.49999999999999994 (JS `Math.round`); `quantise(-0.000025, 1e5) == -0.00002`; neither returns -0.0 |
-| UT-DRC-04 | Amended 2026-10-05 (U-D3, D-022), 2026-10-08 (U-D4, D-022c) and 2026-10-08 (U-D7, D-035b, cases 5a to 5d): connectivity exemptions, one exempt case and one near miss per rule of interfaces.md §7, each below the rule so only the exemption decides | 1a adjacent main primitives exempt; 1b same-net main primitives two indices apart reported; 1c a corner fillet or taper exempt from both mains it belongs to and from the other fillets and tapers of those mains; 1d the DEF-M1V-01 hairpin: a fillet against the main two steps back reported; 2a a path end group exempt from the via or pad its end lies on; 2b a via the path does not end on reported; 2c an interconnect path (net `U`) ending on a `PHASE_A` via of any role (terminal, centre, transfer), and on a pad of another net, exempt; 2d vias of any net and role tapping an interconnect ring (net `N`) mid-path and at its ends, each centre within `pad_mm / 2` of the centreline, exempt from every primitive of the ring, and the same ring with a phase net (not an interconnect) reported against the same vias; 3a same-net end groups meeting at one via, one pad or within `COINCIDENCE_MM` exempt; 3b different-net end groups at a coincident point with no via or pad reported; 3c an interconnect end group and a phase path end group on one via of any role, or on one pad, exempt; 4a a same-net via inside a pad exempt; 4b an other-net via inside a pad reported; 5a a path end point on the middle of a same-net line exempt from every primitive of that path; 5b the same on the middle of a same-net arc; 5c the 5a T with the two paths on different nets reported; 5d the 5a T with the end point 0.01 mm short of the centreline reported. Rule 2b (amended 2026-10-09, U-D8, D-036a, D-037a; D-036a's "rule 2b" is not case 2b above), in `tests/unit/drc/test_run_drc.py`: `test_ut_drc_04_same_net_via_on_a_path_centreline_is_exempt_from_that_primitive` (a same-net via on a line and on an arc exempt); `test_ut_drc_04_via_of_another_net_on_a_path_centreline_is_reported` (the same geometry on another net reported); `test_ut_drc_04_same_net_via_tap_band_is_half_the_via_pad` (0.29 mm off the centreline exempt, 0.31 mm, 0.01 mm outside the `pad_mm / 2` band, reported); `test_ut_drc_04_same_net_via_tap_leaves_a_far_primitive_of_the_same_path_checked` (the far primitive of the tapped path, 0.1 mm from the via against a 0.2 mm rule, reported) |
+| UT-DRC-04 | Amended 2026-10-05 (U-D3, D-022), 2026-10-08 (U-D4, D-022c) and 2026-10-08 (U-D7, D-035b, cases 5a to 5d): connectivity exemptions, one exempt case and one near miss per rule of interfaces.md §7, each below the rule so only the exemption decides | 1a adjacent main primitives exempt; 1b same-net main primitives two indices apart reported; 1c a corner fillet or taper exempt from both mains it belongs to and from the other fillets and tapers of those mains; 1d the DEF-M1V-01 hairpin: a fillet against the main two steps back reported; 2a a path end group exempt from the via or pad its end lies on; 2b a via the path does not end on reported; 2c an interconnect path (net `U`) ending on a `PHASE_A` via of any role (terminal, centre, transfer), and on a pad of another net, exempt; 2d vias of any net and role tapping an interconnect ring (net `N`) mid-path and at its ends, each centre within `pad_mm / 2` of the centreline, exempt from every primitive of the ring, and the same ring with a phase net (not an interconnect) reported against the same vias; 3a same-net end groups meeting at one via, one pad or within `COINCIDENCE_MM` exempt; 3b different-net end groups at a coincident point with no via or pad reported; 3c an interconnect end group and a phase path end group on one via of any role, or on one pad, exempt; 4a a same-net via inside a pad exempt; 4b an other-net via inside a pad reported; 5a a path end point on the middle of a same-net line exempt from every primitive of that path; 5b the same on the middle of a same-net arc; 5c the 5a T with the two paths on different nets reported; 5d the 5a T with the end point 0.01 mm short of the centreline reported. Revision 2026-10-13 (U-D14, Fable's ruling): U-M5f adds 5e (a same-net path's end point on the other path's end point region, exempt: the end-point reading of rule 5) and 5f (the same geometry on different nets, reported). Neither is on main 76f054b, and this plan does not claim that they pass. Rule 2b (amended 2026-10-09, U-D8, D-036a, D-037a; D-036a's "rule 2b" is not case 2b above), in `tests/unit/drc/test_run_drc.py`: `test_ut_drc_04_same_net_via_on_a_path_centreline_is_exempt_from_that_primitive` (a same-net via on a line and on an arc exempt); `test_ut_drc_04_via_of_another_net_on_a_path_centreline_is_reported` (the same geometry on another net reported); `test_ut_drc_04_same_net_via_tap_band_is_half_the_via_pad` (0.29 mm off the centreline exempt, 0.31 mm, 0.01 mm outside the `pad_mm / 2` band, reported); `test_ut_drc_04_same_net_via_tap_leaves_a_far_primitive_of_the_same_path_checked` (the far primitive of the tapped path, 0.1 mm from the via against a 0.2 mm rule, reported) |
 | UT-GEN-01 | Amended 2026-10-05 (U-D3) and 2026-10-08 (U-D4, D-031f): generator contract for spiral, serpentine, wave and a stub | returns a `BoardStack` or Unbuildable, never raises on fuzzed input; spiral and wave stacks hold exactly one board; same design gives the same `stack_hash`; on every board, every circuit path and via ID exists and every winding path belongs to exactly one Member or to `interconnect_path_ids`; every board sets `detail` and a non-empty `derived`; from U-M2e-4, every id of `interconnect_path_ids` has exactly one `interconnect_roles` entry. Revision 2026-10-09 (U-D10, DEF-M3b-03, U-M3-fix3): the wave and the serpentine port each have the fuzz test `test_fuzzed_inputs_give_a_stack_or_unbuildable_never_an_exception` (`tests/unit/generators/wave/test_wave_generate.py` l.321 and `tests/unit/generators/serpentine/test_serpentine_inputs.py` l.88), each with the explicit denormal `@example`. The guard tests refuse each unusable size, count and degenerate end turn with the code of interfaces.md §6 before any geometry is built (`test_unusable_size_is_refused_before_any_geometry` in both `*_inputs.py` files, l.85 and l.148), accept a width exactly at the DRC minimum, and turn `biarc` of coincident points into `DegenerateBiarcError` (`test_wave_inputs.py` l.121). U-M3-fix3 showed that the new serpentine tests fail without the guard (31 of 33, its report) |
 | UT-GEN-02 | Dispatch | `build_layout` routes by `design.topology`; calling `generate_wave` with a spiral design raises TypeError |
 | UT-GEN-03 | Amended 2026-10-05 (U-D3); single-mode rule ratified 2026-10-08 (U-D4, D-031e; main checks only `one_board_per_phase`, DEF-U-D4-02): serpentine validation | layers per phase 1 or even; copper count = phases x layers per phase for `stack_mode` `single` and = layers per phase for `one_board_per_phase` (one board's stack-up, Xcoil `stackupFor(p, perBoard)` l.686-688), else INVALID with the pointer; `board_gap_mm` below 0 is INVALID and above 10 mm is UNSUPPORTED_RANGE (Xcoil l.127). As implemented (revision 2026-10-08, U-D7; `tests/unit/generators/serpentine/test_serpentine_generator.py` l.88-139): an odd layers per phase gives `INVALID_LAYERS_PER_PHASE`; a copper count that does not fit the stack mode gives `INVALID_SERPENTINE_COPPER_COUNT` in both modes, and the generator also refuses it with `UNBUILDABLE_SERPENTINE_COPPER_COUNT`; a gap of -0.1 mm gives `INVALID_NEGATIVE`, 0 and 10 mm give nothing, and 10.5 mm gives `RANGE_ABOVE_SUPPORTED` |
@@ -377,13 +390,13 @@ Gate wall time (revision 2026-10-08, U-D7, D-035h). The commit gate on main 4aec
 minutes (Fable's gate run, U-M3a report). U-M3b measured 269 s for 1490 tests on its branch. The time is not a gate
 criterion. Shortening it is a Phase 5 item.
 
-### 5.6 Strict xfails on main 6243163 (revision 2026-10-13, U-D14; first written 2026-10-11, U-D12)
+### 5.6 Strict xfails on main 76f054b (revision 2026-10-13, U-D14; first written 2026-10-11, U-D12)
 
-One mark, `xfail(strict=True)`, is left on main 6243163. `grep -rn "xfail" tests --include=*.py` finds it at
+One mark, `xfail(strict=True)`, is left on main 76f054b (the same on main 6243163). `grep -rn "xfail" tests --include=*.py` finds it at
 `tests/unit/physics/test_oracles_m5.py` l.239, and finds three docstrings that use the word (`test_oracles.py` l.98,
 `test_oracles_m5.py` l.124 and l.252). The mark covers `test_or07_d09_phase_emf_within_the_registry_band`, which is
 parametrised over the D09 builds A and B, so it holds two cases. `pytest tests/unit/physics/test_oracles.py
-tests/unit/physics/test_oracles_m5.py -rxs` printed `8 passed, 2 skipped, 2 xfailed` (`verified` by running it).
+tests/unit/physics/test_oracles_m5.py -rxs` printed `8 passed, 2 skipped, 2 xfailed` (`verified` by running it on main 76f054b, 3 s, and earlier on main 6243163).
 A strict xfail fails the run when it passes, so the owner removes the mark in the same change that fixes the cause. The
 commit and nightly profiles run the test. They ignore only `tests/performance` and `tests/packaging` (`tools/ci.py` l.28
 and l.42-43), and the test carries no `slow` or `manual` mark.
@@ -396,7 +409,7 @@ The mark has one effect on the evidence of §5.7. A record that xfails has the o
 interfaces.md §3.1 keeps an ID out of `passed_tests` unless every record that carries it passed. EQT-05-O2 and EQT-06-O2
 therefore cannot enter `passed_tests` while OR-07 is an xfail (`inferred` from that rule and the U-M5o report; not run).
 
-Oracle results on main 6243163 (D-045g). The plan records them here because this section is where the one oracle outside
+Oracle results on main 76f054b (D-045g; the values equal those on main 6243163). The plan records them here because this section is where the one oracle outside
 its band is listed. `verified` by running `PYTHONPATH=src pytest tests/unit/physics/test_oracles.py
 tests/unit/physics/test_oracles_m5.py -s -rxs`, which prints each line below, except where the cell says D-045g. A value
 here compares a model with a published figure. None is a validation by experiment.
@@ -415,9 +428,9 @@ here compares a model with a published figure. None is a validation by experimen
 | OR-11, OR-12 | EQ-05 field per layer and EQ-12 eddy loss | no Phase 2 test. The cases need FEA and move to Phase 3 (`oracle_tests_spec.md` §OR-11 and OR-12, U-E9, D-045b) | none | Phase 3 |
 
 OR-04 is outside D-045g, and this unit did not look at it. OR-07 and OR-08 are "not independent of EC-05" (§4). The
-skipped tests carry the reason `NOT_REPRESENTABLE` (`test_oracles_m5.py` l.42). The M2 exit of §7 says "OR tests (pass or
-documented `xfail`)". OR-03 and OR-10 are skips and OR-11 and OR-12 have no test, so that wording does not name them. Whether
-§7 is widened is for Fable (`unresolved`).
+skipped tests carry the reason `NOT_REPRESENTABLE` (`test_oracles_m5.py` l.42). The M2 exit of §7 names the four
+outcomes that D-045b allows: pass, the strict xfail F-OR07, the skip of OR-03 and OR-10, and the Phase 3 cases OR-11 and
+OR-12.
 
 Marks that are gone since main 4fda98d (U-D12 listed six):
 
@@ -427,7 +440,7 @@ Marks that are gone since main 4fda98d (U-D12 listed six):
   (`def test_` at l.130, l.139, l.146 and l.159), and `pytest tests/ui/qt_e2e/test_ax04_target_size.py` printed
   `4 passed in 40.71s` (`verified` by running it). The first test, `test_ax04_every_interactive_widget_reaches_24_px_and_check_rows_32_px`,
   fails for any new undersized button, field, combo, tab, chip, scroll bar or check row.
-- The two DEF-M1V-03 cases, closed by U-V1c and U-M5o (§5).
+- The two DEF-M1V-03 cases, closed by U-V1c and the GR-19 DRC reading of D-046f (§5).
 
 The two UX-AC-03 cases that this section listed on main 9776555 are closed. U-M4e-1b retitled the five examples and
 removed the mark on the title test. The mark on the serpentine export scan stayed, because the design `/name` still held
@@ -462,6 +475,17 @@ marker each test carries is in the second column; the requirements' Tests column
 | UT-CLI-03 | `embodic-cli selftest` (REQ-F-18), U-M5d | one line per check and the summary line; exit 0 when every check passed; exit 1 with the catalogue monkeypatched to hold one failing check, and that check's line names it; `--json OUT` writes the `selftest_to_json` document |
 | UI-35 | Tests dialog (REQ-F-25), U-M5d, pytest-qt offscreen | `btn-tests-run` starts the run in a worker thread (the measure functions run on a thread other than the GUI thread); `tests-table` gains one row per result with ID, group, the result icon and its word, duration and message; `tests-summary` reads "45 tests: 45 passed, 0 failed"; Esc and **Stop** cancel, and the remaining rows read `not run`; a second run starts from an empty table; no badge in the results view changes during or after a run |
 
+D-045f and D-046e (revision 2026-10-13, U-D14; main 76f054b, `verified` by reading the files and by running the two
+tests). A release run leaves `resources/evidence/passed_tests.v1.json` in the tree, and no later session may read it. The
+test side meets this (`tests/conftest.py` l.42-71 points the registry at a session copy without the file, and
+`tests/packaging/support.py` `build_wheel` builds from a copy without it), and the product gains no switch
+(interfaces.md §3.1). Two tests pin it. This plan gives them no ID of their own, and Fable decides whether they get one.
+
+| Test (file, line) | Check (REQ marker) | Criterion | Result |
+|---|---|---|---|
+| `test_d045f_evidence_a_release_run_left_in_the_tree_never_reaches_the_test_session` (`tests/unit/results/test_evidence.py` l.202) | evidence reader (REQ-T-05) | with an applicable file planted in `resources/evidence`, `load_registry(resource_root())` reads it and `load_registry()` returns `evidence_build_id` None and an empty `passed_tests`; the file is restored afterwards | `1 passed`, `verified` by running it |
+| `test_pk03_the_session_wheel_leaves_out_evidence_a_release_run_left_in_the_tree` (`tests/packaging/test_pk03_reproducible_wheel.py` l.67) | wheel (REQ-N-06) | with a file planted in `resources/evidence`, the wheel from `build_wheel` holds `embodic/_resources/evidence/equations.v1.json` and not `passed_tests.v1.json` | `1 passed`, `verified` by running it |
+
 Where each packaging test runs. This container is Linux x86-64 with CPython 3.10 to 3.13 in `/usr/bin` and uv
 0.8.17 (`verified` by listing, 2026-10-12). `unshare -rn` gives a process with no network (`verified`: a socket connect
 returned 101, network unreachable). Anything that needs Windows is `not tested` here. The route for it is
@@ -472,9 +496,9 @@ without the user's approval.
 |---|---|---|---|
 | PK-01 | the Linux cells for 3.11, 3.12 and 3.13, with `tools/ci.py --profile commit` in one venv per version | the Windows cells. `ci.yml` lacks 3.13 and installs `.[dev]` only (interfaces.md §13 point 12) | U-M5b |
 | PK-02 | yes: a clean venv per Python version installs from `requirements/py3xx.txt` with `--require-hashes`, then the wheel with `--no-deps` | the Windows resolve of the same files | U-M5b |
-| PK-03 | yes: two wheel builds give the same member list and the same SHA-256 per `.py` member. The evidence file differs in `generated_utc` and `build_id`, and the criterion does not compare it | none | U-M5b |
+| PK-03 | yes: two wheel builds give the same member list and the same SHA-256 per `.py` member. The session wheel is built without the evidence file (D-045f), so the criterion has nothing to leave out; the release profile's own wheel carries the file and PK-10 checks it | none | U-M5b |
 | PK-04 | no: it compares Windows JSON with Linux JSON (1e-9 rel.) | yes; `not tested` here | U-M5b sets it up, CI runs it |
-| PK-05 | no: the bundle smoke test (start, compute the default example, export SVG) needs the Windows folder | yes; `not tested` here. A Linux one-folder build may run as a smoke of the spec only, labelled as such | U-M5c |
+| PK-05 | no: the bundle smoke test (start, compute the default example, export SVG) needs the Windows folder | yes; `not tested` here. The Linux smoke of the spec is `tests/bundle/test_bundle_smoke.py` (6 tests, labelled as a smoke of the spec only). D-046h records `6 passed` and a frozen `embodic-cli selftest` of 45 of 45 on U-M5c's Linux folder. This unit did not run them against a folder: in a tree without `build/bundle/embodic` the 6 tests skip (`verified`) | U-M5c |
 | PK-06 | yes, on Linux: Agent 4 follows README.md from a clean venv and times each step to a first computed example | the timed walkthrough on a clean Windows machine (REQ-N-07 acceptance), Agent 4 or the user; `not tested` here | U-V5 |
 | PK-07 | yes: `unshare -rn python tools/ci.py --profile commit` passes; a static test finds no `socket`, `http.client` or `urllib.request` import in `src` | none | U-M5b |
 | PK-08 | yes: the runtime closure read with `importlib.metadata` (numpy, PySide6-Essentials, shiboken6) matches the licences of §5 of `package_layout.md`; `THIRD_PARTY_LICENSES.md` has one section per runtime dependency and bundled font and the LGPL-3.0 and GPL-3.0 texts; the wheel listing shows it under `dist-info/licenses/`. pip-audit is not a dependency (§5 needs Fable's approval to add one), so the audit part is `not tested` | none | U-M5b |
@@ -499,7 +523,7 @@ default design at start (D-014). AX-07 tested the web option (D-010).
 | Milestone | Must pass |
 |---|---|
 | M1 | MT-01 to MT-03, MT-06 to MT-08, UT-GEO-01, UT-GEO-15, UT-GEO-22, UT-GEO-23, UT-DRC-01 to UT-DRC-08 on hand-built layouts, GR-17 to GR-19, PR-01 and PR-02 on random primitive sets, TR-02 |
-| M2 | all UT-GEO, UT-WND, UT-PHY, UT-RES, UT-MOD, UT-IO, UT-GEN-01/02, GR-01 to GR-16, OR tests (pass or documented `xfail`), PR-01 to PR-12, BV, TR-01 to TR-04 |
+| M2 | all UT-GEO, UT-WND, UT-PHY, UT-RES, UT-MOD, UT-IO, UT-GEN-01/02, GR-01 to GR-16, every OR test has one of four outcomes (revision 2026-10-13, U-D14, D-045b, which records a decision already taken and is no looser gate): it passes, or it is the documented strict xfail F-OR07 (OR-07), or it is a documented skip as not representable in Phase 2 (OR-03 and OR-10, G40), or it is a Phase 3 FEA case (OR-11 and OR-12). OR-09 is characterisation only and passes when the value is finite and positive, PR-01 to PR-12, BV, TR-01 to TR-04 |
 | M3 | GR-20 to GR-23, UT-GEN-03/04/05, PR-13, PR-14, and every M2 gate still green |
 | M4 | UI, AX, LG, UT-EXP, UT-SES tests; Agent 4 U-V4 independent export parsing |
 | M5 | UT-CLI, PF (baseline recorded), PK-01 to PK-08, PK-06 walkthrough; from revision 2026-10-12 (U-D13) also UT-RES-08, UT-RES-09, TR-05, PK-10, PK-11, UT-SLF-01 to UT-SLF-03 and UI-35. PK-01, PK-04, PK-05 and the Windows half of PK-06 count only from a Windows run (§5.7); until then they are `not tested` |
