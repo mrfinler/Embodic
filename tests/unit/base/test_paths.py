@@ -7,9 +7,9 @@ import venv
 from pathlib import Path
 
 import pytest
+from tests.packaging.support import CLEAN_ENV
 
 from embodic.paths import resource_root
-from tests.packaging.support import CLEAN_ENV
 
 REPO = Path(__file__).resolve().parents[3]
 
