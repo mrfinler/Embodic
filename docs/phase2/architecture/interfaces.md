@@ -473,7 +473,7 @@ class MaterialOverrides:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class AnalysisOptions:
-    harmonics: tuple[int, ...] = (1, 3, 5, 7, 9, 11, 13)  # odd only
+    harmonics: tuple[int, ...] = (1, 3, 5, 7, 9, 11, 13)  # starts with 1, odd and positive (§2.2, revision 2026-10-13)
     max_segment_mm: float = 0.5
     edge_correction: Literal["off"] = "off"  # EC-05 optional correction stays off in Phase 2
 
@@ -806,6 +806,39 @@ reading). XD-WAVE text. `wave.toml` holds two entries.
 - The via-length difference above has no XD-WAVE entry. D-038b corrects D-035e: no entry is owed.
   `test_gr22_phase_resistance_differs_from_xcoil_only_by_the_via_barrel_length` (`test_gr22_results.py` l.124) removes
   the barrel length at function level and compares.
+
+Revision 2026-10-13 (U-D15, claude-sonnet-5-5; D-046 and the U-M5h report; `src/embodic/model/validate.py`,
+`src/embodic/errors/catalogue/model.py`, `src/embodic/physics/analyse.py` and `src/embodic/api.py` on main 5e74acc,
+`verified` by reading unless a line says otherwise). The harmonic list, `/analysis/harmonics`. The list starts with
+harmonic 1, and every entry is odd and at least 1. `validate_design` reports two codes:
+
+| Code | Category, severity | Pointer | Fires when | Message | Source |
+|---|---|---|---|---|---|
+| `INVALID_HARMONIC_FUNDAMENTAL` | INVALID, ERROR | `/analysis/harmonics` | the list is empty, or its first entry is not 1 | "The harmonic list must start with the fundamental, harmonic 1." | `validate.py` l.339-340; `catalogue/model.py` l.64 |
+| `INVALID_HARMONIC` | INVALID, ERROR | `/analysis/harmonics/<position>`, one per bad entry | an entry is below 1 or is even; `value` holds the entry | "Harmonic orders must be odd and positive." | `validate.py` l.341-343; `catalogue/model.py` l.63 |
+
+The two rules are independent. `(2, 1)` raises both codes, `(3, 1)` raises only the first, and `(1, 2)` raises only the
+second.
+
+- Where the rule comes from. §8 says "Harmonic 1 is index 0" for `CircuitSolution.phase_emf_phasor_v_s_per_rad`.
+  `analyse` reads `emf[phase][0]` as the fundamental for `ke_ph` and `emf_angle_ph` (`physics/analyse.py` l.298-299),
+  and EQ-18 divides the THD sum by Ke_1 (`equation_specification.md` l.388). U-M5h found that `_harmonics` checked only
+  the odd and positive entries, so no rule held index 0 to harmonic 1 (its report).
+- What a bad list did before the rule. `()` raised IndexError in physics, found by the release run on 10c6411 in the
+  nightly profile (comment at `test_pipeline_properties.py` l.94). `(3, 5)` raised KeyError. `(3, 1)` returned the
+  constant of n = 3 as Ke with no issue. These come from the U-M5h report and the docstring at `test_validate.py`
+  l.33. They were not re-run here, so they are `inferred`.
+- The stop. `issue()` makes every issue an ERROR unless the caller says otherwise (`validate.py` l.45), and `compute`
+  returns after the validate stage when any issue is an ERROR, before geometry, DRC and physics (`api.py` l.270-283).
+  `analyse` does not check the list itself: a grep of `analyse.py` finds `harmonics` only in lines that compute with
+  it (l.249 to l.381). A caller that bypasses `compute` has to validate first.
+- Registration. `_harmonics` (`validate.py` l.337-343) is in `CROSS_FIELD_RULES` (l.346-359). The range l.343-356 given
+  for that tuple under "Copper count per topology" above was true on main 8a297a0 and has moved.
+- Tests. `test_a_harmonic_list_that_does_not_start_with_the_fundamental_is_an_error` (`tests/unit/model/test_validate.py`
+  l.32) expects exactly one issue, `INVALID_HARMONIC_FUNDAMENTAL` with the pointer `/analysis/harmonics`, for `()`,
+  `(3, 5)` and `(3, 1)`. The test at l.40 accepts `(1,)` and `(1, 3, 5, 7, 9, 11, 13)`. PR-05 pins the empty list
+  (`test_plan.md` §5.2). No test names `INVALID_HARMONIC` or passes an even or a negative entry (a grep of `tests`), so
+  that rule is `not tested`.
 
 ### 2.3 Field table, draft and the new-design flow (ADR-0010)
 
@@ -2833,7 +2866,10 @@ What the merged names mean (D-031f, adopted as implemented):
 - `layer_thickness_mm` and `layer_copper_area_mm2` replace `thickness_mm_by_layer` and `copper_area_mm2_by_layer`
   (D-025a, D-026c): the unit suffix ends the name, as MT-05 requires.
 - `CircuitSolution.phase_emf_phasor_v_s_per_rad` holds every analysed harmonic, in the order of
-  `design.analysis.harmonics`, because EQ-18 builds the waveform from all of them. Harmonic 1 is index 0.
+  `design.analysis.harmonics`, because EQ-18 builds the waveform from all of them. Harmonic 1 is index 0. Revision
+  2026-10-13 (U-D15): `validate_design` enforces this with the ERROR `INVALID_HARMONIC_FUNDAMENTAL` on
+  `/analysis/harmonics` (§2.2, same date), so `compute` passes `analyse` neither an empty list nor one that starts with
+  another order.
 - `solve_phase_circuit` takes per-path flux linkage in T·mm² and the mechanical speed, so it can return the
   circulating loss in W. Path and via resistances are keyed by id.
 - The cancel token in physics is a `Protocol` with one read-only `cancelled` property, because MT-01 forbids
@@ -3019,8 +3055,11 @@ class LoadedDraft:
 
 
 def load_project(path: Path) -> tuple[ProjectFile | LoadedDraft | None, tuple[ValidationIssue, ...]]: ...
-def save_project(path: Path, project: ProjectFile | LoadedDraft) -> str:
-    """Writes atomically (temp file + os.replace). Returns the design hash ('' for a draft)."""
+def save_project(path: Path, project: ProjectFile | LoadedDraft, *, saved_utc: str | None = None) -> str:
+    """Writes atomically (temp file + os.replace). Returns the design hash ('' for a draft).
+
+    `saved_utc` is the text of the file's `saved_utc` key. None reads the clock to the whole second (revision
+    2026-10-13, U-D15)."""
 def canonical_json(design: DesignParameters) -> bytes: ...
 def design_hash(design: DesignParameters) -> str: ...
 
@@ -3091,6 +3130,34 @@ The design name of an example.
 - What did not change. A name is not an engineering value: OR-01 and every golden are unaffected. The only keys that
   changed in the five files are `/name` and the hash fields (U-M4e-2 report). Provenance stays in `source_note`, which the
   gallery never shows (`display_note` does).
+
+Revision 2026-10-13 (U-D15, claude-sonnet-5-5; D-046 and the U-M5h report; `src/embodic/io/project.py`,
+`src/embodic/selftest/catalogue.py` and `tests/unit/embodic_io/project/test_project.py` on main 5e74acc, `verified` by
+reading). `save_project` takes the keyword `saved_utc`. U-M5h reported that the stub above differed from the code. This
+note and the stub are the contract row.
+
+- The signature. The stub is the signature of `project.py` l.171, copied without change. The keyword is optional and
+  keyword-only, so every earlier call stays valid. Without it, `_utc_now()` (l.138-139) formats the current UTC time to
+  the whole second as `%Y-%m-%dT%H:%M:%SZ`. A stamp that the caller passes is written as given, without a check
+  (l.181-182), and the schema only types the key as a string (`project.v1.schema.json` l.1082).
+- Why the keyword exists. `saved_utc` is a key of the file, but neither `ProjectFile` nor `LoadedDraft` has a field
+  for it, and `load_project` does not return it (a grep of `project.py` finds the name only at l.52, l.143, l.157 and
+  l.171-182). The second save of a save, load, save round trip therefore reads the clock again. When the two reads fall
+  in different seconds, the two files differ in that one key and REQ-F-15's byte-identical round trip fails. One stamp
+  passed to both saves removes the second read. U-M5h reproduced the failure with a red test (its report; not re-run
+  here, `inferred`).
+- Who passes it. A caller that compares two saves byte for byte passes one stamp to both. `UT-IO-01` does not need to,
+  because its autouse fixture replaces `_utc_now` with a fixed time (`test_project.py` l.35-37).
+  `test_ut_io_01_saved_utc_reads_the_clock_unless_the_caller_passes_a_stamp` (l.80) pins both behaviours: no keyword
+  gives the clock, and a passed stamp reaches the file. The self-test `ST-IO-ROUNDTRIP` runs in an installed build
+  without that fixture, so `_roundtrip` passes `ROUNDTRIP_SAVED_UTC = "2026-10-08T12:00:00Z"` to both saves
+  (`catalogue.py` l.43, l.191 and l.194), the time of the fixture. `checks/selftest_probe.py` copied the old save pair
+  and has the same fix (U-D15).
+- No product save passes it. The two product calls of `save_project` (`ui/viewmodels/outcome.py` l.157 and
+  `ui/viewmodels/session.py` l.709) omit the keyword, so a user's Save writes the clock. Only the self-test above passes
+  it. Two callers of `project_document`, which requires the keyword (`project.py` l.142-144), pass the export time:
+  `write_bundle` (`io/bundle.py` l.44) and the JSON project export (`ui/viewmodels/export.py` l.260-264). A grep of
+  `src` for `save_project(` and `saved_utc` finds no other call.
 
 ### 9.2 Board dump (Agent 3 format, frozen here as v1)
 
@@ -4042,7 +4109,7 @@ both.
 | S33, the Tests dialog (point 11) | The contract is §14. D-042a (`docs/decision_log.md` l.48) asks for "a test bundle in the wheel". The wheel ships no pytest tests (`package_layout.md` §5.2), so the bundle is the self-test catalogue of §14, which needs only the package. Fable records that reading or rules otherwise | Fable |
 | The entry point that opens `dlg-tests` | screens.md §13 says no toolstrip button, menu item or shortcut opens the dialog until it ships. Agent 1 names the entry (action ID, icon stem, label, shortcut) and, if wanted, a label that shows `Registry.evidence_build_id`, in screens.md §13 and §14a, before U-M5d starts. `checks/screens_coverage.py` fails on an objectName that no table defines | Agent 1, through Fable |
 | The CI matrix | `.github/workflows/ci.yml` runs Python 3.11 and 3.12 only and installs `.[dev]`, so no Qt test runs in CI. REQ-N-05 names 3.11 to 3.13 (PK-01) | U-M5b |
-| The `eqt` markers | U-M5o placed them, and D-046c fixes the rule: a test carries a registry ID only when it checks that ID's acceptance criterion as written. On main 76f054b `grep -rn "pytest.mark.eqt" tests --include=*.py` finds 48 lines (`verified`). How many of the 63 registry IDs they carry is `unresolved`: the U-M5o report counts 42, and a count by this unit that reads the arguments of every `pytest.mark.eqt(...)` call finds 37. The two are not reconciled, and U-M5f recounts | U-M5f recounts; Agent 2 reviews |
+| The `eqt` markers | U-M5o placed them, and D-046c fixes the rule: a test carries a registry ID only when it checks that ID's acceptance criterion as written. On main 76f054b `grep -rn "pytest.mark.eqt" tests --include=*.py` finds 48 lines (`verified`). How many of the 63 registry IDs they carry is `unresolved`: the U-M5o report counts 42, and a count by this unit that reads the arguments of every `pytest.mark.eqt(...)` call finds 37. The two are not reconciled, and U-M5f recounts. Revision 2026-10-13 (U-D15, claude-sonnet-5-5; main 5e74acc): U-M5f recounted. 54 of the 63 registry IDs are carried by tests (U-M5f report). This unit's static count agrees (`verified` by reading: `equation_registry.json` holds 63 IDs, and 54 appear as whole-string constants in `tests/`, which covers the markers and the parametrised `EQT_GR_BY_FN` tables). The 9 others are `EQT-14-GR`, `EQT-14-O2`, `EQT-16-GR`, `EQT-17-GR`, `EQT-19-GR`, `EQT-22-GR`, `EQT-27-GR`, `EQT-28-GR` and `EQT-29-GR`, the nine rows marked Phase 3 in `docs/phase2/engineering/eqt_map_review.md` l.229-241. The count reads test files and not the markers pytest collects, so the `--req-report` count is `not tested` here. Carried is not passed. The rule of §3.1 admits an ID only when every test that carries it passed, and the release evidence (`passed_tests.v1.json`) lists the passed ones. Which of the 54 pass is `unresolved` until a release run has written that file for a build. EQT-05-O2 and EQT-06-O2 cannot pass while OR-07 is the strict xfail F-OR07 (`test_plan.md` §5.6) | U-M5f recounted (done); the passed list comes from the release run |
 | embodic's own licence | No `LICENSE` file. `package_layout.md` §5.2 reserves the place and says "pending the user's choice". This contract chooses nothing | the user |
 
 13. Open points after U-D14 (revision 2026-10-13, claude-sonnet-5-5; main 6243163, and main 76f054b where a row says so
@@ -4160,8 +4227,16 @@ The catalogue holds the values as literals, because the wheel carries neither `d
 | ST-EX-<example_id>-HASH, 5 checks | examples | `compute(...).design_hash` of each packaged example | the pinned `EXAMPLE_HASHES` value, exact | `tests/unit/embodic_io/project/test_examples.py::test_ut_io_08_the_packaged_design_hashes_are_pinned` |
 | ST-EX-<example_id>-COMPUTES, 5 checks | examples | the outcome has an analysis and no ERROR issue | True | `test_examples.py::test_ut_io_08_example_validates_and_computes_drc_clean` (three spirals), `tests/unit/generators/serpentine/test_serpentine_example.py::test_the_example_validates_and_computes_drc_clean`, `tests/unit/ui/results/test_rail_cards.py::test_drc_card_of_the_wave_example_counts_186_failures` |
 | ST-DRC-DEFAULT-CLEAN, ST-DRC-DEFAULT-TRACE | drc | the DRC report of `spiral_12c16p_default`: `violation_count`, the `trace_trace` `measured_min_mm` | 0 exact; 0.2 mm abs. 1e-6 | `test_spiral_generate.py::test_default_example_passes_drc` |
-| ST-IO-ROUNDTRIP | export | save, load and save `spiral_12c16p_default` with `ui_state={"zoom": 1.5}` in the scratch folder | the two files are byte-identical | `tests/unit/embodic_io/project/test_project.py::test_ut_io_01_save_load_save_is_byte_identical` |
+| ST-IO-ROUNDTRIP | export | save, load and save `spiral_12c16p_default` with `ui_state={"zoom": 1.5}` in the scratch folder, both saves with `saved_utc="2026-10-08T12:00:00Z"` (revision 2026-10-13, U-D15; §9.1) | the two files are byte-identical | `tests/unit/embodic_io/project/test_project.py::test_ut_io_01_save_load_save_is_byte_identical` |
 | ST-EXP-BUNDLE | export | `write_bundle` of SVG, DXF complete, DXF outline, PDF report and project JSON to `motor.zip` with `allow_drc_errors=True` | members `README.txt`, `motor.dxf`, `motor.embodic.json`, `motor.svg`, `motor_outline.dxf`, `motor_report.pdf` | `tests/unit/embodic_io/exporters/test_report_readme_bundle.py::test_ut_exp_05_bundle_holds_selected_files_and_readme` |
+
+Revision 2026-10-13 (U-D15, claude-sonnet-5-5; main 5e74acc). `ST-IO-ROUNDTRIP` passes one `saved_utc` to both saves
+(`selftest/catalogue.py` l.43, l.191 and l.194; §9.1), as U-M5h fixed it, and `checks/selftest_probe.py` now does the
+same (`ROUNDTRIP_SAVED_UTC`). The probe on main 5e74acc printed "45 checks, 0 failed, 8.7 s for all checks" and
+exited 0 (`verified` by running it once at low priority beside Fable's release gate; the time is no budget). One run
+cannot show that the flake is gone, because the old pair failed only when its two clock reads fell in different
+seconds (U-M5h report). The fix removes the second read (`project.py` l.181), and absence of the flake over repeated
+runs is `not tested`.
 
 CF-02, CF-03, CF-05, CF-07 and CF-08 have no product test that asserts their expected value on main 7b9b4c9 (`verified`
 by grep for the case IDs and the values in `tests/unit`). They join the catalogue when U-M5o adds those tests, with the
