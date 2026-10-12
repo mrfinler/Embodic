@@ -61,3 +61,15 @@ def test_timings_lists_every_stage_that_ran_and_only_on_request(run, project_of)
         rf"^Timings \(s\): validate {stage}, geometry {stage}, drc {stage}, physics {stage}$", timed, re.MULTILINE
     )
     assert re.search(rf"^Timings \(s\): validate {stage}, geometry {stage}, physics {stage}$", no_drc, re.MULTILINE)
+
+
+@pytest.mark.req("REQ-F-18")
+def test_compute_json_is_written_when_the_drc_fails(run, project_of, tmp_path: Path) -> None:
+    """Catches a CLI that writes the JSON only for a clean run: the failure itself is what a script reads."""
+    out = tmp_path / "out.json"
+    code, _, _ = run("compute", project_of("wave_16p_example"), "--json", out)
+    document = json.loads(out.read_text(encoding="utf-8"))
+    assert code == 2
+    assert document["ok"] is False
+    assert [report["passed"] for report in document["drc"]] == [False]
+    assert document["analysis"] is not None

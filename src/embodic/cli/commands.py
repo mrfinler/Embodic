@@ -8,14 +8,20 @@ import argparse
 import json
 import sys
 import traceback
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from enum import IntEnum
 from pathlib import Path
 from typing import NoReturn
 
 from embodic.api import ComputeOptions, ComputeOutcome, compute, compute_project, outcome_to_json
 from embodic.errors import IssueCategory, Severity, ValidationIssue, message_for
+from embodic.io.bundle import write_bundle
+from embodic.io.dxf_writer import write_dxf
+from embodic.io.exporters import ExportKind, ExportRefused, ExportSummary, drc_passed, exportable_boards
 from embodic.io.project import ProjectFile, load_project, project_provenance
+from embodic.io.readme_writer import write_readme
+from embodic.io.report import write_report_pdf
+from embodic.io.svg_writer import write_svg
 from embodic.model.validate import validate_design
 from embodic.outcome import Stage
 
@@ -123,14 +129,19 @@ def _refuse(issues: Sequence[ValidationIssue]) -> ExitCode:
     return max(ExitCode.VALIDATION_ERRORS, exit_code_of_issues(issues))
 
 
+def _run(project: ProjectFile, options: ComputeOptions) -> ComputeOutcome:
+    outcome = compute(project.design, project_provenance(project), options=options)
+    assert outcome is not None, "compute without a cancel token never returns None"
+    return outcome
+
+
 def _compute(args: argparse.Namespace) -> ExitCode:
     if args.json is not None and (bad := _unwritable(args.json)) is not None:
         return _refuse((bad,))
     loaded = _load(args.project)
     if isinstance(loaded, tuple):
         return _refuse(loaded)
-    outcome = compute(loaded.design, project_provenance(loaded), options=ComputeOptions(run_drc=not args.no_drc))
-    assert outcome is not None, "compute without a cancel token never returns None"
+    outcome = _run(loaded, ComputeOptions(run_drc=not args.no_drc))
     if args.json is not None:
         args.json.write_text(
             json.dumps(outcome_to_json(outcome), indent=2, sort_keys=True, ensure_ascii=False, allow_nan=False) + "\n",
@@ -154,6 +165,73 @@ def _validate(args: argparse.Namespace) -> ExitCode:
     return code
 
 
+Written = tuple[ExportSummary, ...] | ExportRefused
+Writer = Callable[[ComputeOutcome, Path, bool], Written]
+
+
+def _one(result: ExportSummary | ExportRefused) -> Written:
+    return result if isinstance(result, ExportRefused) else (result,)
+
+
+def _bundle(outcome: ComputeOutcome, path: Path, allow_drc_errors: bool) -> Written:
+    """Bundle every file the design can produce: the screws drawing only when a board has screw holes."""
+    boards = outcome.boards.boards if outcome.boards is not None else ()
+    screws = [ExportKind.DXF_SCREWS] if any(board.outline.holes for board in boards) else []
+    kinds = [ExportKind.SVG, ExportKind.DXF_COMPLETE, ExportKind.DXF_OUTLINE, *screws]
+    kinds += [ExportKind.PROJECT_JSON, ExportKind.PDF_REPORT]
+    return write_bundle(outcome, kinds, path, allow_drc_errors=allow_drc_errors)
+
+
+WRITERS: dict[str, Writer] = {
+    "svg": lambda outcome, path, allow: _one(write_svg(outcome, path, allow_drc_errors=allow)),
+    "dxf": lambda outcome, path, allow: _one(write_dxf(outcome, path, "complete", allow_drc_errors=allow)),
+    "dxf-outline": lambda outcome, path, allow: _one(write_dxf(outcome, path, "outline", allow_drc_errors=allow)),
+    "dxf-screws": lambda outcome, path, allow: _one(write_dxf(outcome, path, "screws", allow_drc_errors=allow)),
+    "pdf": lambda outcome, path, allow: _one(write_report_pdf(outcome, path)),
+    "readme": lambda outcome, path, allow: (write_readme(outcome, (), path),),
+    "bundle": _bundle,
+}
+REFUSAL_EXIT: dict[str, ExitCode] = {
+    "drc_errors_not_confirmed": ExitCode.DRC_ERRORS,
+    "no_layout": ExitCode.VALIDATION_ERRORS,
+    "no_screws": ExitCode.VALIDATION_ERRORS,
+}
+
+
+def _refused(refusal: ExportRefused) -> ExitCode:
+    _print_issues(refusal.issues)
+    if refusal.reason == "drc_errors_not_confirmed":
+        _print_issues((_issue("DRC_CLI_EXPORT_REFUSED", IssueCategory.DRC),))
+    return REFUSAL_EXIT[refusal.reason]
+
+
+def _export(args: argparse.Namespace) -> ExitCode:
+    if (bad := _unwritable(args.output)) is not None:
+        return _refuse((bad,))
+    loaded = _load(args.project)
+    if isinstance(loaded, tuple):
+        return _refuse(loaded)
+    outcome = _run(loaded, ComputeOptions())
+    _print_issues(outcome.issues)
+    if (code := exit_code_of_issues(outcome.issues)) is not ExitCode.OK:
+        return code
+    # The same gate for every format, as the export dialog applies it: the PDF writer alone would not refuse.
+    gate = exportable_boards(outcome, allow_drc_errors=args.allow_drc_errors)
+    if isinstance(gate, ExportRefused):
+        return _refused(gate)
+    written = WRITERS[args.format](outcome, args.output, args.allow_drc_errors)
+    if isinstance(written, ExportRefused):
+        return _refused(written)
+    print(f"Wrote {args.output}")
+    if len(written) > 1:
+        print(f"  holds {', '.join(summary.path.name for summary in written)}")
+    if not drc_passed(outcome):
+        violations = sum(report.violation_count for report in outcome.drc or ())
+        warning = _issue("DRC_CLI_EXPORT_FORCED", IssueCategory.DRC, violations, severity=Severity.WARNING)
+        _print_issues((warning,))
+    return ExitCode.OK
+
+
 class _Parser(argparse.ArgumentParser):
     """argparse exits with 2 on a usage error, which is the DRC code here; a usage error is a validation error."""
 
@@ -175,6 +253,14 @@ def _parser() -> argparse.ArgumentParser:
     validate_parser = commands.add_parser("validate", help="check the design against its rules and build nothing")
     validate_parser.add_argument("project", type=Path, help="project file (.embodic.json)")
     validate_parser.set_defaults(handler=_validate)
+    export_parser = commands.add_parser("export", help="write a drawing, a report or a bundle of files")
+    export_parser.add_argument("project", type=Path, help="project file (.embodic.json)")
+    export_parser.add_argument("--format", required=True, choices=list(WRITERS), help="what to write")
+    export_parser.add_argument("-o", "--output", required=True, type=Path, metavar="PATH", help="file to write")
+    export_parser.add_argument(
+        "--allow-drc-errors", action="store_true", help="write the files although the design rule check failed"
+    )
+    export_parser.set_defaults(handler=_export)
     return parser
 
 
