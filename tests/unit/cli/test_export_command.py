@@ -39,7 +39,8 @@ def test_every_format_of_every_example_is_written_and_readable(run, project_of, 
     name = f"motor.{fmt}"
     out = tmp_path / name
     holes = HOLES.get(example_id, 0)
-    code, stdout, stderr = export(run, project_of(example_id), fmt, out, "--allow-drc-errors")
+    confirm = ("--allow-drc-errors",) if example_id == WAVE else ()
+    code, stdout, stderr = export(run, project_of(example_id), fmt, out, *confirm)
     if fmt == "dxf-screws" and holes == 0:
         assert (code, out.exists()) == (1, False)
         assert "error INVALID_EXPORT_NO_SCREW_HOLES:" in stderr

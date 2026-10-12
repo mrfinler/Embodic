@@ -1,7 +1,9 @@
 """The command line itself (REQ-F-18): usage errors, output paths and the process entry points."""
 
+import importlib
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -79,3 +81,13 @@ def test_module_entry_point_returns_the_exit_code_to_the_shell(project_of) -> No
         [sys.executable, "-m", "embodic.cli", "compute", str(wave)], capture_output=True, check=False
     )
     assert result.returncode == 2
+
+
+@pytest.mark.req("REQ-F-18")
+def test_the_console_script_points_at_main() -> None:
+    """Catches an entry-point typo that only fails after `pip install`: the script must name an importable `main`."""
+    pyproject = Path(__file__).resolve().parents[3] / "pyproject.toml"
+    target = tomllib.loads(pyproject.read_text(encoding="utf-8"))["project"]["scripts"]["embodic-cli"]
+    module, _, attribute = target.partition(":")
+    assert (module, attribute) == ("embodic.cli", "main")
+    assert callable(getattr(importlib.import_module(module), attribute))
