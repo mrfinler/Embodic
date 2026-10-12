@@ -91,6 +91,8 @@ def test_pr_03_every_built_path_is_continuous(design: DesignParameters) -> None:
 @example(draft=cf11_draft_with({"/operating/winding_temperature_degc": 3}))
 @example(draft=cf11_draft_with({"/vias/plating_um": 5e-324}))
 @example(draft=cf11_draft_with({"/outline/bore/radius_mm": 1e300}))
+# Release run on 10c6411 (nightly profile): an empty harmonic list reached physics and raised IndexError.
+@example(draft=cf11_draft_with({"/analysis/harmonics": []}))
 def test_pr_05_arbitrary_values_never_raise_and_invalid_values_return_issues(draft: Any) -> None:
     """PR-05 (exception part). Catches an uncaught exception or an invalid input that returns no issue."""
     parsed = parse_draft(draft)
