@@ -309,8 +309,8 @@ Tool options:
 
 | Tool | What it solves | Licence | Source | Status |
 |---|---|---|---|---|
-| FEMM 4.2 | 2-D planar and axisymmetric magnetics, Windows | Aladdin Free Public License | EV-109 | verified (extract) |
-| Elmer FEM | multiphysics incl. electromagnetics, 2-D and 3-D | GPL v2 for ElmerGUI, ElmerGrid and most solver modules; LGPL for the ElmerSolver library | EV-110 | verified (extract) |
+| FEMM 4.2 | 2-D planar and axisymmetric magnetics, Windows | Aladdin Free Public License | EV-115 | verified (extract) |
+| Elmer FEM | multiphysics incl. electromagnetics, 2-D and 3-D | GPL v2 for ElmerGUI, ElmerGrid and most solver modules; LGPL for the ElmerSolver library | EV-116 | verified (extract) |
 
 FEMM fits OR-11 (2-D section) and OR-12 (planar time-harmonic). It runs on the user's Windows PC (UD-27 is still open).
 Elmer is the only option above for the 3-D edge-leakage case. Neither tool may be bundled or linked from embodic

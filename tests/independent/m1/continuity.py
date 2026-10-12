@@ -28,3 +28,13 @@ def first_gap(path: Sequence[Prim], tol_mm: float = CONTINUITY_TOL_MM) -> Gap | 
         if not distance <= tol_mm:
             return Gap(index, end, nxt, distance)
     return None
+
+
+def chains(path: Sequence[Prim], tol_mm: float = CONTINUITY_TOL_MM) -> list[range]:
+    """Split an ordered path at every joint wider than ``tol_mm``: the index range of each continuous run, in order."""
+    runs, start = [], 0
+    while (gap := first_gap(path[start:], tol_mm)) is not None:
+        runs.append(range(start, start + gap.index + 1))
+        start += gap.index + 1
+    runs.append(range(start, len(path)))
+    return runs

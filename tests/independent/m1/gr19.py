@@ -6,6 +6,11 @@ Two universes come from each dump. ``as_mapped`` keeps every net the dump states
 ``intended`` gives each via the net of the copper of its own phase (Xcoil via ``phase`` read from the raw layout), so a
 mapper that renames via nets (DEF-M1c-01) cannot also move the expected exemptions. Interconnect path ids come from
 ``Layout.circuit.interconnect_path_ids``.
+
+U-M1b's mapper makes one CopperPath per Xcoil object. Xcoil's star item holds the neutral ring and its stubs in one
+``ic`` object that is not a chain (interfaces.md section 7, D-035b), while a CopperPath is one continuous chain
+(section 5). ``split_interconnect_chains`` therefore hands the mapper one ``ic`` object per continuous chain, as
+embodic's own serpentine and wave ports split the star item (DEF-M1V-03).
 """
 
 import importlib.util
@@ -18,6 +23,7 @@ from typing import Any
 
 from board_dump_reader import BoardDump, parse_board_dump
 from brute_clearance import Verdict
+from continuity import chains, first_gap
 from drc_universe import Cls, Item, PairResult, Rule, contract_exemptions, sweep
 from records import Arc, Line, Prim, disc
 
@@ -45,10 +51,27 @@ def load_mapper() -> Any:
     return module
 
 
-def _outline_prim(rec: dict[str, Any]) -> Prim:
+def _centreline(rec: dict[str, Any]) -> Prim:
+    """Xcoil record to a zero-width primitive: an outline edge, or the geometry of a copper record."""
     if rec["type"] == "line":
         return Line(rec["x1"], rec["y1"], rec["x2"], rec["y2"], 0.0)
     return Arc(rec["cx"], rec["cy"], rec["r"], rec["a1"], rec["a2"] - rec["a1"], 0.0)
+
+
+def _split(obj: dict[str, Any]) -> list[dict[str, Any]]:
+    if obj["kind"] != "ic":
+        return [obj]
+    runs = chains([_centreline(rec) for rec in obj["prims"]])
+    return [{**obj, "prims": obj["prims"][run.start : run.stop]} for run in runs]
+
+
+def split_interconnect_chains(raw: dict[str, Any]) -> dict[str, Any]:
+    """Return ``raw`` with each ``ic`` object replaced by one object per chain; joints wider than CONTINUITY_TOL_MM cut.
+
+    Primitive order, every other object and every other field stay as Xcoil returned them.
+    """
+    layers = [{**layer, "objs": [o for obj in layer["objs"] for o in _split(obj)]} for layer in raw["layers"]]
+    return {**raw, "layers": layers}
 
 
 def universe(dump: BoardDump, raw: dict[str, Any], *, intended: bool) -> list[Item]:
@@ -68,14 +91,14 @@ def universe(dump: BoardDump, raw: dict[str, Any], *, intended: bool) -> list[It
     outline = dump.raw["outline"]
     loops = [("outer", outline["board"])] + [(f"cutout{c}", loop) for c, loop in enumerate(outline["cutouts"])]
     for name, loop in loops:
-        items += [Item(f"edge:{name}/prim:{k}", Cls.EDGE, _outline_prim(r), None) for k, r in enumerate(loop)]
+        items += [Item(f"edge:{name}/prim:{k}", Cls.EDGE, _centreline(r), None) for k, r in enumerate(loop)]
     items += [Item(f"hole:{i}", Cls.HOLE, disc(h["x"], h["y"], h["dia"]), None) for i, h in enumerate(outline["holes"])]
     return items
 
 
 @dataclass(frozen=True, slots=True)
 class Board:
-    """One GR-19 case: the mapped Layout, its parsed dump, both universes and the interconnect path ids."""
+    """One GR-19 case: raw Xcoil output, the Layout of its split form, the dump, universes, interconnect ids."""
 
     case_id: str
     raw: dict[str, Any]
@@ -93,7 +116,7 @@ def boards() -> list[Board]:
 
     out = []
     for case_id, raw in load_cases().items():
-        layout = mapper.layout_from_xcoil(raw)
+        layout = mapper.layout_from_xcoil(split_interconnect_chains(raw))
         dump = parse_board_dump(json.loads(encode_board_dump(dump_layout(layout, case_id=case_id))))
         out.append(
             Board(case_id, raw, layout, dump, universe(dump, raw, intended=False), universe(dump, raw, intended=True),
@@ -129,19 +152,37 @@ def classify(board: Board, engine: dict[frozenset[str], tuple[str, float]], rule
     return classes
 
 
+def object_gaps_mm(raw: dict[str, Any]) -> dict[int, float]:
+    """Xcoil object index (U-M1b's path id) -> its first joint gap, for every object that is not one chain."""
+    objs = [obj for layer in raw["layers"] for obj in layer["objs"]]
+    gaps = {i: first_gap([_centreline(rec) for rec in obj["prims"]]) for i, obj in enumerate(objs)}
+    return {i: round(gap.distance_mm, 6) for i, gap in gaps.items() if gap is not None}
+
+
 def main() -> int:
-    """Print the per-layout violation table."""
+    """Print the per-layout violation table, then what U-M1b's unsplit mapping gives instead."""
     from embodic_adapter import pair_violations, uniform_rules
 
     from embodic.drc import run_drc
 
+    mapper = load_mapper()
     for board in boards():
         rule = board.raw["params"]["clearance"]
         report = run_drc(board.layout, uniform_rules(rule))
         assert report is not None
-        print(f"{board.case_id}: run_drc violation_count={report.violation_count}")
+        print(f"{board.case_id}: run_drc violation_count={report.violation_count}, paths={len(board.layout.paths)}")
         for name, count in sorted(classify(board, pair_violations(report), rule).items()):
             print(f"  {count:5d}  {name}")
+        unsplit = mapper.layout_from_xcoil(board.raw)
+        unsplit_report = run_drc(unsplit, uniform_rules(rule))
+        assert unsplit_report is not None
+        gaps = object_gaps_mm(board.raw)
+        on_gapped = sorted(
+            sorted(key) for key in pair_violations(unsplit_report)
+            if any(label.startswith("path:") and int(label[5:].split("/")[0]) in gaps for label in key)
+        )  # fmt: skip
+        print(f"  U-M1b unsplit: paths={len(unsplit.paths)}, gaps {gaps}, run_drc violation_count="
+              f"{unsplit_report.violation_count}, pairs on a gapped object {on_gapped}")  # fmt: skip
     return 0
 
 

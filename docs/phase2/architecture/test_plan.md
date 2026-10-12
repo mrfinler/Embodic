@@ -73,6 +73,12 @@ hashes). §5.3.1 is new and says which tests under `tests/ui/qt_e2e/` cover AX-0
 that UI-20 has no test, and that `.claude/skills/verify/verify.py --acceptance` is the UI verification entry point. §5.6
 now lists six strict xfails: the four of AX-04 and the two of DEF-M1V-03. The two UX-AC-03 marks are gone. No ID is new.
 
+Revision 2026-10-12 (U-D13, claude-opus-5-5, D-034, D-042a; main 7b9b4c9 read for every item, and
+`checks/selftest_probe.py` run). §5.7 is new: UT-RES-08, UT-RES-09, TR-05 and PK-10 for the evidence of passing tests,
+UT-SLF-01 to UT-SLF-03, UT-CLI-03, UI-35 and PK-11 for the self-tests and the Tests dialog, and the split of the PK tests
+between this container and the Windows CI matrix. §7 names the new IDs in the M5 exit. PK-09 stays withdrawn, so the new
+packaging IDs start at PK-10.
+
 ## 1. What changed and why
 
 | Change | Reason |
@@ -388,6 +394,46 @@ split `pair-list` out of `layer-list` and cut the screw table to three columns
 `test_ruling_c_the_screw_table_has_three_columns_and_the_selected_pattern_its_own_fields`, `test_inspector_widgets.py`
 l.112). The fifth is the title case above.
 
+### 5.7 M5 tests: test evidence, self-tests and packaging (revision 2026-10-12, U-D13)
+
+Each new contract point of interfaces.md §3.1, §12 and §14 and package_layout.md §5.2 has one ID here. The `req`
+marker each test carries is in the second column; the requirements' Tests column lists the same IDs.
+
+| ID | Check (REQ marker) | Criterion |
+|---|---|---|
+| UT-RES-08 | Evidence reader (REQ-T-05), U-M5b | `load_registry(root)` on a temporary copy of `resources/` plus a written `passed_tests.v1.json` whose versions and `source_sha256` match returns `passed_tests` equal to the file's list and `evidence_build_id` equal to its `build_id`. Each of these gives `frozenset()`, `evidence_build_id` None, no exception and no issue added to `Registry.issues`: no file; a file that is not JSON; `format` other than `"embodic.passed-tests"`; `format_version` 2; a missing key; `passed_tests` not a list of strings; `embodic_version` changed; `registry_version` changed; `source_sha256` changed. `evidence_applies(..., source_sha256=None)` ignores only the source hash. `package_source_sha256` changes when one byte of one `.py` file changes and returns None for a folder without `.py` files |
+| UT-RES-09 | Badge change from the evidence (REQ-T-05), U-M5b | with evidence that lists every linked test of EQ-10 and of EQ-05: a result whose chain is EQ-10 alone has badge `verified`, and `test_state("EQ-10")` is `verified`; a result whose chain holds EQ-05 has badge `inferred` and `test_state("EQ-05")` is `inferred`; an EQ-14 chain (`cannot verify yet`) stays `unresolved`; a result with an empty chain stays `not tested`; the assumed-inputs tag, the validity flags and the value are equal to the same result computed without evidence. With evidence that lists all but one linked test of EQ-10, the EQ-10 result stays `not tested` |
+| TR-05 | Evidence writer (REQ-T-05), U-M5b | on fixture REQ reports, `passed_registry_tests` passes an ID only when at least one record carries it and every carrying record passed; one skipped carrier keeps it out; an unknown eqt ID raises ValueError. `record_main` exits 1 and writes nothing for `--profile commit`, a missing report, a report with one failed record, or an unknown ID. On a valid report it writes a file that `parse_passed_tests` reads back with the same `passed_tests`, sorted keys, a `platform` value equal to `platform.platform()` and no key or value that holds `platform.node()` or the home folder path |
+| PK-10 | Evidence in the wheel (REQ-N-06, REQ-T-05), U-M5b; runs after the record step | `tools/ci.py --profile release` deletes the evidence file first; when every gate passed it writes it, builds the wheel, and `tests/packaging/evidence/` checks that `embodic/_resources/evidence/passed_tests.v1.json` in the wheel is byte-identical to the recorded file and that a clean venv with the wheel installed reports a non-empty `load_registry().passed_tests`. A release run with one red gate leaves no evidence file |
+| PK-11 | Self-test from the installed wheel (REQ-N-06), U-M5d | in a clean venv holding only the runtime lock file and the wheel (no pytest, no `tests/`, no `docs/`), `embodic-cli selftest` exits 0 and prints "45 tests: 45 passed, 0 failed" |
+| UT-SLF-01 | The catalogue holds on the build (REQ-F-25), U-M5d | `run_selftests(SELFTESTS)` returns 45 results in catalogue order, every one `passed`; the IDs are unique and equal the ID list of interfaces.md §14 |
+| UT-SLF-02 | Catalogue drift (REQ-F-25), U-M5d | the CF-09 literals equal the CF-09 rows of `docs/phase2/engineering/oracle_cases.json`; the hash literals equal `EXAMPLE_HASHES` of `tests/unit/embodic_io/project/test_examples.py`; every `source_test` names a file that exists and a `def` of that name in it |
+| UT-SLF-03 | Runner behaviour (REQ-F-25), U-M5d | with fake checks: a value outside tolerance gives `failed` with a message that names the expected value, the observed value and the tolerance; a `measure` that raises gives `failed` with the exception type and text, and the next check still runs; a token cancelled from `on_result` after the first result leaves every later check `not run` and `cancelled` True; `ok` is False for any failure or any `not run`; `selftest_to_json` round-trips through `json.loads` |
+| UT-CLI-03 | `embodic-cli selftest` (REQ-F-18), U-M5d | one line per check and the summary line; exit 0 when every check passed; exit 1 with the catalogue monkeypatched to hold one failing check, and that check's line names it; `--json OUT` writes the `selftest_to_json` document |
+| UI-35 | Tests dialog (REQ-F-25), U-M5d, pytest-qt offscreen | `btn-tests-run` starts the run in a worker thread (the measure functions run on a thread other than the GUI thread); `tests-table` gains one row per result with ID, group, the result icon and its word, duration and message; `tests-summary` reads "45 tests: 45 passed, 0 failed"; Esc and **Stop** cancel, and the remaining rows read `not run`; a second run starts from an empty table; no badge in the results view changes during or after a run |
+
+Where each packaging test runs. This container is Linux x86-64 with CPython 3.10 to 3.13 in `/usr/bin` and uv
+0.8.17 (`verified` by listing, 2026-10-12). `unshare -rn` gives a process with no network (`verified`: a socket connect
+returned 101, network unreachable). Anything that needs Windows is `not tested` here. The route for it is
+`.github/workflows/ci.yml` with `workflow_dispatch` and the profile `release`, run by Fable. Nothing is published
+without the user's approval.
+
+| ID | Here (Linux container) | Needs Windows or the CI matrix | Owner |
+|---|---|---|---|
+| PK-01 | the Linux cells for 3.11, 3.12 and 3.13, with `tools/ci.py --profile commit` in one venv per version | the Windows cells. `ci.yml` lacks 3.13 and installs `.[dev]` only (interfaces.md §13 point 12) | U-M5b |
+| PK-02 | yes: a clean venv per Python version installs from `requirements/py3xx.txt` with `--require-hashes`, then the wheel with `--no-deps` | the Windows resolve of the same files | U-M5b |
+| PK-03 | yes: two wheel builds give the same member list and the same SHA-256 per `.py` member. The evidence file differs in `generated_utc` and `build_id`, and the criterion does not compare it | none | U-M5b |
+| PK-04 | no: it compares Windows JSON with Linux JSON (1e-9 rel.) | yes; `not tested` here | U-M5b sets it up, CI runs it |
+| PK-05 | no: the bundle smoke test (start, compute the default example, export SVG) needs the Windows folder | yes; `not tested` here. A Linux one-folder build may run as a smoke of the spec only, labelled as such | U-M5c |
+| PK-06 | yes, on Linux: Agent 4 follows README.md from a clean venv and times each step to a first computed example | the timed walkthrough on a clean Windows machine (REQ-N-07 acceptance), Agent 4 or the user; `not tested` here | U-V5 |
+| PK-07 | yes: `unshare -rn python tools/ci.py --profile commit` passes; a static test finds no `socket`, `http.client` or `urllib.request` import in `src` | none | U-M5b |
+| PK-08 | yes: the runtime closure read with `importlib.metadata` (numpy, PySide6-Essentials, shiboken6) matches the licences of §5 of `package_layout.md`; `THIRD_PARTY_LICENSES.md` has one section per runtime dependency and bundled font and the LGPL-3.0 and GPL-3.0 texts; the wheel listing shows it under `dist-info/licenses/`. pip-audit is not a dependency (§5 needs Fable's approval to add one), so the audit part is `not tested` | none | U-M5b |
+| PK-10, PK-11 | yes | none | U-M5b, U-M5d |
+
+Performance (PF-01 to PF-05, Phase 1 rows and §5.4) run in the release profile on this container and write
+`tests/performance/baseline.json` with the machine data of `package_layout.md` §5.2. A number measured here describes a
+2-CPU container and is no target for the user's laptop.
+
 ## 6. Withdrawn tests
 
 <!-- withdrawn-tests:start -->
@@ -406,7 +452,7 @@ default design at start (D-014). AX-07 tested the web option (D-010).
 | M2 | all UT-GEO, UT-WND, UT-PHY, UT-RES, UT-MOD, UT-IO, UT-GEN-01/02, GR-01 to GR-16, OR tests (pass or documented `xfail`), PR-01 to PR-12, BV, TR-01 to TR-04 |
 | M3 | GR-20 to GR-23, UT-GEN-03/04/05, PR-13, PR-14, and every M2 gate still green |
 | M4 | UI, AX, LG, UT-EXP, UT-SES tests; Agent 4 U-V4 independent export parsing |
-| M5 | UT-CLI, PF (baseline recorded), PK-01 to PK-08, PK-06 walkthrough |
+| M5 | UT-CLI, PF (baseline recorded), PK-01 to PK-08, PK-06 walkthrough; from revision 2026-10-12 (U-D13) also UT-RES-08, UT-RES-09, TR-05, PK-10, PK-11, UT-SLF-01 to UT-SLF-03 and UI-35. PK-01, PK-04, PK-05 and the Windows half of PK-06 count only from a Windows run (§5.7); until then they are `not tested` |
 
 ## 8. Requirements-to-tests matrix
 
@@ -434,14 +480,14 @@ the owner packages of `interfaces.md`.
 | REQ-F-15 | amended | must | M2 | embodic.io | UT-IO-01, UT-IO-02, UT-IO-03, UT-IO-04, UT-IO-07, PR-08 |
 | REQ-F-16 | amended | must | M4 | embodic.io | UT-EXP-01, UT-EXP-02, UT-EXP-03, UT-EXP-04, UT-IO-06 |
 | REQ-F-17 | carried | could | M4 | embodic.ui.views | UI-10 |
-| REQ-F-18 | amended | must | M5 | embodic.cli | UT-CLI-01, UT-CLI-02 |
+| REQ-F-18 | amended | must | M5 | embodic.cli | UT-CLI-01, UT-CLI-02, UT-CLI-03 |
 | REQ-F-19 | amended | must | M2 | embodic.generators | UT-GEO-20, UT-GEN-01, UT-GEN-02, MT-01 |
 | REQ-F-20 | carried | could | M2 | embodic.physics | UI-07, UT-RES-02, UT-PHY-23 |
 | REQ-F-21 | amended | must | M4 | embodic.ui.viewmodels | UI-22, UI-23, PR-12 |
 | REQ-F-22 | amended | should | M4 | embodic.ui.viewmodels | UI-11, UT-SES-02 |
 | REQ-F-23 | carried | must | M4 | embodic.ui.viewmodels | UI-15 |
 | REQ-F-24 | amended | should | M2 | embodic.geometry | UT-GEO-21 |
-| REQ-F-25 | amended | should | M4 | resources/examples | UI-16, UT-IO-08 |
+| REQ-F-25 | amended | should | M4 | resources/examples | UI-16, UT-IO-08, UT-SLF-01, UT-SLF-02, UT-SLF-03, UI-35 |
 | REQ-F-26 | carried | should | M4 | embodic.ui.views | UI-17 |
 | REQ-F-27 | carried | should | M4 | embodic.ui.viewmodels | UI-18 |
 | REQ-F-28 | carried | should | M4 | embodic.ui.views | UI-19 |
@@ -487,7 +533,7 @@ the owner packages of `interfaces.md`.
 | REQ-N-03 | carried | should | M5 | embodic.api | PF-02 |
 | REQ-N-04 | carried | must | M2 | embodic.physics | PR-09, PK-04, MT-06 |
 | REQ-N-05 | carried | must | M5 | pyproject.toml | PK-01, PK-02 |
-| REQ-N-06 | amended | must | M5 | pyproject.toml | PK-03, PK-05 |
+| REQ-N-06 | amended | must | M5 | pyproject.toml | PK-03, PK-05, PK-10, PK-11 |
 | REQ-N-07 | amended | must | M5 | docs | PK-06 |
 | REQ-N-08 | amended | must | M1 | pyproject.toml | MT-01, MT-02, MT-03 |
 | REQ-N-09 | carried | must | M2 | embodic.physics | MT-04 |
@@ -514,7 +560,7 @@ the owner packages of `interfaces.md`.
 | REQ-T-02 | carried | must | M2 | embodic.results | UT-RES-01 |
 | REQ-T-03 | carried | must | M2 | embodic.results | UT-RES-02, UT-RES-05 |
 | REQ-T-04 | carried | must | M2 | embodic.results | UT-RES-03, TR-04 |
-| REQ-T-05 | carried | must | M2 | embodic.results | TR-03, UT-RES-02 |
+| REQ-T-05 | carried | must | M2 | embodic.results | TR-03, UT-RES-02, UT-RES-08, UT-RES-09, TR-05 |
 | REQ-T-06 | amended | must | M2 | embodic.model | UT-RES-06, UT-MOD-05 |
 | REQ-T-07 | amended | must | M4 | embodic.io | UT-IO-06 |
 | REQ-T-08 | amended | must | M2 | embodic.physics | UT-PHY-13, UT-PHY-21 |

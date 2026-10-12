@@ -80,6 +80,13 @@ D-041b, the design name that equals the title, with the five moved design hashes
 the PDF (ruling f). §11 adds the screw push buttons (ruling i), the stretched last column (ruling j) and the provenance
 property of the pair-list chip (F2). §13 closes the open rows of point 10 and adds point 11.
 
+Revision 2026-10-12 (U-D13, claude-opus-5-5, D-007, D-023, D-034, D-042a; the code on main 7b9b4c9 was read for every
+item, and `checks/selftest_probe.py` ran every self-test check against it). §3 corrects the `passed_tests` comment, adds
+`Registry.tests_passed` as implemented and `Registry.evidence_build_id`. The new §3.1 is the contract for the evidence
+of passing tests: the file `resources/evidence/passed_tests.v1.json`, its writer `tools/record_passed_tests.py`, the
+`eqt` test marker, the staleness rule and the badge changes. §12 adds `embodic-cli selftest`. The new §14 is the
+contract for `embodic.selftest` and the Tests dialog. §13 adds point 12.
+
 ## 0. Rules for every public boundary
 
 - Lengths are millimetres (`_mm`), angles radians (`_rad`) inside the core, temperature °C (`_degc`), current A (`_a`),
@@ -1173,16 +1180,22 @@ class Registry:
     version: str
     equations: Mapping[str, EquationEntry]
     evidence: Mapping[str, EvidenceEntry]
-    passed_tests: frozenset[str]  # test IDs that passed in this build (tests/results.json); empty in a fresh install
+    passed_tests: frozenset[str]  # registry test IDs (EQT-nn-kind) that passed in this build (§3.1); empty without evidence
+    issues: tuple[ValidationIssue, ...] = ()
+    evidence_build_id: str | None = None  # PassedTestsEvidence.build_id when the evidence applies (§3.1), else None
 
     def equation(self, eq_id: str) -> EquationEntry: ...
     def constant(self, name: str) -> RegistryConstant: ...
+    def tests_passed(self, eq_id: str) -> bool:
+        """True when the equation links at least one test and every linked test is in passed_tests (registry.py l.143)."""
     def test_state(self, eq_id: str) -> Status:
         """NOT_TESTED until every linked test passed in this build, else the equation status."""
 
 
 def load_registry(root: Path | None = None) -> Registry:
-    """Reads resources/evidence/equations.v1.json and evidence.v1.json (packaged copies, tools/sync_registry.py)."""
+    """Reads resources/evidence/equations.v1.json and evidence.v1.json (packaged copies, tools/sync_registry.py), then
+    passed_tests.v1.json when it exists and applies (§3.1). A missing, unreadable, malformed or stale evidence file gives
+    an empty passed_tests and evidence_build_id None; it never raises and adds no issue."""
 
 
 def combine_status(*statuses: Status) -> Status: ...
@@ -1353,6 +1366,149 @@ per-module allowance in LG-01.
   the character in `embodic.results.formatting`, where it passes, and in `embodic.errors`, where the message names U+00A0.
 - The unit tests expect the character: the `CASES` of `tests/unit/results/test_formatting.py` write `"1.00\u00a0kΩ"`,
   `"500\u00a0mΩ"` and the like, and `test_formatting_engineering_text` (l.44) compares against them.
+
+### 3.1 Evidence of passing tests (revision 2026-10-12, U-D13; D-007, D-023, D-034)
+
+The gap. `parse_registry` builds every `Registry` with `passed_tests=frozenset()` (`results/registry.py` l.185), and
+`load_registry` (l.157) returns that registry unchanged. `Registry.tests_passed` (l.143) is therefore False for every
+equation, `_link` passes False into `ChainLink.tests_passed` (`results/traceable.py` l.231 to l.234), and `derive_badge` adds
+`not tested` for every link (`results/status.py` l.118 to l.120). Every computed result of an installed build reads
+`not tested`, and the equation guide shows `not tested` in its "Test state in this build" row
+(`ui/viewmodels/results.py` l.734). All of this is `verified` by reading main 7b9b4c9.
+
+What a registry test ID is. The registry links test IDs of the form `EQT-<nn>-<kind>` to each equation
+(`resources/evidence/equations.v1.json`, 63 distinct IDs over 30 equations, `verified` by counting; the kinds GR, CFxx, O1, O2, EC and UTk are defined in
+`docs/phase2/engineering/equation_specification.md` l.27). No pytest test names an EQT ID on main 7b9b4c9 (`verified` by
+grep. In `tests/` the string occurs only in `tests/unit/results/test_registry.py`, which checks the ID format). A pytest
+node ID and a registry test ID are different things, so the build needs a declared link between them before any
+evidence can exist.
+
+The link. A test that realises a registry test ID carries the marker `@pytest.mark.eqt("EQT-05-CF01", ...)`.
+`tests/conftest.py` registers the marker beside `req` and `eq` (`MARKERS`, l.10), and `ReqReport` writes a sorted `"eqt"`
+list into each record of `build/req_report.json` (l.53 to l.58). `tools/trace_matrix.py` reads only `nodeid`, `req` and
+`outcome` (`parse_report`, l.56), so the extra key changes nothing there. U-M5o places the markers (`work_breakdown.md`
+§8), and Agent 2 reviews the mapping. A registry test ID that no test carries never passes, so its equation keeps the
+badge `not tested`, which is what D-007 asks for an untested equation.
+
+The file. `resources/evidence/passed_tests.v1.json` is a build product. It is git-ignored and never committed. The wheel
+carries it as `embodic/_resources/evidence/passed_tests.v1.json`, because hatchling's `force-include` copies a
+git-ignored file under `resources/` (`verified` by building a wheel and an sdist from a scratch copy of main 7b9b4c9 with
+the file present and its path in `.gitignore`, U-D13). The sdist leaves it out (same build), so a wheel built from the
+sdist reads `not tested`. That is correct, because no gate ran on that build. The file is one JSON object with sorted
+keys:
+
+| Key | Type | Value |
+|---|---|---|
+| `format` | string | `"embodic.passed-tests"` |
+| `format_version` | integer | `1` |
+| `build_id` | string | `<embodic_version>+g<first 12 hex digits of git_commit>.<generated_utc as YYYYMMDDThhmmssZ>` |
+| `embodic_version` | string | `embodic.__version__` of the tested tree (`src/embodic/__init__.py` l.3) |
+| `registry_version` | string | `Registry.version` of the tested tree (`v1+<12 hex>.<12 hex>`, `registry.py` l.165) |
+| `source_sha256` | string | `package_source_sha256` of `src/embodic` (below), 64 hex digits |
+| `git_commit` | string | the 40 hex digits of `git rev-parse HEAD` |
+| `git_dirty` | boolean | true when `git status --porcelain` prints anything |
+| `python`, `numpy` | string | `platform.python_version()` and `numpy.__version__` of the gate run (as in `VersionInfo`) |
+| `platform` | string | `platform.platform()`. Never `platform.node()`, a user name or a home path (standing order 7) |
+| `generated_utc` | string | ISO 8601 UTC time ending in `Z` |
+| `gate_profile` | string | `"release"`, the only profile that writes the file |
+| `passed_tests` | array of strings | the sorted registry test IDs that passed |
+| `realised_by` | object | for each ID in `passed_tests`, the sorted pytest node IDs that carried it |
+
+The writer. `tools/record_passed_tests.py` (new, U-M5b) is pure functions and one `main`:
+
+```python
+# tools/record_passed_tests.py (U-M5b): reads the REQ report of one gate run and writes the evidence file or nothing.
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ReportRecord:
+    nodeid: str
+    outcome: str  # "passed", "failed", "skipped" or "not run" (tests/conftest.py ReqReport)
+    eqt: tuple[str, ...]
+
+
+def passed_registry_tests(records: Sequence[ReportRecord], registry_test_ids: frozenset[str]
+                          ) -> tuple[frozenset[str], Mapping[str, tuple[str, ...]]]:
+    """An ID passes when at least one record carries it and every record that carries it has outcome "passed".
+    A skipped, xfailed (the report says "skipped"), failed or not-run record keeps its IDs out. Raises ValueError for an
+    eqt ID that registry_test_ids does not hold, because a typo would otherwise never match and hide."""
+
+
+def record_main(argv: Sequence[str] | None = None) -> int:
+    """record_passed_tests.py --report build/req_report.json --profile release --out resources/evidence/passed_tests.v1.json
+    Exit 1 and write nothing when the profile is not release, the report is missing, any record has outcome "failed",
+    or an eqt ID is unknown. Otherwise write the file with the keys above and print one line: how many registry test
+    IDs passed, of how many, and how many no test carries."""
+```
+
+Who runs it. `python tools/ci.py --profile release` deletes `resources/evidence/passed_tests.v1.json` before its first
+gate, so a red run never leaves the file of an earlier build. It then runs every gate as today. When every gate passed,
+it runs the record step as one more gate, "passed-test evidence (TR-05)", followed by the PK-10 step, which builds the
+wheel and checks the file inside it (`test_plan.md` §5.7). The commit and nightly profiles neither write nor delete the
+file. The report path stays `build/req_report.json` (`tools/ci.py` `gates_for`, l.50 and l.53).
+
+The reader. `embodic.results.registry` gains the names below. `load_registry` calls them after `parse_registry`.
+`parse_registry` stays pure and unchanged, so the fixtures of `tests/unit/results/registries.py` keep working.
+
+```python
+PASSED_TESTS_FILE = "passed_tests.v1.json"
+PASSED_TESTS_FORMAT = "embodic.passed-tests"
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class PassedTestsEvidence:
+    build_id: str
+    embodic_version: str
+    registry_version: str
+    source_sha256: str
+    git_commit: str
+    git_dirty: bool
+    python: str
+    numpy: str
+    platform: str
+    generated_utc: str
+    gate_profile: str
+    passed_tests: frozenset[str]
+    realised_by: Mapping[str, tuple[str, ...]]
+
+
+def parse_passed_tests(document: object) -> PassedTestsEvidence | None:
+    """The boundary parser: None for a wrong format or version, a missing key or a value of the wrong type. Never raises."""
+
+
+def package_source_sha256(package_dir: Path) -> str | None:
+    """SHA-256 over every *.py below package_dir outside __pycache__, in sorted relative POSIX path order; each entry is
+    the path, a NUL byte and the SHA-256 of the file's bytes. None when the folder holds no .py file (a frozen build).
+    The 168 files of src/embodic hash in 5 to 16 ms on this container (checks/selftest_probe.py, U-D13)."""
+
+
+def evidence_applies(evidence: PassedTestsEvidence, *, embodic_version: str, registry_version: str,
+                     source_sha256: str | None) -> bool:
+    """False (stale) when embodic_version or registry_version differs from the evidence, or when source_sha256 is not
+    None and differs. A frozen build passes None and skips only the source comparison."""
+```
+
+Staleness. The U-D13 brief defines stale as a different embodic version or registry version. That rule alone lets a
+source checkout keep the file of its last release run while a developer edits the physics code under the same version,
+and the badges would then claim that tests passed for code no test ran. The source hash closes that gap. A wheel
+installs the same `.py` files that the gate tested (PK-03 compares their hashes), so an unmodified install always
+applies. A PyInstaller one-folder build holds compiled modules and no `.py` files (`inferred` from PyInstaller's
+layout; U-M5c confirms), so it compares the two versions only.
+
+What changes on screen. With an evidence file that applies, `Registry.tests_passed(eq_id)` is True for exactly the
+equations whose every linked EQT ID is in `passed_tests`. For those equations:
+
+1. `ChainLink.tests_passed` is True, so `derive_badge` stops adding `not tested` for that link. The badge becomes the
+   weakest of the chain's evidence statuses and the validity cap, as D-007 states. A result whose chain is EQ-10 alone
+   reads `verified`, the registry status of EQ-10. A result whose chain holds EQ-05 reads at most `inferred`. A chain that
+   holds a `cannot verify yet` equation stays `unresolved`.
+2. `Registry.test_state(eq_id)` returns the registry status of the equation (`verified`, `inferred`, `assumption` or
+   `unresolved`), not always `verified`, and the guide row "Test state in this build" shows it.
+3. `Registry.evidence_build_id` holds the build ID that the Tests dialog shows (§14).
+
+Nothing else changes. A result with an empty chain (`input`, `derived`, `count`) stays `not tested` (`status.py` l.109).
+The "n assumed inputs" tag (D-023), the provenance chips, the validity flags, labels such as "estimate", DRC and every
+number stay as they are. A source checkout without the file behaves exactly as main 7b9b4c9 does. Tests: UT-RES-08
+(reader), UT-RES-09 (badge change), TR-05 (writer) and PK-10 (wheel), in `test_plan.md` §5.7.
 
 ## 4. `embodic.winding`: spiral phase plan
 
@@ -3613,8 +3769,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     embodic-cli validate <project.embodic.json>
     embodic-cli export <project.embodic.json> --format {svg,dxf,dxf-outline,dxf-screws,pdf,readme,bundle} -o PATH
                 [--allow-drc-errors]
+    embodic-cli selftest [--json OUT]      (revision 2026-10-12, U-D13; §14)
     The desktop app entry point is `embodic` (embodic.ui.app:main)."""
 ```
+
+`embodic-cli selftest` (U-M5d, after U-M5a merges) runs `run_selftests(SELFTESTS)` of §14 and prints one line per
+check, with the verdict word, the check ID, the duration and, for a failure, the message. The last line is the summary of
+screens.md §13 ("45 tests: 45 passed, 0 failed"). The exit code is `ExitCode.OK` when `SelfTestReport.ok`, else
+`ExitCode.VALIDATION_ERRORS` (value 1). The enum keeps its four members, so the U-M5a code needs no change. A check
+that raises is a failed check, not exit code 3. `--json OUT` writes `selftest_to_json(report)`. Ctrl+C cancels through
+the `CancelToken`, prints the summary with the remaining checks as `not run`, and exits 1. Test: UT-CLI-03.
 
 ## 13. Open interface points
 
@@ -3711,3 +3875,144 @@ both.
 | The layer bar showed "L1 L2 L1 L2" once after several rows shared one window | `unresolved`. U-M4e-2 did not reproduce it in a fresh window (its report). U-V4 tries to reproduce it | Agent 4 (U-V4) |
 | S33, the Tests dialog (`tests-table`) | Not in this build, so row S33 of the checklist is not captured and the verify skill lists it as `not tested`. M5 carries the dialog (D-042 draft): it needs the `passed_tests` evidence packaged into `resources/evidence` and a test bundle in the wheel (D-034, `briefs/U-S4g.md`) | M5 (`work_breakdown.md` §8) |
 | Text clipping at 150 and 200 percent (UI-09), keyboard input in the native file dialog (AX-02) | `not tested` by a machine (`test_plan.md` §5.3.1) | Agent 1 reviews the grabs |
+
+12. Open points after U-D13 (revision 2026-10-12; main 7b9b4c9, `verified` by reading unless the row says otherwise).
+
+| Item | State | Owner |
+|---|---|---|
+| S33, the Tests dialog (point 11) | The contract is §14. D-042a (`docs/decision_log.md` l.48) asks for "a test bundle in the wheel". The wheel ships no pytest tests (`package_layout.md` §5.2), so the bundle is the self-test catalogue of §14, which needs only the package. Fable records that reading or rules otherwise | Fable |
+| The entry point that opens `dlg-tests` | screens.md §13 says no toolstrip button, menu item or shortcut opens the dialog until it ships. Agent 1 names the entry (action ID, icon stem, label, shortcut) and, if wanted, a label that shows `Registry.evidence_build_id`, in screens.md §13 and §14a, before U-M5d starts. `checks/screens_coverage.py` fails on an objectName that no table defines | Agent 1, through Fable |
+| The CI matrix | `.github/workflows/ci.yml` runs Python 3.11 and 3.12 only and installs `.[dev]`, so no Qt test runs in CI. REQ-N-05 names 3.11 to 3.13 (PK-01) | U-M5b |
+| The `eqt` markers | No test carries one on main 7b9b4c9, so the first evidence file lists no ID and every badge stays as today until U-M5o lands | U-M5o, Agent 2 reviews |
+| embodic's own licence | No `LICENSE` file. `package_layout.md` §5.2 reserves the place and says "pending the user's choice". This contract chooses nothing | the user |
+
+## 14. `embodic.selftest`: self-tests for an installed build (revision 2026-10-12, U-D13; D-042a, screens.md §13)
+
+The installed wheel carries no pytest tests and no pytest (`package_layout.md` §5.2). The self-test is a small runner in
+pure Python over a fixed catalogue of checks that need only the package and its resources. Each check computes one value
+through the public functions and compares it with an expected value and tolerance copied from a named pytest test.
+The Tests dialog and `embodic-cli selftest` both run it.
+
+```python
+# embodic.selftest (U-M5d). Layer: below embodic.ui and embodic.cli, above embodic.api (package_layout.md §3, C1).
+
+class SelfTestGroup(StrEnum):
+    CLOSED_FORM = "closed form"  # CF cases of oracle_cases.json and the spiral worked examples
+    EXAMPLES = "examples"  # the five packaged examples compute, with their pinned design hashes
+    DRC = "drc"
+    EXPORT = "export"
+
+
+class SelfTestVerdict(StrEnum):
+    PASSED = "passed"
+    FAILED = "failed"
+    NOT_RUN = "not run"  # cancelled before the check started
+
+
+SelfTestValue: TypeAlias = "float | int | bool | str | tuple[str, ...]"
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class SelfTestCheck:
+    id: str  # "ST-CF01"; unique; the Tests table and the CLI show it
+    group: SelfTestGroup
+    title: str  # English, one line
+    source_test: str  # pytest node ID whose assertion gives expected, rel_tol and abs_tol
+    expected: SelfTestValue
+    unit: str  # display unit of a float value ("T", "ohm", "mm"), "" otherwise
+    measure: Callable[[Path], SelfTestValue]  # receives an empty scratch folder; writes nowhere else
+    rel_tol: float = 0.0
+    abs_tol: float = 0.0
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class SelfTestResult:
+    check_id: str
+    group: SelfTestGroup
+    title: str
+    verdict: SelfTestVerdict
+    observed: SelfTestValue | None  # None when not run, or when measure raised
+    expected: SelfTestValue
+    duration_s: float
+    message: str  # "" when passed; else expected, observed and tolerance, or the exception type and text
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class SelfTestReport:
+    results: tuple[SelfTestResult, ...]  # one per check, in catalogue order
+    versions: VersionInfo
+    evidence_build_id: str | None  # load_registry().evidence_build_id (§3.1), shown, never changed by a run
+    cancelled: bool
+
+    @property
+    def ok(self) -> bool:
+        """Every result passed: no failure and nothing not run."""
+
+
+SELFTESTS: tuple[SelfTestCheck, ...] = ()  # the 45 checks of the table below, in that order
+
+
+def agrees(observed: SelfTestValue, expected: SelfTestValue, *, rel_tol: float, abs_tol: float) -> bool:
+    """A float or int against a float expectation: |observed - expected| <= max(abs_tol, rel_tol * |expected|).
+    Anything else: equality."""
+
+
+def run_selftests(checks: Sequence[SelfTestCheck] = SELFTESTS, *, cancel: CancelToken | None = None,
+                  on_result: Callable[[SelfTestResult], None] | None = None) -> SelfTestReport:
+    """Run the checks in order, each with its own temporary folder that is deleted afterwards. A check that raises is
+    FAILED with the exception type and message, and the run goes on. After cancel, every check not yet started is
+    NOT_RUN. on_result is called once per result, from the running thread. Imports no Qt and no pytest."""
+
+
+def selftest_to_json(report: SelfTestReport) -> dict[str, JsonValue]:
+    """Versions, evidence_build_id, cancelled and one object per result; floats in the encoding of §9.2."""
+```
+
+The catalogue. Each expected value below was computed by `checks/selftest_probe.py` on main 7b9b4c9 through the same
+public functions, and all 45 checks pass (`verified` by running it twice, U-D13: "45 checks, 0 failed"; 9.5 s and 18.0 s of
+wall time on this 2-CPU container, which other units share, so the time is no budget).
+The catalogue holds the values as literals, because the wheel carries neither `docs/` nor `tests/`.
+
+| IDs | Group | Measures | Expected, tolerance | Source test |
+|---|---|---|---|---|
+| ST-CF01 | closed form | `field_harmonic` B_z1 of the CF-01 rotor at r = 1e5 mm, z = 0 | 1.162077823241657 T, rel. 1e-9 | `tests/unit/physics/test_kernels.py::test_cf01_field_fundamental_equals_the_1d_magnetic_circuit` |
+| ST-CF04-R20, ST-CF04-R60, ST-CF04-ARC | closed form | `path_resistance_ohm` of a 1000 mm line and a 90 degree arc of r 30 mm, 0.5 mm by 34.8 µm, at 20 and 60 °C | 0.9908620689655171, 1.1466255862068966 and 0.04669327494874277 ohm, rel. 1e-12 | `test_kernels.py::test_cf04_track_resistance_at_20_and_60_degc` |
+| ST-CF04-VIA | closed form | `via_resistance_ohm(0.3, 25.0, 1.6, rho20, 1)` | 0.001277202792190775 ohm, rel. 1e-12 | `test_kernels.py::test_cf04_and_ut_phy_11_via_barrel_resistance` |
+| ST-CF06-KE, ST-CF06-KT-STAR, ST-CF06-KT-DELTA | closed form | `phase_constants(0.01, STAR or DELTA, 3, 10)` | 0.017320508075688773 V·s/rad, 0.021213203435596423 and 0.01224744871391589 N·m/A, rel. 1e-12 | `test_kernels.py::test_cf06_star_and_delta_constants` |
+| ST-CF06-RLL-STAR, ST-CF06-RLL-DELTA | closed form | `line_resistance_ohm([1.0, 1.1, 1.2], STAR or DELTA)` | 2.2 and 0.731313131 ohm, rel. 1e-9 | `tests/unit/physics/test_closed_forms_m2e2.py::test_eq23_cf06_star_and_delta` |
+| ST-CF09-<Q>-<poles>-PATTERN, 9 checks | closed form | the pattern string of `assign_phases(Q, poles)` for each CF-09 row: (12, 10), (12, 14), (12, 16), (18, 16), (24, 14), (24, 22), (24, 26), (9, 8), (15, 16) | the row's `pattern`, exact | `tests/unit/winding/test_star_of_slots.py::test_cf09_patterns_and_balance` |
+| ST-CF09-<Q>-<poles>-KD1, 9 checks | closed form | `distribution_factor(assign_phases(Q, poles), 1, Q)` for the same rows | the row's `kd1`, abs. 1e-9 | `tests/unit/winding/test_winding_factors.py::test_ut_wnd_05_cf09_distribution_factor` |
+| ST-CF11-LENGTH, ST-CF11-TURNS | closed form | the computed `spiral_12c16p_default` board: `SpiralDetail.track_length_per_coil_layer_mm["X"]`, `turns_achieved` | 415.4808 mm abs. 5e-5; 10 exact | `tests/unit/generators/test_spiral_generate.py::test_default_track_length_matches_cf11` |
+| ST-CF10-LENGTH | closed form | the same for `spiral_12c10p_d08` | 160.2750 mm, abs. 5e-5 | `test_spiral_generate.py::test_d08_builds_three_turns_with_the_half_closing` |
+| ST-EX-<example_id>-HASH, 5 checks | examples | `compute(...).design_hash` of each packaged example | the pinned `EXAMPLE_HASHES` value, exact | `tests/unit/embodic_io/project/test_examples.py::test_ut_io_08_the_packaged_design_hashes_are_pinned` |
+| ST-EX-<example_id>-COMPUTES, 5 checks | examples | the outcome has an analysis and no ERROR issue | True | `test_examples.py::test_ut_io_08_example_validates_and_computes_drc_clean` (three spirals), `tests/unit/generators/serpentine/test_serpentine_example.py::test_the_example_validates_and_computes_drc_clean`, `tests/unit/ui/results/test_rail_cards.py::test_drc_card_of_the_wave_example_counts_186_failures` |
+| ST-DRC-DEFAULT-CLEAN, ST-DRC-DEFAULT-TRACE | drc | the DRC report of `spiral_12c16p_default`: `violation_count`, the `trace_trace` `measured_min_mm` | 0 exact; 0.2 mm abs. 1e-6 | `test_spiral_generate.py::test_default_example_passes_drc` |
+| ST-IO-ROUNDTRIP | export | save, load and save `spiral_12c16p_default` with `ui_state={"zoom": 1.5}` in the scratch folder | the two files are byte-identical | `tests/unit/embodic_io/project/test_project.py::test_ut_io_01_save_load_save_is_byte_identical` |
+| ST-EXP-BUNDLE | export | `write_bundle` of SVG, DXF complete, DXF outline, PDF report and project JSON to `motor.zip` with `allow_drc_errors=True` | members `README.txt`, `motor.dxf`, `motor.embodic.json`, `motor.svg`, `motor_outline.dxf`, `motor_report.pdf` | `tests/unit/embodic_io/exporters/test_report_readme_bundle.py::test_ut_exp_05_bundle_holds_selected_files_and_readme` |
+
+CF-02, CF-03, CF-05, CF-07 and CF-08 have no product test that asserts their expected value on main 7b9b4c9 (`verified`
+by grep for the case IDs and the values in `tests/unit`). They join the catalogue when U-M5o adds those tests, with the
+new test as the source. The catalogue grows only from a named passing test, never from a value typed here.
+
+Drift. UT-SLF-02 keeps the literals true. It compares the CF-09 rows with `docs/phase2/engineering/oracle_cases.json`,
+the hashes with `EXAMPLE_HASHES` of `test_examples.py` (l.34), and checks that every `source_test` names a function that
+exists in its file. A unit that changes a source value edits the catalogue in the same commit.
+
+The Tests dialog (screens.md §13). `embodic.ui.viewmodels.selftest.SelfTestViewModel` is Qt-free: `rows`
+(`Observable[tuple[SelfTestResult, ...]]`), `summary` (`Observable[str]`), `running` (`Observable[bool]`), `run()` and
+`stop()`. `embodic.ui.workers.SelfTestWorker` runs `run_selftests` on the `QThreadPool` with a fresh `CancelToken` and
+posts each `on_result` to the GUI thread. `embodic.ui.views.tests_dialog.TestsDialog` (`dlg-tests`) shows
+`btn-tests-run`, the `tests-table` columns of screens.md §13 (test ID, group, result icon with the verdict word,
+duration, message) and `tests-summary` ("45 tests: 45 passed, 0 failed"; after a cancel, "45 tests: 12 passed, 0
+failed, 33 not run"). Esc and **Stop** call `stop()`. The window stays responsive while checks run. Strings live in a new
+`embodic/ui/strings/selftest.py`. Test: UI-35.
+
+Why a self-test result never moves a badge. The badge rule is a pure function of the registry and the design (D-007,
+`derive_badge`), and the registry's test state comes from the build's evidence (§3.1). A self-test run does not feed it,
+for three reasons. First, the catalogue is 45 checks, and the registry links 63 test IDs, most of them golden and oracle
+tests that need Xcoil fixtures and literature data the wheel does not carry, so a passing run cannot stand for the
+registry's tests. Second, a badge that changed when a user pressed Run would differ between two machines, and before and
+after the click, for the same file. That breaks determinism (REQ-N-04) and the D-007 rule that only calculation trust
+sets a badge. Third, a self-test answers a different question, whether this installation reproduces the build's numbers.
+A failure there is a defect in the installation (a broken NumPy, a damaged resource), which the dialog and the CLI
+report as a failure, not a lower evidence status. Tests: UT-SLF-01 to UT-SLF-03, UT-CLI-03, UI-35, PK-11.
