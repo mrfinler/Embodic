@@ -13,6 +13,7 @@ from embodic.physics import (
     copper_resistivity_ohm_m,
     delta_circulating_loss_w,
     eddy_loss_w,
+    edge_leakage_fraction,
     efficiency,
     emf_waveform_v,
     field_table,
@@ -22,7 +23,8 @@ from embodic.physics import (
     line_waveforms_v,
     solve_phase_circuit,
 )
-from embodic.physics.emf import PathField
+from embodic.physics.emf import FIELD_TABLE_STEPS, FieldTable, PathField
+from embodic.results import load_registry
 
 pytestmark = pytest.mark.req("REQ-F-11")
 ROTOR = RotorSpec(
@@ -165,3 +167,92 @@ def test_eq06_reversed_path_reverses_the_phasor() -> None:
     reverse = integrate_path((back,), table, 5, 0.5, 2.0).flux_linkage_t_mm2[0]
     assert abs(forward) > 0.0
     assert reverse == pytest.approx(-forward, rel=1e-12)
+
+
+def _radial(r_from_mm: float, r_to_mm: float, angle_rad: float) -> Line:
+    return Line(
+        x1_mm=r_from_mm * math.cos(angle_rad),
+        y1_mm=r_from_mm * math.sin(angle_rad),
+        x2_mm=r_to_mm * math.cos(angle_rad),
+        y2_mm=r_to_mm * math.sin(angle_rad),
+        width_mm=0.5,
+        role=PrimitiveRole.SIDE,
+    )
+
+
+def _cf02_coil() -> list[Line | Arc]:
+    """CF-02 coil: radial sides from 18 to 38 mm at -15 and +15 degrees, arcs at 38 and 18 mm, out along -15 degrees."""
+    a, b = -math.radians(15.0), math.radians(15.0)
+    return [
+        _radial(18.0, 38.0, a),
+        Arc(cx_mm=0.0, cy_mm=0.0, r_mm=38.0, start_rad=a, sweep_rad=b - a, width_mm=0.5, role=PrimitiveRole.END_TURN),
+        _radial(38.0, 18.0, b),
+        Arc(cx_mm=0.0, cy_mm=0.0, r_mm=18.0, start_rad=b, sweep_rad=a - b, width_mm=0.5, role=PrimitiveRole.END_TURN),
+    ]
+
+
+def _uniform_table(bz_t: float) -> FieldTable:
+    return FieldTable(
+        r_inner_mm=18.0,
+        r_outer_mm=38.0,
+        harmonics=(1,),
+        bz_t=np.full((1, FIELD_TABLE_STEPS + 1), bz_t),
+        bt_t=np.zeros((1, FIELD_TABLE_STEPS + 1)),
+    )
+
+
+@pytest.mark.eqt("EQT-05-CF03", "EQT-06-CF03")
+def test_cf03_coil_in_the_eq05_field_of_a_double_rotor() -> None:
+    """CF-03 (EQ-05, EQ-06): the CF-02 coil at z 0.8 mm, G 1.1 mm -> Ke1 = 1.0201338249421754e-3 V*s/rad, rel 1e-5.
+
+    The tolerance is CF-03's: Xcoil's 48-step field table and 0.5 mm segments. Defect caught: z measured from the wrong
+    plane, G of a single rotor, or a harmonic index error in u = n p / r.
+    """
+    rotor = RotorSpec(
+        poles=16,
+        rotor_type=RotorType.DOUBLE,
+        magnet=ArcMagnet(pole_arc_ratio=0.85, r_inner_mm=18.0, r_outer_mm=38.0, thickness_mm=3.0),
+        remanence_t=1.3,
+        recoil_permeability=1.05,
+        air_gap_mm=0.8,
+        back_iron_thickness_mm=5.0,
+    )
+    table = field_table(rotor, 1.1, 0.8, (1,))
+    ke_v_s_per_rad = abs(integrate_path(_cf02_coil(), table, 8, 0.5, 1.0).flux_linkage_t_mm2[0]) * 1e-6
+    assert ke_v_s_per_rad == pytest.approx(1.0201338249421754e-3, rel=1e-5)
+
+
+@pytest.mark.eqt("EQT-06-CF02")
+def test_cf02_coil_in_a_uniform_field_matches_the_closed_form() -> None:
+    """CF-02 (EQ-06): B1 0.8 T, p 8, sigma 30 deg -> Ke1 = B1 (r_b^2 - r_a^2) sin(p sigma / 2) = 7.75958761790857e-4.
+
+    Rel 1e-9, and the two arcs alone link exactly 0. Defect caught: sin(sigma / 2) in mechanical angle, an arc that
+    links flux, or a missing r in r dr.
+    """
+    table = _uniform_table(0.8)
+    coil = _cf02_coil()
+    ke_v_s_per_rad = abs(integrate_path(coil, table, 8, 0.5, 1.0).flux_linkage_t_mm2[0]) * 1e-6
+    arcs_only = integrate_path([coil[1], coil[3]], table, 8, 0.5, 1.0).flux_linkage_t_mm2[0]
+    assert ke_v_s_per_rad == pytest.approx(7.75958761790857e-4, rel=1e-9)
+    assert abs(arcs_only) == 0.0
+
+
+@pytest.mark.eqt("EQT-05-EC")
+def test_ec05_edge_leakage_value_from_the_registry_constants() -> None:
+    """EC-05 (EQ-05): two radial lines of 0.4 mm in a uniform 0.8 T field, G 1.1 mm -> e_edge 0.11285496821276436.
+
+    Line 1 (r 18.3 to 18.7 mm, r_m 18.5, d 0.5 mm) weighs 0.8 * 18.5 * 0.4 = 5.92, line 2 (r 27.8 to 28.2 mm, r_m 28.0,
+    d 10 mm) 8.96. The expected values are written with D_e 0.47 and c_e 0.9 as literals, rel 1e-12.
+
+    Defect caught: a wrong D_e or c_e in the registry or the kernel, d measured to the farther magnet end, a weight
+    without r, or a decay length without G.
+    """
+    check = load_registry().equation("EQ-05").validity_checks[0]
+    table = _uniform_table(0.8)
+
+    decay_mm = float(check.parameters["c_e"]) * 1.1
+    near = integrate_path([_radial(18.3, 18.7, 0.0)], table, 8, 0.5, decay_mm)
+    far = integrate_path([_radial(27.8, 28.2, 0.5)], table, 8, 0.5, decay_mm)
+    amplitude = float(check.parameters["D_e"])
+    assert edge_leakage_fraction([near], amplitude) == pytest.approx(0.28363329517506497, rel=1e-12)
+    assert edge_leakage_fraction([near, far], amplitude) == pytest.approx(0.11285496821276436, rel=1e-12)

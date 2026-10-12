@@ -14,6 +14,7 @@ from embodic.physics import (
     field_harmonic,
     ipc2221_current_a,
     loss_budget_current_a,
+    mass_g,
     path_resistance_ohm,
     phase_constants,
     pole_arc_ratio_block,
@@ -168,6 +169,22 @@ def test_ut_phy_15_ipc2221_guideline_current() -> None:
     """UT-PHY-15 (EQ-15): 0.5 mm x 34.8 um, dT 20 K -> 1.955 A external, 0.977 A internal (+/-1 mA)."""
     assert ipc2221_current_a(0.5 * 0.0348, 20.0, internal=False) == pytest.approx(1.955, abs=1e-3)
     assert ipc2221_current_a(0.5 * 0.0348, 20.0, internal=True) == pytest.approx(0.977, abs=1e-3)
+
+
+@pytest.mark.eqt("EQT-16-UT1")
+def test_ut_phy_16_mass_of_the_laminate_and_the_copper_in_it() -> None:
+    """EQ-16 example values, rel 1e-12: a 6461 mm2 x 0.62 mm board of 1.85 g/cm3 weighs 7.410767 g.
+
+    With 1000 mm2 of 34.8 um copper (8.89 g/cm3): 0.309372 g of copper, which displaces its volume, and 7.346387 g of
+    laminate.
+
+    Defect caught: copper volume not subtracted from the laminate, or a g/cm3 to g/mm3 factor error.
+    """
+    bare = mass_g({}, {}, 6461.0, 0.62, 8.89, 1.85)
+    plated = mass_g({"L1": 1000.0}, {"L1": 0.0348}, 6461.0, 0.62, 8.89, 1.85)
+    assert bare.laminate_g == pytest.approx(7.410767, rel=1e-12)
+    assert plated.copper_g == pytest.approx(0.309372, rel=1e-12)
+    assert plated.laminate_g == pytest.approx(7.346387, rel=1e-12)
 
 
 @pytest.mark.eqt("EQT-21-UT1")
