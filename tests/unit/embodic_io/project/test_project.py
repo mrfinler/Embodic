@@ -76,6 +76,16 @@ def test_ut_io_01_draft_round_trip_is_byte_identical(tmp_path: Path) -> None:
     assert first == second
 
 
+@pytest.mark.req("REQ-F-15")
+def test_ut_io_01_saved_utc_reads_the_clock_unless_the_caller_passes_a_stamp(tmp_path: Path) -> None:
+    """Catches a product save that stops reading the clock, or a passed stamp that the file ignores."""
+    clock, passed = tmp_path / "clock.embodic.json", tmp_path / "passed.embodic.json"
+    save_project(clock, _cf11_project())
+    save_project(passed, _cf11_project(), saved_utc="2026-01-02T03:04:05Z")
+    stamps = [json.loads(path.read_text(encoding="utf-8"))["saved_utc"] for path in (clock, passed)]
+    assert stamps == ["2026-10-08T12:00:00Z", "2026-01-02T03:04:05Z"]
+
+
 @pytest.mark.req("REQ-F-15", "REQ-N-04")
 def test_ut_io_02_canonical_json_is_sorted_compact_and_in_degrees() -> None:
     """Catches whitespace, unsorted keys or radians in the hashed bytes, which would break cross-platform hashes."""
