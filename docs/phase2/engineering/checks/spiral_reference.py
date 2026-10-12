@@ -4,6 +4,9 @@
 # not product code: it prints every intermediate number of the two worked examples (default 12/16 and D08 12/10).
 # Geometry: canonical coil centred on the +x axis, half-angle h = pi/Q, left sector edge at +h (y > 0), right edge at -h.
 # Run: python3 docs/phase2/engineering/checks/spiral_reference.py [--json]
+# Changelog 2026-10-13 (U-E10, D-046 b): coil_path no longer subtracts 1e-6 rad from the terminal-via angle. EQ-25 and
+# spiral_generator_spec.md G6 state no margin, and the product follows the text; the margin moved the CF-11 stub by 1.48e-5
+# relative (DEF-UE10-02). CF-10 is unchanged because its start-corner angle is the smaller one.
 import json
 import math
 import sys
@@ -229,7 +232,7 @@ def coil_path(g, turns, N, kind="full"):
     lead = 0.0 if kind == "half" else rv * ang(L)
     r_T = g.r_outer + g.s + g.pad / 2
     c0 = turns[0]["A"]
-    aV = min(ang(c0), g.h - math.asin(min(1.0, (max(g.pad, g.bw) + g.s) / (2 * r_T))) - 1e-6)
+    aV = min(ang(c0), g.h - math.asin(min(1.0, (max(g.pad, g.bw) + g.s) / (2 * r_T))))
     tv = (r_T * math.cos(aV), r_T * math.sin(aV))
     stub = dist(tv, c0)
     body = sum(parts.values())

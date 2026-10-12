@@ -278,7 +278,7 @@ cases.append({
 })
 dft = ex["default 12/16"]
 cases.append({
-    "case_id": "CF-11", "version": 2, "version_note": "version 2 (revision 2026-10-05, U-E3): G3-G5 revised (both sides on d_t, outer-end jog, lead arc at r_v = r_hi); inputs unchanged", "kind": "reference model (spiral_reference.py)", "eq_ids": ["EQ-02", "EQ-03", "EQ-08", "EQ-25"],
+    "case_id": "CF-11", "version": 3, "version_note": "version 3 (revision 2026-10-13, U-E10, D-046 b): terminal-via angle without the reference script's undocumented 1e-6 rad margin (DEF-UE10-02); full-precision stub 0.7876736223934756 mm, R per coil-layer moves by -2.8e-8 relative; version 2 (revision 2026-10-05, U-E3): G3-G5 revised (both sides on d_t, outer-end jog, lead arc at r_v = r_hi); inputs unchanged", "kind": "reference model (spiral_reference.py)", "eq_ids": ["EQ-02", "EQ-03", "EQ-08", "EQ-25"],
     "title": "Default example 12/16 spiral coil (r 18-38 mm copper edge, w 0.5, s 0.2, gap 0.2, via pad 0.6 mm)",
     "inputs": {k: inp(v, "mm or 1", "assumption", "example values (D-014); answers_to_agents.md 3.2 defaults; Xcoil viaPad/busWidth")
                for k, v in dft["inputs"].items()},

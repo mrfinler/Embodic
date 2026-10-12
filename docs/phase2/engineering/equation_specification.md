@@ -27,6 +27,9 @@ Gate verdicts (unchanged from Phase 1, PROJECT_BRIEF §5):
 Test IDs: `EQT-nn-GR` golden regression, `EQT-nn-CFxx` closed-form case CF-xx of `oracle_cases.json`, `EQT-nn-O1`/`-O2`
 literature oracle, `EQT-nn-EC` validity check, `EQT-nn-UTk` unit test of a rule stated here. Agent 6 maps them into the
 Phase 2 test plan.
+For an `EQT-nn-CFxx` test the case CF-xx (its inputs, expected values and tolerances) governs over the entry's Phase 1
+reference and tolerance texts, which stay as the Phase 1 record (revision 2026-10-13 (U-E10), D-046 d; registry note
+"v1.0 rev. U-E10"). The texts that differ are the EQ-06 tolerance and the EQ-12 and EQ-13 reference cases.
 
 Status labels follow standing order 2. `verified` means read in the cited source or reproduced by a script in `checks/`.
 No number in this document is a measurement. Units are SI unless stated. Geometry is in mm where marked.
@@ -715,3 +718,7 @@ New EQ-23 to EQ-30 for the serpentine and wave port (D-013). EQ-08 exact integer
 (DEF-P2-01). EC-05 labels (DEF-23). New fields `applies_to`, `golden_functions`, `replaced_functions`, `changes`, `tests`.
 O1 version 2, closed-form cases CF-01 to CF-11. Unchanged: all formulas and tolerances of EQ-01 to EQ-22 except where
 stated in the entry.
+
+Revision 2026-10-13 (U-E10, D-046): CF cases govern their EQT-nn-CFxx tests (section "How to read an entry"). CF-11
+version 3: `checks/spiral_reference.py` no longer subtracts 1e-6 rad from the terminal-via angle, which EQ-25 does not
+state (DEF-UE10-02). The CF-11 stub is 0.7876736223934756 mm at full precision; the printed values are unchanged.
