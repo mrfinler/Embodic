@@ -168,13 +168,18 @@ def encode_project(document: Mapping[str, JsonValue]) -> str:
     return json.dumps(document, sort_keys=True, indent=1, ensure_ascii=False, allow_nan=False) + "\n"
 
 
-def save_project(path: Path, project: ProjectFile | LoadedDraft) -> str:
-    """Write atomically (temp file + os.replace) and return the design hash ('' for a draft)."""
+def save_project(path: Path, project: ProjectFile | LoadedDraft, *, saved_utc: str | None = None) -> str:
+    """Write atomically (temp file + os.replace) and return the design hash ('' for a draft).
+
+    saved_utc defaults to the current UTC second. A caller that compares two saves byte for byte passes one stamp to
+    both, since two clock reads can straddle a second.
+    """
     if isinstance(project, ProjectFile):
         provenance: ProvenanceMap = project_provenance(project)
     else:  # a draft is not a design, so only its measurements have a provenance to keep
         provenance = {m.pointer: MeasuredValue(source=m.source) for m in project.measurements}
-    document = project_document(project, provenance, saved_utc=_utc_now())
+    stamp = _utc_now() if saved_utc is None else saved_utc
+    document = project_document(project, provenance, saved_utc=stamp)
     descriptor, temp_name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:

@@ -335,7 +335,10 @@ def _winding_above_ambient(design: DesignParameters) -> Iterator[ValidationIssue
 
 
 def _harmonics(design: DesignParameters) -> Iterator[ValidationIssue]:
-    for position, order in enumerate(design.analysis.harmonics):
+    harmonics = design.analysis.harmonics
+    if not harmonics or harmonics[0] != 1:  # physics reads index 0 as the fundamental (interfaces.md, D-031f)
+        yield issue("INVALID_HARMONIC_FUNDAMENTAL", ["/analysis/harmonics"])
+    for position, order in enumerate(harmonics):
         if order < 1 or order % 2 == 0:
             yield issue("INVALID_HARMONIC", [f"/analysis/harmonics/{position}"], value=order)
 

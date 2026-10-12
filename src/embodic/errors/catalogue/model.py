@@ -61,4 +61,5 @@ MESSAGES: Mapping[str, str] = {
         "Spiral coils use copper layers in pairs; with an odd count one copper layer carries no coil."
     ),
     "INVALID_HARMONIC": "Harmonic orders must be odd and positive.",
+    "INVALID_HARMONIC_FUNDAMENTAL": "The harmonic list must start with the fundamental, harmonic 1.",
 }

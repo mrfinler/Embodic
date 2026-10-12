@@ -40,6 +40,7 @@ SPIRAL_GENERATE = "tests/unit/generators/test_spiral_generate.py"
 EXAMPLES_TEST = "tests/unit/embodic_io/project/test_examples.py"
 RHO20_OHM_M, ALPHA20_PER_K = 1.7241e-8, 0.00393  # test_kernels.py l.27-28 (registry EQ-10, EV-53)
 CF11, D08 = "spiral_12c16p_default", "spiral_12c10p_d08"
+ROUNDTRIP_SAVED_UTC = "2026-10-08T12:00:00Z"  # the frozen clock of test_project.py (l.37) that UT-IO-01 saves with
 
 # CF-09 rows of docs/phase2/engineering/oracle_cases.json: (Q, poles, pattern, kd1).
 CF09_ROWS: tuple[tuple[int, int, str, float], ...] = (
@@ -186,10 +187,11 @@ def _drc_least_trace_gap(_: Path) -> float:
 def _roundtrip(scratch: Path) -> bool:
     project, _ = _computed(CF11)
     first, second = scratch / "a.embodic.json", scratch / "b.embodic.json"
-    save_project(first, ProjectFile(design=project.design, origin=project.origin, ui_state={"zoom": 1.5}))
+    saved = ProjectFile(design=project.design, origin=project.origin, ui_state={"zoom": 1.5})
+    save_project(first, saved, saved_utc=ROUNDTRIP_SAVED_UTC)
     loaded, _issues = load_project(first)
     assert isinstance(loaded, ProjectFile), "a saved complete design loads as a project"
-    save_project(second, loaded)
+    save_project(second, loaded, saved_utc=ROUNDTRIP_SAVED_UTC)
     return first.read_bytes() == second.read_bytes()
 
 

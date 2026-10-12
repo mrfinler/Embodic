@@ -22,6 +22,26 @@ def _with_coil_gap(gap_mm: float) -> DesignParameters:
     return dataclasses.replace(design, winding=dataclasses.replace(design.winding, coil=coil))
 
 
+def _with_harmonics(harmonics: tuple[int, ...]) -> DesignParameters:
+    design = spiral_design()
+    return dataclasses.replace(design, analysis=dataclasses.replace(design.analysis, harmonics=harmonics))
+
+
+@pytest.mark.req("REQ-F-14")
+@pytest.mark.parametrize("harmonics", [(), (3, 5), (3, 1)])
+def test_a_harmonic_list_that_does_not_start_with_the_fundamental_is_an_error(harmonics):
+    """interfaces.md: harmonic 1 is index 0. Defect caught: () and (3, 5) crashed physics, (3, 1) gave Ke of n = 3."""
+    found = [(i.code, i.severity, i.pointers) for i in validate_design(_with_harmonics(harmonics))]
+    assert found == [("INVALID_HARMONIC_FUNDAMENTAL", Severity.ERROR, ("/analysis/harmonics",))]
+
+
+@pytest.mark.req("REQ-F-14")
+@pytest.mark.parametrize("harmonics", [(1,), (1, 3, 5, 7, 9, 11, 13)])
+def test_a_harmonic_list_that_starts_with_the_fundamental_is_accepted(harmonics):
+    """Defect caught: the fundamental rule refusing a valid list, such as the fundamental alone."""
+    assert validate_design(_with_harmonics(harmonics)) == ()
+
+
 @pytest.mark.req("REQ-F-14")
 def test_coil_gap_below_trace_spacing_is_an_info_hint_proposing_the_spacing():
     """R12. Defect caught: a gap below s rejected as an error, or reported without the spacing as Suggestion."""
