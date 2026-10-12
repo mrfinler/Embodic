@@ -20,13 +20,15 @@ OUT = ROOT / "docs/phase2/evidence/evidence_register.json"
 PREPARED_BY = (
     "Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5 (rows EV-01 to EV-83); "
     "claude-sonnet-5-5 (rows EV-84 to EV-93, unit U-S3b; rows EV-94 to EV-105, unit U-S3c; "
-    "rows EV-106 to EV-108, unit U-S5a; row EV-106 revised, unit U-S5b; rows EV-109 to EV-114, unit U-S5c)"
+    "rows EV-106 to EV-108, unit U-S5a; row EV-106 revised, unit U-S5b; rows EV-109 to EV-114, unit U-S5c); "
+    "Agent 2 (Motor Design Expert), model: claude-opus-5-5 (rows EV-115 and EV-116, unit U-E9)"
 )
 ACCESSED_DEFAULT = "2026-10-04"
 ACCESSED = {
     **{f"EV-{n}": "2026-10-08" for n in range(84, 106)},  # U-S3b and U-S3c lookups
     **{f"EV-{n}": "2026-10-09" for n in range(106, 109)},  # U-S5a
     **{f"EV-{n}": "2026-10-12" for n in range(109, 115)},  # U-S5c
+    "EV-115": "2026-10-12", "EV-116": "2026-10-12",  # U-E9
 }
 STATUS_WEAKEST_FIRST = ["unresolved", "not tested", "assumption", "inferred", "verified"]
 # Phase 1 status cells carry qualifiers; these phrases reduce to a vocabulary word.
@@ -75,6 +77,7 @@ T = {  # topology tags, one explicit entry per row so a new row cannot be silent
     "EV-103": ["general"], "EV-104": ["wave"], "EV-105": ["wave"],
     "EV-106": ["non_engineering"], "EV-107": ["non_engineering"], "EV-108": ["non_engineering"],
     **{f"EV-{n}": ["non_engineering"] for n in range(109, 115)},
+    "EV-115": ["non_engineering"], "EV-116": ["non_engineering"],
 }
 KIND = {  # rows that are not plain source claims
     "EV-60": "bibliographic_record", "EV-61": "bibliographic_record", "EV-63": "bibliographic_record",
@@ -114,6 +117,7 @@ DOCS_FOR_ROW = {  # rows whose Source column names no D-number
     "EV-109": ["LIC-LGPL-3.0-QT-6.11.2"], "EV-110": ["LIC-GPL-3.0-SPDX"],
     "EV-111": ["PYPI-pyside6-essentials-6.11.2"], "EV-112": ["REPO-qt-6.11.2"],
     "EV-113": ["PYPI-numpy-2.4.6"], "EV-114": ["LIC-PSF-CPYTHON-3.11"],
+    "EV-115": ["WEB-FEMM-DOWNLOAD"], "EV-116": ["REPO-elmerfem"],
 }
 
 
@@ -283,6 +287,10 @@ OTHER_DOCS = [
     doc("LIC-PSF-CPYTHON-3.11", "CPython 3.11 LICENSE.txt (PSF License Agreement), Linux distribution copy",
         "Python Software Foundation", None, None, "/usr/lib/python3.11/LICENSE.txt", "licence",
         path="/usr/lib/python3.11/LICENSE.txt"),
+    doc("WEB-FEMM-DOWNLOAD", "FEMM download page (FEMM 4.2)", "D. Meeker", None, None, "femm.info", "documentation",
+        "https://www.femm.info/wiki/Download"),
+    doc("REPO-elmerfem", "Elmer FEM repository and ElmerLicensePolicy.md", "CSC - IT Center for Science", None, None,
+        "github.com/ElmerCSC/elmerfem", "repository", "https://github.com/ElmerCSC/elmerfem"),
 ]
 
 
