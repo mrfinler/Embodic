@@ -76,19 +76,22 @@ def test_dump_geometry_equals_raw_xcoil_records(case_id: str) -> None:
         assert p.width == rec["width"]
 
 
-_DEF_M1V_03 = pytest.mark.xfail(
-    reason="DEF-M1V-03: mapper puts each discontinuous Xcoil 'ic' object into one CopperPath", strict=True
-)
-
-
-@pytest.mark.parametrize(
-    "case_id", [CASES[0], pytest.param(CASES[1], marks=_DEF_M1V_03), pytest.param(CASES[2], marks=_DEF_M1V_03)]
-)
+@pytest.mark.parametrize("case_id", CASES)
 def test_every_dumped_object_is_a_continuous_path(case_id: str) -> None:
     """CopperPath is a continuous chain (interfaces.md section 5); a broken object fakes same-path violations."""
     board = _boards()[case_id]
     gaps = {oid: first_gap([p.prim for p in prims]) for oid, prims in board.dump.paths.items()}
     assert {oid: g for oid, g in gaps.items() if g is not None} == {}
+
+
+def test_interconnect_objects_are_cut_only_at_their_gaps() -> None:
+    """Catch a split that also cuts joined stubs, or none at all: Xcoil's 7 / 5 / 5 ``ic`` objects give 7 / 8 / 8 paths.
+
+    Read from the fixtures: the serpentine and wave star items are 3 stubs and a ring with a gap at each joint; the wave
+    U, V and W leads and one sector N lead are 2 joined stubs each.
+    """
+    counts = {case_id: len(board.interconnect) for case_id, board in _boards().items()}
+    assert counts == dict(zip(CASES, (7, 8, 8), strict=True))
 
 
 @pytest.mark.parametrize("case_id", CASES)
