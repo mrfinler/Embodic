@@ -10,7 +10,17 @@ Two labels mark what was run for this build:
 - Windows commands are written from the documentation of Python, venv and pip. They are not tested on Windows in this
   build.
 
-The time of each step comes from the PK-06 walkthrough (unit U-V5), which has not run yet. This guide gives no times.
+The PK-06 walkthrough (unit U-V5) followed steps 1 to 6 of this guide on Linux on 2026-10-13. It ran four times, each in
+a new folder with a new virtual environment and an empty pip cache. The machine was a Linux x86-64 container with 2
+CPUs, 8 GB of RAM, CPython 3.11.15 and no display. From step 1 to the first computed example (the `compute` command in
+step 5), the four cold runs took 19.2 s, 20.7 s, 26.0 s and 27.7 s. All four finished inside the 10 minutes that
+REQ-N-07 allows. In all four runs, step 4 aborted after about 0.5 s with the Qt error listed under Troubleshooting on
+Linux. The container has no display, so the window step is `not tested`, and the times include the abort.
+
+The download limits the time. The dependency install in step 3 took 12.7 s to 20.1 s of each run, and pip downloaded the
+80.1 MB PySide6-Essentials wheel at 5.0 MB/s to 9.7 MB/s. The spread between the runs comes from the download rate,
+because no other step varies by more than 1.5 s. A machine with a warm pip cache, a slower disk or another Python build
+is `not tested`. The Windows walkthrough is `not tested`.
 
 ## 1. Check the requirements
 
@@ -68,6 +78,9 @@ Windows, not tested on Windows in this build:
 python -m pip install --require-hashes -r requirements\py311.txt
 python -m pip install --no-deps embodic-0.0.1-py3-none-any.whl
 ```
+
+After an install command, pip may print an upgrade notice, and the notice does not affect the install. In the PK-06 runs
+it read `[notice] A new release of pip is available: 24.0 -> 26.2.1`.
 
 Check what is installed:
 
@@ -136,7 +149,34 @@ Expected output: `Wrote board.svg`. `--format` also takes `dxf`, `dxf-outline`, 
 
 ## 6. Check the installation
 
-`embodic-cli selftest` and the Tests dialog arrive with unit U-M5d. This build does not have them.
+The wheel carries 45 self-tests. They check that this installation reproduces the numbers of its build. Run them from
+the virtual environment of step 2. The command is the same on Windows, where it is not tested in this build.
+
+```
+embodic-cli selftest
+```
+
+Expected output: one line per check with the verdict word (`passed` or `failed`), the check ID and the duration, and for
+a failed check its message. The last line is the summary. These are the last two lines of a passing run on Linux (the
+durations differ on your machine):
+
+```
+passed   ST-EXP-BUNDLE                         3.99 s
+45 tests: 45 passed, 0 failed
+```
+
+The exit code is 0 when every check passes and 1 when a check fails. The PK-06 walkthrough ran the command four times on
+Linux without a display. Each run passed, exited 0 and took 8.6 s to 8.9 s. No failing run was produced for this guide,
+so the exit code 1 comes from the interface contract (`docs/phase2/architecture/interfaces.md` section 12). A failed
+check points to a defect in the installation, such as a broken NumPy or a damaged resource file.
+
+The app runs the same checks in the Tests dialog. Open the View tab, find the group Help and click **Self-tests**. Click
+**Run** to start the checks. **Stop** or Esc cancels a run. The summary line reads `45 tests: 45 passed, 0 failed` after
+a passing run. A desktop session did not open the dialog in this build, so the description comes from the source and
+`docs/phase2/design/screens.md` section 13.
+
+A self-test result never changes a result badge. Badges follow the registry and the test evidence of the build, so a
+pass or a fail here moves none of them (`docs/phase2/architecture/interfaces.md` section 14).
 
 ## 7. Run the tests
 
@@ -234,9 +274,15 @@ of the spec only. The Windows folder, which the bundle test PK-05 needs, is not 
 
 - `ERROR: Hashes are required in --require-hashes mode`: the command installs a file that the lock file does not pin.
   Install the wheel in its own command with `--no-deps`, as in step 3.
-- The app fails with a message about the Qt platform plugin `xcb`: the system lacks a library that Qt needs. Install
-  your distribution's packages for EGL, OpenGL, xkbcommon and fontconfig (the package names differ per distribution;
-  not tested in this build). Without a display, set `QT_QPA_PLATFORM=offscreen` to run the tests.
+- The app aborts with `qt.qpa.plugin: From 6.5.0, xcb-cursor0 or libxcb-cursor0 is needed to load the Qt xcb platform
+  plugin.` followed by `Could not load the Qt platform plugin "xcb"`: the system lacks the library that Qt names. On
+  Debian and Ubuntu, install the package `libxcb-cursor0`. Whether the window then opens on a desktop session is not
+  tested. The package names on other distributions are not tested either. If Qt names other libraries, install your
+  distribution's packages for EGL, OpenGL, xkbcommon and fontconfig (the package names differ per distribution; not
+  tested in this build).
+- There is no display: set `QT_QPA_PLATFORM=offscreen` before you start `embodic`. Qt then uses its offscreen platform
+  and shows no window. The command `QT_QPA_PLATFORM=offscreen embodic --smoke` opens the window, loads the D08 example,
+  computes it and exits with code 0. It took 2.5 s to 3.0 s in the four PK-06 runs.
 - `embodic-cli: command not found`: the virtual environment is not active. Run `. .venv/bin/activate`.
 
 ## Troubleshooting on Windows

@@ -75,7 +75,25 @@ embodic-cli export <examples>/spiral_12c16p_default.embodic.json --format svg -o
 
 ## Check the installation
 
-`embodic-cli selftest` and the Tests dialog of the app arrive with unit U-M5d. This build does not have them.
+`embodic-cli selftest` runs 45 built-in checks against the installed package and needs no display. It prints one line
+per check with the verdict word, the check ID and the duration, then a summary line. A failed check adds its message to
+its line. The exit code is 0 when every check passes and 1 otherwise.
+
+```
+embodic-cli selftest
+```
+
+The last two lines of a passing run on Linux (the durations differ on your machine):
+
+```
+passed   ST-EXP-BUNDLE                         3.99 s
+45 tests: 45 passed, 0 failed
+```
+
+The app runs the same checks from the Tests dialog. Open the View tab, find the group Help, and click **Self-tests**.
+
+A self-test result never changes a result badge. Badges follow the registry and the test evidence of the build, so a
+pass or a fail here moves none of them (`docs/phase2/architecture/interfaces.md` section 14).
 
 ## Run the tests
 
@@ -114,7 +132,9 @@ Add `--record-baseline` to rewrite `tests/performance/baseline.json`.
 
 ## Build the Windows folder
 
-The PyInstaller one-folder build (`python tools/build_bundle.py`) arrives with unit U-M5c. This build does not have it.
+`python tools/build_bundle.py` builds a PyInstaller one-folder bundle. Section 9 of `docs/install/INSTALL.md` has the
+command, the contents of the folder and the checks. The build was run on Linux only, and that run is a smoke test of the
+PyInstaller spec. The Windows folder is not tested.
 
 ## Licences
 
