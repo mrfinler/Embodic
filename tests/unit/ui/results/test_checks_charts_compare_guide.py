@@ -142,8 +142,7 @@ def test_tick_labels_use_the_unicode_minus():
 def test_ui10_compare_current_column_equals_the_single_design_results(d08, spiral_14p):
     """Catches a comparison that recomputes or reformats a value differently from the Results tab.
 
-    A cell joins number and unit with U+00A0 (ruling e1); a unitless value is the number alone, its unit column says
-    "dimensionless".
+    A cell joins number and unit with U+00A0 (ruling e1); a unitless value is the number alone (D-043c: no Unit column).
     """
 
     def cell(single):
@@ -155,7 +154,7 @@ def test_ui10_compare_current_column_equals_the_single_design_results(d08, spira
         assert rows[single.quantity].current_text == cell(single)
     for single in result_rows(d08.analysis):
         assert rows[single.quantity].reference_text == cell(single)
-    assert rows["winding_factor_1"].unit_text == "dimensionless"
+    assert rows["winding_factor_1"].current_text.replace(".", "").isdigit(), "a unitless cell is the number alone"
 
 
 @pytest.mark.req("REQ-L-08")

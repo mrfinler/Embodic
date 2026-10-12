@@ -6,7 +6,18 @@ disclosure; every part reads the `ResultRow`, never a constant (D-007).
 
 from collections.abc import Callable
 
-from PySide6.QtCore import QEasingCurve, QEvent, QObject, QPropertyAnimation, Qt, QTimer, Signal
+from PySide6.QtCore import (
+    QEasingCurve,
+    QEvent,
+    QModelIndex,
+    QObject,
+    QPersistentModelIndex,
+    QPropertyAnimation,
+    QSize,
+    Qt,
+    QTimer,
+    Signal,
+)
 from PySide6.QtGui import QColor, QGuiApplication, QPainter, QPixmap, QResizeEvent
 from PySide6.QtWidgets import (
     QApplication,
@@ -21,6 +32,8 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QStackedWidget,
     QStyle,
+    QStyledItemDelegate,
+    QStyleOptionViewItem,
     QTableWidget,
     QTableWidgetItem,
     QToolButton,
@@ -58,6 +71,7 @@ CARD_GAP_PX = 8
 # With each check box's own 4 px of border and padding, a 4 px gap leaves 12 px between one status and the next box,
 # and the row of five status words fits the 568 px results page of a 1280 px window (U-S4e ruling c).
 FILTER_GAP_PX = 4
+FOCUS_BORDER_PX = 1  # width of `QTableView::item:focus` in theme_template.qss
 
 
 # Agent 1's style sheets ring buttons and fields; the chips, tags and scroll areas of the results area need it too.
@@ -103,6 +117,19 @@ def set_revealed(widget: QWidget, shown: bool) -> QPropertyAnimation | None:
     animation.finished.connect(lambda: widget.setMaximumHeight(16_777_215))
     animation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
     return animation
+
+
+class FocusRoomDelegate(QStyledItemDelegate):
+    """Add the focus border's two sides to a cell's height.
+
+    `QTableView::item:focus` draws a border inside the cell. The focused cell's text rectangle shrinks by it, so a
+    row sized to its wrapped text loses the last line and elides the one before (U-S4h N1).
+    """
+
+    def sizeHint(self, option: QStyleOptionViewItem, index: QModelIndex | QPersistentModelIndex) -> QSize:  # noqa: N802 (Qt override)
+        """Return the text's size plus room for the focus border above and below."""
+        hint = super().sizeHint(option, index)
+        return QSize(hint.width(), hint.height() + 2 * FOCUS_BORDER_PX)
 
 
 class ResultCard(QFrame):
@@ -383,7 +410,6 @@ class CompareTab(QWidget):
         "compare.column.reference",
         "compare.column.current",
         "compare.column.delta",
-        "compare.column.unit",
     )
 
     def __init__(self, vm: CompareViewModel) -> None:
@@ -409,6 +435,7 @@ class CompareTab(QWidget):
         header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.table.setTextElideMode(Qt.TextElideMode.ElideNone)
+        self.table.setItemDelegate(FocusRoomDelegate(self.table))
         self.table.verticalHeader().setVisible(False)
         self.table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
@@ -491,7 +518,7 @@ class CompareTab(QWidget):
 
     def _fill(self, r: int, row: CompareRow) -> None:
         assert self.tokens is not None
-        cells = (row.label, row.reference_text, row.current_text, row.delta_text, row.unit_text)
+        cells = (row.label, row.reference_text, row.current_text, row.delta_text)
         for c, value in enumerate(cells):
             item = QTableWidgetItem(value)
             item.setToolTip(value)

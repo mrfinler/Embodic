@@ -568,8 +568,8 @@ Direction: TypeAlias = Literal["up", "down", "same"]
 class CompareRow:
     """One quantity of the reference and the current design.
 
-    A value cell joins number and unit with U+00A0 (ruling e1); a unitless value leaves "dimensionless" to the unit
-    column, so the value columns stay narrow enough for the Quantity column (U-S4g S28).
+    A value cell joins number and unit with U+00A0 (ruling e1); a unitless value is the number alone. The table has no
+    Unit column: a column unit beside a scaled cell unit ("V·s/rad", "26.4 mV·s/rad") contradicts it (D-043c).
     """
 
     quantity: str
@@ -578,7 +578,6 @@ class CompareRow:
     current_text: str
     delta_text: str
     direction: Direction
-    unit_text: str
 
 
 def _direction(delta: float) -> Direction:
@@ -619,7 +618,6 @@ def compare_rows(reference: ComputeOutcome, current: ComputeOutcome) -> tuple[Co
                     current_text=format_quantity(cur.traceable.value, unit),
                     delta_text=_signed(format_quantity(delta, unit), delta),
                     direction=_direction(delta),
-                    unit_text=unit.display() or text("results.unit.dimensionless"),
                 )
             )
     ref_counts, cur_counts = _counts(reference), _counts(current)
@@ -633,7 +631,6 @@ def compare_rows(reference: ComputeOutcome, current: ComputeOutcome) -> tuple[Co
                 current_text=str(cur_n),
                 delta_text=_signed(format_quantity(delta_n, Unit.COUNT), delta_n),
                 direction=_direction(delta_n),
-                unit_text=text("results.unit.dimensionless"),
             )
         )
     return tuple(rows)

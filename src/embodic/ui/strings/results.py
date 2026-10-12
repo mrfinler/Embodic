@@ -117,7 +117,6 @@ STRINGS: Mapping[str, str] = {
     "compare.column.reference": "Reference",
     "compare.column.current": "Current",
     "compare.column.delta": "Delta",
-    "compare.column.unit": "Unit",
     "compare.reference.caption": "Reference: {name}",
     "compare.count.copper-layers": "Copper layers",
     "compare.count.coils": "Coils",

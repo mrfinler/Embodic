@@ -5,7 +5,7 @@ import dataclasses
 import pytest
 from PySide6.QtCore import QPoint, QRect, Qt
 from PySide6.QtGui import qGray
-from PySide6.QtWidgets import QApplication, QCheckBox, QMessageBox, QPushButton, QWidget
+from PySide6.QtWidgets import QApplication, QCheckBox, QMessageBox, QPushButton, QTableWidget, QWidget
 from tests.ui.qt_results.conftest import find
 
 from embodic.results.status import Status
@@ -20,6 +20,7 @@ def ink_pixels(icon) -> int:
 
 
 D08, D14, WAVE, SERPENTINE = "spiral_12c10p_d08", "spiral_12c14p", "wave_16p_example", "serpentine_16p_example"
+CF11 = "spiral_12c16p_default"
 
 
 @pytest.mark.req("REQ-N-25")
@@ -253,6 +254,48 @@ def test_s28_compare_table_takes_its_rows_up_to_the_pane_and_the_chart_starts_be
         assert wrapped.width() <= inner and table.rowHeight(row) >= wrapped.height(), (row, label, wrapped, inner)
     assert chart.mapTo(window, QPoint(0, 0)).y() >= table.mapTo(window, QPoint(0, table.height())).y()
     assert chart.height() >= chart.minimumSizeHint().height()
+
+
+def dark_pixels(table: QTableWidget, row: int) -> int:
+    """Return how many dark (text) pixels the Quantity cell of a row paints inside its 4 px border."""
+    rect = table.visualRect(table.model().index(row, 0)).adjusted(4, 4, -4, -4)
+    image = table.viewport().grab(rect).toImage()
+    return sum(1 for x in range(image.width()) for y in range(image.height()) if qGray(image.pixel(x, y)) < 110)
+
+
+@pytest.mark.req("REQ-F-17", "REQ-N-15")
+@pytest.mark.parametrize("size", [(1280, 800), (1600, 900)])
+def test_s28_n1_n2_compare_has_no_unit_column_and_a_focused_quantity_cell_keeps_all_its_lines(
+    make_window, load, qtbot, size
+):
+    """U-S4h N1, N2 (D-043c). Catches a Unit column, a Quantity column narrower than Delta, a focused cell cut short."""
+    window = load(make_window(), CF11)
+    window.resize(*size)
+    tab = window.compare_tab
+    window.show_results_tab("tab-compare")
+    qtbot.mouseClick(tab.set_reference, Qt.MouseButton.LeftButton)
+    load(window, D14)
+    window.show_results_tab("tab-compare")
+    table = tab.table
+    for _ in range(10):
+        QApplication.processEvents()
+    headers = [table.horizontalHeaderItem(c).text() for c in range(table.columnCount())]
+    assert headers == ["Quantity", "Reference", "Current", "Delta"]
+    widths = [table.columnWidth(c) for c in range(table.columnCount())]
+    assert widths[0] > max(widths[1:]), widths
+    window.activateWindow()
+    table.setFocus(Qt.FocusReason.TabFocusReason)
+    unfocused = {}
+    table.setCurrentCell(0, 1)
+    for row in range(table.rowCount()):
+        unfocused[row] = dark_pixels(table, row)
+    short = []
+    for row in range(table.rowCount()):
+        table.setCurrentCell(row, 0)
+        QApplication.processEvents()
+        if dark_pixels(table, row) < 0.85 * unfocused[row]:
+            short.append((row, table.item(row, 0).text(), unfocused[row], dark_pixels(table, row)))
+    assert short == []
 
 
 @pytest.mark.req("REQ-F-33")
