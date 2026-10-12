@@ -2,10 +2,15 @@
 
 import json
 import os
+import shutil
+import tempfile
 from pathlib import Path
 
 import pytest
 from hypothesis import settings
+
+from embodic.paths import resource_root
+from embodic.results import registry
 
 MARKERS = (
     "req(*req_ids): requirement IDs (REQ-x-nn) this test verifies; every test needs at least one (TR-02)",
@@ -31,13 +36,39 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
 
 
+SHIPPED_REGISTRIES = pytest.StashKey[tuple[pytest.MonkeyPatch, Path]]()
+
+
 def pytest_configure(config: pytest.Config) -> None:
-    """Register the markers and, when asked, the REQ report collector."""
+    """Register the markers, the REQ report collector when asked, and the registry without build evidence."""
     for line in MARKERS:
         config.addinivalue_line("markers", line)
     report_path = config.getoption("--req-report")
     if report_path:
         config.pluginmanager.register(ReqReport(Path(report_path)), "embodic-req-report")
+    config.stash[SHIPPED_REGISTRIES] = _load_registry_without_build_evidence()
+
+
+def pytest_unconfigure(config: pytest.Config) -> None:
+    """Restore the registry's resource root and delete the session copy."""
+    patch, folder = config.stash[SHIPPED_REGISTRIES]
+    patch.undo()
+    shutil.rmtree(folder, ignore_errors=True)
+
+
+def _load_registry_without_build_evidence() -> tuple[pytest.MonkeyPatch, Path]:
+    """Point load_registry() at a copy of the shipped registries that leaves out passed_tests.v1.json (D-045f).
+
+    A release run leaves that file in resources/evidence (interfaces.md section 3.1), and it would turn the badges under
+    test away from `not tested`. A test about evidence writes its own file and passes load_registry an explicit root.
+    This runs before collection because some test modules call load_registry() at import.
+    """
+    folder = Path(tempfile.mkdtemp(prefix="embodic-registries-"))
+    skip_evidence = shutil.ignore_patterns(registry.PASSED_TESTS_FILE)
+    shutil.copytree(resource_root() / "evidence", folder / "evidence", ignore=skip_evidence)
+    patch = pytest.MonkeyPatch()
+    patch.setattr(registry, "resource_root", lambda: folder)
+    return patch, folder
 
 
 class ReqReport:

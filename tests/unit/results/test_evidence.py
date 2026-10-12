@@ -196,3 +196,24 @@ def test_ut_res_09_one_missing_linked_test_keeps_the_badge_not_tested(root):
     assert registry.passed_tests == frozenset({"EQT-10-CF04", "EQT-10-GR"})
     assert _badges(registry)["eq10"].status is Status.NOT_TESTED
     assert registry.test_state("EQ-10") is Status.NOT_TESTED
+
+
+@pytest.mark.req("REQ-T-05")
+def test_d045f_evidence_a_release_run_left_in_the_tree_never_reaches_the_test_session(root):
+    """Catches a session whose default registry reads resources/evidence/passed_tests.v1.json (DEF-U-M5b-01, D-045f).
+
+    The planted file applies to this tree but lists no test, so a run killed before the restore changes no badge.
+    """
+    leftover = resource_root() / "evidence" / PASSED_TESTS_FILE
+    previous = leftover.read_bytes() if leftover.exists() else None
+    leftover.write_text(json.dumps(document(root, []), sort_keys=True), encoding="utf-8")
+    try:
+        read_explicitly, read_by_default = load_registry(resource_root()), load_registry()
+    finally:
+        if previous is None:
+            leftover.unlink()
+        else:
+            leftover.write_bytes(previous)
+    assert read_explicitly.evidence_build_id == "0.0.1+g0123456789ab.20261012T120000Z", "precondition: the file applies"
+    assert read_by_default.evidence_build_id is None
+    assert read_by_default.passed_tests == frozenset()

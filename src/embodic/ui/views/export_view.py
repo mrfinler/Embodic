@@ -21,7 +21,14 @@ from PySide6.QtWidgets import (
 from embodic.io.exporters import ExportRefused
 from embodic.ui.strings import text
 from embodic.ui.theme import ThemeTokens
-from embodic.ui.viewmodels.export import FORMAT_OPTIONS, ExportFormat, ExportViewModel, ExportWritten, selection_problem
+from embodic.ui.viewmodels.export import (
+    FORMAT_OPTIONS,
+    ExportFormat,
+    ExportViewModel,
+    ExportWritten,
+    needs_drc_confirmation,
+    selection_problem,
+)
 from embodic.ui.views.dialogs import ExportConfirmDialog
 from embodic.ui.views.style import themed_icon
 from embodic.ui.views.widgets import check_box
@@ -146,9 +153,9 @@ class ExportDialog(QDialog):
             self.folder.setText(folder)
 
     def run_clicked(self) -> None:
-        """Run the export; with DRC failures, open the confirmation first (focus on Cancel)."""
+        """Run the export; with DRC failures and more than the PDF report and the README chosen, confirm first."""
         preflight = self.vm.preflight()
-        if not preflight.needs_confirmation:
+        if not needs_drc_confirmation(preflight, self.selected()):
             self._run(confirmed=False)
             return
         outcome = self.vm.outcome()
