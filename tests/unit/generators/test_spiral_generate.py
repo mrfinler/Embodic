@@ -21,7 +21,7 @@ from embodic.geometry.details import SpiralDetail, TurnClosing, TurnLimitReason
 from embodic.geometry.discretise import discretise
 from embodic.geometry.layout import BoardStack, Layout, ViaRole
 from embodic.geometry.paths import CopperPath, is_continuous
-from embodic.geometry.primitives import PrimitiveRole
+from embodic.geometry.primitives import PrimitiveRole, primitive_length_mm
 from embodic.geometry.transforms import mirror, reverse_path, rotate
 from embodic.model.design import DesignParameters
 from embodic.model.drc_rules import DrcRules
@@ -62,6 +62,30 @@ def test_default_track_length_matches_cf11(board: Layout) -> None:
     assert detail.turn_limit.loops_trapezoidal == 8 and detail.turn_limit.loops_triangular == 3
     assert detail.track_length_per_coil_layer_mm["X"] == pytest.approx(415.4808, abs=5e-5)
     assert detail.plan.pattern == "ACBACBACBACB"
+
+
+@pytest.mark.eqt("EQT-25-CF11")
+@pytest.mark.req("REQ-F-06")
+def test_default_lead_stub_and_via_radii_match_cf11(board: Layout) -> None:
+    """CF-11 (EQ-25): per coil-layer lead 1.3341074672568292 mm and stub 0.7876736223934756 mm, rel 1e-6.
+
+    Terminal vias sit at r_T = 38.5 mm (abs 1e-9) and centre vias at r_v = 30.7 mm (abs 1e-6).
+
+    Defect caught: a terminal-via angle that drops the bus width (stub 0.7512 mm) or carries a margin (the 1e-6 rad of
+    DEF-UE10-02 moves the stub 1.5e-5 relative), or a stub that absorbs length from the body. The 415.4808 mm total
+    hides them. The bus width alone gives the same angle as max(pad, bw) here (bw 1.0 mm > pad 0.6 mm), so that
+    variant is not caught.
+    """
+    for path in _coil_paths(board, 0).values():
+        lead_mm = sum(primitive_length_mm(p) for p in path.primitives if p.role is PrimitiveRole.LEAD)
+        stub_mm = sum(primitive_length_mm(p) for p in path.primitives if p.role is PrimitiveRole.STUB)
+        assert lead_mm == pytest.approx(1.3341074672568292, rel=1e-6)
+        assert stub_mm == pytest.approx(0.7876736223934756, rel=1e-6)
+    terminal_radii = [math.hypot(v.x_mm, v.y_mm) for v in board.vias if v.role is ViaRole.TERMINAL]
+    centre_radii = [math.hypot(v.x_mm, v.y_mm) for v in board.vias if v.role is ViaRole.CENTRE]
+    assert terminal_radii and centre_radii
+    assert terminal_radii == pytest.approx([38.5] * len(terminal_radii), abs=1e-9)
+    assert centre_radii == pytest.approx([30.7] * len(centre_radii), abs=1e-6)
 
 
 @pytest.mark.eqt("EQT-02-CF10", "EQT-03-CF10")
@@ -132,6 +156,20 @@ def test_ut_geo_04_centre_via_terminates_x_and_y(board: Layout) -> None:
         for path in _coil_paths(board, coil).values():
             ends = (path.primitives[0].start_point(), path.primitives[-1].end_point())
             assert min(math.dist(e, (via.x_mm, via.y_mm)) for e in ends) <= 1e-9
+
+
+@pytest.mark.eqt("EQT-01-UT1")
+@pytest.mark.req("REQ-F-01")
+def test_eq01_centre_vias_sit_one_coil_pitch_of_2pi_over_q_apart(board: Layout) -> None:
+    """EQ-01 (Q 12, 2p 16): the 12 centre vias sit at first_coil_angle_rad + k pi/6, k 0 to 11, abs 1e-9 rad.
+
+    Defect caught: a coil pitch of pi/p (D08 eq. 3.27, valid only for Q = 2p) places them 22.5 degrees apart.
+    """
+    first = default_design().winding.coil.first_coil_angle_rad  # type: ignore[union-attr]
+    offsets = [(math.atan2(v.y_mm, v.x_mm) - first) % (2 * math.pi) for v in board.vias if v.role is ViaRole.CENTRE]
+    slots = [round(offset / (math.pi / 6)) for offset in offsets]
+    assert sorted(slot % 12 for slot in slots) == list(range(12))
+    assert [o - k * math.pi / 6 for o, k in zip(offsets, slots, strict=True)] == pytest.approx([0.0] * 12, abs=1e-9)
 
 
 @pytest.mark.req("REQ-F-01")
