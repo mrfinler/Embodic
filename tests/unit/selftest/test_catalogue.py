@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from embodic.io import project as project_module
 from embodic.selftest import SELFTESTS, SelfTestVerdict, run_selftests
 
 REPO = Path(__file__).resolve().parents[3]
@@ -47,6 +48,18 @@ def test_ut_slf_01_every_check_of_the_catalogue_passes_on_this_build_in_catalogu
     assert [r.check_id for r in report.results] == SECTION_14_IDS
     assert len(SECTION_14_IDS) == len(set(SECTION_14_IDS)) == 45
     assert (report.ok, report.cancelled) == (True, False)
+
+
+@pytest.mark.req("REQ-F-25")
+def test_ut_slf_01_io_roundtrip_holds_when_the_two_saves_straddle_a_second_boundary(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Catches ST-IO-ROUNDTRIP stamping each save from the wall clock, which failed in PK-11 and UI-35."""
+    seconds = iter(range(60))
+    monkeypatch.setattr(project_module, "_utc_now", lambda: f"2026-10-08T12:00:{next(seconds):02d}Z")
+    (roundtrip,) = [check for check in SELFTESTS if check.id == "ST-IO-ROUNDTRIP"]
+    (result,) = run_selftests([roundtrip]).results
+    assert (result.verdict, result.message) == (SelfTestVerdict.PASSED, "")
 
 
 @pytest.mark.req("REQ-F-25")
