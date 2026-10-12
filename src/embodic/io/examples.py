@@ -24,8 +24,7 @@ DISPLAY_NOTES = {
     "spiral_12c16p_default": "CF-11 copper with 12 coils and 16 poles. Example values (assumption).",
     "wave_16p_example": (
         "Involute wave settings of the reference generator. Example values (assumption); board, bore and screw "
-        "circle follow the "
-        "reference outline rules at this copper envelope."
+        "circle follow the reference outline rules at this copper envelope."
     ),
 }
 
