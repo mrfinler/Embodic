@@ -1421,8 +1421,8 @@
   },
   {
    "case_id": "CF-11",
-   "version": 2,
-   "version_note": "version 2 (revision 2026-10-05, U-E3): G3-G5 revised (both sides on d_t, outer-end jog, lead arc at r_v = r_hi); inputs unchanged",
+   "version": 3,
+   "version_note": "version 3 (revision 2026-10-13, U-E10, D-046 b): terminal-via angle without the reference script's undocumented 1e-6 rad margin (DEF-UE10-02); full-precision stub 0.7876736223934756 mm, R per coil-layer moves by -2.8e-8 relative; version 2 (revision 2026-10-05, U-E3): G3-G5 revised (both sides on d_t, outer-end jog, lead arc at r_v = r_hi); inputs unchanged",
    "kind": "reference model (spiral_reference.py)",
    "eq_ids": [
     "EQ-02",
@@ -1549,7 +1549,7 @@
     },
     {
      "quantity": "R per coil-layer 20 degC",
-     "value": 0.4116841855287007,
+     "value": 0.4116841739852531,
      "unit": "ohm",
      "tolerance": "relative 1e-6"
     },

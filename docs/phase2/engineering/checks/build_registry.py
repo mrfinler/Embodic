@@ -297,7 +297,12 @@ def build():
     reg["notes"] = list(p1["notes"]) + ["v1.0: EQ-23...EQ-30 added for the serpentine/wave port (D-013); EC-05 labels per DEF-23; EQ-02 eye counts per EQ-25",
                                         "v1.0 rev. U-E2 (2026-10-05): DEF-M2b-01 EC-05 typed fields; DEF-M2b-02 EV-24 on EQ-20, EV-82/EV-83 on EQ-15, "
                                         "unsourced equations listed in equation_specification.md 'Source and unit gaps'; DEF-M2b-03 label, constants, "
-                                        "object-form dominant_assumptions"]
+                                        "object-form dominant_assumptions",
+                                        "v1.0 rev. U-E10 (2026-10-13, D-046 d): for a test ID EQT-nn-CFxx the closed-form case CF-xx of "
+                                        "oracle_cases.json (its inputs, expected values and tolerances) governs over the equation's Phase 1 "
+                                        "reference_case and tolerance texts, which stay as the Phase 1 record; the texts that differ are the EQ-06 "
+                                        "tolerance (1e-4 vs CF-02 1e-9 and CF-03 1e-5) and the EQ-12 and EQ-13 reference_case (Xcoil rho, 1e-4 and "
+                                        "5e-3 mm vs CF-05 1e-9); eqt_map_review.md section b"]
     eqs = []
     for e in p1["equations"]:
         e = copy.deepcopy(e)

@@ -7,6 +7,26 @@ carry the ID with `@pytest.mark.eqt` check the ID's acceptance criterion as the 
 The evidence rule is interfaces.md section 3.1: an ID passes when at least one test carries it and every carrying test
 passes. A skipped, xfailed, failed or not-run record keeps the ID out.
 
+## Rulings applied (D-046, 2026-10-13)
+
+The review below was made on main 6243163 and merged as a3fb8a0. Fable's rulings change it as follows.
+
+- (b) DEF-UE10-02. The EQ-25 text stands. `checks/spiral_reference.py` no longer subtracts 1e-6 rad from the
+  terminal-via angle (changelog in its header). The script now gives the CF-11 stub 0.7876736223934756 mm (`verified`,
+  ran). `checks/build_oracle_cases.py` rebuilt `oracle_cases.json`. Only CF-11 changed: version 3, and "R per coil-layer
+  20 degC" moved from 0.4116841855287007 to 0.4116841739852531 Ω (−2.8e-8 relative, inside its 1e-6). The printed CF-11
+  lengths are unchanged. Agent 3 regenerates the fixture in U-M5f with
+  `/home/claude/embodic/.venv/bin/python tests/unit/generators/make_r2_goldens.py`, run from the repository root. That
+  script imports `spiral_reference` and writes `tests/unit/generators/fixtures/spiral_r2_turns.json`.
+- (c) A marker is an all-or-nothing claim. EQT-05-EC loses its marker until the e_edge test below (Phase 2 test 8) exists.
+  Then both tests carry it. EQT-02-CF10 gains `test_or_04_d08_builds_three_turns_with_the_half_closing` as a second
+  carrier. EQT-23-CF06 is tightened to rel 1e-12 with 2.1999999999999997 and 0.7313131313131312 Ω. Agent 3 does all
+  three in U-M5f.
+- (d) The registry gains the note "v1.0 rev. U-E10": for an `EQT-nn-CFxx` test the case CF-xx governs over the Phase 1
+  `reference_case` and `tolerance` texts. `equation_specification.md` repeats it under "How to read an entry" and in
+  "Changes from the Phase 1 draft". `check_consistency.py` and `check_ev_ids.py` pass.
+- (e) EQT-14-GR stays Phase 3 with the note in section (c).
+
 ## How the review was made
 
 - Map. `pytest tests --collect-only --req-report` on the worktree (3085 tests collected) lists the `eqt` markers of every
@@ -33,6 +53,7 @@ passes. A skipped, xfailed, failed or not-run record keeps the ID out.
 | Carried, `remove` | 0 |
 | Not carried, Phase 2 (test specified below) | 12 IDs in 11 tests |
 | Not carried, Phase 3 | 9 |
+| After D-046 c | EQT-05-EC moves from carried to Phase 2 (test 8): 41 carried, 13 Phase 2 IDs |
 
 Carried IDs that do not pass on main 6243163 (`verified`, `-m eqt` run): EQT-05-O2 and EQT-06-O2 (OR-07 strict xfail,
 section d), EQT-23-GR and EQT-26-GR (carriers in `test_interconnect_golden.py` fail, DEF-UE10-01).
@@ -53,7 +74,7 @@ Status column: `verified` = read in the test and the registry, and the carrying 
 | EQT-04-UT1 | test_kernels.py `test_ut_phy_02_block_magnet_pole_arc_ratio` | correct | verified | Registry reference 0.853 / 0.547 / 0.402 is printed to 3 decimals; abs 5e-4 is that rounding. |
 | EQT-05-GR | test_physics_golden.py `test_physics_kernel_matches_xcoil` (fieldHarmonic, 3 cases) | correct | verified | KERNEL rel 1e-12, open rotor included. `fieldSetup` has no carrier (`inferred` by name search). |
 | EQT-05-CF01 | test_kernels.py `test_cf01_field_fundamental_equals_the_1d_magnetic_circuit` | correct | verified | CF-01 inputs, 1.162077823241657 T, rel 1e-9. |
-| EQT-05-EC | golden/m2_physics/test_analyse_layouts.py `test_ec05_above_the_cap_downgrades_emf_results_to_unresolved` | partial | verified | Checks both sides of the 10 % rule (limitation below, `unresolved` above). Does not check the value of e_edge against the EC-05 formula (D_e 0.47, c_e 0.9, w = \|B_z1 r Δr\|, d to the nearer magnet end). A wrong D_e, c_e or d passes while the two designs stay on their sides of 10 %. Missing: one constructed path whose e_edge is derived by hand from the formula at the kernel's segmentation. The expected value needs an Agent 2 derivation first (open question 3). |
+| EQT-05-EC | golden/m2_physics/test_analyse_layouts.py `test_ec05_above_the_cap_downgrades_emf_results_to_unresolved` | partial | verified | Checks both sides of the 10 % rule (limitation below, `unresolved` above). Does not check the value of e_edge against the EC-05 formula (D_e 0.47, c_e 0.9, w = \|B_z1 r Δr\|, d to the nearer magnet end). A wrong D_e, c_e or d passes while the two designs stay on their sides of 10 %. D-046 c: the marker comes off until Phase 2 test 8 (section c) exists. |
 | EQT-05-O1 | unit/physics/test_oracles.py `test_or01_d08_line_line_ke_within_the_registry_band` | correct | verified | D08 0.031 V·s/rad in [−8 %, +8 % + e_edge], e_edge computed per design. |
 | EQT-05-O2 | unit/physics/test_oracles_m5.py `test_or07_d09_phase_emf_within_the_registry_band` (A, B), `test_or08_d09_synthesised_bz_peak_at_mid_radius_within_5_percent_of_the_figure_reading` | correct | verified | Markers are right. OR-07 is a strict xfail, so the ID stays out (section d). OR-08 checks the registry `additional_cases` value B_pole_centre 0.738 T against D09 Fig. 7 at ±5 % and passes. |
 | EQT-06-GR | m2_physics/test_analysis_golden.py `test_result_quantities_match_xcoil`; m3_serpentine/test_gr22_results.py `test_gr22_phase_constant_equals_xcoil`; m3_wave/test_gr22_results.py `test_gr22_ke_per_phase_and_eddy_loss_match_xcoil` | correct | verified | Ke per phase and line at INTEGRATED (rel 1e-9). |
@@ -163,7 +184,7 @@ stub reference (with -1e-6 rad) 0.7876852722970421 stub by the EQ-25 text 0.7876
 ```
 
 `checks/spiral_reference.py` l.232 subtracts an extra 1e-6 rad from the terminal-via angle. EQ-25's text
-(equation_specification.md l.492) and `spiral_generator_spec.md` G6 have no such margin. The product follows the text.
+(equation_specification.md l.495 after the D-046 edit, l.492 on a3fb8a0) and `spiral_generator_spec.md` G6 have no such margin. The product follows the text.
 So the CF-11 stub (0.7877 mm printed, 0.7876852722970421 in `tests/unit/generators/fixtures/spiral_r2_turns.json`) is
 1.48e-5 relative off the rule, outside CF-11's 1e-6. This is a defect in the reference model, not in the product
 (DEF-UE10-02). The registry's EQ-25 text is right and stays.
@@ -177,8 +198,8 @@ Missing test (expected values from the EQ-25 text, derived with the reference co
   `ViaRole.TERMINAL` via at r_T = 38.5 mm (abs 1e-9); every `ViaRole.CENTRE` via at r_v = 30.7 mm (abs 1e-6).
 - Defect caught: a lead arc at the wrong radius, a terminal via on the bus width instead of max(pad, bw), a stub that
   absorbs length from the body.
-- If Fable rules instead to keep the margin, the EQ-25 text gains "− 1e-6 rad" and the stub expectation becomes the
-  fixture value. Either way the text and the reference must agree before the test is written.
+- D-046 b resolved the conflict in favour of the EQ-25 text. After Agent 3 regenerates the fixture, its CF-11 `stub`
+  equals 0.7876736223934756 mm, and the test may read it from there.
 
 ### EQT-14-O2
 
@@ -205,7 +226,7 @@ Phase 3 rows carry their own status.
 | EQT-07-CF07 | 2 | Section (b). |
 | EQT-12-CF05 | 2 | Section (b). |
 | EQT-13-CF05 | 2 | Section (b). |
-| EQT-14-GR | 3 | embodic has no port of `windingInductance`, `conductorsSerpentine`, `conductorsWave` or `conductorsFromElements` (`verified` by search of src/embodic). `AnalysisResult.inductance_estimate_h` is EQ-14 form (a). Nothing to compare until a port exists or Fable changes the gate (open question 1). |
+| EQT-14-GR | 3 | embodic has no port of `windingInductance`, `conductorsSerpentine`, `conductorsWave` or `conductorsFromElements` (`verified` by search of src/embodic). `AnalysisResult.inductance_estimate_h` is EQ-14 form (a). See the Phase 3 note on EQ-14 below. |
 | EQT-14-O2 | 3 | Section (b). |
 | EQT-16-GR | 3 | `mass_g` exists, but no Xcoil `massThermal` dump is in tests/golden/data (`inferred` by key search). A dump from tools/golden/dump_xcoil.mjs with Xcoil's copper density 8.96 g/cm³ injected. |
 | EQT-16-UT1 | 2 | Test 5 below. |
@@ -219,6 +240,12 @@ Phase 3 rows carry their own status.
 | EQT-28-GR | 3 | No rotor-inertia function in src/embodic (`verified` by search). The port comes first. |
 | EQT-29-GR | 3 | No capacitance function in src/embodic (`verified` by search). The port comes first. The CODATA ε₀ change of EQ-29 (U-E5) applies to it. |
 
+Phase 3 note on EQ-14 (D-046 e). The registry gate of EQ-14 is `cannot verify yet` with Xcoil's current-sheet functions
+(`windingInductance`, `conductorsSerpentine`, `conductorsWave`, `conductorsFromElements`) as golden functions at 1e-9.
+embodic ships the magnetising form (a) instead, so EQT-14-GR has nothing to compare. Phase 3 decides one of two paths.
+Port the current-sheet model and add its golden test, or change the gate to name form (a) and drop EQT-14-GR. The
+registry stays unchanged until then.
+
 The Phase 3 "dump" rows need Xcoil data that is not in hand. tools/golden/dump_xcoil.mjs can probably write it (not run
 in this unit), so each is cheap once Fable schedules it.
 
@@ -231,7 +258,7 @@ Each value was reproduced through the product's public function (`probe_phase2.p
    330° at 9 decimals. Defect caught: θ_cp = π/p (D08 eq. 3.27, valid only for Q = 2p) gives 22.5°. θ_e = pθ (240° per
    coil) is exercised by the CF-09 pattern test of 12/16.
 2. EQT-02-UT1. Input: `loop_turns(CoilFrame.of(SpiralCoilSpec(...), 0.6))` for 18/16 (r 18 to 38, w 0.5, s 0.2, gap 0.2),
-   12/16 (same) and D08 (r 11.47 to 45.03, w 2.06, s 0.8, gap 0.8). Expected (EQ-02 text l.64 to 65): 7, 11, 3 turns,
+   12/16 (same) and D08 (r 11.47 to 45.03, w 2.06, s 0.8, gap 0.8). Expected (EQ-02 text, equation_specification.md l.67 to 68): 7, 11, 3 turns,
    exact. Probe: 7 (stop radial), 11 (lateral), 3 (lateral). Defect caught: a missing `min_side_length` = 2w rule
    (18/16 gives 8).
 3. EQT-05-CF03 and EQT-06-CF03. Input (CF-03): `field_table(rotor, 1.1, 0.8, (1,))` with 16 poles, B_r 1.3 T, µ_r 1.05,
@@ -259,6 +286,18 @@ Each value was reproduced through the product's public function (`probe_phase2.p
    False for k 4. Probe: [True, True, True, False]. Also put EQT-25-UT1 on
    `test_ut_geo_19_series_groups_get_their_own_centre_via_one_pitch_apart` (test_spiral_pairs.py), which asserts r_v
    30.7, 29.9, 29.1 mm at abs 1e-9. Defect caught: the v1.0 pitch pad + s, or k in place of k − 1.
+8. EQT-05-EC, e_edge value (D-046 c; the existing threshold test keeps checking the 10 % rule). Inputs: a hand-built
+   `FieldTable(r_inner_mm=18, r_outer_mm=38, harmonics=(1,), bz_t=0.8 T at all 49 radii, bt_t=0)`; two radial lines of
+   0.4 mm, each one segment at `max_segment_mm` 0.5: r 18.3 to 18.7 mm at angle 0 (r_m 18.5, d 0.5 mm) and r 27.8 to
+   28.2 mm at angle 0.5 rad (r_m 28.0, d 10 mm); D_e and c_e read from `load_registry().equation("EQ-05").validity_checks[0]`
+   `.parameters`, as `analyse` does (analyse.py l.256 to 259); G 1.1 mm (example), so c_e G = 0.99 mm. Call
+   `edge_leakage_fraction([integrate_path(line_k, table, 8, 0.5, c_e * G) for each line], D_e)`. Expected, from the EC-05
+   formula (equation_specification.md l.117 to 118) with D_e 0.47 and c_e 0.9 written as literals: w₁ = 0.8 × 18.5 × 0.4
+   = 5.92, w₂ = 0.8 × 28.0 × 0.4 = 8.96, e_edge = 0.47 (w₁ e^(−0.5/0.99) + w₂ e^(−10/0.99))/(w₁ + w₂) =
+   0.11285496821276436, rel 1e-12. The first line alone gives 0.47 e^(−0.5/0.99) = 0.28363329517506497. Probe
+   (`probe_ec05.py`): 0.11285496821276378 (rel 5.2e-15) and 0.28363329517506497; registry D_e 0.47, c_e 0.9. Defect
+   caught: a wrong D_e or c_e in the registry or the kernel, d measured to the farther magnet end, the weight without r,
+   the decay length without G.
 
 ## (d) EQT-05-O2 and EQT-06-O2 while F-OR07 is open
 
@@ -279,7 +318,7 @@ What closes F-OR07 (oracle_tests_spec.md section "OR-07. D09 phase EMF"):
 | ID | Defect | Reproduce | Owner |
 |---|---|---|---|
 | DEF-UE10-01 | `tests/golden/m2_physics/test_interconnect_golden.py` fails on main 6243163: `xcoil_roles.classify` raises `ValueError: zip() argument 2 is shorter than argument 1` (xcoil_roles.py l.44). The layout has more paths than Xcoil has objects. U-M5o's GR-19 split is the likely cause (`inferred`). It blocks EQT-23-GR and EQT-26-GR. | `cd /home/claude/wt/U-E10 && PYTHONPATH=/home/claude/wt/U-E10/src /home/claude/embodic/.venv/bin/python -m pytest tests/golden/m2_physics/test_interconnect_golden.py -q` gives "2 failed, 2 passed, 15 errors". | Agent 3 (Fable routes) |
-| DEF-UE10-02 | `docs/phase2/engineering/checks/spiral_reference.py` l.232 subtracts 1e-6 rad from the terminal-via angle, which EQ-25 does not state. CF-11's stub (0.7876852722970421 mm) is 1.48e-5 relative off the rule (0.7876736223934756 mm, which the product gives). The same value is in tests/unit/generators/fixtures/spiral_r2_turns.json. CF-10 is unaffected (its start-corner angle is the smaller one). | `stub_by_spec.py` (output in section b). | Agent 2 (script, `oracle_cases.json` rebuild) and Agent 3 (fixture), after Fable rules |
+| DEF-UE10-02 | `docs/phase2/engineering/checks/spiral_reference.py` l.232 subtracts 1e-6 rad from the terminal-via angle, which EQ-25 does not state. CF-11's stub (0.7876852722970421 mm) is 1.48e-5 relative off the rule (0.7876736223934756 mm, which the product gives). The same value is in tests/unit/generators/fixtures/spiral_r2_turns.json. CF-10 is unaffected (its start-corner angle is the smaller one). | `stub_by_spec.py` (output in section b). | Fixed in the script and `oracle_cases.json` (D-046 b, this unit); fixture: Agent 3, U-M5f |
 
 ## Commands and output
 
@@ -292,17 +331,16 @@ All with `PYTHONPATH=/home/claude/wt/U-E10/src` and `/home/claude/embodic/.venv/
 | `tests/golden/m2_physics/test_interconnect_golden.py` | "2 failed, 2 passed, 15 errors in 1.65s" (DEF-UE10-01) |
 | `tests/unit/physics/test_closed_forms_m2e2.py tests/unit/physics/test_kernels.py tests/unit/generators/test_spiral_turns.py tests/unit/generators/test_spiral_length.py tests/unit/physics/test_oracles_m5.py` | "43 passed, 2 skipped, 2 xfailed in 5.38s" |
 
-`equation_registry.json` is unchanged, so `check_consistency.py` and `check_ev_ids.py` were not needed.
+D-046 continuation (2026-10-13), from the repository root:
+
+| Command | Output |
+|---|---|
+| `python3 docs/phase2/engineering/checks/spiral_reference.py --json` and `coil_path` on the three cases | CF-11 stub 0.7876736223934756, total 415.48080896371465; CF-10 stub 2.130000000000003 (unchanged) |
+| `python3 docs/phase2/engineering/checks/build_oracle_cases.py` | `oracle_cases.json` diff: CF-11 version 2 to 3 and R per coil-layer 0.4116841855287007 to 0.4116841739852531, nothing else |
+| `python3 docs/phase2/engineering/checks/build_registry.py` | "30 equations"; diff: one added note, every other key equal |
+| `python3 docs/phase2/engineering/checks/check_consistency.py` | "PASS: spec, registry, oracle cases and engine.js agree" |
+| `python3 docs/phase2/engineering/checks/check_ev_ids.py` | "missing: [] \| outside phase2_scope: []", exit 0 |
 
 ## Open questions for Fable
 
-1. EQ-14's gate names Xcoil's current-sheet functions for a golden port, and embodic ships form (a) instead. Keep the gate
-   and port `windingInductance`, or change the gate and drop EQT-14-GR?
-2. DEF-UE10-02: remove the 1e-6 rad margin from the reference script (then rebuild CF-11 and the fixture), or add it to
-   EQ-25's text? Agent 2 recommends removal: the margin is 1e-6 rad × 38.5 mm = 3.9e-5 mm of via position, below any
-   fabrication meaning, and the text is the contract.
-3. EQT-05-EC: the e_edge value needs a hand-derived expected value for one constructed path. Agent 2 can supply it in a
-   follow-up unit.
-4. The registry `reference_case` entries of EQ-12, EQ-13 (Phase 1 values at 1e-4 and 5e-3 mm) and the EQ-06 `tolerance`
-   text (1e-4 vs closed form) differ from CF-02, CF-03 and CF-05. A CF ID names its case, so the case governs. Should the
-   registry say so in a note? The two texts misled U-M5o.
+Questions 1 to 4 of the first hand-back were ruled in D-046 (b to e). None is open.
