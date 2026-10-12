@@ -276,8 +276,9 @@ of the spec only. The Windows folder, which the bundle test PK-05 needs, is not 
   Install the wheel in its own command with `--no-deps`, as in step 3.
 - The app aborts with `qt.qpa.plugin: From 6.5.0, xcb-cursor0 or libxcb-cursor0 is needed to load the Qt xcb platform
   plugin.` followed by `Could not load the Qt platform plugin "xcb"`: the system lacks the library that Qt names. On
-  Debian and Ubuntu, install the package `libxcb-cursor0`. Whether the window then opens on a desktop session is not
-  tested. The package names on other distributions are not tested either. If Qt names other libraries, install your
+  Ubuntu 24.04 the package is `libxcb-cursor0` in the universe component (`apt-cache policy libxcb-cursor0` on the build
+  container lists candidate 0.1.4-1build1). Install it with your package manager. Whether the window then opens on a
+  desktop session is not tested. Debian and other distributions are not tested. If Qt names other libraries, install your
   distribution's packages for EGL, OpenGL, xkbcommon and fontconfig (the package names differ per distribution; not
   tested in this build).
 - There is no display: set `QT_QPA_PLATFORM=offscreen` before you start `embodic`. Qt then uses its offscreen platform
