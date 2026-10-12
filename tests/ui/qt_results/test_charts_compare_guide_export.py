@@ -192,6 +192,30 @@ def test_ui29_export_with_drc_failures_lists_them_with_focus_on_cancel(make_wind
     assert written and sorted(dialog.result_text.text().splitlines()[1:]) == written
 
 
+@pytest.mark.req("REQ-F-33", "REQ-N-15")
+def test_s30_n3_export_confirmation_wraps_its_lines_without_a_sideways_bar(make_window, load, qtbot, tmp_path):
+    """U-S4h N3. Catches a failure line that runs off the right edge behind a sideways bar ("3.000000 mm" cut)."""
+    window = load(make_window(), WAVE)
+    window.toolstrip.actions_by_id["act-export-all"].trigger()
+    dialog = window.export_dialog
+    dialog.folder.setText(str(tmp_path / "wave"))
+    qtbot.mouseClick(dialog.run, Qt.MouseButton.LeftButton)
+    confirm = dialog.confirm
+    assert confirm.isVisible()
+    for _ in range(10):
+        QApplication.processEvents()
+    failures = confirm.failures
+    assert not failures.horizontalScrollBar().isVisible()
+    fonts, width = failures.fontMetrics(), failures.viewport().width()
+    first = failures.item(0).text()
+    assert fonts.horizontalAdvance(first) > width, "precondition: the line is longer than the list is wide"
+    for row in range(failures.count()):
+        rect = failures.visualItemRect(failures.item(row))
+        assert rect.right() <= width, (row, rect)
+    assert failures.visualItemRect(failures.item(0)).height() >= 2 * fonts.height()
+    confirm.reject()
+
+
 @pytest.mark.req("REQ-F-33")
 def test_export_dialog_on_d08_writes_svg_dxf_pdf_readme_zip_and_lists_only_those_files(
     make_window, load, qtbot, tmp_path
