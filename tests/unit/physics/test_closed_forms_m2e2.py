@@ -90,10 +90,10 @@ def test_eq19_balanced_fundamental_drives_nothing() -> None:
 
 @pytest.mark.eqt("EQT-23-CF06")
 def test_eq23_cf06_star_and_delta() -> None:
-    """EQ-23 reference (CF-06): branches 1.0, 1.1, 1.2 ohm -> R_LL 2.2 (star), 0.731313131 (delta)."""
+    """EQ-23 reference (CF-06): branches 1.0, 1.1, 1.2 ohm -> R_LL 2.1999999999999997 (star), 0.7313131313131312 (delta)."""
     branches = [1.0, 1.1, 1.2]
-    assert line_resistance_ohm(branches, ConnectionTopology.STAR) == pytest.approx(2.2, rel=1e-9)
-    assert line_resistance_ohm(branches, ConnectionTopology.DELTA) == pytest.approx(0.731313131, rel=1e-9)
+    assert line_resistance_ohm(branches, ConnectionTopology.STAR) == pytest.approx(2.1999999999999997, rel=1e-12)
+    assert line_resistance_ohm(branches, ConnectionTopology.DELTA) == pytest.approx(0.7313131313131312, rel=1e-12)
 
 
 def test_eq26_efficiency() -> None:

@@ -98,7 +98,7 @@ def test_ut_geo_09_turn_limit_is_eye_limited_at_ten() -> None:
     assert radial_bound(frame) == pytest.approx(14.43, abs=5e-3)
 
 
-@pytest.mark.eqt("EQT-25-CF10")
+@pytest.mark.eqt("EQT-25-CF10", "EQT-02-CF10")
 @pytest.mark.req("REQ-F-06")
 @pytest.mark.parametrize("pad", [0.6, 1.2])
 def test_or_04_d08_builds_three_turns_with_the_half_closing(pad: float) -> None:
