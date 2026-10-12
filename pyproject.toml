@@ -106,6 +106,7 @@ name = "Core layers"
 type = "layers"
 layers = [
     "(embodic.ui) | (embodic.cli)",
+    "(embodic.selftest)",
     "(embodic.api)",
     "(embodic.generators)",
     "(embodic.io)",
