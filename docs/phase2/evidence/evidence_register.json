@@ -1,5 +1,5 @@
 {
-  "prepared_by": "Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5 (rows EV-01 to EV-83); claude-sonnet-5-5 (rows EV-84 to EV-93, unit U-S3b; rows EV-94 to EV-105, unit U-S3c; rows EV-106 to EV-108, unit U-S5a; row EV-106 revised, unit U-S5b)",
+  "prepared_by": "Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5 (rows EV-01 to EV-83); claude-sonnet-5-5 (rows EV-84 to EV-93, unit U-S3b; rows EV-94 to EV-105, unit U-S3c; rows EV-106 to EV-108, unit U-S5a; row EV-106 revised, unit U-S5b; rows EV-109 to EV-114, unit U-S5c)",
   "schema": "embodic evidence register",
   "schema_version": 1,
   "generated_by": "docs/phase2/evidence/tools/build_evidence_register.py",
@@ -10,7 +10,7 @@
     },
     {
       "path": "docs/phase2/evidence/evidence_register.md",
-      "sha256": "453f8f447e185435629fb754ae41bad8f615f1fd2587db5274b5c0fb48a1f54f"
+      "sha256": "75d69846e9c9cb54bb0994458780e2e149604211cbe75b8afc2f24e60782ce61"
     },
     {
       "path": "docs/phase1/engineering/equation_registry_draft.json",
@@ -808,6 +808,72 @@
       "kind": "package",
       "path": null,
       "url": "https://pypi.org/project/fonttools/4.66.1/"
+    },
+    {
+      "id": "LIC-LGPL-3.0-QT-6.11.2",
+      "title": "GNU Lesser General Public License, Version 3 (qtbase LICENSES/LGPL-3.0-only.txt)",
+      "authors": "Free Software Foundation (Qt project copy)",
+      "year": 2007,
+      "year_text": "29 June 2007",
+      "venue": "qt/qtbase, release tag v6.11.2",
+      "kind": "licence",
+      "path": null,
+      "url": "https://raw.githubusercontent.com/qt/qtbase/v6.11.2/LICENSES/LGPL-3.0-only.txt"
+    },
+    {
+      "id": "LIC-GPL-3.0-SPDX",
+      "title": "GNU General Public License, Version 3 (SPDX licence list text GPL-3.0-only)",
+      "authors": "Free Software Foundation (SPDX copy)",
+      "year": 2007,
+      "year_text": "29 June 2007",
+      "venue": "spdx/license-list-data",
+      "kind": "licence",
+      "path": null,
+      "url": "https://raw.githubusercontent.com/spdx/license-list-data/main/text/GPL-3.0-only.txt"
+    },
+    {
+      "id": "PYPI-pyside6-essentials-6.11.2",
+      "title": "PySide6-Essentials 6.11.2 and shiboken6 6.11.2 (metadata, headers, wheel members)",
+      "authors": "Qt for Python Team (The Qt Company)",
+      "year": null,
+      "year_text": null,
+      "venue": "PyPI",
+      "kind": "package",
+      "path": null,
+      "url": "https://pypi.org/project/PySide6-Essentials/6.11.2/"
+    },
+    {
+      "id": "REPO-qt-6.11.2",
+      "title": "Qt 6.11.2 source repositories on the GitHub mirror, tag v6.11.2",
+      "authors": "The Qt Company and Qt project contributors",
+      "year": 2026,
+      "year_text": "2026",
+      "venue": "github.com/qt (qtbase and five more modules)",
+      "kind": "repository",
+      "path": null,
+      "url": "https://raw.githubusercontent.com/qt/qtbase/v6.11.2/"
+    },
+    {
+      "id": "PYPI-numpy-2.4.6",
+      "title": "NumPy 2.4.6 (PyPI metadata and licence files in the wheels)",
+      "authors": "NumPy Developers",
+      "year": null,
+      "year_text": null,
+      "venue": "PyPI",
+      "kind": "package",
+      "path": null,
+      "url": "https://pypi.org/project/numpy/2.4.6/"
+    },
+    {
+      "id": "LIC-PSF-CPYTHON-3.11",
+      "title": "CPython 3.11 LICENSE.txt (PSF License Agreement), Linux distribution copy",
+      "authors": "Python Software Foundation",
+      "year": null,
+      "year_text": null,
+      "venue": "/usr/lib/python3.11/LICENSE.txt",
+      "kind": "licence",
+      "path": "/usr/lib/python3.11/LICENSE.txt",
+      "url": null
     }
   ],
   "entries": [
@@ -5905,6 +5971,249 @@
       "related_gaps": [],
       "register_origin": "phase2",
       "accessed": "2026-10-09"
+    },
+    {
+      "id": "EV-109",
+      "claim": "LGPL-3.0 section 4 lets a Combined Work be conveyed \"under terms of your choice that, taken together, effectively do not restrict modification of the portions of the Library contained in the Combined Work and reverse engineering for debugging such modifications\", if the distributor also gives a prominent notice (4 a), accompanies the work with the GNU GPL and the LGPL texts (4 b), names the licence copies where the work displays copyright notices (4 c), does one of 4 d) 0 (convey the Minimal Corresponding Source and the Corresponding Application Code \"in a form suitable for, and under terms that permit, the user to recombine or relink\") or 4 d) 1 (use a shared library mechanism that \"uses at run time a copy of the Library already present on the user's computer system\"), and gives Installation Information only where GPL section 6 would require it (4 e). Section 0 defines Application, Combined Work, Linked Version, Minimal Corresponding Source and Corresponding Application Code. The text does not say whether a Qt copy delivered in the application's own folder is \"already present\"",
+      "kind": "source_claim",
+      "source": {
+        "document": "LIC-LGPL-3.0-QT-6.11.2",
+        "title": "GNU Lesser General Public License, Version 3 (qtbase LICENSES/LGPL-3.0-only.txt)",
+        "authors": "Free Software Foundation (Qt project copy)",
+        "year": 2007,
+        "year_text": "29 June 2007"
+      },
+      "documents": [
+        "LIC-LGPL-3.0-QT-6.11.2"
+      ],
+      "location": {
+        "text": "https://raw.githubusercontent.com/qt/qtbase/v6.11.2/LICENSES/LGPL-3.0-only.txt sections 0 and 4; dependency_licences.md quotes Q1 to Q11 and Q17",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://raw.githubusercontent.com/qt/qtbase/v6.11.2/LICENSES/LGPL-3.0-only.txt"
+        ]
+      },
+      "read_method": "source_read",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (the distributor obligations of a PyInstaller one-folder build that bundles PySide6 and Qt; the reading of \"already present\" is unresolved)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (source read)",
+      "topology_tags": [
+        "non_engineering"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase2",
+      "accessed": "2026-10-12"
+    },
+    {
+      "id": "EV-110",
+      "claim": "GPL-3.0 section 1 defines the Corresponding Source of an object code work as \"all the source code needed to generate, install, and (for an executable work) run the object code and to modify the work, including scripts to control those activities\". Section 6 lets a distributor convey object code with the Corresponding Source in one of five ways. Option d) is \"offering access from a designated place\" with \"equivalent access to the Corresponding Source in the same way through the same place at no further charge\", and the source may be on a different server if \"clear directions next to the object code\" say where. Option b) concerns \"a physical product\". Section 6 defines a \"User Product\" as \"tangible personal property\" for personal, family or household use, or equipment for a dwelling. Section 5 c) asks that a covered work be licensed \"as a whole\" under the GPL",
+      "kind": "source_claim",
+      "source": {
+        "document": "LIC-GPL-3.0-SPDX",
+        "title": "GNU General Public License, Version 3 (SPDX licence list text GPL-3.0-only)",
+        "authors": "Free Software Foundation (SPDX copy)",
+        "year": 2007,
+        "year_text": "29 June 2007"
+      },
+      "documents": [
+        "LIC-GPL-3.0-SPDX"
+      ],
+      "location": {
+        "text": "https://raw.githubusercontent.com/spdx/license-list-data/main/text/GPL-3.0-only.txt sections 1, 5 and 6; dependency_licences.md quotes Q12 to Q16, Q26 and Q27",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://raw.githubusercontent.com/spdx/license-list-data/main/text/GPL-3.0-only.txt"
+        ]
+      },
+      "read_method": "source_read",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (LGPL-3.0 section 4 d) 0 and 4 e) point to \"section 6 of the GNU GPL\" for how the source is delivered)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (source read)",
+      "topology_tags": [
+        "non_engineering"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase2",
+      "accessed": "2026-10-12"
+    },
+    {
+      "id": "EV-111",
+      "claim": "PySide6-Essentials 6.11.2 and shiboken6 6.11.2 declare the licence \"LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only\". The PySide6-Essentials description says \"PySide6 is available under both Open Source (LGPLv3 or GPLv2 or GPLv3) and commercial license\". The installed PySide6/QtCore.pyi starts with \"Copyright (C) 2022 The Qt Company Ltd.\" and \"SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only\". The only licence file in either Windows wheel is LicenseRef-Qt-Commercial.txt, 470 bytes, SHA-256 4f54763ac0fe2abd8f7f8d8fe370a94a08ebf84786aa0b91045bd6628deb08a3, identical in both wheels, and it says \"Licensees holding valid commercial Qt licenses may use this software in accordance with the the terms contained in a written agreement between you and The Qt Company\". The installed Linux wheel has no licence file. The Windows PySide6-Essentials wheel holds Qt6Core.dll, Qt6Gui.dll, Qt6Widgets.dll and Qt6Svg.dll as separate files and, besides Qt, ten DLLs with Visual C++ runtime names (msvcp140.dll, vcruntime140.dll, concrt140.dll and seven more) and opengl32sw.dll (20639544 bytes). QtCore.qVersion() printed 6.11.2 in the project venv",
+      "kind": "source_claim",
+      "source": {
+        "document": "PYPI-pyside6-essentials-6.11.2",
+        "title": "PySide6-Essentials 6.11.2 and shiboken6 6.11.2 (metadata, headers, wheel members)",
+        "authors": "Qt for Python Team (The Qt Company)",
+        "year": null,
+        "year_text": null
+      },
+      "documents": [
+        "PYPI-pyside6-essentials-6.11.2"
+      ],
+      "location": {
+        "text": "https://pypi.org/project/PySide6-Essentials/6.11.2/ (\"Licensing\"); .venv/lib/python3.11/site-packages/pyside6_essentials-6.11.2.dist-info/METADATA SHA-256 a4e0d97dfc9aeb7f65f42c05281fdc0372297a95d1a3e498df14806729644677; wheel member pyside6_essentials-6.11.2.dist-info/licenses/LicenseRef-Qt-Commercial.txt; dependency_licences.md quotes Q18, Q19 and Q21",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://pypi.org/project/PySide6-Essentials/6.11.2/"
+        ]
+      },
+      "read_method": "source_read",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (what a PyInstaller folder built from these wheels contains, and that neither wheel carries the LGPL text; the licence terms of the ten runtime DLLs and of opengl32sw.dll were not read and stay unresolved)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (source read)",
+      "topology_tags": [
+        "non_engineering"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase2",
+      "accessed": "2026-10-12"
+    },
+    {
+      "id": "EV-112",
+      "claim": "The repositories qt/qtbase, qt/qtdeclarative, qt/qttools, qt/qtsvg, qt/qtshadertools and qt/qtimageformats each answer 200 for LICENSES/LGPL-3.0-only.txt at tag v6.11.2, so that tag exists in each. qt/qtbase src/corelib/global/qglobal.h at the tag starts with \"Copyright (C) 2020 The Qt Company Ltd.\" and the line \"SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only\". The files src/3rdparty/<name>/qt_attribution.json for double-conversion (BSD-3-Clause, 3.4.0), freetype (FTL OR GPL-2.0-only, 2.14.3), harfbuzz-ng (MIT, 14.3.0), libpng (Libpng AND libpng-2.0, 1.6.58), pcre2 (10.47) and zlib (Zlib, 1.3.2) declare those licences. qt/pyside-setup answered 404 for every path tried on the GitHub mirror. Whether the PyPI Windows binaries contain these bundled copies is not stated in any file read",
+      "kind": "source_claim",
+      "source": {
+        "document": "REPO-qt-6.11.2",
+        "title": "Qt 6.11.2 source repositories on the GitHub mirror, tag v6.11.2",
+        "authors": "The Qt Company and Qt project contributors",
+        "year": 2026,
+        "year_text": "2026"
+      },
+      "documents": [
+        "REPO-qt-6.11.2"
+      ],
+      "location": {
+        "text": "https://raw.githubusercontent.com/qt/qtbase/v6.11.2/src/3rdparty/ (six qt_attribution.json files); https://raw.githubusercontent.com/qt/qtbase/v6.11.2/src/corelib/global/qglobal.h",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": [
+          "https://raw.githubusercontent.com/qt/qtbase/v6.11.2/src/3rdparty/",
+          "https://raw.githubusercontent.com/qt/qtbase/v6.11.2/src/corelib/global/qglobal.h"
+        ]
+      },
+      "read_method": "source_read",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly (a verified source location for the Qt source offer and per-library licence data; the full third-party list of the Windows binaries and the PySide6 source tag are not established)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (source read)",
+      "topology_tags": [
+        "non_engineering"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase2",
+      "accessed": "2026-10-12"
+    },
+    {
+      "id": "EV-113",
+      "claim": "NumPy 2.4.6 licenses/LICENSE.txt in the Windows cp311 wheel is 45831 bytes (SHA-256 a804dff0ead9fadc5293456410bcbfc32bf024be9c4513459663fb7b442d2341) and begins \"Copyright (c) 2005-2025, NumPy Developers.\" It is BSD-3-Clause and says \"Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.\" It lists OpenBLAS (BSD-3-Clause), LAPACK (BSD-3-Clause-Open-MPI) and the GCC runtime library (GPL-3.0-or-later WITH GCC-exception-3.1) for numpy.libs\\libscipy_openblas*.dll. The Linux wheel in the venv has a different file (46794 bytes, SHA-256 4860083caa0de2ac3292ca98bd074bd8f45d8b32624e37b1e70a240bff61e488) that also lists libquadmath. Each wheel holds 17 licence files",
+      "kind": "source_claim",
+      "source": {
+        "document": "PYPI-numpy-2.4.6",
+        "title": "NumPy 2.4.6 (PyPI metadata and licence files in the wheels)",
+        "authors": "NumPy Developers",
+        "year": null,
+        "year_text": null
+      },
+      "documents": [
+        "PYPI-numpy-2.4.6"
+      ],
+      "location": {
+        "text": "numpy-2.4.6.dist-info/licenses/LICENSE.txt in the Windows wheel and in .venv/lib/python3.11/site-packages; dependency_licences.md quote Q28",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "source_read",
+      "applies": {
+        "judgement": "yes",
+        "note": "yes (the NumPy text to ship in the Windows folder; take it from the wheel the build uses)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (source read)",
+      "topology_tags": [
+        "non_engineering"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase2",
+      "accessed": "2026-10-12"
+    },
+    {
+      "id": "EV-114",
+      "claim": "The CPython 3.11 LICENSE.txt PSF License Agreement section 2 grants the right to \"distribute, and otherwise use Python alone or in any derivative version, provided, however, that PSF's License Agreement and PSF's notice of copyright, i.e., \"Copyright (c) 2001, ... Python Software Foundation; All Rights Reserved\" are retained in Python alone or in any derivative version prepared by Licensee\". The file is 13936 bytes, SHA-256 3b2f81fe21d181c499c59a256c8e1968455d6689d269aa85373bfb6af41da3bf. It is the Linux distribution copy of CPython 3.11.15, not the file in the python.org Windows installer",
+      "kind": "source_claim",
+      "source": {
+        "document": "LIC-PSF-CPYTHON-3.11",
+        "title": "CPython 3.11 LICENSE.txt (PSF License Agreement), Linux distribution copy",
+        "authors": "Python Software Foundation",
+        "year": null,
+        "year_text": null
+      },
+      "documents": [
+        "LIC-PSF-CPYTHON-3.11"
+      ],
+      "location": {
+        "text": "/usr/lib/python3.11/LICENSE.txt section 2 of the PSF License Agreement; dependency_licences.md quote Q29",
+        "pages_pdf": [],
+        "pages_printed": null,
+        "urls": []
+      },
+      "read_method": "source_read",
+      "applies": {
+        "judgement": "partly",
+        "note": "partly (the text to ship in the PyInstaller folder; the Windows file was not read because docs.python.org and www.python.org were refused)",
+        "status": "inferred"
+      },
+      "status": "verified",
+      "status_note": "verified (source read)",
+      "topology_tags": [
+        "non_engineering"
+      ],
+      "phase2_scope": true,
+      "out_of_scope_reason": null,
+      "citable": true,
+      "related_equations": [],
+      "related_gaps": [],
+      "register_origin": "phase2",
+      "accessed": "2026-10-12"
     }
   ]
 }
