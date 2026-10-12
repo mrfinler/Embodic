@@ -1,5 +1,5 @@
 {
- "prepared_by": "Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5 (rows EV-01 to EV-83); claude-sonnet-5-5 (rows EV-84 to EV-93, unit U-S3b; rows EV-94 to EV-105, unit U-S3c; rows EV-106 to EV-108, unit U-S5a; row EV-106 revised, unit U-S5b; rows EV-109 to EV-114, unit U-S5c)",
+ "prepared_by": "Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5 (rows EV-01 to EV-83); claude-sonnet-5-5 (rows EV-84 to EV-93, unit U-S3b; rows EV-94 to EV-105, unit U-S3c; rows EV-106 to EV-108, unit U-S5a; row EV-106 revised, unit U-S5b; rows EV-109 to EV-114, unit U-S5c); Agent 2 (Motor Design Expert), model: claude-opus-5-5 (rows EV-115 and EV-116, unit U-E9)",
  "schema": "embodic evidence register",
  "schema_version": 1,
  "generated_by": "docs/phase2/evidence/tools/build_evidence_register.py",
@@ -10,7 +10,7 @@
   },
   {
    "path": "docs/phase2/evidence/evidence_register.md",
-   "sha256": "75d69846e9c9cb54bb0994458780e2e149604211cbe75b8afc2f24e60782ce61"
+   "sha256": "1e4dc7c1588ddb7f7594897070c58b2af181422bcae56581a8b16d0d50fdbbe4"
   },
   {
    "path": "docs/phase1/engineering/equation_registry_draft.json",
@@ -841,6 +841,28 @@
    "kind": "licence",
    "path": "/usr/lib/python3.11/LICENSE.txt",
    "url": null
+  },
+  {
+   "id": "WEB-FEMM-DOWNLOAD",
+   "title": "FEMM download page (FEMM 4.2)",
+   "authors": "D. Meeker",
+   "year": null,
+   "year_text": null,
+   "venue": "femm.info",
+   "kind": "documentation",
+   "path": null,
+   "url": "https://www.femm.info/wiki/Download"
+  },
+  {
+   "id": "REPO-elmerfem",
+   "title": "Elmer FEM repository and ElmerLicensePolicy.md",
+   "authors": "CSC - IT Center for Science",
+   "year": null,
+   "year_text": null,
+   "venue": "github.com/ElmerCSC/elmerfem",
+   "kind": "repository",
+   "path": null,
+   "url": "https://github.com/ElmerCSC/elmerfem"
   }
  ],
  "entries": [
@@ -5846,6 +5868,89 @@
    },
    "status": "verified",
    "status_note": "verified (source read)",
+   "topology_tags": [
+    "non_engineering"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [],
+   "register_origin": "phase2",
+   "accessed": "2026-10-12"
+  },
+  {
+   "id": "EV-115",
+   "claim": "\"FEMM is licensed under the terms of the Aladdin Free Public License.\" The page describes FEMM as \"A Windows finite element solver for 2D and axisymmetric\" problems, and names the FEMM 4.2 distribution",
+   "kind": "source_claim",
+   "source": {
+    "document": "WEB-FEMM-DOWNLOAD",
+    "title": "FEMM download page (FEMM 4.2)",
+    "authors": "D. Meeker",
+    "year": null,
+    "year_text": null
+   },
+   "documents": [
+    "WEB-FEMM-DOWNLOAD"
+   ],
+   "location": {
+    "text": "https://www.femm.info/wiki/Download",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://www.femm.info/wiki/Download"
+    ]
+   },
+   "read_method": "webfetch_extract",
+   "applies": {
+    "judgement": "yes",
+    "note": "yes (OR-11, OR-12 Phase 3 proposal; external tool, not bundled)",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (extract)",
+   "topology_tags": [
+    "non_engineering"
+   ],
+   "phase2_scope": true,
+   "out_of_scope_reason": null,
+   "citable": true,
+   "related_equations": [],
+   "related_gaps": [],
+   "register_origin": "phase2",
+   "accessed": "2026-10-12"
+  },
+  {
+   "id": "EV-116",
+   "claim": "Elmer FEM shows the badges \"License: GPL v2\" and \"License: LGPL v2.1\" and describes models for \"structural mechanics, fluid dynamics, heat transfer, electromagnetics and beyond\". Its licence policy puts the ElmerSolver main library (libelmersolver, /fem/src/*.F90), matc and fhutiter under the LGPL, and ElmerGUI, ElmerGrid and most physical modules (/fem/src/modules/*) under the GPL",
+   "kind": "source_claim",
+   "source": {
+    "document": "REPO-elmerfem",
+    "title": "Elmer FEM repository and ElmerLicensePolicy.md",
+    "authors": "CSC - IT Center for Science",
+    "year": null,
+    "year_text": null
+   },
+   "documents": [
+    "REPO-elmerfem"
+   ],
+   "location": {
+    "text": "https://github.com/ElmerCSC/elmerfem; https://raw.githubusercontent.com/ElmerCSC/elmerfem/devel/license_texts/ElmerLicensePolicy.md",
+    "pages_pdf": [],
+    "pages_printed": null,
+    "urls": [
+     "https://github.com/ElmerCSC/elmerfem",
+     "https://raw.githubusercontent.com/ElmerCSC/elmerfem/devel/license_texts/ElmerLicensePolicy.md"
+    ]
+   },
+   "read_method": "webfetch_extract",
+   "applies": {
+    "judgement": "yes",
+    "note": "yes (OR-11 3-D edge-leakage case, Phase 3 proposal; external tool, not bundled). The licence versions per component are not quoted here",
+    "status": "inferred"
+   },
+   "status": "verified",
+   "status_note": "verified (extract)",
    "topology_tags": [
     "non_engineering"
    ],
