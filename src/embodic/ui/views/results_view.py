@@ -6,8 +6,19 @@ disclosure; every part reads the `ResultRow`, never a constant (D-007).
 
 from collections.abc import Callable
 
-from PySide6.QtCore import QEasingCurve, QEvent, QObject, QPropertyAnimation, Qt, QTimer, Signal
-from PySide6.QtGui import QGuiApplication, QResizeEvent
+from PySide6.QtCore import (
+    QEasingCurve,
+    QEvent,
+    QModelIndex,
+    QObject,
+    QPersistentModelIndex,
+    QPropertyAnimation,
+    QSize,
+    Qt,
+    QTimer,
+    Signal,
+)
+from PySide6.QtGui import QColor, QGuiApplication, QPainter, QPixmap, QResizeEvent
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -21,6 +32,8 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QStackedWidget,
     QStyle,
+    QStyledItemDelegate,
+    QStyleOptionViewItem,
     QTableWidget,
     QTableWidgetItem,
     QToolButton,
@@ -52,13 +65,13 @@ from embodic.ui.views.widgets import check_box
 
 COMPUTING_DIM_AFTER_MS = 300
 COMPUTING_OPACITY = 0.6
-STALE_OPACITY = 0.6
 REVEAL_MS = 120
 CARD_MIN_WIDTH_PX = 280  # screens.md section 6, U-S4e ruling d
 CARD_GAP_PX = 8
 # With each check box's own 4 px of border and padding, a 4 px gap leaves 12 px between one status and the next box,
 # and the row of five status words fits the 568 px results page of a 1280 px window (U-S4e ruling c).
 FILTER_GAP_PX = 4
+FOCUS_BORDER_PX = 1  # width of `QTableView::item:focus` in theme_template.qss
 
 
 # Agent 1's style sheets ring buttons and fields; the chips, tags and scroll areas of the results area need it too.
@@ -79,6 +92,15 @@ def animations_enabled() -> bool:
     return QApplication.isEffectEnabled(Qt.UIEffect.UI_General)
 
 
+def inked(pixmap: QPixmap, colour: str) -> QPixmap:
+    """Return the pixmap's shape drawn in one colour; a pixmap takes no colour from the style sheet."""
+    painter = QPainter(pixmap)
+    painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
+    painter.fillRect(pixmap.rect(), QColor(colour))
+    painter.end()
+    return pixmap
+
+
 def set_revealed(widget: QWidget, shown: bool) -> QPropertyAnimation | None:
     """Show or hide a collapsible part; it slides open only when the OS allows animations (UI-31)."""
     if not shown or not animations_enabled():
@@ -95,6 +117,19 @@ def set_revealed(widget: QWidget, shown: bool) -> QPropertyAnimation | None:
     animation.finished.connect(lambda: widget.setMaximumHeight(16_777_215))
     animation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
     return animation
+
+
+class FocusRoomDelegate(QStyledItemDelegate):
+    """Add the focus border's two sides to a cell's height.
+
+    `QTableView::item:focus` draws a border inside the cell. The focused cell's text rectangle shrinks by it, so a
+    row sized to its wrapped text loses the last line and elides the one before (U-S4h N1).
+    """
+
+    def sizeHint(self, option: QStyleOptionViewItem, index: QModelIndex | QPersistentModelIndex) -> QSize:  # noqa: N802 (Qt override)
+        """Return the text's size plus room for the focus border above and below."""
+        hint = super().sizeHint(option, index)
+        return QSize(hint.width(), hint.height() + 2 * FOCUS_BORDER_PX)
 
 
 class ResultCard(QFrame):
@@ -151,15 +186,7 @@ class ResultCard(QFrame):
         how_layout.addWidget(copy, 0, Qt.AlignmentFlag.AlignLeft)
         self.how.setVisible(False)
 
-        # Value, unit and badge dim together when the card shows a last valid result (UX-AC-15).
-        value_row = QWidget()
-        value_row.setObjectName(f"{prefix}-value-row")
-        self._stale_dim = QGraphicsOpacityEffect(value_row)
-        self._stale_dim.setOpacity(STALE_OPACITY)
-        self._stale_dim.setEnabled(False)
-        value_row.setGraphicsEffect(self._stale_dim)
-        value_line = QHBoxLayout(value_row)
-        value_line.setContentsMargins(0, 0, 0, 0)
+        value_line = QHBoxLayout()
         value_line.addWidget(self.value)
         value_line.addWidget(self.unit, 0, Qt.AlignmentFlag.AlignBaseline)
         value_line.addStretch(1)
@@ -171,7 +198,7 @@ class ResultCard(QFrame):
         meta.addStretch(1)
         layout = QVBoxLayout(self)
         layout.addWidget(self.title)
-        layout.addWidget(value_row)
+        layout.addLayout(value_line)
         layout.addLayout(meta)
         layout.addWidget(self.asm_list)
         layout.addWidget(self.how_toggle)
@@ -202,8 +229,10 @@ class ResultCard(QFrame):
         self.setAccessibleName(row.accessible_name)
         self.setWhatsThis(row.eq_ids[0] if row.eq_ids else "")
         self.setProperty("stale", "true" if stale else "false")
-        self._stale_dim.setEnabled(stale)
-        repolish(self)
+        for widget in (self, self.value, self.unit, self.badge.label):
+            repolish(widget)
+        if stale:
+            self.badge.icon.setPixmap(inked(self.badge.icon.pixmap(), tokens.colours["text-3"]))
         if self.how_toggle.isChecked():
             self._fill_how()
 
@@ -381,7 +410,6 @@ class CompareTab(QWidget):
         "compare.column.reference",
         "compare.column.current",
         "compare.column.delta",
-        "compare.column.unit",
     )
 
     def __init__(self, vm: CompareViewModel) -> None:
@@ -407,6 +435,7 @@ class CompareTab(QWidget):
         header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.table.setTextElideMode(Qt.TextElideMode.ElideNone)
+        self.table.setItemDelegate(FocusRoomDelegate(self.table))
         self.table.verticalHeader().setVisible(False)
         self.table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
@@ -489,7 +518,7 @@ class CompareTab(QWidget):
 
     def _fill(self, r: int, row: CompareRow) -> None:
         assert self.tokens is not None
-        cells = (row.label, row.reference_text, row.current_text, row.delta_text, row.unit_text)
+        cells = (row.label, row.reference_text, row.current_text, row.delta_text)
         for c, value in enumerate(cells):
             item = QTableWidgetItem(value)
             item.setToolTip(value)

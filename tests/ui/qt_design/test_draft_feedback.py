@@ -44,7 +44,7 @@ def test_7_a_blank_draft_lists_its_missing_required_fields_in_the_rail(make_shel
     assert f"{coils}: required, no value yet." in rows
     card = find(window, "rail-inputs")
     assert card.isVisibleTo(window.rail)
-    assert find(card, "rail-inputs-value").text() == f"{len(state.missing)} required fields left"
+    assert find(card, "rail-inputs-value").text() == f"{len(rows)} required fields left"
     assert find(card, "rail-inputs-value").property("state") == "fail"
 
 
@@ -57,6 +57,21 @@ def test_7_a_control_that_fills_several_missing_pointers_gets_one_row(make_shell
     rows = listed(window)
     assert rows.count("Copper layers: required, no value yet.") == 1
     assert len(set(rows)) == len(rows)
+
+
+@pytest.mark.req("REQ-F-36", "REQ-F-37")
+@pytest.mark.parametrize("topology", [TopologyKind.SPIRAL, TopologyKind.SERPENTINE, TopologyKind.WAVE])
+def test_d043b_the_required_bar_counts_the_rows_of_the_missing_list(make_shell, topology):
+    """Catches U-M4e-4's open question: a bar that says 37 above a list of 35 rows (pointers counted, not controls)."""
+    window = make_shell(compute_fn=no_compute).window
+    window.session.new_design(topology)
+    settle()
+    rows = listed(window)
+    assert len(rows) > 1 and all(row.endswith(": required, no value yet.") for row in rows)
+    fields_left = f"{len(rows)} required fields left"
+    assert find(window, "new-required-count").text() == fields_left
+    assert find(find(window, "rail-inputs"), "rail-inputs-value").text() == fields_left
+    assert fields_left in window.toolstrip.actions_by_id["act-compute"].toolTip()
 
 
 @pytest.mark.req("REQ-F-36", "REQ-F-37")
@@ -129,13 +144,7 @@ def test_8_issues_list_wraps_a_long_message_without_a_sideways_bar(make_shell, w
     assert rect.height() >= 3 * issues.fontMetrics().height(), rect
 
 
-# Open, needs a ruling (U-M4e-4): a blank design gives the new angle offset `default` (rule 3 of interfaces.md 2.4), but
-# D08 is an example origin, rule 3 needs a blank one, and the example holds no screw pattern, so rule 4 gives `user`.
-OPEN_DEF_M4E3C_01 = "DEF-M4e3c-01: a new fastener pattern's angle offset shows a user chip nobody typed"
-
-
 @pytest.mark.req("REQ-F-24")
-@pytest.mark.xfail(strict=True, reason=OPEN_DEF_M4E3C_01)
 def test_12_a_new_fastener_pattern_starts_its_angle_offset_with_a_default_chip(make_shell, wait_computed, qtbot):
     """Catches S20: a new pattern whose angle offset shows no chip, or a user chip for a value nobody typed."""
     window = make_shell().window

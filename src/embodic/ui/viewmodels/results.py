@@ -289,6 +289,7 @@ class ResultsViewModel:
 
 
 CheckState: TypeAlias = Literal["pass", "fail", "not-run"]
+CardState: TypeAlias = CheckState | Literal["advice"]
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -388,16 +389,19 @@ class StatusCard:
 
     key: str  # objectName of the card
     title: str
-    state: CheckState
+    state: CardState
     word: str
 
 
 def inputs_card(issues: Sequence[ValidationIssue], missing: int = 0) -> StatusCard:
-    """Return the Inputs card; it counts the missing required fields and the issues the Input issues list shows."""
+    """Return the Inputs card: missing fields and errors fail it; warnings and notes are advice, shown as notes."""
+    errors = sum(1 for found in issues if found.severity is Severity.ERROR)
+    advice = len(issues) - errors
     words = [_count(missing, "new-required-count.one", "new-required-count.text")] if missing else []
-    words += [_count(len(issues), "rail.inputs.one", "rail.inputs.many")] if issues else []
+    words += [_count(errors, "rail.inputs.one", "rail.inputs.many")] if errors else []
+    words += [_count(advice, "rail.inputs.note-one", "rail.inputs.note-many")] if advice else []
     word = ", ".join(words) or text("rail.inputs.pass")
-    state: CheckState = "fail" if words else "pass"
+    state: CardState = "fail" if missing or errors else "advice" if advice else "pass"
     return StatusCard(key="rail-inputs", title=text("rail.inputs.label"), state=state, word=word)
 
 
@@ -564,8 +568,8 @@ Direction: TypeAlias = Literal["up", "down", "same"]
 class CompareRow:
     """One quantity of the reference and the current design.
 
-    A value cell joins number and unit with U+00A0 (ruling e1); a unitless value leaves "dimensionless" to the unit
-    column, so the value columns stay narrow enough for the Quantity column (U-S4g S28).
+    A value cell joins number and unit with U+00A0 (ruling e1); a unitless value is the number alone. The table has no
+    Unit column: a column unit beside a scaled cell unit ("V·s/rad", "26.4 mV·s/rad") contradicts it (D-043c).
     """
 
     quantity: str
@@ -574,7 +578,6 @@ class CompareRow:
     current_text: str
     delta_text: str
     direction: Direction
-    unit_text: str
 
 
 def _direction(delta: float) -> Direction:
@@ -615,7 +618,6 @@ def compare_rows(reference: ComputeOutcome, current: ComputeOutcome) -> tuple[Co
                     current_text=format_quantity(cur.traceable.value, unit),
                     delta_text=_signed(format_quantity(delta, unit), delta),
                     direction=_direction(delta),
-                    unit_text=unit.display() or text("results.unit.dimensionless"),
                 )
             )
     ref_counts, cur_counts = _counts(reference), _counts(current)
@@ -629,7 +631,6 @@ def compare_rows(reference: ComputeOutcome, current: ComputeOutcome) -> tuple[Co
                 current_text=str(cur_n),
                 delta_text=_signed(format_quantity(delta_n, Unit.COUNT), delta_n),
                 direction=_direction(delta_n),
-                unit_text=text("results.unit.dimensionless"),
             )
         )
     return tuple(rows)

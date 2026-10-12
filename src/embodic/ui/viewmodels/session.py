@@ -434,12 +434,13 @@ def draft_chips(document: SessionDocument, origin_design: DesignParameters | Non
 
     `derive_provenance` takes a complete design; a draft needs the same four rules over its values. For a complete
     draft the result equals `project_provenance` (tests/unit/ui/session checks it), including its rule that an origin
-    no longer packaged gives `user` instead of `default`.
+    no longer packaged gives `user` instead of `default`. Rule 3 holds where the origin holds no value: a blank design,
+    or a pointer a packaged example lacks (D-043a).
     """
     values = document.draft.values
     origin_values = draft_from_design(origin_design).values if origin_design is not None else {}
     sources = {m.pointer: m.source for m in document.measurements}
-    blank_origin = document.origin is None
+    rule_3_applies = document.origin is None or origin_design is not None
     chips: dict[str, FieldProvenance] = {}
     for pointer, value in values.items():
         spec = field_for(pointer, values)
@@ -447,7 +448,7 @@ def draft_chips(document: SessionDocument, origin_design: DesignParameters | Non
             chips[pointer] = MeasuredValue(source=sources[pointer])
         elif document.origin is not None and pointer in origin_values and origin_values[pointer] == value:
             chips[pointer] = ExampleValue(example_id=document.origin.example_id)
-        elif blank_origin and not spec.required and value == spec.neutral_value:
+        elif rule_3_applies and pointer not in origin_values and not spec.required and value == spec.neutral_value:
             chips[pointer] = DefaultValue()
         else:
             chips[pointer] = UserValue()

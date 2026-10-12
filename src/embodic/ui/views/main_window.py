@@ -445,7 +445,7 @@ class MainWindow(QMainWindow):
         for panel in self.panels.values():
             panel.refresh()
         drafting = isinstance(state, SessionDrafting)
-        missing = len(state.missing) if isinstance(state, SessionDrafting) else 0
+        missing = len(self._fields_left())
         self.required_count.setText(
             text("new-required-count.one") if missing == 1 else text("new-required-count.text", count=missing)
         )
@@ -464,6 +464,11 @@ class MainWindow(QMainWindow):
         self._show_issues()
         self._render()
 
+    def _fields_left(self) -> tuple[str, ...]:
+        """Return the first missing pointer of each control: the rows of the missing list and the count users read."""
+        state = self.session.state.value
+        return missing_fields(state.draft, state.missing) if isinstance(state, SessionDrafting) else ()
+
     def _invalid_fields_text(self) -> str:
         fields = {found.pointers[0] for found in self.session.issues.value if found.pointers}
         count = len(fields)
@@ -472,7 +477,7 @@ class MainWindow(QMainWindow):
     def _show_stale(self, outdated: bool) -> None:
         state = self.session.state.value
         if isinstance(state, SessionDrafting) and state.missing:
-            message = text("design.stale.drafting", count=len(state.missing))
+            message = text("design.stale.drafting", count=len(self._fields_left()))
         elif isinstance(state, SessionDrafting):
             message = self._invalid_fields_text()
         else:
@@ -485,7 +490,7 @@ class MainWindow(QMainWindow):
         state = self.session.state.value
         missing = state.missing if isinstance(state, SessionDrafting) else ()
         if isinstance(state, SessionDrafting):
-            for pointer in missing_fields(state.draft, state.missing):
+            for pointer in self._fields_left():
                 widget_id = widget_for_pointer(pointer, state.draft) or pointer
                 label = label_text(widget_id, state.draft.topology.value)
                 item = QListWidgetItem(text("rail.issues.missing", label=label))
@@ -641,10 +646,8 @@ class MainWindow(QMainWindow):
         outcome = shown.outcome if shown else None
         table = drc_table(outcome)
         self._render_results(state, outcome, table, outdated)
-        session_state = self.session.state.value
-        missing = len(session_state.missing) if isinstance(session_state, SessionDrafting) else 0
-        inputs = inputs_card(self.session.issues.value, missing)
-        cards: tuple[StatusCard, ...] | None = (inputs,) if inputs.state == "fail" else None
+        inputs = inputs_card(self.session.issues.value, len(self._fields_left()))
+        cards: tuple[StatusCard, ...] | None = (inputs,) if inputs.state != "pass" else None
         if table is not None:
             cards = (inputs, drc_card(table))
         self.rail.show_cards(cards, self.tokens, stale=outdated)
@@ -805,15 +808,26 @@ class MainWindow(QMainWindow):
             self.results_tabs.insertTab(first, self.rail_scroll, text("shell.results-rail.title"))
 
     def _place_canvas(self, compact: bool) -> None:
-        """Under 620 px client height the canvas is the first results tab, "Drawing" (design_spec.md section 5)."""
+        """Under 620 px client height the canvas is the first results tab, "Drawing" (design_spec.md section 5).
+
+        Entering compact height keeps the tab the user reads; Drawing comes forward only while keyboard focus is inside
+        the canvas page, since a focused widget on a hidden tab has no visible focus (U-S4h ruling n, WCAG 2.4.7).
+        """
         index = self.results_tabs.indexOf(self.canvas_page)
-        if compact and index < 0:
+        if compact == (index >= 0):
+            return
+        focus = QApplication.focusWidget()
+        held = focus if focus is not None and self.canvas_page.isAncestorOf(focus) else None
+        if compact:
             self.results_tabs.insertTab(0, self.canvas_page, text("shell.drawing.title"))
-            self.results_tabs.setCurrentIndex(0)
-        elif not compact and index >= 0:
+            if held is not None:
+                self.results_tabs.setCurrentIndex(0)
+        else:
             self.results_tabs.removeTab(index)
             self.centre_split.insertWidget(0, self.canvas_page)
             self.canvas_page.show()
+        if held is not None:
+            held.setFocus()
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802 (Qt override)
         """Give the canvas its share of `centre-split` on every resize; a results page's size hint never moves it."""

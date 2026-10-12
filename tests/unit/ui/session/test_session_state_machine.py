@@ -4,6 +4,8 @@ Computes are not run here except once for D08: a recording submitter stands in f
 real D08 result where a kept drawing matters.
 """
 
+import dataclasses
+
 import pytest
 
 from embodic.api import compute
@@ -11,7 +13,8 @@ from embodic.io.canonical import design_hash
 from embodic.io.examples import load_example
 from embodic.io.project import ProjectFile, project_from_example, project_provenance
 from embodic.model.draft import DesignDraft, blank_draft, draft_from_design, parse_draft
-from embodic.model.provenance import ExampleValue, UserValue
+from embodic.model.outline import ScrewFit, ScrewPattern
+from embodic.model.provenance import DefaultValue, ExampleValue, UserValue
 from embodic.model.vocabulary import TopologyKind
 from embodic.ui.viewmodels.outcome import OutcomeViewModel, ready_state
 from embodic.ui.viewmodels.session import (
@@ -220,6 +223,27 @@ def test_draft_chips_equal_project_provenance_for_a_complete_draft(from_example)
     document = SessionDocument(draft=DesignDraft(topology=design.topology, values=values), origin=origin)
     expected = project_provenance(ProjectFile(design=parse_draft(document.draft), origin=origin))
     assert draft_chips(document, design if from_example else None) == expected
+
+
+@pytest.mark.req("REQ-F-21")
+@pytest.mark.parametrize("angle_offset_rad", [0.0, 0.1])
+def test_d043a_draft_chips_equal_project_provenance_for_a_pattern_the_example_lacks(angle_offset_rad):
+    """Catches a draft chip of user where the model gives default, for a field the example holds no value for."""
+    ref, example = load_example(D08)
+    pattern = ScrewPattern(
+        size="M3",
+        fit=ScrewFit.NORMAL,
+        count=8,
+        pitch_radius_mm=30.0,
+        hole_diameter_mm=3.4,
+        angle_offset_rad=angle_offset_rad,
+    )
+    design = dataclasses.replace(example, outline=dataclasses.replace(example.outline, screws=(pattern,)))
+    document = SessionDocument(draft=draft_from_design(design), origin=ref)
+    expected = project_provenance(ProjectFile(design=design, origin=ref))
+    chips = draft_chips(document, example)
+    assert chips == expected
+    assert chips["/outline/screws/0/angle_offset_rad"] == (DefaultValue() if angle_offset_rad == 0.0 else UserValue())
 
 
 @pytest.mark.req("REQ-F-31")

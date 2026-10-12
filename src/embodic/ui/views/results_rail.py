@@ -18,8 +18,14 @@ from embodic.ui.views.style import themed_icon
 # Rail card name and the AnalysisResult field it shows.
 KEY_CARDS: dict[str, str] = {"sum-ke": "ke_line_peak_v_s_per_rad", "sum-r-phase": "resistance_phase_operating_ohm"}
 CHECK_CARDS = ("rail-inputs", "rail-drc")
-# Check state to the glyph file and the `state` value the style sheet colours (a check that did not run is a warning).
-GLYPHS = {"pass": ("check-pass", "pass"), "fail": ("check-fail", "fail"), "not-run": ("check-warn", "warn")}
+# Card state to the glyph file and the `state` value the style sheet colours (a check that did not run, and advice
+# the user cannot fix, are warnings).
+GLYPHS = {
+    "pass": ("check-pass", "pass"),
+    "fail": ("check-fail", "fail"),
+    "not-run": ("check-warn", "warn"),
+    "advice": ("check-warn", "warn"),
+}
 GLYPH_PX = 16
 
 

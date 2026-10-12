@@ -10,11 +10,9 @@ from embodic.ui.viewmodels.results import drc_card, drc_table, inputs_card
 pytestmark = pytest.mark.req("REQ-F-33")
 
 
-def issue(code: str) -> ValidationIssue:
+def issue(code: str, severity: Severity = Severity.ERROR) -> ValidationIssue:
     """Return an input issue with a fixed message."""
-    return ValidationIssue(
-        code=code, category=IssueCategory.INVALID, severity=Severity.ERROR, message="x", pointers=("/a",)
-    )
+    return ValidationIssue(code=code, category=IssueCategory.INVALID, severity=severity, message="x", pointers=("/a",))
 
 
 def test_inputs_card_says_no_input_issues_for_an_empty_issue_list():
@@ -28,6 +26,21 @@ def test_inputs_card_counts_the_issues_the_list_shows(count, word):
     """Catches a card that disagrees with the list below it, and '1 input issues'."""
     card = inputs_card([issue(f"INVALID_{n}") for n in range(count)])
     assert (card.state, card.word) == ("fail", word)
+
+
+@pytest.mark.parametrize(
+    ("issues", "missing", "state", "word"),
+    [
+        ([issue("RANGE_NOTE", Severity.WARNING)], 0, "advice", "1 input note"),
+        ([issue("A", Severity.WARNING), issue("B", Severity.INFO)], 0, "advice", "2 input notes"),
+        ([issue("INVALID_A"), issue("RANGE_NOTE", Severity.WARNING)], 0, "fail", "1 input issue, 1 input note"),
+        ([issue("RANGE_NOTE", Severity.WARNING)], 2, "fail", "2 required fields left, 1 input note"),
+    ],
+)
+def test_inputs_card_counts_only_errors_as_failing_inputs_and_words_the_rest_as_notes(issues, missing, state, word):
+    """U-S4h N4. Catches advice the user cannot fix counted as a failing input (a fail glyph on a warning)."""
+    card = inputs_card(issues, missing)
+    assert (card.state, card.word) == (state, word)
 
 
 def test_drc_card_of_the_wave_example_counts_186_failures(wave):

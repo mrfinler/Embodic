@@ -45,6 +45,9 @@ class ExportConfirmDialog(QDialog):
         body.setWordWrap(True)
         self.failures = QListWidget()
         self.failures.setObjectName("export-confirm-list")
+        self.failures.setWordWrap(True)
+        self.failures.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.failures.setResizeMode(QListWidget.ResizeMode.Adjust)
         self.failures.addItems([failure_line(v) for v in failures[:LISTED_FAILURES]])
         if total > LISTED_FAILURES:
             self.failures.addItem(text("export.confirm.more", count=total - LISTED_FAILURES))
