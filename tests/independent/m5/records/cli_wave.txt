@@ -1,0 +1,15 @@
+compute exit 2: Design rule check: FAILED, 186 violations
+ok   svg         allow=False exit=2 (want 2) written=False (want False) DRC_CLI_EXPORT_REFUSED DRC_EXPORT_NOT_CONFIRMED DRC_TRACE_TRACE DRC_TRACE_VIA
+ok   dxf         allow=False exit=2 (want 2) written=False (want False) DRC_CLI_EXPORT_REFUSED DRC_EXPORT_NOT_CONFIRMED DRC_TRACE_TRACE DRC_TRACE_VIA
+ok   dxf-outline allow=False exit=2 (want 2) written=False (want False) DRC_CLI_EXPORT_REFUSED DRC_EXPORT_NOT_CONFIRMED DRC_TRACE_TRACE DRC_TRACE_VIA
+ok   dxf-screws  allow=False exit=2 (want 2) written=False (want False) DRC_CLI_EXPORT_REFUSED DRC_EXPORT_NOT_CONFIRMED DRC_TRACE_TRACE DRC_TRACE_VIA
+ok   pdf         allow=False exit=0 (want 0) written=True (want True) 
+ok   readme      allow=False exit=0 (want 0) written=True (want True) 
+ok   bundle      allow=False exit=2 (want 2) written=False (want False) DRC_CLI_EXPORT_REFUSED DRC_EXPORT_NOT_CONFIRMED DRC_TRACE_TRACE DRC_TRACE_VIA
+ok   svg         allow=True  exit=0 (want 0) written=True (want True) DRC_CLI_EXPORT_FORCED
+ok   dxf         allow=True  exit=0 (want 0) written=True (want True) DRC_CLI_EXPORT_FORCED
+ok   dxf-outline allow=True  exit=0 (want 0) written=True (want True) DRC_CLI_EXPORT_FORCED
+ok   dxf-screws  allow=True  exit=0 (want 0) written=True (want True) DRC_CLI_EXPORT_FORCED
+ok   pdf         allow=True  exit=0 (want 0) written=True (want True) 
+ok   readme      allow=True  exit=0 (want 0) written=True (want True) 
+ok   bundle      allow=True  exit=0 (want 0) written=True (want True) DRC_CLI_EXPORT_FORCED

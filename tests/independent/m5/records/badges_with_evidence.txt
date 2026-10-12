@@ -1,0 +1,34 @@
+evidence file present: True (52 passed ids)
+equations whose every test passed: ['EQ-01', 'EQ-02', 'EQ-03', 'EQ-04', 'EQ-07', 'EQ-08', 'EQ-09', 'EQ-10', 'EQ-11', 'EQ-12', 'EQ-13', 'EQ-15', 'EQ-18', 'EQ-20', 'EQ-21', 'EQ-23', 'EQ-24', 'EQ-25', 'EQ-26', 'EQ-30']
+ok   ke_phase_v_s_per_rad           not tested  predicted not tested  chain EQ-06,EQ-07,EQ-05 caps 0
+ok   ke_line_v_s_per_rad            not tested  predicted not tested  chain EQ-09,EQ-06 caps 0
+ok   ke_line_peak_v_s_per_rad       not tested  predicted not tested  chain EQ-18,EQ-09,EQ-06 caps 0
+ok   kt_n_m_per_a                   not tested  predicted not tested  chain EQ-09,EQ-06 caps 0
+ok   kv_rpm_per_v                   not tested  predicted not tested  chain EQ-09,EQ-06 caps 0
+ok   winding_factor_1               not tested  predicted not tested  chain EQ-27,EQ-06 caps 0
+ok   resistance_phase_20c_ohm       inferred    predicted inferred    chain EQ-10,EQ-11 caps 0
+ok   resistance_phase_operating_ohm inferred    predicted inferred    chain EQ-10,EQ-11 caps 0
+ok   resistance_line_ohm            inferred    predicted inferred    chain EQ-23,EQ-10,EQ-11 caps 0
+ok   emf_phase_rms_v                not tested  predicted not tested  chain EQ-06,EQ-07 caps 0
+ok   torque_n_m                     not tested  predicted not tested  chain EQ-09,EQ-06 caps 0
+ok   loss_copper_w                  inferred    predicted inferred    chain EQ-10,EQ-11 caps 0
+ok   loss_eddy_w                    not tested  predicted not tested  chain EQ-12,EQ-05 caps 0
+ok   loss_circulating_w             inferred    predicted inferred    chain EQ-07 caps 0
+ok   loss_delta_circulating_w       not tested  predicted not tested  chain EQ-19,EQ-06 caps 0
+ok   loss_interconnect_w            verified    predicted verified    chain EQ-23,EQ-10 caps 0
+ok   loss_total_w                   not tested  predicted not tested  chain EQ-26,EQ-10,EQ-11,EQ-12,EQ-07,EQ-19,EQ-23,EQ-09,EQ-06 caps 0
+ok   output_power_w                 not tested  predicted not tested  chain EQ-26,EQ-09,EQ-06 caps 0
+ok   efficiency                     not tested  predicted not tested  chain EQ-26,EQ-10,EQ-11,EQ-12,EQ-07,EQ-19,EQ-23,EQ-09,EQ-06 caps 0
+ok   motor_constant_n_m_per_sqrt_w  not tested  predicted not tested  chain EQ-26,EQ-09,EQ-06,EQ-10,EQ-11 caps 0
+ok   thd_phase                      not tested  predicted not tested  chain EQ-18,EQ-06 caps 0
+ok   thd_line                       not tested  predicted not tested  chain EQ-18,EQ-06 caps 0
+ok   current_density_a_per_mm2      not tested  predicted not tested  chain EQ-22 caps 0
+ok   skin_depth_mm                  verified    predicted verified    chain EQ-13,EQ-10 caps 0
+ok   inductance_estimate_h          unresolved  predicted unresolved  chain EQ-14,EQ-27 caps 0
+ok   ipc_guideline_current_a        unresolved  predicted unresolved  chain EQ-15 caps 0
+ok   mass_copper_g                  not tested  predicted not tested  chain EQ-16 caps 0
+ok   mass_laminate_g                not tested  predicted not tested  chain EQ-16 caps 0
+ok   temperature_rise_k             not tested  predicted not tested  chain EQ-17,EQ-26,EQ-10,EQ-11,EQ-12,EQ-07,EQ-19,EQ-23,EQ-09,EQ-06 caps 0
+ok   edge_leakage_fraction          not tested  predicted not tested  chain EQ-05 caps 0
+ok   emf_waveform_v                 not tested  predicted not tested  chain EQ-18,EQ-06 caps 0
+31 results, actual badge counts {'inferred': 5, 'not tested': 22, 'unresolved': 2, 'verified': 2}, 0 differ from prediction

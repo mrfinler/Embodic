@@ -1,0 +1,222 @@
+{
+ "compute": "Design: Wave, 16 poles, involute\nDesign hash: sha256:3131a61975766c38984df5065b01f255875b79ebcfa831624c10c5db5d5c82e8\nTopology: wave, boards: 1\nDesign rule check: FAILED, 186 violations\n",
+ "rows": [
+  {
+   "format": "svg",
+   "allow_drc_errors": false,
+   "exit": 2,
+   "written": false,
+   "bytes": 0,
+   "expected_exit": 2,
+   "expected_written": false,
+   "ok": true,
+   "issue_codes": [
+    "DRC_CLI_EXPORT_REFUSED",
+    "DRC_EXPORT_NOT_CONFIRMED",
+    "DRC_TRACE_TRACE",
+    "DRC_TRACE_VIA"
+   ],
+   "stdout": "",
+   "stderr": "error DRC_EXPORT_NOT_CONFIRMED: The design rule check did not pass; confirm the export with its failures listed to write the files anyway.\n  value: 186\nerror DRC_TRACE_TRACE: Two traces are closer than the trace clearance rule.\n  value: 0.19996529918358164\n  hint: board 1\nerror DRC_TRACE_VIA: A trace is closer to a via than the via clearance rule.\n  value: 0.19996529918357453\n  hint: board 1\nerror DRC_CLI_EXPORT_REFUSED: Nothing was written. Run the command again with --allow-drc-errors to write the files although the design rule check failed."
+  },
+  {
+   "format": "dxf",
+   "allow_drc_errors": false,
+   "exit": 2,
+   "written": false,
+   "bytes": 0,
+   "expected_exit": 2,
+   "expected_written": false,
+   "ok": true,
+   "issue_codes": [
+    "DRC_CLI_EXPORT_REFUSED",
+    "DRC_EXPORT_NOT_CONFIRMED",
+    "DRC_TRACE_TRACE",
+    "DRC_TRACE_VIA"
+   ],
+   "stdout": "",
+   "stderr": "error DRC_EXPORT_NOT_CONFIRMED: The design rule check did not pass; confirm the export with its failures listed to write the files anyway.\n  value: 186\nerror DRC_TRACE_TRACE: Two traces are closer than the trace clearance rule.\n  value: 0.19996529918358164\n  hint: board 1\nerror DRC_TRACE_VIA: A trace is closer to a via than the via clearance rule.\n  value: 0.19996529918357453\n  hint: board 1\nerror DRC_CLI_EXPORT_REFUSED: Nothing was written. Run the command again with --allow-drc-errors to write the files although the design rule check failed."
+  },
+  {
+   "format": "dxf-outline",
+   "allow_drc_errors": false,
+   "exit": 2,
+   "written": false,
+   "bytes": 0,
+   "expected_exit": 2,
+   "expected_written": false,
+   "ok": true,
+   "issue_codes": [
+    "DRC_CLI_EXPORT_REFUSED",
+    "DRC_EXPORT_NOT_CONFIRMED",
+    "DRC_TRACE_TRACE",
+    "DRC_TRACE_VIA"
+   ],
+   "stdout": "",
+   "stderr": "error DRC_EXPORT_NOT_CONFIRMED: The design rule check did not pass; confirm the export with its failures listed to write the files anyway.\n  value: 186\nerror DRC_TRACE_TRACE: Two traces are closer than the trace clearance rule.\n  value: 0.19996529918358164\n  hint: board 1\nerror DRC_TRACE_VIA: A trace is closer to a via than the via clearance rule.\n  value: 0.19996529918357453\n  hint: board 1\nerror DRC_CLI_EXPORT_REFUSED: Nothing was written. Run the command again with --allow-drc-errors to write the files although the design rule check failed."
+  },
+  {
+   "format": "dxf-screws",
+   "allow_drc_errors": false,
+   "exit": 2,
+   "written": false,
+   "bytes": 0,
+   "expected_exit": 2,
+   "expected_written": false,
+   "ok": true,
+   "issue_codes": [
+    "DRC_CLI_EXPORT_REFUSED",
+    "DRC_EXPORT_NOT_CONFIRMED",
+    "DRC_TRACE_TRACE",
+    "DRC_TRACE_VIA"
+   ],
+   "stdout": "",
+   "stderr": "error DRC_EXPORT_NOT_CONFIRMED: The design rule check did not pass; confirm the export with its failures listed to write the files anyway.\n  value: 186\nerror DRC_TRACE_TRACE: Two traces are closer than the trace clearance rule.\n  value: 0.19996529918358164\n  hint: board 1\nerror DRC_TRACE_VIA: A trace is closer to a via than the via clearance rule.\n  value: 0.19996529918357453\n  hint: board 1\nerror DRC_CLI_EXPORT_REFUSED: Nothing was written. Run the command again with --allow-drc-errors to write the files although the design rule check failed."
+  },
+  {
+   "format": "pdf",
+   "allow_drc_errors": false,
+   "exit": 0,
+   "written": true,
+   "bytes": 616738,
+   "expected_exit": 0,
+   "expected_written": true,
+   "ok": true,
+   "issue_codes": [],
+   "stdout": "Wrote /tmp/claude-0/-home-claude/f28a4cfe-cf25-5512-9052-c4c291ea667b/scratchpad/cli_wave2/pdf.pdf\nDesign rule check: FAILED, 186 violations",
+   "stderr": ""
+  },
+  {
+   "format": "readme",
+   "allow_drc_errors": false,
+   "exit": 0,
+   "written": true,
+   "bytes": 1063,
+   "expected_exit": 0,
+   "expected_written": true,
+   "ok": true,
+   "issue_codes": [],
+   "stdout": "Wrote /tmp/claude-0/-home-claude/f28a4cfe-cf25-5512-9052-c4c291ea667b/scratchpad/cli_wave2/readme.md\nDesign rule check: FAILED, 186 violations",
+   "stderr": ""
+  },
+  {
+   "format": "bundle",
+   "allow_drc_errors": false,
+   "exit": 2,
+   "written": false,
+   "bytes": 0,
+   "expected_exit": 2,
+   "expected_written": false,
+   "ok": true,
+   "issue_codes": [
+    "DRC_CLI_EXPORT_REFUSED",
+    "DRC_EXPORT_NOT_CONFIRMED",
+    "DRC_TRACE_TRACE",
+    "DRC_TRACE_VIA"
+   ],
+   "stdout": "",
+   "stderr": "error DRC_EXPORT_NOT_CONFIRMED: The design rule check did not pass; confirm the export with its failures listed to write the files anyway.\n  value: 186\nerror DRC_TRACE_TRACE: Two traces are closer than the trace clearance rule.\n  value: 0.19996529918358164\n  hint: board 1\nerror DRC_TRACE_VIA: A trace is closer to a via than the via clearance rule.\n  value: 0.19996529918357453\n  hint: board 1\nerror DRC_CLI_EXPORT_REFUSED: Nothing was written. Run the command again with --allow-drc-errors to write the files although the design rule check failed."
+  },
+  {
+   "format": "svg",
+   "allow_drc_errors": true,
+   "exit": 0,
+   "written": true,
+   "bytes": 164983,
+   "expected_exit": 0,
+   "expected_written": true,
+   "ok": true,
+   "issue_codes": [
+    "DRC_CLI_EXPORT_FORCED"
+   ],
+   "stdout": "Wrote /tmp/claude-0/-home-claude/f28a4cfe-cf25-5512-9052-c4c291ea667b/scratchpad/cli_wave2/svg-forced.svg",
+   "stderr": "warning DRC_CLI_EXPORT_FORCED: The design rule check failed and the files were written because --allow-drc-errors was given.\n  value: 186"
+  },
+  {
+   "format": "dxf",
+   "allow_drc_errors": true,
+   "exit": 0,
+   "written": true,
+   "bytes": 248638,
+   "expected_exit": 0,
+   "expected_written": true,
+   "ok": true,
+   "issue_codes": [
+    "DRC_CLI_EXPORT_FORCED"
+   ],
+   "stdout": "Wrote /tmp/claude-0/-home-claude/f28a4cfe-cf25-5512-9052-c4c291ea667b/scratchpad/cli_wave2/dxf-forced.dxf",
+   "stderr": "warning DRC_CLI_EXPORT_FORCED: The design rule check failed and the files were written because --allow-drc-errors was given.\n  value: 186"
+  },
+  {
+   "format": "dxf-outline",
+   "allow_drc_errors": true,
+   "exit": 0,
+   "written": true,
+   "bytes": 871,
+   "expected_exit": 0,
+   "expected_written": true,
+   "ok": true,
+   "issue_codes": [
+    "DRC_CLI_EXPORT_FORCED"
+   ],
+   "stdout": "Wrote /tmp/claude-0/-home-claude/f28a4cfe-cf25-5512-9052-c4c291ea667b/scratchpad/cli_wave2/dxf-outline-forced.dxf",
+   "stderr": "warning DRC_CLI_EXPORT_FORCED: The design rule check failed and the files were written because --allow-drc-errors was given.\n  value: 186"
+  },
+  {
+   "format": "dxf-screws",
+   "allow_drc_errors": true,
+   "exit": 0,
+   "written": true,
+   "bytes": 1109,
+   "expected_exit": 0,
+   "expected_written": true,
+   "ok": true,
+   "issue_codes": [
+    "DRC_CLI_EXPORT_FORCED"
+   ],
+   "stdout": "Wrote /tmp/claude-0/-home-claude/f28a4cfe-cf25-5512-9052-c4c291ea667b/scratchpad/cli_wave2/dxf-screws-forced.dxf",
+   "stderr": "warning DRC_CLI_EXPORT_FORCED: The design rule check failed and the files were written because --allow-drc-errors was given.\n  value: 186"
+  },
+  {
+   "format": "pdf",
+   "allow_drc_errors": true,
+   "exit": 0,
+   "written": true,
+   "bytes": 616736,
+   "expected_exit": 0,
+   "expected_written": true,
+   "ok": true,
+   "issue_codes": [],
+   "stdout": "Wrote /tmp/claude-0/-home-claude/f28a4cfe-cf25-5512-9052-c4c291ea667b/scratchpad/cli_wave2/pdf-forced.pdf\nDesign rule check: FAILED, 186 violations",
+   "stderr": ""
+  },
+  {
+   "format": "readme",
+   "allow_drc_errors": true,
+   "exit": 0,
+   "written": true,
+   "bytes": 1063,
+   "expected_exit": 0,
+   "expected_written": true,
+   "ok": true,
+   "issue_codes": [],
+   "stdout": "Wrote /tmp/claude-0/-home-claude/f28a4cfe-cf25-5512-9052-c4c291ea667b/scratchpad/cli_wave2/readme-forced.md\nDesign rule check: FAILED, 186 violations",
+   "stderr": ""
+  },
+  {
+   "format": "bundle",
+   "allow_drc_errors": true,
+   "exit": 0,
+   "written": true,
+   "bytes": 674101,
+   "expected_exit": 0,
+   "expected_written": true,
+   "ok": true,
+   "issue_codes": [
+    "DRC_CLI_EXPORT_FORCED"
+   ],
+   "stdout": "Wrote /tmp/claude-0/-home-claude/f28a4cfe-cf25-5512-9052-c4c291ea667b/scratchpad/cli_wave2/bundle-forced.zip\n  holds bundle-forced.svg, bundle-forced.dxf, bundle-forced_outline.dxf, bundle-forced_screws.dxf, bundle-forced.embodic.json, bundle-forced_report.pdf, README.txt",
+   "stderr": "warning DRC_CLI_EXPORT_FORCED: The design rule check failed and the files were written because --allow-drc-errors was given.\n  value: 186"
+  }
+ ]
+}

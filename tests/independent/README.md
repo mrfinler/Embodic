@@ -344,3 +344,38 @@ Runs (2 cores, shared with another unit's tests). `pytest tests/independent -q` 
 1558 s, no xfail. `python tools/ci.py --profile commit` on 55fe127 (434b8a8 plus this README): 6 of 6, 2821 passed,
 1 skipped, 88 deselected, pytest 3351.8 s. Main 7b9b4c9 had 2817 passed and 2 xfailed (D-044); the 4 more are the two
 retired cases and the two new tests.
+
+## M5 instruments and verdicts (U-V5, release 0.0.1 built on main 5e74acc)
+
+The M5 scripts check the release artefacts, read only: the wheel (SHA-256 `f114a6e7…dcd0`), `req_report.json` and the
+evidence file of Fable's release run, copied to `/home/claude/release_0.0.1/`. Unlike the M1 instruments, the badge,
+oracle and CLI scripts import `embodic`, because they drive the installed wheel through its public API; their expected
+values come from the contract, the registry files and the papers' numbers in `oracle_cases.json`, not from embodic code
+or Agent 3's tests. Records are in `m5/records/`: `PK-06_walkthrough.md` and `release_check.md`, with the raw output
+beside them.
+
+| Script | Run in | What it checks |
+|---|---|---|
+| `m5/pk06_walkthrough.py` | system `python3.11`, a new empty folder | README.md and INSTALL.md steps 1 to 6 verbatim, timed, with a fresh pip cache; compares each output with the guide's text |
+| `m5/evidence_check.py` | `python3.11 -I`, no embodic import | `passed_tests` and `realised_by` against my reading of interfaces.md §3.1 on the REQ report; `embodic_version`, `registry_version`, `gate_profile`, `build_id` and `source_sha256` against the installed package |
+| `m5/badge_check.py` | the wheel venv | predicts every badge of an example from the registry and the evidence file, compares with `embodic.api` |
+| `m5/oracle_check.py` | the wheel venv | builds D08 and D09 from `oracle_cases.json`, re-runs OR-01, OR-02, OR-06 and OR-08 through the public API |
+| `m5/cli_check.py` | the wheel venv | `embodic-cli export` exit codes and written files on a design that fails its DRC (interfaces.md §12, D-045e) |
+| `m5/bundle_check.py` | `python3.11 -I` | licence files of the PyInstaller folder and its frozen selftest, without writing to the folder |
+
+Verdicts on 2026-10-13 (each `verified` by running the script named; Windows `not tested`):
+
+| Item | Verdict |
+|---|---|
+| PK-06 Linux (REQ-N-07) | pass: 19.2 s to 27.7 s to the first computed example over four cold runs; step 3's 97.3 MB download is 66 % to 72 % of it |
+| Selftest from the wheel (PK-11) | `45 tests: 45 passed, 0 failed`, exit 0 |
+| Evidence file | equal: 52 of 63 registry ids pass by my derivation, the same set and carriers as the wheel; versions, profile and source hash agree |
+| Badges, D08 example | 31 of 31 equal my prediction with the evidence (7 leave `not tested`) and without it (29 `not tested`, 2 `unresolved` from `cannot verify yet` equations) |
+| Oracles | OR-01 −0.40 %, OR-02 +4.26 % / −5.46 %, OR-06 1.8490 A within print rounding, OR-08 0.7384 T: all equal D-045g and in band |
+| CLI rulings | 14 of 14 cases as §12 states; GR-19 mutant "ic objects mapped unsplit" killed (`1/1 mutants killed`) against the release wheel |
+| PyInstaller folder (optional) | frozen selftest 45 of 45; licence files present and absent as package_layout.md §5.1 says |
+
+Defects: DEF-UV5-01 (selftest documented as missing in INSTALL.md §6 and README.md), DEF-UV5-02 (README.md says the
+bundle build is missing), DEF-UV5-03 (Linux troubleshooting omits `libxcb-cursor0`), DEF-UV5-04 (selftest column
+overflow for the two longest IDs), DEF-UV5-05 (pip's upgrade notice not mentioned). Reproduce steps are in
+`m5/records/PK-06_walkthrough.md`.

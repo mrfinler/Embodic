@@ -1,0 +1,338 @@
+{
+ "evidence_present": true,
+ "rows": [
+  {
+   "result": "ke_phase_v_s_per_rad",
+   "eq_ids": [
+    "EQ-06",
+    "EQ-07",
+    "EQ-05"
+   ],
+   "caps": 0,
+   "predicted": "not tested",
+   "actual": "not tested"
+  },
+  {
+   "result": "ke_line_v_s_per_rad",
+   "eq_ids": [
+    "EQ-09",
+    "EQ-06"
+   ],
+   "caps": 0,
+   "predicted": "not tested",
+   "actual": "not tested"
+  },
+  {
+   "result": "ke_line_peak_v_s_per_rad",
+   "eq_ids": [
+    "EQ-18",
+    "EQ-09",
+    "EQ-06"
+   ],
+   "caps": 0,
+   "predicted": "not tested",
+   "actual": "not tested"
+  },
+  {
+   "result": "kt_n_m_per_a",
+   "eq_ids": [
+    "EQ-09",
+    "EQ-06"
+   ],
+   "caps": 0,
+   "predicted": "not tested",
+   "actual": "not tested"
+  },
+  {
+   "result": "kv_rpm_per_v",
+   "eq_ids": [
+    "EQ-09",
+    "EQ-06"
+   ],
+   "caps": 0,
+   "predicted": "not tested",
+   "actual": "not tested"
+  },
+  {
+   "result": "winding_factor_1",
+   "eq_ids": [
+    "EQ-27",
+    "EQ-06"
+   ],
+   "caps": 0,
+   "predicted": "not tested",
+   "actual": "not tested"
+  },
+  {
+   "result": "resistance_phase_20c_ohm",
+   "eq_ids": [
+    "EQ-10",
+    "EQ-11"
+   ],
+   "caps": 0,
+   "predicted": "inferred",
+   "actual": "inferred"
+  },
+  {
+   "result": "resistance_phase_operating_ohm",
+   "eq_ids": [
+    "EQ-10",
+    "EQ-11"
+   ],
+   "caps": 0,
+   "predicted": "inferred",
+   "actual": "inferred"
+  },
+  {
+   "result": "resistance_line_ohm",
+   "eq_ids": [
+    "EQ-23",
+    "EQ-10",
+    "EQ-11"
+   ],
+   "caps": 0,
+   "predicted": "inferred",
+   "actual": "inferred"
+  },
+  {
+   "result": "emf_phase_rms_v",
+   "eq_ids": [
+    "EQ-06",
+    "EQ-07"
+   ],
+   "caps": 0,
+   "predicted": "not tested",
+   "actual": "not tested"
+  },
+  {
+   "result": "torque_n_m",
+   "eq_ids": [
+    "EQ-09",
+    "EQ-06"
+   ],
+   "caps": 0,
+   "predicted": "not tested",
+   "actual": "not tested"
+  },
+  {
+   "result": "loss_copper_w",
+   "eq_ids": [
+    "EQ-10",
+    "EQ-11"
+   ],
+   "caps": 0,
+   "predicted": "inferred",
+   "actual": "inferred"
+  },
+  {
+   "result": "loss_eddy_w",
+   "eq_ids": [
+    "EQ-12",
+    "EQ-05"
+   ],
+   "caps": 0,
+   "predicted": "not tested",
+   "actual": "not tested"
+  },
+  {
+   "result": "loss_circulating_w",
+   "eq_ids": [
+    "EQ-07"
+   ],
+   "caps": 0,
+   "predicted": "inferred",
+   "actual": "inferred"
+  },
+  {
+   "result": "loss_delta_circulating_w",
+   "eq_ids": [
+    "EQ-19",
+    "EQ-06"
+   ],
+   "caps": 0,
+   "predicted": "not tested",
+   "actual": "not tested"
+  },
+  {
+   "result": "loss_interconnect_w",
+   "eq_ids": [
+    "EQ-23",
+    "EQ-10"
+   ],
+   "caps": 0,
+   "predicted": "verified",
+   "actual": "verified"
+  },
+  {
+   "result": "loss_total_w",
+   "eq_ids": [
+    "EQ-26",
+    "EQ-10",
+    "EQ-11",
+    "EQ-12",
+    "EQ-07",
+    "EQ-19",
+    "EQ-23",
+    "EQ-09",
+    "EQ-06"
+   ],
+   "caps": 0,
+   "predicted": "not tested",
+   "actual": "not tested"
+  },
+  {
+   "result": "output_power_w",
+   "eq_ids": [
+    "EQ-26",
+    "EQ-09",
+    "EQ-06"
+   ],
+   "caps": 0,
+   "predicted": "not tested",
+   "actual": "not tested"
+  },
+  {
+   "result": "efficiency",
+   "eq_ids": [
+    "EQ-26",
+    "EQ-10",
+    "EQ-11",
+    "EQ-12",
+    "EQ-07",
+    "EQ-19",
+    "EQ-23",
+    "EQ-09",
+    "EQ-06"
+   ],
+   "caps": 0,
+   "predicted": "not tested",
+   "actual": "not tested"
+  },
+  {
+   "result": "motor_constant_n_m_per_sqrt_w",
+   "eq_ids": [
+    "EQ-26",
+    "EQ-09",
+    "EQ-06",
+    "EQ-10",
+    "EQ-11"
+   ],
+   "caps": 0,
+   "predicted": "not tested",
+   "actual": "not tested"
+  },
+  {
+   "result": "thd_phase",
+   "eq_ids": [
+    "EQ-18",
+    "EQ-06"
+   ],
+   "caps": 0,
+   "predicted": "not tested",
+   "actual": "not tested"
+  },
+  {
+   "result": "thd_line",
+   "eq_ids": [
+    "EQ-18",
+    "EQ-06"
+   ],
+   "caps": 0,
+   "predicted": "not tested",
+   "actual": "not tested"
+  },
+  {
+   "result": "current_density_a_per_mm2",
+   "eq_ids": [
+    "EQ-22"
+   ],
+   "caps": 0,
+   "predicted": "not tested",
+   "actual": "not tested"
+  },
+  {
+   "result": "skin_depth_mm",
+   "eq_ids": [
+    "EQ-13",
+    "EQ-10"
+   ],
+   "caps": 0,
+   "predicted": "verified",
+   "actual": "verified"
+  },
+  {
+   "result": "inductance_estimate_h",
+   "eq_ids": [
+    "EQ-14",
+    "EQ-27"
+   ],
+   "caps": 0,
+   "predicted": "unresolved",
+   "actual": "unresolved"
+  },
+  {
+   "result": "ipc_guideline_current_a",
+   "eq_ids": [
+    "EQ-15"
+   ],
+   "caps": 0,
+   "predicted": "unresolved",
+   "actual": "unresolved"
+  },
+  {
+   "result": "mass_copper_g",
+   "eq_ids": [
+    "EQ-16"
+   ],
+   "caps": 0,
+   "predicted": "not tested",
+   "actual": "not tested"
+  },
+  {
+   "result": "mass_laminate_g",
+   "eq_ids": [
+    "EQ-16"
+   ],
+   "caps": 0,
+   "predicted": "not tested",
+   "actual": "not tested"
+  },
+  {
+   "result": "temperature_rise_k",
+   "eq_ids": [
+    "EQ-17",
+    "EQ-26",
+    "EQ-10",
+    "EQ-11",
+    "EQ-12",
+    "EQ-07",
+    "EQ-19",
+    "EQ-23",
+    "EQ-09",
+    "EQ-06"
+   ],
+   "caps": 0,
+   "predicted": "not tested",
+   "actual": "not tested"
+  },
+  {
+   "result": "edge_leakage_fraction",
+   "eq_ids": [
+    "EQ-05"
+   ],
+   "caps": 0,
+   "predicted": "not tested",
+   "actual": "not tested"
+  },
+  {
+   "result": "emf_waveform_v",
+   "eq_ids": [
+    "EQ-18",
+    "EQ-06"
+   ],
+   "caps": 0,
+   "predicted": "not tested",
+   "actual": "not tested"
+  }
+ ]
+}
