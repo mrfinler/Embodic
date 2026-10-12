@@ -8,7 +8,9 @@ from PySide6.QtGui import qGray
 from PySide6.QtWidgets import QApplication, QCheckBox, QMessageBox, QPushButton, QTableWidget, QWidget
 from tests.ui.qt_results.conftest import find
 
+from embodic.io.exporters import ExportKind, ExportRefused
 from embodic.results.status import Status
+from embodic.ui.viewmodels.export import BUNDLE
 from embodic.ui.viewmodels.results import ChartModel, ChartSeries
 from embodic.ui.views.charts import ChartWidget
 
@@ -190,6 +192,38 @@ def test_ui29_export_with_drc_failures_lists_them_with_focus_on_cancel(make_wind
     qtbot.mouseClick(find(dialog.confirm, QPushButton, "btn-export-confirm-run"), Qt.MouseButton.LeftButton)
     written = sorted(p.name for p in (tmp_path / "wave").iterdir())
     assert written and sorted(dialog.result_text.text().splitlines()[1:]) == written
+
+
+@pytest.mark.req("REQ-F-33")
+def test_export_dialog_on_a_failed_drc_writes_the_report_and_readme_and_refuses_the_drawings(
+    make_window, load, qtbot, tmp_path
+):
+    """D-038d, D-045e. Catches documents of the DRC state that wait for the DRC confirmation, or drawings that don't."""
+    window = load(make_window(), WAVE)
+    window.toolstrip.actions_by_id["act-export-pdf"].trigger()
+    dialog = window.export_dialog
+    find(dialog, QCheckBox, "export-format-readme").setChecked(True)
+    assert dialog.selected() == {ExportKind.PDF_REPORT, ExportKind.README}
+    dialog.folder.setText(str(tmp_path / "documents"))
+    qtbot.mouseClick(dialog.run, Qt.MouseButton.LeftButton)
+    assert dialog.confirm is None
+    written = ["README.txt", "Wave_16_poles_involute_report.pdf"]
+    assert sorted(p.name for p in (tmp_path / "documents").iterdir()) == written
+    assert sorted(dialog.result_text.text().splitlines()[1:]) == written
+    assert "DRC: FAILED, 186 violations" in (tmp_path / "documents" / "README.txt").read_text(encoding="utf-8")
+
+    for widget_id in ("export-format-svg", "export-format-dxf-complete", "export-format-zip"):
+        find(dialog, QCheckBox, widget_id).setChecked(True)
+    dialog.folder.setText(str(tmp_path / "drawings"))
+    qtbot.mouseClick(dialog.run, Qt.MouseButton.LeftButton)
+    assert dialog.confirm is not None and dialog.confirm.isVisible()
+    qtbot.mouseClick(dialog.confirm.cancel, Qt.MouseButton.LeftButton)
+    assert not (tmp_path / "drawings").exists()
+    refused = window.export_vm.run(
+        frozenset({ExportKind.SVG, ExportKind.DXF_COMPLETE, BUNDLE}), tmp_path / "drawings", confirmed_drc_errors=False
+    )
+    assert isinstance(refused, ExportRefused) and refused.reason == "drc_errors_not_confirmed"
+    assert list((tmp_path / "drawings").iterdir()) == []
 
 
 @pytest.mark.req("REQ-F-33", "REQ-N-15")
