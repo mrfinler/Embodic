@@ -1,4 +1,4 @@
-"""The commands of `embodic-cli` (interfaces.md section 12): compute, validate and export a project file.
+"""The commands of `embodic-cli` (interfaces.md section 12): compute, validate and export a project file, and selftest.
 
 This module is the boundary of the program. It parses the command line, maps every outcome to an exit code and prints
 English text. The work is done by `embodic.api` and `embodic.io`; nothing here imports Qt.
@@ -6,6 +6,7 @@ English text. The work is done by `embodic.api` and `embodic.io`; nothing here i
 
 import argparse
 import json
+import signal
 import sys
 import traceback
 from collections.abc import Callable, Sequence
@@ -14,6 +15,7 @@ from pathlib import Path
 from typing import NoReturn
 
 from embodic.api import ComputeOptions, ComputeOutcome, compute, compute_project, outcome_to_json
+from embodic.drc import CancelToken
 from embodic.errors import IssueCategory, Severity, ValidationIssue, message_for
 from embodic.io.bundle import write_bundle
 from embodic.io.dxf_writer import write_dxf
@@ -24,6 +26,7 @@ from embodic.io.report import write_report_pdf
 from embodic.io.svg_writer import write_svg
 from embodic.model.validate import validate_design
 from embodic.outcome import Stage
+from embodic.selftest import SELFTESTS, SelfTestReport, SelfTestResult, SelfTestVerdict, run_selftests, selftest_to_json
 
 __all__ = ["ExitCode", "main"]
 
@@ -191,6 +194,8 @@ WRITERS: dict[str, Writer] = {
     "readme": lambda outcome, path, allow: (write_readme(outcome, (), path),),
     "bundle": _bundle,
 }
+# The PDF report and the README document the DRC state, so they never wait for the confirmation (D-045e, D-038d).
+DOCUMENTS = frozenset({"pdf", "readme"})
 REFUSAL_EXIT: dict[str, ExitCode] = {
     "drc_errors_not_confirmed": ExitCode.DRC_ERRORS,
     "no_layout": ExitCode.VALIDATION_ERRORS,
@@ -215,8 +220,7 @@ def _export(args: argparse.Namespace) -> ExitCode:
     _print_issues(outcome.issues)
     if (code := exit_code_of_issues(outcome.issues)) is not ExitCode.OK:
         return code
-    # The same gate for every format, as the export dialog applies it: the PDF writer alone would not refuse.
-    gate = exportable_boards(outcome, allow_drc_errors=args.allow_drc_errors)
+    gate = exportable_boards(outcome, allow_drc_errors=args.allow_drc_errors or args.format in DOCUMENTS)
     if isinstance(gate, ExportRefused):
         return _refused(gate)
     written = WRITERS[args.format](outcome, args.output, args.allow_drc_errors)
@@ -227,9 +231,53 @@ def _export(args: argparse.Namespace) -> ExitCode:
         print(f"  holds {', '.join(summary.path.name for summary in written)}")
     if not drc_passed(outcome):
         violations = sum(report.violation_count for report in outcome.drc or ())
-        warning = _issue("DRC_CLI_EXPORT_FORCED", IssueCategory.DRC, violations, severity=Severity.WARNING)
-        _print_issues((warning,))
+        if args.format in DOCUMENTS:
+            print(f"Design rule check: FAILED, {violations} violations")
+        else:
+            warning = _issue("DRC_CLI_EXPORT_FORCED", IssueCategory.DRC, violations, severity=Severity.WARNING)
+            _print_issues((warning,))
     return ExitCode.OK
+
+
+def format_selftest_result(result: SelfTestResult) -> str:
+    """Return one check as a line: verdict, ID, seconds and, for a failure, the message."""
+    line = f"{result.verdict.value:<7}  {result.check_id:<34}  {result.duration_s:6.2f} s"
+    return f"{line}  {result.message}" if result.message else line
+
+
+def format_selftest_summary(report: SelfTestReport) -> str:
+    """Return the summary line of screens.md section 13, with the checks a cancel left out when there are any."""
+    count = {verdict: 0 for verdict in SelfTestVerdict}
+    for result in report.results:
+        count[result.verdict] += 1
+    passed, failed, not_run = (
+        count[SelfTestVerdict.PASSED],
+        count[SelfTestVerdict.FAILED],
+        count[SelfTestVerdict.NOT_RUN],
+    )
+    summary = f"{len(report.results)} tests: {passed} passed, {failed} failed"
+    return f"{summary}, {not_run} not run" if not_run else summary
+
+
+def _selftest(args: argparse.Namespace) -> ExitCode:
+    if args.json is not None and (bad := _unwritable(args.json)) is not None:
+        return _refuse((bad,))
+    cancel = CancelToken()
+    previous = signal.signal(signal.SIGINT, lambda *_: cancel.cancel())
+    try:
+        report = run_selftests(
+            SELFTESTS, cancel=cancel, on_result=lambda r: print(format_selftest_result(r), flush=True)
+        )
+    finally:
+        signal.signal(signal.SIGINT, previous)
+    print(format_selftest_summary(report))
+    if args.json is not None:
+        args.json.write_text(
+            json.dumps(selftest_to_json(report), indent=2, sort_keys=True, ensure_ascii=False, allow_nan=False) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+    return ExitCode.OK if report.ok else ExitCode.VALIDATION_ERRORS
 
 
 class _Parser(argparse.ArgumentParser):
@@ -242,8 +290,11 @@ class _Parser(argparse.ArgumentParser):
 
 
 def _parser() -> argparse.ArgumentParser:
-    parser = _Parser(prog="embodic-cli", description="Compute, validate and export embodic project files.")
-    commands = parser.add_subparsers(dest="command", required=True, metavar="{compute,validate,export}")
+    parser = _Parser(
+        prog="embodic-cli",
+        description="Compute, validate and export embodic project files, and test this installation.",
+    )
+    commands = parser.add_subparsers(dest="command", required=True, metavar="{compute,validate,export,selftest}")
     compute_parser = commands.add_parser("compute", help="run every stage and report the exit code")
     compute_parser.add_argument("project", type=Path, help="project file (.embodic.json)")
     compute_parser.add_argument("--json", type=Path, metavar="OUT", help="write the whole outcome as JSON to OUT")
@@ -261,6 +312,11 @@ def _parser() -> argparse.ArgumentParser:
         "--allow-drc-errors", action="store_true", help="write the files although the design rule check failed"
     )
     export_parser.set_defaults(handler=_export)
+    selftest_parser = commands.add_parser(
+        "selftest", help="check that this installation reproduces the build's numbers"
+    )
+    selftest_parser.add_argument("--json", type=Path, metavar="OUT", help="write every result as JSON to OUT")
+    selftest_parser.set_defaults(handler=_selftest)
     return parser
 
 
@@ -271,6 +327,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     embodic-cli validate <project.embodic.json>
     embodic-cli export <project.embodic.json> --format {svg,dxf,dxf-outline,dxf-screws,pdf,readme,bundle} -o PATH
                 [--allow-drc-errors]
+    embodic-cli selftest [--json OUT]
     The desktop app entry point is `embodic` (embodic.ui.app:main).
     """
     try:
