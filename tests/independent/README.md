@@ -339,3 +339,8 @@ reports the 3 and 4 artefact pairs above. Its callers are `tests/golden/m1_layou
 `tests/independent/m2/def_m2e3_01.py`; the last picks phase members by object kind and never reads an `ic` path, so the
 split does not concern it (`inferred` from reading l.30-38). interfaces.md section 7 (rule 5 revision, D-037a) and
 test_plan.md sections 5 and 5.6 describe the unsplit numbering and the open xfail.
+
+Runs (2 cores, shared with another unit's tests). `pytest tests/independent -q` on 434b8a8: 388 passed, 1 skipped in
+1558 s, no xfail. `python tools/ci.py --profile commit` on 55fe127 (434b8a8 plus this README): 6 of 6, 2821 passed,
+1 skipped, 88 deselected, pytest 3351.8 s. Main 7b9b4c9 had 2817 passed and 2 xfailed (D-044); the 4 more are the two
+retired cases and the two new tests.
