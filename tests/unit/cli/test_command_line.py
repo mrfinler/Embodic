@@ -57,7 +57,7 @@ def test_json_to_a_folder_exits_1(run, project_of, tmp_path: Path) -> None:
 
 
 @pytest.mark.req("REQ-F-18")
-def test_python_dash_m_runs_the_command_and_imports_no_qt(project_of) -> None:
+def test_a_full_compute_loads_no_qt_module(project_of) -> None:
     """Catches a Qt import on the headless path: the process runs a full compute and then lists loaded Qt modules."""
     script = (
         "import sys\n"

@@ -20,6 +20,7 @@ def _save(path: Path, design, origin=None) -> Path:
     return path
 
 
+@pytest.mark.req("REQ-F-18")
 def test_exit_code_values_are_the_contract() -> None:
     """Catches a renumbered code: scripts compare against 0, 1, 2 and 3 (interfaces.md section 12)."""
     assert [(c.name, int(c)) for c in ExitCode] == [
