@@ -36,7 +36,7 @@ def test_help_exits_0_and_lists_the_commands(run) -> None:
     """Catches a help request that is treated as a usage error."""
     code, out, _ = run("--help")
     assert code == 0
-    assert "{compute,validate,export}" in out
+    assert "{compute,validate,export,selftest}" in out
 
 
 @pytest.mark.req("REQ-F-18")

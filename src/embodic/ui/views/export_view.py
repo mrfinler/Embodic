@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QUrl
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtGui import QDesktopServices, QResizeEvent
 from PySide6.QtWidgets import (
     QCheckBox,
     QDialog,
@@ -27,6 +27,19 @@ from embodic.ui.views.style import themed_icon
 from embodic.ui.views.widgets import check_box
 
 CHECK_ICONS = {"pass": "check-pass", "fail": "check-fail", "warn": "check-warn"}
+
+
+class _RowsList(QListWidget):
+    """A list as tall as its wrapped rows, so the last row is never cut (S31)."""
+
+    def resizeEvent(self, event: QResizeEvent) -> None:  # noqa: N802 (Qt override)
+        """Take the height of the rows at the new width."""
+        super().resizeEvent(event)
+        if not self.count():
+            return
+        self.doItemsLayout()
+        last = self.visualItemRect(self.item(self.count() - 1))
+        self.setFixedHeight(last.bottom() + 1 + self.verticalOffset() + self.spacing() + 2 * self.frameWidth())
 
 
 class ExportDialog(QDialog):
@@ -70,7 +83,7 @@ class ExportDialog(QDialog):
         folder_line.addWidget(browse)
         checklist_title = QLabel(text("export.checklist"))
         checklist_title.setProperty("class", "section-title")
-        self.checklist = QListWidget()
+        self.checklist = _RowsList()
         self.checklist.setObjectName("export-checklist")
         for item in vm.checklist():
             row = QListWidgetItem(item.text)
@@ -80,7 +93,7 @@ class ExportDialog(QDialog):
             row.setData(Qt.ItemDataRole.UserRole, item.state)
             self.checklist.addItem(row)
         self.checklist.setWordWrap(True)
-        self.checklist.setMaximumHeight(150)
+        self.checklist.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.problem = QLabel()
         self.problem.setObjectName("export-problem")
         self.problem.setProperty("class", "hint")

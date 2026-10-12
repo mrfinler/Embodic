@@ -18,6 +18,7 @@ CF11 = "spiral_12c16p_default"
 WAVE = "wave_16p_example"  # fails the DRC with 186 violations
 HOLES = {"serpentine_16p_example": 8, "wave_16p_example": 8}  # screw clearance holes; the other examples have none
 FORMATS = ("svg", "dxf", "dxf-outline", "dxf-screws", "pdf", "readme", "bundle")
+GATED = ("svg", "dxf", "dxf-outline", "dxf-screws", "bundle")  # the drawings and the bundle wait for the confirmation
 
 
 def export(run, project: Path, fmt: str, out: Path, *flags: str) -> tuple[int, str, str]:
@@ -81,9 +82,9 @@ def test_dxf_formats_are_not_swapped(run, project_of, tmp_path) -> None:
 
 
 @pytest.mark.req("REQ-F-33")
-@pytest.mark.parametrize("fmt", FORMATS)
-def test_a_failed_drc_refuses_every_format_without_confirmation(run, project_of, tmp_path, fmt) -> None:
-    """Catches an export that writes files for a design that fails the DRC: exit 2, nothing on disk, the fix named."""
+@pytest.mark.parametrize("fmt", GATED)
+def test_a_failed_drc_refuses_drawings_and_the_bundle_without_confirmation(run, project_of, tmp_path, fmt) -> None:
+    """Catches a drawing written for a design that fails the DRC: exit 2, nothing on disk, the fix named (D-045e)."""
     out = tmp_path / f"wave.{fmt}"
     code, stdout, stderr = export(run, project_of(WAVE), fmt, out)
     assert code == 2
@@ -91,6 +92,27 @@ def test_a_failed_drc_refuses_every_format_without_confirmation(run, project_of,
     assert not out.exists()
     assert "error DRC_EXPORT_NOT_CONFIRMED:" in stderr
     assert "error DRC_CLI_EXPORT_REFUSED: Nothing was written. Run the command again with --allow-drc-errors" in stderr
+
+
+@pytest.mark.req("REQ-F-33")
+def test_d_045e_the_pdf_report_of_a_failed_drc_is_written_and_prints_the_drc_result(run, project_of, tmp_path) -> None:
+    """D-045e (D-038d): the report documents the state and needs no confirmation. Catches the old refusal (exit 2)."""
+    out = tmp_path / "wave.pdf"
+    code, stdout, stderr = export(run, project_of(WAVE), "pdf", out)
+    assert (code, stderr) == (0, "")
+    assert stdout.splitlines() == [f"Wrote {out}", "Design rule check: FAILED, 186 violations"]
+    text = " ".join(page.extract_text() for page in PdfReader(out).pages)
+    assert "Board 1: FAILED, 186 violations" in text
+
+
+@pytest.mark.req("REQ-F-33")
+def test_d_045e_the_readme_of_a_failed_drc_is_written_without_confirmation(run, project_of, tmp_path) -> None:
+    """D-045e: the README is a document like the report. Catches the old refusal (exit 2) of the readme format."""
+    out = tmp_path / "README.txt"
+    code, stdout, stderr = export(run, project_of(WAVE), "readme", out)
+    assert (code, stderr) == (0, "")
+    assert stdout.splitlines() == [f"Wrote {out}", "Design rule check: FAILED, 186 violations"]
+    assert compute_project(project_of(WAVE)).design_hash in out.read_text(encoding="utf-8")
 
 
 @pytest.mark.req("REQ-F-33")

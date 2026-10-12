@@ -24,7 +24,6 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QLabel,
     QPushButton,
-    QStyledItemDelegate,
     QStyleOptionViewItem,
     QTableView,
     QVBoxLayout,
@@ -37,6 +36,7 @@ from embodic.ui.strings import text
 from embodic.ui.theme import ThemeTokens
 from embodic.ui.viewmodels.results import DrcRow, DrcTable
 from embodic.ui.views.geometry_view import DATA_KIND, GeometryView
+from embodic.ui.views.results_view import FocusRoomDelegate
 from embodic.ui.views.status_badge import repolish
 from embodic.ui.views.style import themed_icon
 
@@ -49,8 +49,11 @@ FAIL_BORDER_PX = 4
 MESSAGE_MIN_PX = 200
 
 
-class _FailBorder(QStyledItemDelegate):
-    """Draws the 4 px fail border on the first cell of a failing row (screens.md section 7)."""
+class _FailBorder(FocusRoomDelegate):
+    """Draws the 4 px fail border on the first cell of a failing row (screens.md section 7).
+
+    The focus room keeps a focused Message cell from losing its last wrapped line, as in the compare table.
+    """
 
     def __init__(self, colour: QColor) -> None:
         super().__init__()

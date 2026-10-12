@@ -18,13 +18,13 @@ from embodic.paths import resource_root
 EXAMPLE_SUFFIX = ".embodic.json"
 # The note the UI shows per example; the source note in the file keeps the provenance (m4_review.md ruling g 4).
 DISPLAY_NOTES = {
-    "serpentine_16p_example": "Default serpentine preset of the reference generator. Example values (assumption).",
+    "serpentine_16p_example": "Serpentine settings of the reference generator. Example values (assumption).",
     "spiral_12c10p_d08": "D08 thesis configuration. The 66 mm circle board and 10 mm bore are an assumption.",
     "spiral_12c14p": "CF-11 copper with 14 poles on a 104 mm board. Example values (assumption).",
-    "spiral_12c16p_default": "CF-11 default 12-coil 16-pole spiral. Example values (assumption).",
+    "spiral_12c16p_default": "CF-11 copper with 12 coils and 16 poles. Example values (assumption).",
     "wave_16p_example": (
-        "Default wave preset with 2 turns. Example values (assumption); board, bore and screw circle follow the "
-        "reference outline rules at this copper envelope."
+        "Involute wave settings of the reference generator. Example values (assumption); board, bore and screw "
+        "circle follow the reference outline rules at this copper envelope."
     ),
 }
 

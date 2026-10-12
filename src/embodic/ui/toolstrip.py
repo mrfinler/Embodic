@@ -141,4 +141,7 @@ TOOLSTRIP: tuple[ToolstripAction, ...] = (
     ToolstripAction(
         id="act-fit", tab=ToolstripTab.VIEW, icon="zoom-fit", shortcut="F", command="fit_view", group="view"
     ),
+    ToolstripAction(
+        id="act-tests", tab=ToolstripTab.VIEW, icon="check-pass", shortcut=None, command="show_tests", group="help"
+    ),
 )
