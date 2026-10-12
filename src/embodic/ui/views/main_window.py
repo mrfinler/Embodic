@@ -74,6 +74,7 @@ from embodic.ui.viewmodels.results import (
     inputs_card,
     topic_for,
 )
+from embodic.ui.viewmodels.selftest import SelfTestViewModel
 from embodic.ui.viewmodels.session import (
     DesignSession,
     SessionDrafting,
@@ -96,6 +97,7 @@ from embodic.ui.views.new_design_dialog import NewDesignDialog
 from embodic.ui.views.phase_panel import PhasePanel
 from embodic.ui.views.results_rail import ResultsRail
 from embodic.ui.views.results_view import CompareTab, ResultsTab, focus_ring_qss
+from embodic.ui.views.tests_dialog import SelfTestWorker, TestsDialog
 from embodic.ui.views.toolstrip_bar import CommandTable, ToolstripBar
 from embodic.ui.views.widgets import check_box
 
@@ -143,6 +145,7 @@ class MainWindow(QMainWindow):
         self.export_vm = ExportViewModel(self._export_source)
         self.guide: GuideWindow | None = None
         self.export_dialog: ExportDialog | None = None
+        self.tests_dialog: TestsDialog | None = None
         self._on_close = on_close
         self._os_prefers_dark = os_prefers_dark
         self.tokens: ThemeTokens = load_theme("light")
@@ -201,6 +204,7 @@ class MainWindow(QMainWindow):
             "fit_view": self.canvas.fit_view,
             "show_checks": partial(self.show_results_tab, "tab-drc"),
             "show_equations": self.show_equations,
+            "show_tests": self.show_tests,
             **{command: partial(self.show_export, command) for command in PRESETS},
         }
 
@@ -332,6 +336,14 @@ class MainWindow(QMainWindow):
         guide.show_topic(eq_id or next(iter(self.registry.equations)))
         guide.show()
         guide.raise_()
+
+    def show_tests(self) -> None:
+        """Open the Tests dialog (D-045c), created on first use; its runs never touch the results or their badges."""
+        if self.tests_dialog is None:
+            worker = SelfTestWorker(self)
+            self.tests_dialog = TestsDialog(SelfTestViewModel(worker), worker, self.tokens, self)
+        self.tests_dialog.show()
+        self.tests_dialog.raise_()
 
     def show_help(self) -> None:
         """F1: open the guide at the topic of the focused widget (its whatsThis or a parent's)."""

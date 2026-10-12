@@ -421,7 +421,8 @@ of the focused field (field `whatsThis` holds the topic id).
 ## 13. Tests (`dlg-tests`)
 
 Milestone M5 (U-S4g ruling l, D-042 draft). The dialog needs the bundled test set and the packaged `passed_tests`
-evidence in the wheel (D-034). Until both ship, no toolstrip button, menu item or shortcut opens it.
+evidence in the wheel (D-034). Entry point (D-045c, U-M5d): the toolstrip View tab, group "Help", `act-tests`
+"Self-tests" with icon `check-pass`, command `show_tests`.
 
 | objectName | Qt widget | Rule |
 |---|---|---|

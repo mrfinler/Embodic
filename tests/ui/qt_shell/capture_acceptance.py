@@ -523,7 +523,19 @@ def _s32(run: Run) -> None:
 
 
 def _s33(run: Run) -> None:
-    run.notes.append("not tested: no Tests dialog (`tests-table`) exists in this build (screens.md section 13)")
+    run.start(None)
+    run.window.toolstrip.actions_by_id["act-tests"].trigger()
+    dialog = run.window.tests_dialog
+    assert dialog is not None
+    run.widget("btn-tests-run", dialog).click()
+    deadline = time.monotonic() + 4 * SETTLE_S
+    while dialog.vm.running.value and time.monotonic() < deadline:
+        run.app.processEvents()
+        time.sleep(0.01)
+    run.focus("tests-table", dialog)
+    run.save("S33", L, WIDE)
+    run.notes.append(run.widget("tests-summary", dialog).text())
+    dialog.close()
 
 
 def _s34(run: Run) -> None:

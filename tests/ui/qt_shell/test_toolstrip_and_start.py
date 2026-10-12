@@ -18,6 +18,7 @@ IMPLEMENTED = {"save_project", "show_examples", "compute_now", "cycle_theme", "t
 IMPLEMENTED |= {"open_project"}  # U-M4e-1 (F21)
 IMPLEMENTED |= {"new_design", "set_connection_star", "set_connection_delta"}  # U-M4c session commands
 IMPLEMENTED |= {f"set_topology_{name}" for name in ("spiral", "serpentine", "wave")}
+IMPLEMENTED |= {"show_tests"}  # U-M5d (D-045c)
 IMPLEMENTED |= {"show_checks", "show_equations"}  # U-M4d results area
 DISABLED_UNTIL_UNDO = {"undo", "redo"}  # U-M4c: enabled once the session has history
 DISABLED_UNTIL_UNDO |= {"export_svg", "export_dxf", "export_pdf", "export_bundle"}  # U-M4d: once a design computed
@@ -90,14 +91,15 @@ def test_ui25_arrow_keys_move_focus_within_a_tab_and_wrap(make_shell, qtbot):
     window.activateWindow()
     toolstrip = window.toolstrip
     toolstrip.show_tab(ToolstripTab.VIEW)
-    theme, greyscale, fit = (toolstrip.buttons[i] for i in ("act-theme", "act-greyscale", "act-fit"))
+    names = ("act-theme", "act-greyscale", "act-fit", "act-tests")
+    theme, greyscale, fit, tests = (toolstrip.buttons[i] for i in names)
     theme.setFocus()
     qtbot.waitUntil(theme.hasFocus)
-    for key, expected in ((Qt.Key.Key_Right, greyscale), (Qt.Key.Key_Right, fit), (Qt.Key.Key_Right, theme)):
-        qtbot.keyClick(window.focusWidget(), key)
+    for expected in (greyscale, fit, tests, theme):
+        qtbot.keyClick(window.focusWidget(), Qt.Key.Key_Right)
         assert window.focusWidget() is expected
     qtbot.keyClick(window.focusWidget(), Qt.Key.Key_Left)
-    assert window.focusWidget() is fit
+    assert window.focusWidget() is tests
     qtbot.keyClick(window.focusWidget(), Qt.Key.Key_Home)
     assert window.focusWidget() is theme
 
