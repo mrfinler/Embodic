@@ -101,6 +101,7 @@ def _verdict(case: GoldenCase, registry: Registry) -> Comparison:
     return Comparison(diffs=tuple(diffs), indeterminate=result.indeterminate)
 
 
+@pytest.mark.eqt("EQT-30-GR")
 @pytest.mark.parametrize("case", BUILT, ids=lambda c: c.case_id)
 def test_gr20_drc_verdict_matches_xcoil_outside_the_slack_band(
     case: GoldenCase, registry: Registry, golden_report: Any
@@ -109,6 +110,7 @@ def test_gr20_drc_verdict_matches_xcoil_outside_the_slack_band(
     golden_report.check(case.case_id, apply_allow_list(_verdict(case, registry), case.case_id, ALLOW))
 
 
+@pytest.mark.eqt("EQT-30-GR")
 @pytest.mark.parametrize("case", BUILT, ids=lambda c: c.case_id)
 def test_gr20_via_to_via_clearance_equals_xcoil_exactly(
     case: GoldenCase, registry: Registry, golden_report: Any

@@ -75,6 +75,7 @@ def test_eq14_reference_estimate() -> None:
     assert inductance_estimate_h(64, 0.866, 38.0, 18.0, 8, 6.62) == pytest.approx(9.74e-6, rel=5e-4)
 
 
+@pytest.mark.eqt("EQT-19-CF07")
 def test_eq19_triplen_in_phase() -> None:
     """EQ-19 reference: 0.1 V third harmonic in phase on all three phases, R_loop 3 ohm -> P 0.015 W."""
     e3 = np.array([0.0, 0.1 + 0j])
@@ -87,6 +88,7 @@ def test_eq19_balanced_fundamental_drives_nothing() -> None:
     assert delta_circulating_loss_w(phasors, 3.0) == pytest.approx(0.0, abs=1e-30)
 
 
+@pytest.mark.eqt("EQT-23-CF06")
 def test_eq23_cf06_star_and_delta() -> None:
     """EQ-23 reference (CF-06): branches 1.0, 1.1, 1.2 ohm -> R_LL 2.2 (star), 0.731313131 (delta)."""
     branches = [1.0, 1.1, 1.2]

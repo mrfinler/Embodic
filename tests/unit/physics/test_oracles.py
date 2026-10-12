@@ -87,6 +87,7 @@ def _d08_design() -> DesignParameters:
     )
 
 
+@pytest.mark.eqt("EQT-05-O1", "EQT-06-O1", "EQT-09-O1")
 @pytest.mark.req("REQ-F-11")
 def test_or01_d08_line_line_ke_within_the_registry_band() -> None:
     """OR-01: model Ke_LL peak against D08's measured 0.031 V*s/rad in [-8 %, +8 % + e_edge] (test_plan.md section 4).

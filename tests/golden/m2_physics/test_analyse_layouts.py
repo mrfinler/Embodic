@@ -190,6 +190,7 @@ def test_edge_leakage_metric_is_labelled_per_def23(results: Mapping[str, Analysi
     assert flag.metric_bound.value == "lower_bound"
 
 
+@pytest.mark.eqt("EQT-05-EC")
 def test_ec05_above_the_cap_downgrades_emf_results_to_unresolved() -> None:
     """Defect caught: an e_edge above the 10 % cap (D-017) leaving Ke and torque at their equation badge.
 

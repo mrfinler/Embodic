@@ -99,6 +99,7 @@ def _compared(case: str, r: AnalysisResult) -> tuple[dict[str, float], dict[str,
     return xcoil, embodic
 
 
+@pytest.mark.eqt("EQT-06-GR", "EQT-07-GR", "EQT-09-GR", "EQT-12-GR", "EQT-18-GR")
 @pytest.mark.parametrize("case", CASES)
 def test_result_quantities_match_xcoil(results: Mapping[str, AnalysisResult], case: str) -> None:
     """Defect caught: a wrong EMF sum, THD, line waveform peak, torque or eddy-loss coefficient (EQ-06, 09, 12, 18).
@@ -111,6 +112,7 @@ def test_result_quantities_match_xcoil(results: Mapping[str, AnalysisResult], ca
     assert verdict.ok, f"{case}: {verdict}"
 
 
+@pytest.mark.eqt("EQT-18-GR")
 @pytest.mark.parametrize("case", CASES)
 def test_phase_waveform_matches_xcoil(results: Mapping[str, AnalysisResult], case: str) -> None:
     """Defect caught: a harmonic with the wrong phase or amplitude in the synthesised waveform (EQ-18)."""
@@ -121,6 +123,7 @@ def test_phase_waveform_matches_xcoil(results: Mapping[str, AnalysisResult], cas
     assert verdict.ok, f"{case}: {verdict}"
 
 
+@pytest.mark.eqt("EQT-23-GR")
 @pytest.mark.parametrize("case", CASES)
 def test_line_resistance_with_interconnect_copper_matches_xcoil(case: str) -> None:
     """Defect caught: a wrong star formula or a dropped stub, link or neutral-ring term in EQ-23.
@@ -136,6 +139,7 @@ def test_line_resistance_with_interconnect_copper_matches_xcoil(case: str) -> No
     assert actual > without, "the fixture has interconnect copper, so dropping it must change the result"
 
 
+@pytest.mark.eqt("EQT-26-GR")
 @pytest.mark.parametrize("case", CASES)
 def test_efficiency_matches_xcoil(case: str) -> None:
     """Defect caught: eta = P_out / (P_out + P_loss) with the wrong denominator (EQ-26).

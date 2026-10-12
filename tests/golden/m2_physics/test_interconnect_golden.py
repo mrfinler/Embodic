@@ -46,6 +46,7 @@ def results() -> Mapping[str, AnalysisResult]:
     return out
 
 
+@pytest.mark.eqt("EQT-23-GR")
 @pytest.mark.parametrize("case", CASES)
 def test_interconnect_sums_per_phase_match_xcoil(case: str) -> None:
     """Defect caught: a stub counted as a link, a tap stub on the wrong phase, or a ring segment of the wrong length.
@@ -81,6 +82,7 @@ def _with_xcoil_copper(case: str, r: AnalysisResult) -> float:
     return r.loss_total_w.value - r.loss_copper_w.value + _xcoil(case)["pCu"]
 
 
+@pytest.mark.eqt("EQT-26-GR")
 @pytest.mark.parametrize("case", CASES)
 def test_loss_sum_and_efficiency_match_xcoil_given_its_copper_loss(
     results: Mapping[str, AnalysisResult], case: str
@@ -99,6 +101,7 @@ def test_loss_sum_and_efficiency_match_xcoil_given_its_copper_loss(
     assert compare_scalar(x["pOut"], r.output_power_w.value, INTEGRATED).ok
 
 
+@pytest.mark.eqt("EQT-26-GR")
 @pytest.mark.parametrize("case", CASES)
 def test_motor_constant_matches_xcoil_given_its_copper_loss(results: Mapping[str, AnalysisResult], case: str) -> None:
     """Defect caught: K_m from the line current, the loss sum or a missing square root (EQ-26)."""
@@ -117,6 +120,7 @@ def test_motor_constant_is_zero_without_copper_loss_or_current() -> None:
     assert compare_scalar(0.05 / math.sqrt(2.0), motor_constant_n_m_per_sqrt_w(0.05, 2.0, 1.0), KERNEL).ok
 
 
+@pytest.mark.eqt("EQT-26-GR")
 @pytest.mark.parametrize("case", CASES)
 def test_result_level_loss_sum_and_efficiency_against_xcoil(results: Mapping[str, AnalysisResult], case: str) -> None:
     """Records the gap that the mapped circuit's copper loss leaves in the loss sum and eta (XD-PHY-005).

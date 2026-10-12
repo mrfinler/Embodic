@@ -131,6 +131,7 @@ def test_gr18_covers_the_nine_pad_fixtures_and_the_segment_fixtures() -> None:
     assert any(c.fn == "segSegDist" for c in CASES.values())
 
 
+@pytest.mark.eqt("EQT-30-GR")
 @pytest.mark.parametrize("case", [c for c in CASES.values() if c.fn in DRC_FUNCTIONS], ids=lambda c: c.case_id)
 def test_gr18_drc_kernel_matches_xcoil(case: GoldenCase, golden_report: Any) -> None:
     """Catches drift from Xcoil's segment and pad kernels beyond 1e-12 mm, or a wrong own-via exemption."""

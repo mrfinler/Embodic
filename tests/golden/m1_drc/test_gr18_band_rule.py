@@ -101,6 +101,7 @@ def test_gr18_band_cases_cover_the_three_regions_of_the_band_rule() -> None:
         assert _in_region(_region(case), call.output["clearance"], call.inputs["clearance"]), case.case_id
 
 
+@pytest.mark.eqt("EQT-30-GR")
 @pytest.mark.parametrize("case", CASES.values(), ids=lambda c: c.case_id)
 def test_gr18_run_drc_agrees_with_xcoil_outside_the_slack_band(case: GoldenCase, golden_report: Any) -> None:
     """Catches embodic's trace clearance drifting from Xcoil's beyond 1e-6 mm, or a pass/fail flip outside the band.
