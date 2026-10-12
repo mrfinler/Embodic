@@ -3,7 +3,7 @@
 import math
 
 import pytest
-from continuity import first_gap
+from continuity import chains, first_gap
 from records import Arc, Line
 
 pytestmark = pytest.mark.req("REQ-N-21")
@@ -60,6 +60,23 @@ def test_reversed_primitive_is_a_gap() -> None:
     path[0] = Line(10.0, 0.0, 10.0, -5.0, W)
     gap = first_gap(path)
     assert gap is not None and gap.index == 0
+
+
+def test_chains_split_only_at_joints_wider_than_the_bound() -> None:
+    """Catch a splitter that cuts at every joint, misses a reversed primitive, or cuts inside the 1e-6 mm bound.
+
+    Path: side, turn, side; a line 27 mm away, then one 0.9e-6 mm on (kept); a line drawn back to that end; a 1.1e-6 mm
+    joint.
+    """
+    path = [
+        *side_turn_side(),
+        Line(20.0, 0.0, 25.0, 0.0, W),
+        Line(25.0 + 0.9e-6, 0.0, 30.0, 0.0, W),
+        Line(40.0, 0.0, 30.0, 0.0, W),
+        Line(30.0 + 1.1e-6, 0.0, 35.0, 0.0, W),
+    ]
+    assert chains(path) == [range(0, 3), range(3, 5), range(5, 6), range(6, 7)]
+    assert chains(side_turn_side()) == [range(0, 3)]
 
 
 def test_nan_coordinate_is_a_gap() -> None:

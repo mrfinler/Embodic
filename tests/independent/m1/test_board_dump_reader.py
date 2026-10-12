@@ -116,15 +116,15 @@ def test_non_finite_geometry_is_rejected() -> None:
 def test_golden_layout_fixtures_map_and_parse() -> None:
     """Part 2: every GR-19 layout, mapped by U-M1b's mapper and written by embodic, parses with no contract problem.
 
-    Catches a writer that drops a field, rounds an end point, or lists a primitive under two objects. Continuity per
-    object is checked in ``test_gr19_drc.py`` (DEF-M1V-03).
+    Catches a writer that drops a field, rounds an end point, or lists a primitive under two objects. The objects are
+    the ones the mapper gets, each ``ic`` chain on its own; continuity per object is checked in ``test_gr19_drc.py``.
     """
-    from gr19 import boards
+    from gr19 import boards, split_interconnect_chains
 
     found = boards()
     assert len(found) == 3
     for board in found:
-        raw_objects = [obj for layer in board.raw["layers"] for obj in layer["objs"]]
+        raw_objects = [obj for layer in split_interconnect_chains(board.raw)["layers"] for obj in layer["objs"]]
         assert len(board.dump.paths) == len(raw_objects)
         assert [len(board.dump.paths[k]) for k in sorted(board.dump.paths)] == [len(o["prims"]) for o in raw_objects]
         assert len(path_adjacent(board.dump)) == sum(len(o["prims"]) - 1 for o in raw_objects)
