@@ -1,9 +1,8 @@
 """``dlg-tests``: run the self-tests in a worker and list each result (screens.md section 13, interfaces.md 14)."""
 
-import logging
-from collections.abc import Callable, Sequence
+from typing import Protocol
 
-from PySide6.QtCore import QObject, QRunnable, Qt, QThreadPool, Signal, Slot
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -18,14 +17,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from embodic.drc import CancelToken
-from embodic.selftest import SelfTestCheck, SelfTestReport, SelfTestResult, SelfTestVerdict, run_selftests
+from embodic.selftest import SelfTestResult, SelfTestVerdict
 from embodic.ui.strings import text
 from embodic.ui.theme import ThemeTokens
-from embodic.ui.viewmodels.selftest import SelfTestViewModel
+from embodic.ui.viewmodels.selftest import SelfTestRunner, SelfTestViewModel
 from embodic.ui.views.style import themed_icon
-
-logger = logging.getLogger(__name__)
 
 COLUMNS = ("id", "group", "result", "duration", "message")
 VERDICT_ICONS = {
@@ -35,67 +31,18 @@ VERDICT_ICONS = {
 }
 
 
-class _Job(QRunnable):
-    def __init__(self, worker: "SelfTestWorker", checks: Sequence[SelfTestCheck], cancel: CancelToken) -> None:
-        super().__init__()
-        self._worker, self._checks, self._cancel = worker, checks, cancel
-
-    def run(self) -> None:
-        try:
-            report = run_selftests(self._checks, cancel=self._cancel, on_result=self._worker.result.emit)
-        except Exception:
-            logger.exception("the self-test run failed")
-            self._worker.done.emit(None)
-            return
-        self._worker.done.emit(report)
-
-
-class SelfTestWorker(QObject):
-    """Implements SelfTestRunner with a one-thread pool; the signals bring each result to the GUI thread."""
-
-    result = Signal(object)  # SelfTestResult
-    done = Signal(object)  # SelfTestReport, or None when the run itself raised
-
-    def __init__(self, parent: QObject | None = None) -> None:
-        super().__init__(parent)
-        self._pool = QThreadPool(self)
-        self._pool.setMaxThreadCount(1)
-        self._on_result: Callable[[SelfTestResult], None] | None = None
-        self._on_done: Callable[[SelfTestReport | None], None] | None = None
-        self.result.connect(self._deliver_result)
-        self.done.connect(self._deliver_done)
-
-    def start(
-        self,
-        checks: Sequence[SelfTestCheck],
-        cancel: CancelToken,
-        on_result: Callable[[SelfTestResult], None],
-        on_done: Callable[[SelfTestReport | None], None],
-    ) -> None:
-        """Run the checks on the pool's thread."""
-        self._on_result, self._on_done = on_result, on_done
-        self._pool.start(_Job(self, checks, cancel))
+class WaitingRunner(SelfTestRunner, Protocol):
+    """The self-test runner the dialog waits for when it closes (embodic.ui.workers.SelfTestWorker)."""
 
     def wait(self) -> None:
         """Block until the running check, if any, has finished."""
-        self._pool.waitForDone()
-
-    @Slot(object)
-    def _deliver_result(self, result: SelfTestResult) -> None:
-        if self._on_result is not None:
-            self._on_result(result)
-
-    @Slot(object)
-    def _deliver_done(self, report: SelfTestReport | None) -> None:
-        if self._on_done is not None:
-            self._on_done(report)
 
 
 class TestsDialog(QDialog):
     """The Tests dialog; Esc or Stop cancels a run, Esc closes the dialog when nothing runs."""
 
     def __init__(
-        self, vm: SelfTestViewModel, worker: SelfTestWorker, tokens: ThemeTokens, parent: QWidget | None = None
+        self, vm: SelfTestViewModel, worker: WaitingRunner, tokens: ThemeTokens, parent: QWidget | None = None
     ) -> None:
         super().__init__(parent)
         self.setObjectName("dlg-tests")

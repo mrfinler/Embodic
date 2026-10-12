@@ -97,12 +97,10 @@ def run_selftests(
                 on_result(result)
     finally:
         forget_computed()
-    # The registry field arrives with U-M5b (section 3.1); until then every build reads as having no evidence.
-    build_id: str | None = getattr(load_registry(), "evidence_build_id", None)
     return SelfTestReport(
         results=tuple(results),
         versions=version_info(),
-        evidence_build_id=build_id,
+        evidence_build_id=load_registry().evidence_build_id,
         cancelled=any(result.verdict is SelfTestVerdict.NOT_RUN for result in results),
     )
 

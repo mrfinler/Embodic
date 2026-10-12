@@ -153,7 +153,7 @@ class ExportDialog(QDialog):
             self.folder.setText(folder)
 
     def run_clicked(self) -> None:
-        """Run the export; with DRC failures and more than the PDF report and the README chosen, confirm first."""
+        """Run the export; with DRC failures and an SVG, a DXF or the ZIP chosen, open the confirmation first."""
         preflight = self.vm.preflight()
         if not needs_drc_confirmation(preflight, self.selected()):
             self._run(confirmed=False)

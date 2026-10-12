@@ -9,6 +9,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel, QPushButton, QTableWidget, QWidget
 
 from embodic.selftest import SELFTESTS, SelfTestCheck, SelfTestGroup
+from embodic.ui import workers
 from embodic.ui.toolstrip import TOOLSTRIP, ToolstripTab
 from embodic.ui.viewmodels.selftest import SelfTestViewModel
 from embodic.ui.views import tests_dialog
@@ -52,7 +53,7 @@ def badges(window: QWidget) -> dict[str, str]:
 
 def open_dialog(window, qtbot, checks) -> tests_dialog.TestsDialog:
     """Open a Tests dialog over the window that runs ``checks`` instead of the catalogue."""
-    worker = tests_dialog.SelfTestWorker(window)
+    worker = workers.SelfTestWorker(window)
     dialog = tests_dialog.TestsDialog(SelfTestViewModel(worker, checks), worker, window.tokens, window)
     qtbot.addWidget(dialog)
     dialog.show()

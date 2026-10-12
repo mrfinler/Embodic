@@ -69,8 +69,9 @@ PRESETS: dict[str, frozenset[ExportFormat]] = {
     "export_pdf": frozenset({ExportKind.PDF_REPORT}),
     "export_bundle": frozenset(o.choice for o in FORMAT_OPTIONS),
 }
-# The PDF report and the README document the DRC state, so they never wait for the DRC confirmation (D-038d, D-045e).
-DOCUMENTS: frozenset[ExportFormat] = frozenset({ExportKind.PDF_REPORT, ExportKind.README})
+# The PDF report and the README document the DRC state and the project file is the design itself, not a fabrication
+# drawing, so none of them waits for the DRC confirmation (D-038d, D-045e, D-046a).
+UNGATED: frozenset[ExportFormat] = frozenset({ExportKind.PDF_REPORT, ExportKind.README, ExportKind.PROJECT_JSON})
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -117,8 +118,8 @@ def selection_problem(formats: frozenset[ExportFormat], folder: str) -> str | No
 
 
 def needs_drc_confirmation(preflight: ExportPreflight, formats: frozenset[ExportFormat]) -> bool:
-    """Return True when the DRC failed and the selection holds a drawing, the project file or the ZIP (REQ-F-33)."""
-    return preflight.needs_confirmation and not formats <= DOCUMENTS
+    """Return True when the DRC failed and the selection holds an SVG, a DXF or the ZIP (REQ-F-33)."""
+    return preflight.needs_confirmation and not formats <= UNGATED
 
 
 class ExportViewModel:
@@ -207,14 +208,14 @@ class ExportViewModel:
     ) -> ExportWritten | ExportRefused:
         """Write the chosen files and, when chosen, the ZIP of the same kinds; return the files on disk.
 
-        The PDF report and the README alone are written whatever the DRC verdict.
+        The PDF report, the README and the project file alone are written whatever the DRC verdict.
         """
         outcome = self.outcome()
         if outcome is None:
             raise RuntimeError("no computed design to export")
         folder.mkdir(parents=True, exist_ok=True)
         kinds = [o.choice for o in FORMAT_OPTIONS if o.choice in formats and isinstance(o.choice, ExportKind)]
-        drc_errors_allowed = confirmed_drc_errors or formats <= DOCUMENTS
+        drc_errors_allowed = confirmed_drc_errors or formats <= UNGATED
         result = self.export(kinds, folder, confirmed_drc_errors=drc_errors_allowed)
         if isinstance(result, ExportRefused):
             return result

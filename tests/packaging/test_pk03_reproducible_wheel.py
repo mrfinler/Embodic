@@ -61,3 +61,23 @@ def test_pk03_the_sdist_leaves_out_developer_tooling_build_output_and_evidence(t
     assert "build" not in tops
     assert {"src", "resources", "pyproject.toml", "README.md", "THIRD_PARTY_LICENSES.md"} <= tops
     assert not [name for name in names if name.endswith("passed_tests.v1.json")]
+
+
+@pytest.mark.req("REQ-N-06")
+def test_pk03_the_session_wheel_leaves_out_evidence_a_release_run_left_in_the_tree(tmp_path):
+    """D-045f. Catches a test wheel that packages a leftover evidence file, so its installed badges leave `not tested`.
+
+    The planted file is not valid evidence, so a run killed before the restore changes no badge.
+    """
+    leftover = REPO / "resources" / "evidence" / "passed_tests.v1.json"
+    previous = leftover.read_bytes() if leftover.exists() else None
+    leftover.write_text("{}", encoding="utf-8")
+    try:
+        names = set(wheel_members(build_wheel(tmp_path)))
+    finally:
+        if previous is None:
+            leftover.unlink()
+        else:
+            leftover.write_bytes(previous)
+    assert "embodic/_resources/evidence/equations.v1.json" in names
+    assert EVIDENCE_MEMBER not in names
