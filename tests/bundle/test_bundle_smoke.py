@@ -30,10 +30,9 @@ pytestmark = pytest.mark.skipif(
 
 
 def run_frozen(executable: Path, *args: str | Path, timeout_s: float = 120.0) -> subprocess.CompletedProcess[str]:
-    """Run a frozen executable with UTF-8 output and return the finished process."""
-    env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
+    """Run a frozen executable and return the finished process with its output decoded as UTF-8."""
     command = [str(executable), *map(str, args)]
-    return subprocess.run(command, capture_output=True, text=True, encoding="utf-8", env=env, timeout=timeout_s)
+    return subprocess.run(command, capture_output=True, encoding="utf-8", timeout=timeout_s)
 
 
 def without_export_time(svg: Path) -> str:
