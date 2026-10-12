@@ -7,10 +7,12 @@ from typing import Any
 import pytest
 from harness import INTEGRATED, KERNEL_MM, GoldenCase, compare_prims, compare_scalar, compare_sequence, load_area
 
+from embodic.drc import run_drc
 from embodic.geometry.layout import Layout
 from embodic.geometry.paths import COINCIDENCE_MM, joint_gaps_mm
 from embodic.geometry.primitives import path_length_mm
 from embodic.io.board_dump import decode_board_dump, dump_layout, encode_board_dump
+from embodic.model.drc_rules import DrcRules
 
 from .xcoil_map import layout_from_xcoil, split_ic_chains
 
@@ -21,6 +23,13 @@ CASES = list(load_area("m1_layout").values())
 # at each joint, so the DRC reading (``split_ic_chains``) maps each to four paths (three more than objects); every other
 # ``ic`` object is one chain.
 EXTRA_INTERCONNECT_CHAINS = {"layout-sector-default": 0, "layout-serpentine-default": 3, "layout-wave-turns-2": 3}
+# D-045g (interfaces.md section 7): run_drc on the split_ic_chains reading, as tests/golden/m1_drc/time_gr19_layouts.py
+# measures it.
+DRC_VIOLATIONS_BY_KIND = {
+    "layout-sector-default": Counter(),
+    "layout-serpentine-default": Counter(),
+    "layout-wave-turns-2": Counter({"trace_trace": 6, "trace_via": 180}),
+}
 
 
 def _raw(case: GoldenCase) -> Any:
@@ -144,3 +153,27 @@ def test_gr19_interconnect_keeps_xcoil_net_names(case: GoldenCase) -> None:
     ]
     mapped = [layout.paths[i] for i in layout.circuit.interconnect_path_ids]
     assert [path.net for path in mapped for _ in path.primitives] == xcoil_ic_nets
+
+
+@pytest.mark.parametrize("case", CASES, ids=lambda c: c.case_id)
+def test_gr19_run_drc_counts_on_the_split_chain_reading(case: GoldenCase) -> None:
+    """Catches a DRC exemption or a chain cut that moves the D-045g counts: sector 0, serpentine 0, wave 186.
+
+    The unsplit mapping reported 0, 3 and 190. The wave board keeps 6 trace_trace and 180 trace_via violations.
+    """
+    raw = _raw(case)
+    clearance_mm = raw["params"]["clearance"]
+    rules = DrcRules(
+        trace_clearance_mm=clearance_mm,
+        via_clearance_mm=clearance_mm,
+        edge_clearance_mm=clearance_mm,
+        hole_clearance_mm=clearance_mm,
+        min_trace_width_mm=0.1,
+        min_drill_mm=0.2,
+        min_annular_ring_mm=0.1,
+    )
+    report = run_drc(layout_from_xcoil(split_ic_chains(raw)), rules)
+    assert report is not None
+    expected = DRC_VIOLATIONS_BY_KIND[case.case_id]
+    assert Counter(v.kind.value for v in report.violations) == expected
+    assert report.violation_count == expected.total()
