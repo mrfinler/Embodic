@@ -92,9 +92,11 @@ step 2 that box contains the arc, so box distance is a lower bound of `D`.
   whole centreline, its end points included. With each `ic` chain its own path (U-V1c), one pair each on GR-19
   serpentine and wave needs rule 5: neutral stub path 16 (wave 193) ends on ring path 18 (wave 195) between its ends, both
   net `N`; `run_drc` exempts it too (`verified`). No GR-19 pair depends on the end-point clause now: every star path is
-  one primitive, so two paths meeting end to end fall under rule 3 (`inferred` from the exemption labels). Before the
-  split, the start of path 16 (193) was the end of path 15 (192) and lay on its primitive 2, so only that clause
-  exempted it. Point-to-centreline distances are exact closed forms (`point_to_centreline`).
+  one primitive, so two paths meeting end to end fall under rule 3. Before the split, the start of path 16 (193) was
+  the end of path 15 (192) and lay on its primitive 2, so only that clause exempted it. `verified` by running a scratch
+  copy of `_tees` that skips a hit at the other path's end points: 0 extra violations on the split mapping, and on the
+  unsplit one exactly `path:15/prim:2` with `path:16/prim:0` and `path:192/prim:2` with `path:193/prim:0`.
+  Point-to-centreline distances are exact closed forms (`point_to_centreline`).
 - The minima test brackets the pairs run_drc reports as well as its own violating pairs, so a pair the contract exempts
   but run_drc reports is caught by the exemption tests, not by the minima test.
 - Pads other than round ones are not modelled. All GR-19 pads are round.
