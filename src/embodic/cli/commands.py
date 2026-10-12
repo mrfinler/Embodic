@@ -16,6 +16,7 @@ from typing import NoReturn
 from embodic.api import ComputeOptions, ComputeOutcome, compute, compute_project, outcome_to_json
 from embodic.errors import IssueCategory, Severity, ValidationIssue, message_for
 from embodic.io.project import ProjectFile, load_project, project_provenance
+from embodic.model.validate import validate_design
 from embodic.outcome import Stage
 
 __all__ = ["ExitCode", "main"]
@@ -116,14 +117,18 @@ def _load(path: Path) -> ProjectFile | tuple[ValidationIssue, ...]:
     return incomplete
 
 
+def _refuse(issues: Sequence[ValidationIssue]) -> ExitCode:
+    """Print why there is nothing to work on; no design or no output file is never a success."""
+    _print_issues(issues)
+    return max(ExitCode.VALIDATION_ERRORS, exit_code_of_issues(issues))
+
+
 def _compute(args: argparse.Namespace) -> ExitCode:
     if args.json is not None and (bad := _unwritable(args.json)) is not None:
-        _print_issues((bad,))
-        return ExitCode.VALIDATION_ERRORS
+        return _refuse((bad,))
     loaded = _load(args.project)
     if isinstance(loaded, tuple):
-        _print_issues(loaded)
-        return exit_code_of_issues(loaded)
+        return _refuse(loaded)
     outcome = compute(loaded.design, project_provenance(loaded), options=ComputeOptions(run_drc=not args.no_drc))
     assert outcome is not None, "compute without a cancel token never returns None"
     if args.json is not None:
@@ -135,6 +140,18 @@ def _compute(args: argparse.Namespace) -> ExitCode:
     print("\n".join(format_summary(outcome, timings=args.timings)))
     _print_issues(outcome.issues)
     return exit_code_of_outcome(outcome)
+
+
+def _validate(args: argparse.Namespace) -> ExitCode:
+    loaded = _load(args.project)
+    if isinstance(loaded, tuple):
+        return _refuse(loaded)
+    issues = validate_design(loaded.design)
+    _print_issues(issues)
+    code = exit_code_of_issues(issues)
+    if code is ExitCode.OK:
+        print(f"Valid: {loaded.design.name}")
+    return code
 
 
 class _Parser(argparse.ArgumentParser):
@@ -155,6 +172,9 @@ def _parser() -> argparse.ArgumentParser:
     compute_parser.add_argument("--no-drc", action="store_true", help="skip the design rule check")
     compute_parser.add_argument("--timings", action="store_true", help="print the seconds each stage took")
     compute_parser.set_defaults(handler=_compute)
+    validate_parser = commands.add_parser("validate", help="check the design against its rules and build nothing")
+    validate_parser.add_argument("project", type=Path, help="project file (.embodic.json)")
+    validate_parser.set_defaults(handler=_validate)
     return parser
 
 
