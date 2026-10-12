@@ -30,7 +30,7 @@ LAYOUT = ARCH / "package_layout.md"
 ADR_DIR = ARCH / "decisions"
 REQUIRED_ADRS = ("ADR-0004", "ADR-0005", "ADR-0010", "ADR-0011", "ADR-0012")
 
-MODEL_LINE = re.compile(r"Prepared by: Agent 6 .* model: claude-opus-5-5")
+MODEL_LINE = re.compile(r"Prepared by: Agent 6 .* model: claude-(?:opus|sonnet)-5-5")
 THAI = re.compile("[" + chr(0x0E00) + "-" + chr(0x0E7F) + "]")
 REQ_ID = re.compile(r"REQ-[FNKTL]-\d{2}")
 TEST_ID = re.compile(r"\b(?:UT-[A-Z]{2,3}-\d{2}|(?:GR|OR|PR|BV|UI|KX|KS|LG|AX|PF|MT|PK|TR|IT)-\d{2})\b")

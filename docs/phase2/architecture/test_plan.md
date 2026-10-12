@@ -4,8 +4,8 @@ Prepared by: Agent 6 - Software Architecture Specialist - model: claude-opus-5-5
 
 This plan updates `docs/phase1/architecture/test_plan_draft.md`. Every Phase 1 test not listed under "Withdrawn tests"
 stays in force with its Phase 1 ID, check and criterion. This file adds the Phase 2 tests, amends the ones whose subject
-changed, and holds the generated requirements-to-tests matrix. It records no results: unit reports and Fable's
-ledger hold those.
+changed, and holds the generated requirements-to-tests matrix. It records no results, except the oracle results of
+§5.6 (D-045g) and the readings that revision notes quote: unit reports and Fable's ledger hold the others.
 
 This file and the Phase 1 plan it extends are the only sources of test IDs and their meanings. A brief, docstring or
 report that gives an ID another meaning is wrong, and this plan wins. A unit that needs a new test asks for a new ID
@@ -78,6 +78,11 @@ Revision 2026-10-12 (U-D13, claude-opus-5-5, D-034, D-042a; main 7b9b4c9 read fo
 UT-SLF-01 to UT-SLF-03, UT-CLI-03, UI-35 and PK-11 for the self-tests and the Tests dialog, and the split of the PK tests
 between this container and the Windows CI matrix. §7 names the new IDs in the M5 exit. PK-09 stays withdrawn, so the new
 packaging IDs start at PK-10.
+
+Revision 2026-10-13 (U-D14, claude-sonnet-5-5, D-045, D-037a, D-038d; main 6243163 read for every item, and the test
+modules named below run). §5 closes DEF-M1V-03 and names F-OR07 as the one open finding that keeps a strict xfail. §5.6
+is rewritten for main 6243163: one `xfail(strict=True)` mark (OR-07, two cases), the oracle results of D-045g, and the
+AX-04 and DEF-M1V-03 marks that are gone. §5.3.1 amends the AX-04 row for the same reason. No ID is new.
 
 ## 1. What changed and why
 
@@ -192,10 +197,24 @@ Phase 1 UT-PHY-01 to UT-PHY-21 and OR-01 to OR-12 stay. Two changes apply.
 
 ## 5. New and amended tests
 
-Open defects that keep a strict xfail (revision 2026-10-09, U-D8; D-037, U-V3b report; `tests/independent/README.md`
-on main 8a297a0, `verified` by reading). DEF-M1V-03 is the only one. The GR-19 mapper maps an Xcoil `ic` object to one
-`CopperPath` with gaps (11.28 mm on serpentine path 15, 22.11 mm on wave path 192), and the strict xfail in
-`tests/independent/m1/test_gr19_drc.py` covers 2 layouts. Owner U-M1z (mapper), status open.
+Closed defect DEF-M1V-03 (revision 2026-10-13, U-D14; U-V1c and U-M5o reports, D-045g; main 6243163). Revision
+2026-10-09 (U-D8) named it as the only open defect with a strict xfail: the GR-19 mapper put an Xcoil `ic` object into one
+`CopperPath` with gaps (11.28 mm on serpentine path 15, 22.11 mm on wave path 192). Two units closed it.
+
+- U-V1c split the `ic` objects in Agent 4's harness (`split_interconnect_chains`, `tests/independent/m1/gr19.py` l.68)
+  and removed the strict xfail from `tests/independent/m1/test_gr19_drc.py`.
+- U-M5o made the same cut in the product mapper (`_chains`, `tests/golden/m1_layout/xcoil_map.py` l.75). The test
+  `test_gr19_every_path_is_one_continuous_chain` (`tests/golden/m1_layout/test_gr19_layouts.py` l.54) asserts it.
+
+`grep -rn "xfail" tests --include=*.py` finds no mark in either file (`verified` by running it). The continuity tests pass:
+`7 passed, 45 deselected` from `pytest tests/independent/m1/test_gr19_drc.py tests/golden/m1_layout/test_gr19_layouts.py
+-k "continuous or cut_only"`. `run_drc` on the three GR-19 layouts of the product mapper reports sector 0, serpentine 0
+and wave 186 violations (6 `trace_trace` and 180 `trace_via`), `verified` by running
+`PYTHONPATH=src python3 tests/golden/m1_drc/time_gr19_layouts.py --runs 1`. Before the split the counts were 0, 3 and 190
+(U-M5o report, not rerun). The 186 wave violations are the D-006 pairs of D-034 (`tests/independent/README.md`, U-V1c
+section). After the split no GR-19 pair depends on the end-point clause of rule 5 (interfaces.md §7).
+
+The one finding that keeps a strict xfail is F-OR07, the OR-07 band miss of D-045a (§5.6).
 
 Closed defect DEF-M3b-03 (revision 2026-10-09, U-D10; U-M3-fix3 report, main fd190c1). The wave fuzz test failed with
 `ZeroDivisionError` in `biarc` for a denormal trace width on the merged gate of main 3d70170. U-M3-fix3 reproduced it
@@ -284,7 +303,7 @@ throwaway settings file) and find every widget by `objectName`. They run offscre
 | ID | Test (file in `tests/ui/qt_e2e/`) | What it checks | `not tested` |
 |---|---|---|---|
 | AX-02 | `test_ax02_open_edit_three_inputs_recompute_open_eq_details_and_export_svg_with_the_keyboard_only` (`test_ax02_keyboard_only.py` l.43) | key events only, no pointer event: open D08 from the Examples gallery, type `param-speed`, `param-current` and `param-copper-temp`, recompute, open `res-r-phase-how`, open the guide at EQ-10, export one SVG | Keys inside the file dialog. The Windows build opens files in the native dialog, which an offscreen run cannot drive, so "open" is the gallery |
-| AX-04 | `test_ax04_every_interactive_widget_outside_the_open_defects_reaches_24_px_and_check_labels_32_px` (`test_ax04_target_size.py` l.135) and `test_ax04_open_target_size_defects` (l.146) | every visible, enabled button, tab, slider, field and focusable chip is at least 24 px on its smaller side, and a check box or radio button is measured by its click rectangle at 32 px. The screens are the empty session, D08 with each inspector, results and toolstrip tab, and the New design, Examples and Export dialogs, all at 1280 x 800. The first test passes today. The second is parametrised over `KNOWN_UNDERSIZED` (l.54) and holds the four strict xfails of §5.6 | WCAG's spacing exception for scroll bars is unruled (U-S4g) |
+| AX-04 | `test_ax04_every_interactive_widget_reaches_24_px_and_check_rows_32_px` (`test_ax04_target_size.py` l.130), `test_ax04_check_rows_take_a_click_in_their_whole_32_px_rectangle` (l.139), `test_ax04_a_click_anywhere_in_a_check_row_toggles_the_box` (l.146) and `test_ax04_a_click_on_the_label_text_toggles_the_box` (l.159) | every visible, enabled button, tab, slider, field and focusable chip is at least 24 px on its smaller side, and a check box or radio button is measured by its click rectangle at 32 px. The screens are the empty session, D08 with each inspector, results and toolstrip tab, and the New design, Examples and Export dialogs, all at 1280 x 800. Revision 2026-10-13 (U-D14): the four tests pass on main 6243163 and carry no xfail mark (§5.6). The names above replace `test_ax04_every_interactive_widget_outside_the_open_defects_reaches_24_px_and_check_labels_32_px`, `test_ax04_open_target_size_defects` and `KNOWN_UNDERSIZED`, which no longer exist (`verified` by grep) | WCAG's spacing exception for scroll bars was unruled (U-S4g). The scroll bars now reach 24 px, so the walk needs no exception |
 | UI-09 | `test_ui09_the_window_renders_at_each_scale_factor` (`test_ui09_scaling.py` l.31) | one new process per `QT_SCALE_FACTOR` of 1, 1.5 and 2; the grab is 1280 x 800, 1920 x 1200 and 2560 x 1600 pixels. The grabs are kept for Agent 1 | "No clipped or overlapping text" is a judgement on the images, so it is `not tested` by code |
 | walkthroughs | `test_walkthrough_open_edit_recompute_inspect_export_save_and_reopen` (`test_walkthroughs.py` l.123), three cases | one user route per topology, listed below | typing into the file dialog. The cases answer it with `QFileDialog.selectFile` |
 | UX fixes of `m4_review_2.md` §6 | `test_f2_the_pair_list_rotation_chip_carries_its_provenance_for_the_dashed_example_rule` (`test_review_2_fixes.py` l.27), `test_ruling_i_the_screw_buttons_are_push_buttons_with_a_3_to_1_boundary` (l.45), `test_ruling_j_the_last_column_takes_the_remaining_width_so_no_header_cell_is_empty` (l.65, two sizes) | chip provenance, screw buttons, stretched last column at 1280 x 800 and 960 x 540 | |
@@ -358,26 +377,57 @@ Gate wall time (revision 2026-10-08, U-D7, D-035h). The commit gate on main 4aec
 minutes (Fable's gate run, U-M3a report). U-M3b measured 269 s for 1490 tests on its branch. The time is not a gate
 criterion. Shortening it is a Phase 5 item.
 
-### 5.6 Strict xfails on main 4fda98d (revision 2026-10-11, U-D12)
+### 5.6 Strict xfails on main 6243163 (revision 2026-10-13, U-D14; first written 2026-10-11, U-D12)
 
-Six test cases carry `xfail(strict=True)` on main 4fda98d: four in AX-04 and two of DEF-M1V-03. The gate of U-M4e-2
-reported `6 xfailed`. A strict xfail fails the run when it passes, so the owner removes the mark in the same change
-that fixes the cause. `grep -rn xfail tests --include=*.py` finds the markers (and one docstring, `test_oracles.py`
-l.97). `pytest tests/ui/qt_e2e/test_ax04_target_size.py -rx` lists the four AX-04 cases with their reasons. The two
-DEF-M1V-03 cases sit in `tests/independent` and run in the commit gate profile (`tools/ci.py` ignores only
-`tests/performance` and `tests/packaging`).
+One mark, `xfail(strict=True)`, is left on main 6243163. `grep -rn "xfail" tests --include=*.py` finds it at
+`tests/unit/physics/test_oracles_m5.py` l.239, and finds three docstrings that use the word (`test_oracles.py` l.98,
+`test_oracles_m5.py` l.124 and l.252). The mark covers `test_or07_d09_phase_emf_within_the_registry_band`, which is
+parametrised over the D09 builds A and B, so it holds two cases. `pytest tests/unit/physics/test_oracles.py
+tests/unit/physics/test_oracles_m5.py -rxs` printed `8 passed, 2 skipped, 2 xfailed` (`verified` by running it).
+A strict xfail fails the run when it passes, so the owner removes the mark in the same change that fixes the cause. The
+commit and nightly profiles run the test. They ignore only `tests/performance` and `tests/packaging` (`tools/ci.py` l.28
+and l.42-43), and the test carries no `slow` or `manual` mark.
 
 | Test | Mark reason | Ids it carries | Open point and owner |
 |---|---|---|---|
-| `test_ax04_open_target_size_defects[EqChip]` and `[AssumptionTag]` (`tests/ui/qt_e2e/test_ax04_target_size.py` l.146; the reasons are `KNOWN_UNDERSIZED`, l.54) | DEF-M4e2-01: the EQ chip and the "n assumptions" tag are 22 px tall (`status_badge.py`); the target is 24 px | REQ-N-13, AX-04 | Agent 1 rules fix or exception (U-S4g). Agent 3 fixes (U-M4e-3) and removes both marks |
-| `test_ax04_open_target_size_defects[QCheckBox]` (same function) | DEF-M4e2-02: check box click rectangles are 20 px tall in the results filters, the layer toggles and the export dialog; the target is 32 px for a check box with its label | REQ-N-13, AX-04 | the same two units |
-| `test_ax04_open_target_size_defects[QScrollBar]` (same function) | DEF-M4e2-03: scroll bars are 12 px wide (`theme_template.qss`); whether WCAG 2.2 SC 2.5.8's spacing exception applies to a scroll bar is unruled | REQ-N-13, AX-04 | Agent 1 rules (U-S4g); Agent 3 fixes if the ruling says fix (U-M4e-3) |
-| `test_every_dumped_object_is_a_continuous_path` for its second and third case (`tests/independent/m1/test_gr19_drc.py` l.79 builds the mark `_DEF_M1V_03`, applied at l.85) | DEF-M1V-03: the mapper puts each discontinuous Xcoil `ic` object into one `CopperPath` | the mapper defect described in §5 above this table | U-M1z (mapper), status open |
+| `test_or07_d09_phase_emf_within_the_registry_band[A]` and `[B]` (`test_oracles_m5.py` l.238-262) | F-OR07 (D-045a): the D09 phase EMF lies outside [-5 %, +5 % + e_edge] for both pre-registered builds | OR-07, EQT-05-O2, EQT-06-O2 | The cause is `unresolved`: the spiral geometry G2 and the edge leakage (`docs/phase2/engineering/oracle_tests_spec.md` §OR-07; U-E9 lists UD-25 and G2 as the blocker). The band is never widened. No owner is named, and the mark goes in the change that fixes the cause |
 
-The first test of AX-04, `test_ax04_every_interactive_widget_outside_the_open_defects_reaches_24_px_and_check_labels_32_px`
-(l.135), is not a xfail. It excludes the four kinds above, so a new undersized button, field, combo or tab fails it.
-`DEF-M4e2-01` to `DEF-M4e2-03` are the defect ids of U-M4e-2 (store `reports/U-M4e-2.md`). The test names three ids for
-four cases because DEF-M4e2-01 covers two widget classes.
+The mark has one effect on the evidence of §5.7. A record that xfails has the outcome "skipped" in the REQ report, and
+interfaces.md §3.1 keeps an ID out of `passed_tests` unless every record that carries it passed. EQT-05-O2 and EQT-06-O2
+therefore cannot enter `passed_tests` while OR-07 is an xfail (`inferred` from that rule and the U-M5o report; not run).
+
+Oracle results on main 6243163 (D-045g). The plan records them here because this section is where the one oracle outside
+its band is listed. `verified` by running `PYTHONPATH=src pytest tests/unit/physics/test_oracles.py
+tests/unit/physics/test_oracles_m5.py -s -rxs`, which prints each line below, except where the cell says D-045g. A value
+here compares a model with a published figure. None is a validation by experiment.
+
+| Oracle | Quantity (model against reference) | Result | Band | Verdict |
+|---|---|---|---|---|
+| OR-01 | D08 line-line Ke, `test_oracles.py` | -0.40 % (D-045g, read; the test passed in this run and prints no value) | O1 band with e_edge (§4) | in band |
+| OR-02 | D09 phase R at 20 °C against 1.07 ohm | A 1.11558 ohm, +4.26 %. B 1.01158 ohm, -5.46 % | +-8 % | in band |
+| OR-03 | D10 phase R against 2.15 ohm | skipped: not representable, unequal-width concentric geometry and unprinted inputs (G40), `test_oracles_m5.py` l.313 | none | not run |
+| OR-05 | D08 phase R at 50 °C against 0.39 ohm | loop only 0.381201 ohm, -2.26 %. Full phase 0.485162 ohm, +24.40 % | information, no band | information |
+| OR-06 | D08 current at the copper-loss budget | 1.84900 A on 0.39 ohm, inside the print-rounding interval [1.8373, 1.8610] A that holds 1.84 A. On the embodic full-phase R: 1.65778 A | no band | consistent within print rounding |
+| OR-07 | D09 phase EMF at 2000 rpm against 6.21 V | A 7.37166 V, +18.71 %, band [-5.0 %, +7.59 %]. B 5.74941 V, -7.42 %, band [-5.0 %, +8.34 %] | [-5 %, +5 % + e_edge] | out of band, strict xfail F-OR07 |
+| OR-08 | D09 B_z peak at mid-radius, harmonics 1 to 13, against the figure reading 0.72 to 0.75 T | 0.7384 T. The fundamental b1 is 0.846122 T and is recorded, not compared | [0.7125, 0.7560] T | in band |
+| OR-09 | D09 inductance against 14.8 uH measured | A 8.9536 uH (-39.5 %). B 5.0355 uH (-66.0 %) | none, characterisation only | the test checks only that the value is finite and positive |
+| OR-10 | D10 winding temperature rise against 83.2 K | skipped: not representable (G40), `test_oracles_m5.py` l.318 | none | not run |
+| OR-11, OR-12 | EQ-05 field per layer and EQ-12 eddy loss | no Phase 2 test. The cases need FEA and move to Phase 3 (`oracle_tests_spec.md` §OR-11 and OR-12, U-E9, D-045b) | none | Phase 3 |
+
+OR-04 is outside D-045g, and this unit did not look at it. OR-07 and OR-08 are "not independent of EC-05" (§4). The
+skipped tests carry the reason `NOT_REPRESENTABLE` (`test_oracles_m5.py` l.42). The M2 exit of §7 says "OR tests (pass or
+documented `xfail`)". OR-03 and OR-10 are skips and OR-11 and OR-12 have no test, so that wording does not name them. Whether
+§7 is widened is for Fable (`unresolved`).
+
+Marks that are gone since main 4fda98d (U-D12 listed six):
+
+- The four AX-04 cases. DEF-M4e2-01 (the EQ chip and the "n assumptions" tag, 22 px) and DEF-M4e2-03 (scroll bars, 12 px)
+  were fixed in U-M4e-3b. DEF-M4e2-02 (check box click rectangles) was fixed in U-M4e-3c, which also removed both AX-04
+  marks (reports of U-M4e-3b and U-M4e-3c, read). `test_ax04_target_size.py` now holds four tests and no mark
+  (`def test_` at l.130, l.139, l.146 and l.159), and `pytest tests/ui/qt_e2e/test_ax04_target_size.py` printed
+  `4 passed in 40.71s` (`verified` by running it). The first test, `test_ax04_every_interactive_widget_reaches_24_px_and_check_rows_32_px`,
+  fails for any new undersized button, field, combo, tab, chip, scroll bar or check row.
+- The two DEF-M1V-03 cases, closed by U-V1c and U-M5o (§5).
 
 The two UX-AC-03 cases that this section listed on main 9776555 are closed. U-M4e-1b retitled the five examples and
 removed the mark on the title test. The mark on the serpentine export scan stayed, because the design `/name` still held
