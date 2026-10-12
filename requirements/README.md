@@ -22,7 +22,7 @@ For a development checkout:
 
 ```
 python -m pip install --require-hashes -r requirements/py311-dev.txt
-python -m pip install --no-deps --no-build-isolation -e .
+python -m pip install --no-deps -e .
 ```
 
 ## Regenerate the lock files

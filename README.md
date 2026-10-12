@@ -87,7 +87,7 @@ Linux (bash):
 python3.11 -m venv .venv
 . .venv/bin/activate
 python -m pip install --require-hashes -r requirements/py311-dev.txt
-python -m pip install --no-deps --no-build-isolation -e .
+python -m pip install --no-deps -e .
 python tools/ci.py --profile commit
 ```
 
@@ -97,7 +97,7 @@ Windows (PowerShell), not tested on Windows in this build:
 py -3.11 -m venv .venv
 .venv\Scripts\Activate.ps1
 python -m pip install --require-hashes -r requirements\py311-dev.txt
-python -m pip install --no-deps --no-build-isolation -e .
+python -m pip install --no-deps -e .
 python tools\ci.py --profile commit
 ```
 

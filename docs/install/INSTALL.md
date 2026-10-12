@@ -141,13 +141,15 @@ Expected output: `Wrote board.svg`. `--format` also takes `dxf`, `dxf-outline`, 
 ## 7. Run the tests
 
 A development install uses the `-dev` lock file, which adds the test and build tools, and installs embodic in editable
-mode from a checkout of the repository.
+mode from a checkout of the repository. The editable install needs network access: pip builds it in an isolated
+environment and downloads hatchling and `editables` there. `--no-build-isolation` fails, because hatchling's editable
+build imports `editables`, which the lock file does not pin.
 
-Linux, not run in this build in a fresh environment (the gate below ran in an existing one):
+Linux (the two install commands ran in a fresh environment; the gate ran in the existing project environment):
 
 ```
 python -m pip install --require-hashes -r requirements/py311-dev.txt
-python -m pip install --no-deps --no-build-isolation -e .
+python -m pip install --no-deps -e .
 python tools/ci.py --profile commit
 ```
 
@@ -155,7 +157,7 @@ Windows, not tested on Windows in this build:
 
 ```
 python -m pip install --require-hashes -r requirements\py311-dev.txt
-python -m pip install --no-deps --no-build-isolation -e .
+python -m pip install --no-deps -e .
 python tools\ci.py --profile commit
 ```
 
