@@ -3,6 +3,7 @@
 import math
 import threading
 from dataclasses import replace
+from itertools import pairwise
 
 import pytest
 
@@ -296,6 +297,50 @@ def test_ut_drc_04_junction_end_group_is_exempt_from_the_whole_trunk_path() -> N
     trunk = path(0, [line(-5, 0, 0, 0), line(0, 0, 0, -5)], net="A")
     branch = path(1, [line(-0.05, 4, -0.05, 0)], net="A")
     assert _junction_violations(branch, trunk) == set()
+
+
+_HOOK = [(0.0, 0.0), (0.0, 2.0), (4.0, 2.0), (4.0, 5.0)]
+
+
+def _hook_and_branch(net: str, *, junction_at_start: bool) -> tuple[CopperPath, CopperPath]:
+    """Return a three-line trunk and a one-line branch that ends on one of the trunk's two end points.
+
+    The branch runs from (0.5, 1.8) to the trunk end point (0, 0). Its centreline stays 0.2 mm from the trunk's middle
+    line, so the edge-to-edge clearance is 0, and that line is outside the trunk's end group at (0, 0).
+    """
+    points = _HOOK if junction_at_start else _HOOK[::-1]
+    trunk = path(0, [line(*a, *b) for a, b in pairwise(points)], net="A")
+    branch = path(1, [line(0.5, 1.8, 0.0, 0.0)], net=net)
+    return trunk, branch
+
+
+@pytest.mark.parametrize("junction_at_start", [True, False], ids=["trunk-start", "trunk-end"])
+def test_ut_drc_04_path_end_on_an_end_point_of_a_same_net_path_is_exempt_from_every_primitive_of_it(
+    junction_at_start: bool,
+) -> None:
+    """Catches a T-junction test that skips the other path's end points (end-point reading, case 5g).
+
+    Rule 3 exempts the branch only from the trunk's end group. The trunk's middle line is 0.2 mm from the branch
+    centreline, so only rule 5 (the centreline includes its end points, interfaces.md section 7) exempts that pair.
+    """
+    trunk, branch = _hook_and_branch("A", junction_at_start=junction_at_start)
+    assert _junction_violations(branch, trunk) == set()
+
+
+@pytest.mark.parametrize(
+    ("junction_at_start", "touched", "middle"),
+    [(True, "path:0/prim:0", "path:0/prim:1"), (False, "path:0/prim:2", "path:0/prim:1")],
+    ids=["trunk-start", "trunk-end"],
+)
+def test_ut_drc_04_the_same_end_point_geometry_on_different_nets_is_reported(
+    junction_at_start: bool, touched: str, middle: str
+) -> None:
+    """Catches an end-point exemption that drops the net test: the 5g geometry on nets A and B is reported (5h)."""
+    trunk, branch = _hook_and_branch("B", junction_at_start=junction_at_start)
+    assert _junction_violations(branch, trunk) == {
+        (DrcCheckKind.TRACE_TRACE, (touched, "path:1/prim:0")),
+        (DrcCheckKind.TRACE_TRACE, (middle, "path:1/prim:0")),
+    }
 
 
 @pytest.mark.eqt("EQT-30-UT1")

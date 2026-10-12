@@ -126,7 +126,8 @@ def test_eq02_loop_rule_admits_the_turn_count_of_the_text(
 ) -> None:
     """EQ-02 text: the loop rule admits 7, 11 and 3 turns for 18/16, 12/16 and D08 (via pad 0.6 mm, gap = clearance).
 
-    Defect caught: a missing min_side_length = 2w rule, which admits an 8th turn on 18/16.
+    Defect caught: a loop rule that admits an 8th turn on 18/16. Turn 7 fails the min-side rule (0.638 < 1.0 mm) and the
+    radial rule (end radius 32.2204 >= next outer radius 32.15 mm), so dropping either one alone is not caught.
     """
     coil = SpiralCoilSpec(
         coil_count=coil_count,
