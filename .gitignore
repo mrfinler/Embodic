@@ -17,3 +17,7 @@ Thumbs.db
 .coverage.*
 coverage.xml
 htmlcov/
+
+# Evidence of passing tests: a release-gate build product, never committed (interfaces.md section 3.1).
+resources/evidence/passed_tests.v1.json
+resources/evidence/*.partial

@@ -6,6 +6,9 @@
 types but the file only describes in prose, becomes a WARNING issue in `Registry.issues` and the weakest value is used.
 """
 
+import dataclasses
+import functools
+import hashlib
 import json
 import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -14,6 +17,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any, TypeVar
 
+import embodic
 from embodic.errors import IssueCategory, Severity, ValidationIssue, message_for
 from embodic.model.vocabulary import TopologyKind
 from embodic.paths import resource_root
@@ -23,6 +27,8 @@ from embodic.units import Unit
 EQUATIONS_FILE = "equations.v1.json"
 EVIDENCE_FILE = "evidence.v1.json"
 MANIFEST_FILE = "manifest.v1.json"
+PASSED_TESTS_FILE = "passed_tests.v1.json"
+PASSED_TESTS_FORMAT = "embodic.passed-tests"
 _STATUS_PREFIX = re.compile(r"\s*([a-z ]+?)\s*(?::|$)")
 _Entry = TypeVar("_Entry", "EquationEntry", "EvidenceEntry")
 _Value = TypeVar("_Value")
@@ -125,8 +131,9 @@ class Registry:
     version: str
     equations: Mapping[str, EquationEntry]
     evidence: Mapping[str, EvidenceEntry]
-    passed_tests: frozenset[str]  # test IDs that passed in this build; empty in a fresh install
+    passed_tests: frozenset[str]  # registry test IDs that passed in this build (section 3.1); empty without evidence
     issues: tuple[ValidationIssue, ...] = ()
+    evidence_build_id: str | None = None  # PassedTestsEvidence.build_id when the evidence applies, else None
 
     def equation(self, eq_id: str) -> EquationEntry:
         """Return an equation; raise KeyError for an unknown ID (code declares EQ-IDs, so this is a defect)."""
@@ -154,15 +161,134 @@ class Registry:
         return tuple(e for e in self.equations.values() if topology in e.applies_to)
 
 
+@dataclass(frozen=True, slots=True, kw_only=True)
+class PassedTestsEvidence:
+    """The release gate's record of which registry test IDs passed, and on which tree (interfaces.md section 3.1)."""
+
+    build_id: str
+    embodic_version: str
+    registry_version: str
+    source_sha256: str
+    git_commit: str
+    git_dirty: bool
+    python: str
+    numpy: str
+    platform: str
+    generated_utc: str
+    gate_profile: str
+    passed_tests: frozenset[str]
+    realised_by: Mapping[str, tuple[str, ...]]
+
+
+_EVIDENCE_TEXT_KEYS = (
+    "build_id",
+    "embodic_version",
+    "registry_version",
+    "source_sha256",
+    "git_commit",
+    "python",
+    "numpy",
+    "platform",
+    "generated_utc",
+    "gate_profile",
+)
+
+
+def _strings(value: Any) -> tuple[str, ...] | None:
+    if isinstance(value, list) and all(isinstance(item, str) for item in value):
+        return tuple(value)
+    return None
+
+
+def parse_passed_tests(document: object) -> PassedTestsEvidence | None:
+    """Return the evidence record, or None for a wrong format or version, a missing key or a mistyped value."""
+    if not isinstance(document, dict):
+        return None
+    if document.get("format") != PASSED_TESTS_FORMAT or document.get("format_version") != 1:
+        return None
+    text = {key: value for key in _EVIDENCE_TEXT_KEYS if isinstance(value := document.get(key), str)}
+    passed = _strings(document.get("passed_tests"))
+    realised = document.get("realised_by")
+    git_dirty = document.get("git_dirty")
+    if len(text) < len(_EVIDENCE_TEXT_KEYS) or passed is None or not isinstance(git_dirty, bool):
+        return None
+    if not isinstance(realised, dict):
+        return None
+    realised_by = {key: nodes for key, value in realised.items() if (nodes := _strings(value)) is not None}
+    if len(realised_by) < len(realised):
+        return None
+    return PassedTestsEvidence(
+        **text,
+        git_dirty=git_dirty,
+        passed_tests=frozenset(passed),
+        realised_by=MappingProxyType(realised_by),
+    )
+
+
+def package_source_sha256(package_dir: Path) -> str | None:
+    """Hash every *.py below package_dir outside __pycache__; None when there is none (a frozen build).
+
+    Each entry is the relative POSIX path, a NUL byte and the SHA-256 of the file's bytes, in sorted path order.
+    """
+    files = sorted(
+        (path.relative_to(package_dir).as_posix(), path)
+        for path in package_dir.rglob("*.py")
+        if "__pycache__" not in path.relative_to(package_dir).parts
+    )
+    if not files:
+        return None
+    digest = hashlib.sha256()
+    for relative, path in files:
+        digest.update(relative.encode("utf-8") + b"\0" + hashlib.sha256(path.read_bytes()).digest())
+    return digest.hexdigest()
+
+
+def evidence_applies(
+    evidence: PassedTestsEvidence, *, embodic_version: str, registry_version: str, source_sha256: str | None
+) -> bool:
+    """Return False (stale) for another embodic or registry version, or for other source code when it can be hashed."""
+    return (
+        evidence.embodic_version == embodic_version
+        and evidence.registry_version == registry_version
+        and (source_sha256 is None or evidence.source_sha256 == source_sha256)
+    )
+
+
+@functools.cache
+def _running_source_sha256() -> str | None:
+    """Hash the code this process imported; it cannot change under a running process, so once is enough."""
+    return package_source_sha256(Path(__file__).resolve().parents[1])
+
+
+def _read_evidence(folder: Path) -> PassedTestsEvidence | None:
+    try:
+        return parse_passed_tests(json.loads((folder / PASSED_TESTS_FILE).read_text(encoding="utf-8")))
+    except (OSError, UnicodeDecodeError, ValueError):
+        return None
+
+
 def load_registry(root: Path | None = None) -> Registry:
-    """Read resources/evidence/equations.v1.json and evidence.v1.json (packaged copies, tools/sync_registry.py)."""
+    """Read resources/evidence/equations.v1.json and evidence.v1.json, then the evidence of passing tests.
+
+    The registries are the packaged copies of tools/sync_registry.py. passed_tests.v1.json fills passed_tests only when
+    it exists, parses and applies (interfaces.md section 3.1); otherwise passed_tests stays empty, with no issue.
+    """
     folder = (root if root is not None else resource_root()) / "evidence"
     equations, evidence, manifest = (
         json.loads((folder / name).read_text(encoding="utf-8"))
         for name in (EQUATIONS_FILE, EVIDENCE_FILE, MANIFEST_FILE)
     )
     hashes = [manifest["files"][name]["copy_sha256"][:12] for name in (EQUATIONS_FILE, EVIDENCE_FILE)]
-    return parse_registry(equations, evidence, version=f"v1+{hashes[0]}.{hashes[1]}")
+    registry = parse_registry(equations, evidence, version=f"v1+{hashes[0]}.{hashes[1]}")
+    passed = _read_evidence(folder)
+    if passed is None or not evidence_applies(
+        passed,
+        embodic_version=embodic.__version__,
+        registry_version=registry.version,
+        source_sha256=_running_source_sha256(),
+    ):
+        return registry
+    return dataclasses.replace(registry, passed_tests=passed.passed_tests, evidence_build_id=passed.build_id)
 
 
 def parse_registry(equations_json: Any, evidence_json: Any, *, version: str) -> Registry:

@@ -1,3 +1,123 @@
 # embodic
 
-PCB spiral-coil stator design and analysis tool (Python). Status: Phase 1 draft — see docs/PROJECT_BRIEF.md and docs/phase1/.
+embodic designs and analyses three-phase PCB stator coils for axial-flux machines: spiral coils, serpentine windings
+and interleaved wave windings. It builds the copper layout of a design, checks it against design rules, estimates
+electrical quantities such as the back-EMF constant and the phase resistance, and exports SVG, DXF, PDF and JSON files.
+It runs as a desktop window (`embodic`) and as a command-line program (`embodic-cli`).
+
+Every computed result carries a badge with one status word. The badge is the weakest of its equation's evidence status,
+the test state of its equation in this build and any validity cap. The app's equation guide defines the words:
+
+- `verified`: read in the source or reproduced by running something.
+- `inferred`: follows from verified facts by reasoning that was not reproduced.
+- `assumption`: taken as true without evidence for this design.
+- `unresolved`: not known yet. A label beside the badge, such as "estimate", says why.
+- `not tested`: the tests linked to the equation have not passed in this build.
+
+No result is a measurement of a built stator.
+
+Licence: not yet chosen; all rights reserved until the project owner chooses one.
+
+## Requirements
+
+- CPython 3.11, 3.12 or 3.13.
+- Windows 10 or 11 (x64), or Linux (x86-64).
+
+`docs/install/INSTALL.md` has every step below with the expected output and troubleshooting. The Windows commands are
+written from the documentation of Python and pip. They are not tested on Windows in this build.
+
+## Install
+
+Create a virtual environment, install the pinned dependencies from the lock file of your Python version, then install
+the embodic wheel. The example uses Python 3.11 and `requirements/py311.txt`.
+
+Linux (bash):
+
+```
+python3.11 -m venv .venv
+. .venv/bin/activate
+python -m pip install --require-hashes -r requirements/py311.txt
+python -m pip install --no-deps embodic-0.0.1-py3-none-any.whl
+```
+
+Windows (PowerShell), not tested on Windows in this build:
+
+```
+py -3.11 -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install --require-hashes -r requirements\py311.txt
+python -m pip install --no-deps embodic-0.0.1-py3-none-any.whl
+```
+
+## Run the app
+
+```
+embodic
+```
+
+## Run the command-line program
+
+The examples ship inside the package. This command prints their folder:
+
+```
+python -c "from embodic.paths import resource_root; print(resource_root() / 'examples')"
+```
+
+Compute an example, check a design without building it, and export a drawing. On Windows, write the paths with `\`.
+
+```
+embodic-cli compute <examples>/spiral_12c16p_default.embodic.json --json outcome.json
+embodic-cli validate <examples>/spiral_12c16p_default.embodic.json
+embodic-cli export <examples>/spiral_12c16p_default.embodic.json --format svg -o board.svg
+```
+
+`--format` takes `svg`, `dxf`, `dxf-outline`, `dxf-screws`, `pdf`, `readme` or `bundle`.
+
+## Check the installation
+
+`embodic-cli selftest` and the Tests dialog of the app arrive with unit U-M5d. This build does not have them.
+
+## Run the tests
+
+Install the development lock file and embodic in editable mode, then run the commit gate from the repository root.
+
+Linux (bash):
+
+```
+python3.11 -m venv .venv
+. .venv/bin/activate
+python -m pip install --require-hashes -r requirements/py311-dev.txt
+python -m pip install --no-deps -e .
+python tools/ci.py --profile commit
+```
+
+Windows (PowerShell), not tested on Windows in this build:
+
+```
+py -3.11 -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install --require-hashes -r requirements\py311-dev.txt
+python -m pip install --no-deps -e .
+python tools\ci.py --profile commit
+```
+
+## Build the wheel and record the test evidence
+
+```
+python tools/ci.py --profile release
+```
+
+The release profile runs every gate. When all of them pass, it writes the list of registry tests that passed to
+`resources/evidence/passed_tests.v1.json`, builds the wheel into `build/dist/`, and checks that the wheel carries the
+list. Only then can a result read anything other than `not tested`. The file is a build product and is never committed.
+Add `--record-baseline` to rewrite `tests/performance/baseline.json`.
+
+## Build the Windows folder
+
+The PyInstaller one-folder build (`python tools/build_bundle.py`) arrives with unit U-M5c. This build does not have it.
+
+## Licences
+
+`THIRD_PARTY_LICENSES.md` lists the licence of every runtime dependency and bundled font, with the full texts. embodic
+uses Qt and PySide6 under LGPL-3.0. embodic's own licence is not yet chosen; all rights reserved until the project
+owner chooses one.
