@@ -53,6 +53,9 @@ COMPUTE_SOURCES = {
     "serpentine_16p_example": "tests/unit/generators/serpentine/test_serpentine_example.py::test_the_example_validates_and_computes_drc_clean",
     "wave_16p_example": "tests/unit/ui/results/test_rail_cards.py::test_drc_card_of_the_wave_example_counts_186_failures",
 }
+# One stamp for both saves of ST-IO-ROUNDTRIP. Two clock reads can fall in different seconds, and saved_utc then makes
+# the files differ (U-M5h; src/embodic/selftest/catalogue.py l.43 holds the same value as the catalogue's stamp).
+ROUNDTRIP_SAVED_UTC = "2026-10-08T12:00:00Z"
 EXAMPLE_HASHES = {  # tests/unit/embodic_io/project/test_examples.py l.34
     "spiral_12c16p_default": "sha256:ac4fab5db06f9e8f733dc495080deeddfe0bcf58faa31ebb7ec841c1b27d9c09",
     "spiral_12c14p": "sha256:4a1997029f7063676bdb9eab703c462f4240d84916a5ddf3deec044fa4391bc1",
@@ -162,9 +165,9 @@ def example_checks(scratch: Path) -> list[tuple[str, str, object, object, float,
                  least["trace_trace"], 0.2, 0.0, 1e-6))
     ref, design, _ = outcomes["spiral_12c16p_default"]
     first, second = scratch / "a.embodic.json", scratch / "b.embodic.json"
-    save_project(first, ProjectFile(design=design, origin=ref, ui_state={"zoom": 1.5}))
+    save_project(first, ProjectFile(design=design, origin=ref, ui_state={"zoom": 1.5}), saved_utc=ROUNDTRIP_SAVED_UTC)
     loaded, _issues = load_project(first)
-    save_project(second, loaded)
+    save_project(second, loaded, saved_utc=ROUNDTRIP_SAVED_UTC)
     rows.append(("ST-IO-ROUNDTRIP",
                  "tests/unit/embodic_io/project/test_project.py::test_ut_io_01_save_load_save_is_byte_identical",
                  first.read_bytes() == second.read_bytes(), True, 0.0, 0.0))
