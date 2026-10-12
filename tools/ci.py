@@ -58,10 +58,9 @@ class Gate:
 def gates_for(profile: Profile, *, record_baseline: bool = False) -> list[Gate]:
     """Return the gates of a profile in run order."""
     python = sys.executable
-    req_report = REQ_REPORT
     pytest_argv = [python, "-m", "pytest", "-p", "no:cacheprovider", "-m", profile.marker_expression]
     pytest_argv += [f"--ignore={d}" for d in profile.ignored_test_dirs]
-    pytest_argv += [f"--req-report={req_report}"]
+    pytest_argv += [f"--req-report={REQ_REPORT}"]
     pytest_env = {"EMBODIC_HYPOTHESIS_PROFILE": profile.hypothesis_profile}
     if record_baseline:
         pytest_env["EMBODIC_RECORD_BASELINE"] = "1"
@@ -77,7 +76,7 @@ def gates_for(profile: Profile, *, record_baseline: bool = False) -> list[Gate]:
             (
                 python,
                 str(REPO / "tools" / "trace_matrix.py"),
-                f"--report={req_report}",
+                f"--report={REQ_REPORT}",
                 f"--out={BUILD / 'trace_matrix.md'}",
             ),
         ),
