@@ -1,4 +1,4 @@
-"""Time ``run_drc`` on the GR-19 raw Xcoil layouts mapped by U-M1b's mapper (measurement, not a test).
+"""Time ``run_drc`` on the GR-19 raw Xcoil layouts in the DRC reading of U-M1b's mapper (measurement, not a test).
 
 Usage, inside the project's virtual environment::
 
@@ -23,7 +23,7 @@ GOLDEN = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(GOLDEN))
 
 from harness import load_area  # noqa: E402
-from m1_layout.xcoil_map import layout_from_xcoil  # noqa: E402
+from m1_layout.xcoil_map import layout_from_xcoil, split_ic_chains  # noqa: E402
 
 from embodic.drc import DrcCheckKind, DrcReport, run_drc  # noqa: E402
 from embodic.geometry.layout import Layout  # noqa: E402
@@ -67,7 +67,7 @@ def main() -> int:
             min_drill_mm=0.2,
             min_annular_ring_mm=0.1,
         )
-        layout = layout_from_xcoil(raw)
+        layout = layout_from_xcoil(split_ic_chains(raw))
         report = run_drc(layout, rules)
         seconds = []
         for _ in range(args.runs):

@@ -2,6 +2,8 @@
 
 from collections.abc import Mapping
 
+from embodic.results.formatting import UNIT_SPACE
+
 STRINGS: Mapping[str, str] = {
     "selftest.title": "Self-tests",
     "selftest.intro": (
@@ -14,7 +16,7 @@ STRINGS: Mapping[str, str] = {
     "selftest.column.result": "Result",
     "selftest.column.duration": "Duration",
     "selftest.column.message": "Message",
-    "selftest.duration": "{seconds:.2f}\N{NO-BREAK SPACE}s",
+    "selftest.duration": "{seconds:.2f}" + UNIT_SPACE + "s",
     "selftest.summary.idle": "{total} tests. Run checks this installation.",
     "selftest.summary.running": "Running: {done} of {total} tests done.",
     "selftest.summary.done": "{total} tests: {passed} passed, {failed} failed",
