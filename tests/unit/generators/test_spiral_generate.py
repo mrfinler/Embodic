@@ -21,7 +21,7 @@ from embodic.geometry.details import SpiralDetail, TurnClosing, TurnLimitReason
 from embodic.geometry.discretise import discretise
 from embodic.geometry.layout import BoardStack, Layout, ViaRole
 from embodic.geometry.paths import CopperPath, is_continuous
-from embodic.geometry.primitives import PrimitiveRole
+from embodic.geometry.primitives import PrimitiveRole, primitive_length_mm
 from embodic.geometry.transforms import mirror, reverse_path, rotate
 from embodic.model.design import DesignParameters
 from embodic.model.drc_rules import DrcRules
@@ -62,6 +62,28 @@ def test_default_track_length_matches_cf11(board: Layout) -> None:
     assert detail.turn_limit.loops_trapezoidal == 8 and detail.turn_limit.loops_triangular == 3
     assert detail.track_length_per_coil_layer_mm["X"] == pytest.approx(415.4808, abs=5e-5)
     assert detail.plan.pattern == "ACBACBACBACB"
+
+
+@pytest.mark.eqt("EQT-25-CF11")
+@pytest.mark.req("REQ-F-06")
+def test_default_lead_stub_and_via_radii_match_cf11(board: Layout) -> None:
+    """CF-11 (EQ-25): per coil-layer lead 1.3341074672568292 mm and stub 0.7876736223934756 mm, rel 1e-6.
+
+    Terminal vias sit at r_T = 38.5 mm (abs 1e-9) and centre vias at r_v = 30.7 mm (abs 1e-6).
+
+    Defect caught: a lead arc at the wrong radius, a terminal via on the bus width instead of max(pad, bw), or a stub
+    that absorbs length from the body (the 415.4808 mm total hides all three).
+    """
+    for path in _coil_paths(board, 0).values():
+        lead_mm = sum(primitive_length_mm(p) for p in path.primitives if p.role is PrimitiveRole.LEAD)
+        stub_mm = sum(primitive_length_mm(p) for p in path.primitives if p.role is PrimitiveRole.STUB)
+        assert lead_mm == pytest.approx(1.3341074672568292, rel=1e-6)
+        assert stub_mm == pytest.approx(0.7876736223934756, rel=1e-6)
+    terminal_radii = [math.hypot(v.x_mm, v.y_mm) for v in board.vias if v.role is ViaRole.TERMINAL]
+    centre_radii = [math.hypot(v.x_mm, v.y_mm) for v in board.vias if v.role is ViaRole.CENTRE]
+    assert terminal_radii and centre_radii
+    assert terminal_radii == pytest.approx([38.5] * len(terminal_radii), abs=1e-9)
+    assert centre_radii == pytest.approx([30.7] * len(centre_radii), abs=1e-6)
 
 
 @pytest.mark.eqt("EQT-02-CF10", "EQT-03-CF10")

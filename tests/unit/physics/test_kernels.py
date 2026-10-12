@@ -153,6 +153,17 @@ def test_ut_phy_13_skin_depth_at_133_hz() -> None:
     assert math.isinf(skin_depth_mm(0.0, RHO20))
 
 
+@pytest.mark.eqt("EQT-13-CF05")
+def test_cf05_skin_depth_at_the_16_pole_1000_rpm_frequency() -> None:
+    """CF-05 (EQ-13): 133.33333333333334 Hz, 20 degC -> sqrt(rho/(pi f mu0)) = 5.723108629458205 mm, rel 1e-9.
+
+    Defect caught: Xcoil's 1.724e-8 copper constant (rel 2.9e-5), a mu0 typed with too few digits, or the frequency
+    rounded to 133.3 Hz (rel 1.25e-4, the input of the UT-PHY-13 test above).
+    """
+    delta = skin_depth_mm(133.33333333333334, copper_resistivity_ohm_m(20.0, RHO20, ALPHA20))
+    assert delta == pytest.approx(5.723108629458205, rel=1e-9)
+
+
 def test_ut_phy_15_ipc2221_guideline_current() -> None:
     """UT-PHY-15 (EQ-15): 0.5 mm x 34.8 um, dT 20 K -> 1.955 A external, 0.977 A internal (+/-1 mA)."""
     assert ipc2221_current_a(0.5 * 0.0348, 20.0, internal=False) == pytest.approx(1.955, abs=1e-3)

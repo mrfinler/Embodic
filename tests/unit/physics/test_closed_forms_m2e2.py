@@ -36,9 +36,8 @@ ROTOR = RotorSpec(
 )
 
 
-def test_eq07_two_member_identity() -> None:
-    """EQ-07 reference (D01 eq. 2): E 1.0 and 0.98 V, R 1 ohm each give E_grp 0.99 V and P_c 1e-4 W."""
-    circuit = Circuit(
+def _two_member_circuit() -> Circuit:
+    return Circuit(
         phases=(
             PhaseCircuit(
                 phase=Phase.A,
@@ -49,11 +48,29 @@ def test_eq07_two_member_identity() -> None:
         topology=ConnectionTopology.OPEN,
         interconnect_path_ids=(),
     )
+
+
+def test_eq07_two_member_identity() -> None:
+    """EQ-07 reference (D01 eq. 2): E 1.0 and 0.98 V, R 1 ohm each give E_grp 0.99 V and P_c 1e-4 W."""
     lam = {0: np.array([1.0e6 + 0j]), 1: np.array([0.98e6 + 0j])}  # T*mm^2; x 1e-6 x omega_m 1 = V
-    s = solve_phase_circuit(circuit, lam, {0: 1.0, 1: 1.0}, {}, 1.0)
+    s = solve_phase_circuit(_two_member_circuit(), lam, {0: 1.0, 1: 1.0}, {}, 1.0)
     assert s.phase_emf_phasor_v_s_per_rad[Phase.A][0] == pytest.approx(0.99, rel=1e-12)
     assert s.circulating_loss_w[Phase.A] == pytest.approx(1e-4, rel=1e-9)
     assert s.phase_resistance_ohm[Phase.A] == pytest.approx(0.5, rel=1e-12)
+
+
+@pytest.mark.eqt("EQT-07-CF07")
+def test_eq07_cf07_two_member_group_with_half_ohm_members() -> None:
+    """CF-07 (EQ-07): E 1.00 and 0.98 V, R 0.5 ohm each -> E_grp 0.99 V, R_grp 0.25 ohm, P_c 2.0e-4 W, rel 1e-12.
+
+    Defect caught: member resistance multiplied instead of divided (5.0e-5 W; R = 1 ohm hides it), R_grp used in place
+    of R_i, or a missing factor 1/2.
+    """
+    lam = {0: np.array([1.0e6 + 0j]), 1: np.array([0.98e6 + 0j])}
+    s = solve_phase_circuit(_two_member_circuit(), lam, {0: 0.5, 1: 0.5}, {}, 1.0)
+    assert s.phase_emf_phasor_v_s_per_rad[Phase.A][0] == pytest.approx(0.99, rel=1e-12)
+    assert s.phase_resistance_ohm[Phase.A] == pytest.approx(0.25, rel=1e-12)
+    assert s.circulating_loss_w[Phase.A] == pytest.approx(2.0e-4, rel=1e-12)
 
 
 def test_eq12_c9_single_trace() -> None:
@@ -68,6 +85,26 @@ def test_eq12_c9_single_trace() -> None:
     omega_e = 2.0 * math.pi * 8 * 1000.0 / 60.0
     rho = copper_resistivity_ohm_m(20.0, 1.7241e-8, 0.00393)
     assert eddy_loss_w(field, (1,), 0.0348, omega_e, rho) == pytest.approx(7.2311e-5, rel=1e-4)
+
+
+@pytest.mark.eqt("EQT-12-CF05")
+def test_eq12_cf05_single_trace_at_full_precision() -> None:
+    """CF-05 (EQ-12): L 20, w 0.5, t 0.0348 mm, B_z 0.7 T, 133.33333333333334 Hz, 20 degC -> 7.230675123999244e-05 W.
+
+    Defect caught: a copper constant other than the registry's (Xcoil's 1.724e-8 is off by 5.8e-5), a rounded
+    electrical frequency, or the /12 form of D04 and D10 (a factor 2). The C9 test above reads 7.2311e-5 at 1e-4 and
+    sees none of them.
+    """
+    field = PathField(
+        flux_linkage_t_mm2=np.zeros(1, dtype=np.complex128),
+        eddy_bz_sum=np.array([20.0 * 0.7**2 * 0.5**3]),
+        eddy_bt_sum=np.array([0.0]),
+        edge_weight=0.0,
+        edge_weighted=0.0,
+    )
+    omega_e = 2.0 * math.pi * 133.33333333333334
+    rho = copper_resistivity_ohm_m(20.0, 1.7241e-8, 0.00393)
+    assert eddy_loss_w(field, (1,), 0.0348, omega_e, rho) == pytest.approx(7.230675123999244e-05, rel=1e-9)
 
 
 def test_eq14_reference_estimate() -> None:
@@ -90,7 +127,7 @@ def test_eq19_balanced_fundamental_drives_nothing() -> None:
 
 @pytest.mark.eqt("EQT-23-CF06")
 def test_eq23_cf06_star_and_delta() -> None:
-    """EQ-23 reference (CF-06): branches 1.0, 1.1, 1.2 ohm -> R_LL 2.1999999999999997 (star), 0.7313131313131312 (delta)."""
+    """EQ-23 reference (CF-06): branches 1.0, 1.1, 1.2 ohm -> R_LL 2.1999999999999997 star, 0.7313131313131312 delta."""
     branches = [1.0, 1.1, 1.2]
     assert line_resistance_ohm(branches, ConnectionTopology.STAR) == pytest.approx(2.1999999999999997, rel=1e-12)
     assert line_resistance_ohm(branches, ConnectionTopology.DELTA) == pytest.approx(0.7313131313131312, rel=1e-12)
