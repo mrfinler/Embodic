@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from embodic.paths import resource_root
+from tests.packaging.support import CLEAN_ENV
 
 REPO = Path(__file__).resolve().parents[3]
 
@@ -33,14 +34,17 @@ def test_paths_resource_root_in_built_wheel(tmp_path):
     subprocess.run(
         [sys.executable, "-m", "pip", "wheel", "--no-deps", "--quiet", "--wheel-dir", str(wheel_dir), str(REPO)],
         check=True,
+        env=CLEAN_ENV,
     )
     (wheel,) = wheel_dir.glob("embodic-*.whl")
     env_dir = tmp_path / "venv"
     venv.create(env_dir, with_pip=True)
     python = env_dir / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
-    subprocess.run([str(python), "-m", "pip", "install", "--no-deps", "--quiet", str(wheel)], check=True)
+    subprocess.run([str(python), "-m", "pip", "install", "--no-deps", "--quiet", str(wheel)], check=True, env=CLEAN_ENV)
     probe = "import embodic.paths as p; r = p.resource_root(); print(r); print((r / 'icons' / 'new.svg').is_file())"
-    result = subprocess.run([str(python), "-c", probe], check=True, capture_output=True, text=True, cwd=tmp_path)
+    result = subprocess.run(
+        [str(python), "-c", probe], check=True, capture_output=True, text=True, cwd=tmp_path, env=CLEAN_ENV
+    )
     root_line, icon_line = result.stdout.splitlines()
     assert Path(root_line).parts[-2:] == ("embodic", "_resources")
     assert REPO not in Path(root_line).parents
