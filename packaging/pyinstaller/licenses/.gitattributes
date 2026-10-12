@@ -1,0 +1,2 @@
+# Byte-exact copies: build_bundle.py checks their SHA-256, so no line-ending conversion on checkout.
+*.txt -text

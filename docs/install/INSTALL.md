@@ -177,7 +177,58 @@ evidence step, and no evidence file remains.
 
 ## 9. Build the Windows folder
 
-The PyInstaller one-folder build (`python tools/build_bundle.py`) arrives with unit U-M5c. This build does not have it.
+`tools/build_bundle.py` builds a PyInstaller 6.22.3 one-folder bundle from `packaging/pyinstaller/embodic.spec`. It
+installs PyInstaller in its own scratch venv, `.venv-bundle`, and leaves the venv of step 2 unchanged. The first run
+downloads the packages of the lock file, PyInstaller and hatchling, so it needs the network. Run it from a source
+checkout with the Python whose lock file the bundle should use.
+
+Linux:
+
+```
+python3.11 tools/build_bundle.py
+```
+
+Windows, not tested on Windows in this build:
+
+```
+py -3.11 tools\build_bundle.py
+```
+
+The folder is `build/bundle/embodic`. It holds the desktop app `embodic` and the command line `embodic-cli`
+(`embodic.exe` and `embodic-cli.exe` on Windows), `_internal/` with Python, Qt and embodic's resources,
+`THIRD_PARTY_LICENSES.md`, `licenses/` (LGPL-3.0, GPL-3.0, NumPy and Python texts) and `source/` with embodic's source
+distribution. The build uses one-folder mode without UPX, so each Qt library stays a separate file that a user can
+replace (LGPL-3.0). The folder does not yet carry a written offer for the Qt and PySide6 source, Qt's third-party
+notices or embodic's own licence; the script lists each as `absent`.
+
+Expected output: the script ends with the licence checklist, the four Qt libraries and the folder size, then exits 0.
+On Linux the Qt lines were:
+
+```
+Qt libraries as separate files (dependency_licences.md R10):
+  Qt6Core     _internal/PySide6/Qt/lib/libQt6Core.so.6 7524648 bytes
+  Qt6Gui      _internal/PySide6/Qt/lib/libQt6Gui.so.6 11412488 bytes
+  Qt6Widgets  _internal/PySide6/Qt/lib/libQt6Widgets.so.6 8155496 bytes
+  Qt6Svg      _internal/PySide6/Qt/lib/libQt6Svg.so.6 691176 bytes
+```
+
+The Linux folder held 444 files, about 232 MB, and no `.py` file. PyInstaller warned that it could not resolve
+`libxcb-cursor.so.0`, which the build machine lacks; the folder's `xcb` platform plugin then needs that library on the
+user's system. The offscreen platform runs without it.
+
+Check the folder with the smoke test, from the venv of step 7:
+
+```
+python -m pytest tests/bundle
+```
+
+Expected output: `6 passed`. The tests run the frozen `embodic-cli compute` and `export --format svg` on the default
+example and compare the result with the source, start the frozen app with `--smoke` on the offscreen Qt platform, run
+the frozen `embodic-cli selftest`, and check the Qt libraries. Without a folder the six tests are skipped.
+
+What was run: the build, the smoke test and `build/bundle/embodic/embodic-cli selftest`, which ended with
+`45 tests: 45 passed, 0 failed`, on the Linux container named at the top of this guide. A Linux folder is a smoke test
+of the spec only. The Windows folder, which the bundle test PK-05 needs, is not tested.
 
 ## Troubleshooting on Linux
 

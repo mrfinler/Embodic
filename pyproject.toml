@@ -38,6 +38,7 @@ dev = [
     "hatchling>=1.27,<2",
 ]
 desktop-dev = ["embodic[desktop,dev]", "pytest-qt>=4.5,<5"]
+bundle = ["pyinstaller>=6.22,<7"]
 
 [project.scripts]
 embodic = "embodic.ui.app:main"
