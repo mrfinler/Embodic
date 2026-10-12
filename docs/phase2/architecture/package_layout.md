@@ -53,14 +53,26 @@ Revision 2026-10-11 (U-D12, claude-sonnet-5-5, U-M4e-2; the tree of main 4fda98d
   distribution carries it is `unresolved`, because `pyproject.toml` has no sdist section. The tree also lists the files of
   `tests/ui/qt_e2e/` and `tests/ui/qt_shell/capture_acceptance.py`, the lever that the skill runs.
 
+Revision 2026-10-12 (U-D13, claude-opus-5-5, D-034, D-042a; the tree and `pyproject.toml` of main 7b9b4c9 were read for
+every item, and a wheel and an sdist were built from a scratch copy of it).
+
+- §1. The tree adds `embodic/selftest/`, the Tests dialog modules, `tools/record_passed_tests.py`,
+  `packaging/pyinstaller/`, the git-ignored evidence file `resources/evidence/passed_tests.v1.json`,
+  `tests/packaging/evidence/` and `tests/performance/baseline.json`, and reserves the place of embodic's `LICENSE`.
+- §3. Contract C1 gains the layer `(embodic.selftest)` between the adapters and `embodic.api`.
+- §5. The lock tool is uv (row added). The new §5.2 fixes the wheel, sdist, lock files, README and install guide
+  sections, the `THIRD_PARTY_LICENSES.md` structure, the PyInstaller one-folder layout and the PF baseline file.
+
 ## 1. Repository tree
 
 ```
 embodic/
   pyproject.toml                 PEP 621 metadata, extras, tool config (ruff, mypy, pytest, import-linter)
   README.md                      English; install, run, test, package (U-M5b)
-  THIRD_PARTY_LICENSES.md        generated licence list (U-M5b)
+  THIRD_PARTY_LICENSES.md        licence list, one section per runtime dependency and bundled asset (U-M5b, §5.2)
+  LICENSE                        embodic's own licence: not written. Pending the user's choice (§5.2)
   CHANGELOG.md
+  .gitignore                     adds resources/evidence/passed_tests.v1.json (U-M5b): a build product, never committed
   .github/workflows/ci.yml       calls tools/ci.py (U-M1a)
   .claude/skills/verify/         project verification skill (U-M4e-2). Developer tooling, not shipped in the wheel
     SKILL.md                     how to drive the app offscreen: launch, doctor, drive, evidence, cleanup
@@ -68,7 +80,8 @@ embodic/
                                  UI-09 grabs, then writes build/verify/<UTC timestamp>/ (build/ is git-ignored)
     features/                    README.md (the feature map) and design_walkthrough.md, results_and_checks.md,
                                  export_and_save.md, accessibility.md, canvas_and_shell.md
-  requirements/                  lock files with hashes: py311.txt, py312.txt, py313.txt (+ -dev) (U-M5b)
+  requirements/                  lock files with hashes from uv: py311.txt, py312.txt, py313.txt and the -dev files
+                                 (U-M5b, §5.2); README.md holds the regeneration command
   src/embodic/
     __init__.py                  __version__ only
     units.py                     Unit vocabulary, conversions, js_round and quantise (JS Math.round semantics)
@@ -106,18 +119,22 @@ embodic/
                                  schema/project.v1.schema.json
                                  svg_writer.py dxf_writer.py pdf_writer.py report.py readme_writer.py bundle.py
     api.py                       compute, compute_project, outcome_to_json, StageCache
-    cli/                         __main__.py commands.py
+    cli/                         __main__.py commands.py; `selftest` subcommand (U-M5d, interfaces.md §12)
+    selftest/                    __init__.py (public names) checks.py (SELFTESTS, the 45 checks) runner.py
+                                 (run_selftests, agrees, selftest_to_json); no Qt, no pytest (U-M5d, interfaces.md §14)
     ui/
       strings/                   __init__.py (merges, rejects duplicate keys) shell.py design.py results.py export.py
       fonts.py                   register_fonts, FONT_FILES, family stacks (Qt-free; app.py passes Qt's loader in)
       theme.py                   ThemeTokens, load_theme, resolve_theme (Qt-free)
       toolstrip.py               TOOLSTRIP action table (Qt-free)
-      viewmodels/                observable.py session.py outcome.py results.py export.py appearance.py (Qt-free)
+      viewmodels/                observable.py session.py outcome.py results.py export.py appearance.py
+                                 selftest.py (U-M5d) (Qt-free)
       views/                     Qt widgets: main_window.py toolstrip_bar.py geometry_view.py style.py
                                  new_design_dialog.py coil_panel.py phase_panel.py layer_panel.py board_rotor_panel.py
                                  results_view.py results_rail.py charts.py status_badge.py checks_view.py
                                  export_view.py dialogs.py equation_view.py examples_gallery.py
-      workers.py                 QThreadPool compute worker, debounce, latest-wins cancellation
+                                 tests_dialog.py (`dlg-tests`, U-M5d)
+      workers.py                 QThreadPool compute worker, debounce, latest-wins cancellation; SelfTestWorker (U-M5d)
       app.py                     QApplication (`qt_application` registers the fonts), theme, canvas share store, logging,
                                  crash handler, autosave, entry point `embodic`
   resources/                     shipped in the wheel as embodic/_resources (hatchling force-include)
@@ -130,7 +147,9 @@ embodic/
                                  Read through resource_root(); no font is fetched at run time
     examples/                    <example_id>.embodic.json, one file per example with its own title block;
                                  no shared index file, list_examples() scans the folder (U-M2f, U-M3a, U-M3b)
-    evidence/                    equations.v1.json, evidence.v1.json, synced copies (tools/sync_registry.py)
+    evidence/                    equations.v1.json, evidence.v1.json, manifest.v1.json, synced copies
+                                 (tools/sync_registry.py); passed_tests.v1.json, written by the release gate only and
+                                 git-ignored (interfaces.md §3.1)
   tests/
     conftest.py                  markers: req, eq, slow, manual; offscreen Qt for tests/ui
     ui/conftest.py               offscreen platform and the autouse session fixture `qapp`, which returns `qt_application()`
@@ -148,11 +167,13 @@ embodic/
     ui/qt_shell/capture_acceptance.py   the lever that grabs the 41 checklist rows and the UI-09 scales; verify.py runs it
     static/                      AST lints: MT-04 to MT-08, LG-01 to LG-08
     independent/                 Agent 4 only
-    performance/  packaging/
+    performance/                 PF tests and baseline.json (§5.2)
+    packaging/                   PK tests; packaging/evidence/ holds PK-10, which runs after the record step (§5.2)
   tools/
     ci.py                        one entry for every gate profile (commit, nightly, release)
     trace_matrix.py              REQ markers -> matrix, TR-01/TR-02
     sync_registry.py             docs/phase2/engineering + evidence JSON -> resources/evidence, with SHA-256 check
+    record_passed_tests.py       REQ report -> resources/evidence/passed_tests.v1.json (U-M5b, interfaces.md §3.1)
     golden/dump_xcoil.mjs        Node dumper, reads /home/claude/serpentine read-only; M1 kernel functions built in
     golden/functions/<area>.mjs  engine functions for one area (m1_layout, physics, serpentine, wave), one owner each
     golden/cases/<area>.json     case lists, one file per owning unit
@@ -160,7 +181,8 @@ embodic/
     contrast_check.py            AX-01, AX-08, AX-09 from resources/themes and resources/icons
     design/                      Agent 1's rerunnable scripts (D-021): build_themes.py, build_icons.py, check_*.py,
                                  layout_probe.py (widths of the panes and tables), qss_smoke.py, render_sheet.py
-    build_bundle.py              PyInstaller one-folder attempt (stretch)
+    build_bundle.py              PyInstaller one-folder attempt (stretch, U-M5c); runs the spec below
+  packaging/pyinstaller/         embodic.spec and the bundle's licence texts (U-M5c, §5.2)
   docs/                          role folders; docs/install/INSTALL.md (English) and INSTALL_TH.md (Fable)
 ```
 
@@ -211,6 +233,7 @@ l.202-215, `importlinter/contracts/forbidden.py` l.58-76; `verified` by reading,
 
 ```
 embodic.ui | embodic.cli
+embodic.selftest
 embodic.api
 embodic.generators
 embodic.io
@@ -222,6 +245,11 @@ embodic.results
 embodic.model
 embodic.units | embodic.errors | embodic.paths
 ```
+
+Revision 2026-10-12 (U-D13). `embodic.selftest` sits below both adapters, because `embodic.cli` and
+`embodic.ui.viewmodels` import it, and siblings joined by `|` may not import each other. It sits above `embodic.api`,
+because its checks call `compute`, the exporters and the project file. U-M5d adds `"(embodic.selftest)"` as the second
+entry of the C1 `layers` list in `pyproject.toml`; the parentheses keep the contract green until the package exists.
 
 Why this order. `generators` sits above `io`, `outcome`, `physics` and `drc`, so no consumer of a Layout can import a
 generator (ADR-0012); only `api` (and the UI above it) reaches them. `outcome` sits below `io` because exporters take a
@@ -241,6 +269,7 @@ name = "Core layers"
 type = "layers"
 layers = [
     "(embodic.ui) | (embodic.cli)",
+    "(embodic.selftest)",
     "(embodic.api)",
     "(embodic.generators)",
     "(embodic.io)",
@@ -346,6 +375,7 @@ test (U-M1a resource-root check, PK tests) runs offline with `pip wheel --no-bui
 | jsonschema | 4.26.0 | `>=4.23,<5` | MIT | >= 3.10 | dev (test-only) | keeps the published project schema and the hand-written loader in step (UT-IO-03) |
 | hatchling | 1.32.4 | `>=1.27,<2` | MIT | >= 3.10 | dev (build backend) | already the `[build-system]` backend; in `dev` as well so that the wheel test needs no network. Read from https://pypi.org/pypi/hatchling/json on 2026-10-04 (`verified (PyPI metadata)`); Agent 5's licence register does not list it yet |
 | PyInstaller | 6.22.3 | `>=6.22,<7` | GPLv2-or-later with the bootloader exception (Agent 3, PyPI text) | >= 3.8, < 3.16 | build (stretch) | one-folder Windows bundle attempt (D-015); build tool only, nothing of it enters `src` |
+| uv | the version U-M5b runs, written into the header of each lock file | not in `pyproject.toml` | MIT OR Apache-2.0 (https://pypi.org/pypi/uv/json, `license_expression`, read 2026-10-12; latest 0.13.0, and this container has 0.8.17 at `/root/.local/bin/uv`) | >= 3.8 | build (lock files only) | writes the hashed lock file of each Python version from one interpreter (`uv pip compile --python-version 3.1x --generate-hashes`). pip-tools 7.6.2 (BSD-3-Clause, same source and date) needs an interpreter of each target version per run. Chosen 2026-10-12 (U-D13); the user's pip never needs uv, because the lock files are plain `pip install --require-hashes -r` input |
 
 Not used, with the reason: reportlab (the PDF writer is a port of Xcoil's own dependency-free `report.js`), platformdirs
 (Qt's `QStandardPaths` gives the per-user log and recovery folders inside the UI adapter), pyqtgraph and matplotlib
@@ -378,3 +408,111 @@ quoted licence text stay in that file. "Today" is Agent 5's reading of a wheel b
 
 The folder does not carry fontTools or any other dev tool. The PyInstaller bootloader adds no obligation
 (dependency_licences.md, §Distribution obligations, item 7).
+
+### 5.2 Packaging layout (M5; revision 2026-10-12, U-D13)
+
+Facts marked `verified` come from a wheel and an sdist that U-D13 built with hatchling 1.32.4 (`python -m hatchling
+build`) from a scratch copy of main 7b9b4c9, with a dummy `resources/evidence/passed_tests.v1.json` added and its path
+appended to `.gitignore`. Test IDs are defined in `test_plan.md` §5.7.
+
+Wheel. `pip wheel --no-build-isolation --no-deps . -w build/dist` builds it from `[tool.hatch.build.targets.wheel]`.
+
+| Wheel member | Source | State on main 7b9b4c9 |
+|---|---|---|
+| `embodic/**` | `src/embodic`, `.py` files and package data such as `embodic/io/schema/project.v1.schema.json` | `verified` present |
+| `embodic/_resources/themes/`, `icons/`, `examples/` | `resources/` through `force-include` | `verified` present |
+| `embodic/_resources/fonts/` with `Inter/LICENSE.txt`, `JetBrainsMono/OFL.txt` and `FONTS.md` | `resources/fonts/` (OFL condition 2, §5.1) | `verified` present |
+| `embodic/_resources/evidence/` with `equations.v1.json`, `evidence.v1.json`, `manifest.v1.json` | `tools/sync_registry.py` copies | `verified` present |
+| `embodic/_resources/evidence/passed_tests.v1.json` | the release gate (interfaces.md §3.1); git-ignored | `verified` that a git-ignored file there enters the wheel; written by U-M5b, PK-10 |
+| `embodic-<version>.dist-info/licenses/THIRD_PARTY_LICENSES.md` | `[project] license-files = ["THIRD_PARTY_LICENSES.md"]` (PEP 639), U-M5b | absent; that hatchling 1.32.4 places `license-files` there is `inferred`, and PK-08 lists the wheel to confirm |
+| embodic's own licence file | none | absent. Pending the user's choice. No unit writes `LICENSE` until the user decides |
+| `tests/`, `.claude/`, `docs/`, `tools/`, `packaging/`, `requirements/` | none | `verified` absent. No document ships except the licence texts above |
+
+Sdist. Today it holds `.claude`, `.github`, `.gitignore`, `CHANGELOG.md`, `PKG-INFO`, `README.md`, `docs`,
+`pyproject.toml`, `requirements`, `resources`, `src`, `tests` and `tools`. It leaves out `build/` and the git-ignored
+evidence file (`verified`). U-M5b adds `[tool.hatch.build.targets.sdist] exclude = [".claude/", "build/"]`, so `.claude/`
+leaves too and `build/` stays out if `.gitignore` ever changes. This closes the U-D12 question of §1. A wheel built from
+the sdist has no evidence file, so its results read `not tested`. That is correct, because no gate ran on it.
+
+Lock files (REQ-N-06). uv writes one file per Python version, every line pinned with `--hash` (§5, row uv):
+
+```
+uv pip compile pyproject.toml --extra desktop --universal --python-version 3.11 --generate-hashes -o requirements/py311.txt
+uv pip compile pyproject.toml --extra desktop-dev --universal --python-version 3.11 --generate-hashes -o requirements/py311-dev.txt
+```
+
+and the same for 3.12 and 3.13. `--universal` asks for one file valid on Windows and Linux. That uv's universal mode
+with `--generate-hashes` lists the hashes of every platform's wheel is `inferred`; PK-02 checks Linux in this container
+and PK-01 checks Windows in CI. Install with two commands, because `--require-hashes` needs a hash for every requirement
+and the local wheel has none: `python -m pip install --require-hashes -r requirements/py311.txt`, then
+`python -m pip install --no-deps build/dist/embodic-<version>-py3-none-any.whl`. `requirements/README.md` holds the
+commands. No unit publishes to PyPI or anywhere else without the user's approval.
+
+README.md sections, in English, each command given for Windows PowerShell and for Linux bash:
+
+1. What embodic does (one paragraph) and the status words a result can carry.
+2. Requirements: CPython 3.11, 3.12 or 3.13; Windows 10 or 11 x64, or Linux x86-64 (REQ-N-05).
+3. Install: create a venv, install from the lock file, install the wheel (above).
+4. Run the app: `embodic`.
+5. Run the CLI: `embodic-cli compute`, `validate`, `export` (interfaces.md §12).
+6. Check the installation: `embodic-cli selftest`, and the Tests dialog.
+7. Run the tests: a dev install (`pip install -e .[desktop-dev]` from `requirements/py3xx-dev.txt`), then
+   `python tools/ci.py --profile commit`.
+8. Build the wheel, and record the test evidence with `python tools/ci.py --profile release`.
+9. Build the PyInstaller folder (stretch, U-M5c): `python tools/build_bundle.py`.
+10. Licences: `THIRD_PARTY_LICENSES.md`; embodic's own licence is pending the user's choice.
+
+`docs/install/INSTALL.md` (English) is the long form of sections 2 to 9, with the expected output after each step, the
+time each step took in the PK-06 walkthrough, and a troubleshooting section per platform. Fable writes
+`docs/install/INSTALL_TH.md` from it (U-F1).
+
+`THIRD_PARTY_LICENSES.md` structure. U-M5b assembles it from Agent 5's list (`dependency_licences.md`, "What the M5
+packages must carry" and the "M5 distribution" section that U-S5c writes). It copies the source offer and the notice
+wording from U-S5c verbatim and does not write its own.
+
+1. A prominent notice first, saying that embodic uses Qt and PySide6 under LGPL-3.0, with the versions and the source location
+   from U-S5c (LGPL-3.0 section 4 a and c, quoted in `dependency_licences.md`).
+2. One section per runtime dependency and bundled asset, each with name, pinned version, SPDX identifier, copyright line,
+   the path of the full text in the venv, wheel or repository, and how embodic uses it: NumPy 2.4.6 (BSD-3-Clause, with
+   the notices of the bundled OpenBLAS, LAPACK and GCC runtime), PySide6-Essentials 6.11.2 and shiboken6 6.11.2
+   (LGPL-3.0-only, the option embodic uses), Qt 6.11.2 (LGPL-3.0-only, with Qt's third-party notices for the bundled
+   modules), Inter and JetBrains Mono (OFL-1.1, each family with its own text), and CPython (PSF-2.0, the
+   PyInstaller folder only).
+3. The full texts: OFL-1.1 for each font family, LGPL-3.0, and GPL-3.0, which LGPL-3.0 section 4 b requires beside it.
+4. One line that embodic's own licence is pending the user's choice.
+
+PyInstaller one-folder build (stretch, D-015; U-M5c). The spec is `packaging/pyinstaller/embodic.spec`, and
+`tools/build_bundle.py` runs it and assembles the folder. One-folder only, never one-file, so every Qt library stays a
+separate, replaceable file (`dependency_licences.md`, obligation 3).
+
+```
+dist/embodic/                    zipped for delivery; never published without the user's approval
+  embodic.exe                    windowed entry, embodic.ui.app:main
+  embodic-cli.exe                console entry, embodic.cli:main
+  _internal/                     PyInstaller 6 contents folder: the Python runtime, compiled modules, and the Qt,
+                                 PySide6 and shiboken6 libraries as separate files
+    embodic/_resources/          the same tree as in the wheel, evidence file included
+  THIRD_PARTY_LICENSES.md
+  licenses/                      LGPL-3.0.txt, GPL-3.0.txt, numpy/LICENSE.txt, PYTHON-LICENSE.txt, the Qt
+                                 third-party notices (§5.1)
+  SOURCE.md                      the source offer or link wording of U-S5c, for Qt, PySide6 and embodic
+  embodic-<version>.tar.gz       embodic's sdist (LGPL-3.0 section 4 d, route 0, dependency_licences.md)
+```
+
+Whether `resource_root()` finds `_internal/embodic/_resources` in a frozen build is `unresolved`: `paths.py` l.24 to l.25 raises
+when `importlib.resources.files("embodic")` is not a `pathlib.Path`, and what PyInstaller returns there was not run here.
+U-M5c checks it first. A frozen build has no `.py` files, so the evidence check compares versions only (interfaces.md §3.1).
+
+PF baseline (REQ-N-01 to REQ-N-03, REQ-N-22). `tests/performance/baseline.json` is committed and rewritten only by a
+release run with `--record-baseline`:
+
+| Key | Value |
+|---|---|
+| `format`, `format_version` | `"embodic.pf-baseline"`, `1` |
+| `embodic_version`, `git_commit`, `recorded_utc` | as in the evidence file |
+| `machine` | `platform.platform()`, `platform.machine()`, the CPU model string, `os.cpu_count()`, total memory in GiB, `python`, `numpy`. No host name, user name or path |
+| `cases` | PF-01 (`spiral_12c16p_default`, 20 warm runs: p50, p95 and the per-stage seconds of `ComputeOutcome.timings_s`), PF-02, PF-03 (offscreen platform, so `inferred` for a desktop session), PF-05 (`serpentine_16p_example`, `wave_16p_example`) |
+
+PF-04 compares a run with this file. It fails when a case is more than 3 times its budget or more than 25 % slower than
+the baseline (Phase 1 PF-04). The budgets stay `assumption` (Phase 1 PF-01 to PF-03); the baseline records, it does not
+set targets.
