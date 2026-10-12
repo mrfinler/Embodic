@@ -226,6 +226,23 @@ def test_export_dialog_on_a_failed_drc_writes_the_report_and_readme_and_refuses_
     assert list((tmp_path / "drawings").iterdir()) == []
 
 
+@pytest.mark.req("REQ-F-33")
+def test_export_dialog_on_a_failed_drc_writes_the_project_file_without_the_confirmation(
+    make_window, load, qtbot, tmp_path
+):
+    """D-046a. Catches a project file, the design itself, that waits for the confirmation meant for drawings."""
+    window = load(make_window(), WAVE)
+    window.toolstrip.actions_by_id["act-export-pdf"].trigger()
+    dialog = window.export_dialog
+    find(dialog, QCheckBox, "export-format-pdf").setChecked(False)
+    find(dialog, QCheckBox, "export-format-json").setChecked(True)
+    assert dialog.selected() == {ExportKind.PROJECT_JSON}
+    dialog.folder.setText(str(tmp_path / "project"))
+    qtbot.mouseClick(dialog.run, Qt.MouseButton.LeftButton)
+    assert dialog.confirm is None
+    assert [p.name for p in (tmp_path / "project").iterdir()] == ["Wave_16_poles_involute.embodic.json"]
+
+
 @pytest.mark.req("REQ-F-33", "REQ-N-15")
 def test_s30_n3_export_confirmation_wraps_its_lines_without_a_sideways_bar(make_window, load, qtbot, tmp_path):
     """U-S4h N3. Catches a failure line that runs off the right edge behind a sideways bar ("3.000000 mm" cut)."""
