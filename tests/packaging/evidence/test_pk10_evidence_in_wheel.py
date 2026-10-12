@@ -17,8 +17,9 @@ MEMBER = f"embodic/_resources/evidence/{PASSED_TESTS_FILE}"
 @pytest.fixture(scope="module")
 def release_wheel():
     """Return the one wheel that the release gate built into build/dist."""
-    (wheel,) = (REPO / "build" / "dist").glob("embodic-*.whl")
-    return wheel
+    wheels = sorted((REPO / "build" / "dist").glob("embodic-*.whl"))
+    assert len(wheels) == 1, f"PK-10 runs after the record step of `python tools/ci.py --profile release`: {wheels}"
+    return wheels[0]
 
 
 @pytest.mark.req("REQ-N-06", "REQ-T-05")
