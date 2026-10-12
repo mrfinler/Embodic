@@ -1,4 +1,4 @@
-Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5. Revised 2026-10-08 (U-S3c) by Agent 5, model: claude-sonnet-5-5. Revised 2026-10-09 (U-S5a) by Agent 5, model: claude-sonnet-5-5. Revised 2026-10-09 (U-S5b: static Inter files) by Agent 5, model: claude-sonnet-5-5.
+Prepared by: Agent 5 (Research & Evidence Specialist), model: claude-opus-5-5. Revised 2026-10-08 (U-S3c) by Agent 5, model: claude-sonnet-5-5. Revised 2026-10-09 (U-S5a) by Agent 5, model: claude-sonnet-5-5. Revised 2026-10-09 (U-S5b: static Inter files) by Agent 5, model: claude-sonnet-5-5. Revised 2026-10-12 (U-S5c: M5 distribution, LGPL route, licence text sources) by Agent 5, model: claude-sonnet-5-5.
 
 # Dependency licences (Phase 2)
 
@@ -130,7 +130,8 @@ fall on embodic. From Qt's obligations page (`verified (extract)`, URL above):
    mechanism for linking with the Library. A suitable mechanism is one that (a) uses at run time a copy of the Library
    already present on the user's computer system, and (b) will operate properly with a modified version of the Library
    that is interface-compatible with the Linked Version" (`verified`, same copy). A one-folder bundle ships its own
-   copy of the Library, so whether route 1 (a) is met is `unresolved`. Route 0 needs embodic's own source with the
+   copy of the Library, so whether route 1 (a) is met is `unresolved`. U-S5c: M5 complies with route 0 and does not rely on
+   route 1 for the bundle (§M5 distribution). Route 0 needs embodic's own source with the
    bundle, which a Python application can supply (`inferred`; legal review needed).
 4. Put no term in the embodic licence or EULA that forbids reverse engineering of the Qt parts (Qt page, "No
    Restrictions on Freedom").
@@ -338,3 +339,278 @@ other dev tool are not needed at run time.
 Not needed in the folder: fontTools (dev only, never imported by `src`), pytest and the other test or dev tools, and the
 PyInstaller bootloader (§Distribution obligations item 7). The folder lists the licences it carries. It does not need to
 list the dev tools.
+
+## M5 distribution
+
+This section is the reference for unit U-M5b (`THIRD_PARTY_LICENSES.md`) and U-M5c (the PyInstaller one-folder build). It
+quotes the licence clauses that bind a one-folder distribution of embodic when PySide6 is used under LGPL-3.0, says what
+embodic does about each clause, lists where every licence text lives, and records the licence decision that stays with the
+user. It is not legal advice. Each reading marked `inferred` is Agent 5's reading of the quoted words, and a lawyer should
+review the final distribution.
+
+Label meanings follow the standing orders. `verified` means the source was read in this unit, or a command
+was run and its output read. Every quote in the next table is checked by a script, so a quote that drifts from its source
+fails the check (`python3 docs/phase2/evidence/tools/check_m5_licence_quotes.py`, output in §Run of the check).
+
+### Sources read and hosts refused
+
+The session proxy answered 403 to CONNECT for these hosts on 2026-10-12, so none of their pages was read:
+`www.qt.io`, `doc.qt.io`, `code.qt.io`, `download.qt.io`, `wiki.qt.io`, `www.gnu.org`, `docs.python.org`, `www.python.org`,
+`opensource.org` and `spdx.org` (`verified`, the proxy status endpoint lists each host as `connect_rejected`). Qt's own
+statements therefore come from four places that were reachable.
+
+1. The Qt project's licence texts at the release tag, on the GitHub mirror: `https://raw.githubusercontent.com/qt/qtbase/v6.11.2/LICENSES/`
+   (`LGPL-3.0-only.txt`, 7651 bytes; `GPL-3.0-only.txt`, 35147 bytes). The repositories `qt/qtbase`, `qt/qtdeclarative`,
+   `qt/qttools`, `qt/qtsvg`, `qt/qtshadertools` and `qt/qtimageformats` each answered 200 for `LICENSES/LGPL-3.0-only.txt`
+   at tag `v6.11.2` (`verified`, `curl` status codes). `qt/pyside-setup` answered 404 for every path tried, so PySide6 is not
+   mirrored there.
+2. The long description of the PySide6-Essentials 6.11.2 metadata (installed copy and the Windows wheel's `.metadata`), which
+   carries the section "Licensing".
+3. The licence headers of the installed PySide6 files and the commercial notice file in the Windows wheel.
+4. The SPDX licence list copies and the Qt attribution files at the tag.
+
+The Qt page that U-S5a cited ("Open Source LGPL obligations", https://www.qt.io/licensing/open-source-lgpl-obligations) was
+read in U-S5a through a model-written extract. It was not re-read here. Nothing below depends on it. Where U-S5a quoted it,
+this section quotes the licence text instead.
+
+### Quoted requirements
+
+Source ids: `lgpl3-qtbase` is `https://raw.githubusercontent.com/qt/qtbase/v6.11.2/LICENSES/LGPL-3.0-only.txt`. `gpl3-spdx` and the
+other `-spdx` ids are the files under `https://raw.githubusercontent.com/spdx/license-list-data/main/text/`. The other ids are
+installed files: `pyside-metadata` is `pyside6_essentials-6.11.2.dist-info/METADATA`, `numpy-licence-linux` is
+`numpy-2.4.6.dist-info/licenses/LICENSE.txt`, `psf-cpython-linux` is `/usr/lib/python3.11/LICENSE.txt`. An ellipsis (`...`) marks a
+cut inside a quote. "Section" is the section of the named licence. Where the LGPL text says "section 6 of the GNU GPL" it means
+section 6 of the GPL-3.0 text (Q12 to Q14), not section 6 of the LGPL, which is about revised versions.
+
+| Q | Source id | Section | Quote |
+|---|---|---|---|
+| Q1 | lgpl3-qtbase | LGPL-3.0 §4, opening | "You may convey a Combined Work under terms of your choice that, taken together, effectively do not restrict modification of the portions of the Library contained in the Combined Work and reverse engineering for debugging such modifications, if you also do each of the following" |
+| Q2 | lgpl3-qtbase | LGPL-3.0 §4 a) | "Give prominent notice with each copy of the Combined Work that the Library is used in it and that the Library and its use are covered by this License." |
+| Q3 | lgpl3-qtbase | LGPL-3.0 §4 b) | "Accompany the Combined Work with a copy of the GNU GPL and this license document." |
+| Q4 | lgpl3-qtbase | LGPL-3.0 §4 c) | "For a Combined Work that displays copyright notices during execution, include the copyright notice for the Library among these notices, as well as a reference directing the user to the copies of the GNU GPL and this license document." |
+| Q5 | lgpl3-qtbase | LGPL-3.0 §4 d) 0) | "Convey the Minimal Corresponding Source under the terms of this License, and the Corresponding Application Code in a form suitable for, and under terms that permit, the user to recombine or relink the Application with a modified version of the Linked Version to produce a modified Combined Work, in the manner specified by section 6 of the GNU GPL for conveying Corresponding Source." |
+| Q6 | lgpl3-qtbase | LGPL-3.0 §4 d) 1) | "Use a suitable shared library mechanism for linking with the Library. A suitable mechanism is one that (a) uses at run time a copy of the Library already present on the user's computer system, and (b) will operate properly with a modified version of the Library that is interface-compatible with the Linked Version." |
+| Q7 | lgpl3-qtbase | LGPL-3.0 §4 e) | "Provide Installation Information, but only if you would otherwise be required to provide such information under section 6 of the GNU GPL, and only to the extent that such information is necessary to install and execute a modified version of the Combined Work produced by recombining or relinking the Application with a modified version of the Linked Version." |
+| Q8 | lgpl3-qtbase | LGPL-3.0 §0 | "An "Application" is any work that makes use of an interface provided by the Library, but which is not otherwise based on the Library." |
+| Q9 | lgpl3-qtbase | LGPL-3.0 §0 | "A "Combined Work" is a work produced by combining or linking an Application with the Library. The particular version of the Library with which the Combined Work was made is also called the "Linked Version"." |
+| Q10 | lgpl3-qtbase | LGPL-3.0 §0 | "The "Minimal Corresponding Source" for a Combined Work means the Corresponding Source for the Combined Work, excluding any source code for portions of the Combined Work that, considered in isolation, are based on the Application, and not on the Linked Version." |
+| Q11 | lgpl3-qtbase | LGPL-3.0 §0 | "The "Corresponding Application Code" for a Combined Work means the object code and/or source code for the Application, including any data and utility programs needed for reproducing the Combined Work from the Application, but excluding the System Libraries of the Combined Work." |
+| Q12 | gpl3-spdx | GPL-3.0 §6, opening | "You may convey a covered work in object code form under the terms of sections 4 and 5, provided that you also convey the machine-readable Corresponding Source under the terms of this License, in one of these ways:" |
+| Q13 | gpl3-spdx | GPL-3.0 §6 d) | "Convey the object code by offering access from a designated place (gratis or for a charge), and offer equivalent access to the Corresponding Source in the same way through the same place at no further charge. ... the Corresponding Source may be on a different server (operated by you or a third party) that supports equivalent copying facilities, provided you maintain clear directions next to the object code saying where to find the Corresponding Source. Regardless of what server hosts the Corresponding Source, you remain obligated to ensure that it is available for as long as needed to satisfy these requirements." |
+| Q14 | gpl3-spdx | GPL-3.0 §6 b) | "Convey the object code in, or embodied in, a physical product (including a physical distribution medium), accompanied by a written offer, valid for at least three years and valid for as long as you offer spare parts or customer support for that product model" |
+| Q15 | gpl3-spdx | GPL-3.0 §1 | "The "Corresponding Source" for a work in object code form means all the source code needed to generate, install, and (for an executable work) run the object code and to modify the work, including scripts to control those activities. However, it does not include the work's System Libraries, or general-purpose tools or generally available free programs which are used unmodified in performing those activities but which are not part of the work." |
+| Q16 | gpl3-spdx | GPL-3.0 §6 | "A "User Product" is either (1) a "consumer product", which means any tangible personal property which is normally used for personal, family, or household purposes, or (2) anything designed or sold for incorporation into a dwelling." |
+| Q17 | lgpl3-qtbase | LGPL-3.0, preamble | "This version of the GNU Lesser General Public License incorporates the terms and conditions of version 3 of the GNU General Public License, supplemented by the additional permissions listed below." |
+| Q18 | pyside-metadata | PySide6-Essentials 6.11.2, "Licensing" | "PySide6 is available under both Open Source (LGPLv3 or GPLv2 or GPLv3) and commercial license. Using PyPi is the recommended installation source, because the content of the wheels is valid for both cases." |
+| Q19 | pyside-qtcore-pyi | `PySide6/QtCore.pyi`, lines 1 and 2 | "Copyright (C) 2022 The Qt Company Ltd. # SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only" |
+| Q20 | qt-qglobal-h | Qt 6.11.2 `src/corelib/global/qglobal.h`, lines 1 to 3 | "Copyright (C) 2020 The Qt Company Ltd. // Copyright (C) 2019 Intel Corporation. // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only" |
+| Q21 | qt-commercial-win | `LicenseRef-Qt-Commercial.txt` in the Windows wheel | "Licensees holding valid commercial Qt licenses may use this software in accordance with the the terms contained in a written agreement between you and The Qt Company." |
+| Q22 | mit-spdx | MIT, grant | "Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software" |
+| Q23 | mit-spdx | MIT, condition | "The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software." |
+| Q24 | apache2-spdx | Apache-2.0 §4 a) | "You must give any other recipients of the Work or Derivative Works a copy of this License" |
+| Q25 | apache2-spdx | Apache-2.0 §3 | "If You institute patent litigation against any entity (including a cross-claim or counterclaim in a lawsuit) alleging that the Work or a Contribution incorporated within the Work constitutes direct or contributory patent infringement, then any patent licenses granted to You under this License for that Work shall terminate as of the date such litigation is filed." |
+| Q26 | gpl3-spdx | GPL-3.0 §5 c) | "You must license the entire work, as a whole, under this License to anyone who comes into possession of a copy." |
+| Q27 | gpl3-spdx | GPL-3.0 §10 | "Each time you convey a covered work, the recipient automatically receives a license from the original licensors, to run, modify and propagate that work, subject to this License." |
+| Q28 | numpy-licence-linux | NumPy `LICENSE.txt`, BSD-3-Clause | "Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution." |
+| Q29 | psf-cpython-linux | PSF License Agreement §2 | "provided, however, that PSF's License Agreement and PSF's notice of copyright, i.e., "Copyright (c) 2001, ... Python Software Foundation; All Rights Reserved" are retained in Python alone or in any derivative version prepared by Licensee." |
+| Q30 | ofl-inter | SIL OFL 1.1, condition 2 | "Original or Modified Versions of the Font Software may be bundled, redistributed and/or sold with any software, provided that each copy contains the above copyright notice and this license." |
+
+### What the one-folder build must do about LGPL-3.0
+
+The mapping onto the LGPL terms (`inferred`, from Q8, Q9 and Q10). embodic's Python code is the "Application", because
+it uses the interfaces of PySide6 and is not based on it. Qt and PySide6 are the "Library". The PyInstaller folder is the
+"Combined Work", and the Qt and PySide6 files in it, version 6.11.2, are the "Linked Version". embodic links nothing
+statically. Python imports `PySide6/QtCore.pyd` and its `Qt6Core.dll` at run time, and both are separate files in the Windows
+wheel (`verified`, member names in the wheel listing: `PySide6/Qt6Core.dll`, `PySide6/Qt6Gui.dll`, `PySide6/Qt6Widgets.dll`,
+`PySide6/Qt6Svg.dll`, `PySide6/QtCore.pyd`, `PySide6/QtGui.pyd`, `PySide6/QtWidgets.pyd`, `PySide6/QtSvg.pyd`). The Qt version in
+the project venv is 6.11.2, and `QtCore.qVersion()` printed `6.11.2` next to PySide6 6.11.2 and shiboken6 6.11.2 (`verified`, run 2026-10-12).
+embodic's runtime imports are QtCore, QtGui, QtWidgets and QtSvg (`verified`, `grep` of `src`). QtTest appears only in tests.
+
+| Ref | Requirement (quote) | Our action | Label |
+|---|---|---|---|
+| R1 | Q1: the terms must "effectively do not restrict modification of the portions of the Library contained in the Combined Work and reverse engineering for debugging such modifications" | The embodic licence and any EULA contain no term against modifying or reverse engineering the Qt and PySide6 files. The application does not check the hash or signature of those files at start-up and does not refuse to run when they change. Replacing `Qt6Core.dll` with an interface-compatible build must leave embodic running. | `inferred` for the start-up check, which is not named in the text |
+| R2 | Q2: "Give prominent notice with each copy of the Combined Work that the Library is used in it and that the Library and its use are covered by this License." | Put the notice in `THIRD_PARTY_LICENSES.md` at the top of the folder, in the About box, and on the page that offers the download. Proposed wording below. | `verified` for the requirement, `assumption` for the wording |
+| R3 | Q3: "Accompany the Combined Work with a copy of the GNU GPL and this license document." | Put `licenses/LGPL-3.0.txt` and `licenses/GPL-3.0.txt` in the folder. Use the two Qt files at tag v6.11.2 (sources below). The PySide6 wheels carry neither text (DEF-S3-01). | `verified` |
+| R4 | Q4: a Combined Work "that displays copyright notices during execution" must include the Library's copyright notice "as well as a reference directing the user to the copies of the GNU GPL and this license document" | embodic shows no About box today (`grep -rn About src` prints nothing, `verified`). When U-M5b adds one, it lists "Copyright (C) The Qt Company Ltd. and other contributors" for Qt and PySide6 and names `licenses/LGPL-3.0.txt` and `licenses/GPL-3.0.txt`. The Qt files carry year-specific lines, for example Q19 (2022, PySide6) and Q20 (2020, Qt). The wording of the combined line is a decision for Fable. | `verified` for the requirement and for today's absence of an About box, `assumption` for the wording |
+| R5 | Q5 with Q10 and Q15: convey "the Minimal Corresponding Source under the terms of this License", the "Corresponding Source" being "all the source code needed to generate, install, and ... run the object code and to modify the work, including scripts to control those activities" | Offer the source of Qt 6.11.2 and PySide6 6.11.2 as shipped, next to the download (R6). The Qt modules in the Essentials wheel that embodic loads come from the repositories `qt/qtbase` (Core, Gui, Widgets), `qt/qtsvg` (Svg) and the other modules the wheel carries (`qt/qtdeclarative`, `qt/qttools`, `qt/qtshadertools`, `qt/qtimageformats`), at tag `v6.11.2`. The PySide6 source is at https://code.qt.io/cgit/pyside/pyside-setup.git/ (PyPI `Project-URL` "Repository", `verified` in the installed METADATA), tag name `v6.11.2` by analogy with the Qt tags (`inferred`, host refused). | `verified` for the six Qt tags, `inferred` for the module-to-repository mapping and for the PySide6 tag |
+| R6 | Q13: "offer equivalent access to the Corresponding Source in the same way through the same place at no further charge", with "clear directions next to the object code saying where to find the Corresponding Source" and a duty "to ensure that it is available for as long as needed" | A download is a case for GPL-3.0 §6 d), not b), because Q14 concerns "a physical product" (`inferred`). Next to the download link and in `THIRD_PARTY_LICENSES.md`, name the source locations of R5. Because the duty to keep the source available outlasts a link on a third-party host, mirror the Qt 6.11.2 and PySide6 6.11.2 source archives with the embodic release (a decision for Fable, `assumption`). | `inferred` |
+| R7 | Q5: "the Corresponding Application Code in a form suitable for, and under terms that permit, the user to recombine or relink the Application with a modified version of the Linked Version" | Ship the folder as built. A user who drops a rebuilt `Qt6Core.dll` into `PySide6/` relinks nothing in embodic and gets a modified Combined Work (`inferred`). Also publish embodic's source (the wheel or the source distribution), the `.spec` file and the build script, because Q11 counts "utility programs needed for reproducing the Combined Work" as Application code. | `inferred` |
+| R8 | Q6 (route 1): a shared-library mechanism that "uses at run time a copy of the Library already present on the user's computer system" | Do not rely on route 1 for the bundle. Use route 0 (R5 to R7). Route 1 fits the pip install, where Qt comes from PyPI and was not delivered by embodic. See the next subsection. | `inferred` |
+| R9 | Q7: Installation Information "only if you would otherwise be required to provide such information under section 6 of the GNU GPL" | GPL-3.0 §6 asks for Installation Information only for a "User Product", defined in Q16 as "tangible personal property" for personal use or dwelling equipment. A downloadable desktop application is not tangible personal property, so embodic provides none beyond R7 (`inferred`; a lawyer should confirm). | `inferred` |
+| R10 | Q9 and Q6 (b): the Linked Version stays replaceable | Build with one-folder mode. Do not use `--onefile`, which packs the Qt files into the executable. Do not compress the Qt files with UPX. After the build, run `dir /s /b *.dll` on the output and confirm that `Qt6Core.dll`, `Qt6Gui.dll`, `Qt6Widgets.dll` and `Qt6Svg.dll` are separate files. The venv has no PyInstaller (no `pyinstaller` entry in `site-packages`, `verified` by `ls`), so this unit could not check the real folder layout. | `inferred`, `not tested` on a real build |
+| R11 | Q4 and R3 | The About box and `THIRD_PARTY_LICENSES.md` give the PySide6 and Qt versions. The code can read them: `PySide6.__version__` and `QtCore.qVersion()` printed `6.11.2` in the venv. | `verified` |
+
+Proposed notice for R2 (`assumption`, wording for Fable and the lawyer):
+
+> embodic uses Qt 6.11.2 and PySide6 6.11.2 (Qt for Python), which are covered by the GNU Lesser General Public License,
+> version 3 (LGPL-3.0-only). The Qt and PySide6 libraries are separate files in the `PySide6` folder of this download. You can
+> replace them with a modified, interface-compatible version. The licence texts are `licenses/LGPL-3.0.txt` and
+> `licenses/GPL-3.0.txt`. The source code of the Qt and PySide6 versions in this download is available at
+> https://github.com/qt/qtbase/tree/v6.11.2 and the other Qt repositories at tag v6.11.2, and at
+> https://code.qt.io/cgit/pyside/pyside-setup.git/.
+
+The URL `https://github.com/qt/qtbase/tree/v6.11.2` is the browsing form of the raw URL that answered 200. It was not opened (the
+proxy gives `github.com/qt/qtbase` a 403), so M5 should open it from a normal network before it goes into a release.
+
+### Route 4 d) 1 against a bundled Qt copy
+
+U-S5a left this `unresolved`. The words that decide it are in Q6: a suitable mechanism "uses at run time a copy of the Library
+already present on the user's computer system". Two readings fit the text.
+
+1. Narrow reading. "Already present" means present before and apart from the Combined Work, such as a system package or a
+   pip install by the user. A Qt copy that embodic delivers in its own folder is delivered with the Combined Work, so route 1
+   (a) is not met.
+2. Broad reading. Any separate library file on the user's disk at run time counts, as opposed to code linked into the
+   executable. A bundled `Qt6Core.dll` that the executable loads from the folder meets it.
+
+The licence text does not choose between them, and this unit found no Qt or PySide6 statement on the point that it could
+read (the Qt pages were refused). The reading stays `unresolved`. The decision does not depend on it. Route 0 needs no
+"already present" copy: it asks for the Minimal Corresponding Source (R5), the Corresponding Application Code in a recombinable form
+(R7), and the GPL §6 delivery of source (R6). A one-folder build with separate Qt files can do all three. The rule for
+M5 is therefore "comply with route 0 for the bundle, and treat route 1 as met only in the pip install" (`inferred`).
+
+### Text sources for THIRD_PARTY_LICENSES.md
+
+One section per row. "Venv path" starts at the main checkout, `/home/claude/embodic`, and the folder `site-packages` is under the venv's `lib/python3.11`.
+The venv is a Linux install, so its wheels differ from the Windows wheels that M5 packages. Where they differ, the row gives both.
+The files that Q18 and Q19 read are `.venv/lib/python3.11/site-packages/pyside6_essentials-6.11.2.dist-info/METADATA` and
+`.venv/lib/python3.11/site-packages/PySide6/QtCore.pyi`. The NumPy licence directory is
+`.venv/lib/python3.11/site-packages/numpy-2.4.6.dist-info/licenses/`.
+
+| Component | Version | Licence (declared) | Text to ship | Where the text is | Label |
+|---|---|---|---|---|---|
+| embodic | 0.0.1 | open (no licence file) | embodic's own licence file | does not exist. See §The embodic licence | `unresolved` (user decision) |
+| numpy | 2.4.6 | BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0 | the whole directory `licenses/` of the dist-info (17 files) | venv path `.venv/lib/python3.11/site-packages/numpy-2.4.6.dist-info/licenses/LICENSE.txt` (46794 bytes, Linux wheel) and the 16 other files under `licenses/` there. Windows wheel member `numpy-2.4.6.dist-info/licenses/LICENSE.txt` is 45831 bytes and differs, because the Windows binary bundles OpenBLAS, LAPACK and the GCC runtime where the Linux one also lists libquadmath. Take the file from the wheel that the build uses | `verified` (both files hashed and read) |
+| PySide6-Essentials | 6.11.2 | LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only (metadata); the commercial option is named in Q19 | `licenses/LGPL-3.0.txt`, `licenses/GPL-3.0.txt` (R3) and the notice of R2 | LGPL: `https://raw.githubusercontent.com/qt/qtbase/v6.11.2/LICENSES/LGPL-3.0-only.txt`, SHA-256 `da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768`, 7651 bytes. GPL: `https://raw.githubusercontent.com/qt/qtbase/v6.11.2/LICENSES/GPL-3.0-only.txt`, SHA-256 `8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903`, 35147 bytes. Neither wheel carries them. The Windows wheel's `pyside6_essentials-6.11.2.dist-info/licenses/LicenseRef-Qt-Commercial.txt` (470 bytes, Q21) is the commercial notice; it is not a licence embodic uses, and the Linux wheel has no such file | `verified` (LGPL read in full; GPL hashed and compared with the SPDX copy, which differs in 5 spans, "(C)" against the copyright sign and four one-letter insertions) |
+| shiboken6 | 6.11.2 | same as PySide6-Essentials | no extra file. Its section in `THIRD_PARTY_LICENSES.md` points to the PySide6 texts | the Windows wheel's `shiboken6-6.11.2.dist-info/licenses/LicenseRef-Qt-Commercial.txt` is byte-identical to the PySide6 one (SHA-256 `4f54763ac0fe2abd8f7f8d8fe370a94a08ebf84786aa0b91045bd6628deb08a3` for both) | `verified` |
+| Qt (the libraries in the wheel) | 6.11.2 | LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only OR commercial, per the file header in Q20 | covered by the two rows above | the same two texts | `verified` for the one qtbase header read (Q20); the other modules were not each opened (`inferred`) |
+| Qt's built-in third-party code | see the next table | per library | each library's licence file, named in its `qt_attribution.json` | `https://raw.githubusercontent.com/qt/qtbase/v6.11.2/src/3rdparty/<name>/qt_attribution.json` | `verified` for the six read; the full list for the Windows binaries is `unresolved` |
+| Microsoft C++ runtime DLLs and `opengl32sw.dll` in the Windows wheel | see the list below | not read | licence terms not read | no text found in the wheel (the wheel has no file named like a licence besides the commercial notice) | `unresolved` |
+| Inter (static Regular and SemiBold) | v4.1 | SIL OFL 1.1 | `LICENSE.txt` beside the font | `resources/fonts/Inter/LICENSE.txt` (4380 bytes) | `verified` |
+| JetBrains Mono (Regular, Medium) | v2.304 | SIL OFL 1.1 | `OFL.txt` beside the font | `resources/fonts/JetBrainsMono/OFL.txt` (4399 bytes) | `verified` |
+| CPython | 3.11.x | PSF-2.0 | the Python `LICENSE.txt` | Linux build: `/usr/lib/python3.11/LICENSE.txt` (13936 bytes, SHA-256 `3b2f81fe21d181c499c59a256c8e1968455d6689d269aa85373bfb6af41da3bf`). Windows build: the python.org installer puts a `LICENSE.txt` in the install folder (`inferred`; not read, python.org refused). Take the file from the Python that runs PyInstaller | `verified` for the Linux copy, `inferred` for the Windows location |
+| PyInstaller bootloader | 6.22.3 | GPL-2.0-or-later with bootloader exception | no obligation (§Distribution obligations item 7) | wheel member `pyinstaller-6.22.3.dist-info/licenses/COPYING.txt`, read in U-S5a. It is not in the venv | `verified` in U-S5a, not re-read here |
+
+The Qt attribution files at tag v6.11.2 that this unit fetched and parsed (`verified`, the JSON parsed with Python). The table
+lists what each file declares. Whether the PyPI Windows binaries were built with these bundled copies, or with system copies, is
+not stated in anything read (`unresolved`), so U-M5b should list a library only after Qt's page
+https://doc.qt.io/qt-6/licenses-used-in-qt.html (refused here) or the wheel itself confirms it.
+
+| Library | Version | Licence id declared | Licence file named | Usage line in the file |
+|---|---|---|---|---|
+| double-conversion | 3.4.0 | BSD-3-Clause | `LICENSE` | "Used in Qt Core." |
+| FreeType | 2.14.3 | FTL OR GPL-2.0-only (plus Zlib, MIT and MIT-open-group parts) | `LICENSE.txt` and three others | "Optionally used in Qt GUI and platform plugins." |
+| HarfBuzz | 14.3.0 | MIT | `COPYING` | "Optionally used in Qt GUI." |
+| libpng | 1.6.58 | Libpng AND libpng-2.0 | `LICENSE` | "Used in the qpng image plugin." |
+| PCRE2 | 10.47 | LicenseRef-BSD-3-Clause-with-PCRE2-Binary-Like-Packages-Exception, and BSD-2-Clause for SLJIT | `LICENCE.md`, `LICENSE-SLJIT` | "Used in Qt Core (QRegularExpression)." |
+| zlib | 1.3.2 | Zlib | `LICENSE` | "Optionally used in Qt Core and development tools." |
+
+The non-Qt binaries inside the PySide6-Essentials Windows wheel (`verified`, central directory of
+`pyside6_essentials-6.11.2-cp310-abi3-win_amd64.whl`, read with HTTP range requests on 2026-10-12): `PySide6/concrt140.dll`,
+`msvcp140.dll`, `msvcp140_1.dll`, `msvcp140_2.dll`, `msvcp140_codecvt_ids.dll`, `vcamp140.dll`, `vccorlib140.dll`,
+`vcomp140.dll`, `vcruntime140.dll`, `vcruntime140_1.dll`, and `PySide6/opengl32sw.dll` (20639544 bytes). The shiboken6 wheel
+holds the same ten runtime DLLs under `shiboken6/`. The ten file names are the Microsoft Visual C++ runtime (`inferred` from the
+names). The file name `opengl32sw.dll` suggests a software OpenGL fallback (`inferred`). Their licence terms were not read.
+The wheel contains no `.exe`, `.dll` or `.pyd` of a name that matches a licence file, and its only licence member is the
+commercial notice (`verified`, the same file listing).
+
+The Linux wheel in the venv keeps its licence files out of the dist-info. `pyside6_essentials-6.11.2.dist-info` holds `INSTALLER`,
+`METADATA`, `RECORD`, `WHEEL`, `entry_points.txt` and `top_level.txt`, with no `licenses/` folder (`verified`, `find`). The
+Windows wheel's `.metadata` declares `License-File: LicenseRef-Qt-Commercial.txt` and the Linux one does not (`verified`,
+both read).
+
+### The embodic licence: what each common choice means for LGPL use
+
+The embodic licence is a decision for the user (D-015: "embodic licence left open"). This unit does not choose it. The
+table says what the quoted texts say about each common choice when PySide6 is used under LGPL-3.0 as in §What the one-folder
+build must do. All rows are `inferred`.
+
+| Choice | What the licence text says | Effect with the Qt and PySide6 files | Work it adds |
+|---|---|---|---|
+| MIT | Q22 grants the rights "to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies"; Q23 asks that the notice "shall be included in all copies or substantial portions" | Nothing in the MIT text restricts modification of the Qt files or reverse engineering, so Q1 holds. Q5 asks that embodic be conveyed "under terms that permit" recombining, which MIT does. The Qt and PySide6 files stay under LGPL-3.0, with R2 to R7 done. | The MIT notice in `THIRD_PARTY_LICENSES.md`. Nothing else |
+| Apache-2.0 | Q24: "You must give any other recipients of the Work or Derivative Works a copy of this License". Q25 ends the patent licence of a recipient who sues over the Work | The text has no clause on modifying the Qt files, so Q1 holds. Q25 applies to patent suits about the embodic Work and does not touch Qt. This unit read no source on the Apache-2.0 and GPL-2.0 pairing, and the Qt option in use is LGPL-3.0, so the pairing is not needed. | `LICENSE` and a `NOTICE` file if one exists, plus R2 to R7 |
+| GPL-3.0 | Q17: the LGPL-3.0 "incorporates the terms and conditions of version 3 of the GNU General Public License, supplemented by the additional permissions". Q26: "You must license the entire work, as a whole, under this License". Q27: each recipient "automatically receives a license ... to run, modify and propagate that work" | Q1 allows "terms of your choice", and GPL-3.0 is among them. The metadata also offers GPL-3.0-only as an option for PySide6 (Q18), so the whole bundle can be GPL-3.0 and then R2 to R7 shrink: the GPL gives every recipient the embodic source (Q12, Q15), which also meets Q5. | The GPL text in `licenses/`. The source offer of R5 and R6 for embodic itself |
+| Proprietary | There is no text to quote for an unwritten licence. The limits come from Q1 ("effectively do not restrict modification ... and reverse engineering for debugging such modifications") and Q5 ("under terms that permit, the user to recombine or relink") | A proprietary licence can ship the Qt and PySide6 files only if its terms leave the user free to replace them and to reverse engineer them for debugging those modifications, and only if embodic reaches the user in a form that can be recombined (R7). A "no reverse engineering" clause without a carve-out for the Qt files conflicts with Q1. Q21 shows the alternative: a commercial Qt licence from The Qt Company, whose terms are in a written agreement and were not read | The carve-out clause, R2 to R7, and a lawyer's review of the EULA. The commercial Qt licence avoids R2 to R7 and costs money (not researched) |
+
+NumPy (BSD-3-Clause, Q28) and the two fonts (SIL OFL 1.1, Q30) place no condition on the licence of embodic itself in any
+row above beyond keeping their notices (`inferred` from the quoted conditions; the OFL sentence on documents is in §What the two
+licence texts say). CPython (Q29) asks for its agreement and copyright notice to be "retained" and nothing more about the embodic licence.
+
+Decision for the user, in one line: pick one of MIT, Apache-2.0, GPL-3.0 or a proprietary licence. The first three need no
+change to the plan above. A proprietary licence needs the carve-out clause and a lawyer.
+
+### Open points after U-S5c
+
+1. Route 4 d) 1 (a) against a bundled copy stays `unresolved` as a reading. M5 does not rely on it (§Route 4 d) 1).
+2. The exact build recipe of the Qt libraries in the PyPI wheels is not stated in anything read. Q15 asks for "scripts to
+   control those activities". Pointing to the upstream release source is an `inferred` way to meet it for unmodified
+   files. A lawyer should confirm.
+3. The full list of third-party code inside the Windows Qt binaries is `unresolved`. Six libraries are read (above).
+4. The licence terms of the Microsoft runtime DLLs and `opengl32sw.dll` are not read.
+5. No real PyInstaller output exists, so R10 is `not tested`. U-M5c checks the folder with a listing and records it.
+6. `docs/phase2/architecture/package_layout.md` §5.1 still says "Route 1 (a) against a bundled Qt copy is `unresolved`" and
+   lists no `source/` or `licenses/` row for embodic's source and the spec file. The owner (Agent 3) updates it through Fable.
+7. The Qt pages (`qt.io`, `doc.qt.io`) and `gnu.org` stay unread. If the user gets the proxy to allow them, a second reading of
+   Qt's own LGPL statement would close the gap left by §Sources read and hosts refused.
+
+### Run of the check
+
+`python3 docs/phase2/evidence/tools/check_m5_licence_quotes.py --wheels` from the worktree on 2026-10-12, with the project
+venv, exited 0 (`verified`). Each source below was hashed against the value recorded in the script before any quote was
+searched. Without `--wheels` the script skips Q21 and reads no wheel.
+
+```
+source lgpl3-qtbase: 7651 bytes, sha256 matches, https://raw.githubusercontent.com/qt/qtbase/v6.11.2/LICENSES/LGPL-3.0-only.txt
+source lgpl3-spdx: 42098 bytes, sha256 matches, https://raw.githubusercontent.com/spdx/license-list-data/main/text/LGPL-3.0-only.txt
+source gpl3-spdx: 34674 bytes, sha256 matches, https://raw.githubusercontent.com/spdx/license-list-data/main/text/GPL-3.0-only.txt
+source mit-spdx: 1078 bytes, sha256 matches, https://raw.githubusercontent.com/spdx/license-list-data/main/text/MIT.txt
+source apache2-spdx: 10280 bytes, sha256 matches, https://raw.githubusercontent.com/spdx/license-list-data/main/text/Apache-2.0.txt
+source pyside-metadata: 3637 bytes, sha256 matches, /home/claude/embodic/.venv/lib/python3.11/site-packages/pyside6_essentials-6.11.2.dist-info/METADATA
+source pyside-qtcore-pyi: 556957 bytes, sha256 matches, /home/claude/embodic/.venv/lib/python3.11/site-packages/PySide6/QtCore.pyi
+source numpy-licence-linux: 46794 bytes, sha256 matches, /home/claude/embodic/.venv/lib/python3.11/site-packages/numpy-2.4.6.dist-info/licenses/LICENSE.txt
+source psf-cpython-linux: 13936 bytes, sha256 matches, /usr/lib/python3.11/LICENSE.txt
+source ofl-inter: 4380 bytes, sha256 matches, /home/claude/wt/U-S5c/resources/fonts/Inter/LICENSE.txt
+source qt-qglobal-h: 1917 bytes, sha256 matches, https://raw.githubusercontent.com/qt/qtbase/v6.11.2/src/corelib/global/qglobal.h
+source qt-commercial-win: 470 bytes, sha256 matches, pyside6_essentials-6.11.2-cp310-abi3-win_amd64.whl:pyside6_essentials-6.11.2.dist-info/licenses/LicenseRef-Qt-Commercial.txt
+source numpy-licence-win: 45831 bytes, sha256 matches, numpy-2.4.6-cp311-cp311-win_amd64.whl:numpy-2.4.6.dist-info/licenses/LICENSE.txt
+Q1 to Q30: ok (one line each in the full output)
+30 quote rows, 0 failed
+  556957 439e2bd3f6f8576f .venv/lib/python3.11/site-packages/PySide6/QtCore.pyi
+   46794 4860083caa0de2ac .venv/lib/python3.11/site-packages/numpy-2.4.6.dist-info/licenses/LICENSE.txt
+    1018 fbc539f47d0cf83b .venv/lib/python3.11/site-packages/numpy-2.4.6.dist-info/licenses/numpy/_core/include/numpy/libdivide/LICENSE.txt
+     690 3f2c1ffa76383a55 .venv/lib/python3.11/site-packages/numpy-2.4.6.dist-info/licenses/numpy/_core/src/common/pythoncapi-compat/COPYING
+   20785 e340270d4f643845 .venv/lib/python3.11/site-packages/numpy-2.4.6.dist-info/licenses/numpy/_core/src/highway/LICENSE
+    1414 f7b14309e5f54e50 .venv/lib/python3.11/site-packages/numpy-2.4.6.dist-info/licenses/numpy/_core/src/multiarray/dragon4_LICENSE.txt
+    1514 211e7d737d6179a0 .venv/lib/python3.11/site-packages/numpy-2.4.6.dist-info/licenses/numpy/_core/src/npysort/x86-simd-sort/LICENSE.md
+    1543 c17011467b4fe6e2 .venv/lib/python3.11/site-packages/numpy-2.4.6.dist-info/licenses/numpy/_core/src/umath/svml/LICENSE
+    1498 a85ca13fdf90160b .venv/lib/python3.11/site-packages/numpy-2.4.6.dist-info/licenses/numpy/fft/pocketfft/LICENSE.md
+    2266 a14cc25e10d40a3a .venv/lib/python3.11/site-packages/numpy-2.4.6.dist-info/licenses/numpy/linalg/lapack_lite/LICENSE.txt
+    1593 05f3b88351988ecf .venv/lib/python3.11/site-packages/numpy-2.4.6.dist-info/licenses/numpy/ma/LICENSE
+    3511 103166b62b80443a .venv/lib/python3.11/site-packages/numpy-2.4.6.dist-info/licenses/numpy/random/LICENSE.md
+    2745 469778be8f33d54e .venv/lib/python3.11/site-packages/numpy-2.4.6.dist-info/licenses/numpy/random/src/distributions/LICENSE.md
+    2926 0e111337b25494a7 .venv/lib/python3.11/site-packages/numpy-2.4.6.dist-info/licenses/numpy/random/src/mt19937/LICENSE.md
+    1154 e7d4f4fb20358f31 .venv/lib/python3.11/site-packages/numpy-2.4.6.dist-info/licenses/numpy/random/src/pcg64/LICENSE.md
+    1509 6f5828a57223d4cc .venv/lib/python3.11/site-packages/numpy-2.4.6.dist-info/licenses/numpy/random/src/philox/LICENSE.md
+    1226 9d4098846018319c .venv/lib/python3.11/site-packages/numpy-2.4.6.dist-info/licenses/numpy/random/src/sfc64/LICENSE.md
+     332 268b0ca06759d31e .venv/lib/python3.11/site-packages/numpy-2.4.6.dist-info/licenses/numpy/random/src/splitmix64/LICENSE.md
+   46794 4860083caa0de2ac .venv/lib/python3.11/site-packages/numpy-2.4.6.dist-info/licenses/LICENSE.txt
+    3637 a4e0d97dfc9aeb7f .venv/lib/python3.11/site-packages/pyside6_essentials-6.11.2.dist-info/METADATA
+    4380 262481e844521b32 resources/fonts/Inter/LICENSE.txt
+    4399 30f0c136e3c88e42 resources/fonts/JetBrainsMono/OFL.txt
+6 paths (22 files), 0 missing
+```
+
+The listing is the `ls` output that the paths of §Text sources for THIRD_PARTY_LICENSES.md call for. The left column is the
+size in bytes and the middle column is the first 16 hex digits of the SHA-256. The NumPy licence directory has 17 files, and
+the line for `licenses/LICENSE.txt` appears twice, once inside the directory and once as its own path.
+
+Mutation test (`verified`). A copy of this document had the word "recombine" in Q5 changed to "recompile". The script printed
+`Q5: FAIL, fragment not found after offset 0 in lgpl3-qtbase: 'Convey the Minimal Corresponding Source under the terms of
+this License, and the Correspon'`, then `30 quote rows, 1 failed`, and exited 1.
+
+Full run of the register script (`verified`). `check_dependency_licences.py --coverage` printed `every pyproject.toml requirement
+is listed in PACKAGES` and exited 0 in this worktree. The full run, made in a copy of the evidence folder so that it did not
+overwrite the table above, also exited 0 on 2026-10-12. PyPI then showed newer releases than the table of 2026-10-09: NumPy
+2.5.4 as newest overall (the pin stays 2.4.6), hypothesis 6.169.0, pypdf 6.20.0 and ruff 0.17.0 as newest overall. The
+PySide6-Essentials and shiboken6 pins stay at 6.11.2. The table keeps its 2026-10-09 values. Rerun the script in the main
+checkout to refresh it.
