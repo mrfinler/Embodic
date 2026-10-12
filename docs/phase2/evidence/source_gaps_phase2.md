@@ -105,3 +105,12 @@ No new EV row. This unit read no external source; both rows record what open_pos
 |---|---|---|---|---|
 | G38: same-node gap below the clearance rule | Measured: serpentine strands-3 leaves 0.1091 mm between a strand end and the terminal via of the same phase (rule 0.200 mm, D-006). The evidence register holds no fabricator or standard text on how a gap between copper of one node is treated | none | `unresolved` | A fabricator capability page or DFM rule that states the minimum gap it etches for the copper weight in use, and whether it checks gaps within one net |
 | G39: per-board interconnect inputs | A per-phase stack needs the resistance of each board-to-node conductor (open_positions_m3.md section 3). The register holds the copper constants (EV-53) but no wire-gauge area table and no connector contact-resistance datasheet | EV-53 | `assumption` for any gauge area, contact resistance or lead temperature | A wire-gauge standard table, the datasheet of the connector the user picks, and the user's lead lengths |
+
+## Revision 2026-10-12 (U-E9): gaps G40 and G41
+
+Agent 2, model claude-opus-5-5. No source was reopened for these rows; they record what `oracle_tests_spec.md` needs.
+
+| Gap | Result | EV ids | Label now | What remains |
+|---|---|---|---|---|
+| G40: D10 winding geometry values | OR-03 (phase R 2.15 Ω, D10 p.8) and OR-10 (110.2 °C, D10 p.10) are not buildable. D10 gives eq. 1 to 3 for D_mi, D_mo and the unequal widths but prints neither the values nor N, B_r or the pole arc (`oracle_cases.json` O3-D10). `SpiralCoilSpec` has one trace width, so the unequal-width conductor is not representable in Phase 2 | EV-28, EV-29 | `unresolved` | D10 Fig. 2 and 3 dimensions, or the authors' values for D_mi, D_mo, N, w_ie, w_oe, B_r and pole arc |
+| G41: D07 winding construction for OR-09 | OR-09 records the D09 inductance only. The Phase 1 extract of D07 (O5) gives magnet radii, magnet thickness, B_r, gap, copper weight, PCB thickness and 30 tracks per phase per layer, but no trace width, end-turn shape or construction that maps to an embodic `WaveStyle` | EV-17, EV-18, EV-19 | `unresolved` | The D07 pages with the track width and end-turn geometry (D07 Fig. and Table 1 p.2 reread), then a mapping to a wave style or a ruling that it is not representable |
