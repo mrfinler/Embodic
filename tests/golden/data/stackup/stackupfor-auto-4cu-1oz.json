@@ -1,0 +1,34 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "nCu": 4,
+        "p": {"boardThickness": 1.6, "copperOzInner": 1, "copperOzOuter": 1, "dielectricEr": 0, "dielectricMaterial": "FR-4", "stackupMode": "auto"}
+      },
+      "output": {
+        "boardThickness": 1.6,
+        "custom": false,
+        "entries": [
+          {"oz": 1, "t": 0.0348, "type": "cu"},
+          {"density": 1.85, "er": 4.4, "material": "FR-4", "t": 0.48693333333333344, "type": "diel"},
+          {"oz": 1, "t": 0.0348, "type": "cu"},
+          {"density": 1.85, "er": 4.4, "material": "FR-4", "t": 0.48693333333333355, "type": "diel"},
+          {"oz": 1, "t": 0.0348, "type": "cu"},
+          {"density": 1.85, "er": 4.4, "material": "FR-4", "t": 0.48693333333333344, "type": "diel"},
+          {"oz": 1, "t": 0.0348, "type": "cu"}
+        ],
+        "matches": true,
+        "t": [0.0348, 0.0348, 0.0348, 0.0348],
+        "z": [0.0174, 0.5391333333333334, 1.0608666666666668, 1.5826000000000002]
+      }
+    }
+  ],
+  "case_id": "stackupfor-auto-4cu-1oz",
+  "eq_ids": [],
+  "fn": "stackupFor",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "GR-07 case 1: auto mode, 4 copper layer(s) of 1 oz, inner equal to outer, board 1.6 mm",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["auto", "4cu", "1oz"]
+}

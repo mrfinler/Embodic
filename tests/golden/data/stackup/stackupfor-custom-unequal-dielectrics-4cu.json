@@ -1,0 +1,50 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "nCu": 4,
+        "p": {
+          "boardThickness": 1.6,
+          "copperOzInner": 1,
+          "copperOzOuter": 1,
+          "dielectricEr": 0,
+          "dielectricMaterial": "FR-4",
+          "stackup": [
+            {"t": 0.0348, "type": "cu"},
+            {"er": 4.4, "material": "FR-4", "t": 0.3, "type": "diel"},
+            {"t": 0.0348, "type": "cu"},
+            {"er": 4.4, "material": "FR-4", "t": 0.8, "type": "diel"},
+            {"t": 0.0696, "type": "cu"},
+            {"er": 4.4, "material": "FR-4", "t": 0.1, "type": "diel"},
+            {"t": 0.0696, "type": "cu"}
+          ],
+          "stackupMode": "custom"
+        }
+      },
+      "output": {
+        "boardThickness": 1.4087999999999998,
+        "custom": true,
+        "entries": [
+          {"oz": 1, "t": 0.0348, "type": "cu"},
+          {"density": 1.85, "er": 4.4, "material": "FR-4", "t": 0.3, "type": "diel"},
+          {"oz": 1, "t": 0.0348, "type": "cu"},
+          {"density": 1.85, "er": 4.4, "material": "FR-4", "t": 0.8, "type": "diel"},
+          {"oz": 2, "t": 0.0696, "type": "cu"},
+          {"density": 1.85, "er": 4.4, "material": "FR-4", "t": 0.1, "type": "diel"},
+          {"oz": 2, "t": 0.0696, "type": "cu"}
+        ],
+        "matches": true,
+        "t": [0.0348, 0.0348, 0.0696, 0.0696],
+        "z": [0.0174, 0.35219999999999996, 1.2044, 1.3739999999999999]
+      }
+    }
+  ],
+  "case_id": "stackupfor-custom-unequal-dielectrics-4cu",
+  "eq_ids": [],
+  "fn": "stackupFor",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "GR-07 case 2: custom list with three different dielectric thicknesses",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["custom", "4cu", "unequal-dielectrics"]
+}

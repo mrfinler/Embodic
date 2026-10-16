@@ -1,0 +1,354 @@
+{
+ "format": "embodic.golden-cases",
+ "format_version": 1,
+ "area": "stackup",
+ "cases": [
+  {
+   "id": "stackupfor-auto-1cu-1oz",
+   "fn": "stackupFor",
+   "note": "GR-07 case 1: auto mode, 1 copper layer(s) of 1 oz, inner equal to outer, board 1.6 mm",
+   "tags": [
+    "auto",
+    "1cu",
+    "1oz"
+   ],
+   "inputs": {
+    "p": {
+     "boardThickness": 1.6,
+     "stackupMode": "auto",
+     "dielectricMaterial": "FR-4",
+     "dielectricEr": 0,
+     "copperOzOuter": 1,
+     "copperOzInner": 1
+    },
+    "nCu": 1
+   }
+  },
+  {
+   "id": "stackupfor-auto-2cu-1oz",
+   "fn": "stackupFor",
+   "note": "GR-07 case 1: auto mode, 2 copper layer(s) of 1 oz, inner equal to outer, board 1.6 mm",
+   "tags": [
+    "auto",
+    "2cu",
+    "1oz"
+   ],
+   "inputs": {
+    "p": {
+     "boardThickness": 1.6,
+     "stackupMode": "auto",
+     "dielectricMaterial": "FR-4",
+     "dielectricEr": 0,
+     "copperOzOuter": 1,
+     "copperOzInner": 1
+    },
+    "nCu": 2
+   }
+  },
+  {
+   "id": "stackupfor-auto-4cu-1oz",
+   "fn": "stackupFor",
+   "note": "GR-07 case 1: auto mode, 4 copper layer(s) of 1 oz, inner equal to outer, board 1.6 mm",
+   "tags": [
+    "auto",
+    "4cu",
+    "1oz"
+   ],
+   "inputs": {
+    "p": {
+     "boardThickness": 1.6,
+     "stackupMode": "auto",
+     "dielectricMaterial": "FR-4",
+     "dielectricEr": 0,
+     "copperOzOuter": 1,
+     "copperOzInner": 1
+    },
+    "nCu": 4
+   }
+  },
+  {
+   "id": "stackupfor-auto-6cu-1oz",
+   "fn": "stackupFor",
+   "note": "GR-07 case 1: auto mode, 6 copper layer(s) of 1 oz, inner equal to outer, board 1.6 mm",
+   "tags": [
+    "auto",
+    "6cu",
+    "1oz"
+   ],
+   "inputs": {
+    "p": {
+     "boardThickness": 1.6,
+     "stackupMode": "auto",
+     "dielectricMaterial": "FR-4",
+     "dielectricEr": 0,
+     "copperOzOuter": 1,
+     "copperOzInner": 1
+    },
+    "nCu": 6
+   }
+  },
+  {
+   "id": "stackupfor-auto-8cu-1oz",
+   "fn": "stackupFor",
+   "note": "GR-07 case 1: auto mode, 8 copper layer(s) of 1 oz, inner equal to outer, board 1.6 mm",
+   "tags": [
+    "auto",
+    "8cu",
+    "1oz"
+   ],
+   "inputs": {
+    "p": {
+     "boardThickness": 1.6,
+     "stackupMode": "auto",
+     "dielectricMaterial": "FR-4",
+     "dielectricEr": 0,
+     "copperOzOuter": 1,
+     "copperOzInner": 1
+    },
+    "nCu": 8
+   }
+  },
+  {
+   "id": "stackupfor-auto-1cu-2oz",
+   "fn": "stackupFor",
+   "note": "GR-07 case 1: auto mode, 1 copper layer(s) of 2 oz, inner equal to outer, board 1.6 mm",
+   "tags": [
+    "auto",
+    "1cu",
+    "2oz"
+   ],
+   "inputs": {
+    "p": {
+     "boardThickness": 1.6,
+     "stackupMode": "auto",
+     "dielectricMaterial": "FR-4",
+     "dielectricEr": 0,
+     "copperOzOuter": 2,
+     "copperOzInner": 2
+    },
+    "nCu": 1
+   }
+  },
+  {
+   "id": "stackupfor-auto-2cu-2oz",
+   "fn": "stackupFor",
+   "note": "GR-07 case 1: auto mode, 2 copper layer(s) of 2 oz, inner equal to outer, board 1.6 mm",
+   "tags": [
+    "auto",
+    "2cu",
+    "2oz"
+   ],
+   "inputs": {
+    "p": {
+     "boardThickness": 1.6,
+     "stackupMode": "auto",
+     "dielectricMaterial": "FR-4",
+     "dielectricEr": 0,
+     "copperOzOuter": 2,
+     "copperOzInner": 2
+    },
+    "nCu": 2
+   }
+  },
+  {
+   "id": "stackupfor-auto-4cu-2oz",
+   "fn": "stackupFor",
+   "note": "GR-07 case 1: auto mode, 4 copper layer(s) of 2 oz, inner equal to outer, board 1.6 mm",
+   "tags": [
+    "auto",
+    "4cu",
+    "2oz"
+   ],
+   "inputs": {
+    "p": {
+     "boardThickness": 1.6,
+     "stackupMode": "auto",
+     "dielectricMaterial": "FR-4",
+     "dielectricEr": 0,
+     "copperOzOuter": 2,
+     "copperOzInner": 2
+    },
+    "nCu": 4
+   }
+  },
+  {
+   "id": "stackupfor-auto-6cu-2oz",
+   "fn": "stackupFor",
+   "note": "GR-07 case 1: auto mode, 6 copper layer(s) of 2 oz, inner equal to outer, board 1.6 mm",
+   "tags": [
+    "auto",
+    "6cu",
+    "2oz"
+   ],
+   "inputs": {
+    "p": {
+     "boardThickness": 1.6,
+     "stackupMode": "auto",
+     "dielectricMaterial": "FR-4",
+     "dielectricEr": 0,
+     "copperOzOuter": 2,
+     "copperOzInner": 2
+    },
+    "nCu": 6
+   }
+  },
+  {
+   "id": "stackupfor-auto-8cu-2oz",
+   "fn": "stackupFor",
+   "note": "GR-07 case 1: auto mode, 8 copper layer(s) of 2 oz, inner equal to outer, board 1.6 mm",
+   "tags": [
+    "auto",
+    "8cu",
+    "2oz"
+   ],
+   "inputs": {
+    "p": {
+     "boardThickness": 1.6,
+     "stackupMode": "auto",
+     "dielectricMaterial": "FR-4",
+     "dielectricEr": 0,
+     "copperOzOuter": 2,
+     "copperOzInner": 2
+    },
+    "nCu": 8
+   }
+  },
+  {
+   "id": "stackupfor-custom-symmetric-4cu",
+   "fn": "stackupFor",
+   "note": "GR-07 case 2: custom list, mirror-symmetric about the mid plane (outer 1 oz, inner 2 oz)",
+   "tags": [
+    "custom",
+    "4cu",
+    "symmetric"
+   ],
+   "inputs": {
+    "p": {
+     "copperOzOuter": 1,
+     "copperOzInner": 1,
+     "boardThickness": 1.6,
+     "stackupMode": "custom",
+     "dielectricMaterial": "FR-4",
+     "dielectricEr": 0,
+     "stackup": [
+      {
+       "type": "cu",
+       "t": 0.0348
+      },
+      {
+       "type": "diel",
+       "t": 0.2,
+       "er": 4.4,
+       "material": "FR-4"
+      },
+      {
+       "type": "cu",
+       "t": 0.0696
+      },
+      {
+       "type": "diel",
+       "t": 1.0,
+       "er": 4.4,
+       "material": "FR-4"
+      },
+      {
+       "type": "cu",
+       "t": 0.0696
+      },
+      {
+       "type": "diel",
+       "t": 0.2,
+       "er": 4.4,
+       "material": "FR-4"
+      },
+      {
+       "type": "cu",
+       "t": 0.0348
+      }
+     ]
+    },
+    "nCu": 4
+   }
+  },
+  {
+   "id": "stackupfor-custom-unequal-dielectrics-4cu",
+   "fn": "stackupFor",
+   "note": "GR-07 case 2: custom list with three different dielectric thicknesses",
+   "tags": [
+    "custom",
+    "4cu",
+    "unequal-dielectrics"
+   ],
+   "inputs": {
+    "p": {
+     "copperOzOuter": 1,
+     "copperOzInner": 1,
+     "boardThickness": 1.6,
+     "stackupMode": "custom",
+     "dielectricMaterial": "FR-4",
+     "dielectricEr": 0,
+     "stackup": [
+      {
+       "type": "cu",
+       "t": 0.0348
+      },
+      {
+       "type": "diel",
+       "t": 0.3,
+       "er": 4.4,
+       "material": "FR-4"
+      },
+      {
+       "type": "cu",
+       "t": 0.0348
+      },
+      {
+       "type": "diel",
+       "t": 0.8,
+       "er": 4.4,
+       "material": "FR-4"
+      },
+      {
+       "type": "cu",
+       "t": 0.0696
+      },
+      {
+       "type": "diel",
+       "t": 0.1,
+       "er": 4.4,
+       "material": "FR-4"
+      },
+      {
+       "type": "cu",
+       "t": 0.0696
+      }
+     ]
+    },
+    "nCu": 4
+   }
+  },
+  {
+   "id": "stackupfor-auto-thin-8cu-2oz-0p4mm",
+   "fn": "stackupFor",
+   "note": "GR-07 case 3: 8 layers of 2 oz on a 0.4 mm board, so every dielectric gap clamps to 0",
+   "tags": [
+    "auto",
+    "8cu",
+    "2oz",
+    "thin-board",
+    "gap-clamp"
+   ],
+   "inputs": {
+    "p": {
+     "boardThickness": 0.4,
+     "stackupMode": "auto",
+     "dielectricMaterial": "FR-4",
+     "dielectricEr": 0,
+     "copperOzOuter": 2,
+     "copperOzInner": 2
+    },
+    "nCu": 8
+   }
+  }
+ ]
+}
