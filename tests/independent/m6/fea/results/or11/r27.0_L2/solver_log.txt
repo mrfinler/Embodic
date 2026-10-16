@@ -1,0 +1,263 @@
+$ gmsh -2 -nt 1 -format msh2 or11.geo -o or11.msh
+Info    : Running 'gmsh -2 -nt 1 -format msh2 or11.geo -o or11.msh' [Gmsh 4.12.1, 1 node, max. 1 thread]
+Info    : Started on Fri Oct 16 13:46:35 2026
+Info    : Reading 'or11.geo'...
+Info    : Done reading 'or11.geo'
+Info    : Reconstructing periodicity for curve connection 10005 - 10000
+Info    : Reconstructing periodicity for curve connection 10011 - 10006
+Info    : Reconstructing periodicity for curve connection 10017 - 10012
+Info    : Reconstructing periodicity for curve connection 10023 - 10018
+Info    : Reconstructing periodicity for curve connection 10029 - 10024
+Info    : Reconstructing periodicity for curve connection 10035 - 10030
+Info    : Reconstructing periodicity for curve connection 10041 - 10036
+Info    : Reconstructing periodicity for curve connection 10047 - 10042
+Info    : Reconstructing periodicity for curve connection 10053 - 10048
+Info    : Reconstructing periodicity for curve connection 10059 - 10054
+Info    : Reconstructing periodicity for curve connection 10065 - 10060
+Info    : Meshing 1D...
+Info    : [  0%] Meshing curve 1 (Line)
+Info    : [ 10%] Meshing curve 2 (Line)
+Info    : [ 10%] Meshing curve 3 (Line)
+Info    : [ 10%] Meshing curve 4 (Line)
+Info    : [ 10%] Meshing curve 5 (Line)
+Info    : [ 10%] Meshing curve 6 (Line)
+Info    : [ 10%] Meshing curve 7 (Line)
+Info    : [ 10%] Meshing curve 8 (Line)
+Info    : [ 10%] Meshing curve 9 (Line)
+Info    : [ 10%] Meshing curve 10 (Line)
+Info    : [ 10%] Meshing curve 11 (Line)
+Info    : [ 10%] Meshing curve 12 (Line)
+Info    : [ 10%] Meshing curve 13 (Line)
+Info    : [ 20%] Meshing curve 14 (Line)
+Info    : [ 20%] Meshing curve 15 (Line)
+Info    : [ 20%] Meshing curve 16 (Line)
+Info    : [ 20%] Meshing curve 17 (Line)
+Info    : [ 20%] Meshing curve 18 (Line)
+Info    : [ 20%] Meshing curve 19 (Line)
+Info    : [ 20%] Meshing curve 20 (Line)
+Info    : [ 20%] Meshing curve 21 (Line)
+Info    : [ 20%] Meshing curve 22 (Line)
+Info    : [ 20%] Meshing curve 23 (Line)
+Info    : [ 20%] Meshing curve 24 (Line)
+Info    : [ 20%] Meshing curve 25 (Line)
+Info    : [ 20%] Meshing curve 26 (Line)
+Info    : [ 30%] Meshing curve 27 (Line)
+Info    : [ 30%] Meshing curve 28 (Line)
+Info    : [ 30%] Meshing curve 29 (Line)
+Info    : [ 30%] Meshing curve 30 (Line)
+Info    : [ 30%] Meshing curve 31 (Line)
+Info    : [ 30%] Meshing curve 32 (Line)
+Info    : [ 30%] Meshing curve 33 (Line)
+Info    : [ 30%] Meshing curve 34 (Line)
+Info    : [ 30%] Meshing curve 35 (Line)
+Info    : [ 30%] Meshing curve 36 (Line)
+Info    : [ 30%] Meshing curve 37 (Line)
+Info    : [ 30%] Meshing curve 38 (Line)
+Info    : [ 40%] Meshing curve 39 (Line)
+Info    : [ 40%] Meshing curve 40 (Line)
+Info    : [ 40%] Meshing curve 41 (Line)
+Info    : [ 40%] Meshing curve 42 (Line)
+Info    : [ 40%] Meshing curve 43 (Line)
+Info    : [ 40%] Meshing curve 44 (Line)
+Info    : [ 40%] Meshing curve 45 (Line)
+Info    : [ 40%] Meshing curve 46 (Line)
+Info    : [ 40%] Meshing curve 47 (Line)
+Info    : [ 40%] Meshing curve 48 (Line)
+Info    : [ 40%] Meshing curve 49 (Line)
+Info    : [ 40%] Meshing curve 50 (Line)
+Info    : [ 40%] Meshing curve 51 (Line)
+Info    : [ 50%] Meshing curve 52 (Line)
+Info    : [ 50%] Meshing curve 53 (Line)
+Info    : [ 50%] Meshing curve 54 (Line)
+Info    : [ 50%] Meshing curve 55 (Line)
+Info    : [ 50%] Meshing curve 56 (Line)
+Info    : [ 50%] Meshing curve 57 (Line)
+Info    : [ 50%] Meshing curve 58 (Line)
+Info    : [ 50%] Meshing curve 59 (Line)
+Info    : [ 50%] Meshing curve 60 (Line)
+Info    : [ 50%] Meshing curve 10000 (Line)
+Info    : [ 50%] Meshing curve 10001 (Line)
+Info    : [ 50%] Meshing curve 10002 (Line)
+Info    : [ 50%] Meshing curve 10003 (Line)
+Info    : [ 60%] Meshing curve 10004 (Line)
+Info    : [ 60%] Meshing curve 10005 (Line) as a copy of curve 10000
+Info    : [ 60%] Meshing curve 10006 (Line)
+Info    : [ 60%] Meshing curve 10007 (Line)
+Info    : [ 60%] Meshing curve 10008 (Line)
+Info    : [ 60%] Meshing curve 10009 (Line)
+Info    : [ 60%] Meshing curve 10010 (Line)
+Info    : [ 60%] Meshing curve 10011 (Line) as a copy of curve 10006
+Info    : [ 60%] Meshing curve 10012 (Line)
+Info    : [ 60%] Meshing curve 10013 (Line)
+Info    : [ 60%] Meshing curve 10014 (Line)
+Info    : [ 60%] Meshing curve 10015 (Line)
+Info    : [ 70%] Meshing curve 10016 (Line)
+Info    : [ 70%] Meshing curve 10017 (Line) as a copy of curve 10012
+Info    : [ 70%] Meshing curve 10018 (Line)
+Info    : [ 70%] Meshing curve 10019 (Line)
+Info    : [ 70%] Meshing curve 10020 (Line)
+Info    : [ 70%] Meshing curve 10021 (Line)
+Info    : [ 70%] Meshing curve 10022 (Line)
+Info    : [ 70%] Meshing curve 10023 (Line) as a copy of curve 10018
+Info    : [ 70%] Meshing curve 10024 (Line)
+Info    : [ 70%] Meshing curve 10025 (Line)
+Info    : [ 70%] Meshing curve 10026 (Line)
+Info    : [ 70%] Meshing curve 10027 (Line)
+Info    : [ 70%] Meshing curve 10028 (Line)
+Info    : [ 80%] Meshing curve 10029 (Line) as a copy of curve 10024
+Info    : [ 80%] Meshing curve 10030 (Line)
+Info    : [ 80%] Meshing curve 10031 (Line)
+Info    : [ 80%] Meshing curve 10032 (Line)
+Info    : [ 80%] Meshing curve 10033 (Line)
+Info    : [ 80%] Meshing curve 10034 (Line)
+Info    : [ 80%] Meshing curve 10035 (Line) as a copy of curve 10030
+Info    : [ 80%] Meshing curve 10036 (Line)
+Info    : [ 80%] Meshing curve 10037 (Line)
+Info    : [ 80%] Meshing curve 10038 (Line)
+Info    : [ 80%] Meshing curve 10039 (Line)
+Info    : [ 80%] Meshing curve 10040 (Line)
+Info    : [ 90%] Meshing curve 10041 (Line) as a copy of curve 10036
+Info    : [ 90%] Meshing curve 10042 (Line)
+Info    : [ 90%] Meshing curve 10043 (Line)
+Info    : [ 90%] Meshing curve 10044 (Line)
+Info    : [ 90%] Meshing curve 10045 (Line)
+Info    : [ 90%] Meshing curve 10046 (Line)
+Info    : [ 90%] Meshing curve 10047 (Line) as a copy of curve 10042
+Info    : [ 90%] Meshing curve 10048 (Line)
+Info    : [ 90%] Meshing curve 10049 (Line)
+Info    : [ 90%] Meshing curve 10050 (Line)
+Info    : [ 90%] Meshing curve 10051 (Line)
+Info    : [ 90%] Meshing curve 10052 (Line)
+Info    : [ 90%] Meshing curve 10053 (Line) as a copy of curve 10048
+Info    : [100%] Meshing curve 10054 (Line)
+Info    : [100%] Meshing curve 10055 (Line)
+Info    : [100%] Meshing curve 10056 (Line)
+Info    : [100%] Meshing curve 10057 (Line)
+Info    : [100%] Meshing curve 10058 (Line)
+Info    : [100%] Meshing curve 10059 (Line) as a copy of curve 10054
+Info    : [100%] Meshing curve 10060 (Line)
+Info    : [100%] Meshing curve 10061 (Line)
+Info    : [100%] Meshing curve 10062 (Line)
+Info    : [100%] Meshing curve 10063 (Line)
+Info    : [100%] Meshing curve 10064 (Line)
+Info    : [100%] Meshing curve 10065 (Line) as a copy of curve 10060
+Info    : Done meshing 1D (Wall 0.0751978s, CPU 0.071245s)
+Info    : Meshing 2D...
+Info    : [  0%] Meshing surface 1 (Plane, Frontal-Delaunay)
+Info    : [ 10%] Meshing surface 2 (Plane, Frontal-Delaunay)
+Info    : [ 10%] Meshing surface 3 (Plane, Frontal-Delaunay)
+Info    : [ 10%] Meshing surface 4 (Plane, Frontal-Delaunay)
+Info    : [ 10%] Meshing surface 5 (Plane, Frontal-Delaunay)
+Info    : [ 10%] Meshing surface 6 (Plane, Frontal-Delaunay)
+Info    : [ 20%] Meshing surface 7 (Plane, Frontal-Delaunay)
+Info    : [ 20%] Meshing surface 8 (Plane, Frontal-Delaunay)
+Info    : [ 20%] Meshing surface 9 (Plane, Frontal-Delaunay)
+Info    : [ 20%] Meshing surface 10 (Plane, Frontal-Delaunay)
+Info    : [ 20%] Meshing surface 11 (Plane, Frontal-Delaunay)
+Info    : [ 20%] Meshing surface 12 (Plane, Frontal-Delaunay)
+Info    : [ 30%] Meshing surface 13 (Plane, Frontal-Delaunay)
+Info    : [ 30%] Meshing surface 14 (Plane, Frontal-Delaunay)
+Info    : [ 30%] Meshing surface 15 (Plane, Frontal-Delaunay)
+Info    : [ 30%] Meshing surface 16 (Plane, Frontal-Delaunay)
+Info    : [ 30%] Meshing surface 17 (Plane, Frontal-Delaunay)
+Info    : [ 40%] Meshing surface 18 (Plane, Frontal-Delaunay)
+Info    : [ 40%] Meshing surface 19 (Plane, Frontal-Delaunay)
+Info    : [ 40%] Meshing surface 20 (Plane, Frontal-Delaunay)
+Info    : [ 40%] Meshing surface 21 (Transfinite)
+Info    : [ 40%] Meshing surface 22 (Transfinite)
+Info    : [ 40%] Meshing surface 23 (Transfinite)
+Info    : [ 50%] Meshing surface 24 (Transfinite)
+Info    : [ 50%] Meshing surface 25 (Transfinite)
+Info    : [ 50%] Meshing surface 26 (Plane, Frontal-Delaunay)
+Info    : [ 50%] Meshing surface 27 (Plane, Frontal-Delaunay)
+Info    : [ 50%] Meshing surface 28 (Plane, Frontal-Delaunay)
+Info    : [ 60%] Meshing surface 29 (Plane, Frontal-Delaunay)
+Info    : [ 60%] Meshing surface 30 (Plane, Frontal-Delaunay)
+Info    : [ 60%] Meshing surface 31 (Transfinite)
+Info    : [ 60%] Meshing surface 32 (Transfinite)
+Info    : [ 60%] Meshing surface 33 (Transfinite)
+Info    : [ 60%] Meshing surface 34 (Transfinite)
+Info    : [ 70%] Meshing surface 35 (Transfinite)
+Info    : [ 70%] Meshing surface 36 (Plane, Frontal-Delaunay)
+Info    : [ 70%] Meshing surface 37 (Plane, Frontal-Delaunay)
+Info    : [ 70%] Meshing surface 38 (Plane, Frontal-Delaunay)
+Info    : [ 70%] Meshing surface 39 (Plane, Frontal-Delaunay)
+Info    : [ 80%] Meshing surface 40 (Plane, Frontal-Delaunay)
+Info    : [ 80%] Meshing surface 41 (Plane, Frontal-Delaunay)
+Info    : [ 80%] Meshing surface 42 (Plane, Frontal-Delaunay)
+Info    : [ 80%] Meshing surface 43 (Plane, Frontal-Delaunay)
+Info    : [ 80%] Meshing surface 44 (Plane, Frontal-Delaunay)
+Info    : [ 80%] Meshing surface 45 (Plane, Frontal-Delaunay)
+Info    : [ 90%] Meshing surface 46 (Plane, Frontal-Delaunay)
+Info    : [ 90%] Meshing surface 47 (Plane, Frontal-Delaunay)
+Info    : [ 90%] Meshing surface 48 (Plane, Frontal-Delaunay)
+Info    : [ 90%] Meshing surface 49 (Plane, Frontal-Delaunay)
+Info    : [ 90%] Meshing surface 50 (Plane, Frontal-Delaunay)
+Info    : [100%] Meshing surface 51 (Plane, Frontal-Delaunay)
+Info    : [100%] Meshing surface 52 (Plane, Frontal-Delaunay)
+Info    : [100%] Meshing surface 53 (Plane, Frontal-Delaunay)
+Info    : [100%] Meshing surface 54 (Plane, Frontal-Delaunay)
+Info    : [100%] Meshing surface 55 (Plane, Frontal-Delaunay)
+Info    : Done meshing 2D (Wall 2.91261s, CPU 2.83186s)
+Info    : Reconstructing periodicity for curve connection 10005 - 10000
+Info    : Reconstructing periodicity for curve connection 10011 - 10006
+Info    : Reconstructing periodicity for curve connection 10017 - 10012
+Info    : Reconstructing periodicity for curve connection 10023 - 10018
+Info    : Reconstructing periodicity for curve connection 10029 - 10024
+Info    : Reconstructing periodicity for curve connection 10035 - 10030
+Info    : Reconstructing periodicity for curve connection 10041 - 10036
+Info    : Reconstructing periodicity for curve connection 10047 - 10042
+Info    : Reconstructing periodicity for curve connection 10053 - 10048
+Info    : Reconstructing periodicity for curve connection 10059 - 10054
+Info    : Reconstructing periodicity for curve connection 10065 - 10060
+Info    : 96294 nodes 196960 elements
+Info    : Writing 'or11.msh'...
+Info    : Done writing 'or11.msh'
+Info    : Stopped on Fri Oct 16 13:46:38 2026 (From start: Wall 3.38072s, CPU 3.33468s)
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+Warning : Gmsh must be compiled with ANN support for finding closest nodes
+exit 0, 3.55 s
+
+$ getdp or11.pro -msh or11.msh -solve MagSta_a -pos Lines -v 3
+Info    : Started (Fri Oct 16 13:46:39 2026, Wall = 0.434961s, CPU = 0.060339s, Mem = 91.6875Mb)
+P r e - P r o c e s s i n g . . .
+Info    : System 1/1: 95809 Dofs
+E n d   P r e - P r o c e s s i n g
+P r o c e s s i n g . . .
+E n d   P r o c e s s i n g
+P o s t - P r o c e s s i n g . . .
+E n d   P o s t - P r o c e s s i n g
+Info    : Stopped (Fri Oct 16 13:46:42 2026, Wall = 3.77197s, CPU = 3.13366s, Mem = 313.66Mb)
+exit 0, 3.83 s
+
