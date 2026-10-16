@@ -4,10 +4,11 @@ from dataclasses import dataclass
 
 import pytest
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QDialog, QListWidget, QPushButton, QTabBar, QTabWidget, QToolButton
+from PySide6.QtWidgets import QTabBar, QTabWidget, QToolButton
 
 from embodic.ui.toolstrip import ToolstripTab
 
+from .gallery import open_example_from_gallery
 from .support import find
 
 EXAMPLE_ID = "spiral_12c10p_d08"
@@ -41,16 +42,6 @@ ROUTES: dict[str, tuple[tuple[Interaction, ...], str]] = {
 }
 
 
-def _open_d08_from_gallery(qtbot, window, wait_drawn) -> None:
-    qtbot.mouseClick(find(window, "btn-empty-examples", QPushButton), Qt.MouseButton.LeftButton)
-    gallery = find(window, "dlg-examples", QDialog)
-    examples = find(gallery, "examples-list", QListWidget)
-    row = next(r for r in range(examples.count()) if examples.item(r).data(Qt.ItemDataRole.UserRole) == EXAMPLE_ID)
-    examples.setCurrentRow(row)
-    qtbot.mouseClick(find(gallery, "btn-load-example", QPushButton), Qt.MouseButton.LeftButton)
-    wait_drawn(window)
-
-
 def _interact(qtbot, window, step: Interaction) -> None:
     if isinstance(step, ClickButton):
         qtbot.mouseClick(find(window, step.button, QToolButton), Qt.MouseButton.LeftButton)
@@ -69,7 +60,7 @@ def _interact(qtbot, window, step: Interaction) -> None:
 @pytest.mark.parametrize("view", list(ROUTES))
 def test_f13_1_every_view_is_visible_after_at_most_two_interactions(view, window, wait_drawn, qtbot):
     """Catches a view moved into a dialog or a second-level menu: its widget is not visible within two interactions."""
-    _open_d08_from_gallery(qtbot, window, wait_drawn)
+    open_example_from_gallery(qtbot, window, wait_drawn, EXAMPLE_ID)
     route, target = ROUTES[view]
     assert len(route) <= MAX_INTERACTIONS, view
     for step in route:
@@ -80,6 +71,6 @@ def test_f13_1_every_view_is_visible_after_at_most_two_interactions(view, window
 @pytest.mark.req("REQ-F-13")
 def test_f13_1_the_phase_and_layer_pages_are_hidden_until_their_tab_is_clicked(window, wait_drawn, qtbot):
     """Catches a route check that passes without any interaction: tab-phases and tab-layers start hidden."""
-    _open_d08_from_gallery(qtbot, window, wait_drawn)
+    open_example_from_gallery(qtbot, window, wait_drawn, EXAMPLE_ID)
     assert not find(window, "tab-phases").isVisible()
     assert not find(window, "tab-layers").isVisible()
