@@ -6,7 +6,9 @@ What a row shows comes from `DesignSession.rows()`; a row only parses the typed 
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from functools import partial
 
+import shiboken6
 from PySide6.QtCore import QEvent, QObject, QPoint, Qt
 from PySide6.QtWidgets import (
     QButtonGroup,
@@ -339,6 +341,17 @@ class _Form:
     extras: dict[str, object]  # the attributes of FORM_ATTRIBUTES this form's build set
 
 
+def _delete_detached_forms(forms: Mapping[str | None, _Form], _panel: QObject | None = None) -> None:
+    """Delete the forms the panel's scroll area does not hold when the panel goes.
+
+    A detached form has no Qt parent, and the lambdas its inputs connect keep the panel's wrapper alive, so neither Qt
+    nor Python would ever free it: every closed window kept about 1800 widgets (DEF-U-M6f-01).
+    """
+    for form in forms.values():
+        if shiboken6.isValid(form.body) and form.body.parent() is None:
+            shiboken6.delete(form.body)
+
+
 class FieldPanel(QScrollArea):
     """One inspector tab: the field rows of that tab for the open topology, in form order, plus its helpers.
 
@@ -370,6 +383,7 @@ class FieldPanel(QScrollArea):
         self._layout.addStretch(1)
         self._building = TopologyKind.SPIRAL  # the topology whose form build() makes
         self._forms: dict[str | None, _Form] = {None: _Form(body=self._body, editors={}, helpers={}, extras={})}
+        self.destroyed.connect(partial(_delete_detached_forms, self._forms))
 
     def prebuild(self) -> None:
         """Build the form of every topology now; opening a design then only shows and fills one."""
