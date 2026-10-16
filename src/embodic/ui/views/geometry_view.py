@@ -7,6 +7,8 @@ labels are placed again after every zoom, pan or resize step, so they never over
 """
 
 import math
+from collections.abc import Iterator
+from contextlib import contextmanager
 
 from PySide6.QtCore import QPointF, QRect, QRectF, Qt, Signal
 from PySide6.QtGui import (
@@ -164,6 +166,7 @@ class GeometryView(QGraphicsView):
         self._hidden: frozenset[str] = frozenset()
         self._extent = QRectF()
         self._label_items: list[QGraphicsItem] = []
+        self._labels_held = False
         self._font = label_font()
         self._metrics = QFontMetricsF(self._font)
 
@@ -175,12 +178,26 @@ class GeometryView(QGraphicsView):
         hidden: frozenset[str],
     ) -> None:
         """Redraw with new content, theme, render mode or layer visibility; keeps the zoom when the extent stays."""
+        if geometry is self._geometry and tokens is self._tokens and mode is self._mode and hidden == self._hidden:
+            return
         first = self._geometry is None and geometry is not None
         self._geometry, self._tokens, self._mode, self._hidden = geometry, tokens, mode, hidden
         self.setBackgroundBrush(QColor(tokens.colours["canvas"]))
-        self._rebuild()
+        with self._holding_labels():
+            self._rebuild()
         if first:
             self.fit_view()
+        else:
+            self.place_labels()
+
+    @contextmanager
+    def _holding_labels(self) -> Iterator[None]:
+        """Hold label placement while the view changes in several scroll steps; the caller places them once after."""
+        held, self._labels_held = self._labels_held, True
+        try:
+            yield
+        finally:
+            self._labels_held = held
 
     def _shown(self) -> list[tuple[Layout, BoardMarks]]:
         if self._geometry is None:
@@ -220,7 +237,6 @@ class GeometryView(QGraphicsView):
                 self._draw_eye(mark)
         bounds = self._extent
         scene.setSceneRect(bounds.adjusted(-bounds.width(), -bounds.height(), bounds.width(), bounds.height()))
-        self.place_labels()
 
     def _draw_board(self, board: Layout) -> None:
         assert self._tokens is not None
@@ -412,8 +428,9 @@ class GeometryView(QGraphicsView):
         """Fit the drawn boards into the view."""
         if self._extent.isEmpty():
             return
-        self.resetTransform()
-        self.fitInView(self._extent, Qt.AspectRatioMode.KeepAspectRatio)
+        with self._holding_labels():
+            self.resetTransform()
+            self.fitInView(self._extent, Qt.AspectRatioMode.KeepAspectRatio)
         self._fit_scale = self.transform().m11()
         self._fitted = True
         self.place_labels()
@@ -448,7 +465,8 @@ class GeometryView(QGraphicsView):
     def scrollContentsBy(self, dx: int, dy: int) -> None:  # noqa: N802 (Qt override)
         """Place the labels again after a pan step: the view edge decides which labels fit."""
         super().scrollContentsBy(dx, dy)
-        self.place_labels()
+        if not self._labels_held:
+            self.place_labels()
 
     def wheelEvent(self, event: QWheelEvent) -> None:  # noqa: N802 (Qt override)
         """Zoom around the pointer."""
