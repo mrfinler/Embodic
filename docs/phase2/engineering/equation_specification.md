@@ -22,7 +22,8 @@ Gate verdicts (unchanged from Phase 1, PROJECT_BRIEF §5):
   tests only.
 - `replace`: new code from this specification. Closed-form and oracle tests only. No bug-for-bug port.
 - `cannot verify yet`: port with golden regression (so the estimate equals Xcoil's) and ship the result as a labelled
-  estimate under the status rule D-007.
+  estimate under the status rule D-007. EQ-14 is the one exception. embodic implements its form (a) instead of porting
+  Xcoil, so a closed-form case (CF-12) replaces the golden regression (revision 2026-10-16 (U-E12), D-049 d).
 
 Test IDs: `EQT-nn-GR` golden regression, `EQT-nn-CFxx` closed-form case CF-xx of `oracle_cases.json`, `EQT-nn-O1`/`-O2`
 literature oracle, `EQT-nn-EC` validity check, `EQT-nn-UTk` unit test of a rule stated here. Agent 6 maps them into the
@@ -337,18 +338,34 @@ This note adds no input and leaves the registry status of EQ-05 unchanged.
 
 ### EQ-14 Inductance (estimate only)
 
-- Formula: (a) magnetising L_m = (3µ₀/(4π))(N k_w1)²(D_o² − D_i²)/(p² δ′) (= D10 eq. 14 p.5); (b) Xcoil current-sheet
-  model `windingInductance`: all space orders ν, inter-layer coupling e^{−νΔz/r}, sinc² width factor, L_s = L_self − M,
-  end turns excluded.
+- Formula: magnetising L_m = (3µ₀/(4π))(N k_w1)²(D_o² − D_i²)/(p² δ′), δ′ = 2 l_m + 2 g + t_s (= D10 eq. 14 p.5).
+  This is the only form embodic implements (revision 2026-10-16 (U-E12), D-049 d). Xcoil's current-sheet model
+  (`windingInductance` with all space orders ν, inter-layer coupling e^{−νΔz/r}, a sinc² width factor and
+  L_s = L_self − M) is not ported, and no golden regression applies.
+- Implementation (`verified`, read on main f07d502): `src/embodic/physics/estimates.py` l.62 to 102
+  (`inductance_estimate_h`) evaluates the formula with µ₀ = `MU0_H_PER_M` = 4π×10⁻⁷ H/m (`physics/losses.py` l.8).
+  `src/embodic/physics/analyse.py` l.394 to 408 supplies the inputs. N is half the radial sides (`PrimitiveRole.SIDE`)
+  of the first phase's paths (`phases[0]`, l.376) divided by the parallel members (l.383, l.395 to 402). k_w1 is the numeric utilisation factor k_u of EQ-27
+  (l.405), not an analytic winding factor. D_o and D_i are twice the copper envelope radii of board 0 (l.406).
+  t_s is `BoardStack.stack_thickness_mm` (l.407; `geometry/layout.py` l.146 to 149). The result is
+  `AnalysisResult.inductance_estimate_h` with trace equations EQ-14 and EQ-27 (l.577). The drive model takes L_m/3 for
+  delta (l.487).
 - Sources: D10 eq. 11 to 14 p.4 to 5 (EV-31); D15 eq. 14 p.8 (EV-44); gap G1 `unresolved`.
 - Variables: N series turns per phase; D_o, D_i, δ′ [m]; L [H].
-- Validity: radial conductors only (b); sinusoidal MMF (a). Limitations: no leakage or end-turn terms.
-- Reference: Phase 1 C9 engine 12/16, 8 turns: L_s 17.96 µH; `checks/engine_probe.js` Xcoil default serpentine
-  L_s 14.149 µH. Oracle: D09 14.8 µH (method not stated, readings I1 to I3 of the draft).
-- Tolerance: none claimed. Gate: `cannot verify yet` (`windingInductance`, `conductorsSerpentine`, `conductorsWave`,
-  `conductorsFromElements` golden 1e-9). Status: unresolved.
+- Validity: sinusoidal MMF. Limitations: no leakage, end-turn or sub-harmonic terms (G1).
+- Reference: CF-12 (the Phase 1 C9 inputs N 64, k_w1 0.866, D_o 76 mm, D_i 36 mm, δ′ 6.62 mm, p 8 → 9.74 µH) checks
+  the code against the formula, not against a motor. Phase 1 record (information only, not compared): Xcoil's
+  current-sheet model gave L_s 17.96 µH for C9, and `checks/engine_probe.js` gave L_s 14.149 µH for the Xcoil default
+  serpentine. Oracle: D09 14.8 µH (method not stated, readings I1 to I3 of the draft).
+- Tolerance: none claimed against a measurement; target ±20 % after validation. CF-12 holds the code to the formula at
+  relative 1e-12. Gate: `cannot verify yet` (no Xcoil port, D-049 d; `windingInductance`, `conductorsSerpentine`,
+  `conductorsWave` and `conductorsFromElements` are replaced functions). Status: unresolved.
+- What would verify it: a measured phase inductance with a stated method. OR-09 records the estimate against D09's
+  14.8 µH as characterisation only (A 8.95 µH, B 5.04 µH; `oracle_tests_spec.md` OR-09). Row M2 of the Phase 3
+  measurement plan (`docs/phase3/engineering/engineering_verification_plan.md` §3) measures a built board with an LCR
+  meter, and a band can be pre-registered once a measurement record exists and G1 has a leakage and end-turn term.
 - Dominant assumptions: effective gap, k_w1, end-turn omission. Applies to: spiral, serpentine, wave.
-  Tests: EQT-14-GR, EQT-14-O2.
+  Tests: EQT-14-CF12 (replaces the withdrawn EQT-14-GR, which had no port to compare), EQT-14-O2 (`not tested`).
 
 ### EQ-15 IPC-2221 current capacity
 
@@ -614,7 +631,7 @@ with `WAVE_INNER_TIGHT`).
 | `emfWaveform`, `lineWaveform` | all | EQ-18 | reuse | golden |
 | `massThermal` | all | EQ-16, EQ-17 | reuse with change | golden with 8.96 g/cm³ injected |
 | `stackupFor`, `stackCapacitance` | all | EQ-29 | reuse with change | golden core |
-| `windingInductance`, `conductorsSerpentine`, `conductorsWave`, `conductorsFromElements` | all | EQ-14 | cannot verify yet | golden, label "estimate" |
+| `windingInductance`, `conductorsSerpentine`, `conductorsWave`, `conductorsFromElements` | all | EQ-14 | cannot verify yet | not ported (D-049 d); embodic computes form (a), checked by CF-12; label "estimate" |
 | `torqueSpeed`, `inverterVoltage`, `driveAnalysis` | all | EQ-20 | cannot verify yet | golden, label "estimate" |
 | `rotorInertiaEstimate` | all | EQ-28 | reuse with change | golden core |
 | `runDrc`, `drcLayer`, `drcPadVsLayer`, `drcObjects`, `drcLayerObjects`, `drcInterconnect`, `padsClearance`, `padSegClearance`, `segSegDist`, `ptSegDist`, `canonicalSegments`, `makeGrid`, `gridQuery` | all | EQ-30 | reuse with change | golden on values; slack removed (D-006) |
@@ -622,7 +639,8 @@ with `WAVE_INNER_TIGHT`).
 | `sectorFeasible`, `maxSectorTurns`, `maxSectorTurnsFor`, `sectorViaSpot`, `sectorCoilX`, `chainCoils` | sector only (not ported) | EQ-02, EQ-25 | replace | new spiral generator |
 
 Functions whose numerics must match Xcoil within 1e-9: every function in the table marked "golden", including the
-`cannot verify yet` kernels (port equivalence keeps the estimate equal to Xcoil's; it does not validate it).
+`cannot verify yet` kernels (port equivalence keeps the estimate equal to Xcoil's; it does not validate it). The EQ-14
+functions are the exception: they are not ported (D-049 d).
 
 Functions that must change: `starOfSlots` (exact integer arithmetic, EQ-08); the DRC slack `tol = 0.004` in `runDrc` and
 the wave and sector DRC paths (D-006, EQ-30); copper constants ρ₂₀ 1.7241e-8 and density 8.89 g/cm³ (EQ-10, EQ-16);
@@ -722,3 +740,11 @@ stated in the entry.
 Revision 2026-10-13 (U-E10, D-046): CF cases govern their EQT-nn-CFxx tests (section "How to read an entry"). CF-11
 version 3: `checks/spiral_reference.py` no longer subtracts 1e-6 rad from the terminal-via angle, which EQ-25 does not
 state (DEF-UE10-02). The CF-11 stub is 0.7876736223934756 mm at full precision; the printed values are unchanged.
+
+Revision 2026-10-16 (U-E12, claude-opus-5-5; D-049 b, D-049 d). EQ-14: the gate named Xcoil's current-sheet functions,
+which embodic does not port (a spec defect). The entry now names form (a), the model `inductance_estimate_h`
+implements, with file and line. The gate stays `cannot verify yet` and the status `unresolved`. The four Xcoil functions
+move to `replaced_functions`. EQT-14-GR is withdrawn because no port exists to compare. EQT-14-CF12 replaces it, and the
+new closed-form case CF-12 holds the code to the formula at relative 1e-12. Until a test carries EQT-14-CF12, it is
+`not tested`. O2-D09 version 3 adds the D09 Table 1 envelope as information only (inputs, variants and bands
+unchanged).
