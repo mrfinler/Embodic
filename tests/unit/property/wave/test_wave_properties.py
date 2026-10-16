@@ -66,7 +66,7 @@ def test_pr_13_run_drc_never_under_reports_on_a_wave_board(style: str, poles: in
 def _scalars(layout: Layout) -> list[float]:
     report = run_drc(layout, uniform_rules(RULE_MM))
     assert report is not None
-    return [s.measured_min_mm for s in report.summaries if s.measured_min_mm is not None]
+    return [s.least_clearance_mm for s in report.summaries if s.least_clearance_mm is not None]
 
 
 @pytest.mark.parametrize("style", [s.value for s in WaveStyle])

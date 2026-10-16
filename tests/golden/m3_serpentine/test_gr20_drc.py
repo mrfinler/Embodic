@@ -67,7 +67,7 @@ def _reports(case: GoldenCase, registry: Registry) -> list[tuple[Layout, Any]]:
 
 
 def _clearance_min(report: Any, kinds: tuple[DrcCheckKind, ...] = CLEARANCE_KINDS) -> float:
-    values = [s.measured_min_mm for s in report.summaries if s.kind in kinds and s.measured_min_mm is not None]
+    values = [s.least_clearance_mm for s in report.summaries if s.kind in kinds and s.least_clearance_mm is not None]
     return min(values, default=math.inf)
 
 

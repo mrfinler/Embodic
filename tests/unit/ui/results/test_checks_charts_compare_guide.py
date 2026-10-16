@@ -36,7 +36,7 @@ def test_drc_table_of_the_wave_example_lists_every_failure_with_catalogue_text(w
     first = table.rows[0]
     assert (first.number, first.rule_code, first.layer_text) == (1, "DRC_TRACE_TRACE", "L1")
     assert first.message == message_for("DRC_TRACE_TRACE")
-    assert (first.measured_text, first.required_text) == ("0.199965\u00a0mm", "0.200000\u00a0mm")
+    assert (first.clearance_text, first.required_text) == ("0.199965\u00a0mm", "0.200000\u00a0mm")
     assert first.at_mm == wave.drc[0].violations[0].at_mm
 
 
@@ -238,7 +238,7 @@ def test_ui17_guide_tree_has_the_four_groups_and_every_equation(registry):
 def test_drc_measured_and_required_print_the_same_six_decimals(wave):
     """U-S4g S25. Catches "0.200000" beside "3.00000": six figures give a value of 3 mm one decimal fewer."""
     first = wave.drc[0].violations[0]
-    widened = dataclasses.replace(first, measured_mm=0.2, required_mm=3.0)
+    widened = dataclasses.replace(first, clearance_mm=0.2, required_mm=3.0)
     report = dataclasses.replace(wave.drc[0], violations=(widened, *wave.drc[0].violations[1:]))
     row = drc_table(dataclasses.replace(wave, drc=(report, *wave.drc[1:]))).rows[0]
-    assert (row.measured_text, row.required_text) == ("0.200000\u00a0mm", "3.000000\u00a0mm")
+    assert (row.clearance_text, row.required_text) == ("0.200000\u00a0mm", "3.000000\u00a0mm")

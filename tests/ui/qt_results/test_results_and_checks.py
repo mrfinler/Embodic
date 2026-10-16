@@ -18,7 +18,7 @@ from embodic.ui.views.geometry_view import DATA_KIND
 from embodic.ui.views.style import themed_icon
 
 D08, WAVE, SERPENTINE = "spiral_12c10p_d08", "wave_16p_example", "serpentine_16p_example"
-DRC_COLUMNS = ("severity", "board", "message", "measured", "required", "layer")
+DRC_COLUMNS = ("severity", "board", "message", "clearance", "required", "layer")
 CELL_MARGIN_PX = 3  # Fusion item text margin on each side (PM_FocusFrameHMargin + 1)
 
 _CONTRAST_TOOL = Path(__file__).resolve().parents[3] / "tools" / "contrast_check.py"  # tools/ is not a package
@@ -184,7 +184,7 @@ def test_ruling_d_drc_table_shows_glyph_message_measured_required_layer_without_
     assert headers == ["", "Message", "Measured (mm)", "Required (mm)", "Layer"]
     assert table.columnWidth(0) == 24
     assert table.horizontalHeader().length() <= table.viewport().width(), size
-    first = model.index(0, DRC_COLUMNS.index("measured"))
+    first = model.index(0, DRC_COLUMNS.index("clearance"))
     assert first.data() == "0.199965" and first.data(Qt.ItemDataRole.FontRole).family() == "JetBrains Mono"
     tooltip = model.index(0, DRC_COLUMNS.index("layer")).data(Qt.ItemDataRole.ToolTipRole)
     assert tooltip.startswith("Error. DRC_") and "Measured 0.199965\u00a0mm, required" in tooltip

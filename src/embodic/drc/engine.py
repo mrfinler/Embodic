@@ -323,7 +323,7 @@ def _report(
         least = float(mine.min()) if len(mine) else None
         summaries.append(
             DrcCheckSummary(
-                kind=kind, measured_min_mm=least, required_mm=float(required_mm[index]), pairs_checked=len(mine)
+                kind=kind, least_clearance_mm=least, required_mm=float(required_mm[index]), pairs_checked=len(mine)
             )
         )
     for m in measured:
@@ -335,7 +335,7 @@ def _report(
                 DrcViolation(
                     kind=kind,
                     layer=m.layer,
-                    measured_mm=float(m.clearance_mm[i]),
+                    clearance_mm=float(m.clearance_mm[i]),
                     required_mm=float(required_mm[m.kind[i]]),
                     at_mm=(float(m.at_mm[i, 0]), float(m.at_mm[i, 1])),
                     objects=tuple(items.labels[j] for j in pair),
@@ -347,11 +347,11 @@ def _report(
         need_mm = REQUIRED_MM[kind](rules)
         summaries.append(
             DrcCheckSummary(
-                kind=kind, measured_min_mm=min(r[0] for r in rows), required_mm=need_mm, pairs_checked=len(rows)
+                kind=kind, least_clearance_mm=min(r[0] for r in rows), required_mm=need_mm, pairs_checked=len(rows)
             )
         )
         violations += [
-            DrcViolation(kind=kind, layer=layer, measured_mm=value_mm, required_mm=need_mm, at_mm=at, objects=(label,))
+            DrcViolation(kind=kind, layer=layer, clearance_mm=value_mm, required_mm=need_mm, at_mm=at, objects=(label,))
             for value_mm, layer, at, label in rows
             if violates(value_mm, need_mm)
         ]

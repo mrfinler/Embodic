@@ -178,7 +178,7 @@ def _drc_violations(_: Path) -> int:
 
 def _drc_least_trace_gap(_: Path) -> float:
     (report,) = _computed(CF11)[1].drc or ()
-    least = next(s.measured_min_mm for s in report.summaries if s.kind.value == "trace_trace")
+    least = next(s.least_clearance_mm for s in report.summaries if s.kind.value == "trace_trace")
     if least is None:
         raise ValueError("the check measured no track pair")
     return least

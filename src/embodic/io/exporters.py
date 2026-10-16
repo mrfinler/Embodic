@@ -142,7 +142,7 @@ def _drc_failures(reports: tuple[DrcReport, ...] | None) -> tuple[ValidationIssu
                     _issue(
                         summary.kind.issue_code,
                         IssueCategory.DRC,
-                        value=summary.measured_min_mm,
+                        value=summary.least_clearance_mm,
                         limit=summary.required_mm,
                         hint=f"board {board}",
                     )

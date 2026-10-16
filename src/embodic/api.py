@@ -340,6 +340,8 @@ def outcome_to_json(outcome: ComputeOutcome) -> dict[str, JsonValue]:
             "layout_hashes": [b.layout_hash for b in outcome.boards.boards],
         }
     return {
+        "format": "embodic.outcome",
+        "format_version": 2,
         "design": design_document(outcome.design),
         "design_hash": outcome.design_hash,
         "provenance": provenance_document(outcome.provenance),

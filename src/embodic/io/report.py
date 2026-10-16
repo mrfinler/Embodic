@@ -140,7 +140,9 @@ def _drc(flow: _Flow, outcome: ComputeOutcome) -> None:
         for s in report.summaries:
             # six figures, so a measured 0.19997 mm against a 0.2 mm rule does not print as 0.200 mm
             measured = (
-                "none checked" if s.measured_min_mm is None else value_text(s.measured_min_mm, Unit.MM, significant=6)
+                "none checked"
+                if s.least_clearance_mm is None
+                else value_text(s.least_clearance_mm, Unit.MM, significant=6)
             )
             flow.row(
                 [

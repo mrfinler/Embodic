@@ -187,3 +187,31 @@ def test_compute_project_of_a_missing_file(tmp_path: Path) -> None:
     result = compute_project(tmp_path / "absent.embodic.json")
     assert isinstance(result, tuple)
     assert [i.code for i in result] == ["INVALID_PROJECT_NOT_FOUND"]
+
+
+@pytest.mark.req("REQ-T-10")
+def test_outcome_json_names_its_format_and_calls_the_drc_distance_clearance() -> None:
+    """Catches DEF-UV8-03 (D-051 a): the JSON called the computed DRC distance "measured", D-007's provenance word.
+
+    The wave example fails DRC, so its document holds violations as well as summaries. The project schema stays 1.
+    """
+    ref, design = load_example("wave_16p_example")
+    document = outcome_to_json(_computed(design, project_provenance(ProjectFile(design=design, origin=ref))))
+    assert (document["format"], document["format_version"]) == ("embodic.outcome", 2)
+    (report,) = document["drc"]
+    assert {key for violation in report["violations"] for key in violation} == {
+        "kind",
+        "layer",
+        "clearance_mm",
+        "required_mm",
+        "at_mm",
+        "objects",
+    }
+    assert {key for summary in report["summaries"] for key in summary} == {
+        "kind",
+        "least_clearance_mm",
+        "required_mm",
+        "pairs_checked",
+    }
+    assert "measured" not in json.dumps(document["drc"])
+    assert document["versions"]["schema"] == 1

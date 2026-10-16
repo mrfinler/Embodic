@@ -45,7 +45,7 @@ def _coil0_x(board: Layout) -> tuple[Line | Arc, ...]:
 def _clean(board: Layout, design: DesignParameters) -> dict[str, float | None]:
     report = run_drc(board, design.drc_rules)
     assert report is not None and report.violation_count == 0, [v.objects for v in report.violations]
-    return {s.kind.value: s.measured_min_mm for s in report.summaries}
+    return {s.kind.value: s.least_clearance_mm for s in report.summaries}
 
 
 EXAMPLES: list[tuple[str, Callable[[], DesignParameters]]] = [("CF-11", default_design), ("D08", d08_design)]

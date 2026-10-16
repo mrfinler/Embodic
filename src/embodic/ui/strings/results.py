@@ -82,7 +82,7 @@ STRINGS: Mapping[str, str] = {
     "drc.column.board": "Board",
     "drc.column.severity": "",
     "drc.column.message": "Message",
-    "drc.column.measured": "Measured\n(mm)",
+    "drc.column.clearance": "Measured\n(mm)",
     "drc.column.required": "Required\n(mm)",
     "drc.row.description": "Error. {code}. {message} Measured {measured}, required {required}, layer {layer}.",
     "drc.column.layer": "Layer",

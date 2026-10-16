@@ -98,7 +98,7 @@ def test_series_board_passes_drc_with_smallest_gap_s(case: tuple[str, int, Desig
     report = run_drc(board, design.drc_rules)
     assert report is not None
     assert report.violation_count == 0, [v.objects for v in report.violations][:5]
-    least = {s.kind.value: s.measured_min_mm for s in report.summaries if s.measured_min_mm is not None}
+    least = {s.kind.value: s.least_clearance_mm for s in report.summaries if s.least_clearance_mm is not None}
     assert least["trace_trace"] == pytest.approx(RULE_S_MM[name], abs=1e-6)
     assert least["trace_via"] == pytest.approx(RULE_S_MM[name], abs=1e-6)
 

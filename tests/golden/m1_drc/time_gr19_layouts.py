@@ -40,7 +40,7 @@ def _cpu_model() -> str:
 def _trace_via_net_mismatch(layout: Layout, report: DrcReport) -> dict[tuple[str, str], int]:
     hits: Counter[tuple[str, str]] = Counter()
     for violation in report.violations:
-        if violation.kind is DrcCheckKind.TRACE_VIA and violation.measured_mm < 0:
+        if violation.kind is DrcCheckKind.TRACE_VIA and violation.clearance_mm < 0:
             ids = dict(obj.split("/")[0].split(":") for obj in violation.objects)
             path_net, via_net = layout.paths[int(ids["path"])].net, layout.vias[int(ids["via"])].net
             if path_net != via_net:

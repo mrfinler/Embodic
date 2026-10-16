@@ -81,7 +81,7 @@ def test_parallel_pairs_pass_drc(m1: Layout) -> None:
     """G6 and G9: three identical pairs and shared through vias keep every gap at s or more."""
     report = run_drc(m1, _three_pairs(((0, 1, 2),)).drc_rules)
     assert report is not None and report.violation_count == 0, [v.objects for v in report.violations]
-    least = {s.kind.value: s.measured_min_mm for s in report.summaries}
+    least = {s.kind.value: s.least_clearance_mm for s in report.summaries}
     assert least["trace_trace"] == pytest.approx(0.2, abs=1e-6)
     assert least["trace_via"] == pytest.approx(0.2, abs=1e-6)
 
