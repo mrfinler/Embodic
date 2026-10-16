@@ -52,6 +52,11 @@ class Stackup:
         return math.fsum(layer.thickness_mm for layer in self.layers)
 
 
+def copper_total_mm(copper_count: int, copper_thickness_mm: float) -> float:
+    """Return the exact sum of ``copper_count`` copper layers of one thickness."""
+    return math.fsum([copper_thickness_mm] * copper_count)
+
+
 def generate_even_stackup(
     copper_count: int, copper_thickness_mm: float, board_thickness_mm: float, material: str = "FR-4"
 ) -> Stackup:
@@ -64,7 +69,7 @@ def generate_even_stackup(
     copper_thickness_mm : float
         Finished thickness of every copper layer.
     board_thickness_mm : float
-        Total board thickness.
+        Total board thickness, greater than the copper total (``validate.even_stackup_issues`` checks it first).
     material : str
         Dielectric material name.
 
@@ -72,13 +77,23 @@ def generate_even_stackup(
     -------
     Stackup
         Copper layers L1..Ln with dielectric layers D1..D(n-1) between them; one copper layer gets one dielectric below.
+
+    Raises
+    ------
+    ValueError
+        When the board is not thicker than its copper (D-053a): there is no room for a dielectric layer.
     """
+    copper_mm = copper_total_mm(copper_count, copper_thickness_mm)
+    if board_thickness_mm <= copper_mm:
+        raise ValueError(
+            f"board thickness {board_thickness_mm} mm does not exceed the copper total {copper_mm} mm (D-053a)"
+        )
     if copper_count == 1:
         dielectric_mm = board_thickness_mm - copper_thickness_mm
         return Stackup(
             layers=(
                 CopperLayer(name="L1", thickness_mm=copper_thickness_mm),
-                DielectricLayer(name="D1", thickness_mm=max(0.0, dielectric_mm), material=material),
+                DielectricLayer(name="D1", thickness_mm=dielectric_mm, material=material),
             )
         )
     pitch_mm = (board_thickness_mm - copper_thickness_mm) / (copper_count - 1)
@@ -87,7 +102,5 @@ def generate_even_stackup(
         layers.append(CopperLayer(name=f"L{index + 1}", thickness_mm=copper_thickness_mm))
         if index < copper_count - 1:
             dielectric_mm = pitch_mm - copper_thickness_mm
-            layers.append(
-                DielectricLayer(name=f"D{index + 1}", thickness_mm=max(0.0, dielectric_mm), material=material)
-            )
+            layers.append(DielectricLayer(name=f"D{index + 1}", thickness_mm=dielectric_mm, material=material))
     return Stackup(layers=tuple(layers))

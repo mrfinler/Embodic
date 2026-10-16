@@ -168,6 +168,7 @@ class MainWindow(QMainWindow):
         outcome.board.subscribe(lambda _: self._render())
         session.state.subscribe(lambda _: self._on_session())
         session.issues.subscribe(lambda _: self._show_issues())
+        session.stackup_issues.subscribe(lambda _: self._on_session())
         session.notice.subscribe(lambda _: self._show_notice())
         session.opened.subscribe(lambda _: self._show_drawing())
         for action_id, available in (("act-undo", session.can_undo), ("act-redo", session.can_redo)):
