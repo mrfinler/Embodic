@@ -13,7 +13,7 @@ from embodic.model.vocabulary import Phase
 
 
 class SideStyle(StrEnum):
-    """Coil sides along radii or parallel to the coil axis."""
+    """Coil sides along radii or parallel to the sector edge."""
 
     RADIAL = "radial"
     PARALLEL = "parallel"
