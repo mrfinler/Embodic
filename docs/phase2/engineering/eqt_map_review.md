@@ -244,7 +244,8 @@ Phase 3 note on EQ-14 (D-046 e). The registry gate of EQ-14 is `cannot verify ye
 (`windingInductance`, `conductorsSerpentine`, `conductorsWave`, `conductorsFromElements`) as golden functions at 1e-9.
 embodic ships the magnetising form (a) instead, so EQT-14-GR has nothing to compare. Phase 3 decides one of two paths.
 Port the current-sheet model and add its golden test, or change the gate to name form (a) and drop EQT-14-GR. The
-registry stays unchanged until then.
+registry stays unchanged until then. Revision 2026-10-16 (U-E12, D-049 d): the gate now names form (a); EQT-14-GR is
+withdrawn and EQT-14-CF12 (CF-12) replaces it (equation_specification.md EQ-14).
 
 The Phase 3 "dump" rows need Xcoil data that is not in hand. tools/golden/dump_xcoil.mjs can probably write it (not run
 in this unit), so each is cheap once Fable schedules it.

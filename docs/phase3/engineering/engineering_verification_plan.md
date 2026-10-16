@@ -216,7 +216,7 @@ No board exists (D-048 f). Every row below is `not tested`. Run the steps in thi
 
 | ID | Closing method | Cloud now | Reason |
 |---|---|---|---|
-| EQT-14-GR | Xcoil data (golden), after a Fable ruling | yes, after the ruling | embodic has no port of Xcoil's current-sheet functions. Port them and dump, or change the gate to form (a) and drop the id (D-046 e) |
+| EQT-14-GR | Withdrawn (revision 2026-10-16, U-E12, D-049 d) | n/a | No port to compare. EQT-14-CF12 (oracle_cases.json CF-12) replaces it; `tests/unit/physics/test_closed_forms_m2e2.py` `test_eq14_reference_estimate` can carry it once it asserts the CF-12 value at relative 1e-12 (Agent 3) |
 | EQT-14-O2 | Literature value (D09 14.8 µH) or measurement (M2) | no | D09 gives no method, frequency or rotor state (DEF-08), the D09 coil is unknown (G2), and EQ-14 has no leakage term (G1) |
 | EQT-16-GR | Xcoil data: `massThermal` dump with copper density 8.96 g/cm³ | yes | `tools/golden/dump_xcoil.mjs` and Node v22 are present (`/opt/node22/bin/node`); not run in this unit |
 | EQT-17-GR | Xcoil data: the same `massThermal` dump (ΔT) | yes | As EQT-16-GR |
@@ -235,7 +235,7 @@ their first non-D09 evidence.
 |---|---|---|
 | Wave example: 186 D-006 violations (D-034) | Phase 5 change | The example is a faithful port of Xcoil's preset, which hid the violations in a 4 µm slack. The fix is new example values (clearance), not a DRC rule change (D-006). Phase 3 can only re-count |
 | Serpentine strands > 1 not DRC-clean (D-036 a) | Phase 5 change | A generator spec revision by Agent 2, then a code unit. Phase 3 keeps the counts (12/0/0/0/0/0/18, D-037 a) as the regression state |
-| D-030 lower bounds for clearance and pad | Phase 3 verification task | A property test with hostile clearance and pad values in bounded memory shows whether a failure exists (D-040 d names only the width). A found failure becomes a Phase 5 change |
+| D-030 lower bounds for clearance and pad | Phase 3 verification task | A property test with hostile clearance and pad values in bounded memory shows whether a failure exists (D-040 d names only the width). A found failure becomes a Phase 5 change. Specification for Agent 3: `d030_property_spec.md` (revision 2026-10-16, U-E12) |
 | Per-phase stack interconnect `unresolved` (D-037 b) | Stays open | No interconnect is built for a stack, so no result exists to verify. A design spec belongs to Phase 5, and a physical check needs a board |
 | e_edge on generated layouts ≈ 0.4 × Phase 1 (Q1) | Phase 3 verification task, done here (`inferred`) | Section 1: the Phase 1 script assumed uniform radial coverage. The FEA-profile probe gives −2.41 % against e_edge 2.59 %. OR-11c gives the independent check |
 

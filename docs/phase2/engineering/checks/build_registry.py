@@ -60,8 +60,13 @@ PATCH = {
     "EQ-12": dict(applies_to=ALL, golden_functions=["analyze", "analyzeWave", "analyzeElements"], gate_verdict="reuse",
                   tests=tests("EQ-12", "GR", "CF05")),
     "EQ-13": dict(applies_to=ALL, golden_functions=["skinDepthMm"], gate_verdict="reuse", tests=tests("EQ-13", "GR", "CF05")),
-    "EQ-14": dict(applies_to=ALL, golden_functions=["windingInductance", "conductorsSerpentine", "conductorsWave", "conductorsFromElements"],
-                  gate_verdict="cannot verify yet", tests=tests("EQ-14", "GR", "O2")),
+    # Revision 2026-10-16 (U-E12, D-049 d): embodic implements form (a) and does not port Xcoil's current-sheet model, so the
+    # gate names no golden function; EQT-14-GR is withdrawn and EQT-14-CF12 checks the code against the formula.
+    "EQ-14": dict(applies_to=ALL, golden_functions=[],
+                  replaced_functions=["windingInductance", "conductorsSerpentine", "conductorsWave", "conductorsFromElements"],
+                  formula="L_m = (3*mu0/(4*pi))*(N*k_w1)^2*(D_o^2 - D_i^2)/(p^2*delta'), delta' = 2*l_m + 2*g + t_s "
+                          "(form (a) only; Xcoil's current-sheet model is not ported, D-049 d)",
+                  gate_verdict="cannot verify yet", tests=tests("EQ-14", "CF12", "O2")),
     "EQ-15": dict(applies_to=ALL, golden_functions=["ipc2221Current"], gate_verdict="cannot verify yet", tests=tests("EQ-15", "GR")),
     "EQ-16": dict(applies_to=ALL, golden_functions=["massThermal"], gate_verdict="reuse with change",
                   changes=["copper density 8.89 g/cm3 (EV-53) instead of 8.96", "laminate density per stack-up entry with source", "holes and mask"],
@@ -302,7 +307,12 @@ def build():
                                         "oracle_cases.json (its inputs, expected values and tolerances) governs over the equation's Phase 1 "
                                         "reference_case and tolerance texts, which stay as the Phase 1 record; the texts that differ are the EQ-06 "
                                         "tolerance (1e-4 vs CF-02 1e-9 and CF-03 1e-5) and the EQ-12 and EQ-13 reference_case (Xcoil rho, 1e-4 and "
-                                        "5e-3 mm vs CF-05 1e-9); eqt_map_review.md section b"]
+                                        "5e-3 mm vs CF-05 1e-9); eqt_map_review.md section b",
+                                        "v1.0 rev. U-E12 (2026-10-16, D-049 d): EQ-14 is the one 'cannot verify yet' entry without an "
+                                        "Xcoil port. embodic implements form (a) (src/embodic/physics/estimates.py inductance_estimate_h, "
+                                        "called from analyse.py l.408); the current-sheet functions move to replaced_functions; "
+                                        "EQT-14-GR is withdrawn (nothing to compare) and EQT-14-CF12 (oracle_cases.json CF-12) checks "
+                                        "the code against the form (a) formula. The status stays unresolved and the label estimate"]
     eqs = []
     for e in p1["equations"]:
         e = copy.deepcopy(e)

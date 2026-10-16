@@ -45,6 +45,10 @@
    "value": 2.2854256674920137e-06
   },
   {
+   "check": "CF-12 L_m vs the Phase 1 C9 reference 9.74 uH (rel)",
+   "value": 0.0004562010459249589
+  },
+  {
    "check": "O1 loop-only R_phase 50 degC vs D08 Table 4.6 0.39 ohm (rel)",
    "value": -0.022562138780845124
   }
@@ -278,7 +282,7 @@
   },
   {
    "case_id": "O2-D09",
-   "version": 2,
+   "version": 3,
    "title": "Tokgöz, Çakal, Keysan (IET EPA 2020): concentric (spiral) PCB winding, 12 coils/16 poles, 2 layers, double rotor",
    "document": "D09 B2/EPA-2020-0622-FINAL.pdf",
    "topology": "FSCW spiral, all phases on each layer, open phases (6 terminals)",
@@ -513,9 +517,38 @@
     }
    ],
    "pre_registration": "primary case A (DEF-19): N = 8, centre-lines R_i0 25.2 / R_o0 47.6 mm (reproduces 3244 mm and 171 mm2 within 0.1 %, links excluded), mu_r 1.05, 20 degC, inductance reading I1 with rotor; pre-registered alternative B: N = 7, centre-lines 20.2 / 43.8 mm (requires ~326 mm of links per phase); both are run and reported; sweeps are sensitivity runs; no tuning to measured values. EMF/torque bands are asymmetric by the EC-05 edge add-on (+5.8 % for A)",
-   "version_note": "version 2: v1 primary geometry (N = 7, copper edge 25-46 mm) contradicted the published 3244 mm (true spiral 2758 mm, -15 %) - DEF-19",
+   "version_note": "version 3 (revision 2026-10-16, U-E12, D-049 b): adds table1_envelope (information only). Inputs, the pre-registered variants A and B and every band are unchanged; no new variant until gap G2 has a source (D-049 c). Version 2: the Phase 1 draft case with the Phase 2 edits",
    "dec23_note": "DEF-23: D09 Fig. 7 is both the EC-05 calibration source and this oracle, so O2 EMF/torque results cannot validate EC-05; they test EQ-05/06 given EC-05. Fig. 7 plots |B| at the magnet middle (caption p.4), used as a proxy for B_z at the copper.",
-   "runnable": true
+   "runnable": true,
+   "table1_envelope": {
+    "status": "information only; no test reads it and no band depends on it",
+    "source": "D09 Table 1 p.3 (calculated by D09)",
+    "values": {
+     "phase_trace_length_mm": 3244,
+     "mid_turn_loop_area_mm2": 171
+    },
+    "isoperimetric_ratio_4piA_over_P2": {
+     "value": {
+      "N=6": 0.47,
+      "N=7": 0.64,
+      "N=8": 0.836
+     },
+     "basis": "mean turn perimeter P = 3244/(8 N) mm (8 coil-layers per phase), A = 171 mm2; a square is 0.785 and a circle 1. A trapezoidal coil in a 30 deg sector cannot be rounder than a square, so N = 8 fits both numbers only if the 3244 mm leaves out copper",
+     "status": "inferred (arithmetic in this script)"
+    },
+    "variant_A_as_generated": {
+     "mid_turn_loop_area_mm2": 170.8,
+     "phase_length_mm": 3584.7,
+     "phase_length_parts_mm": [
+      3416.4,
+      168.3
+     ],
+     "note": "coil paths + chain of phase A; +10.5 % over 3244 mm, area -0.1 %",
+     "source": "docs/phase3/engineering/engineering_verification_plan.md l.75-82 (U-E11, checks/f_or07_probe.py)",
+     "status": "verified (ran in U-E11)"
+    },
+    "grid_note": "U-E11 grid (docs/phase3/engineering/engineering_verification_plan.md l.88-104): parallel sides N 6-8, R_i0 22-27 mm; radial sides N 6-7, R_i0 22-28 mm; R_o0 44-48 mm; 1 mm steps. Within 5 % of both Table 1 numbers: 7 of 90 parallel builds, all N = 7, EMF -6.87 % to +3.25 % of 6.21 V; 0 of 30 radial builds; no N = 8 build. The 5 % window is the probe's choice (assumption). Found after the A and B verdicts, so it is a sensitivity result and not a re-registration; OR-07 stays a strict xfail (F-OR07)"
+   }
   },
   {
    "case_id": "O3-D10",
@@ -1567,6 +1600,70 @@
    ],
    "status": "inferred",
    "evidence": "reference model of the spec rules (example values, not a measured design)"
+  },
+  {
+   "case_id": "CF-12",
+   "version": 1,
+   "kind": "closed form",
+   "eq_ids": [
+    "EQ-14"
+   ],
+   "title": "EQ-14 form (a) magnetising inductance at the Phase 1 C9 inputs; checks the code against the formula, not the physics",
+   "inputs": {
+    "N": {
+     "value": 64,
+     "unit": "1",
+     "status": "assumption",
+     "source": "example; EQ-14 reference_case (Phase 1 C9)"
+    },
+    "k_w1": {
+     "value": 0.866,
+     "unit": "1",
+     "status": "assumption",
+     "source": "example; EQ-14 reference_case (Phase 1 C9)"
+    },
+    "r_outer_mm": {
+     "value": 38.0,
+     "unit": "mm",
+     "status": "assumption",
+     "source": "example; D_o 76 mm of the EQ-14 reference_case"
+    },
+    "r_inner_mm": {
+     "value": 18.0,
+     "unit": "mm",
+     "status": "assumption",
+     "source": "example; D_i 36 mm of the EQ-14 reference_case"
+    },
+    "p": {
+     "value": 8,
+     "unit": "1",
+     "status": "assumption",
+     "source": "example; EQ-14 reference_case (16 poles)"
+    },
+    "delta_prime_mm": {
+     "value": 6.62,
+     "unit": "mm",
+     "status": "assumption",
+     "source": "example; EQ-14 reference_case"
+    },
+    "mu0_H_per_m": {
+     "value": 1.2566370614359173e-06,
+     "unit": "H/m",
+     "status": "verified",
+     "source": "4 pi 1e-7, the value src/embodic/physics/losses.py l.8 MU0_H_PER_M uses (CODATA 2022 differs by -1.3e-10 relative, EV-84)"
+    }
+   },
+   "expected": [
+    {
+     "quantity": "L_m",
+     "value": 9.744443398187309e-06,
+     "unit": "H",
+     "formula": "(3 mu0/(4 pi)) (N k_w1)^2 ((2 r_outer)^2 - (2 r_inner)^2)/(p^2 delta')",
+     "tolerance": "relative 1e-12 (arithmetic identity; the code and this case use the same mu0)"
+    }
+   ],
+   "status": "verified",
+   "evidence": "arithmetic in this script; equals the rounded Phase 1 value 9.74 uH to +4.6e-04. Not evidence that L_m predicts a measured inductance (EQ-14 stays unresolved, G1)"
   }
  ]
 }

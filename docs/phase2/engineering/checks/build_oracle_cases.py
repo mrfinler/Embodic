@@ -1,5 +1,5 @@
 # Prepared by: Agent 2 — Motor Design Expert — model: claude-opus-5-5
-# Computes the closed-form reference cases CF-01...CF-13 and writes docs/phase2/engineering/oracle_cases.json together with
+# Computes the closed-form reference cases CF-01...CF-12 and writes docs/phase2/engineering/oracle_cases.json together with
 # the literature oracles O1-O3 carried over from docs/phase1/engineering/oracle_cases_draft.json (with the Phase 2 edits).
 # Every computed number below is produced by this script; nothing is typed in by hand except the inputs.
 # Run: python3 docs/phase2/engineering/checks/build_oracle_cases.py
@@ -292,6 +292,30 @@ cases.append({
     "status": "inferred", "evidence": "reference model of the spec rules (example values, not a measured design)",
 })
 
+# CF-12 EQ-14 form (a) as written (revision 2026-10-16, U-E12, D-049 d): replaces EQT-14-GR, which had no port to compare
+L12 = dict(N=64, k_w1=0.866, r_outer_mm=38.0, r_inner_mm=18.0, p=8, delta_mm=6.62)
+L_m12 = (3 * MU0 / (4 * math.pi) * (L12["N"] * L12["k_w1"]) ** 2 * ((2 * L12["r_outer_mm"] * 1e-3) ** 2 - (2 * L12["r_inner_mm"] * 1e-3) ** 2)
+         / (L12["p"] ** 2 * L12["delta_mm"] * 1e-3))
+checks.append(("CF-12 L_m vs the Phase 1 C9 reference 9.74 uH (rel)", rel(L_m12 * 1e6, 9.74)))
+cases.append({
+    "case_id": "CF-12", "version": 1, "kind": "closed form", "eq_ids": ["EQ-14"],
+    "title": "EQ-14 form (a) magnetising inductance at the Phase 1 C9 inputs; checks the code against the formula, not the physics",
+    "inputs": {"N": inp(L12["N"], "1", "assumption", "example; EQ-14 reference_case (Phase 1 C9)"),
+               "k_w1": inp(L12["k_w1"], "1", "assumption", "example; EQ-14 reference_case (Phase 1 C9)"),
+               "r_outer_mm": inp(L12["r_outer_mm"], "mm", "assumption", "example; D_o 76 mm of the EQ-14 reference_case"),
+               "r_inner_mm": inp(L12["r_inner_mm"], "mm", "assumption", "example; D_i 36 mm of the EQ-14 reference_case"),
+               "p": inp(L12["p"], "1", "assumption", "example; EQ-14 reference_case (16 poles)"),
+               "delta_prime_mm": inp(L12["delta_mm"], "mm", "assumption", "example; EQ-14 reference_case"),
+               "mu0_H_per_m": inp(MU0, "H/m", "verified", "4 pi 1e-7, the value src/embodic/physics/losses.py l.8 MU0_H_PER_M uses "
+                                                           "(CODATA 2022 differs by -1.3e-10 relative, EV-84)")},
+    "expected": [{"quantity": "L_m", "value": L_m12, "unit": "H",
+                  "formula": "(3 mu0/(4 pi)) (N k_w1)^2 ((2 r_outer)^2 - (2 r_inner)^2)/(p^2 delta')",
+                  "tolerance": "relative 1e-12 (arithmetic identity; the code and this case use the same mu0)"}],
+    "status": "verified",
+    "evidence": (f"arithmetic in this script; equals the rounded Phase 1 value 9.74 uH to {rel(L_m12 * 1e6, 9.74):+.1e}. "
+                 "Not evidence that L_m predicts a measured inductance (EQ-14 stays unresolved, G1)"),
+})
+
 # Literature oracles carried over from Phase 1
 p1 = json.load(open(PHASE1))
 lit = {c["case_id"]: copy.deepcopy(c) for c in p1["cases"]}
@@ -346,6 +370,35 @@ o2 = lit["O2-D09"]
 o2["dec23_note"] = ("DEF-23: D09 Fig. 7 is both the EC-05 calibration source and this oracle, so O2 EMF/torque results cannot validate EC-05; "
                     "they test EQ-05/06 given EC-05. Fig. 7 plots |B| at the magnet middle (caption p.4), used as a proxy for B_z at the copper.")
 o2["runnable"] = True
+# Version 3 (revision 2026-10-16, U-E12, D-049 b): the D09 Table 1 envelope as information only; inputs, variants and bands unchanged
+o2["version"] = 3
+o2["version_note"] = ("version 3 (revision 2026-10-16, U-E12, D-049 b): adds table1_envelope (information only). Inputs, the "
+                      "pre-registered variants A and B and every band are unchanged; no new variant until gap G2 has a source "
+                      "(D-049 c). Version 2: the Phase 1 draft case with the Phase 2 edits")
+iso = {n: 4 * math.pi * 171.0 / (3244.0 / (8 * n)) ** 2 for n in (6, 7, 8)}
+o2["table1_envelope"] = {
+    "status": "information only; no test reads it and no band depends on it",
+    "source": "D09 Table 1 p.3 (calculated by D09)",
+    "values": {"phase_trace_length_mm": 3244, "mid_turn_loop_area_mm2": 171},
+    "isoperimetric_ratio_4piA_over_P2": {
+        "value": {f"N={n}": round(v, 3) for n, v in iso.items()},
+        "basis": "mean turn perimeter P = 3244/(8 N) mm (8 coil-layers per phase), A = 171 mm2; a square is 0.785 and a circle 1. "
+                 "A trapezoidal coil in a 30 deg sector cannot be rounder than a square, so N = 8 fits both numbers only if the "
+                 "3244 mm leaves out copper",
+        "status": "inferred (arithmetic in this script)",
+    },
+    "variant_A_as_generated": {
+        "mid_turn_loop_area_mm2": 170.8, "phase_length_mm": 3584.7, "phase_length_parts_mm": [3416.4, 168.3],
+        "note": "coil paths + chain of phase A; +10.5 % over 3244 mm, area -0.1 %",
+        "source": "docs/phase3/engineering/engineering_verification_plan.md l.75-82 (U-E11, checks/f_or07_probe.py)",
+        "status": "verified (ran in U-E11)",
+    },
+    "grid_note": ("U-E11 grid (docs/phase3/engineering/engineering_verification_plan.md l.88-104): parallel sides N 6-8, "
+                  "R_i0 22-27 mm; radial sides N 6-7, R_i0 22-28 mm; R_o0 44-48 mm; 1 mm steps. Within 5 % of both Table 1 "
+                  "numbers: 7 of 90 parallel builds, all N = 7, EMF -6.87 % to +3.25 % of 6.21 V; 0 of 30 radial builds; no N = 8 "
+                  "build. The 5 % window is the probe's choice (assumption). Found after the A and B verdicts, so it is a "
+                  "sensitivity result and not a re-registration; OR-07 stays a strict xfail (F-OR07)"),
+}
 o3 = lit["O3-D10"]
 o3["runnable"] = False
 cases = [o1, o2, o3] + cases
