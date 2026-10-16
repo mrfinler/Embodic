@@ -399,6 +399,121 @@ o2["table1_envelope"] = {
                   "build. The 5 % window is the probe's choice (assumption). Found after the A and B verdicts, so it is a "
                   "sensitivity result and not a re-registration; OR-07 stays a strict xfail (F-OR07)"),
 }
+
+# Version 4 (revision 2026-10-16, U-E13, D-049 c): variant C pre-registered from Agent 5's Fig. 1a readings (U-S8).
+# The two drawing scales are the only source of each read range, so one build per scale is the envelope.
+PX_PER_MM = {"pitch": 5.200, "hole": 2 * 128.34 / 50.0}
+FIG1A_PX = {"R_i0": 129.70, "R_o0": 233.60, "d_0": 2.95}
+EV131_PRINTED_MM = {"R_i0": (24.94, 25.26), "R_o0": (44.92, 45.50), "d_0": (0.57, 0.57)}
+W09, S09, H09 = 0.8, 0.2, math.pi / 12
+read = {k: {s: px / PX_PER_MM[s] for s in PX_PER_MM} for k, px in FIG1A_PX.items()}
+for k, (lo, hi) in EV131_PRINTED_MM.items():
+    err = max(abs(read[k]["pitch"] - lo), abs(read[k]["hole"] - hi))
+    assert err <= 0.005, f"variant C {k}: px / scale {read[k]} does not reproduce EV-131 {lo}-{hi} mm"
+    checks.append((f"O2 C {k}: px/scale vs EV-131 printed ends [mm]", err))
+mid = {k: (v["pitch"] + v["hole"]) / 2 for k, v in read.items()}
+
+
+def c_build(R_i0, R_o0, d_0, end_style="arc"):
+    """Generator settings for one variant C build; coil gap from d_0 = gap/2 + w/2 (spiral_generator_spec.md G1)."""
+    gap = 2 * d_0 - W09
+    assert gap > S09, "the generator would use max(gap, s) = s, not the read offset"
+    return {"centre_lines_mm": [R_i0, R_o0], "r_inner_mm": R_i0 - W09 / 2, "r_outer_mm": R_o0 + W09 / 2,
+            "coil_gap_mm": gap, "end_style": end_style}
+
+
+envelope = {s: c_build(read["R_i0"][s], read["R_o0"][s], read["d_0"][s]) for s in PX_PER_MM}
+nominal = c_build(mid["R_i0"], mid["R_o0"], mid["d_0"])
+straight = c_build(mid["R_i0"], mid["R_o0"] / math.cos(H09), mid["d_0"], end_style="straight")
+SRC_SCALE = "EV-129 (pitch 5.200 px = 0.8 + 0.2 mm, Table 2 p.3; inner circle r 128.34 px = 50 mm, Table 2 p.3)"
+o2["version"] = 4
+o2["version_note"] = ("version 4 (revision 2026-10-16, U-E13, D-049 c): adds variant_C, pre-registered from the D09 Fig. 1a "
+                      "readings of U-S8 (EV-127 to EV-133) before any run. Inputs, variants A and B, every band and "
+                      "table1_envelope are unchanged. " + o2["version_note"])
+o2["pre_registration"] += ("; variant C (version 4, U-E13): N = 7, parallel sides, centre lines and coil gap from D09 Fig. 1a "
+                           "(variant_C); registered before it was built or run")
+o2["variant_C"] = {
+    "status": "pre-registered 2026-10-16 (U-E13 step 1); not built, not run",
+    "source": "docs/phase3/evidence/d09_coil_geometry.md (U-S8); evidence_register_phase3.md EV-127 to EV-133",
+    "nominal_rule": ("each read quantity takes the midpoint of its two-scale range (pitch scale 5.200 px/mm and hole scale "
+                     "5.1336 px/mm, EV-129); decided in U-E13 before any build. The nominal is the verdict build"),
+    "inputs": {
+        "turns_per_coil_top_layer": inp(7, "1", "inferred", "EV-128: 7 bands on 36 of 36 readable sides of Fig. 1a p.2"),
+        "turns_per_coil_bottom_layer": inp(7, "1", "assumption",
+                                           "Fig. 1a hides the bottom layer (EV-128); D09 Table 2 p.3 gives 2 layers and EV-62 "
+                                           "8 coil-layers per phase; the generator builds one turn count per layer pair"),
+        "coil_count": inp(12, "1", "verified", "case input coil_count (EV-62); EV-127 finds 12 windows 30.00 deg +- 0.04 apart"),
+        "side_style": inp("parallel", "-", "inferred",
+                          "EV-130: lateral sides are parallel offsets of the sector edge (7 bands on all 24 sides; radial model "
+                          "rejected). spiral_generator_spec.md G2 l.71 builds parallel side t on the line parallel to the "
+                          "sector edge at offset d_t, the same construction"),
+        "end_style": inp("arc", "-", "assumption",
+                         "EV-130: chord and arc give the same band counts, so Fig. 1a does not decide; arc maps the bisector "
+                         "reading to R_o0 one to one (G2 l.77) and is the end style of variants A and B and the U-E11 grid"),
+        "corner_radius_mm": inp(0.0, "mm", "assumption", "not read in U-S8; the value of variants A and B"),
+        "trace_width_mm": inp(W09, "mm", "verified", "D09 Table 2 p.3 (case input)"),
+        "clearance_mm": inp(S09, "mm", "verified", "D09 Table 2 p.3 (case input)"),
+        "pixel_readings_px": inp(FIG1A_PX, "px", "inferred",
+                                 "EV-131 (turn_loops_vs_table1.log): outermost turn centre line on the inner side R_i0 and the "
+                                 "outer side R_o0 from the inner-circle centre; outermost turn offset d_0 from the sector edge"),
+        "scales_px_per_mm": inp(PX_PER_MM, "px/mm", "inferred", SRC_SCALE),
+        "coil_centre_line_R_i0_mm": dict(inp(mid["R_i0"], "mm", "inferred", "EV-131, midpoint rule"),
+                                         range=[read["R_i0"]["pitch"], read["R_i0"]["hole"]]),
+        "coil_centre_line_R_o0_mm": dict(inp(mid["R_o0"], "mm", "inferred", "EV-131, midpoint rule"),
+                                         range=[read["R_o0"]["pitch"], read["R_o0"]["hole"]]),
+        "side_offset_d_0_mm": dict(inp(mid["d_0"], "mm", "inferred", "EV-131, midpoint rule"),
+                                   range=[read["d_0"]["pitch"], read["d_0"]["hole"]]),
+    },
+    "other_inputs": ("every other O2-D09 input as variant A uses it, with its own status: the printed value, or 'assumed' "
+                     "where unresolved (mu_r 1.05, 20 degC, inductance reading I1); layer pair L1 -> L2 in series per coil; "
+                     "vias, chain, outline and DRC rules as the shared D09 build (oracle_tests_spec.md, Shared D09 build)"),
+    "generator_settings": {
+        "SpiralCoilSpec": dict(coil_count=12, turns=7, side_style="parallel", end_style=nominal["end_style"],
+                               corner_radius_mm=0.0, trace_width_mm=W09, clearance_mm=S09,
+                               r_inner_mm=nominal["r_inner_mm"], r_outer_mm=nominal["r_outer_mm"],
+                               coil_gap_mm=nominal["coil_gap_mm"]),
+        "rules": ("r_inner = R_i0 - w/2 and r_outer = R_o0 + w/2 (copper edges, spec Conventions l.36); coil_gap = 2 d_0 - w "
+                  "from d_0 = gap/2 + w/2 (spec G1 l.65), above s, so the generator uses it (spec Inputs l.49). Variants A "
+                  "and B used coil gap 0.2 mm (assumption); C has a reading for it"),
+        "predicted_innermost_turn_mm": {
+            "value": {"inner_side": mid["R_i0"] + 6 * (W09 + S09), "outer_side": mid["R_o0"] - 6 * (W09 + S09),
+                      "lateral_offset": mid["d_0"] + 6 * (W09 + S09)},
+            "reading_EV131": {"inner_side": [30.98, 31.38], "outer_side": [38.94, 39.45], "lateral_offset": [6.63, 6.72]},
+            "status": "inferred (spec G1 with pitch w + s; not yet checked on a generated layout)",
+        },
+    },
+    "builds": {
+        "C": dict(nominal, role="verdict build"),
+        "C-pitch": dict(envelope["pitch"], role="envelope: all three readings at the pitch scale"),
+        "C-hole": dict(envelope["hole"], role="envelope: all three readings at the hole scale"),
+        "C-straight": dict(straight, role=("sensitivity to the unread end style: straight ends with R_o0 = bisector reading "
+                                           "/ cos(pi/Q), so the outer chord's centre line meets the reading on the coil centre "
+                                           "line (spec G2 l.78-80); the inner chord touches R_i0 there (l.80)")),
+    },
+    "bands": {
+        "OR-07": ("unchanged: emf_phase_rms_v / ref - 1 in [-5 %, +5 % + e_edge] for each ref of 6.21 V calc (Table 4 p.6), "
+                  "6.20 V FEA (Table 5 p.6) and 6.22 V measured (Table 7 p.8), e_edge = edge_leakage_fraction of the built "
+                  "design (oracle_tests_spec.md OR-07 (d); tests/unit/physics/test_oracles_m5.py l.256-259)"),
+        "OR-02": ("unchanged: resistance_phase_20c_ohm / 1.07 ohm - 1 in [-8 %, +8 %] (Table 6 p.7); the 40 degC run is a "
+                  "sensitivity run, not a second chance"),
+    },
+    "in_band_means": ("C is in band for OR-07 when build C builds with turns_achieved 7, passes DRC, computes without an issue, "
+                      "and all three deviations lie in its own band. A build that fails a precondition is 'not buildable' and "
+                      "is reported as such. The envelope and C-straight results are reported beside C; a verdict that changes "
+                      "inside them is reported as 'not robust to the reading', never used instead of C's. An in-band C stays "
+                      "inferred (figure-read inputs) and not independent of EC-05 (DEF-23); the xfail status of OR-07 and "
+                      "EQT-05-O2 / EQT-06-O2 is Fable's ruling"),
+    "open_notes": [
+        "EV-132 (unresolved): the 7 read turns x 8 coil-layers give 2804 to 2848 mm against D09 Table 1's 3244 mm phase "
+        "length (-13.6 % to -12.2 %), and the 4th loop 149.5 to 158.7 mm2 against 171 mm2. C does not try to close it; "
+        "step 2 reports C's generated phase length (coil paths + embodic chain at example widths) as information only",
+        "EV-133 (unresolved): the Fig. 11a photo puts the inner side about 1.4 to 1.5 mm further from the hole than Fig. 1a. "
+        "C uses the drawing only; the photo shift is not in the envelope (outer and lateral sides of the photo were not read)",
+        "known before this registration: the U-E11 grid (parallel N 6 to 8, coil gap 0.2 mm, 1 mm steps, table1_envelope "
+        "grid_note) and its EMF values. No grid result chose any C input; every C input follows from EV-127 to EV-133 by "
+        "the rules above, so this registration is not blind to the grid",
+    ],
+}
 o3 = lit["O3-D10"]
 o3["runnable"] = False
 cases = [o1, o2, o3] + cases
