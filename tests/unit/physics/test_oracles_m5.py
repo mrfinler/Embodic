@@ -291,7 +291,7 @@ def test_or08_d09_synthesised_bz_peak_at_mid_radius_within_5_percent_of_the_figu
     peak = math.fsum(harmonics)
     b1 = _analysis(outcome).layers[0].b1_peak_mid_radius_t.value
     print(f"OR-08 D09 A: synthesised B_z peak (n 1-13) {peak:.4f} T; b1 {b1:.6f} T (fundamental, recorded)")
-    assert harmonics[0] == pytest.approx(b1, rel=1e-12), "the n = 1 term must be analyse()'s own b1 at this z"
+    assert harmonics[0] == pytest.approx(b1, rel=1e-12, abs=0.0), "the n = 1 term must be analyse()'s own b1 at this z"
     assert peak == pytest.approx(0.7384, abs=5e-5)
     assert 0.75 * 0.95 <= peak <= 0.72 * 1.05, f"B_z peak {peak:.4f} T outside [0.7125, 0.7560] T"
 

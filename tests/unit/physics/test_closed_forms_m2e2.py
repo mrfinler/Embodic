@@ -56,9 +56,9 @@ def test_eq07_two_member_identity() -> None:
     """EQ-07 reference (D01 eq. 2): E 1.0 and 0.98 V, R 1 ohm each give E_grp 0.99 V and P_c 1e-4 W."""
     lam = {0: np.array([1.0e6 + 0j]), 1: np.array([0.98e6 + 0j])}  # T*mm^2; x 1e-6 x omega_m 1 = V
     s = solve_phase_circuit(_two_member_circuit(), lam, {0: 1.0, 1: 1.0}, {}, 1.0)
-    assert s.phase_emf_phasor_v_s_per_rad[Phase.A][0] == pytest.approx(0.99, rel=1e-12)
+    assert s.phase_emf_phasor_v_s_per_rad[Phase.A][0] == pytest.approx(0.99, rel=1e-12, abs=0.0)
     assert s.circulating_loss_w[Phase.A] == pytest.approx(1e-4, rel=1e-9)
-    assert s.phase_resistance_ohm[Phase.A] == pytest.approx(0.5, rel=1e-12)
+    assert s.phase_resistance_ohm[Phase.A] == pytest.approx(0.5, rel=1e-12, abs=0.0)
 
 
 @pytest.mark.eqt("EQT-07-CF07")
@@ -70,9 +70,9 @@ def test_eq07_cf07_two_member_group_with_half_ohm_members() -> None:
     """
     lam = {0: np.array([1.0e6 + 0j]), 1: np.array([0.98e6 + 0j])}
     s = solve_phase_circuit(_two_member_circuit(), lam, {0: 0.5, 1: 0.5}, {}, 1.0)
-    assert s.phase_emf_phasor_v_s_per_rad[Phase.A][0] == pytest.approx(0.99, rel=1e-12)
-    assert s.phase_resistance_ohm[Phase.A] == pytest.approx(0.25, rel=1e-12)
-    assert s.circulating_loss_w[Phase.A] == pytest.approx(2.0e-4, rel=1e-12)
+    assert s.phase_emf_phasor_v_s_per_rad[Phase.A][0] == pytest.approx(0.99, rel=1e-12, abs=0.0)
+    assert s.phase_resistance_ohm[Phase.A] == pytest.approx(0.25, rel=1e-12, abs=0.0)
+    assert s.circulating_loss_w[Phase.A] == pytest.approx(2.0e-4, rel=1e-12, abs=0.0)
 
 
 def test_eq12_c9_single_trace() -> None:
@@ -106,19 +106,28 @@ def test_eq12_cf05_single_trace_at_full_precision() -> None:
     )
     omega_e = 2.0 * math.pi * 133.33333333333334
     rho = copper_resistivity_ohm_m(20.0, 1.7241e-8, 0.00393)
-    assert eddy_loss_w(field, (1,), 0.0348, omega_e, rho) == pytest.approx(7.230675123999244e-05, rel=1e-9)
+    assert eddy_loss_w(field, (1,), 0.0348, omega_e, rho) == pytest.approx(7.230675123999244e-05, rel=1e-9, abs=0.0)
 
 
+@pytest.mark.eqt("EQT-14-CF12")
 def test_eq14_reference_estimate() -> None:
-    """EQ-14 reference (C9): N 64, k_w1 0.866, D 76/36 mm, delta' 6.62 mm, p 8 -> 9.74 uH."""
-    assert inductance_estimate_h(64, 0.866, 38.0, 18.0, 8, 6.62) == pytest.approx(9.74e-6, rel=5e-4)
+    """CF-12 (EQ-14 form a): N 64, k_w1 0.866, D 76/36 mm, delta' 6.62 mm, p 8 -> L_m 9.744443398187309e-06 H.
+
+    Relative 1e-12. The value is the formula, not a prediction of a measured inductance (EQ-14 stays unresolved).
+    The rounded Phase 1 figure 9.74 uH is 4.6e-4 away and hides what the tight tolerance sees. Defect caught: a mu0
+    other than 4 pi 1e-7 (rounded 1.2566e-6 moves L_m by 2.9e-5, CODATA 2022 by 1.3e-10), or a diameter, pole-pair
+    or gap term off by a small factor. abs=0 matters: approx keeps an absolute 1e-12 H by default, which is 1e-7
+    relative at 9.7e-6 H and would let the CODATA change through.
+    """
+    expected_h = 9.744443398187309e-06
+    assert inductance_estimate_h(64, 0.866, 38.0, 18.0, 8, 6.62) == pytest.approx(expected_h, rel=1e-12, abs=0.0)
 
 
 @pytest.mark.eqt("EQT-19-CF07")
 def test_eq19_triplen_in_phase() -> None:
     """EQ-19 reference: 0.1 V third harmonic in phase on all three phases, R_loop 3 ohm -> P 0.015 W."""
     e3 = np.array([0.0, 0.1 + 0j])
-    assert delta_circulating_loss_w([e3, e3, e3], 3.0) == pytest.approx(0.015, rel=1e-12)
+    assert delta_circulating_loss_w([e3, e3, e3], 3.0) == pytest.approx(0.015, rel=1e-12, abs=0.0)
 
 
 def test_eq19_balanced_fundamental_drives_nothing() -> None:
@@ -131,13 +140,17 @@ def test_eq19_balanced_fundamental_drives_nothing() -> None:
 def test_eq23_cf06_star_and_delta() -> None:
     """EQ-23 reference (CF-06): branches 1.0, 1.1, 1.2 ohm -> R_LL 2.1999999999999997 star, 0.7313131313131312 delta."""
     branches = [1.0, 1.1, 1.2]
-    assert line_resistance_ohm(branches, ConnectionTopology.STAR) == pytest.approx(2.1999999999999997, rel=1e-12)
-    assert line_resistance_ohm(branches, ConnectionTopology.DELTA) == pytest.approx(0.7313131313131312, rel=1e-12)
+    assert line_resistance_ohm(branches, ConnectionTopology.STAR) == pytest.approx(
+        2.1999999999999997, rel=1e-12, abs=0.0
+    )
+    assert line_resistance_ohm(branches, ConnectionTopology.DELTA) == pytest.approx(
+        0.7313131313131312, rel=1e-12, abs=0.0
+    )
 
 
 def test_eq26_efficiency() -> None:
     """EQ-26 reference: P_out 10 W, P_loss 2.5 W -> eta 0.8; no output gives 0, not a division by zero."""
-    assert efficiency(10.0, 2.5) == pytest.approx(0.8, rel=1e-12)
+    assert efficiency(10.0, 2.5) == pytest.approx(0.8, rel=1e-12, abs=0.0)
     assert efficiency(0.0, 2.5) == 0.0
 
 
@@ -147,7 +160,7 @@ def test_eq18_star_line_waveform_cancels_triplens() -> None:
     line = line_waveforms_v(phases, ConnectionTopology.STAR)[0]
     spectrum = np.abs(np.fft.rfft(line[:-1])) / 180.0
     assert spectrum[3] < 1e-12
-    assert spectrum[1] == pytest.approx(math.sqrt(3.0), rel=1e-12)
+    assert spectrum[1] == pytest.approx(math.sqrt(3.0), rel=1e-12, abs=0.0)
 
 
 def test_eq06_circumferential_arc_links_no_flux() -> None:
@@ -166,7 +179,7 @@ def test_eq06_reversed_path_reverses_the_phasor() -> None:
     forward = integrate_path((out,), table, 5, 0.5, 2.0).flux_linkage_t_mm2[0]
     reverse = integrate_path((back,), table, 5, 0.5, 2.0).flux_linkage_t_mm2[0]
     assert abs(forward) > 0.0
-    assert reverse == pytest.approx(-forward, rel=1e-12)
+    assert reverse == pytest.approx(-forward, rel=1e-12, abs=0.0)
 
 
 def _radial(r_from_mm: float, r_to_mm: float, angle_rad: float) -> Line:
@@ -254,5 +267,5 @@ def test_ec05_edge_leakage_value_from_the_registry_constants() -> None:
     near = integrate_path([_radial(18.3, 18.7, 0.0)], table, 8, 0.5, decay_mm)
     far = integrate_path([_radial(27.8, 28.2, 0.5)], table, 8, 0.5, decay_mm)
     amplitude = float(check.parameters["D_e"])
-    assert edge_leakage_fraction([near], amplitude) == pytest.approx(0.28363329517506497, rel=1e-12)
-    assert edge_leakage_fraction([near, far], amplitude) == pytest.approx(0.11285496821276436, rel=1e-12)
+    assert edge_leakage_fraction([near], amplitude) == pytest.approx(0.28363329517506497, rel=1e-12, abs=0.0)
+    assert edge_leakage_fraction([near, far], amplitude) == pytest.approx(0.11285496821276436, rel=1e-12, abs=0.0)

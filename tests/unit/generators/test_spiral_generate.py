@@ -7,14 +7,21 @@ from collections import Counter
 
 import numpy as np
 import pytest
-from hypothesis import example, given, settings
+from hypothesis import event, example, given, settings
 from hypothesis import strategies as st
 from tests.unit.generators.d08_example import d08_design
 from tests.unit.generators.default_example import default_design
+from tests.unit.generators.hostile_sizes import (
+    HOSTILE_SETTINGS,
+    WIDTHS,
+    Sizes,
+    check_hostile_build,
+    hostile_sizes,
+)
 from tests.unit.generators.wave.designs import wave
 from tests.unit.model.designs import serpentine_design
 
-from embodic.drc import run_drc
+from embodic.drc import DRC_EPSILON_MM, run_drc
 from embodic.errors import Unbuildable
 from embodic.generators import GENERATORS, build_layout, generate_serpentine, generate_spiral, generate_wave
 from embodic.geometry.details import SpiralDetail, TurnClosing, TurnLimitReason
@@ -339,6 +346,70 @@ def test_ut_gen_01_fuzz_never_raises(
         vias=dataclasses.replace(design.vias, pad_mm=pad),
     )
     _check_contract(generate_spiral(fuzzed, load_registry()))
+
+
+_EXAMPLE = default_design()
+_EXAMPLE_SIZES = Sizes(
+    clearance_mm=_EXAMPLE.winding.coil.clearance_mm,  # type: ignore[union-attr]
+    pad_mm=_EXAMPLE.vias.pad_mm,
+    terminal_pad_mm=_EXAMPLE.connection.terminal_pad_mm,
+)
+_TINIEST = Sizes(clearance_mm=5e-324, pad_mm=5e-324, terminal_pad_mm=5e-324)
+
+
+@pytest.mark.slow
+@pytest.mark.req("REQ-F-19")
+@HOSTILE_SETTINGS
+@example(coils=12, poles=16, r_inner=1.0, span=1.0, width="example", turns=None, sizes=_TINIEST)  # DEF-M3b-03 shape
+@example(
+    coils=12, poles=16, r_inner=18.0, span=20.0, width="example", turns=None,
+    sizes=dataclasses.replace(_EXAMPLE_SIZES, clearance_mm=DRC_EPSILON_MM),
+)  # fmt: skip  # turn cap
+@example(
+    coils=12, poles=16, r_inner=18.0, span=20.0, width="example", turns=None,
+    sizes=dataclasses.replace(_EXAMPLE_SIZES, pad_mm=2.2250738585072014e-308),
+)  # fmt: skip  # smallest normal float
+@given(
+    coils=st.sampled_from([3, 6, 9, 12, 18, 24]),
+    poles=st.sampled_from([2, 4, 8, 10, 14, 16, 20]),
+    r_inner=st.floats(1.0, 60.0),
+    span=st.floats(1.0, 40.0),
+    width=st.sampled_from(WIDTHS),
+    turns=st.none() | st.integers(1, 30),
+    sizes=hostile_sizes(_EXAMPLE.drc_rules, _EXAMPLE_SIZES, terminal_pad=False),
+)
+def test_d030_hostile_clearance_and_pad_are_built_or_refused_within_bounds(
+    coils: int, poles: int, r_inner: float, span: float, width: str, turns: int | None, sizes: Sizes
+) -> None:
+    """D-030 lower bounds (d030_property_spec.md): a positive clearance or via pad below the DRC rules never raises.
+
+    Defect caught: a division by the clearance or the pad (DEF-M3b-03 for the width), a turn or via count derived from
+    1/s without the width floor (the unbounded build of D-030), a non-finite coordinate, or an exception instead of
+    Unbuildable. The width is valid by construction, so the width refusal never stops the build.
+
+    Property 4 is not evaluated when the design is Unbuildable at the default sizes (the spec does not define it). One
+    nightly run of 200 examples: 51.5% Unbuildable, 45.0% compared with the baseline, 3.5% without a baseline.
+    """
+    assert isinstance(_EXAMPLE.winding, SpiralWindingSpec)
+    width_mm = _EXAMPLE.drc_rules.min_trace_width_mm if width == WIDTHS[0] else _EXAMPLE.winding.coil.trace_width_mm
+    registry = load_registry()
+
+    def build(at: Sizes) -> BoardStack | Unbuildable:
+        coil = dataclasses.replace(
+            _EXAMPLE.winding.coil, coil_count=coils, r_inner_mm=r_inner, r_outer_mm=r_inner + span,
+            trace_width_mm=width_mm, clearance_mm=at.clearance_mm, turns=turns,
+        )  # fmt: skip
+        design = dataclasses.replace(
+            _EXAMPLE,
+            rotor=dataclasses.replace(_EXAMPLE.rotor, poles=poles),
+            winding=dataclasses.replace(_EXAMPLE.winding, coil=coil),
+            vias=dataclasses.replace(_EXAMPLE.vias, pad_mm=at.pad_mm),
+        )
+        return generate_spiral(design, registry)
+
+    # With turns=None a smaller pitch admits more turns, so the reference is the build at the smallest legitimate one.
+    reference = dataclasses.replace(_EXAMPLE_SIZES, clearance_mm=DRC_EPSILON_MM) if turns is None else _EXAMPLE_SIZES
+    event(f"example reached: {check_hostile_build(lambda: build(sizes), lambda: build(reference), _check_contract)}")
 
 
 def _drc_summary(board: Layout, rules: DrcRules) -> dict[str, float | None]:

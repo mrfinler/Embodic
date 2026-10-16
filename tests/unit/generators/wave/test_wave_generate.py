@@ -5,7 +5,7 @@ import math
 from typing import Any
 
 import pytest
-from hypothesis import example, given, settings
+from hypothesis import event, example, given, settings
 from hypothesis import strategies as st
 
 from embodic.api import compute
@@ -21,6 +21,7 @@ from embodic.model.vocabulary import ConnectionTopology, Phase
 from embodic.model.winding_specs import SpiralWindingSpec, WaveStyle, WaveWindingSpec
 from embodic.results import Registry, load_registry
 
+from ..hostile_sizes import HOSTILE_SETTINGS, WIDTHS, Sizes, check_hostile_build, hostile_sizes
 from .designs import wave
 
 pytestmark = pytest.mark.req("REQ-F-35")
@@ -329,3 +330,64 @@ def test_fuzzed_inputs_give_a_stack_or_unbuildable_never_an_exception(
     )
     fuzzed = dataclasses.replace(design, winding=spec, vias=dataclasses.replace(design.vias, pad_mm=pad))
     _check_contract(generate_wave(fuzzed, REGISTRY))
+
+
+_EXAMPLE = wave()
+_EXAMPLE_SIZES = Sizes(
+    clearance_mm=_EXAMPLE.winding.clearance_mm,  # type: ignore[union-attr]
+    pad_mm=_EXAMPLE.vias.pad_mm,
+    terminal_pad_mm=_EXAMPLE.connection.terminal_pad_mm,
+)
+_TINIEST = Sizes(clearance_mm=5e-324, pad_mm=5e-324, terminal_pad_mm=5e-324)
+
+
+@pytest.mark.slow
+@pytest.mark.req("REQ-F-19")
+@HOSTILE_SETTINGS
+@example(style=WaveStyle.INVOLUTE, r_inner=1.0, span=1.0, width="example", turns=1, sizes=_TINIEST)  # DEF-M3b-03 shape
+@example(
+    style=WaveStyle.INVOLUTE, r_inner=22.0, span=18.0, width="example", turns=2,
+    sizes=dataclasses.replace(_EXAMPLE_SIZES, pad_mm=2.2250738585072014e-308),
+)  # fmt: skip  # smallest normal float
+@given(
+    style=st.sampled_from(list(WaveStyle)),
+    r_inner=st.floats(1.0, 60.0),
+    span=st.floats(1.0, 40.0),
+    width=st.sampled_from(WIDTHS),
+    turns=st.integers(1, 30),
+    sizes=hostile_sizes(_EXAMPLE.drc_rules, _EXAMPLE_SIZES, terminal_pad=True),
+)
+def test_d030_hostile_clearance_and_pads_are_built_or_refused_within_bounds(
+    style: WaveStyle, r_inner: float, span: float, width: str, turns: int, sizes: Sizes
+) -> None:
+    """D-030 lower bounds (d030_property_spec.md): a positive clearance, via pad or terminal pad below the DRC rules.
+
+    Defect caught: a division by one of these sizes (DEF-M3b-03 for the width), a count derived from 1/size without the
+    width floor (the unbounded build of D-030), a non-finite coordinate, or an exception instead of Unbuildable. The
+    width is valid by construction, so the width refusal never stops the build.
+
+    Property 4 is not evaluated when the design is Unbuildable at the default sizes (the spec does not define it). One
+    nightly run of 200 examples: 94.0% Unbuildable, 5.0% compared with the baseline, 1.0% without a baseline.
+
+    Turns are drawn over 1 to 30 as the spec says. The generator documents only MAX_TURNS = 200 (generators/wave/
+    generate.py l.30); the SLOT_PITCH refusal is geometric (derive.py l.318, 2 r_in sin(d_theta/2) < w + s), so the
+    range is kept and most draws end Unbuildable.
+    """
+    assert isinstance(_EXAMPLE.winding, WaveWindingSpec)
+    width_mm = _EXAMPLE.drc_rules.min_trace_width_mm if width == WIDTHS[0] else _EXAMPLE.winding.trace_width_mm
+
+    def build(at: Sizes) -> BoardStack | Unbuildable:
+        design = wave(
+            style, turns=turns, r_inner_mm=r_inner, r_outer_mm=r_inner + span, trace_width_mm=width_mm,
+            clearance_mm=at.clearance_mm,
+        )  # fmt: skip
+        design = dataclasses.replace(
+            design,
+            vias=dataclasses.replace(design.vias, pad_mm=at.pad_mm),
+            connection=dataclasses.replace(design.connection, terminal_pad_mm=at.terminal_pad_mm),
+        )
+        return generate_wave(design, REGISTRY)
+
+    event(
+        f"example reached: {check_hostile_build(lambda: build(sizes), lambda: build(_EXAMPLE_SIZES), _check_contract)}"
+    )

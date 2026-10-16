@@ -116,7 +116,7 @@ def test_motor_constant_is_zero_without_copper_loss_or_current() -> None:
     """Defect caught: a division by zero or a NaN where Xcoil reports 0 (l.1435)."""
     assert motor_constant_n_m_per_sqrt_w(0.05, 0.0, 1.0) == 0.0
     assert motor_constant_n_m_per_sqrt_w(0.05, 2.0, 0.0) == 0.0
-    assert motor_constant_n_m_per_sqrt_w(0.05, 4.0, 1.0) == pytest.approx(0.025, rel=1e-15)
+    assert motor_constant_n_m_per_sqrt_w(0.05, 4.0, 1.0) == pytest.approx(0.025, rel=1e-15, abs=0.0)
     assert compare_scalar(0.05 / math.sqrt(2.0), motor_constant_n_m_per_sqrt_w(0.05, 2.0, 1.0), KERNEL).ok
 
 

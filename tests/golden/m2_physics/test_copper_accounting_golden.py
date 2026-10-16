@@ -129,6 +129,6 @@ def test_serpentine_full_sums_differ_by_the_vbus_copper_inside_the_recorded_marg
     vbus_eddy = math.fsum(w for kind, w in zip(kinds, eddy, strict=True) if kind == "vbus")
     strand_eddy = math.fsum(w for kind, w in zip(kinds, eddy, strict=True) if kind == "strand")
     assert vbus_eddy > 0.0
-    assert full["loss_eddy"] == pytest.approx(strand_eddy + vbus_eddy, rel=1e-12)
+    assert full["loss_eddy"] == pytest.approx(strand_eddy + vbus_eddy, rel=1e-12, abs=0.0)
     ic_eddy = math.fsum(w for kind, w in zip(kinds, eddy, strict=True) if kind == "ic")
     assert ic_eddy == 0.0, "the interconnect paths carry no eddy loss, so only vbus separates the sums"

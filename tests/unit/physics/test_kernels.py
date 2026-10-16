@@ -61,14 +61,14 @@ def test_ut_phy_04_symmetry_plane_per_rotor_type_and_open_rotor_limit() -> None:
 
     Defect caught: the yoke case using the double-rotor half plane, or a mirror applied to an open rotor.
     """
-    assert symmetry_plane_mm(_rotor(RotorType.DOUBLE), 1.6) == pytest.approx(1.6, rel=1e-15)
-    assert symmetry_plane_mm(_rotor(RotorType.SINGLE_YOKE), 1.6) == pytest.approx(3.2, rel=1e-15)
+    assert symmetry_plane_mm(_rotor(RotorType.DOUBLE), 1.6) == pytest.approx(1.6, rel=1e-15, abs=0.0)
+    assert symmetry_plane_mm(_rotor(RotorType.SINGLE_YOKE), 1.6) == pytest.approx(3.2, rel=1e-15, abs=0.0)
     assert math.isinf(symmetry_plane_mm(_rotor(RotorType.SINGLE_OPEN), 1.6))
     rotor = _rotor(RotorType.SINGLE_OPEN, poles=16)
     r, z1, z2 = np.array([28.0]), np.array([0.5]), np.array([1.5])
     b1, _ = field_harmonic(1, r, z1, rotor, math.inf, np.array(0.85))
     b2, _ = field_harmonic(1, r, z2, rotor, math.inf, np.array(0.85))
-    assert b2[0] / b1[0] == pytest.approx(math.exp(-(8 / 28.0) * 1.0), rel=1e-12)
+    assert b2[0] / b1[0] == pytest.approx(math.exp(-(8 / 28.0) * 1.0), rel=1e-12, abs=0.0)
 
 
 @pytest.mark.req("REQ-F-07")
@@ -77,8 +77,8 @@ def test_field_is_mirrored_about_the_symmetry_plane() -> None:
     rotor = _rotor(poles=16)
     r = np.array([28.0, 28.0])
     bz, bt = field_harmonic(1, r, np.array([0.9, 1.3]), rotor, 1.1, np.array(0.85))
-    assert bz[0] == pytest.approx(bz[1], rel=1e-12)
-    assert bt[0] == pytest.approx(bt[1], rel=1e-12)
+    assert bz[0] == pytest.approx(bz[1], rel=1e-12, abs=0.0)
+    assert bt[0] == pytest.approx(bt[1], rel=1e-12, abs=0.0)
 
 
 @pytest.mark.eqt("EQT-04-UT1")
@@ -112,9 +112,9 @@ def test_cf04_track_resistance_at_20_and_60_degc() -> None:
     thickness = {"F.Cu": 0.0348}
     r20 = path_resistance_ohm(_track_arrays(), thickness, copper_resistivity_ohm_m(20.0, RHO20, ALPHA20))
     r60 = path_resistance_ohm(_track_arrays(), thickness, copper_resistivity_ohm_m(60.0, RHO20, ALPHA20))
-    assert r20[0] == pytest.approx(0.9908620689655171, rel=1e-12)
-    assert r20[1] == pytest.approx(0.04669327494874277, rel=1e-12)
-    assert r60[0] == pytest.approx(1.1466255862068966, rel=1e-12)
+    assert r20[0] == pytest.approx(0.9908620689655171, rel=1e-12, abs=0.0)
+    assert r20[1] == pytest.approx(0.04669327494874277, rel=1e-12, abs=0.0)
+    assert r60[0] == pytest.approx(1.1466255862068966, rel=1e-12, abs=0.0)
 
 
 @pytest.mark.eqt("EQT-11-CF04")
@@ -126,9 +126,9 @@ def test_cf04_and_ut_phy_11_via_barrel_resistance() -> None:
     Defect caught: plating grown outward (pi (2 r t + t^2)) or the barrel count ignored.
     """
     rho = copper_resistivity_ohm_m(20.0, RHO20, ALPHA20)
-    assert via_resistance_ohm(0.3, 25.0, 1.6, rho, 1) == pytest.approx(0.001277202792190775, rel=1e-12)
+    assert via_resistance_ohm(0.3, 25.0, 1.6, rho, 1) == pytest.approx(0.001277202792190775, rel=1e-12, abs=0.0)
     assert via_resistance_ohm(0.3, 25.0, 0.2, rho, 1) == pytest.approx(0.160e-3, abs=0.5e-6)
-    assert via_resistance_ohm(0.3, 25.0, 1.6, rho, 2) == pytest.approx(0.001277202792190775 / 2, rel=1e-12)
+    assert via_resistance_ohm(0.3, 25.0, 1.6, rho, 2) == pytest.approx(0.001277202792190775 / 2, rel=1e-12, abs=0.0)
 
 
 @pytest.mark.eqt("EQT-09-CF06")
@@ -141,11 +141,11 @@ def test_cf06_star_and_delta_constants() -> None:
     """
     star = phase_constants(0.01, ConnectionTopology.STAR, 3, 10)
     delta = phase_constants(0.01, ConnectionTopology.DELTA, 3, 10)
-    assert star.ke_line_v_s_per_rad == pytest.approx(0.017320508075688773, rel=1e-12)
-    assert star.kt_n_m_per_a == pytest.approx(0.021213203435596423, rel=1e-12)
-    assert delta.kt_n_m_per_a == pytest.approx(0.01224744871391589, rel=1e-12)
-    assert delta.ke_line_v_s_per_rad == pytest.approx(0.01, rel=1e-12)
-    assert star.kv_rpm_per_v == pytest.approx(60.0 / (2.0 * math.pi * 0.017320508075688773), rel=1e-12)
+    assert star.ke_line_v_s_per_rad == pytest.approx(0.017320508075688773, rel=1e-12, abs=0.0)
+    assert star.kt_n_m_per_a == pytest.approx(0.021213203435596423, rel=1e-12, abs=0.0)
+    assert delta.kt_n_m_per_a == pytest.approx(0.01224744871391589, rel=1e-12, abs=0.0)
+    assert delta.ke_line_v_s_per_rad == pytest.approx(0.01, rel=1e-12, abs=0.0)
+    assert star.kv_rpm_per_v == pytest.approx(60.0 / (2.0 * math.pi * 0.017320508075688773), rel=1e-12, abs=0.0)
 
 
 def test_ut_phy_13_skin_depth_at_133_hz() -> None:
@@ -182,9 +182,9 @@ def test_ut_phy_16_mass_of_the_laminate_and_the_copper_in_it() -> None:
     """
     bare = mass_g({}, {}, 6461.0, 0.62, 8.89, 1.85)
     plated = mass_g({"L1": 1000.0}, {"L1": 0.0348}, 6461.0, 0.62, 8.89, 1.85)
-    assert bare.laminate_g == pytest.approx(7.410767, rel=1e-12)
-    assert plated.copper_g == pytest.approx(0.309372, rel=1e-12)
-    assert plated.laminate_g == pytest.approx(7.346387, rel=1e-12)
+    assert bare.laminate_g == pytest.approx(7.410767, rel=1e-12, abs=0.0)
+    assert plated.copper_g == pytest.approx(0.309372, rel=1e-12, abs=0.0)
+    assert plated.laminate_g == pytest.approx(7.346387, rel=1e-12, abs=0.0)
 
 
 @pytest.mark.eqt("EQT-21-UT1")
@@ -196,10 +196,10 @@ def test_ut_phy_17_loss_budget_current() -> None:
 def test_ut_phy_19_thd_of_a_pure_fundamental_is_zero() -> None:
     """UT-PHY-19 (EQ-18): THD of a pure fundamental is 0; 3rd and 5th of 0.3 and 0.4 give 0.5."""
     assert thd({1: 2.0, 3: 0.0, 5: 0.0}) <= 1e-12
-    assert thd({1: 1.0, 3: 0.3, 5: 0.4}) == pytest.approx(0.5, rel=1e-12)
+    assert thd({1: 1.0, 3: 0.3, 5: 0.4}) == pytest.approx(0.5, rel=1e-12, abs=0.0)
 
 
 def test_current_density_and_temperature_rise_worked_examples() -> None:
     """EQ-22: 1 A over 2 paths of 0.5 mm x 0.035 mm -> 28.571 A/mm^2. EQ-17: 2 W, 2500 mm^2, h 20 -> 20 K."""
-    assert current_density_a_per_mm2(1.0, 2, 0.5, 0.035) == pytest.approx(1.0 / 0.035, rel=1e-12)
-    assert temperature_rise_k(2.0, 2500.0, 20.0) == pytest.approx(20.0, rel=1e-12)
+    assert current_density_a_per_mm2(1.0, 2, 0.5, 0.035) == pytest.approx(1.0 / 0.035, rel=1e-12, abs=0.0)
+    assert temperature_rise_k(2.0, 2500.0, 20.0) == pytest.approx(20.0, rel=1e-12, abs=0.0)
