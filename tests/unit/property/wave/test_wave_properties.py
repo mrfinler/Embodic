@@ -15,12 +15,14 @@ from drc_universe import contract_exemptions, sweep
 from embodic_adapter import pair_violations, uniform_rules
 from gr19 import universe
 from tests.unit.generators.wave.designs import wave
+from tests.unit.property.chord_counts import designed_integers_snapped, roundoff_rel
 from tests.unit.property.t_junctions import same_net_via_tap_pairs, t_junction_pairs
 
 from embodic.drc import run_drc
 from embodic.generators.wave.generate import generate_wave_rotated
 from embodic.geometry.layout import BoardStack, Layout
 from embodic.io.board_dump import dump_layout, encode_board_dump
+from embodic.model.design import DesignParameters
 from embodic.model.winding_specs import WaveStyle
 from embodic.physics import analyse
 from embodic.results import load_registry
@@ -80,14 +82,37 @@ def test_pr_14_rotating_the_start_angle_leaves_ke_resistance_and_drc_values_unch
     found on a sampled waveform whose phase moves with the rotation.
     """
     design = wave(WaveStyle(style), poles=8)
-    pp = design.rotor.poles // 2
-    base = generate_wave_rotated(design, REGISTRY, 0.0)
-    turned = generate_wave_rotated(design, REGISTRY, 360.0 / pp * turn)
-    assert isinstance(base, BoardStack) and isinstance(turned, BoardStack)
-    a, b = analyse(design, base, {}, REGISTRY), analyse(design, turned, {}, REGISTRY)
+    _check_rotation(design, 360.0 / (design.rotor.poles // 2) * turn)
+
+
+def _check_rotation(design: DesignParameters, degrees: float) -> None:
+    """Compare the boards at 0 and ``degrees``, built and analysed with the designed-integer chord counts held equal.
+
+    Ke, line Ke and the eddy loss sum the same chords, so they are compared at the round-off bound 2 (N + 10) u
+    (DEF-UE16-01, D-054a); R and the DRC minima keep 1e-9.
+    """
+    with designed_integers_snapped():
+        base = generate_wave_rotated(design, REGISTRY, 0.0)
+        turned = generate_wave_rotated(design, REGISTRY, degrees)
+        assert isinstance(base, BoardStack) and isinstance(turned, BoardStack)
+        a, b = analyse(design, base, {}, REGISTRY), analyse(design, turned, {}, REGISTRY)
+        rel = roundoff_rel(base, design.analysis.max_segment_mm)
     assert a is not None and b is not None
-    for name in ("ke_phase_v_s_per_rad", "ke_line_v_s_per_rad", "resistance_phase_20c_ohm", "loss_eddy_w"):
-        assert getattr(b, name).value == pytest.approx(getattr(a, name).value, rel=1e-9), name
+    for name in ("ke_phase_v_s_per_rad", "ke_line_v_s_per_rad", "loss_eddy_w"):
+        assert getattr(b, name).value == pytest.approx(getattr(a, name).value, rel=rel), name
+    assert b.resistance_phase_20c_ohm.value == pytest.approx(a.resistance_phase_20c_ohm.value, rel=1e-9)
     first, second = _scalars(base.boards[0]), _scalars(turned.boards[0])
     assert second == pytest.approx(first, abs=1e-9)
     assert math.isfinite(a.ke_line_v_s_per_rad.value) and a.ke_line_v_s_per_rad.value > 0.0
+
+
+@pytest.mark.parametrize("ulps", [1, 4, 8])
+def test_pr_14_overlap_keeps_ke_when_the_platform_rounds_the_rotation_differently(ulps: int) -> None:
+    """DEF-UE16-01. Catches a Ke comparison that depends on the last bits of sin and cos (Windows UCRT against glibc).
+
+    A rotation a few ulp off one electrical period stands in for another platform: it flips chord counts of the 54
+    designed-integer primitives and moved Ke by 2.4e-10 to 4.4e-8 (U-E16 probe, pr14_and_reqf_texts.md section 1.3).
+    """
+    design = wave(WaveStyle.OVERLAP, poles=8)
+    period_deg = 360.0 / (design.rotor.poles // 2)
+    _check_rotation(design, period_deg + ulps * math.ulp(period_deg))

@@ -15,6 +15,7 @@ from records import Line as OwnLine
 from records import disc
 from tests.unit.generators.serpentine.make_example import example_design
 from tests.unit.generators.serpentine.support import with_winding
+from tests.unit.property.chord_counts import designed_integers_snapped, roundoff_rel
 from tests.unit.property.t_junctions import same_net_via_tap_pairs, t_junction_pairs
 
 from embodic.drc import DrcReport, run_drc
@@ -36,7 +37,6 @@ EXAMPLES = 3
 PERIOD_FRACTIONS = [1.0, 0.5, 0.25, -0.75, 0.37]
 PAIR_KINDS = {"trace_trace", "trace_via", "via_via", "pad_trace", "pad_pad"}
 CORNERS = {PrimitiveRole.FILLET, PrimitiveRole.TAPER}
-KE_REL_TOL = 1e-8  # D-036 c; the reason is in the _check_rotation docstring
 
 
 def _stack(design: DesignParameters) -> BoardStack:
@@ -133,8 +133,8 @@ def _first_phase_angle_rad(waveform: Sequence[float]) -> float:
     return cmath.phase(np.fft.fft(np.array(waveform)[:-1])[1])
 
 
-def _measures(design: DesignParameters, stack: BoardStack) -> tuple[float, float, float, dict[str, float]]:
-    """Return the first phase angle, the mean Ke, the mean R and the smallest DRC clearance per kind."""
+def _measures(design: DesignParameters, stack: BoardStack) -> tuple[float, dict[str, float], float, dict[str, float]]:
+    """Return the first phase angle, the chord sums (mean Ke, line Ke, eddy loss), R and the least DRC clearances."""
     analysis = analyse(design, stack, derive_provenance(design, None, ()), REGISTRY)
     assert analysis is not None
     drc: dict[str, float] = {}
@@ -144,32 +144,43 @@ def _measures(design: DesignParameters, stack: BoardStack) -> tuple[float, float
         for s in report.summaries:
             if s.least_clearance_mm is not None:
                 drc[s.kind.value] = min(drc.get(s.kind.value, math.inf), s.least_clearance_mm)
-    ke = math.fsum(p.ke_peak_v_s_per_rad.value for p in analysis.phases) / len(analysis.phases)
+    sums = {
+        "ke": math.fsum(p.ke_peak_v_s_per_rad.value for p in analysis.phases) / len(analysis.phases),
+        "ke_line": analysis.ke_line_v_s_per_rad.value,
+        "loss_eddy": analysis.loss_eddy_w.value,
+    }
     return (
         _first_phase_angle_rad(analysis.emf_waveform_v.value),
-        ke,
+        sums,
         analysis.resistance_phase_operating_ohm.value,
         drc,
     )
 
 
 def _check_rotation(
-    design: DesignParameters, fraction: float, build: Callable[[DesignParameters], BoardStack] = _built
+    design: DesignParameters,
+    fraction: float,
+    build: Callable[[DesignParameters], BoardStack] = _built,
+    extra_rad: float = 0.0,
 ) -> None:
     """Rotate the start angle by ``fraction`` of an electrical period and compare the two boards.
 
-    Ke is compared at KE_REL_TOL (1e-8) and not 1e-9: when a side line is a whole number of 0.5 mm chords, rotation
-    moves its computed length by one ulp, ``ceil`` flips the chord count by one, and Ke moved by 8.5e-9 relative in
-    the DEF-M3a-02 counter-example (test_plan.md PR-14 branch B). R, the phasor angle and the DRC values keep 1e-9.
+    Both boards are built and analysed with the designed-integer chord counts held equal (chord_counts.py), so Ke,
+    line Ke and the eddy loss are compared at the round-off bound 2 (N + 10) u (DEF-UE16-01, D-054a). R, the phasor
+    angle and the DRC values keep 1e-9.
     """
     pole_pairs = design.rotor.poles // 2
-    delta = fraction * 2.0 * math.pi / pole_pairs
+    delta = fraction * 2.0 * math.pi / pole_pairs + extra_rad
     assert isinstance(design.winding, SerpentineWindingSpec)
     rotated = with_winding(design, start_angle_rad=design.winding.start_angle_rad + delta)
-    angle0, ke0, r0, drc0 = _measures(design, build(design))
-    angle1, ke1, r1, drc1 = _measures(rotated, build(rotated))
+    with designed_integers_snapped():
+        base = build(design)
+        angle0, sums0, r0, drc0 = _measures(design, base)
+        angle1, sums1, r1, drc1 = _measures(rotated, build(rotated))
+        rel = roundoff_rel(base, design.analysis.max_segment_mm)
     assert abs(math.remainder(angle1 - angle0 + pole_pairs * delta, 2.0 * math.pi)) <= 1e-9
-    assert ke1 == pytest.approx(ke0, rel=KE_REL_TOL)
+    for name, value in sums0.items():
+        assert sums1[name] == pytest.approx(value, rel=rel), name
     assert r1 == pytest.approx(r0, rel=1e-9)
     assert drc1.keys() == drc0.keys()
     for kind, value in drc0.items():
@@ -197,11 +208,23 @@ def test_pr_14_the_default_preset_follows_the_rotation(fraction: float) -> None:
 
 
 def test_pr_14_counter_example_sharp_corners_with_one_turn() -> None:
-    """PR-14 counter-example found by Hypothesis (DEF-M3a-02): Ke moves by 8.5e-9 relative, inside KE_REL_TOL.
+    """PR-14 counter-example found by Hypothesis (DEF-M3a-02), the Windows failure of DEF-UE16-01.
 
-    The 18 mm sharp side lines are exactly 36 chords of 0.5 mm. Rotating moves their computed length by one ulp, so
-    ``ceil`` gives 36 or 37 chords, and the two valid discretisations differ by that much. It is a chord-count flip,
-    not a rotation defect.
+    The 18 mm sharp side lines are exactly 36 chords of 0.5 mm. Rotating moves their computed length by an ulp, so
+    ``ceil`` gives 36 or 37 chords: Ke moved by 8.5e-9 on Linux and -2.0e-8 on Windows. With the counts held equal it
+    agrees to 6e-16, inside the 1.3e-12 bound (pr14_and_reqf_texts.md sections 1.3 and 1.5).
     """
     design = with_winding(example_design(), turns=1, corner_style=CornerStyle.SHARP)
     _check_rotation(design, 1.0)
+
+
+@pytest.mark.parametrize("ulps", [1, 2, 4, 8])
+def test_pr_14_counter_example_keeps_ke_when_the_platform_rounds_the_rotation_differently(ulps: int) -> None:
+    """DEF-UE16-01. Catches a Ke comparison that depends on the last bits of sin and cos (Windows UCRT against glibc).
+
+    A rotation a few ulp off one electrical period stands in for another platform: it flips the chord counts of the
+    84 designed-integer side lines and moved Ke by 1.8e-9 to 8.0e-8 (U-E16 probe, pr14_and_reqf_texts.md section 1.3).
+    """
+    design = with_winding(example_design(), turns=1, corner_style=CornerStyle.SHARP)
+    period_rad = 2.0 * math.pi / (design.rotor.poles // 2)
+    _check_rotation(design, 1.0, extra_rad=ulps * math.ulp(period_rad))
