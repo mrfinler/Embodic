@@ -1,0 +1,59 @@
+{
+ "embodic": "0.0.1",
+ "embodic_source_sha256": "cfefe405be515c4ba107c38b02a5e5dbaacc220ccc1e0e5a70033d919f78baae",
+ "numpy": "2.4.6",
+ "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+ "python": "3.11.15",
+ "runs": [
+  {
+   "example": "serpentine_16p_example",
+   "exit_code": 0,
+   "stdout": [
+    "Design: Serpentine, 16 poles",
+    "Design hash: sha256:8ec4c23449a0be2bf4ee6ba337b72b2e93e5906e6b53ba8ba7c441d4872dd1ca",
+    "Topology: serpentine, boards: 1",
+    "Design rule check: passed"
+   ]
+  },
+  {
+   "example": "spiral_12c10p_d08",
+   "exit_code": 0,
+   "stdout": [
+    "Design: Spiral, 12 coils, 10 poles (D08)",
+    "Design hash: sha256:327919a0eef55ce2c458635f6160047af7654ebd0a04e818ee225fd5f69615d8",
+    "Topology: spiral, boards: 1",
+    "Design rule check: passed"
+   ]
+  },
+  {
+   "example": "spiral_12c14p",
+   "exit_code": 0,
+   "stdout": [
+    "Design: Spiral, 12 coils, 14 poles",
+    "Design hash: sha256:4a1997029f7063676bdb9eab703c462f4240d84916a5ddf3deec044fa4391bc1",
+    "Topology: spiral, boards: 1",
+    "Design rule check: passed"
+   ]
+  },
+  {
+   "example": "spiral_12c16p_default",
+   "exit_code": 0,
+   "stdout": [
+    "Design: Spiral, 12 coils, 16 poles",
+    "Design hash: sha256:ac4fab5db06f9e8f733dc495080deeddfe0bcf58faa31ebb7ec841c1b27d9c09",
+    "Topology: spiral, boards: 1",
+    "Design rule check: passed"
+   ]
+  },
+  {
+   "example": "wave_16p_example",
+   "exit_code": 2,
+   "stdout": [
+    "Design: Wave, 16 poles, involute",
+    "Design hash: sha256:3131a61975766c38984df5065b01f255875b79ebcfa831624c10c5db5d5c82e8",
+    "Topology: wave, boards: 1",
+    "Design rule check: FAILED, 186 violations"
+   ]
+  }
+ ]
+}
