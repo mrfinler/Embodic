@@ -81,7 +81,7 @@ def test_dxf_formats_are_not_swapped(run, project_of, tmp_path) -> None:
     assert len(dxf_entities(outline)) < len(dxf_entities(complete))
 
 
-@pytest.mark.req("REQ-F-33")
+@pytest.mark.req("REQ-F-18", "REQ-F-33")
 @pytest.mark.parametrize("fmt", GATED)
 def test_a_failed_drc_refuses_drawings_and_the_bundle_without_confirmation(run, project_of, tmp_path, fmt) -> None:
     """Catches a drawing written for a design that fails the DRC: exit 2, nothing on disk, the fix named (D-045e)."""
