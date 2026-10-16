@@ -4,6 +4,7 @@ Specification: docs/phase3/architecture/v3_contract_rulings.md section 3 (D-051e
 `tools/golden/functions/stackup.mjs` and `tools/golden/cases/stackup.json`. Every Xcoil number below is read from them.
 """
 
+import itertools
 import math
 import os
 import shutil
@@ -15,7 +16,9 @@ from typing import Any
 import pytest
 from harness import DATA_DIR, KERNEL_MM, GoldenCase, GoldenReport, compare_scalar, compare_sequence, load_area
 
+from embodic.errors import Severity
 from embodic.model.stackup import CopperLayer, DielectricLayer, StackLayer, Stackup, generate_even_stackup
+from embodic.model.validate import even_stackup_issues
 
 pytestmark = pytest.mark.req("REQ-F-04")
 
@@ -115,30 +118,40 @@ def test_gr_07_custom_list_gives_the_copper_z_of_xcoil(case: GoldenCase, golden_
 
 
 @pytest.mark.parametrize("case", THIN.values(), ids=list(THIN))
-def test_gr_07_thin_board_gap_clamp_pins_where_the_helper_and_xcoil_part(case: GoldenCase) -> None:
-    """Pins DEF-U-M6h-01: on 8 layers of 2 oz in 0.4 mm both clamp every gap to 0 but then part ways.
+def test_gr_07_case_3_a_board_thinner_than_its_copper_is_refused(case: GoldenCase) -> None:
+    """Pins D-053a (DEF-U-M6h-01, gr07_case3_ruling.md): embodic refuses 8 layers of 2 oz on a 0.4 mm board.
 
-    Xcoil keeps the input board thickness and spaces the layer centres evenly inside it, so its copper layers overlap.
-    The helper sums its layers, so they touch and the board grows to 8 x 0.0696 mm. The tolerance is not loosened.
-    Agent 2 and Agent 4 decide between an expected diff with its reason and a validation refusal. This test changes
-    with that decision and not before.
+    The Xcoil fixture stays as the record of an unbuildable stack: its entries sum past the board thickness it reports
+    and its layer centres are closer than one copper thickness. embodic's values are not compared with it.
     """
     xcoil = xcoil_view(case.calls[0].output)
     inputs = case.calls[0].inputs
+    copper_count, board_mm = inputs["nCu"], inputs["p"]["boardThickness"]
     copper_t = inputs["p"]["copperOzOuter"] * OZ_TO_MM
-    helper = embodic_view(helper_for(case))
+    entry_sum = math.fsum(e["t"] for e in case.calls[0].output["entries"])
 
-    assert compare_sequence(xcoil["copper_t"], helper["copper_t"], KERNEL_MM).ok
-    assert compare_sequence(xcoil["dielectric_t"], helper["dielectric_t"], KERNEL_MM).ok  # both clamp to 0
-    assert xcoil["board"] == inputs["p"]["boardThickness"] == 0.4
-    assert helper["board"] == pytest.approx(math.fsum([copper_t] * 8), abs=1e-12, rel=0.0)
-    assert not compare_scalar(xcoil["board"], helper["board"], KERNEL_MM).ok
+    assert (copper_count, board_mm, xcoil["board"]) == (8, 0.4, 0.4)
+    assert entry_sum - xcoil["board"] == pytest.approx(8 * 0.0696 - 0.4, abs=KERNEL_MM, rel=0.0)
+    pitch = [b - a for a, b in itertools.pairwise(xcoil["copper_z"])]
+    assert all(step < copper_t for step in pitch), pitch
 
-    touching = [(i + 0.5) * copper_t for i in range(8)]
-    assert helper["copper_z"] == pytest.approx(touching, abs=1e-12, rel=0.0)
-    assert compare_scalar(xcoil["copper_z"][0], helper["copper_z"][0], KERNEL_MM).ok  # the top layer agrees
-    for index in range(1, 8):
-        assert helper["copper_z"][index] - xcoil["copper_z"][index] > 1e-3, index
+    (refusal,) = even_stackup_issues(copper_count, copper_t, board_mm)
+    assert (refusal.code, refusal.severity, refusal.value) == (
+        "INVALID_STACKUP_COPPER_EXCEEDS_BOARD",
+        Severity.ERROR,
+        0.4,
+    )
+    assert refusal.limit == pytest.approx(math.fsum([0.0696] * 8), abs=KERNEL_MM, rel=0.0)
+
+    copper_mm = math.fsum([copper_t] * copper_count)
+    assert [i.code for i in even_stackup_issues(copper_count, copper_t, copper_mm)] == [refusal.code]
+    assert even_stackup_issues(copper_count, copper_t, copper_mm + 1e-6) == ()
+    edge = embodic_view(generate_even_stackup(copper_count, copper_t, copper_mm + 1e-6))
+    assert all(t > 0.0 for t in edge["dielectric_t"]), edge["dielectric_t"]
+    assert math.fsum(edge["copper_t"] + edge["dielectric_t"]) == pytest.approx(copper_mm + 1e-6, abs=KERNEL_MM, rel=0.0)
+
+    with pytest.raises(ValueError, match="board thickness"):
+        generate_even_stackup(copper_count, copper_t, board_mm)
 
 
 @pytest.mark.skipif(shutil.which("node") is None or not ENGINE.is_file(), reason="needs Node and the Xcoil engine")
