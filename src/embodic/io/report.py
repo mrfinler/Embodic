@@ -134,7 +134,7 @@ def _drc(flow: _Flow, outcome: ComputeOutcome) -> None:
         epsilon = f"{report.epsilon_mm}{UNIT_SPACE}mm"
         flow.row([(MARGIN, f"Board {board}: {verdict} (method {report.method}, epsilon {epsilon})")])
         flow.row(
-            [(MARGIN, "Check"), (MARGIN + 130, "Least measured"), (MARGIN + 240, "Required"), (MARGIN + 330, "Pairs")],
+            [(MARGIN, "Check"), (MARGIN + 130, "Least clearance"), (MARGIN + 240, "Required"), (MARGIN + 330, "Pairs")],
             bold=True,
         )
         for s in report.summaries:

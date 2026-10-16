@@ -181,13 +181,13 @@ def test_ruling_d_drc_table_shows_glyph_message_measured_required_layer_without_
     model = table.model()
     shown = [c for c in range(model.columnCount()) if not table.isColumnHidden(c)]
     headers = [model.headerData(c, Qt.Orientation.Horizontal).replace("\n", " ") for c in shown]
-    assert headers == ["", "Message", "Measured (mm)", "Required (mm)", "Layer"]
+    assert headers == ["", "Message", "Clearance (mm)", "Required (mm)", "Layer"]
     assert table.columnWidth(0) == 24
     assert table.horizontalHeader().length() <= table.viewport().width(), size
     first = model.index(0, DRC_COLUMNS.index("clearance"))
     assert first.data() == "0.199965" and first.data(Qt.ItemDataRole.FontRole).family() == "JetBrains Mono"
     tooltip = model.index(0, DRC_COLUMNS.index("layer")).data(Qt.ItemDataRole.ToolTipRole)
-    assert tooltip.startswith("Error. DRC_") and "Measured 0.199965\u00a0mm, required" in tooltip
+    assert tooltip.startswith("Error. DRC_") and "Clearance 0.199965\u00a0mm, required" in tooltip
     assert model.index(0, 0).data() == "" and model.index(0, 0).data(Qt.ItemDataRole.DecorationRole) is not None
 
 

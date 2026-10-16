@@ -28,7 +28,7 @@ def failure_line(v: DrcViolation) -> str:
         "export.confirm.row",
         message=message_for(v.kind.issue_code),
         layer=v.layer or text("drc.layer.all"),
-        measured=drc_length_text(v.clearance_mm),
+        clearance=drc_length_text(v.clearance_mm),
         required=drc_length_text(v.required_mm),
     )
 

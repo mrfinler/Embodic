@@ -214,7 +214,7 @@ def row_description(row: DrcRow) -> str:
         "drc.row.description",
         code=row.rule_code,
         message=row.message,
-        measured=row.clearance_text,
+        clearance=row.clearance_text,
         required=row.required_text,
         layer=row.layer_text,
     )

@@ -193,7 +193,10 @@ def test_ui15_out_of_range_value_stays_until_apply_then_notice_and_undo(rig):
     session.apply_suggestion(found.suggestion)
     assert session.document.draft.values["/rotor/air_gap_mm"] == 50
     assert current_hash(session) != typed_hash
-    assert session.notice.value.text == "Changed from 60 to 50: Xcoil clamps to the supported range."
+    assert (
+        session.notice.value.text
+        == "Changed from 60 to 50: Values outside the supported range move to the nearest limit."
+    )
     session.undo()
     assert (session.document.draft.values["/rotor/air_gap_mm"], current_hash(session)) == (60.0, typed_hash)
     assert session.notice.value is None

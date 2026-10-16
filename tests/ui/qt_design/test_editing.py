@@ -103,7 +103,7 @@ def test_ui15_no_silent_rewrite_the_suggestion_applies_only_on_apply_with_notice
     assert session_hash(window) != typed
     notice = find(window, "design-notice")
     assert notice.isVisibleTo(window)
-    expected = "Changed from 60 to 50: Xcoil clamps to the supported range."
+    expected = "Changed from 60 to 50: Values outside the supported range move to the nearest limit."
     assert find(window, "design-notice-text").text() == expected
     qtbot.mouseClick(find(window, "btn-notice-undo"), Qt.MouseButton.LeftButton)
     assert (find(window, "param-air-gap").text(), session_hash(window)) == ("60", typed)

@@ -363,7 +363,7 @@ contradiction. `issues-list` takes the title "Input issues" and the empty text "
 | objectName | Qt widget | Binding key | Behaviour |
 |---|---|---|---|
 | `drc-summary` | QLabel[class="check-state"] with `check-pass` or `check-fail` icon | `drc.passed`, `drc.violation_count` | "DRC: 2 failures, 1 warning" |
-| `drc-table` | QTableView: severity glyph (24 px, no word), Message, Measured (mm), Required (mm), Layer | `drc.violations` | Rows with `state=fail` get a 4 px fail border. Enter or double-click = Locate. The rule code and the severity word go to the row tooltip and the accessible description ("Error. DRC_TRACE_VIA. A trace is closer to a via than the via clearance rule. Measured 0.199965 mm, required 0.2 mm, layer L1."); Ctrl+C copies the row with the code. No row-number column. |
+| `drc-table` | QTableView: severity glyph (24 px, no word), Message, Clearance (mm), Required (mm), Layer | `drc.violations` | Rows with `state=fail` get a 4 px fail border. Enter or double-click = Locate. The rule code and the severity word go to the row tooltip and the accessible description ("Error. DRC_TRACE_VIA. A trace is closer to a via than the via clearance rule. Clearance 0.199965 mm, required 0.2 mm, layer L1."); Ctrl+C copies the row with the code. No row-number column. |
 | `btn-drc-locate` | QPushButton | selected row | Zooms the canvas to `at_mm`, dims copper to 35 %, draws the ink marker |
 | `drc-rule-note` | QLabel[class="hint"] | static | "A violation is reported when clearance < rule − 1e-6 mm (D-006)." |
 
