@@ -379,3 +379,35 @@ Defects: DEF-UV5-01 (selftest documented as missing in INSTALL.md §6 and README
 bundle build is missing), DEF-UV5-03 (Linux troubleshooting omits `libxcb-cursor0`), DEF-UV5-04 (selftest column
 overflow for the two longest IDs), DEF-UV5-05 (pip's upgrade notice not mentioned). Reproduce steps are in
 `m5/records/PK-06_walkthrough.md`.
+
+## M7 instruments and verdicts (U-V8, V3-01 and V3-14, release 0.0.1 and main 3cb23e5)
+
+V3-01 reads tests, so its script imports neither embodic nor pytest. It reuses the audit functions of
+`docs/phase3/verification/checks/req_audit.py`, reads the test sources of the release commit (`git archive 5e74acc
+tests`), and first reproduces the released audit counts. The rulings in `m7/v3_01_rulings.py` are my reading of each
+test against the Acceptance cell of requirements.md, not the tests' docstrings. V3-14 drives the release wheel through
+`embodic-cli` and scans the installed package with its own extractors. Each class must find a planted hit before its
+real result counts.
+
+| Script | Run in | What it does |
+|---|---|---|
+| `m7/v3_01_sample.py` | system `python3` | samples one passing test per `verified` must row (fixed rule, smallest SHA-256 node id) and reads every cause-B ID; writes `m7/records/V3-01.md` with the rulings and the audit counts with the rulings applied; `--dump FILE` writes the sources it read |
+| `m7/v3_14_scan.py` | `.venv/bin/python -I`, a venv with the release wheel, numpy 2.4.6 and pypdf 6.20.0 | REQ-T-10, REQ-T-11, REQ-L-03 and REQ-L-05 scans over the installed package, every export of the five examples and `compute --json` (`--src src` adds main's source); writes `m7/records/V3-14.md`; exit 2 on a control miss, 1 on a finding |
+
+Verdicts on 2026-10-17 (each `verified` by running the script named):
+
+| Item | Verdict |
+|---|---|
+| V3-01 part A (50 sampled tests) | 6 `checks`, 32 `partial`, 12 `does not check` |
+| V3-01 part B (20 cause-B IDs) | 9 found and `checks` under another label or marker, 9 `partial`, 2 missing (UT-PHY-07, GR-07) |
+| Audit with the rulings applied | must rows `verified` 50 to 42 (lenient) or 10 (strict); all rows 62 to 56 or 24 |
+| V3-14 controls | 74 of 75 rows find their plant; the miss is the raw-stream PDF reader on embedded TrueType text, so the PDF scan rests on pypdf, whose control finds the report's 'Key results' |
+| REQ-T-10 | 260 hits outside the allow-list, all the DRC clearance called "measured" (and FONTS.md); provenance and paper measurements are allow-listed |
+| REQ-T-11 | 16 hits: "Balanced." and "Not balanced ..." from the star of slots (8 strings, wheel and main); computed torque and efficiency labels carry a status and are allow-listed |
+| REQ-L-03 | 11 hits: two validate.py messages and three registry formulas the guide shows; 531 hits in fields the app does not show (registry notes, evidence-file test ids, example notes, board-dump schema text) are allow-listed (`inferred` from the view-model code) |
+| REQ-L-05 | 0 brand files ship (8 originals hashed), 0 personal-data hits; the pitch deck is not in the container, so a scan for the names in it is `unresolved` |
+
+Defects: DEF-UV8-01 (Xcoil in two engine messages), DEF-UV8-02 (the gate never enforces TR-01 or coverage), DEF-UV8-03
+(computed DRC clearance called "measured"), DEF-UV8-04 ("Balanced." from phase angles, needs a ruling), DEF-UV8-05 (Xcoil in
+three registry formulas the guide shows), DEF-UV8-06 (UT-PHY-07 and GR-07 missing), DEF-UV8-07 (a name match does not mean
+the test checks the criterion). Reproduce steps are in `m7/records/defects.md`.
