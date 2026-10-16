@@ -46,9 +46,10 @@ def lint_imports_with_scratch(tmp_path, files: dict[str, str]) -> subprocess.Com
         target = tmp_path / "src" / "embodic" / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(text, encoding="utf-8")
-    env = {**os.environ, "PYTHONPATH": str(tmp_path / "src")}
+    # PYTHONIOENCODING, not PYTHONUTF8: it overrides UTF-8 Mode for the standard streams (PEP 540)
+    env = {**os.environ, "PYTHONPATH": str(tmp_path / "src"), "PYTHONIOENCODING": "utf-8"}
     return subprocess.run(
-        [sys.executable, "-c", LINT_IMPORTS], cwd=tmp_path, env=env, capture_output=True, text=True, check=False
+        [sys.executable, "-c", LINT_IMPORTS], cwd=tmp_path, env=env, capture_output=True, encoding="utf-8", check=False
     )
 
 

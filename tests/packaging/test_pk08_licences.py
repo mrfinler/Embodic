@@ -75,5 +75,7 @@ def test_pk08_the_wheel_carries_the_licence_file_under_dist_info(built_wheel):
 def test_pk08_every_declared_requirement_has_a_licence_row():
     """Catches a dependency added to pyproject.toml without Agent 5's licence row (check_dependency_licences.py)."""
     script = REPO / "docs" / "phase2" / "evidence" / "tools" / "check_dependency_licences.py"
-    completed = subprocess.run([sys.executable, str(script), "--coverage"], capture_output=True, text=True, check=False)
+    completed = subprocess.run(
+        [sys.executable, str(script), "--coverage"], capture_output=True, encoding="utf-8", check=False
+    )
     assert completed.returncode == 0, completed.stdout + completed.stderr

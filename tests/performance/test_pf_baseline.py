@@ -129,7 +129,7 @@ def test_pf03_cold_start_to_a_shown_window_offscreen(baseline_cases, tmp_path):
             [sys.executable, "-c", COLD_START, str(tmp_path / f"recovery{run}")],
             env=env,
             capture_output=True,
-            text=True,
+            encoding="utf-8",
             check=False,
         )
         seconds.append(time.perf_counter() - started)

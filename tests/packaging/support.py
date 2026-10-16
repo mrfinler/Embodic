@@ -21,7 +21,7 @@ BUILD_FOLDERS = ("src", "resources")
 def run(*argv: object, cwd: Path = REPO) -> str:
     """Run a command, fail the test with its output when it exits non-zero, and return stdout."""
     completed = subprocess.run(
-        [str(a) for a in argv], cwd=cwd, env=CLEAN_ENV, capture_output=True, text=True, check=False
+        [str(a) for a in argv], cwd=cwd, env=CLEAN_ENV, capture_output=True, encoding="utf-8", check=False
     )
     assert completed.returncode == 0, f"{argv} exited {completed.returncode}\n{completed.stdout}\n{completed.stderr}"
     return completed.stdout

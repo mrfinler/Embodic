@@ -61,7 +61,7 @@ def baseline_cases():
     yield cases
     if os.environ.get("EMBODIC_RECORD_BASELINE") != "1" or not cases:
         return
-    commit = subprocess.run(("git", "rev-parse", "HEAD"), cwd=REPO, capture_output=True, text=True, check=False)
+    commit = subprocess.run(("git", "rev-parse", "HEAD"), cwd=REPO, capture_output=True, encoding="utf-8", check=False)
     document = {
         "format": "embodic.pf-baseline",
         "format_version": 1,
