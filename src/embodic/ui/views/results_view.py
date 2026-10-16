@@ -165,26 +165,8 @@ class ResultCard(QFrame):
         self.how_toggle.toggled.connect(self._toggle_how)
         self.how = QFrame()
         self.how.setObjectName(f"{prefix}-how")
-        how_layout = QVBoxLayout(self.how)
-        how_layout.setContentsMargins(0, 4, 0, 0)
-        # The disclosure always has the same six sections, so its labels are made once and only their text changes:
-        # a rebuilt label waiting for deleteLater would stay on screen over its successor (U-S4g S22).
-        self.how_sections: list[tuple[QLabel, QLabel]] = []
-        for _ in DISCLOSURE_KEYS:
-            title = QLabel()
-            title.setProperty("class", "section-title")
-            body = QLabel()
-            body.setTextFormat(Qt.TextFormat.PlainText)
-            body.setWordWrap(True)
-            body.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-            how_layout.addWidget(title)
-            how_layout.addWidget(body)
-            self.how_sections.append((title, body))
-        copy = QPushButton(text("results.how.copy"))
-        copy.setObjectName(f"{prefix}-copy")
-        copy.clicked.connect(self._copy)
-        how_layout.addWidget(copy, 0, Qt.AlignmentFlag.AlignLeft)
         self.how.setVisible(False)
+        self.how_sections: list[tuple[QLabel, QLabel]] = []
 
         value_line = QHBoxLayout()
         value_line.addWidget(self.value)
@@ -242,9 +224,32 @@ class ResultCard(QFrame):
             self._fill_how()
         set_revealed(self.how, shown)
 
+    def _build_how(self) -> None:
+        """Make the disclosure's widgets on its first opening; a card that never opens costs none (DEF-U-M5h-01)."""
+        how_layout = QVBoxLayout(self.how)
+        how_layout.setContentsMargins(0, 4, 0, 0)
+        # The disclosure always has the same six sections, so its labels are made once and only their text changes:
+        # a rebuilt label waiting for deleteLater would stay on screen over its successor (U-S4g S22).
+        for _ in DISCLOSURE_KEYS:
+            title = QLabel()
+            title.setProperty("class", "section-title")
+            body = QLabel()
+            body.setTextFormat(Qt.TextFormat.PlainText)
+            body.setWordWrap(True)
+            body.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+            how_layout.addWidget(title)
+            how_layout.addWidget(body)
+            self.how_sections.append((title, body))
+        copy = QPushButton(text("results.how.copy"))
+        copy.setObjectName(f"{self.prefix}-copy")
+        copy.clicked.connect(self._copy)
+        how_layout.addWidget(copy, 0, Qt.AlignmentFlag.AlignLeft)
+
     def _fill_how(self) -> None:
         if self.row is None:
             return
+        if not self.how_sections:
+            self._build_how()
         sections = disclosure(self.row, self._registry)
         for (title, body), section in zip(self.how_sections, sections, strict=True):
             title.setText(section.title)
