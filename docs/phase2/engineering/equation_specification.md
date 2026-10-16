@@ -573,11 +573,11 @@ This note adds no input and leaves the registry status of EQ-05 unchanged.
   "upper bound". Status: assumption. Dominant assumptions: ε_r, dielectric thickness.
   Applies to: spiral, serpentine, wave. Tests: EQT-29-GR.
 
-### EQ-30 DRC clearance measurement and acceptance
+### EQ-30 DRC clearance computation and acceptance
 
 - Formula: clearance(a, b) = min distance between discretised centre-line segments − (w_a + w_b)/2 (pads: distance to the
   pad outline). Violation iff clearance < rule − ε, ε ≤ 1e-6 mm (D-006). The arc discretisation error is bounded by the
-  sagitta tolerance and subtracted, so the measured clearance is never larger than the exact one.
+  sagitta tolerance and subtracted, so the computed clearance is never larger than the exact one.
 - Sources: decision D-006. Xcoil uses tol = 0.004 mm at engine.js lines 757, 1929, 2147, 2429 (`checks/engine_probe.js`).
 - Variables: w_a, w_b [mm]; rule [mm]; ε [mm].
 - Validity: line and arc primitives with round caps.
@@ -757,3 +757,10 @@ Revision 2026-10-17 (U-E14, claude-opus-5-5; DEF-UV8-05, REQ-L-03). The equation
 named Xcoil. `checks/build_registry.py` now writes those program names into `source_notes` instead. The mathematics,
 status, gate and tests of the three entries are unchanged. `docs/phase3/engineering/checks/guide_name_scan.py` renders
 every registry text the guide shows and exits 1 on any "xcoil" (case-insensitive).
+
+Revision 2026-10-17 (U-E15, claude-opus-5-5; U-S9 T10-6, REQ-T-10, D-051 a). The EQ-30 name read "DRC clearance
+measurement and acceptance". embodic computes the clearance from the layout geometry and measures nothing, and
+`measured` is kept for a provenance with a named source (D-007). The name is now "DRC clearance computation and
+acceptance" in this heading and in `checks/build_registry.py`, which writes the registry. The EQ-30 formula text says
+"computed clearance". The formula, status, gate and tests of EQ-30 are unchanged. The packaged copy
+`resources/evidence/equations.v1.json` follows through `tools/sync_registry.py`.

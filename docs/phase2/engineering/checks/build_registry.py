@@ -171,7 +171,7 @@ NEW = [
      "dominant_assumptions": ["eps_r", "dielectric thickness"],
      "reference_case": {"source": "arithmetic", "inputs": {"A_mm2": 1000, "t_mm": 0.2, "eps_r": 4.5}, "expected": {"C_F": 1.99215e-10}, "tolerance": "relative 1e-4"},
      "applies_to": ALL, "golden_functions": ["stackCapacitance"], "tests": tests("EQ-29", "GR")},
-    {"id": "EQ-30", "name": "DRC clearance measurement and acceptance",
+    {"id": "EQ-30", "name": "DRC clearance computation and acceptance",
      "formula": "clearance(a, b) = min distance between discretised centre-line segments - (w_a + w_b)/2 (pads: distance to pad outline); "
                 "violation iff clearance < rule - eps, eps <= 1e-6 mm (D-006); discretisation error bounded by the sagitta tolerance and subtracted (conservative)",
      "variables": [{"symbol": "eps", "unit": "mm", "meaning": "numerical tolerance <= 1e-6 mm"}],
@@ -322,7 +322,11 @@ def build():
                                         "`formula` (src/embodic/ui/viewmodels/results.py l.736 to l.737, disclosure l.226) but not "
                                         "`source_notes`. The program name moves from the formula of EQ-14, EQ-20 and EQ-27 to "
                                         "their source_notes. The mathematics, status, gate and tests of each entry are unchanged; "
-                                        "docs/phase3/engineering/checks/guide_name_scan.py lists displayed texts that name Xcoil"]
+                                        "docs/phase3/engineering/checks/guide_name_scan.py lists displayed texts that name Xcoil",
+                                        "v1.0 rev. U-E15 (2026-10-17, U-S9 T10-6, REQ-T-10, D-051 a): the EQ-30 `name` reads "
+                                        "'DRC clearance computation and acceptance'. embodic computes the clearance from the "
+                                        "layout geometry and measures nothing; `measured` is kept for a provenance with a named "
+                                        "source (D-007). The formula, status, gate and tests of EQ-30 are unchanged"]
     eqs = []
     for e in p1["equations"]:
         e = copy.deepcopy(e)
