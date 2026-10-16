@@ -65,7 +65,9 @@ PATCH = {
     "EQ-14": dict(applies_to=ALL, golden_functions=[],
                   replaced_functions=["windingInductance", "conductorsSerpentine", "conductorsWave", "conductorsFromElements"],
                   formula="L_m = (3*mu0/(4*pi))*(N*k_w1)^2*(D_o^2 - D_i^2)/(p^2*delta'), delta' = 2*l_m + 2*g + t_s "
-                          "(form (a) only; Xcoil's current-sheet model is not ported, D-049 d)",
+                          "(form (a) only, D-049 d)",
+                  source_notes_add="the current-sheet model of Xcoil engine.js windingInductance (l.2617) is not ported "
+                                   "(D-049 d; moved out of the formula, revision 2026-10-17, U-E14)",
                   gate_verdict="cannot verify yet", tests=tests("EQ-14", "CF12", "O2")),
     "EQ-15": dict(applies_to=ALL, golden_functions=["ipc2221Current"], gate_verdict="cannot verify yet", tests=tests("EQ-15", "GR")),
     "EQ-16": dict(applies_to=ALL, golden_functions=["massThermal"], gate_verdict="reuse with change",
@@ -80,7 +82,9 @@ PATCH = {
                   tests=tests("EQ-19", "GR", "CF07")),
     "EQ-20": dict(applies_to=ALL, golden_functions=["torqueSpeed", "inverterVoltage", "driveAnalysis"], gate_verdict="cannot verify yet",
                   formula_add="inverter fundamental: SVPWM V_LL,rms = V_dc/sqrt2; SPWM sqrt3 V_dc/(2 sqrt2); six-step sqrt6 V_dc/pi; open phases (full bridge) "
-                              "V_dc/sqrt2 or 4 V_dc/(pi sqrt2); pull-out T_po = m (E/Z)(V - E R/Z)/omega; pull-in T_pi = T_po - J omega f_e (Xcoil estimate)",
+                              "V_dc/sqrt2 or 4 V_dc/(pi sqrt2); pull-out T_po = m (E/Z)(V - E R/Z)/omega; pull-in T_pi = T_po - J omega f_e (estimate)",
+                  source_notes_add="the pull-in estimate is the one of Xcoil engine.js torqueSpeed l.2713 "
+                                   "(moved out of the formula, revision 2026-10-17, U-E14)",
                   tests=tests("EQ-20", "GR")),
     "EQ-21": dict(applies_to=ALL, golden_functions=[], gate_verdict="replace", tests=tests("EQ-21", "UT1")),
     "EQ-22": dict(applies_to=ALL, golden_functions=["analyze", "analyzeWave", "analyzeElements", "applyConnection"], gate_verdict="reuse",
@@ -135,10 +139,11 @@ NEW = [
      "reference_case": {"source": "arithmetic", "inputs": {"P_out": 10.0, "P_loss": 2.5}, "expected": {"eta": 0.8}, "tolerance": "exact"},
      "applies_to": ALL, "golden_functions": ["applyConnection"], "tests": tests("EQ-26", "GR")},
     {"id": "EQ-27", "name": "Numerical utilisation factor and analytic distribution factor",
-     "formula": "k_u = Ke1 / (sum over series conductors of integral B_z1 r dr over the magnet span) (Xcoil 'kw1'); serpentine k_d = sin(N gamma/2)/(N sin(gamma/2)), "
+     "formula": "k_u = Ke1 / (sum over series conductors of integral B_z1 r dr over the magnet span); serpentine k_d = sin(N gamma/2)/(N sin(gamma/2)), "
                 "gamma = p d_alpha (radial) or p (w + s)/r_mean (parallel); wave k_d = |sum_i w_i e^{j gamma (i - (q-1)/2)}| / sum_i w_i, w_0 = 2p - 1, w_i = 2p",
      "variables": [{"symbol": "k_u", "unit": "1", "meaning": "utilisation factor (numeric)"}, {"symbol": "k_d", "unit": "1", "meaning": "distribution factor"}],
-     "sources": ["EV-59", "EV-26"], "source_notes": "D15 eq. 6 p.7 (average of per-turn factors); D04 eq. 1 p.5 (distribution factor); engine.js analyze 975-986, analyzeWave 2073-2077",
+     "sources": ["EV-59", "EV-26"], "source_notes": "D15 eq. 6 p.7 (average of per-turn factors); D04 eq. 1 p.5 (distribution factor); engine.js analyze 975-986, analyzeWave 2073-2077; "
+                                                   "k_u is the quantity Xcoil engine.js names 'kw1' (analyze l.983; moved out of the formula, revision 2026-10-17, U-E14)",
      "gate_verdict": "reuse with change", "status": "inferred",
      "changes": ["rename Xcoil 'kw1' to utilisation factor k_u (it includes radial field variation and end effects)",
                  "label the parallel-style serpentine k_d as a mean-radius approximation", "spiral: k_w from EQ-08, not from kdAnalytic"],
@@ -312,7 +317,12 @@ def build():
                                         "Xcoil port. embodic implements form (a) (src/embodic/physics/estimates.py inductance_estimate_h, "
                                         "called from analyse.py l.408); the current-sheet functions move to replaced_functions; "
                                         "EQT-14-GR is withdrawn (nothing to compare) and EQT-14-CF12 (oracle_cases.json CF-12) checks "
-                                        "the code against the form (a) formula. The status stays unresolved and the label estimate"]
+                                        "the code against the form (a) formula. The status stays unresolved and the label estimate",
+                                        "v1.0 rev. U-E14 (2026-10-17, DEF-UV8-05, REQ-L-03): the equation guide shows `name` and "
+                                        "`formula` (src/embodic/ui/viewmodels/results.py l.736 to l.737, disclosure l.226) but not "
+                                        "`source_notes`. The program name moves from the formula of EQ-14, EQ-20 and EQ-27 to "
+                                        "their source_notes. The mathematics, status, gate and tests of each entry are unchanged; "
+                                        "docs/phase3/engineering/checks/guide_name_scan.py lists displayed texts that name Xcoil"]
     eqs = []
     for e in p1["equations"]:
         e = copy.deepcopy(e)
@@ -320,6 +330,8 @@ def build():
         for k, v in patch.items():
             if k == "formula_add":
                 e["formula"] = e["formula"] + "; " + v
+            elif k == "source_notes_add":
+                e["source_notes"] = e["source_notes"] + "; " + v
             elif k == "reference_update":
                 e["reference_case"]["expected"].update(v)
             else:
