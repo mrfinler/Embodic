@@ -1,74 +1,109 @@
-"""List, per requirement row, the union of tests that carry its REQ marker or name one of its planned test IDs.
+"""List, for each live must row, every collected test that carries the row's REQ marker or names a planned ID.
 
-    python -m pytest --collect-only -q --req-report /tmp/req_collect.json tests
-    python3 tests/independent/m7/v3_01_union.py /tmp/req_collect.json REQ-N-02 REQ-T-03
+    python3 tests/independent/m7/v3_01_union.py REPORT [REQ-F-nn | REQ-N-nn | REQ-T-nn | REQ-L-nn ...]
 
-A test belongs to a row when it carries the row's REQ marker, when its test name holds a planned ID (ut_res_02, lg01),
-or when its file names a planned ID and the test carries the marker. Each line prints `file:line test-name [REQ ...]`,
-with the line of the `def`, so a reader can open every test that the V3-01 union ruling (v3_01_rulings_ntl.py) must
-cover.
+REPORT is a `--req-report` JSON of a collect-only run (`pytest --collect-only --req-report PATH tests`). The output
+is the reading list behind v3_01_rulings_f.py and v3_01_rulings_ntl.py: per row, the acceptance cell, the planned
+IDs, and per test file the test functions with their `def` line and whether they carry the marker (`m`), name a
+planned ID in the test name (`i`), name one in the function's source, docstring included (`d`), or were found for a
+planned ID under another label in the V3-01 cause-B rulings (`b`).
 """
 
 import ast
 import importlib.util
 import json
+import re
 import sys
+from collections import defaultdict
+from functools import cache
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-AUDIT = REPO / "docs/phase3/verification/checks/req_audit.py"
+REQUIREMENTS = REPO / "docs/phase2/architecture/requirements.md"
+RULINGS = REPO / "tests/independent/m7/v3_01_rulings.py"
+TEST_ID = re.compile(r"\b(?:UT-[A-Z]{2,3}-\d{2}|(?:PR|GR|OR|BV|UI|AX|LG|MT|TR|PK|PF)-\d{2})\b")
 
 
-def _audit():
-    spec = importlib.util.spec_from_file_location("req_audit", AUDIT)
+def must_rows() -> dict[str, tuple[str, tuple[str, ...]]]:
+    """REQ id -> (acceptance, planned IDs) for every live must REQ-F, REQ-N, REQ-T and REQ-L row."""
+    rows = {}
+    for line in REQUIREMENTS.read_text(encoding="utf-8").splitlines():
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if (
+            len(cells) == 9
+            and re.fullmatch(r"REQ-[FNTL]-\d{2}", cells[0])
+            and cells[4] == "must"
+            and cells[1] != "withdrawn"
+        ):
+            rows[cells[0]] = (cells[5], tuple(TEST_ID.findall(cells[8])))
+    return rows
+
+
+def id_pattern(test_id: str) -> re.Pattern[str]:
+    """Match the ID in a lower-case test name, with or without underscores (ut_io_08, lg01)."""
+    return re.compile(r"(?<![a-z0-9])" + "_?".join(test_id.lower().split("-")) + r"(?![0-9])")
+
+
+@cache
+def functions(path: Path) -> dict[str, tuple[int, str]]:
+    """Return function name -> (def line, source text) for every function in a test file."""
+    text = path.read_text(encoding="utf-8", errors="replace")
+    out = {}
+    for node in ast.walk(ast.parse(text)):
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+            out[node.name] = (node.lineno, ast.get_source_segment(text, node) or "")
+    return out
+
+
+def mentions(test_id: str, text: str) -> bool:
+    """Return True when text names the ID as UT-GEO-12, UT_GEO_12 or ut_geo_12."""
+    parts = test_id.split("-")
+    return any(sep.join(parts) in text for sep in ("-", "_")) or bool(id_pattern(test_id).search(text.lower()))
+
+
+def cause_b_nodes(req_id: str) -> set[str]:
+    """Node ids that the V3-01 cause-B rulings cite for a planned ID of the row."""
+    spec = importlib.util.spec_from_file_location("v3_01_rulings", RULINGS)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    return module
+    return {n for (req, _), (*_, nodes) in module.CAUSE_B_RULINGS.items() if req == req_id for n in nodes}
 
 
-def def_lines(path: Path) -> dict[str, int]:
-    """Test function name -> line of its def, for module-level functions and methods."""
-    tree = ast.parse(path.read_text(encoding="utf-8"))
-    return {n.name: n.lineno for n in ast.walk(tree) if isinstance(n, ast.FunctionDef | ast.AsyncFunctionDef)}
-
-
-def union(row, records, sources) -> list[dict]:
-    """Return the records that belong to the row, in node-id order."""
-    audit = _audit()
-    picked = []
+def union(records, req_id: str, planned: tuple[str, ...]):
+    """File -> sorted (def line, test name, flags) for the tests that carry req_id or name a planned ID."""
+    found_b = cause_b_nodes(req_id)
+    patterns = [id_pattern(t) for t in planned]
+    out: dict[str, set[tuple[int, str, str]]] = defaultdict(set)
     for record in records:
-        name = record["nodeid"].split("::")[-1].split("[")[0].lower()
-        file = record["nodeid"].split("::")[0]
-        marked = row.req_id in record["req"]
-        named = any(audit.id_pattern(t).search(name) for t in row.tests)
-        cited = marked and any(audit.file_mentions(t, sources[file]) for t in row.tests)
-        if marked or named or cited:
-            picked.append(record)
-    return picked
+        path, _, name = record["nodeid"].partition("::")
+        leaf = name.split("::")[-1].split("[")[0]
+        line, source = functions(REPO / path).get(leaf, (0, ""))
+        marked = req_id in record["req"]
+        named = any(p.search(leaf.lower()) for p in patterns)
+        cited = any(mentions(t, source) for t in planned)
+        found = record["nodeid"].split("[")[0] in found_b
+        if marked or named or cited or found:
+            flags = "".join(f for f, on in (("m", marked), ("i", named), ("d", cited), ("b", found)) if on)
+            out[path].add((line, leaf, flags))
+    return {path: sorted(tests) for path, tests in sorted(out.items())}
 
 
 def main(argv: list[str]) -> int:
-    """Print the union of every row named on the command line."""
-    audit = _audit()
+    """Print the reading list of each requested row."""
     records = json.loads(Path(argv[0]).read_text(encoding="utf-8"))
-    rows = {r.req_id: r for r in audit.parse_requirements(audit.REQUIREMENTS.read_text(encoding="utf-8"))}
-    files = {r["nodeid"].split("::")[0] for r in records}
-    sources = {f: (REPO / f).read_text(encoding="utf-8", errors="replace") for f in files}
-    lines_of = {}
-    for req_id in argv[1:]:
-        row = rows[req_id]
-        picked = union(row, records, sources)
-        print(f"## {req_id} planned {', '.join(row.tests)}: {len(picked)} tests")
-        seen = set()
-        for record in picked:
-            file, *_, name = record["nodeid"].split("::")
-            base = name.split("[")[0]
-            if (file, base) in seen:
-                continue
-            seen.add((file, base))
-            if file not in lines_of:
-                lines_of[file] = def_lines(REPO / file)
-            print(f"{file}:{lines_of[file].get(base, 0)} {base} {record['req']}")
+    rows = must_rows()
+    wanted = argv[1:] or list(rows)
+    for req_id in wanted:
+        acceptance, planned = rows[req_id]
+        files = union(records, req_id, planned)
+        count = sum(len(t) for t in files.values())
+        print(f"## {req_id}: {count} test functions in {len(files)} files; planned {', '.join(planned)}")
+        print(f"Acceptance: {acceptance}")
+        for path, tests in files.items():
+            print(f"  {path}")
+            for line, name, flags in tests:
+                print(f"    l.{line} {name} [{flags}]")
+        print()
     return 0
 
 
