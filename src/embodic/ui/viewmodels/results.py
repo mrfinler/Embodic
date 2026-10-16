@@ -9,7 +9,7 @@ import dataclasses
 import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Literal, TypeAlias
+from typing import Any, Literal, TypeAlias, get_type_hints
 
 from embodic.drc import DrcReport
 from embodic.errors import IssueCategory, Severity, ValidationIssue, message_for
@@ -107,6 +107,12 @@ def result_row(quantity: str, t: Traceable[float]) -> ResultRow:
         accessible_name=accessible_name(quantity_title(quantity), t),
         traceable=t,
     )
+
+
+def result_quantities() -> tuple[str, ...]:
+    """Return every quantity ``result_rows`` can return, in field order: the result cards a view builds once."""
+    hints = get_type_hints(AnalysisResult)
+    return tuple(field.name for field in dataclasses.fields(AnalysisResult) if hints[field.name] == Traceable[float])
 
 
 def result_rows(analysis: AnalysisResult) -> tuple[ResultRow, ...]:
