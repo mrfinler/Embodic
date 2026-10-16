@@ -103,6 +103,14 @@ rule for hashes and arrays (D-051f), adds the TR-01 row with the release-profile
 (D-051e), and §7 states that the release gate enforces TR-01 from 0.0.2. No ID is new, because UT-PHY-07, GR-07,
 PK-04 and TR-01 are Phase 1 IDs.
 
+Revision 2026-10-17 (U-D18, claude-sonnet-5-5, D-051e, D-052c; main 7d34543 read for every item). §5.8 is new. It says
+how each must row that the release flag `--fail-untested-through M5` leaves without a passing test gets one. REQ-T-11,
+REQ-L-03 and REQ-L-05 get the product tests LG-04, LG-05 and LG-06. REQ-N-07 gets a manual record of PK-06. REQ-N-10
+gets one of two options, and Fable chooses between them. REQ-T-10 has one marked test and no wording scan, so §5.8
+restates LG-03 too. REQ-N-05 needs nothing. §5.4 lists LG-03 to LG-06 and §7 names the manual record in the M5 exit.
+`checks/lg_wording_probe.py` is new and reproduces every hit count that §5.8 quotes. No ID is new, because LG-03 to
+LG-06 and PK-06 are Phase 1 IDs. This unit ran no test suite, so any statement that a test passes is `not tested`.
+
 ## 1. What changed and why
 
 | Change | Reason |
@@ -382,6 +390,10 @@ carries it (D-042 draft, `unresolved` until Fable records it; `work_breakdown.md
 | MT-07 | Scope guard for D-009: no `kipy` or `pcbnew` import, no `.kicad_pcb` writer, no KiCad option in CLI choices, and no "KiCad" in the string catalogue |
 | MT-08 | New 2026-10-05 (U-M1y): no package folder under `tests/` or `src/` whose name becomes a top-level module name shadows a standard-library or installed module (`sys.stdlib_module_names`, `importlib.metadata.packages_distributions()`), and no two such folders share a name (`tests/static/test_mt08_no_stdlib_shadowing.py`; naming rule in package_layout.md §1) |
 | LG-01 | Amended 2026-10-04 (U-M1a deviation, ratified in part). From M1: every string literal in `src` holds only printable ASCII, tab, newline and the allowed unit symbols (U-M1a's character-class check). From M4: every word in the string catalogue and report templates is in an English word list plus the glossary allow-list. The word list has no source yet (no dictionary package in package_layout.md §5): `unresolved`; U-M4b proposes one through Fable before M4 exit. Revision 2026-10-09 (U-D11, D-040 a and c): one module may add characters of its own. `MODULE_SYMBOLS` (`tests/static/test_lg_language.py` l.12) maps a module name to them. `embodic.results.labels` admits η, δ and Δ, the Greek letters of the equation-specification symbols, and no other module may hold them (`test_lg01_admits_the_spec_greek_letters_in_the_label_module_only`, l.81). D-040 c adds U+00A0 for `embodic.results.formatting` only, which U-M4e-1b builds; `MODULE_SYMBOLS` has no such entry on main 9776555 |
+| LG-03 | Restated 2026-10-17 (U-D18). Phase 1 text kept: no "measured" applied to a computed value in a string, a template or an export, and the allow-list admits "reference (paper, measured)". Scan class `measur` over the three corpora of §5.8.1, with the allow-list of §5.8.2. Tests `tests/static/test_lg_wording.py` and `tests/unit/embodic_io/exporters/test_lg_exports.py`, marker REQ-T-10 |
+| LG-04 | Restated 2026-10-17 (U-D18). Phase 1 text kept: no balance, torque or efficiency claim phrased from geometry alone, against a reviewed phrase list. Scan class `balanc`, `torque`, `efficien` over the same corpora, with the allow-list of §5.8.3, marker REQ-T-11. The reviewer clause of REQ-T-11 is a manual record (§5.8.3) |
+| LG-05 | Restated 2026-10-17 (U-D18). Phase 1 text kept: 0 occurrences of "xcoil", ignoring case, in user-facing strings and generated files. U-D18 adds the other program names of D-051c as a second class. Allow-list of §5.8.4, marker REQ-L-03 |
+| LG-06 | Restated 2026-10-17 (U-D18). Phase 1 text kept: brand asset checksums, and a personal-data scan of 0 hits. Two tests with the designs of §5.8.5, marker REQ-L-05 |
 | LG-08 | No Thai characters in any shipped file (src, resources, examples, templates) |
 | AX-08 | Phase colours at least 3:1 against the canvas in both themes; the palette validator passes for both themes; greyscale ladder steps distinguishable |
 | AX-09 | Every toolstrip icon rendered in both themes reaches at least 3:1 against the toolstrip background |
@@ -558,6 +570,325 @@ Performance (PF-01 to PF-05, Phase 1 rows and §5.4) run in the release profile 
 `tests/performance/baseline.json` with the machine data of `package_layout.md` §5.2. A number measured here describes a
 2-CPU container and is no target for the user's laptop.
 
+### 5.8 Rows that fail TR-01 under the release flag (revision 2026-10-17, U-D18)
+
+`tools/ci.py` on main 7d34543 gives the release profile `untested_through="M5"` and the manual-record path (l.47 and
+l.77-79, `verified` by reading), and `docs/phase3/verification/manual_records.json` holds `[]` (`verified`). A live must
+row of milestone M5 or earlier with no passing test and no `passed` record therefore fails the release gate.
+
+Reproduction. `find_untested(requirements, tests, "M5")` of `tools/trace_matrix.py`, run on the 0.0.1 release report
+(`/home/claude/release_0.0.1/req_report.json`, 3125 records, main 5e74acc) and this tree's `requirements.md`, returns
+REQ-N-07, REQ-N-10, REQ-T-10, REQ-T-11, REQ-L-03 and REQ-L-05. With every record under `tests/packaging` and
+`tests/performance` removed, it also returns REQ-N-05 (`verified` by running it on 2026-10-17). Of the six, only REQ-T-10
+carries a marker on main 7d34543, in `tests/unit/api/test_compute.py` l.192 (`verified` by grep over `tests` and
+`tools`). That this test passes is `not tested` here.
+
+| Row | Prio, M | Plan | Kind | Builds it |
+|---|---|---|---|---|
+| REQ-T-10 | must, M4 | LG-03 (§5.8.2). The marked JSON test is not a wording scan | product test | Agent 3 |
+| REQ-T-11 | must, M4 | LG-04 (§5.8.3) and a reviewer record | product test, manual record | Agent 3; Agent 1 reviews |
+| REQ-L-03 | must, M4 | LG-05 (§5.8.4) | product test | Agent 3 |
+| REQ-L-05 | must, M4 | LG-06 (§5.8.5) | two product tests | Agent 3; Agent 1 names the brand files |
+| REQ-N-07 | must, M5 | PK-06 record (§5.8.6) | manual record | Fable writes the record; Agent 4 adds the index entry |
+| REQ-N-10 | must, M2 | option A or B (§5.8.7) | product test and gate, or a split row | Fable decides |
+| REQ-N-05 | must, M5 | none (§5.8.8) | none | none |
+
+A product test fits a row when a script can read the whole acceptance, as a string scan or a hash table does. A manual
+record fits a row when the acceptance needs a person or a machine that the container lacks. REQ-N-07 needs a clean
+Windows machine. The reviewer clause of REQ-T-11 needs a reader. Where a row has both, TR-01 counts the product test,
+and Agent 4's `checks` ruling needs the record (interfaces.md §3.2). TR-01 stays a floor and never says `verified`.
+
+### 5.8.1 One scanner for LG-03 to LG-06
+
+Data shapes. A `Text` is one string that a user or a file could show. It has a corpus, a kind (`literal`, `identifier`,
+`json-key`, `json-value`, `text-line` or `export-text`), a place and the text. An `AllowRule` has a class, regular
+expressions over place, kind and text, a reason and one status label. The rules are data in
+`tests/static/lg_allowlist.toml`, so a reviewer reads each reason beside the hit it admits. A hit is a `Text` that
+matches a class pattern and no rule. A test fails with one line per hit that names the place and the text. The class
+patterns are those of `tests/independent/m7/v3_14_scan.py` l.60-69, including the word-start rule that finds `MEASURED`
+inside `INVALID_MEASURED_SOURCE_EMPTY` (DEF-US9-01). The product tests do not import Agent 4's file, because the
+instruments stay independent (standing order 12).
+
+Three corpora.
+
+1. Source. Every string constant of `src/embodic/**/*.py` except bare string statements, which are docstrings. The scan
+   skips the mapping keys of the string catalogues, because `"hint-combination.balanced"` is a key and not shown text
+   (`ui/strings/design.py` l.218 and l.225, `inferred`). A lower-case literal with no space is an `identifier`. LG-03
+   and LG-04 admit identifiers, except as a mapping value in `embodic.ui.strings`, where a one-word label such as
+   "efficiency" would be shown. V3-14 admits identifiers for every class, and this plan narrows that.
+2. Resources. Every text file under `resources/`: JSON by key and by value, and md, qss, svg and toml by line.
+3. Exports. For each of the five packaged examples: the SVG, the three DXF files, the PDF text read with pypdf, the
+   README, the ZIP bundle with each member, and `outcome_to_json` (`src/embodic/api.py` l.331). The writers are those
+   that UT-EXP-01 to UT-EXP-05 call, run in `tmp_path`.
+
+Scans 1 and 2 live in `tests/static/test_lg_wording.py`. Scan 3 lives in
+`tests/unit/embodic_io/exporters/test_lg_exports.py`. Both import the scanner from `tests/static/lg_scan.py`, as the
+tests under `tests/packaging` import `support.py`.
+
+Registry text has two methods. Method (a) scans the JSON files and allows every path that the views do not show. V3-14
+does this, and each "not shown" call is `inferred`. Method (b) scans the output of `equation_topic` for every equation
+(`src/embodic/ui/viewmodels/results.py` l.699) and of `disclosure` for every result row of the five examples (l.220). A
+registry field that no view renders is not user-facing and needs no rule. This plan proposes (b) for the two registry
+files and keeps corpus 2 for every other resource. Method (a) is the fallback if rendering needs Qt, which
+interfaces.md §11 says it does not (`inferred`). The disclosure draws its sources from the evidence IDs of each result
+(`_source_lines`, l.190), and this unit did not trace those (`not tested`).
+
+Controls. A scanner that skips one kind of file passes on that kind without checking it. Each class has unit tests that
+plant a hit in a `.py` literal, a catalogue mapping value, a JSON key, a JSON value, an identifier word after `_` and in
+camelCase, a text line, an SVG, a DXF comment, a PDF page and a ZIP member. Each class also plants an admitted text that
+must pass. Each test docstring names the defect it catches.
+
+Counts. `python3 -I docs/phase2/architecture/checks/lg_wording_probe.py` on main 7d34543 (`verified` by running it,
+2026-10-17) scans the non-docstring literals of `src`, the text of `resources/` and the registry fields that the
+equation guide renders. It scans no export and skips no mapping key.
+
+| Class | src literal | src identifier | resources | guide fields |
+|---|---|---|---|---|
+| `measur` | 16 | 12 | 24 | 1 |
+| `balanc`, `torque`, `efficien` | 11 | 38 | 30 | 5 |
+| `xcoil` | 1 | 0 | 38 | 0 |
+| other program name | 0 | 0 | 48 | 0 |
+| e-mail address | 0 | 0 | 0 | 0 |
+| home path with an account name | 0 | 0 | 3 | 0 |
+
+### 5.8.2 LG-03 (REQ-T-10)
+
+The acceptance is a "wording scan of strings and templates", so the scan covers all of it. The class is `measur`. The
+allow-list below holds the three reasons the probe's hits fall under.
+
+| Admitted | Where | Reason | Status |
+|---|---|---|---|
+| The provenance word of an input: "Measured: {source}", "Mark as measured...", "Mark as measured", "Source of the measured value (...)", "property not measured", three messages of the error catalogue, and the codes `INVALID_MEASURED_SOURCE_EMPTY` and `INVALID_MEASURED_DESIGN_FIELD` | `ui/strings/design.py` l.202 and l.267-269; `ui/strings/results.py` l.50; `errors/catalogue/base.py` l.10-12; `model/provenance.py` l.114 and l.116; `ui/viewmodels/session.py` l.846-853; `resources/themes/dark.qss` and `light.qss` l.146 | REQ-T-06 and D-007 give the word one meaning, an input that the user marked with a named source | `verified` by reading the hits |
+| Advice to compare with a measurement | `io/readme_writer.py` l.21 ("Check them with a field simulation or a measurement before you build or order boards.") | advice about the user's own check, not a claim about a computed value | `verified` |
+| A measurement in a cited paper, or the source of a constant | registry fields that no view renders. Under method (a): `tolerance`, `constants[].basis`, `reference_case`, `notes`, `input_provenance_*` and `assumptions_tag_rule` in `equations.v1.json`, and `entries[].applies` in `evidence.v1.json` | the Phase 1 entry "reference (paper, measured)" | `inferred` (V3-14) |
+
+Two hits that no entry admits. The first LG-03 run reports both, and the plan admits neither.
+
+- The name of EQ-30, "DRC clearance measurement and acceptance", at `resources/evidence/equations.v1.json` l.2847. The
+  guide shows it as a title, and the probe's guide corpus holds it. The source `docs/phase2/engineering/equation_registry.json`
+  l.2847 has the same text (`verified` by grep). `docs/phase3/architecture/v3_contract_rulings.md` §1 gives the change
+  to Agent 2.
+- `resources/fonts/FONTS.md` l.24 and l.25 ("measured with `sha256sum`", "`verified` by measuring"). The same ruling gives
+  the change to Agent 3 with Agent 5.
+
+LG-03 fails until both change. The tests catch DEF-UV8-03: a planted "Measured (mm)" catalogue value and a planted
+`measured_min_mm` key in an outcome copy each produce a hit. The JSON test at `test_compute.py` l.192 stays. It checks
+one document, and it gives REQ-T-10 its TR-01 test on this tree (`inferred`, not run).
+
+### 5.8.3 LG-04 (REQ-T-11)
+
+The class is `balanc`, `torque`, `efficien`, `imbalanc` and `unbalanc`. The scan proves one thing. Every string that
+names balance, torque or efficiency is on a reviewed list. It does not prove that a sentence is true (`inferred`). D-051b
+removed the claim "Balanced." and renamed two codes, and `phase-balance-status.balanced` now reads "Symmetric 3-phase
+pattern." (`ui/strings/design.py` l.225, `verified`). The tests keep the claim out: a planted "Balanced." catalogue value
+is a hit (DEF-UV8-04). Entries match whole strings, so a new sentence such as "Delivers high torque" is a hit.
+
+| Admitted | Where | Reason | Status |
+|---|---|---|---|
+| Names of computed results: "Torque", "Torque constant per line current, rms", "Efficiency, electromagnetic only", "Torque-speed envelope", "Torque-speed", "Torque constant, star", "Torque constant, delta", `TorqueSpeedEstimate`, "The torque-speed estimate needs a DC-link voltage (Board and rotor, operating point)." | `results/labels.py` l.17, l.24, l.32, l.47; `results/__init__.py` l.46; `ui/strings/results.py` l.13, l.95, l.106; `selftest/catalogue.py` l.305, l.315 | the UI shows each result with a unit, an EQ-ID and a status badge (REQ-T-01), so the value carries its own status | `inferred` |
+| A test node ID | `selftest/catalogue.py` l.235 (`...::test_cf09_patterns_and_balance`) | the name of a test function. Whether the Tests dialog shows it is `not tested` | `inferred` |
+| Guide text that names a quantity or defines a pattern property | the names of EQ-09, EQ-20 and EQ-26, the validity rule of EQ-05 (it lists Ke, EMF and torque as the quantities that the add-on covers), and the formula of EQ-08 ("balance = signed angle sets of B and C equal ...") | a name or a definition, not a claim about the user's design. The word in EQ-08 is an open point (§5.8.9) | `inferred` |
+| Keys and report rows of computed results in the exports | JSON keys such as `torque` and `efficiency`; PDF rows such as "Torque T ... unit status" | each belongs to a Traceable with a status label | `inferred` (V3-14) |
+| Icon documentation | `resources/icons/ICONS.md` l.50 ("Torque-speed") | it names a tab of the UI, the `unresolved` torque-speed estimate (REQ-F-20) | `inferred` |
+
+Reviewer record. The acceptance adds a "reviewer check". Agent 1 reads each admitted string where the UI shows it (the
+results table, the guide and the PDF report) and records that none claims balance, torque or efficiency from geometry or
+phase angles alone. The record is Markdown. It names the build and the SHA-256 of `lg_allowlist.toml`, so a change to the
+list makes it stale (`assumption`). TR-01 does not need the record. Agent 4's ruling does. Interfaces.md §3.2 names Agent
+4's folder and Fable's, and not Agent 1's, so the path is open.
+
+### 5.8.4 LG-05 (REQ-L-03)
+
+There are two classes. The first is `xcoil`, ignoring case. The second is the other program names of V3-14: kicad,
+kimotor, magnetless, femm, elmer, matlab, ansys, comsol, motor-cad and pcbnew. REQ-L-03 names only Xcoil. D-051c widens
+the ban to every program name in a user-facing string, so the second class makes the test stricter than the row text.
+Whether `requirements.md` gets the wider wording is open (§5.8.9). Neither class admits identifiers, because a lower-case
+literal "xcoil" would still be a name.
+
+The guide corpus holds no hit in either class (probe, `verified`). The probe's guide corpus includes the `document` and
+the `location` of every evidence entry that an equation cites, so no cited entry names a program either. U-E14 moved the
+program name out of the formulas of EQ-14, EQ-20 and EQ-27 into `source_notes` (`equations.v1.json` `notes`, `verified`
+by reading). One entry, EV-R1, holds a container path in its location, and the same corpus shows that no equation cites
+it.
+
+| Admitted | Where | Reason | Status |
+|---|---|---|---|
+| Board-dump schema text `name: 'xcoil-v3'` | `io/board_dump.py` l.39 | the format of the golden harness (REQ-F-40). No CLI format or UI export writes a board dump | `inferred` (V3-14) |
+| The `source_note` of an example | `/example/source_note` in `resources/examples/serpentine_16p_example.embodic.json` and `wave_16p_example.embodic.json` | the code says it is never shown (`io/examples.py` l.39, `verified`). The exports corpus has to show 0 hits for all five examples before the entry stands | `inferred` until the export scan runs |
+| Registry fields that no view renders, and the sources they cite | under method (a): `equations.v1.json` `notes`, `golden_tolerance_default`, `tolerance`, `source_notes`, `changes`, `constants[].basis`, `reference_case`; `evidence.v1.json` `topology_vocabulary`, `documents`, `entries[].claim`, `entries[].source` and `entries[].applies` | not rendered. The 38 `xcoil` and 48 other-program hits of the probe all sit here or in the two example files | `inferred` (V3-14) |
+
+### 5.8.5 LG-06 (REQ-L-05)
+
+The acceptance is "asset checksums; personal-name scan = 0". Two tests in `tests/static/test_lg_brand_and_names.py`
+implement it, one for each half.
+
+Brand assets.
+
+- `tests/static/brand_assets.sha256` lists the SHA-256 and the file name of each brand original. It holds hashes only, and
+  no asset is copied. The test never reads `/mnt/user-data/uploads`, because CI and the Windows laptop lack it. Regenerate
+  the table with `sha256sum` over the brand folder.
+- The rule is V3-14's `brand_check`, applied to every tracked image file of the checkout. An image whose hash is in the
+  table passes. An image whose stem equals a brand stem, or matches `logo`, `wordmark` or `embodic-symbol`, and whose
+  hash is in no row fails.
+- The brand folder holds 8 files on 2026-10-17. Five are embodic images, two are `exec-*.png` and one is named `logo`
+  with no extension. The four brand PNGs under `docs/phase1/design/mockups/brand/` have the same SHA-256 as their
+  originals (`verified` by `sha256sum` over both folders), so the scan of the real tree has four files to check. A search
+  of `src`, `resources` and `packaging` for `.png`, `.ico`, `.icns` and `.jpg` finds only
+  `resources/icons/_contact_sheet.png` (`verified`), so the shipped package holds no brand image. The planted controls,
+  one exact copy and one modified copy, show that the test can fail.
+- Which of the eight files are brand assets is open. `docs/PROJECT_BRIEF.md` l.39 lists the logo, the white variants, the
+  symbol, the wordmark and the sub-brand logo. V3-14 hashes all eight. Until Agent 1 names them, the table lists the five
+  embodic images.
+
+Personal data.
+
+- Two patterns. An e-mail address, and a home path (`C:\Users\<name>`, `/home/<name>` or `/Users/<name>`) whose name is
+  not a placeholder (`user`, `username`, `you`, `name`, `runner`, `me`) and not the build account `claude`.
+  `%USERPROFILE%` and `<user>` never match (`v3_14_scan.py` l.77-79).
+- Tokens come from the run environment: the committer name and address of the checkout (`git config user.name` and
+  `user.email`) and the OS account (`getpass.getuser()`), less the placeholders, at least 3 characters, matched as whole
+  words ignoring case. No token is written into the repository (standing order 7).
+- With no token, the release profile fails and the other profiles skip. The test cannot tell the release profile from
+  the nightly one, because both set `EMBODIC_HYPOTHESIS_PROFILE=nightly` (`tools/ci.py` l.46-47). The release profile
+  needs its own environment variable for this. `v3_contract_rulings.md` §2 calls the whole design an `assumption` that
+  Agents 3 and 4 settle.
+- The corpus is the code (`src`, `tools`, `tests`, `packaging`), `resources/` and the exports. REQ-L-05 lists "code, UI,
+  logs or outputs". The log test UT-LOG-01 is not built (REQ-N-20, `not tested`), so logs are outside this test.
+- The probe finds no e-mail address and three home paths, all `/home/claude/embodic-ref/...` in `evidence.v1.json`: two
+  document paths and the location of EV-R1. `claude` is the build account and not a person (V3-14 `BUILD_ACCOUNTS`), so
+  the allow-list admits it with that reason (`inferred`).
+- A token scan finds only the names that the machine knows. A name that appears elsewhere, such as the one in the pitch
+  deck (`docs/PROJECT_BRIEF.md` l.40), stays a reviewer's job (`inferred`).
+
+### 5.8.6 REQ-N-07: manual record of PK-06
+
+The record is manual. The acceptance reads "timed walkthrough on a clean Windows machine by Agent 4 or the user". No
+script runs that machine, and the Linux walkthrough of §5.7 is not it. The elapsed time also depends on the user's
+network, which `windows_campaign_w1.md` l.9-10 measured at about 0.03 MB/s.
+
+The record file is `docs/phase3/fable/windows_campaign_w1.md`. It holds no account name (`verified` by reading; it uses
+`%USERPROFILE%`). Interfaces.md §3.2 puts a campaign record by Fable under `docs/phase3/fable/`. The entry for
+`docs/phase3/verification/manual_records.json`, which Agent 4 owns, has the five keys of §3.2. Fable supplies `result`.
+
+```json
+[
+	{
+		"req": "REQ-N-07",
+		"test_id": "PK-06",
+		"record": "docs/phase3/fable/windows_campaign_w1.md",
+		"embodic_version": "0.0.1",
+		"result": "passed or failed, by Fable's ruling"
+	}
+]
+```
+
+What the record says, `verified` by reading it. Run 1 reached the first computed example after 4154.54 s, of which the
+lock-file step took 4137.15 s, 99.6 % (l.29 and l.33). Without the download the steps took about 17 s (l.38-39). Run 2
+used a warm pip cache, a new folder and a new venv, and reached the example after 21.57 s (l.64-67). Python 3.11.9 came
+from the NuGet package first, in 58.1 s (l.13).
+
+The file does not say `passed` or `failed` in one line. Three readings are open.
+
+1. `failed`. Run 1 is closer to a clean run, since only numpy came from the user's pip cache (l.29), and it missed 10
+   minutes. The row stays red until a clean Windows run meets the time. The 0.0.2 gate then waits for that run.
+2. `passed` on run 2. The time is met, but the pip cache was warm, so the machine was not clean. This changes the
+   acceptance without saying so, and the plan does not offer it.
+3. Change the acceptance in the open: "less than 10 minutes, not counting the time pip spends downloading, which the
+   record reports apart". Both runs then pass. The change needs a revision note in `requirements.md`, and Fable decides.
+
+Three gaps in the file against §3.2, all in Fable's own file. It names no wheel SHA-256 (it gives the package source
+hash `cfefe405…baae` at l.44, and the V3-14 header gives the release wheel hash `f114a6e7…dcd0`, `verified` by reading).
+It has no verdict line. Its performer is Fable on the user's laptop, and the acceptance names Agent 4 or the user. The
+script counts the record whatever the performer and whatever `embodic_version` it names (interfaces.md §13 point 14).
+INSTALL.md changes in 0.0.2 (DEF-W-04, D-051g), so a 0.0.1 record certifies a guide that is about to change. A 0.0.2
+re-run on the laptop would close that, and Fable decides whether the gate needs it.
+
+### 5.8.7 REQ-N-10: coverage or acceptance text
+
+Facts.
+
+- The statement has two clauses. The first sets coverage at 90 % lines and 80 % branches, both thresholds an `assumption`.
+  The second says that every REQ-ID has a test. Phase 1 maps the row to TR-01 alone (`test_plan_draft.md` l.393), and
+  TR-01 reads only the second clause. No test carries REQ-N-10 (`verified` by grep over `tests` and `tools`), and Agent 4's
+  audit rules the row `does not check` (`docs/phase3/verification/req_audit.md`).
+- `coverage` 7.16.2 and `pytest-cov` 7.1.0 are hash-pinned in `requirements/py311-dev.txt` (l.76 and l.841) and at the same
+  lines of `py312-dev.txt` and `py313-dev.txt`. `pyproject.toml` l.28 allows `pytest-cov>=7,<8` (`verified` by reading).
+  `[tool.coverage.run]` sets `source = ["embodic"]` and `branch = true`, and omits `ui/views/*`, `ui/app.py` and
+  `ui/workers.py` (l.102-105). No `[tool.coverage.report]` section exists, and no gate passes `--cov` (`tools/ci.py`
+  l.63-65).
+- The row does not define "core". The omit list is the only definition in the tree (`inferred`). coverage.py counts
+  statements, and the row says lines.
+- In coverage.py 7.16.2, `percent_covered` is (executed statements + executed branches) / (statements + branches)
+  (`coverage/results.py` l.377-381), so one `fail_under` cannot hold two thresholds. The JSON report always has
+  `totals.percent_statements_covered`, and it has `totals.percent_branches_covered` only when branch data exist
+  (`coverage/jsonreport.py` l.45-100). Both are `verified` by reading the copy in `/home/claude/embodic/.venv`. The
+  statement in `v3_contract_rulings.md` §2 point 5 was an `assumption`, and it holds.
+- D-051e puts the coverage step in Phase 5, and interfaces.md §3.2 adds no coverage gate. D-052a records a commit gate that
+  the container's memory limit killed at 4.5 GB after 2.7 h, where earlier gates took about an hour. The cost of tracing
+  is `not tested`.
+- The acceptance asks for "0 untested live REQs", and TR-01 checks must rows only. On the 0.0.1 report, 12 of 93 live rows
+  have no passing test: the six above and REQ-F-30, REQ-N-20, REQ-T-12, REQ-L-02, REQ-L-06 and REQ-L-09 (`verified` by
+  running the parser functions of `tools/trace_matrix.py` over every live row, 2026-10-17).
+
+Option A lands the coverage step now.
+
+1. The release profile's pytest gate adds `--cov --cov-report=json:build/coverage.json`. The config already sets `source`
+   and `branch`.
+2. `tools/coverage_check.py` reads `totals` and exits 1 below 90 % statements or below 80 % branches. It also exits 1 when
+   `percent_branches_covered` is missing, so a run without branch data cannot pass.
+3. `tests/unit/base/test_coverage_check.py`, marker REQ-N-10. 89.9 % statements fails and 90.0 % passes. 79.9 % branches
+   fails and 80.0 % passes. A missing branch key fails. A file that is not JSON fails.
+4. A gate named "coverage (REQ-N-10)" runs after the pytest gate.
+
+Option A makes the first clause measured and enforced. It overrules D-051e. The first run may miss a threshold that is only an
+`assumption`, and the 0.0.2 gate would then wait on a number nobody has measured (`not tested`). The gate also grows in
+time and memory after it hit the container's limit. The unit test proves the checker, and only the gate proves the
+numbers.
+
+Option B splits the row now and lands coverage in Phase 5.
+
+1. REQ-N-10 keeps the second clause. Proposed statement: "Every REQ-ID has at least one automated test or documented
+   manual test." Proposed acceptance: "0 untested live must REQs (TR-01); the matrix lists the untested should and could
+   rows."
+2. A new row, `should`, holds the first clause with its thresholds labelled `assumption`. It needs a test ID defined in
+   this plan, and U-D18 allocates none, because Fable has not chosen B. The next free ID in the TR series is TR-06.
+3. The marker REQ-N-10 goes on the tests of `tests/unit/base/test_tr01_release_gate.py` that exercise the second clause.
+   They already carry REQ-T-09, and a test may carry several markers, as PK-02 carries REQ-N-05 and REQ-N-06. The three
+   candidates are `test_tr01_flag_lists_a_live_must_row_that_has_neither_a_passing_test_nor_a_manual_record`,
+   `test_tr01_release_gate_fails_on_an_untested_must_row` and
+   `test_tr01_release_gate_passes_when_a_manual_record_covers_the_row`.
+4. `tools/trace_matrix.py` prints the untested should and could rows, with a unit test marked REQ-N-10.
+
+Option B leaves D-051e alone and keeps the gate inside its resources, and no row claims coverage that nobody measured. It
+cuts a must requirement to a should for its coverage clause, so Fable decides whether the user must approve it
+(`assumption`).
+
+Option C is a marker on any test. It makes TR-01 pass over an unmeasured clause, and the plan rejects it.
+
+This unit proposes B now and A in Phase 5 with the four pieces above, so that unit has no design left. Fable decides.
+
+### 5.8.8 REQ-N-05
+
+`tests/packaging/test_pk02_clean_install.py` carries REQ-N-05 (l.23 and l.32). The release profile ignores only
+`tests/packaging/evidence` (`tools/ci.py` l.47), so it runs PK-02 and the row has passing tests. The commit and nightly
+profiles ignore `tests/packaging` (l.29, l.45 and l.46), and they do not pass the flag, so they never judge the row.
+`test_tr01_commit_and_nightly_gates_leave_an_untested_must_row_unlisted`
+(`tests/unit/base/test_tr01_release_gate.py` l.251) pins that. The row needs no new test and no record. The flag has to
+stay out of the commit and nightly profiles, because turning it on there lists REQ-N-05 (§5.8, reproduction). The Windows
+cells of PK-01 stay `not tested` (§7), and PK-02 on Linux is what TR-01 counts.
+
+### 5.8.9 Open for Fable
+
+1. REQ-N-10, option A or B (§5.8.7).
+2. REQ-N-07: the `result` value, whether run 1 or run 2 counts or the acceptance changes, whether a 0.0.2 re-run is
+   needed, and whether Fable's run meets "by Agent 4 or the user" (§5.8.6).
+3. Which of the eight brand files are brand assets, and the environment variable that makes the personal-data test fail
+   without a token in the release profile (§5.8.5).
+4. Where Agent 1's reviewer record for REQ-T-11 lives, and whether Agent 2 rewords "balance" in the EQ-08 formula to
+   "symmetry" (§5.8.3).
+5. Whether REQ-L-03 in `requirements.md` names the other programs of D-051c (§5.8.4).
+6. Whether the registry is scanned as rendered text (method (b)) or by path (method (a)) (§5.8.1).
+
 ## 6. Withdrawn tests
 
 <!-- withdrawn-tests:start -->
@@ -581,6 +912,11 @@ default design at start (D-014). AX-07 tested the web option (D-010).
 From the 0.0.2 release gate on, the release profile enforces TR-01 through M5 (revision 2026-10-17, U-D17, D-051e; TR-01
 in §5.7). The commit and nightly profiles do not. A must row that has no passing test and no `passed` manual record then
 fails the gate.
+
+Revision 2026-10-17 (U-D18). The M5 exit counts the PK-06 walkthrough on Windows through a manual record in
+`docs/phase3/verification/manual_records.json`, and not through a test (§5.8.6). The M4 exit already names every LG test,
+so LG-03 to LG-06 add no ID to it. REQ-N-10 waits on Fable's choice between the two options of §5.8.7. Until each row of
+§5.8 has a passing test or a `passed` record, the release gate fails on it.
 
 ## 8. Requirements-to-tests matrix
 
