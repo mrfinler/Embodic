@@ -1,12 +1,12 @@
-"""List, for each live must REQ-F row, every collected test that carries the row's REQ marker or names a planned ID.
+"""List, for each live must row, every collected test that carries the row's REQ marker or names a planned ID.
 
-    python3 tests/independent/m7/v3_01_union.py REPORT [REQ-F-nn ...]
+    python3 tests/independent/m7/v3_01_union.py REPORT [REQ-F-nn | REQ-N-nn | REQ-T-nn | REQ-L-nn ...]
 
 REPORT is a `--req-report` JSON of a collect-only run (`pytest --collect-only --req-report PATH tests`). The output
-is the reading list behind v3_01_rulings_f.py: per row, the acceptance cell, the planned IDs, and per test file the
-test functions with their `def` line and whether they carry the marker (`m`), name a planned ID in the test name
-(`i`), name one in the function's source, docstring included (`d`), or were found for a planned ID under another
-label in the V3-01 cause-B rulings (`b`).
+is the reading list behind v3_01_rulings_f.py and v3_01_rulings_ntl.py: per row, the acceptance cell, the planned
+IDs, and per test file the test functions with their `def` line and whether they carry the marker (`m`), name a
+planned ID in the test name (`i`), name one in the function's source, docstring included (`d`), or were found for a
+planned ID under another label in the V3-01 cause-B rulings (`b`).
 """
 
 import ast
@@ -24,14 +24,14 @@ RULINGS = REPO / "tests/independent/m7/v3_01_rulings.py"
 TEST_ID = re.compile(r"\b(?:UT-[A-Z]{2,3}-\d{2}|(?:PR|GR|OR|BV|UI|AX|LG|MT|TR|PK|PF)-\d{2})\b")
 
 
-def must_f_rows() -> dict[str, tuple[str, tuple[str, ...]]]:
-    """REQ id -> (acceptance, planned IDs) for every live must REQ-F row."""
+def must_rows() -> dict[str, tuple[str, tuple[str, ...]]]:
+    """REQ id -> (acceptance, planned IDs) for every live must REQ-F, REQ-N, REQ-T and REQ-L row."""
     rows = {}
     for line in REQUIREMENTS.read_text(encoding="utf-8").splitlines():
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
         if (
             len(cells) == 9
-            and re.fullmatch(r"REQ-F-\d{2}", cells[0])
+            and re.fullmatch(r"REQ-[FNTL]-\d{2}", cells[0])
             and cells[4] == "must"
             and cells[1] != "withdrawn"
         ):
@@ -91,7 +91,7 @@ def union(records, req_id: str, planned: tuple[str, ...]):
 def main(argv: list[str]) -> int:
     """Print the reading list of each requested row."""
     records = json.loads(Path(argv[0]).read_text(encoding="utf-8"))
-    rows = must_f_rows()
+    rows = must_rows()
     wanted = argv[1:] or list(rows)
     for req_id in wanted:
         acceptance, planned = rows[req_id]
