@@ -109,9 +109,18 @@ def test_eq12_cf05_single_trace_at_full_precision() -> None:
     assert eddy_loss_w(field, (1,), 0.0348, omega_e, rho) == pytest.approx(7.230675123999244e-05, rel=1e-9)
 
 
+@pytest.mark.eqt("EQT-14-CF12")
 def test_eq14_reference_estimate() -> None:
-    """EQ-14 reference (C9): N 64, k_w1 0.866, D 76/36 mm, delta' 6.62 mm, p 8 -> 9.74 uH."""
-    assert inductance_estimate_h(64, 0.866, 38.0, 18.0, 8, 6.62) == pytest.approx(9.74e-6, rel=5e-4)
+    """CF-12 (EQ-14 form a): N 64, k_w1 0.866, D 76/36 mm, delta' 6.62 mm, p 8 -> L_m 9.744443398187309e-06 H.
+
+    Relative 1e-12. The value is the formula, not a prediction of a measured inductance (EQ-14 stays unresolved).
+    The rounded Phase 1 figure 9.74 uH is 4.6e-4 away and hides what the tight tolerance sees. Defect caught: a mu0
+    other than 4 pi 1e-7 (rounded 1.2566e-6 moves L_m by 2.9e-5, CODATA 2022 by 1.3e-10), or a diameter, pole-pair
+    or gap term off by a small factor. abs=0 matters: approx keeps an absolute 1e-12 H by default, which is 1e-7
+    relative at 9.7e-6 H and would let the CODATA change through.
+    """
+    expected_h = 9.744443398187309e-06
+    assert inductance_estimate_h(64, 0.866, 38.0, 18.0, 8, 6.62) == pytest.approx(expected_h, rel=1e-12, abs=0.0)
 
 
 @pytest.mark.eqt("EQT-19-CF07")
