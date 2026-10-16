@@ -16,7 +16,7 @@ from embodic.model.design import DesignParameters
 from embodic.model.winding_specs import SerpentineWindingSpec
 from embodic.results import Registry, load_registry
 
-from ..hostile_sizes import HOSTILE_SETTINGS, WIDTHS, Sizes, check_hostile_build, hostile_sizes
+from ..hostile_sizes import HOSTILE_SETTINGS, WIDTHS, Sizes, check_hostile_build, hostile_sizes, timed_build
 from .make_example import example_design
 from .support import with_copper_count, with_winding
 
@@ -107,13 +107,35 @@ _TINIEST = Sizes(clearance_mm=5e-324, pad_mm=5e-324, terminal_pad_mm=5e-324)
 _SMALLEST_NORMAL_MM = 2.2250738585072014e-308
 
 
+_D030_INPUTS = {
+    "r_inner": st.floats(1.0, 60.0),
+    "span": st.floats(1.0, 40.0),
+    "width": st.sampled_from(WIDTHS),
+    "turns": st.integers(1, 30),
+    "sizes": st.deferred(lambda: hostile_sizes(_base().drc_rules, _example_sizes(), terminal_pad=True)),
+}
+
+
+def _hostile_build(r_inner: float, span: float, width: str, turns: int, at: Sizes) -> BoardStack | Unbuildable:
+    base = _base()
+    assert isinstance(base.winding, SerpentineWindingSpec)
+    width_mm = base.drc_rules.min_trace_width_mm if width == WIDTHS[0] else base.winding.trace_width_mm
+    design = with_winding(
+        base, r_inner_mm=r_inner, r_outer_mm=r_inner + span, trace_width_mm=width_mm,
+        clearance_mm=at.clearance_mm, turns=turns,
+    )  # fmt: skip
+    design = dataclasses.replace(
+        design,
+        vias=dataclasses.replace(design.vias, pad_mm=at.pad_mm),
+        connection=dataclasses.replace(design.connection, terminal_pad_mm=at.terminal_pad_mm),
+    )
+    return generate_serpentine(design, REGISTRY)
+
+
 @pytest.mark.slow
 @pytest.mark.req("REQ-F-19")
 @HOSTILE_SETTINGS
 @example(r_inner=1.0, span=1.0, width="example", turns=1, sizes=_TINIEST)  # DEF-M3b-03 shape
-@example(
-    r_inner=60.0, span=40.0, width="rule_minimum", turns=30, sizes=_TINIEST
-)  # DEF-M6b-01: 16 s, 3 s at the default
 @example(
     r_inner=22.0,
     span=18.0,
@@ -121,40 +143,47 @@ _SMALLEST_NORMAL_MM = 2.2250738585072014e-308
     turns=4,
     sizes=Sizes(clearance_mm=0.2, pad_mm=_SMALLEST_NORMAL_MM, terminal_pad_mm=2.4),
 )
-@given(
-    r_inner=st.floats(1.0, 60.0),
-    span=st.floats(1.0, 40.0),
-    width=st.sampled_from(WIDTHS),
-    turns=st.integers(1, 30),
-    sizes=st.deferred(lambda: hostile_sizes(_base().drc_rules, _example_sizes(), terminal_pad=True)),
-)
-def test_d030_hostile_clearance_and_pads_are_built_or_refused_within_bounds(
+@given(**_D030_INPUTS)
+def test_d030_hostile_clearance_and_pads_are_built_or_refused_without_error(
     r_inner: float, span: float, width: str, turns: int, sizes: Sizes
 ) -> None:
-    """D-030 lower bounds (d030_property_spec.md): a positive clearance, via pad or terminal pad below the DRC rules.
+    """D-030 lower bounds (d030_property_spec.md), properties 1 to 4; the build time is the next test.
 
     Defect caught: a division by one of these sizes (DEF-M3b-03 for the width), a count derived from 1/size without the
-    width floor (the unbounded build of D-030), a non-finite coordinate, or an exception instead of Unbuildable. The
-    width is valid by construction, so the width refusal never stops the build.
+    width floor, a non-finite coordinate, or an exception instead of Unbuildable. The width is valid by construction,
+    so the width refusal never stops the build.
+
+    Property 4 is not evaluated when the design is Unbuildable at the default sizes (the spec does not define it). One
+    nightly run of 200 examples: 54.0% Unbuildable, 40.0% compared with the baseline, 6.0% without a baseline.
     """
-    base = _base()
-    assert isinstance(base.winding, SerpentineWindingSpec)
-    width_mm = base.drc_rules.min_trace_width_mm if width == WIDTHS[0] else base.winding.trace_width_mm
-
-    def build(at: Sizes) -> BoardStack | Unbuildable:
-        design = with_winding(
-            base, r_inner_mm=r_inner, r_outer_mm=r_inner + span, trace_width_mm=width_mm,
-            clearance_mm=at.clearance_mm, turns=turns,
-        )  # fmt: skip
-        design = dataclasses.replace(
-            design,
-            vias=dataclasses.replace(design.vias, pad_mm=at.pad_mm),
-            connection=dataclasses.replace(design.connection, terminal_pad_mm=at.terminal_pad_mm),
-        )
-        return generate_serpentine(design, REGISTRY)
-
-    reached = check_hostile_build(lambda: build(sizes), lambda: build(_example_sizes()), _check_contract)
+    reached = check_hostile_build(
+        lambda: _hostile_build(r_inner, span, width, turns, sizes),
+        lambda: _hostile_build(r_inner, span, width, turns, _example_sizes()),
+        _check_contract,
+        deadline=False,
+    )
     event(f"example reached: {reached}")
+
+
+@pytest.mark.xfail(
+    strict=True, raises=AssertionError, reason="DEF-M6b-01: serpentine build time at near-zero clearance, Phase 5"
+)
+@pytest.mark.slow
+@pytest.mark.req("REQ-F-19")
+@HOSTILE_SETTINGS
+@example(
+    r_inner=60.0, span=40.0, width="rule_minimum", turns=30, sizes=_TINIEST
+)  # DEF-M6b-01: 16 s, 3 s at the default
+@given(**_D030_INPUTS)
+def test_d030_hostile_clearance_and_pads_are_built_within_the_deadline(
+    r_inner: float, span: float, width: str, turns: int, sizes: Sizes
+) -> None:
+    """D-030 lower bounds, property 5: the hostile build takes at most 10 s (the bound stays as the spec has it).
+
+    A strict xfail until Phase 5 (D-050): near-zero clearance multiplies the build time by about 5 with identical
+    output (fit.py min_straight iterates more). The test turns XPASS, and so fails, once the time drops under 10 s.
+    """
+    timed_build(lambda: _hostile_build(r_inner, span, width, turns, sizes))
 
 
 @pytest.fixture

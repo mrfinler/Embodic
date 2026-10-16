@@ -8,7 +8,7 @@ import pytest
 from hypothesis import given, settings
 from tests.unit.generators import hostile_sizes as helper
 from tests.unit.generators.default_example import default_design
-from tests.unit.generators.hostile_sizes import Sizes, assert_all_finite, check_hostile_build
+from tests.unit.generators.hostile_sizes import Sizes, assert_all_finite, check_hostile_build, timed_build
 
 from embodic.errors import Unbuildable
 from embodic.generators import generate_spiral
@@ -38,8 +38,8 @@ def _plain_stack(primitives: tuple[Line | Arc, ...], vias: tuple[Via, ...]) -> B
     return SimpleNamespace(boards=(SimpleNamespace(paths=(path,), vias=vias),))  # type: ignore[return-value]
 
 
-def _check(hostile: BoardStack | Unbuildable, baseline: BoardStack | Unbuildable) -> str:
-    return check_hostile_build(lambda: hostile, lambda: baseline, lambda _: None)
+def _check(hostile: BoardStack | Unbuildable, baseline: BoardStack | Unbuildable, *, deadline: bool = True) -> str:
+    return check_hostile_build(lambda: hostile, lambda: baseline, lambda _: None, deadline=deadline)
 
 
 @pytest.mark.parametrize(
@@ -94,6 +94,9 @@ def test_a_build_over_the_deadline_is_seen(monkeypatch: pytest.MonkeyPatch, stac
     monkeypatch.setattr(helper, "BUILD_DEADLINE_S", -1.0)
     with pytest.raises(AssertionError, match="deadline"):
         _check(stack, stack)
+    with pytest.raises(AssertionError, match="deadline"):
+        timed_build(lambda: stack)
+    assert _check(stack, stack, deadline=False) == "compared"
 
 
 RULES = default_design().drc_rules

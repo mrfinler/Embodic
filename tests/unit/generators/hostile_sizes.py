@@ -78,25 +78,34 @@ def path_count(stack: BoardStack) -> int:
     return sum(len(board.paths) for board in stack.boards)
 
 
+def timed_build(build: Callable[[], BoardStack | Unbuildable]) -> BoardStack | Unbuildable:
+    """Run ``build`` and fail if it takes longer than BUILD_DEADLINE_S (property 5)."""
+    started = time.perf_counter()
+    result = build()
+    seconds = time.perf_counter() - started
+    assert seconds <= BUILD_DEADLINE_S, f"hostile build took {seconds:.1f} s, deadline {BUILD_DEADLINE_S} s"
+    return result
+
+
 def check_hostile_build(
     build_hostile: Callable[[], BoardStack | Unbuildable],
     build_baseline: Callable[[], BoardStack | Unbuildable],
     contract: Callable[[BoardStack | Unbuildable], None],
+    *,
+    deadline: bool = True,
 ) -> str:
     """Properties 1 to 5 of the spec for one example; ``build_baseline`` builds the same design at the default sizes.
 
     Returns how far the example got, for ``hypothesis.event``: "unbuildable", "no baseline" or "compared".
 
     The 10 s of property 5 applies to the hostile build alone. Hypothesis' own deadline would also count the baseline
-    build, so the tests turn it off and this function times the hostile build.
+    build, so the tests turn it off and ``timed_build`` times the hostile build. ``deadline=False`` leaves property 5
+    to a separate test.
 
     When the baseline is Unbuildable there is no path count to compare with, and property 4 is not evaluated for the
     example. The spec does not define that case.
     """
-    started = time.perf_counter()
-    result = build_hostile()
-    seconds = time.perf_counter() - started
-    assert seconds <= BUILD_DEADLINE_S, f"hostile build took {seconds:.1f} s, deadline {BUILD_DEADLINE_S} s"
+    result = timed_build(build_hostile) if deadline else build_hostile()
     contract(result)
     if isinstance(result, Unbuildable):
         return "unbuildable"

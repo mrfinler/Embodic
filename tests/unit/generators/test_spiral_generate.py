@@ -386,6 +386,9 @@ def test_d030_hostile_clearance_and_pad_are_built_or_refused_within_bounds(
     Defect caught: a division by the clearance or the pad (DEF-M3b-03 for the width), a turn or via count derived from
     1/s without the width floor (the unbounded build of D-030), a non-finite coordinate, or an exception instead of
     Unbuildable. The width is valid by construction, so the width refusal never stops the build.
+
+    Property 4 is not evaluated when the design is Unbuildable at the default sizes (the spec does not define it). One
+    nightly run of 200 examples: 51.5% Unbuildable, 45.0% compared with the baseline, 3.5% without a baseline.
     """
     assert isinstance(_EXAMPLE.winding, SpiralWindingSpec)
     width_mm = _EXAMPLE.drc_rules.min_trace_width_mm if width == WIDTHS[0] else _EXAMPLE.winding.coil.trace_width_mm
