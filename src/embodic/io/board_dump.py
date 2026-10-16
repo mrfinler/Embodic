@@ -238,7 +238,9 @@ def decode_board_dump(text: str) -> dict[str, JsonValue]:
 
 def write_board_dump(layout: Layout, path: Path, *, case_id: str, design: DesignParameters | None = None) -> None:
     """Write the board dump of ``layout`` to ``path`` as UTF-8 (side effect: one file)."""
-    path.write_text(encode_board_dump(dump_layout(layout, case_id=case_id, design=design)), encoding="utf-8")
+    path.write_text(
+        encode_board_dump(dump_layout(layout, case_id=case_id, design=design)), encoding="utf-8", newline="\n"
+    )
 
 
 def read_board_dump(path: Path) -> Mapping[str, JsonValue]:
