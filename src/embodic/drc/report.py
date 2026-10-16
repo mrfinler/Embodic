@@ -83,7 +83,11 @@ class DrcCheckSummary:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class DrcReport:
-    """Outcome of ``run_drc``; ``violations`` holds the worst ``MAX_REPORTED_VIOLATIONS`` of ``violation_count``."""
+    """Outcome of ``run_drc``; ``violations`` holds the first ``MAX_REPORTED_VIOLATIONS`` of ``violation_count``.
+
+    The order is canonical: check kind, then copper layer (every-layer checks last), then object ids, so neither the
+    order of the layout's objects nor float noise in the clearances moves a violation (DEF-W-01, D-051 f).
+    """
 
     passed: bool
     summaries: tuple[DrcCheckSummary, ...]

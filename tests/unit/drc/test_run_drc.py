@@ -1,17 +1,21 @@
 """UT-DRC-03 to UT-DRC-07 on hand-built layouts, rule validation, catalogue codes and cancellation."""
 
 import math
+import random
 import threading
 from dataclasses import replace
 from itertools import pairwise
 
 import pytest
 
+from embodic.api import compute
 from embodic.drc import CancelToken, DrcCheckKind, DrcReport, run_drc
 from embodic.errors import MESSAGES
 from embodic.geometry.layout import Hole, Via, ViaRole
 from embodic.geometry.paths import CopperPath
 from embodic.geometry.primitives import PrimitiveRole
+from embodic.io.examples import load_example
+from embodic.io.project import project_from_example, project_provenance
 from embodic.model.drc_rules import validate_drc_rules
 
 from .layouts import RULES, arc, circle_outline, layout, line, pad, path, via
@@ -457,6 +461,35 @@ def test_summaries_cover_every_applicable_kind_and_no_other() -> None:
         DrcCheckKind.ANNULAR_RING,
     }
     assert all(s.pairs_checked > 0 for s in report.summaries if s.kind is DrcCheckKind.TRACE_TRACE)
+
+
+@pytest.fixture(scope="module")
+def wave_outcome():
+    """Return the computed wave example, whose board fails DRC with 186 violations (D-045g)."""
+    project = project_from_example(load_example("wave_16p_example"))
+    return compute(project.design, project_provenance(project))
+
+
+@pytest.mark.parametrize("seed", [None, 7], ids=["reversed", "shuffled"])
+def test_violation_order_is_canonical_whatever_the_order_of_paths_and_vias(wave_outcome, seed: int | None) -> None:
+    """Catches DEF-W-01: the 186 wave violations came out in another order on Windows.
+
+    The list must follow (kind, layer, objects), so neither the input order nor float noise in the clearances moves it.
+    """
+    board = wave_outcome.boards.boards[0]
+    paths, vias = list(board.paths), list(board.vias)
+    if seed is None:
+        paths.reverse()
+        vias.reverse()
+    else:
+        random.Random(seed).shuffle(paths)
+        random.Random(seed).shuffle(vias)
+    report = run_drc(replace(board, paths=tuple(paths), vias=tuple(vias)), wave_outcome.design.drc_rules)
+    assert report is not None
+    expected = [(v.kind, v.layer, v.objects) for v in wave_outcome.drc[0].violations]
+    assert len(expected) == len(set(expected)) == 186
+    assert [kind for kind, _, _ in expected] == [DrcCheckKind.TRACE_TRACE] * 6 + [DrcCheckKind.TRACE_VIA] * 180
+    assert [(v.kind, v.layer, v.objects) for v in report.violations] == expected
 
 
 def test_every_check_kind_has_a_catalogue_message() -> None:
