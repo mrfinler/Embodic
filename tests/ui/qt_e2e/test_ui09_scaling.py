@@ -19,10 +19,10 @@ SCALES = ("1", "1.5", "2")
 
 def capture_at(scale: str, out: Path) -> dict:
     """Run the acceptance lever's UI-09 shot in a new process at ``scale``; return its JSON line."""
-    env = {**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_SCALE_FACTOR": scale}
+    env = {**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_SCALE_FACTOR": scale, "PYTHONIOENCODING": "utf-8"}
     env["PYTHONPATH"] = os.pathsep.join([str(REPO / "src"), str(REPO), env.get("PYTHONPATH", "")])
     argv = [sys.executable, "-m", "tests.ui.qt_shell.capture_acceptance", str(out), "--scaling"]
-    done = subprocess.run(argv, cwd=REPO, env=env, capture_output=True, text=True, timeout=300, check=True)
+    done = subprocess.run(argv, cwd=REPO, env=env, capture_output=True, encoding="utf-8", timeout=300, check=True)
     return json.loads(done.stdout.strip().splitlines()[-1])
 
 

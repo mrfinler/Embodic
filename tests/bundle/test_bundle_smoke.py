@@ -81,7 +81,7 @@ def test_frozen_gui_smoke_computes_and_quits(tmp_path: Path) -> None:
         "XDG_DATA_HOME": str(tmp_path / "data"),
         "XDG_CONFIG_HOME": str(tmp_path / "config"),
     }
-    frozen = subprocess.run([str(FROZEN_GUI), "--smoke"], capture_output=True, text=True, env=env, timeout=120)
+    frozen = subprocess.run([str(FROZEN_GUI), "--smoke"], capture_output=True, encoding="utf-8", env=env, timeout=120)
 
     assert frozen.returncode == 0, frozen.stderr
 

@@ -1,7 +1,6 @@
 """``embodic-cli selftest`` (REQ-F-18, UT-CLI-03): one line per check, the summary line and the exit code."""
 
 import json
-import os
 import signal
 from pathlib import Path
 
@@ -90,7 +89,8 @@ def test_ut_cli_03_ctrl_c_cancels_and_reports_the_rest_as_not_run(run, monkeypat
     """Catches Ctrl+C that kills the run without a summary, or that is swallowed and the checks go on."""
 
     def interrupt(_: Path) -> float:
-        os.kill(os.getpid(), signal.SIGINT)
+        # os.kill(os.getpid(), SIGINT) is TerminateProcess on Windows and ends pytest itself (DEF-W-05)
+        signal.raise_signal(signal.SIGINT)
         return 1.0
 
     first = SelfTestCheck(

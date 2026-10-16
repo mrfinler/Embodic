@@ -44,7 +44,7 @@ def _dump(tmp_path: Path, function_name: str, cases: list[dict]) -> subprocess.C
         ["node", str(DUMPER), str(case_file), "--out", str(tmp_path / "out")],
         env={**os.environ, "GOLDEN_FUNCTIONS_DIR": str(functions_dir)},
         capture_output=True,
-        text=True,
+        encoding="utf-8",
         check=False,
     )
 

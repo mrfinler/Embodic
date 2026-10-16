@@ -41,7 +41,7 @@ def main() -> None:
         with tempfile.TemporaryDirectory() as folder:
             started = time.perf_counter()
             done = subprocess.run(
-                [sys.executable, "-c", COLD_START, folder], env=env, capture_output=True, text=True, check=True
+                [sys.executable, "-c", COLD_START, folder], env=env, capture_output=True, encoding="utf-8", check=True
             )
             cold_s = time.perf_counter() - started
         build_ms = int(done.stdout.strip().splitlines()[-1])

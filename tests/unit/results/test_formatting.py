@@ -87,7 +87,7 @@ def test_formatting_identical_under_german_and_thai_locale(compiled_locales, loc
         [sys.executable, "-c", PROBE, decimal_point, json.dumps(values)],
         env=env,
         capture_output=True,
-        text=True,
+        encoding="utf-8",
         check=False,
     )
     assert completed.returncode == 0, completed.stderr

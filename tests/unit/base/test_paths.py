@@ -43,7 +43,7 @@ def test_paths_resource_root_in_built_wheel(tmp_path):
     subprocess.run([str(python), "-m", "pip", "install", "--no-deps", "--quiet", str(wheel)], check=True, env=CLEAN_ENV)
     probe = "import embodic.paths as p; r = p.resource_root(); print(r); print((r / 'icons' / 'new.svg').is_file())"
     result = subprocess.run(
-        [str(python), "-c", probe], check=True, capture_output=True, text=True, cwd=tmp_path, env=CLEAN_ENV
+        [str(python), "-c", probe], check=True, capture_output=True, encoding="utf-8", cwd=tmp_path, env=CLEAN_ENV
     )
     root_line, icon_line = result.stdout.splitlines()
     assert Path(root_line).parts[-2:] == ("embodic", "_resources")

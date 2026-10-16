@@ -50,6 +50,7 @@ def accessible_name(widget: QWidget) -> str:
     return QAccessible.queryAccessibleInterface(widget).text(QAccessible.Text.Name)
 
 
+@pytest.mark.req("REQ-N-12")
 def test_alt_1_to_alt_4_bring_the_inspector_tabs_coil_phases_layers_board_forward(opened, qtbot):
     """Catches a missing Alt+1 ... Alt+4 binding, or one that opens the wrong tab (design_spec.md section 10)."""
     for key, tab in ((KEY.Key_4, "tab-board"), (KEY.Key_3, "tab-layers"), (KEY.Key_2, "tab-phases")):
@@ -59,6 +60,7 @@ def test_alt_1_to_alt_4_bring_the_inspector_tabs_coil_phases_layers_board_forwar
     assert opened.inspector_tabs.currentWidget().objectName() == "tab-coil"
 
 
+@pytest.mark.req("REQ-N-12")
 def test_ctrl_shift_t_switches_the_theme_as_the_theme_button_does(opened, qtbot):
     """Catches Ctrl+Shift+T doing nothing (UX-AC-06): from the light theme it switches to dark, then on."""
     opened.appearance.set_theme(ThemeName.LIGHT)
@@ -67,6 +69,7 @@ def test_ctrl_shift_t_switches_the_theme_as_the_theme_button_does(opened, qtbot)
     assert opened.tokens.name == "dark"
 
 
+@pytest.mark.req("REQ-N-12")
 def test_ctrl_shift_n_opens_the_examples_gallery(make_shell, qtbot):
     """Catches Ctrl+Shift+N doing nothing at the start screen, where Examples is the first thing a user wants."""
     window = make_shell().window
@@ -78,6 +81,7 @@ def test_ctrl_shift_n_opens_the_examples_gallery(make_shell, qtbot):
     QApplication.activeModalWidget().close()
 
 
+@pytest.mark.req("REQ-N-12")
 def test_f6_and_shift_f6_cycle_the_regions_in_design_spec_order(opened, qtbot):
     """Catches F6 doing nothing, skipping a region that holds a focus stop, or a cycle out of the section 5 order.
 
@@ -96,6 +100,7 @@ def test_f6_and_shift_f6_cycle_the_regions_in_design_spec_order(opened, qtbot):
     assert backward == ["results-rail", "results-tabs", "fig-canvas", "inspector-tabs", "toolstrip"]
 
 
+@pytest.mark.req("REQ-N-12")
 def test_f6_stops_at_the_inspector_before_its_tabs_while_required_fields_are_missing(make_shell, qtbot):
     """Catches F6 jumping past `btn-first-missing`, the inspector's own stop while a new design lacks values."""
     window = make_shell().window
@@ -109,6 +114,7 @@ def test_f6_stops_at_the_inspector_before_its_tabs_while_required_fields_are_mis
     assert region_of(QApplication.focusWidget()) == "inspector-tabs"
 
 
+@pytest.mark.req("REQ-N-12", "REQ-N-16")
 def test_every_tab_stop_with_d08_open_has_an_accessible_name(opened, qtbot):
     """Catches a Tab stop that a screen reader announces with no name (DEF-U-S7-02 found three)."""
     first, unnamed = QApplication.focusWidget(), []
@@ -123,6 +129,7 @@ def test_every_tab_stop_with_d08_open_has_an_accessible_name(opened, qtbot):
     assert unnamed == []
 
 
+@pytest.mark.req("REQ-N-16")
 def test_scroll_areas_and_the_issues_list_take_the_titles_users_read(opened):
     """Catches a name that differs from the visible title (screens.md sections 6, 6.1 and 10).
 
@@ -139,6 +146,7 @@ def test_scroll_areas_and_the_issues_list_take_the_titles_users_read(opened):
     }
 
 
+@pytest.mark.req("REQ-N-16")
 def test_eq_chips_are_links_that_open_the_register_and_kind_tags_stay_text(opened, qtbot):
     """Catches an EQ chip announced as static text (screens.md section 6 says link), or a dead press action."""
     chips = opened.findChildren(EqChip)

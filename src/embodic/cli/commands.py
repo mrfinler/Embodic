@@ -5,6 +5,7 @@ English text. The work is done by `embodic.api` and `embodic.io`; nothing here i
 """
 
 import argparse
+import io
 import json
 import signal
 import sys
@@ -321,6 +322,17 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _write_utf8() -> None:
+    """Write stdout and stderr as UTF-8, keeping each stream's error handler.
+
+    Python writes a Windows pipe or file in the ANSI code page, which has no Ω, µ or U+2212, so a redirected command
+    stopped with UnicodeEncodeError. A stream someone replaced with a non-file object is left alone.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        if isinstance(stream, io.TextIOWrapper):
+            stream.reconfigure(encoding="utf-8", errors=stream.errors)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the command line and return the exit code.
 
@@ -331,6 +343,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     embodic-cli selftest [--json OUT]
     The desktop app entry point is `embodic` (embodic.ui.app:main).
     """
+    _write_utf8()
     try:
         args = _parser().parse_args(argv)
     except SystemExit as stop:

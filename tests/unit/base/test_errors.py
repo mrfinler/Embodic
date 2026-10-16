@@ -34,7 +34,7 @@ def import_errors_with_scratch_catalogue(tmp_path, source: str) -> subprocess.Co
         f"catalogue.__path__.append({str(tmp_path)!r}); "
         "print(sorted(importlib.reload(embodic.errors).MESSAGES))"
     )
-    return subprocess.run([sys.executable, "-c", probe], capture_output=True, text=True, check=False)
+    return subprocess.run([sys.executable, "-c", probe], capture_output=True, encoding="utf-8", check=False)
 
 
 @pytest.mark.req("REQ-L-01")
