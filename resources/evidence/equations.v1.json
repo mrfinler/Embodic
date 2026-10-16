@@ -41,7 +41,8 @@
   "reference values are computed by Agent 2 (scripts in checks/); none is a measurement",
   "v1.0: EQ-23...EQ-30 added for the serpentine/wave port (D-013); EC-05 labels per DEF-23; EQ-02 eye counts per EQ-25",
   "v1.0 rev. U-E2 (2026-10-05): DEF-M2b-01 EC-05 typed fields; DEF-M2b-02 EV-24 on EQ-20, EV-82/EV-83 on EQ-15, unsourced equations listed in equation_specification.md 'Source and unit gaps'; DEF-M2b-03 label, constants, object-form dominant_assumptions",
-  "v1.0 rev. U-E10 (2026-10-13, D-046 d): for a test ID EQT-nn-CFxx the closed-form case CF-xx of oracle_cases.json (its inputs, expected values and tolerances) governs over the equation's Phase 1 reference_case and tolerance texts, which stay as the Phase 1 record; the texts that differ are the EQ-06 tolerance (1e-4 vs CF-02 1e-9 and CF-03 1e-5) and the EQ-12 and EQ-13 reference_case (Xcoil rho, 1e-4 and 5e-3 mm vs CF-05 1e-9); eqt_map_review.md section b"
+  "v1.0 rev. U-E10 (2026-10-13, D-046 d): for a test ID EQT-nn-CFxx the closed-form case CF-xx of oracle_cases.json (its inputs, expected values and tolerances) governs over the equation's Phase 1 reference_case and tolerance texts, which stay as the Phase 1 record; the texts that differ are the EQ-06 tolerance (1e-4 vs CF-02 1e-9 and CF-03 1e-5) and the EQ-12 and EQ-13 reference_case (Xcoil rho, 1e-4 and 5e-3 mm vs CF-05 1e-9); eqt_map_review.md section b",
+  "v1.0 rev. U-E12 (2026-10-16, D-049 d): EQ-14 is the one 'cannot verify yet' entry without an Xcoil port. embodic implements form (a) (src/embodic/physics/estimates.py inductance_estimate_h, called from analyse.py l.408); the current-sheet functions move to replaced_functions; EQT-14-GR is withdrawn (nothing to compare) and EQT-14-CF12 (oracle_cases.json CF-12) checks the code against the form (a) formula. The status stays unresolved and the label estimate"
  ],
  "golden_tolerance_default": "relative 1e-9 vs Xcoil engine.js at function level, same inputs, Xcoil-compatible constants injected",
  "fields_added_in_v1": {
@@ -1605,7 +1606,7 @@
   {
    "id": "EQ-14",
    "name": "Inductance - first estimate only",
-   "formula": "L_m = (3*mu0/(4*pi))*(N*k_w1)^2*(D_o^2 - D_i^2)/(p^2*delta'), delta' = 2*l_m + 2*g + t_s; alternative: Xcoil current-sheet model (radial conductors only)",
+   "formula": "L_m = (3*mu0/(4*pi))*(N*k_w1)^2*(D_o^2 - D_i^2)/(p^2*delta'), delta' = 2*l_m + 2*g + t_s (form (a) only; Xcoil's current-sheet model is not ported, D-049 d)",
    "variables": [
     {
      "symbol": "N",
@@ -1716,14 +1717,15 @@
     "serpentine",
     "wave"
    ],
-   "golden_functions": [
+   "golden_functions": [],
+   "replaced_functions": [
     "windingInductance",
     "conductorsSerpentine",
     "conductorsWave",
     "conductorsFromElements"
    ],
    "tests": [
-    "EQT-14-GR",
+    "EQT-14-CF12",
     "EQT-14-O2"
    ],
    "label": "estimate",
