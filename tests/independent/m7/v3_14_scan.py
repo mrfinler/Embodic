@@ -55,13 +55,23 @@ TEXT_SUFFIXES = {".svg", ".md", ".txt", ".css", ".qss", ".toml", ".dxf", ".html"
 IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".ico", ".icns", ".svg", ".gif", ".bmp", ""}
 BUILD_ACCOUNTS = {"claude"}
 
+# A word starts after a non-letter (space, digit, `_`) or at a lower-to-upper change, so the scan sees words inside
+# identifiers such as RANGE_MANUAL_ASSIGNMENT_UNBALANCED and isUnbalanced; `\b` treats `_` as a letter (DEF-US9-01).
+START = r"(?:(?<![a-z])|(?-i:(?<=[a-z])(?=[A-Z])))"
+END = r"(?-i:(?![a-z]))"
 CLASSES = {
-    "REQ-T-10": re.compile(r"\bmeasur\w*", re.IGNORECASE),
-    "REQ-T-11": re.compile(r"\b(?:balanc\w*|torque\w*|efficien\w*|imbalanc\w*|unbalanc\w*)", re.IGNORECASE),
+    "REQ-T-10": re.compile(START + r"measur\w*", re.IGNORECASE),
+    "REQ-T-11": re.compile(START + r"(?:balanc\w*|torque\w*|efficien\w*|imbalanc\w*|unbalanc\w*)", re.IGNORECASE),
     "REQ-L-03": re.compile(r"xcoil", re.IGNORECASE),
     "REQ-L-03 other": re.compile(
-        r"\b(?:kicad|kimotor|magnetless|femm|elmer|matlab|ansys|comsol|motor-?cad|pcbnew)\b", re.IGNORECASE
+        START + r"(?:kicad|kimotor|magnetless|femm|elmer|matlab|ansys|comsol|motor-?cad|pcbnew)" + END, re.IGNORECASE
     ),
+}
+IDENT_PLANTS = {
+    "REQ-T-10": "Measured",
+    "REQ-T-11": "Unbalanced",
+    "REQ-L-03": "Xcoil",
+    "REQ-L-03 other": "Kicad",
 }
 PLANT = "Planted control: Xcoil measured balanced torque MATLAB planted@example.org C:\\Users\\plantedperson\\x"
 EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
@@ -474,6 +484,14 @@ def run_controls(tmp: Path, exports: Path, tokens: set[str], brand: dict[str, st
         n = sum(1 for t, _ in personal_hits(texts, tokens | {"planted@example.org"}) if "Planted" in t.text)
         rows.append(("REQ-L-05 personal", kind, n))
         failed |= n == 0
+    outcome = json.loads((exports / "spiral_12c16p_default" / "outcome.json").read_text(encoding="utf-8"))
+    for cls, word in IDENT_PLANTS.items():
+        for form, code in (("after `_`", f"PLANTED_{word.upper()}_CODE"), ("camelCase", f"planted{word}Code")):
+            doc = {**outcome, "issues": [*outcome["issues"], {"code": code}]}
+            texts = list(json_texts(json.dumps(doc).encode(), "outcome.json", "control"))
+            n = sum(1 for t, _ in hits(texts, CLASSES[cls]) if t.text == code)
+            rows.append((cls, f"identifier word {form}: issue code {code} in a copy of the real outcome.json", n))
+            failed |= n == 0
     pdf = list(pdf_texts((exports / "spiral_12c16p_default" / "report.pdf").read_bytes(), "report.pdf", "control"))
     n = sum("Key results" in t.text for t in pdf if t.kind == "pdf-text")
     rows.append(("PDF extractor", "'Key results' in the real report.pdf via pypdf", n))
