@@ -845,21 +845,14 @@
       "status": "not tested",
       "status_reasons": [
         "EQ-26 verified",
-        "EQ-26 tests not passed in this build",
         "EQ-10 verified",
-        "EQ-10 tests not passed in this build",
         "EQ-11 inferred",
-        "EQ-11 tests not passed in this build",
         "EQ-12 inferred",
-        "EQ-12 tests not passed in this build",
         "EQ-07 inferred",
-        "EQ-07 tests not passed in this build",
         "EQ-19 inferred",
         "EQ-19 tests not passed in this build",
         "EQ-23 verified",
-        "EQ-23 tests not passed in this build",
         "EQ-09 verified",
-        "EQ-09 tests not passed in this build",
         "EQ-06 verified",
         "EQ-06 tests not passed in this build"
       ],
@@ -1077,8 +1070,7 @@
       "status_reasons": [
         "EQ-06 verified",
         "EQ-06 tests not passed in this build",
-        "EQ-07 inferred",
-        "EQ-07 tests not passed in this build"
+        "EQ-07 inferred"
       ],
       "tolerance": {
         "absolute": null,
@@ -1284,7 +1276,6 @@
       "status": "not tested",
       "status_reasons": [
         "EQ-18 inferred",
-        "EQ-18 tests not passed in this build",
         "EQ-06 verified",
         "EQ-06 tests not passed in this build"
       ],
@@ -1977,9 +1968,7 @@
       "status": "not tested",
       "status_reasons": [
         "EQ-18 inferred",
-        "EQ-18 tests not passed in this build",
         "EQ-09 verified",
-        "EQ-09 tests not passed in this build",
         "EQ-06 verified",
         "EQ-06 tests not passed in this build"
       ],
@@ -2177,7 +2166,6 @@
       "status": "not tested",
       "status_reasons": [
         "EQ-09 verified",
-        "EQ-09 tests not passed in this build",
         "EQ-06 verified",
         "EQ-06 tests not passed in this build"
       ],
@@ -2461,7 +2449,6 @@
         "EQ-06 verified",
         "EQ-06 tests not passed in this build",
         "EQ-07 inferred",
-        "EQ-07 tests not passed in this build",
         "EQ-05 inferred",
         "EQ-05 tests not passed in this build"
       ],
@@ -2659,7 +2646,6 @@
       "status": "not tested",
       "status_reasons": [
         "EQ-09 verified",
-        "EQ-09 tests not passed in this build",
         "EQ-06 verified",
         "EQ-06 tests not passed in this build"
       ],
@@ -2857,7 +2843,6 @@
       "status": "not tested",
       "status_reasons": [
         "EQ-09 verified",
-        "EQ-09 tests not passed in this build",
         "EQ-06 verified",
         "EQ-06 tests not passed in this build"
       ],
@@ -3088,8 +3073,7 @@
           "status_reasons": [
             "EQ-05 inferred",
             "EQ-05 tests not passed in this build",
-            "EQ-04 verified",
-            "EQ-04 tests not passed in this build"
+            "EQ-04 verified"
           ],
           "tolerance": {
             "absolute": null,
@@ -3459,8 +3443,7 @@
           "status_reasons": [
             "EQ-05 inferred",
             "EQ-05 tests not passed in this build",
-            "EQ-04 verified",
-            "EQ-04 tests not passed in this build"
+            "EQ-04 verified"
           ],
           "tolerance": {
             "absolute": null,
@@ -3835,10 +3818,9 @@
       "kind_tag": "computed",
       "label": null,
       "quantity": "loss_circulating",
-      "status": "not tested",
+      "status": "inferred",
       "status_reasons": [
-        "EQ-07 inferred",
-        "EQ-07 tests not passed in this build"
+        "EQ-07 inferred"
       ],
       "tolerance": {
         "absolute": null,
@@ -4045,12 +4027,10 @@
       "kind_tag": "computed",
       "label": null,
       "quantity": "loss_copper",
-      "status": "not tested",
+      "status": "inferred",
       "status_reasons": [
         "EQ-10 verified",
-        "EQ-10 tests not passed in this build",
-        "EQ-11 inferred",
-        "EQ-11 tests not passed in this build"
+        "EQ-11 inferred"
       ],
       "tolerance": {
         "absolute": null,
@@ -4668,7 +4648,6 @@
       "status": "not tested",
       "status_reasons": [
         "EQ-12 inferred",
-        "EQ-12 tests not passed in this build",
         "EQ-05 inferred",
         "EQ-05 tests not passed in this build"
       ],
@@ -4854,12 +4833,10 @@
       "kind_tag": "computed",
       "label": null,
       "quantity": "loss_interconnect",
-      "status": "not tested",
+      "status": "verified",
       "status_reasons": [
         "EQ-23 verified",
-        "EQ-23 tests not passed in this build",
-        "EQ-10 verified",
-        "EQ-10 tests not passed in this build"
+        "EQ-10 verified"
       ],
       "tolerance": {
         "absolute": null,
@@ -5404,21 +5381,14 @@
       "status": "not tested",
       "status_reasons": [
         "EQ-26 verified",
-        "EQ-26 tests not passed in this build",
         "EQ-10 verified",
-        "EQ-10 tests not passed in this build",
         "EQ-11 inferred",
-        "EQ-11 tests not passed in this build",
         "EQ-12 inferred",
-        "EQ-12 tests not passed in this build",
         "EQ-07 inferred",
-        "EQ-07 tests not passed in this build",
         "EQ-19 inferred",
         "EQ-19 tests not passed in this build",
         "EQ-23 verified",
-        "EQ-23 tests not passed in this build",
         "EQ-09 verified",
-        "EQ-09 tests not passed in this build",
         "EQ-06 verified",
         "EQ-06 tests not passed in this build"
       ],
@@ -6038,15 +6008,11 @@
       "status": "not tested",
       "status_reasons": [
         "EQ-26 verified",
-        "EQ-26 tests not passed in this build",
         "EQ-09 verified",
-        "EQ-09 tests not passed in this build",
         "EQ-06 verified",
         "EQ-06 tests not passed in this build",
         "EQ-10 verified",
-        "EQ-10 tests not passed in this build",
-        "EQ-11 inferred",
-        "EQ-11 tests not passed in this build"
+        "EQ-11 inferred"
       ],
       "tolerance": {
         "absolute": null,
@@ -6287,9 +6253,7 @@
       "status": "not tested",
       "status_reasons": [
         "EQ-26 verified",
-        "EQ-26 tests not passed in this build",
         "EQ-09 verified",
-        "EQ-09 tests not passed in this build",
         "EQ-06 verified",
         "EQ-06 tests not passed in this build"
       ],
@@ -6512,10 +6476,9 @@
           "kind_tag": "computed",
           "label": null,
           "quantity": "phase_circulating_loss",
-          "status": "not tested",
+          "status": "inferred",
           "status_reasons": [
-            "EQ-07 inferred",
-            "EQ-07 tests not passed in this build"
+            "EQ-07 inferred"
           ],
           "tolerance": {
             "absolute": null,
@@ -6703,8 +6666,7 @@
           "status_reasons": [
             "EQ-06 verified",
             "EQ-06 tests not passed in this build",
-            "EQ-07 inferred",
-            "EQ-07 tests not passed in this build"
+            "EQ-07 inferred"
           ],
           "tolerance": {
             "absolute": null,
@@ -6905,8 +6867,7 @@
           "status_reasons": [
             "EQ-06 verified",
             "EQ-06 tests not passed in this build",
-            "EQ-07 inferred",
-            "EQ-07 tests not passed in this build"
+            "EQ-07 inferred"
           ],
           "tolerance": {
             "absolute": null,
@@ -7112,12 +7073,10 @@
           "kind_tag": "computed",
           "label": null,
           "quantity": "phase_resistance_20c",
-          "status": "not tested",
+          "status": "inferred",
           "status_reasons": [
             "EQ-10 verified",
-            "EQ-10 tests not passed in this build",
-            "EQ-11 inferred",
-            "EQ-11 tests not passed in this build"
+            "EQ-11 inferred"
           ],
           "tolerance": {
             "absolute": null,
@@ -7309,12 +7268,10 @@
           "kind_tag": "computed",
           "label": null,
           "quantity": "phase_resistance_operating",
-          "status": "not tested",
+          "status": "inferred",
           "status_reasons": [
             "EQ-10 verified",
-            "EQ-10 tests not passed in this build",
-            "EQ-11 inferred",
-            "EQ-11 tests not passed in this build"
+            "EQ-11 inferred"
           ],
           "tolerance": {
             "absolute": null,
@@ -7535,10 +7492,9 @@
           "kind_tag": "computed",
           "label": null,
           "quantity": "phase_circulating_loss",
-          "status": "not tested",
+          "status": "inferred",
           "status_reasons": [
-            "EQ-07 inferred",
-            "EQ-07 tests not passed in this build"
+            "EQ-07 inferred"
           ],
           "tolerance": {
             "absolute": null,
@@ -7726,8 +7682,7 @@
           "status_reasons": [
             "EQ-06 verified",
             "EQ-06 tests not passed in this build",
-            "EQ-07 inferred",
-            "EQ-07 tests not passed in this build"
+            "EQ-07 inferred"
           ],
           "tolerance": {
             "absolute": null,
@@ -7928,8 +7883,7 @@
           "status_reasons": [
             "EQ-06 verified",
             "EQ-06 tests not passed in this build",
-            "EQ-07 inferred",
-            "EQ-07 tests not passed in this build"
+            "EQ-07 inferred"
           ],
           "tolerance": {
             "absolute": null,
@@ -8135,12 +8089,10 @@
           "kind_tag": "computed",
           "label": null,
           "quantity": "phase_resistance_20c",
-          "status": "not tested",
+          "status": "inferred",
           "status_reasons": [
             "EQ-10 verified",
-            "EQ-10 tests not passed in this build",
-            "EQ-11 inferred",
-            "EQ-11 tests not passed in this build"
+            "EQ-11 inferred"
           ],
           "tolerance": {
             "absolute": null,
@@ -8332,12 +8284,10 @@
           "kind_tag": "computed",
           "label": null,
           "quantity": "phase_resistance_operating",
-          "status": "not tested",
+          "status": "inferred",
           "status_reasons": [
             "EQ-10 verified",
-            "EQ-10 tests not passed in this build",
-            "EQ-11 inferred",
-            "EQ-11 tests not passed in this build"
+            "EQ-11 inferred"
           ],
           "tolerance": {
             "absolute": null,
@@ -8558,10 +8508,9 @@
           "kind_tag": "computed",
           "label": null,
           "quantity": "phase_circulating_loss",
-          "status": "not tested",
+          "status": "inferred",
           "status_reasons": [
-            "EQ-07 inferred",
-            "EQ-07 tests not passed in this build"
+            "EQ-07 inferred"
           ],
           "tolerance": {
             "absolute": null,
@@ -8749,8 +8698,7 @@
           "status_reasons": [
             "EQ-06 verified",
             "EQ-06 tests not passed in this build",
-            "EQ-07 inferred",
-            "EQ-07 tests not passed in this build"
+            "EQ-07 inferred"
           ],
           "tolerance": {
             "absolute": null,
@@ -8951,8 +8899,7 @@
           "status_reasons": [
             "EQ-06 verified",
             "EQ-06 tests not passed in this build",
-            "EQ-07 inferred",
-            "EQ-07 tests not passed in this build"
+            "EQ-07 inferred"
           ],
           "tolerance": {
             "absolute": null,
@@ -9158,12 +9105,10 @@
           "kind_tag": "computed",
           "label": null,
           "quantity": "phase_resistance_20c",
-          "status": "not tested",
+          "status": "inferred",
           "status_reasons": [
             "EQ-10 verified",
-            "EQ-10 tests not passed in this build",
-            "EQ-11 inferred",
-            "EQ-11 tests not passed in this build"
+            "EQ-11 inferred"
           ],
           "tolerance": {
             "absolute": null,
@@ -9355,12 +9300,10 @@
           "kind_tag": "computed",
           "label": null,
           "quantity": "phase_resistance_operating",
-          "status": "not tested",
+          "status": "inferred",
           "status_reasons": [
             "EQ-10 verified",
-            "EQ-10 tests not passed in this build",
-            "EQ-11 inferred",
-            "EQ-11 tests not passed in this build"
+            "EQ-11 inferred"
           ],
           "tolerance": {
             "absolute": null,
@@ -9579,14 +9522,11 @@
       "kind_tag": "computed",
       "label": null,
       "quantity": "resistance_line",
-      "status": "not tested",
+      "status": "inferred",
       "status_reasons": [
         "EQ-23 verified",
-        "EQ-23 tests not passed in this build",
         "EQ-10 verified",
-        "EQ-10 tests not passed in this build",
-        "EQ-11 inferred",
-        "EQ-11 tests not passed in this build"
+        "EQ-11 inferred"
       ],
       "tolerance": {
         "absolute": null,
@@ -9778,12 +9718,10 @@
       "kind_tag": "computed",
       "label": null,
       "quantity": "resistance_phase_20c",
-      "status": "not tested",
+      "status": "inferred",
       "status_reasons": [
         "EQ-10 verified",
-        "EQ-10 tests not passed in this build",
-        "EQ-11 inferred",
-        "EQ-11 tests not passed in this build"
+        "EQ-11 inferred"
       ],
       "tolerance": {
         "absolute": null,
@@ -9975,12 +9913,10 @@
       "kind_tag": "computed",
       "label": null,
       "quantity": "resistance_phase_operating",
-      "status": "not tested",
+      "status": "inferred",
       "status_reasons": [
         "EQ-10 verified",
-        "EQ-10 tests not passed in this build",
-        "EQ-11 inferred",
-        "EQ-11 tests not passed in this build"
+        "EQ-11 inferred"
       ],
       "tolerance": {
         "absolute": null,
@@ -10134,12 +10070,10 @@
       "kind_tag": "computed",
       "label": null,
       "quantity": "skin_depth",
-      "status": "not tested",
+      "status": "verified",
       "status_reasons": [
         "EQ-13 verified",
-        "EQ-13 tests not passed in this build",
-        "EQ-10 verified",
-        "EQ-10 tests not passed in this build"
+        "EQ-10 verified"
       ],
       "tolerance": {
         "absolute": null,
@@ -10727,21 +10661,14 @@
         "EQ-17 assumption",
         "EQ-17 tests not passed in this build",
         "EQ-26 verified",
-        "EQ-26 tests not passed in this build",
         "EQ-10 verified",
-        "EQ-10 tests not passed in this build",
         "EQ-11 inferred",
-        "EQ-11 tests not passed in this build",
         "EQ-12 inferred",
-        "EQ-12 tests not passed in this build",
         "EQ-07 inferred",
-        "EQ-07 tests not passed in this build",
         "EQ-19 inferred",
         "EQ-19 tests not passed in this build",
         "EQ-23 verified",
-        "EQ-23 tests not passed in this build",
         "EQ-09 verified",
-        "EQ-09 tests not passed in this build",
         "EQ-06 verified",
         "EQ-06 tests not passed in this build"
       ],
@@ -10920,7 +10847,6 @@
       "status": "not tested",
       "status_reasons": [
         "EQ-18 inferred",
-        "EQ-18 tests not passed in this build",
         "EQ-06 verified",
         "EQ-06 tests not passed in this build"
       ],
@@ -11086,7 +11012,6 @@
       "status": "not tested",
       "status_reasons": [
         "EQ-18 inferred",
-        "EQ-18 tests not passed in this build",
         "EQ-06 verified",
         "EQ-06 tests not passed in this build"
       ],
@@ -11286,7 +11211,6 @@
       "status": "not tested",
       "status_reasons": [
         "EQ-09 verified",
-        "EQ-09 tests not passed in this build",
         "EQ-06 verified",
         "EQ-06 tests not passed in this build"
       ],
@@ -11687,9 +11611,7 @@
           "EQ-20 gate 'cannot verify yet'",
           "EQ-14 gate 'cannot verify yet'",
           "EQ-09 verified",
-          "EQ-09 tests not passed in this build",
-          "EQ-23 verified",
-          "EQ-23 tests not passed in this build"
+          "EQ-23 verified"
         ],
         "tolerance": {
           "absolute": null,
@@ -12087,9 +12009,7 @@
           "EQ-20 gate 'cannot verify yet'",
           "EQ-14 gate 'cannot verify yet'",
           "EQ-09 verified",
-          "EQ-09 tests not passed in this build",
-          "EQ-23 verified",
-          "EQ-23 tests not passed in this build"
+          "EQ-23 verified"
         ],
         "tolerance": {
           "absolute": null,
@@ -12487,9 +12407,7 @@
           "EQ-20 gate 'cannot verify yet'",
           "EQ-14 gate 'cannot verify yet'",
           "EQ-09 verified",
-          "EQ-09 tests not passed in this build",
-          "EQ-23 verified",
-          "EQ-23 tests not passed in this build"
+          "EQ-23 verified"
         ],
         "tolerance": {
           "absolute": null,
@@ -13009,9 +12927,7 @@
           "EQ-20 gate 'cannot verify yet'",
           "EQ-14 gate 'cannot verify yet'",
           "EQ-09 verified",
-          "EQ-09 tests not passed in this build",
-          "EQ-23 verified",
-          "EQ-23 tests not passed in this build"
+          "EQ-23 verified"
         ],
         "tolerance": {
           "absolute": null,
@@ -13531,9 +13447,7 @@
           "EQ-20 gate 'cannot verify yet'",
           "EQ-14 gate 'cannot verify yet'",
           "EQ-09 verified",
-          "EQ-09 tests not passed in this build",
-          "EQ-23 verified",
-          "EQ-23 tests not passed in this build"
+          "EQ-23 verified"
         ],
         "tolerance": {
           "absolute": null,

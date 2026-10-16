@@ -2,9 +2,11 @@
 
     python3 docs/phase3/verification/checks/req_audit.py            # prints the counts, writes req_audit.md
     python3 docs/phase3/verification/checks/req_audit.py --check    # exit 1 when req_audit.md is stale
+    python3 docs/phase3/verification/checks/req_audit.py --self-test
 
 Inputs (read only): requirements.md and the two test plans of this checkout; the REQ report and the gate log of
-Fable's release run on 5e74acc (/home/claude/release_0.0.1); the test sources of that run (/home/claude/wt/release2).
+Fable's release run on 5e74acc (/home/claude/release_0.0.1); the test sources of that run (`git archive 5e74acc tests`,
+or the folder given with --tree); Agent 4's V3-01 rulings and source pins (tests/independent/m7/v3_01_rulings.py).
 
 For each planned test ID of a row, the evidence is the first that holds:
   gate   a PASS line of the release gate log names the ID
@@ -21,14 +23,22 @@ NEEDS lists the IDs whose acceptance needs Windows, a real display or an FEA sol
 Row status: `verified` when every planned ID has gate, name, file, eqt or record evidence and none is in NEEDS;
 `partial` when some evidence exists but an ID lacks it or needs another machine; `not testable here` when no ID has
 evidence and every ID is in NEEDS; `not tested` otherwise. Withdrawn rows keep `withdrawn`. The script matches IDs to
-tests by text. It does not read whether a test checks the acceptance criterion as written: that is V3-01.
+tests by text, so this is the text status. D-051e: a row whose text status is `verified` stays `verified` only with
+Agent 4's V3-01 `checks` ruling for that row, while the SHA-256 of every source the ruling cites equals its pin;
+otherwise it drops to `partial` until Agent 4 re-rules it. The Ruling column says which case applies.
 """
 
 import argparse
 import hashlib
+import importlib.util
+import io
 import json
 import re
+import shutil
+import subprocess
 import sys
+import tarfile
+import tempfile
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
@@ -36,7 +46,8 @@ from pathlib import Path
 HERE = Path(__file__).resolve()
 REPO = HERE.parents[4]
 RELEASE = Path("/home/claude/release_0.0.1")
-RELEASE_TREE = Path("/home/claude/wt/release2")
+RELEASE_COMMIT = "5e74acc"
+RULINGS = REPO / "tests/independent/m7/v3_01_rulings.py"
 REQUIREMENTS = REPO / "docs/phase2/architecture/requirements.md"
 PLANS = (REPO / "docs/phase1/architecture/test_plan_draft.md", REPO / "docs/phase2/architecture/test_plan.md")
 REPORT = RELEASE / "req_report.json"
@@ -159,7 +170,7 @@ def audit(rows, records, gates, eqs, sources):
     return results
 
 
-def render(results, inputs) -> str:
+def render(results, notes, inputs) -> str:
     """Return req_audit.md."""
     counts = Counter(status for _, status, *_ in results)
     must = Counter(status for row, status, *_ in results if row.priority == "must")
@@ -177,16 +188,118 @@ def render(results, inputs) -> str:
         "",
         "Counts by status (must rows): " + ", ".join(f"{k} {v}" for k, v in sorted(must.items())) + ".",
         "",
-        "| REQ | Prio | M | Status | Marked records (passed, of them Agent 4) | Planned tests and evidence | Needs |",
-        "|---|---|---|---|---|---|---|",
+        "| REQ | Prio | M | Status | Ruling | Marked records (passed, of them Agent 4) | Planned tests and evidence "
+        "| Needs |",
+        "|---|---|---|---|---|---|---|---|",
     ]
-    for row, status, n, passed, indep, evidence, blocked in results:
+    for (row, status, n, passed, indep, evidence, blocked), note in zip(results, notes, strict=True):
         ev = ", ".join(f"{t} {k}" for t, k in evidence.items())
         needs = "; ".join(f"{t}: {NEEDS[t][0]} ({NEEDS[t][1]})" for t in blocked) or "-"
         lines.append(
-            f"| {row.req_id} | {row.priority} | {row.milestone} | {status} | {n} ({passed}, {indep}) | {ev} | {needs} |"
+            f"| {row.req_id} | {row.priority} | {row.milestone} | {status} | {note} | {n} ({passed}, {indep}) | {ev} "
+            f"| {needs} |"
         )
     return "\n".join(lines) + "\n"
+
+
+def load_rulings():
+    """Import Agent 4's V3-01 rulings file by path."""
+    spec = importlib.util.spec_from_file_location("v3_01_rulings", RULINGS)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def ruling_gate(req_id: str, sample_rulings, pins, tree: Path) -> str | None:
+    """Return None when a `checks` ruling with matching source pins backs the row, else why it does not."""
+    ruling = sample_rulings.get(req_id)
+    if ruling is None:
+        return "no V3-01 ruling"
+    if ruling[0] != "checks":
+        return f"ruled `{ruling[0]}`"
+    if not pins.get(req_id):
+        return "`checks` without a source pin"
+    changed = []
+    for source, pinned in sorted(pins[req_id].items()):
+        path = Path(source) if Path(source).is_absolute() else tree / source
+        if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != pinned:
+            changed.append(source)
+    return "source changed since the ruling: " + ", ".join(f"`{c}`" for c in changed) if changed else None
+
+
+def apply_rulings(results, sample_rulings, pins, tree: Path):
+    """D-051e: return the results with each text-verified row gated by its ruling, and one Ruling note per row."""
+    out, notes = [], []
+    for row, status, *rest in results:
+        reason = ruling_gate(row.req_id, sample_rulings, pins, tree) if status == "verified" else None
+        if status == "verified" and reason:
+            status = "partial"
+        if reason:
+            notes.append(f"text-verified; {reason}")
+        else:
+            notes.append("`checks`, sources match" if status == "verified" else "-")
+        out.append((row, status, *rest))
+    return out, notes
+
+
+def release_tests(dest: Path) -> Path:
+    """Extract the test tree of the release commit into dest and return dest."""
+    tar = subprocess.run(["git", "-C", str(REPO), "archive", RELEASE_COMMIT, "tests"], capture_output=True, check=True)
+    with tarfile.open(fileobj=io.BytesIO(tar.stdout)) as archive:
+        archive.extractall(dest, filter="data")
+    return dest
+
+
+def run_audit(tree: Path):
+    """Return the text results, the gated results and the Ruling notes for the test sources under tree."""
+    rows = parse_requirements(REQUIREMENTS.read_text(encoding="utf-8"))
+    records = json.loads(REPORT.read_text(encoding="utf-8"))
+    gates = gate_ids(GATE_LOG.read_text(encoding="utf-8"))
+    eqs = eq_map([p.read_text(encoding="utf-8") for p in PLANS])
+    files = {r["nodeid"].split("::")[0] for r in records}
+    sources = {f: (tree / f).read_text(encoding="utf-8", errors="replace") for f in files}
+    text_results = audit(rows, records, gates, eqs, sources)
+    rulings = load_rulings()
+    gated, notes = apply_rulings(text_results, rulings.SAMPLE_RULINGS, rulings.CHECKS_PINS, tree)
+    return text_results, gated, notes
+
+
+def self_test(tree: Path) -> int:
+    """Control for D-051e: a ruled row stays verified on the ruled sources and drops when a copy of its test changes."""
+    req, cited = "REQ-F-36", "tests/ui/qt_design/test_new_design_and_examples.py"
+    unruled = "REQ-F-01"
+    ok = True
+
+    def status_of(results, req_id):
+        return next(status for row, status, *_ in results if row.req_id == req_id)
+
+    text, gated, _ = run_audit(tree)
+    for label, got, want in (
+        (f"{req} text status on the ruled sources", status_of(text, req), "verified"),
+        (f"{req} gated status on the ruled sources", status_of(gated, req), "verified"),
+        (f"{unruled} text status (its V3-01 ruling is `partial`)", status_of(text, unruled), "verified"),
+        (f"{unruled} gated status", status_of(gated, unruled), "partial"),
+    ):
+        ok &= got == want
+        print(f"self-test {'ok' if got == want else 'WRONG'}: {label}: {got}, expected {want}")
+    with tempfile.TemporaryDirectory() as tmp:
+        copy = Path(tmp)
+        shutil.copytree(tree / "tests", copy / "tests")
+        edited = copy / cited
+        edited.write_text(edited.read_text(encoding="utf-8") + "\n# edited after the ruling\n", encoding="utf-8")
+        text, gated, notes = run_audit(copy)
+        note = next(n for (row, *_), n in zip(gated, notes, strict=True) if row.req_id == req)
+    for label, got, want in (
+        (f"{req} text status after editing a copy of {cited}", status_of(text, req), "verified"),
+        (f"{req} gated status after the edit", status_of(gated, req), "partial"),
+    ):
+        ok &= got == want
+        print(f"self-test {'ok' if got == want else 'WRONG'}: {label}: {got}, expected {want}")
+    named = cited in note
+    ok &= named
+    print(f"self-test {'ok' if named else 'WRONG'}: the Ruling note names the changed file: {note}")
+    print("self-test " + ("passed" if ok else "FAILED"))
+    return 0 if ok else 1
 
 
 def sha(path: Path) -> str:
@@ -198,17 +311,18 @@ def main(argv: list[str] | None = None) -> int:
     """Write req_audit.md and print the counts, or with --check report whether it is stale."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--check", action="store_true", help="exit 1 when req_audit.md differs from a fresh run")
+    parser.add_argument("--self-test", action="store_true", help="run the D-051e control")
+    parser.add_argument("--tree", type=Path, help="test sources to audit (default: git archive of the release commit)")
     args = parser.parse_args(argv)
 
-    rows = parse_requirements(REQUIREMENTS.read_text(encoding="utf-8"))
-    records = json.loads(REPORT.read_text(encoding="utf-8"))
-    gates = gate_ids(GATE_LOG.read_text(encoding="utf-8"))
-    eqs = eq_map([p.read_text(encoding="utf-8") for p in PLANS])
-    files = {r["nodeid"].split("::")[0] for r in records}
-    sources = {f: (RELEASE_TREE / f).read_text(encoding="utf-8", errors="replace") for f in files}
-    results = audit(rows, records, gates, eqs, sources)
-    inputs = [(p, sha(p)) for p in (REQUIREMENTS, *PLANS, REPORT, GATE_LOG)]
-    text = render(results, [(str(p.relative_to(REPO)) if p.is_relative_to(REPO) else str(p), h) for p, h in inputs])
+    with tempfile.TemporaryDirectory() as tmp:
+        tree = args.tree.resolve() if args.tree else release_tests(Path(tmp))
+        if args.self_test:
+            return self_test(tree)
+        _, results, notes = run_audit(tree)
+    inputs = [(p, sha(p)) for p in (REQUIREMENTS, *PLANS, REPORT, GATE_LOG, RULINGS)]
+    shown = [(str(p.relative_to(REPO)) if p.is_relative_to(REPO) else str(p), h) for p, h in inputs]
+    text = render(results, notes, shown)
 
     if args.check:
         stale = not OUT.exists() or OUT.read_text(encoding="utf-8") != text
