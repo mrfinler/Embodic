@@ -124,10 +124,19 @@ def test_every_tab_stop_with_d08_open_has_an_accessible_name(opened, qtbot):
 
 
 def test_scroll_areas_and_the_issues_list_take_the_titles_users_read(opened):
-    """Catches a name that differs from the visible title (screens.md sections 6 and 6.1)."""
-    names = {name: accessible_name(opened.findChild(QWidget, name)) for name in ("rail-scroll", "results-scroll")}
+    """Catches a name that differs from the visible title (screens.md sections 6, 6.1 and 10).
+
+    `compare-scroll` is a Tab stop of the same kind on the Compare page, which the D08 walk above does not open.
+    """
+    scrolls = ("rail-scroll", "results-scroll", "compare-scroll")
+    names = {name: accessible_name(opened.findChild(QWidget, name)) for name in scrolls}
     names["issues-list"] = accessible_name(opened.issues_list)
-    assert names == {"rail-scroll": "Key results", "results-scroll": "Results", "issues-list": "Input issues"}
+    assert names == {
+        "rail-scroll": "Key results",
+        "results-scroll": "Results",
+        "compare-scroll": "Compare",
+        "issues-list": "Input issues",
+    }
 
 
 def test_eq_chips_are_links_that_open_the_register_and_kind_tags_stay_text(opened, qtbot):
