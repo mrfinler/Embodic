@@ -20,7 +20,7 @@ import time
 from itertools import pairwise
 from pathlib import Path
 
-from PySide6.QtCore import QSettings, QStandardPaths, QTimer
+from PySide6.QtCore import QEventLoop, QSettings, QStandardPaths, QTimer
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QGraphicsView
 
@@ -51,6 +51,13 @@ TIMED = (
     (charts.TorqueSpeedTab, ("show_outcome",)),
     (geometry_view.GeometryView, ("show_geometry", "place_labels", "fit_view", "resizeEvent", "paintEvent")),
 )
+
+
+def pump(ms: int) -> None:
+    """Run the event loop for ``ms``, as app.exec does; QTest.qWait keeps the GIL and starves the worker."""
+    loop = QEventLoop()
+    QTimer.singleShot(ms, loop.quit)
+    loop.exec()
 
 
 def timed(owner: type, name: str) -> None:
@@ -97,19 +104,19 @@ def main(stem: str) -> None:
         window.resize(1280, 800)
         window.show()
         QTest.qWaitForWindowExposed(window)
-        QTest.qWait(500)
+        pump(500)
         ticks: list[tuple[float, float]] = []
         timer = QTimer()
         timer.setInterval(10)
         timer.timeout.connect(lambda: ticks.append((time.perf_counter(), time.thread_time())))
         timer.start()
-        QTest.qWait(500)
+        pump(500)
         SPANS.clear()
         opened = time.perf_counter()
         window.session.load_example(stem)
         while not isinstance(window.outcome.state.value, OutcomeReady) and time.perf_counter() - opened < 90:
-            QTest.qWait(5)
-        QTest.qWait(1500)
+            pump(5)
+        pump(1500)
         timer.stop()
         window.close()
 
