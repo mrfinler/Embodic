@@ -4,8 +4,8 @@
   "equations.v1.json": {
    "source": "docs/phase2/engineering/equation_registry.json",
    "filter": "verbatim",
-   "source_sha256": "1792b57bfaa03eab768b4cfe5ca3ca0b0ec9d4bf939a4fa5bf62cac79231fb35",
-   "copy_sha256": "1792b57bfaa03eab768b4cfe5ca3ca0b0ec9d4bf939a4fa5bf62cac79231fb35"
+   "source_sha256": "af64e8c1cbcad860ce0e2cd0ff539c59e6638d0510a377afecd552ae89eaf173",
+   "copy_sha256": "af64e8c1cbcad860ce0e2cd0ff539c59e6638d0510a377afecd552ae89eaf173"
   },
   "evidence.v1.json": {
    "source": "docs/phase2/evidence/evidence_register.json",
