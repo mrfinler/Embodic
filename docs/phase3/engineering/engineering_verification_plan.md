@@ -1,4 +1,4 @@
-Prepared by: Agent 2 (Motor Design Expert), model: claude-opus-5-5. Unit U-E11, 2026-10-16, worktree U-E11 from main 99647cb.
+Prepared by: Agent 2 (Motor Design Expert), model: claude-opus-5-5. Unit U-E11, 2026-10-16, worktree U-E11 from main 99647cb. Section 1 "Variant C" added in U-E13, 2026-10-16, worktree U-E13 at 53253b1.
 
 # Phase 3 engineering verification plan: F-OR07 diagnosis, OR-11 and OR-12 FEA cases, measurement plan, Phase 3 EQT ids
 
@@ -15,6 +15,7 @@ From the repository root:
 PYTHONPATH=src /home/claude/embodic/.venv/bin/python docs/phase3/engineering/checks/f_or07_probe.py      # 2 min 33 s
 PYTHONPATH=src /home/claude/embodic/.venv/bin/python docs/phase3/engineering/checks/f_or07_probe.py --no-grid
 PYTHONPATH=src /home/claude/embodic/.venv/bin/python docs/phase3/engineering/checks/or12_reference.py
+PYTHONPATH=src /home/claude/embodic/.venv/bin/python docs/phase3/engineering/checks/or07_variant_c.py     # 8 s
 ```
 
 `f_or07_probe.py` imports the pre-registered D09 builds of `docs/phase2/engineering/checks/oracles_probe.py`
@@ -135,6 +136,54 @@ comment). A generated spiral covers the edges with its outer turns only, because
 R_o0 − k·d. H8 shows that the digitised FEA profile on the generated paths removes 2.41 % of Ke, close to the
 generated-layout e_edge of 2.59 %. So the generated-layout value is the right one for OR-01 and OR-07. The
 calibration is still D09 Fig. 7 (DEF-23), so OR-11c below is the independent check.
+
+### Variant C: the build read from D09 Fig. 1a (U-E13)
+
+Variant C is `variant_C` of O2-D09 version 4 in `docs/phase2/engineering/oracle_cases.json`. It was committed in
+53253b1 before any build. Its inputs are Agent 5's Fig. 1a readings (EV-127 to EV-133): 7 turns, parallel sides,
+centre lines 25.104 / 45.214 mm, coil gap 0.342 mm, arc ends. `checks/or07_variant_c.py` reads the four registered
+builds from that file and runs each through `embodic.api.compute`. Every build met the registered preconditions:
+turns_achieved 7, DRC pass, and no issue of any severity. For each build, Ke recomputed from the public kernels
+equals the product's `ke_phase` within 1.1e-15.
+
+```
+C: turns_achieved 7 | DRC pass | issues [] | preconditions met
+  OR-07 emf_phase_rms_v 5.90328 V | e_edge 0.0172 | band [-5.00%, +6.72%] | -4.94% vs 6.21 V, -4.79% vs 6.2 V, -5.09% vs 6.22 V | OUT of band
+  OR-02 resistance_phase_20c_ohm 0.94680 ohm | -11.51% vs 1.07 ohm | band [-8.00%, +8.00%] | OUT of band
+  phase A copper (information): coil paths 2874.2 mm + chain 160.8 mm = 3035.0 mm (-6.4% vs 3244 mm); coil paths alone -11.4%
+```
+
+| Build | Role | E_ph | vs 6.21 / 6.20 / 6.22 V | OR-07 band | OR-07 | R at 20 °C | vs 1.07 Ω | OR-02 |
+|---|---|---|---|---|---|---|---|---|
+| C | verdict | 5.90328 V | −4.94 / −4.79 / −5.09 % | [−5 %, +6.72 %] | out | 0.94680 Ω | −11.51 % | out |
+| C-pitch | envelope | 5.78063 V | −6.91 / −6.76 / −7.06 % | [−5 %, +6.75 %] | out | 0.93810 Ω | −12.33 % | out |
+| C-hole | envelope | 6.02442 V | −2.99 / −2.83 / −3.14 % | [−5 %, +6.70 %] | in | 0.95550 Ω | −10.70 % | out |
+| C-straight | sensitivity | 5.95153 V | −4.16 / −4.01 / −4.32 % | [−5 %, +7.86 %] | in | 0.97008 Ω | −9.34 % | out |
+
+C at 40 °C (sensitivity, not a second chance): 1.02122 Ω, −4.56 %.
+
+**Verdicts (`verified`, ran).**
+
+- OR-07 on C is out of band. C is inside the band against 6.21 V (calculated) and 6.20 V (FEA). Against 6.22 V
+  (measured) it is 0.09 points below −5 %. The registered rule needs all three, so the verdict is out.
+- The OR-07 verdict is not robust to the reading. C-hole and C-straight are in band, and C-pitch is out. The two
+  drawing scales differ by 1.3 % (EV-129), and that difference alone moves the EMF by 3.9 points.
+- OR-02 on C is out of band at −11.51 %. Every envelope build is out too, from −12.33 % to −9.34 %.
+
+**What the numbers say (`inferred`).**
+
+- The +18.7 % of F-OR07 does not appear on the geometry read from D09's own drawing. C links 19.9 % less flux than
+  variant A (5.90328 / 7.37166 V). The H14 inference above expected about 23 % from D09's own method.
+- The generator reproduces the drawn turns. C's coil paths (2874.2 mm per phase) are 0.9 % to 2.5 % above the sum of
+  the read centre lines (2804 to 2848 mm, EV-132), and the coil paths also hold the leads and stubs.
+- R follows the copper length. C's phase A is 3035.0 mm, 6.4 % under D09's 3244 mm. Scaled to 3244 mm, C's R would be
+  1.012 Ω, close to the 0.999 Ω that D09's 3244 mm gives at 20 °C (O2-D09 phase resistance row). So OR-02 misses by
+  the EV-132 gap: copper that D09 Table 1 counts and Fig. 1a does not show (`unresolved`, a registered open note).
+
+**Status.** OR-07 stays a strict xfail on A and B. C is not in the test suite, and any change of test status is
+Fable's ruling. Still open: the EV-132 length gap, the Fig. 11a radius shift (EV-133), the unread end style, and the
+innermost-turn prediction of the registration (`not tested` on the generated layout). Variant C is not changed after
+these results. Any further variant is a new pre-registration.
 
 ## 2. FEA case specifications OR-11 and OR-12
 
