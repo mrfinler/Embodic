@@ -426,9 +426,10 @@ This note adds no input and leaves the registry status of EQ-05 unchanged.
 
 - Formula: steady-state dq model with R, L_s (EQ-14), Ke and inverter limits: SVPWM V_LL,rms = V_dc/√2; SPWM
   √3V_dc/(2√2); six-step √6V_dc/π; open phases V_dc/√2 or 4V_dc/(π√2). Pull-out T_po = m(E/Z)(V − ER/Z)/ω; pull-in
-  T_pi = T_po − Jωf_e (Xcoil estimate, J from EQ-28).
+  T_pi = T_po − Jωf_e (estimate, J from EQ-28).
 - Sources: EV-24 (D06 eq. 2) supports the torque relation T = mEI/ω only. The inverter fundamentals and the pull-out and
-  pull-in formulas have no source (`unresolved`).
+  pull-in formulas have no source (`unresolved`). The pull-in estimate is the one of Xcoil engine.js `torqueSpeed`
+  l.2713.
 - Variables: V_dc [V]; R, X, Z [Ω]; E [V]; ω [rad/s]; J [kg·m²]. Validity: steady state, i_d ≤ 0 field weakening.
 - Limitations: depends on L_s (EQ-14); no iron or switching losses.
 - Reference: `checks/engine_probe.js` V_dc 24 V star: SVPWM V_LL 16.9706 V, SPWM 14.6969 V, six-step 18.7127 V.
@@ -536,10 +537,11 @@ This note adds no input and leaves the registry status of EQ-05 unchanged.
 
 ### EQ-27 Numerical utilisation factor and analytic distribution factor
 
-- Formula: k_u = Ke1/(Σ over series conductors ∫B_z1 r dr over the magnet span) (Xcoil "kw1"); serpentine
+- Formula: k_u = Ke1/(Σ over series conductors ∫B_z1 r dr over the magnet span); serpentine
   k_d = sin(Nγ/2)/(N sin(γ/2)), γ = p·dα (radial style) or p(w + s)/r_mean (parallel style); wave
   k_d = |Σ_i w_i e^{jγ(i − (q−1)/2)}|/Σ w_i with w_0 = 2p − 1, w_i = 2p.
 - Sources: D15 eq. 6 p.7 (EV-59); D04 eq. 1 p.5 (EV-26); engine.js `analyze` 975 to 986, `analyzeWave` 2073 to 2077.
+  Xcoil engine.js names k_u `kw1` (`analyze` l.983).
 - Variables: N traces, q slots per belt [1]; γ [rad]; k_u, k_d [1].
 - Validity: information outputs; no downstream result uses them.
 - Limitations: the parallel-style serpentine k_d is a mean-radius approximation.
@@ -748,3 +750,10 @@ move to `replaced_functions`. EQT-14-GR is withdrawn because no port exists to c
 new closed-form case CF-12 holds the code to the formula at relative 1e-12. Until a test carries EQT-14-CF12, it is
 `not tested`. O2-D09 version 3 adds the D09 Table 1 envelope as information only (inputs, variants and bands
 unchanged).
+
+Revision 2026-10-17 (U-E14, claude-opus-5-5; DEF-UV8-05, REQ-L-03). The equation guide shows the registry `name` and
+`formula` of an entry (`src/embodic/ui/viewmodels/results.py` l.736 to l.737), and every result disclosure shows
+`{eq}: {name}. {formula}` (l.226). The guide does not show `source_notes`. The formula texts of EQ-14, EQ-20 and EQ-27
+named Xcoil. `checks/build_registry.py` now writes those program names into `source_notes` instead. The mathematics,
+status, gate and tests of the three entries are unchanged. `docs/phase3/engineering/checks/guide_name_scan.py` renders
+every registry text the guide shows and exits 1 on any "xcoil" (case-insensitive).
