@@ -614,7 +614,6 @@
          },
          "thickness_mm": {
           "exclusiveMinimum": 0,
-          "minimum": 0,
           "type": "number"
          }
         },

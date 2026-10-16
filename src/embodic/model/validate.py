@@ -14,7 +14,7 @@ from embodic.errors import IssueCategory, Severity, Suggestion, ValidationIssue,
 from embodic.model.design import DesignParameters
 from embodic.model.fields import FieldSpec, Limits, Sign, field_for
 from embodic.model.schema import JsonValue, ValueType, design_values
-from embodic.model.stackup import CopperLayer
+from embodic.model.stackup import CopperLayer, copper_total_mm
 from embodic.model.winding_specs import (
     PairConnection,
     SerpentineWindingSpec,
@@ -369,6 +369,23 @@ CROSS_FIELD_RULES: tuple[Callable[[DesignParameters], Iterator[ValidationIssue]]
     _supported_ranges,
     _winding_above_ambient,
 )
+
+
+def even_stackup_issues(
+    copper_count: int, copper_thickness_mm: float, board_thickness_mm: float
+) -> tuple[ValidationIssue, ...]:
+    """Check the even stack-up generator inputs: the board must be thicker than its copper (D-053a, B > n t)."""
+    copper_mm = copper_total_mm(copper_count, copper_thickness_mm)
+    if board_thickness_mm > copper_mm:
+        return ()
+    found = issue(
+        "INVALID_STACKUP_COPPER_EXCEEDS_BOARD",
+        ["/stackup/layers"],
+        value=board_thickness_mm,
+        limit=copper_mm,
+        unit=Unit.MM,
+    )
+    return (found,)
 
 
 def validate_design(design: DesignParameters) -> tuple[ValidationIssue, ...]:

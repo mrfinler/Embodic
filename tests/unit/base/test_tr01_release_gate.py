@@ -71,6 +71,7 @@ def manual_only_project(tmp_path: Path) -> dict[str, Path]:
         ),
         "report": write_report(tmp_path / "report.json", [("REQ-F-01", "passed")]),
         "out": tmp_path / "matrix.md",
+        "records": write_records(tmp_path / "no_records.json", []),
     }
 
 
@@ -199,11 +200,14 @@ def test_tr01_a_manual_record_index_that_is_not_a_json_list_fails_the_run(
 def release_trace_gate_argv(profile_name: str, project: dict[str, Path], *extra: str) -> tuple[str, list[str]]:
     """Return the name and the command of the trace-matrix gate of a profile, pointed at the fixture project.
 
-    The gate's own arguments come first, so the flag and the manual-record path are exactly those of the gate. Later
-    occurrences of an option replace earlier ones, which swaps only the files.
+    The gate's own arguments come first, so its flags are exactly those of the gate. Later occurrences of an option
+    replace earlier ones, which swaps only the files. A gate that reads the committed manual-record index reads the
+    project's index instead, so records added to the committed index cannot change these results (DEF-UV12b-01).
     """
     gate = next(g for g in ci.gates_for(ci.PROFILES[profile_name]) if g.name.startswith("trace matrix"))
     swap = [f"--report={project['report']}", f"--requirements={project['requirements']}", f"--out={project['out']}"]
+    if any(arg.startswith("--manual-records=") for arg in gate.argv):
+        swap.append(f"--manual-records={project['records']}")
     return gate.name, [*gate.argv, *swap, *extra]
 
 
@@ -233,17 +237,34 @@ def test_tr01_release_gate_passes_when_a_manual_record_covers_the_row(manual_onl
 
 
 @pytest.mark.req("REQ-T-09")
-def test_tr01_release_gate_reads_the_committed_manual_record_index(tmp_path):
-    """Catches an index that is absent or invalid: with every row tested, the gate's own index must load and add 0."""
+def test_tr01_release_gate_passes_with_an_empty_manual_record_index(tmp_path):
+    """Catches a release gate that fails on an index of no records: with every row tested it must pass and add 0."""
     project = {
         "requirements": write_requirements(tmp_path / "requirements.md", [("REQ-F-01", "carried", "must", "M1")]),
         "report": write_report(tmp_path / "report.json", [("REQ-F-01", "passed")]),
         "out": tmp_path / "matrix.md",
+        "records": write_records(tmp_path / "records.json", []),
     }
     _, argv = release_trace_gate_argv("release", project)
     result = run_gate(argv)
     assert result.returncode == 0, result.stdout + result.stderr
     assert "manual: 0" in result.stdout
+
+
+@pytest.mark.req("REQ-T-09")
+def test_tr01_release_gate_reads_the_committed_manual_record_index():
+    """Catches a release gate pointed at another index than the committed one, or at a file that is absent."""
+    gate = next(g for g in ci.gates_for(ci.PROFILES["release"]) if g.name.startswith("trace matrix"))
+    assert f"--manual-records={ci.MANUAL_RECORDS}" in gate.argv
+    assert ci.MANUAL_RECORDS.is_file()
+
+
+@pytest.mark.req("REQ-T-09")
+def test_tr01_committed_manual_records_are_valid_against_the_real_requirements_file():
+    """Catches a committed record that names no requirement row, a missing record file, or a malformed entry."""
+    known = {req.req_id for req in trace_matrix.parse_requirements(trace_matrix.REQUIREMENTS.read_text("utf-8"))}
+    _, problems = trace_matrix.parse_manual_records(ci.MANUAL_RECORDS.read_text(encoding="utf-8"), known)
+    assert problems == []
 
 
 @pytest.mark.req("REQ-T-09")

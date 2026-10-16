@@ -55,7 +55,9 @@ def readme_text(outcome: ComputeOutcome, files: Sequence[ExportSummary]) -> str:
 
 def write_readme(outcome: ComputeOutcome, files: Sequence[ExportSummary], path: Path) -> ExportSummary:
     """Plain-text README.txt describing every exported file, units, frame and the estimate caveats."""
-    path.write_text(readme_text(outcome, [f for f in files if f.kind is not ExportKind.README]), encoding="utf-8")
+    path.write_text(
+        readme_text(outcome, [f for f in files if f.kind is not ExportKind.README]), encoding="utf-8", newline="\n"
+    )
     return ExportSummary(
         kind=ExportKind.README, path=path, lines=0, arcs=0, circles=0, vias=0, pads=0, holes=0, pages=0
     )

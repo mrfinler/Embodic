@@ -213,7 +213,7 @@ _ROWS: Mapping[str, _Row] = types.MappingProxyType(
         "/stackup/layers/*/thickness_mm#copper": _Row(
             P, Unit.MM, G.STACKUP, "layer-list", _lim(POS, 0.25 * MM_PER_COPPER_OZ, 10 * MM_PER_COPPER_OZ)
         ),
-        "/stackup/layers/*/thickness_mm#dielectric": _Row(D, Unit.MM, G.STACKUP, "layer-list", _lim(NONNEG)),
+        "/stackup/layers/*/thickness_mm#dielectric": _Row(D, Unit.MM, G.STACKUP, "layer-list", _lim(POS)),
         "/stackup/layers/*/material#dielectric": _Row(D, None, G.STACKUP, "layer-list"),
         # Rotor and magnets (Xcoil poles 2..200, Br 0.1..2, muR 1..2, airgap 0.05..50, magnet 0.1..100 mm)
         "/rotor/poles": _Row(D, None, G.ROTOR, "param-poles", _lim(POS, 2, 200), 2),

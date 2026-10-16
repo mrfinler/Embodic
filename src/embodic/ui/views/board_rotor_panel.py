@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QHeaderView,
+    QLabel,
     QLineEdit,
     QPushButton,
     QTableWidget,
@@ -76,6 +77,13 @@ class BoardRotorPanel(FieldPanel):
                 edit.editingFinished.connect(lambda e=edit, f=field: self._stackup_input(e, f))
                 form.addRow(label_above(text(f"{name}.label"), edit))
                 self.helpers[name] = edit
+            error = QLabel()
+            error.setObjectName("param-board-thickness-error")
+            error.setProperty("class", "field-error")
+            error.setWordWrap(True)
+            error.setVisible(False)
+            form.addRow(error)
+            self.helpers["param-board-thickness-error"] = error
 
     def build(self) -> None:
         """Add the rows, the bore choice after the outline rows and the empty screw table."""
@@ -184,6 +192,10 @@ class BoardRotorPanel(FieldPanel):
             edit = self.helpers.get(name)
             if isinstance(edit, QLineEdit) and not edit.hasFocus():
                 edit.setText("" if value is None else f"{value:.6g}")
+        error = self.helpers.get("param-board-thickness-error")
+        if isinstance(error, QLabel):
+            error.setText("\n".join(found.message for found in self.session.stackup_issues.value))
+            error.setVisible(bool(error.text()))
 
     def _show_screws(self, values: Mapping[str, JsonValue]) -> None:
         table, remove = self.helpers.get("screw-table"), self.helpers.get("btn-screw-remove")

@@ -52,6 +52,10 @@ MESSAGES: Mapping[str, str] = {
     ),
     "INVALID_END_WIDTH_BELOW_TRACE": "End-turn width must be at least the trace width ({limit} mm).",
     "INVALID_STACKUP_NO_COPPER": "The stack-up needs at least one copper layer.",
+    "INVALID_STACKUP_COPPER_EXCEEDS_BOARD": (
+        "Board thickness must exceed the total copper thickness of {limit:.6g}{unit}, "
+        "so that every dielectric layer is thicker than 0."
+    ),
     "INVALID_LAYER_NAME_DUPLICATE": "Each layer needs its own name.",
     "INVALID_PAIR_LAYER_UNKNOWN": "A layer pair refers to a copper layer that is not in the stack-up.",
     "INVALID_PAIR_LAYER_SAME": "A layer pair needs two different copper layers.",
