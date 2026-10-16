@@ -11,7 +11,7 @@ from embodic.model.design import DesignParameters
 from embodic.model.draft import DesignDraft, DraftIncomplete, draft_from_design, parse_draft
 from embodic.model.provenance import derive_provenance
 from embodic.model.schema import JsonValue
-from embodic.model.validate import validate_design
+from embodic.model.validate import OUTLINE_MAX_MM, validate_design
 
 
 def _cf11_with(changes: dict[str, JsonValue]) -> DesignParameters:
@@ -63,6 +63,47 @@ def test_values_outside_the_supported_range_block_compute(
     assert len(found) == 1
     assert found[0].severity is Severity.ERROR
     assert found[0].category is IssueCategory.UNSUPPORTED_RANGE
+
+
+def _serpentine_with(changes: dict[str, JsonValue]) -> DesignParameters:
+    draft = draft_from_design(load_example("serpentine_16p_example")[1])
+    parsed = parse_draft(DesignDraft(topology=draft.topology, values={**draft.values, **changes}))
+    assert not isinstance(parsed, DraftIncomplete)
+    return parsed
+
+
+@pytest.mark.req("REQ-F-14")
+@pytest.mark.parametrize(
+    ("pointer", "value"),
+    [
+        # DEF-M7a-01: a 1e30 mm pitch circle overflowed the DRC grid index (INTERNAL_DRC_FAILED).
+        ("/outline/screws/0/pitch_radius_mm", 1e30),
+        ("/outline/screws/0/pitch_radius_mm", OUTLINE_MAX_MM * (1 + 1e-12)),
+        # A 1e30 mm hole covered the whole board and computed without a message.
+        ("/outline/screws/0/hole_diameter_mm", 1e30),
+        ("/outline/screws/0/hole_diameter_mm", 2 * OUTLINE_MAX_MM * (1 + 1e-12)),
+    ],
+)
+def test_a_screw_length_beyond_the_largest_board_blocks_compute(pointer: str, value: float) -> None:
+    """Catches a screw pattern sized off every supported board reaching the generator and the DRC grid."""
+    found = [i for i in validate_design(_serpentine_with({pointer: value})) if i.pointers == (pointer,)]
+    assert [(i.code, i.severity, i.category) for i in found] == [
+        ("RANGE_ABOVE_SUPPORTED", Severity.ERROR, IssueCategory.UNSUPPORTED_RANGE)
+    ]
+
+
+@pytest.mark.req("REQ-F-14")
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"/outline/screws/0/pitch_radius_mm": OUTLINE_MAX_MM},
+        {"/outline/screws/0/hole_diameter_mm": 2 * OUTLINE_MAX_MM},
+    ],
+)
+def test_screw_lengths_on_the_largest_board_limits_pass_validation(changes: dict[str, JsonValue]) -> None:
+    """Catches a screw bound tighter than the board outline maximum it derives from."""
+    (pointer,) = changes
+    assert [i.code for i in validate_design(_serpentine_with(changes)) if pointer in i.pointers] == []
 
 
 @pytest.mark.req("REQ-F-14")

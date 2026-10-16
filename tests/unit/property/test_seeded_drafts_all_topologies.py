@@ -86,17 +86,7 @@ def _non_finite_quantities(data: object, quantity: str | None = None) -> Iterato
 @pytest.mark.slow
 @pytest.mark.parametrize(
     "topology",
-    [
-        "spiral",
-        pytest.param(
-            "serpentine",
-            marks=pytest.mark.xfail(
-                strict=True,
-                reason="DEF: /outline/screws/0/pitch_radius_mm = 1e30 or more gives INTERNAL_DRC_FAILED (also wave)",
-            ),
-        ),
-        "wave",
-    ],
+    ["spiral", "serpentine", "wave"],
 )
 def test_f14_1_seeded_drafts_return_an_outcome_without_internal_errors_or_unnamed_non_finite_numbers(topology):
     """Catches an exception or a silent NaN on serpentine or wave input, which PR-05 draws only for spiral."""

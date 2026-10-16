@@ -10,8 +10,10 @@ from itertools import combinations
 
 from embodic.drc.report import violates
 from embodic.errors import IssueCategory, Severity, ValidationIssue, message_for
-from embodic.geometry.fasteners import PlacedHole, edge_gap_mm, hole_gap_mm
+from embodic.geometry.fasteners import PlacedHole, edge_gap_mm, hole_gap_mm, place_holes
 from embodic.geometry.layout import BoardOutline
+from embodic.geometry.outline import build_outline
+from embodic.model.design import DesignParameters
 from embodic.model.drc_rules import DrcRules
 
 
@@ -37,3 +39,9 @@ def keep_out_issues(
     }
     found = (("UNBUILDABLE_SCREW_HOLE_EDGE", edge), ("UNBUILDABLE_SCREW_HOLE_PITCH", pitch))
     return tuple(_issue(code, patterns) for code, patterns in found if patterns)
+
+
+def design_keep_out_issues(design: DesignParameters, envelope_mm: tuple[float, float]) -> tuple[ValidationIssue, ...]:
+    """``keep_out_issues`` of the design's screw patterns on its outline; every generator refuses these first."""
+    outline = build_outline(design.outline, envelope_mm)
+    return keep_out_issues(place_holes(design.outline.screws), outline, design.drc_rules)

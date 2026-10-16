@@ -30,6 +30,8 @@ PIECE_MM = 0.5
 _ARC_PIECE_RAD = math.pi / 4
 _CHUNK_PAIRS = 1 << 16
 _NO_KIND = -1
+_MAX_CELL_INDEX = 2.0**53
+_MAX_CELL_KEY = 2.0**62
 
 PAIR_KINDS = (
     DrcCheckKind.TRACE_TRACE,
@@ -117,8 +119,16 @@ def candidate_pairs(items: Items, sel: IntArray, rule_mm: float) -> tuple[IntArr
     mid, reach_mm, owner = _pieces(items, sel)
     span_mm = reach_mm + items.half_width_mm[owner]
     cell_mm = 2 * float(span_mm.max()) + rule_mm + 1e-9
-    ij = np.floor(mid / cell_mm).astype(np.int64)
-    ij -= ij.min(axis=0)
+    cells = np.floor(mid / cell_mm)
+    low = cells.min(axis=0)
+    extent = cells.max(axis=0) - low
+    # Above 2**53 a float names no single cell, and the key below must stay inside int64 with its neighbour offsets.
+    if not (np.abs(cells) < _MAX_CELL_INDEX).all() or (extent[0] + 2) * (extent[1] + 3) >= _MAX_CELL_KEY:
+        raise OverflowError(
+            f"DRC grid cell index is not representable: items span {extent[0] * cell_mm:.6g} x "
+            f"{extent[1] * cell_mm:.6g} mm, farthest at {float(np.abs(mid).max()):.6g} mm, cell {cell_mm:.6g} mm"
+        )
+    ij = (cells - low).astype(np.int64)
     width = int(ij[:, 1].max()) + 3
     key = ij[:, 0] * width + ij[:, 1] + 1
     order = np.argsort(key, kind="stable")
