@@ -4,9 +4,11 @@ The badge shows the status word, its border style (solid, dashed, dotted) and a 
 the only cue (design_spec.md section 3.3).
 """
 
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QKeyEvent, QMouseEvent
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QToolButton, QWidget
+import functools
+
+from PySide6.QtCore import QObject, Qt, Signal
+from PySide6.QtGui import QAccessible, QAccessibleActionInterface, QAccessibleInterface, QKeyEvent, QMouseEvent
+from PySide6.QtWidgets import QAccessibleWidget, QHBoxLayout, QLabel, QToolButton, QWidget
 
 from embodic.results.status import Status
 from embodic.ui.strings import text
@@ -59,12 +61,46 @@ class StatusBadge(QWidget):
         repolish(self.label)
 
 
+class _EqChipAccessible(QAccessibleWidget):
+    """What a screen reader reads of an EQ chip: a link with Press while it names an equation (screens.md 6)."""
+
+    def __init__(self, chip: "EqChip") -> None:
+        super().__init__(chip, QAccessible.Role.StaticText)
+        self._chip = chip
+
+    def role(self) -> QAccessible.Role:
+        """Link while the chip opens an equation; static text for a kind tag."""
+        return QAccessible.Role.StaticText if self._chip.eq_id is None else QAccessible.Role.Link
+
+    def actionNames(self) -> list[str]:  # noqa: N802 (Qt override)
+        """Offer Press, which a screen reader's activate command runs, ahead of the widget's own actions."""
+        own = super().actionNames()
+        return own if self._chip.eq_id is None else [QAccessibleActionInterface.pressAction(), *own]
+
+    def doAction(self, name: str) -> None:  # noqa: N802 (Qt override)
+        """Press opens the register entry, as Enter does."""
+        if name == QAccessibleActionInterface.pressAction() and self._chip.eq_id is not None:
+            self._chip.activated.emit(self._chip.eq_id)
+        else:
+            super().doAction(name)
+
+
+def _eq_chip_accessible(_class_name: str, target: QObject) -> QAccessibleInterface | None:
+    return _EqChipAccessible(target) if isinstance(target, EqChip) else None
+
+
+@functools.cache
+def _install_eq_chip_accessible() -> None:
+    QAccessible.installFactory(_eq_chip_accessible)
+
+
 class EqChip(QLabel):
     """An EQ-ID chip that opens the equation register at its entry; a tag (input, derived, count) does not."""
 
     activated = Signal(str)
 
     def __init__(self, name: str) -> None:
+        _install_eq_chip_accessible()
         super().__init__()
         self.setObjectName(name)
         self.setProperty("class", "eq-chip")
