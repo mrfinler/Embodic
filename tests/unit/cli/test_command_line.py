@@ -1,6 +1,8 @@
 """The command line itself (REQ-F-18): usage errors, output paths and the process entry points."""
 
 import importlib
+import json
+import os
 import subprocess
 import sys
 import tomllib
@@ -69,7 +71,7 @@ def test_a_full_compute_loads_no_qt_module(project_of) -> None:
         "ui = sorted(m for m in sys.modules if m.startswith('embodic.ui'))\n"
         "print(code, qt, ui)\n"
     )
-    result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, check=False)
+    result = subprocess.run([sys.executable, "-c", script], capture_output=True, encoding="utf-8", check=False)
     assert result.stdout.splitlines()[-1] == "0 [] []", result.stderr
 
 
@@ -81,6 +83,38 @@ def test_module_entry_point_returns_the_exit_code_to_the_shell(project_of) -> No
         [sys.executable, "-m", "embodic.cli", "compute", str(wave)], capture_output=True, check=False
     )
     assert result.returncode == 2
+
+
+FAILING_UNIT_CHECK = (
+    "import sys\n"
+    "from embodic.cli import commands\n"
+    "from embodic.selftest import SelfTestCheck, SelfTestGroup\n"
+    "commands.SELFTESTS = (SelfTestCheck(id='ST-UNIT', group=SelfTestGroup.CLOSED_FORM, title='unit', source_test='-',"
+    " expected=1.0, unit='N\\u00b7m/A', measure=lambda _: 1.5, rel_tol=1e-9),)\n"
+    "sys.exit(commands.main(['selftest']))\n"
+)
+
+
+@pytest.mark.req("REQ-F-18")
+@pytest.mark.parametrize("code_page", ["cp1252", "cp874"])
+def test_output_to_a_pipe_in_a_windows_code_page_is_utf8(project_of, tmp_path: Path, code_page: str) -> None:
+    """Catches DEF-W-08: Windows pipes use the ANSI code page, which has no Ω, so `validate` stopped with exit 3."""
+    project = json.loads(project_of(CF11).read_text(encoding="utf-8"))
+    project["design"]["name"] = "Stator 50 mΩ µ-step"
+    path = tmp_path / "ohm.embodic.json"
+    path.write_text(json.dumps(project, ensure_ascii=False), encoding="utf-8")
+    env = {**os.environ, "PYTHONIOENCODING": code_page}
+    validate = subprocess.run(
+        [sys.executable, "-m", "embodic.cli", "validate", str(path)], capture_output=True, env=env
+    )
+    assert (validate.returncode, validate.stdout.decode("utf-8").splitlines()) == (0, ["Valid: Stator 50 mΩ µ-step"])
+    selftest = subprocess.run([sys.executable, "-c", FAILING_UNIT_CHECK], capture_output=True, env=env)
+    assert selftest.returncode == 1, selftest.stderr.decode("utf-8")
+    assert (
+        selftest.stdout.decode("utf-8")
+        .splitlines()[0]
+        .endswith("expected 1.0 N·m/A, observed 1.5 N·m/A, tolerance rel. 1e-09")
+    )
 
 
 @pytest.mark.req("REQ-F-18")
