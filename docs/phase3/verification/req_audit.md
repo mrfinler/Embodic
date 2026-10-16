@@ -12,7 +12,7 @@ The status rule and the evidence kinds are in the script's docstring. Inputs and
 - `/home/claude/release_0.0.1/gate_release_5e74acc.log` `7d62341dfa5d4af5`
 - `tests/independent/m7/v3_01_rulings.py` `2c1d03d71f469e9a`
 - `tests/independent/m7/v3_01_rulings_f.py` `9b51fcffd037c32e`
-- `tests/independent/m7/v3_01_rulings_ntl.py` `f4d1e0d761f99e33`
+- `tests/independent/m7/v3_01_rulings_ntl.py` `806ace33aac98663`
 
 Counts by status (all rows): not tested 10, partial 71, verified 12, withdrawn 16.
 
@@ -116,7 +116,7 @@ Counts by status (must rows): not tested 4, partial 57, verified 12.
 | REQ-T-10 | must | M4 | not tested | - | 0 (0, 0) | LG-03 none | - |
 | REQ-T-11 | must | M4 | not tested | - | 0 (0, 0) | LG-04 none | - |
 | REQ-T-12 | should | M4 | not tested | - | 0 (0, 0) | UI-13 none | - |
-| REQ-T-13 | must | M4 | partial | text-verified; ruled `does not check` | 10 (10, 0) | UI-06 name | - |
+| REQ-T-13 | must | M4 | partial | text-verified; ruled `partial` | 10 (10, 0) | UI-06 name | - |
 | REQ-T-14 | must | M4 | partial | text-verified; ruled `partial` | 34 (34, 0) | UT-IO-06 name, UI-32 name | - |
 | REQ-T-15 | must | M2 | partial | - | 22 (22, 0) | UT-MOD-04 file, UT-IO-07 name, PR-12 none | - |
 | REQ-T-16 | must | M2 | partial | text-verified; ruled `partial` | 6 (6, 0) | UT-RES-07 file, UI-33 name | - |

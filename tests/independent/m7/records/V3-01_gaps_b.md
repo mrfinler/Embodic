@@ -9,7 +9,7 @@ is called missing when a search of every union file for its terms found no asser
 inputs, the expected value and its source, the tolerance, and the defect it catches. Specs for Agent 3 unless marked
 "manual record", which a person or Agent 4 runs and indexes in `docs/phase3/verification/manual_records.json`.
 
-Rows not re-ruled in this unit (timebox): REQ-T-01, T-02, T-05, T-07, T-13, T-14. Their U-V8 sample ruling stands.
+REQ-T-01, T-02, T-05, T-07, T-13 and T-14 were ruled in the U-V12b continuation (sections T-01 to T-14 below).
 
 ## N-01 (REQ-N-01)
 
@@ -125,6 +125,54 @@ with a hard-coded colour that the region check (tests/ui/qt_shell/test_theme_and
 Unit test. Run Agent 1's palette validator (design_spec.md sections 3.2 and 3.4) on both theme files: each pair of
 phase colours and each adjacent step of the greyscale ladder must meet the separation that section 3.4 states.
 Catches a theme edit that keeps 3:1 on the canvas but makes two phases or two grey steps indistinguishable.
+
+## T-01 (REQ-T-01)
+
+Qt test. Load D08 and walk all 30 result cards. Expected: each card shows an EQ chip whose text lists the row's
+`eq_ids`, or a kind tag when `eq_ids` is empty, and never neither; for each card, Tab to it and press Space; the
+"How was this computed" panel of that card becomes visible (requirements.md REQ-T-01 "details reachable in one
+interaction"). Catches a card with no EQ link or tag, or a card whose details the keyboard cannot open.
+
+## T-02 (REQ-T-02)
+
+Unit test. For every packaged example, compute the outcome and walk its real `AnalysisResult` (fields, layers,
+phases, torque-speed). Expected: every number is a `Traceable`; each one's `eq_ids` resolve in the packaged registry
+or it carries a kind tag; every `evidence_ids` entry resolves (requirements.md REQ-T-02 "for every example").
+Catches an engine path that emits an unknown EQ-ID or a bare number for one topology.
+
+## T-05 (REQ-T-05)
+
+Gate test, or an acceptance rewording by Agent 6. Run `tools/record_passed_tests.py` (release profile) on a report
+where a `verified` equation's only linked EQT ID is carried by no passing test. Expected by the acceptance: exit 1 and
+the equation named. Today record_main exits 0 and prints the ID as "carried by no test"
+(tests/unit/results/test_record_passed_tests.py:85-117). Catches a release that ships a `verified` equation whose
+tests did not run. If the badge downgrade (`not tested`) is the intended mechanism, the acceptance text needs that
+wording instead.
+
+The badge half is asserted (tests/unit/results/test_traceable.py:154-160): no verified badge without a passing
+linked test. Only the "CI fails" clause is missing.
+
+## T-07 (REQ-T-07)
+
+Unit tests. (a) Save a project and read the JSON: it holds embodic version, engine version, registry version, design
+hash and a generation date in UTC (requirements.md REQ-T-07). (b) In the PDF text, a `generated_utc` value matching
+`\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ`. (c) In README.txt, `embodic_version`, `engine_version` and `generated_utc`
+lines with the outcome's values. Catches an export that drops a stamp field.
+
+## T-13 (REQ-T-13)
+
+Unit test. For every one of the 30 result rows of D08 and of the wave example: the disclosure has the six sections
+Equation, Inputs, Assumptions, Limitations, Validation state, Sources; each Inputs line names the provenance word
+(`user`, `example`, `measured` or `default`); the Assumptions count equals the row's tag count; `copy_trace(row)`
+holds every disclosure line (requirements.md REQ-T-13 "Content check per result row"). Catches one row whose
+disclosure drops a section or an input.
+
+## T-14 (REQ-T-14)
+
+Unit and Qt tests. (a) README.txt contains `embodic_version: <outcome.versions.embodic>`. (b) With D08 open, the
+geometry view or its status line shows the design hash prefix and the embodic version of the drawn outcome, if the
+design spec (UX-AC-17) assigns the stamp to the on-screen drawing; otherwise Agent 6 narrows the statement to
+exports. Catches an export or an engine drawing without its version stamp.
 
 ## T-06 (REQ-T-06)
 

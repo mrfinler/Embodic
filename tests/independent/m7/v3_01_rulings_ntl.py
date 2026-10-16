@@ -8,8 +8,7 @@ every file in the union found no assertion (`inferred` from that search, not fro
 
 UNION_RULINGS: REQ id -> (ruling, reason). req_audit.py lets these replace the V3-01 sample ruling of the same row.
 UNION_PINS: REQ id -> {test file: SHA-256 at 8a4a8a1} for every `checks` ruling (D-051e).
-Rows not listed here (REQ-T-01, T-02, T-05, T-07, T-13, T-14) were not re-ruled inside the U-V12b timebox; their U-V8
-sample ruling stands.
+REQ-T-01, T-02, T-05, T-07, T-13 and T-14 were ruled in the U-V12b continuation, on the same main 8a4a8a1 sources.
 """
 
 UNION_RULINGS: dict[str, tuple[str, str]] = {
@@ -150,6 +149,51 @@ UNION_RULINGS: dict[str, tuple[str, str]] = {
         "A measured copper thickness leaves the tag (tests/unit/results/test_traceable.py:112-127); an empty source "
         "and design fields are refused (tests/unit/model/test_provenance.py:94-105). B_r, the field the acceptance "
         "names, is never shown leaving the tag (gap T-06).",
+    ),
+    "REQ-T-01": (
+        "partial",
+        "Unit and badge on every row (tests/unit/ui/results/test_results_viewmodel.py:27-36) and every card "
+        "(tests/ui/qt_results/test_results_and_checks.py:52-55). Details in one interaction from the keyboard: Space "
+        "opens 'How was this computed' and the EQ link opens the guide (tests/ui/qt_e2e/test_ax02_keyboard_only.py:"
+        "73-77), on the R_ph card only. The EQ link or kind tag is asserted on one card (test_results_and_checks.py:"
+        "41-50); test_results_viewmodel.py:37 compares eq_ids with the data, which an empty pair passes (gap T-01).",
+    ),
+    "REQ-T-02": (
+        "partial",
+        "No AnalysisResult field is a bare float, by its annotations (tests/unit/results/test_analysis_result.py:"
+        "24-27). The ID walk (:64-84) runs on a result built from traced() with fixed EQ-IDs (:30-44), not on the "
+        "computed result of any example, so 'for every example' and the engine's own IDs are not asserted (gap T-02).",
+    ),
+    "REQ-T-05": (
+        "partial",
+        "A verified equation links a test (tests/unit/results/test_registry.py:168-172); no result shows `verified` "
+        "without a passing linked test (tests/unit/results/test_traceable.py:154-160); `cannot verify yet` gives "
+        "`unresolved` (tests/unit/results/test_status.py:61); evidence is written only for a green release run "
+        "(tests/unit/results/test_record_passed_tests.py:73-82). No test makes CI fail on a verified EQ whose linked "
+        "IDs no passing test carries: record_main exits 0 and prints them as 'carried by no test' (:85-117) (gap "
+        "T-05).",
+    ),
+    "REQ-T-07": (
+        "partial",
+        "SVG <metadata> holds all five fields and drc_passed for every example and mode (tests/unit/embodic_io/"
+        "exporters/test_svg.py:67-81); each DXF part's 999 comments hold them (test_dxf.py:104-120). The PDF test "
+        "(test_report_readme_bundle.py:169-177) has no generation date; the README test (:181-198) has the design "
+        "hash and registry version only. No test reads the stamp in the project JSON (gap T-07).",
+    ),
+    "REQ-T-13": (
+        "partial",
+        "The disclosure's six sections, inputs with a parenthesis, assumption count, sources and validation state "
+        "(tests/unit/ui/results/test_results_viewmodel.py:74-87) and Copy trace (:116-128) are checked on one row "
+        "each (R_ph, the inductance estimate) of 30. The acceptance asks for a content check per result row (gap "
+        "T-13).",
+    ),
+    "REQ-T-14": (
+        "partial",
+        "A non-engine chart carries 'Illustrative, not computed' and an engine chart does not (tests/ui/qt_results/"
+        "test_charts_compare_guide_export.py:76-106). The stamp and design hash are in SVG (tests/unit/embodic_io/"
+        "exporters/test_svg.py:67-81), DXF (test_dxf.py:104-120) and PDF (test_report_readme_bundle.py:169-177). "
+        "The README test has no embodic version (:196-198), and no test reads a stamp on the on-screen engine "
+        "drawing (gap T-14).",
     ),
     "REQ-T-08": (
         "partial",
