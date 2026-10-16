@@ -87,6 +87,15 @@ of passing tests: the file `resources/evidence/passed_tests.v1.json`, its writer
 `eqt` test marker, the staleness rule and the badge changes. §12 adds `embodic-cli selftest`. The new §14 is the
 contract for `embodic.selftest` and the Tests dialog. §13 adds point 12.
 
+Revision 2026-10-17 (U-D17, claude-sonnet-5-5, D-051; the code on main 0547f20 was read for every item, and
+`docs/phase3/architecture/v3_contract_rulings.md` supplies the detail that D-051 leaves out). The new §3.2 states the
+`checks` ruling that a requirement row needs before the audit calls it `verified` (D-051e), and the release trace gate
+with its manual-record input. §4 renames the two winding issue codes to `…_ASYMMETRIC_…` (D-051b). §5 states that
+`layout_hash` and `stack_hash` are same-platform identities (D-051f). §7 renames `DrcViolation.measured_mm` to
+`clearance_mm` and `DrcCheckSummary.measured_min_mm` to `least_clearance_mm` (D-051a), and fixes the order of
+`DrcReport.violations` (D-051f). §10 adds `format` and `format_version` 2 to the outcome JSON, with the key map from
+version 1 (D-051a). §11 and §14 follow the rename. §13 adds point 14.
+
 ## 0. Rules for every public boundary
 
 - Lengths are millimetres (`_mm`), angles radians (`_rad`) inside the core, temperature °C (`_degc`), current A (`_a`),
@@ -1604,6 +1613,99 @@ only the release profile's own wheel carries it (PK-10). Two tests pin the behav
 `tools/ci.py` names the file only for the release profile (`EVIDENCE`, l.27, and `evidence_gates`, l.86-93). Outside a
 pytest session, `load_registry()` keeps reading the file whenever it applies, which is the product behaviour above.
 
+### 3.2 Requirement status and the release trace gate (revision 2026-10-17, U-D17; D-051e)
+
+Scope. This section governs the project's audit tooling. Nothing under `src/embodic` changes. D-051e (`docs/decision_log.md`
+l.57) rules two points. A requirement row counts `verified` only with Agent 4's `checks` ruling for that row, tied to the
+source hash of each test it cites (DEF-UV8-07). The release profile passes `tools/trace_matrix.py
+--fail-untested-through` from the 0.0.2 gate on, with a manual-record input for rows only a person can check. The data
+shapes below follow `docs/phase3/architecture/v3_contract_rulings.md` §4 and §2. D-051e does not spell them out, and the
+parts marked as proposed wait for Fable.
+
+What the audit does on main 0547f20 (`verified` by reading). `docs/phase3/verification/checks/req_audit.py` marks a row
+`verified` when every planned test ID of the row has `gate`, `name`, `file`, `eqt` or `record` evidence and no ID needs
+another machine (docstring l.21-24, `audit` l.138-160). A `name` match means that a passing test carrying the row's REQ
+marker has the ID in its name. The script states that it does not read whether a test checks the acceptance (l.24).
+Agent 4 read one sampled test for each of the 50 must rows that the audit called `verified` and found that 6 check the
+acceptance, 32 check part of it and 12 check none of it (`tests/independent/m7/records/V3-01.md` l.68). Standing order 2
+defines `verified` as read in the source or reproduced by running something, and a name match is neither.
+
+The acceptance ruling. Agent 4 owns the ruling file, `req_audit.py` and `verification_plan.md`. The example path of
+v3_contract_rulings.md §4 is `tests/independent/m7/acceptance_rulings.json`, and Agent 4 may choose another path and
+record it here. The file holds one `AcceptanceRuling` per row, with these keys.
+
+| Key | Type | Value |
+|---|---|---|
+| `req_id` | string | the row, for example `"REQ-F-36"` |
+| `ruling` | string | `"checks"`, `"partial"` or `"does not check"`, the words of V3-01 |
+| `clauses` | list | one entry per clause of the row's Acceptance cell, quoted in `text`, each with a list `evidence` |
+| `clauses[].evidence[]` | object | `kind` (`"test"`, `"gate"` or `"record"`), `ref` (a pytest node ID, a gate name or a record path), `line` (integer) and `sha256` (the hash of the cited source) |
+| `missing` | list | the clauses that no evidence asserts; empty for `checks` |
+| `reviewer`, `base_commit` | string | the role that read the evidence (not a person's name, standing order 7) and the commit it read |
+
+The hash covers the source text, encoded as UTF-8. For a test it is the function's source segment
+(`ast.get_source_segment`). For a gate it is the `Gate(...)` entry in `tools/ci.py`. For a record it is the whole file.
+
+The rule. A live row is `verified` only when all three hold.
+
+1. Every planned test ID of the row has passing evidence, as today.
+2. The row has an `AcceptanceRuling` with `ruling` equal to `"checks"`.
+3. Every evidence entry of that ruling is current. Its hash equals the hash of the same source in the audited tree, and a
+   cited test passed in the audited run.
+
+A row that meets 1 but not 2 or 3 is `partial`. A ruling with a hash that no longer matches counts as absent, and the
+audit lists it as stale. A cited test carries the REQ marker of the row. Every other status rule of `req_audit.py` stays,
+including `withdrawn` for withdrawn rows. One ruling covers one row and cites every test the row needs together. The hash
+covers the function body only, so a change to a fixture or a helper does not make a ruling stale, and the audit's header
+states that limit (`inferred`).
+
+TR-01 stays a floor. `tools/trace_matrix.py` answers whether a test exists, and its output never says `verified`.
+`req_audit.py` answers whether the acceptance is checked.
+
+Release trace gate (D-051e). From the 0.0.2 release gate on, the release profile of `tools/ci.py` passes
+`--fail-untested-through M5` to `tools/trace_matrix.py`. D-051e names the flag. The value `M5` is the proposal of
+v3_contract_rulings.md §2 point 1, because it covers every milestone, and Fable confirms it. With the flag, the script
+exits 1 when a live must row of milestone M5 or earlier has no passing test and no manual record that passed
+(`find_untested`, `tools/trace_matrix.py` l.88-97, flag at l.106). On main 0547f20 no profile passes the flag
+(`tools/ci.py` l.74-82).
+
+- `Profile` (`tools/ci.py` l.33-39) gains `untested_through: str | None`. The release profile sets `"M5"`, and the commit
+  and nightly profiles set `None`.
+- `gates_for` adds the flag when the field is set. It names the gate "trace matrix (TR-01, TR-02)" in that case and
+  "trace matrix (TR-02)" otherwise (name at l.75). `req_audit.py` reads the PASS lines of the gate log as `gate`
+  evidence (`gate_ids`, l.110), so a gate name that claims TR-01 without enforcing it gives false evidence.
+- The commit and nightly profiles skip `tests/performance` and `tests/packaging` (`RELEASE_ONLY_TEST_DIRS`, l.28), and the
+  commit profile also deselects `slow` tests (l.43). A row whose only tests sit in those folders has no passing test
+  there. REQ-N-05 is such a row (v3_contract_rulings.md §2 point 2).
+
+Manual records (proposed; Fable confirms the location and the format). `tools/trace_matrix.py` gains `--manual-records
+PATH`. The file is one JSON list with one object per record.
+
+| Key | Type | Value |
+|---|---|---|
+| `req` | string | the REQ ID that the record covers; a row of `requirements.md` |
+| `test_id` | string | the planned test ID that the person ran, for example `"PK-06"` |
+| `record` | string | the repository-relative POSIX path of the record file; the file exists |
+| `embodic_version` | string | the version of the build that the person tested |
+| `result` | string | `"passed"` or `"failed"` |
+
+- TR-01 counts a record with `result` equal to `"passed"` as a test for its `req`. The Phase 1 text of TR-01 already
+  allows "a manual test record" (`docs/phase1/architecture/test_plan_draft.md` l.393).
+- The script exits 1 and prints the record when its `result` is neither value, its `req` is unknown or its `record`
+  path does not exist. A typo then cannot hide a gap, as `record_passed_tests.py` refuses an unknown eqt ID (§3.1).
+- The summary line prints the number of counted records after the test counts, as "manual: 1". Nobody then reads a
+  manual record as an automated test.
+- The index file is `docs/phase3/verification/manual_records.json`. Agent 4 owns it and the release profile passes its
+  path. It holds `[]` until a person has recorded a check. Without this input REQ-N-07 cannot pass, because its acceptance
+  needs a person on a clean Windows machine (`requirements.md`, REQ-N-07).
+- The record files are Markdown. Agent 4's records stay under `tests/independent/<milestone>/records/`, where
+  `req_audit.py` already reads three (`RECORDS`, l.58-62). A campaign record that Fable writes stays under
+  `docs/phase3/fable/`. A record names the build (the version, and the wheel's SHA-256 when a wheel exists), each step
+  with the output the person saw, and the verdict. It holds no account name (standing order 7).
+
+`embodic_version` does not decide whether a record counts. Whether a record of an earlier build satisfies TR-01 for the
+0.0.2 gate is open (§13 point 14). D-051e puts a coverage step in Phase 5, so this contract adds no coverage gate.
+
 ## 4. `embodic.winding`: spiral phase plan
 
 Used by the spiral generator only. Exact integer arithmetic (EQ-08 `replace`).
@@ -1652,7 +1754,7 @@ def compute_winding_factors(assignment: Sequence[CoilAssignment], poles: int, co
 def plan_spiral_winding(design: DesignParameters, spec: SpiralWindingSpec,
                         registry: Registry) -> SpiralWindingPlan | Unbuildable: ...
 def plan_issues(plan: SpiralWindingPlan, design: DesignParameters) -> tuple[ValidationIssue, ...]:
-    """Warnings a buildable plan carries: delta with k_w3 not zero, an unbalanced manual assignment (D-031d)."""
+    """Warnings a buildable plan carries: delta with k_w3 not zero, an asymmetric manual assignment (D-031d, D-051b)."""
 ```
 
 Revision 2026-10-08 (U-D4, D-031d; `src/embodic/winding/plan.py` and `src/embodic/errors/catalogue/winding.py` on main
@@ -1667,18 +1769,27 @@ prefix sets category and severity (`plan.py` `_KIND_BY_PREFIX`). Every issue cit
 
 | Code | Returned by | Category, severity | Pointers | `value`, `limit` |
 |---|---|---|---|---|
-| `UNBUILDABLE_UNBALANCED_WINDING` | `plan_spiral_winding`, star of slots only | UNBUILDABLE, ERROR | `/winding/coil/coil_count`, `/rotor/poles` | none |
+| `UNBUILDABLE_ASYMMETRIC_WINDING` | `plan_spiral_winding`, star of slots only (renamed 2026-10-17, U-D17, D-051b) | UNBUILDABLE, ERROR | `/winding/coil/coil_count`, `/rotor/poles` | none |
 | `UNBUILDABLE_ASSIGNMENT_COVERAGE` | `plan_spiral_winding`, manual assignment that does not list coils 0 to Q - 1 once | UNBUILDABLE, ERROR | `/winding/assignment` | none |
 | `UNBUILDABLE_PARALLEL_PATHS_NOT_DIVISOR` | `plan_spiral_winding`, `not feasibility.allows_parallel_paths(parallel_paths)` (revision 2026-10-08 (U-D5), D-032a, D-033d) | UNBUILDABLE, ERROR | `/winding/parallel_paths` | requested paths, `periodicity` |
 | `RANGE_DELTA_TRIPLEN` | `plan_issues`, delta with k_w3 > 1e-9 | UNSUPPORTED_RANGE, WARNING | `/connection/topology` | k_w3, 0 |
-| `RANGE_MANUAL_ASSIGNMENT_UNBALANCED` | `plan_issues`, manual assignment not balanced | UNSUPPORTED_RANGE, WARNING | `/winding/assignment` | spread (max - min) / max of the fundamental phase EMF magnitudes |
+| `RANGE_MANUAL_ASSIGNMENT_ASYMMETRIC` | `plan_issues`, manual assignment not symmetric (renamed 2026-10-17, U-D17, D-051b) | UNSUPPORTED_RANGE, WARNING | `/winding/assignment` | spread (max - min) / max of the fundamental phase EMF magnitudes |
 
-A manual assignment is accepted even when it is unbalanced; only the star of slots refuses an unbalanced coil and pole
+A manual assignment is accepted even when it is asymmetric; only the star of slots refuses an asymmetric coil and pole
 count. The plan's winding factors use the outermost-turn span 2 pi / Q (A2-TOP §2.2). The generator passes the real
 turn spans to `compute_winding_factors` when it needs the turn-averaged values. Agent 2 answered the two engineering
 questions of U-M2c (D-025e) in `docs/phase2/engineering/equation_specification.md` l.207-214, both `inferred` with no
 textbook source yet: one phase per layer pair is self-consistent when 2p/Q is odd, and the parallel path count a must
 divide t.
+
+Revision 2026-10-17 (U-D17, D-051b; `src/embodic/errors/catalogue/winding.py` l.6 and l.16 and `src/embodic/winding/plan.py`
+l.58 and l.96 on main 0547f20, `verified` by grep). The codes were `UNBUILDABLE_UNBALANCED_WINDING` and
+`RANGE_MANUAL_ASSIGNMENT_UNBALANCED`. D-051b renames them to the same meaning. Category, severity, pointers and `value`
+stay as the table says. The reason is the user's rule that no text claims balance from geometry (standing order 2): the
+check tests a property of the winding pattern, not of a motor. Code that names the old codes changes in the same wave
+(`src/embodic/ui/viewmodels/session.py` l.617, `tests/unit/winding/test_plan.py` l.86 and l.171). Agent 3 owns that
+change. `Feasibility.balanced` and `balanced_coil_counts` keep their names, because D-051b does not name them (§13 point
+14).
 
 Revision 2026-10-08 (U-D5, D-032a, D-033d; `src/embodic/winding/feasibility.py` and `plan.py` on main e1536b8,
 `verified` by reading). D-032a adopts the second answer: a design plans only when t mod a = 0, and the rule stays
@@ -1967,7 +2078,7 @@ class Layout:
     envelope_mm: tuple[float, float]  # r_min_cu, r_max_cu
     detail: TopologyDetail | None = None  # generator-specific record; None only for hand-built test layouts
     derived: tuple[Traceable[float], ...] = ()  # feasibility-rail values; () only for hand-built test layouts
-    layout_hash: str = field(init=False)  # "sha256:<hex>"; never passed in
+    layout_hash: str = field(init=False)  # "sha256:<hex>"; never passed in; a same-platform identity (D-051f)
 
     def __post_init__(self) -> None:
         """Sets layout_hash = compute_layout_hash(paths, vias, pads, outline), so no Layout carries a foreign hash."""
@@ -1984,7 +2095,7 @@ class BoardStack:
     board_thickness_mm: float  # one board, = design.stackup.board_thickness_mm()
     board_gap_mm: float  # 0.0 when len(boards) == 1
     issues: tuple[ValidationIssue, ...] = ()  # WARNING and INFO only; revision 2026-10-08 (U-D7, D-035a)
-    stack_hash: str = field(init=False)  # "sha256:<hex>" over the boards' layout_hash values in order and the gap
+    stack_hash: str = field(init=False)  # "sha256:<hex>" over the boards' layout_hash values in order and the gap; a same-platform identity (D-051f)
 
     def __post_init__(self) -> None:
         """Sets stack_hash. Raises ValueError for no board, or a gap other than 0.0 on a one-board stack."""
@@ -2044,7 +2155,9 @@ def rotate(prims: Sequence[Primitive], angle_rad: float) -> tuple[Primitive, ...
 def mirror(prims: Sequence[Primitive], axis_angle_rad: float) -> tuple[Primitive, ...]: ...
 def build_outline(spec: OutlineSpec, envelope_mm: tuple[float, float]) -> BoardOutline: ...
 def compute_layout_hash(paths: Sequence[CopperPath], vias: Sequence[Via], pads: Sequence[Pad],
-                        outline: BoardOutline) -> str: ...
+                        outline: BoardOutline) -> str:
+    """SHA-256 of the sorted-key JSON of the copper and the outline, shortest round-trip floats (D-051f: a same-platform
+    identity, because one ulp in one float changes the digest)."""
 
 
 # embodic.geometry.distance and embodic.geometry.grid: Xcoil ptSegDist, segSegDist, makeGrid, gridQuery (l.563-596)
@@ -2127,6 +2240,23 @@ is `unresolved`. The compute facade merges `BoardStack.issues` into `ComputeOutc
 Revision 2026-10-09 (U-D8, D-036d; main 8a297a0, `verified` by reading). Closed. `BoardStack.issues` exists
 (`geometry/layout.py` l.130) and refuses an ERROR (l.139-140). The wave case is no longer `unresolved`: both ports
 emit their warning through it (§6, revision U-D8).
+
+Revision 2026-10-17 (U-D17, D-051f; `src/embodic/geometry/hashing.py` l.27-33, `geometry/layout.py` l.141-143 and
+`src/embodic/api.py` l.195, l.296, l.339-340 on main 0547f20, `verified` by reading). `layout_hash` and `stack_hash` are
+same-platform identities. `compute_layout_hash` hashes the sorted-key JSON of the copper and the outline with shortest
+round-trip floats, and `stack_hash` hashes the boards' `layout_hash` values and `board_gap_mm`. A float that differs by
+one ulp gives another digest, and D-051f records that float bytes differ by an ulp across maths libraries. The same
+design can therefore give two `layout_hash` values on Windows and on Linux. REQ-N-04 promises byte identity on one
+platform only. The contract follows from that.
+
+- Two equal hashes mean equal copper on one platform, one Python and one NumPy build. Two unequal hashes from two
+  platforms say nothing about the copper.
+- The stage caches of `compute` key on both hashes (`api.py` l.195 and l.296). A cache lives in one process, so the
+  rule costs it nothing.
+- The outcome JSON carries both hashes at `/boards/stack_hash` and `/boards/layout_hashes` (`api.py` l.339-340). A
+  cross-platform comparison leaves those pointers out and compares `/design_hash` exactly (`test_plan.md` §5.7, PK-04).
+  `design_hash` hashes the design only (§9.1), so no computed float enters it.
+- The determinism claim of `Generator` below holds on one platform.
 
 Revision 2026-10-08 (U-D4, D-031b, D-031f; `src/embodic/geometry/layout.py`, `details.py` and
 `src/embodic/generators/spiral/derived.py` on main c7fff3a, `verified` by reading).
@@ -2357,7 +2487,8 @@ example (`verified` by running it on the three examples of main 9776555).
 
 ```python
 class Generator(Protocol):
-    """A topology generator. Pure; never raises for user input; deterministic (same design -> same stack_hash)."""
+    """A topology generator. Pure; never raises for user input; deterministic on one platform (same design -> same
+    stack_hash; D-051f)."""
 
     kind: ClassVar[TopologyKind]
 
@@ -2487,7 +2618,9 @@ def unusable_sizes(positive: Mapping[str, float], trace_pointer: str, width_mm: 
 
 ## 7. `embodic.drc`
 
-Rule D-006: violation when measured clearance < rule - `DRC_EPSILON_MM`. Turns of one spiral share a net and still keep
+Rule D-006: violation when the clearance < rule - `DRC_EPSILON_MM`. The clearance is the distance that the kernels
+compute from the generated geometry, and the word "measured" is not used for it (D-051a, revision 2026-10-17, U-D17).
+Turns of one spiral share a net and still keep
 clearance. Connectivity exempts exactly the pairs below (revision 2026-10-05, U-M1c report; implemented in
 `src/embodic/drc/items.py` `exempt_pairs` and `src/embodic/drc/engine.py` `_check`). Every other pair is checked,
 including same-net pairs. `run_drc` checks one board; a board stack (§5, D-016) is checked board by board, so copper
@@ -2657,7 +2790,7 @@ class DrcCheckKind(StrEnum):
 class DrcViolation:
     kind: DrcCheckKind
     layer: str | None
-    measured_mm: float
+    clearance_mm: float  # was measured_mm (D-051a)
     required_mm: float
     at_mm: tuple[float, float]
     objects: tuple[str, ...]  # "path:17/prim:4", "via:33"
@@ -2666,7 +2799,7 @@ class DrcViolation:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class DrcCheckSummary:
     kind: DrcCheckKind
-    measured_min_mm: float | None
+    least_clearance_mm: float | None  # was measured_min_mm (D-051a)
     required_mm: float
     pairs_checked: int
 
@@ -2675,7 +2808,7 @@ class DrcCheckSummary:
 class DrcReport:
     passed: bool
     summaries: tuple[DrcCheckSummary, ...]
-    violations: tuple[DrcViolation, ...]  # first 1000
+    violations: tuple[DrcViolation, ...]  # first 1000 in canonical order (kind, layer, objects), D-051f
     violation_count: int
     method: Literal["grid+exact", "symmetric+grid+exact"]
     epsilon_mm: float = DRC_EPSILON_MM
@@ -2692,7 +2825,7 @@ class CancelToken:
 
 def run_drc(layout: Layout, rules: DrcRules, *, use_symmetry: bool = True,
             cancel: CancelToken | None = None) -> DrcReport | None:
-    """None only when cancelled."""
+    """None only when cancelled. The violations come in the canonical order (kind, layer, objects), D-051f."""
 
 
 def min_distance_line_line(a: FloatArray, b: FloatArray) -> FloatArray: ...
@@ -2725,13 +2858,33 @@ Pad to pad and pad to via (ratified). The clearance is the centre distance minus
 true clearance for square, rectangular and oblong pads, so it never under-reports. It can report a pair whose true
 clearance passes. PR-01's no-false-positive clause excludes these pairs (test_plan.md §5.2).
 
-What `DrcCheckSummary` covers. `measured_min_mm` is the least clearance over the pairs the narrow phase measured.
+What `DrcCheckSummary` covers. `least_clearance_mm` is the least clearance over the pairs the narrow phase computed.
 The broad phase keeps every pair that can lie closer than the largest pair rule plus `DRC_EPSILON_MM` (`verified` by
 reading `candidate_pairs` in `src/embodic/drc/engine.py`; UT-DRC-08 compares it with an exhaustive check), so below that
 bound the value is the true minimum of that kind. Above it, the value is an upper bound of the true minimum and the true
 minimum still exceeds the bound, so no verdict depends on it. `None` means no pair of that kind came within the bound.
-`pairs_checked` counts measured pairs and depends on `use_symmetry`. Golden comparisons of summary values apply only
-below the bound. For MIN_WIDTH, MIN_DRILL and ANNULAR_RING the summary covers every object.
+`pairs_checked` counts the pairs the narrow phase computed and depends on `use_symmetry`. Golden comparisons of summary
+values apply only below the bound. For MIN_WIDTH, MIN_DRILL and ANNULAR_RING the summary covers every object.
+
+Revision 2026-10-17 (U-D17, D-051a and D-051f; `src/embodic/drc/report.py` l.54-56, l.68 and l.79 and
+`src/embodic/drc/engine.py` l.325, l.336, l.348, l.352 and l.356 on main 0547f20, `verified` by reading).
+
+Names. `DrcViolation.measured_mm` is now `clearance_mm`, and `DrcCheckSummary.measured_min_mm` is now
+`least_clearance_mm`. The engine computes each value from the generated geometry (`engine.py` l.336), and `measured`
+stays reserved for an input with a named source (D-007). Each new key sits beside `required_mm`, so the object says
+which value is which. Callers change in the same wave, and no alias property stays. The older revision notes of this
+file keep the old names, because they record what the contract said on their date.
+
+Order. `run_drc` returns `DrcReport.violations` sorted by the key (kind, layer, objects) of D-051f. Main 0547f20 sorts by
+`(v.measured_mm - v.required_mm, v.kind, v.objects)` (`engine.py` l.356), the least margin first. D-051f gives the
+reason for the change: on Windows the same 186 wave violations came out in another order (DEF-W-01).
+
+- `kind` compares as the string value of the `DrcCheckKind` member, a `StrEnum`, as the key at `engine.py` l.356 does.
+- `layer` is `None` for a check that holds on every layer. `None` sorts before every layer name (proposed; Fable
+  confirms). Layer names compare in code-point order.
+- `objects` compares as a tuple of strings in code-point order. The string `path:17/prim:4` sorts before `path:2/prim:1`.
+- `violations` keeps the first 1000 entries of this order, and `violation_count` is the full count. The entries kept are
+  no longer the 1000 with the least margin (§13 point 14).
 
 ## 8. `embodic.physics`
 
@@ -3473,11 +3626,45 @@ def compute_project(path: Path) -> ComputeOutcome | tuple[ValidationIssue, ...]:
 
 
 def outcome_to_json(outcome: ComputeOutcome) -> dict[str, JsonValue]:
-    """Results JSON of embodic-cli compute --json; non-finite numbers encoded as {"$f": "inf"}."""
+    """Results JSON of embodic-cli compute --json; non-finite numbers encoded as {"$f": "inf"}. The top level holds
+    "format": "embodic.outcome" and "format_version": 2 (D-051a, revision 2026-10-17, U-D17)."""
 
 
 def version_info() -> VersionInfo: ...
 ```
+
+Revision 2026-10-17 (U-D17, D-051a; `src/embodic/api.py` l.331-352 and `src/embodic/cli/commands.py` l.150 on main
+0547f20, `verified` by reading, and by grep for a reader in `src` and `tools`).
+
+The document names its shape. `outcome_to_json` adds `"format": "embodic.outcome"` and `"format_version": 2` at the top
+level, next to `design`, `design_hash`, `provenance`, `issues`, `ok`, `boards`, `drc`, `analysis` and `versions`. A
+document without `format` is version 1, the shape that embodic 0.0.1 writes. The evidence file (§3.1) and the board dump
+(§9.2) already carry both keys. The outcome JSON was the one machine-written document that could not say which shape it
+had, and a key rename is the first change that needs it.
+
+What version 2 changes. D-051a renames two keys, and D-051f fixes the order of one list. Every other key keeps its name
+and meaning.
+
+| Version 1 pointer | Version 2 pointer |
+|---|---|
+| `/drc/<b>/violations/<i>/measured_mm` | `/drc/<b>/violations/<i>/clearance_mm` |
+| `/drc/<b>/summaries/<i>/measured_min_mm` | `/drc/<b>/summaries/<i>/least_clearance_mm` |
+
+In the pointers, `<b>` is the board index in `drc` and `<i>` is the list index. The list at `/drc/<b>/violations` is in
+the canonical order of §7 in version 2, and in the least-margin-first order of main 0547f20 in version 1. A script that
+reads the violation at one index therefore reads another violation in a version 2 file. The `measured` value at
+`/provenance` is an input provenance and keeps its name (D-007).
+
+- The project file schema stays at 1. The rule of §9.1 covers the project file, and the project file holds no DRC value.
+  A bump to 2 would make embodic 0.0.1 refuse every 0.0.2 project file with `INVALID_SCHEMA_VERSION_NEWER`, although the
+  content of those files did not change. `VersionInfo.schema` at `/versions/schema` is that project schema and stays 1.
+- The product has no version 1 reader. `outcome_to_json` is called by `cli/commands.py` l.150 and by tests, and
+  `src/embodic` and `tools` read no outcome JSON. The key map above is the whole migration for an outside script. Whether
+  the user has such a script is `unresolved`.
+- PK-04 compares two outcome folders only when their source hashes are equal
+  (`docs/phase3/verification/checks/pk04_compare.py` l.53-56), so a 0.0.1
+  file and a 0.0.2 file never meet there. A 0.0.2 build writes new Linux references in any case.
+- `/boards/stack_hash` and `/boards/layout_hashes` are same-platform identities (§5, D-051f).
 
 ## 11. `embodic.ui`: theme, toolstrip and view-model contracts
 
@@ -3897,12 +4084,23 @@ Layers tab and Board tab (U-S4e ruling c).
 
 DRC table and result cards (U-S4e ruling d, DEF-1 and DEF-2).
 
-- Columns. `COLUMNS` (`ui/views/checks_view.py` l.43) is glyph, Board, Message, Measured, Required, Layer. The glyph
+- Columns. `COLUMNS` (`ui/views/checks_view.py` l.43) is glyph, Board, Message, Clearance, Required, Layer (the fourth
+  column read "Measured" until revision 2026-10-17, U-D17, D-051a). The glyph
   column is `GLYPH_PX` (24) wide, and Message takes the width the others leave, at least `MESSAGE_MIN_PX` (l.49, 200)
   on two lines. A table too narrow for that scrolls. The rule code and the severity word moved to the row tooltip and the
   accessible text (`row_description`, l.208). `test_ruling_d_drc_table_shows_glyph_message_measured_required_layer_without_sideways_scroll`
-  (`tests/ui/qt_results/test_results_and_checks.py` l.155) pins the set, and the Measured and Required cells hold the
-  number only (l.172).
+  (`tests/ui/qt_results/test_results_and_checks.py` l.155) pins the set, and the Clearance and Required cells hold the
+  number only (l.172). The test name keeps the old word until Agent 3 renames it with the column.
+- The word "clearance" in the window (revision 2026-10-17, U-D17, D-051a). Main 0547f20 says "measured" at these places
+  (`verified` by grep): the column id `measured` and the string `drc.column.measured` "Measured\n(mm)"
+  (`ui/views/checks_view.py` l.43, l.181, `ui/strings/results.py` l.85), the row description "Measured {measured}"
+  (`strings/results.py` l.87), `DrcRow.measured_text` (`ui/viewmodels/results.py` l.310), the export confirmation row
+  "{measured} measured, {required} required" (`ui/strings/export.py` l.45) and the PDF column "Least measured"
+  (`io/report.py` l.137). D-051a gives all of them "clearance" or "least clearance", and the id, the field and the
+  format keys follow the new word. Agent 1 writes the strings and Agent 3 changes the code
+  (`docs/phase3/architecture/v3_contract_rulings.md` §1, edit table). The chip "measured" and the command "Mark as
+  measured..." of the inspector (`ui/strings/design.py`) stay, because they name an input provenance with a named
+  source (D-007).
 - The Board column. `DrcRow.board_text` (`ui/viewmodels/results.py` l.271) holds the phase letter of the failure's
   board and "" for a one-board design. `DrcTable.boards` (l.284) lists the letters when the design has more than one
   board, and the view hides the column otherwise (`checks_view.py` l.187). `drc_table` (l.298) lists the violations of
@@ -4126,6 +4324,23 @@ both.
 | The PyInstaller folder (stretch, D-015; `package_layout.md` §5.1 and §5.2) | A Linux smoke of the spec only (D-046h). Build exit 0, 444 files, the Qt libraries are separate files, no `.py` file, `licenses/` and `source/embodic-0.0.1.tar.gz` present. Open: the sdist is 18.8 MB (a trimmed sdist is a question for Fable and the user); PyInstaller warns that `libxcb-cursor.so.0` is not resolved on Linux; PK-05 on Windows is `not tested`; the written offer for the Qt and PySide6 source and embodic's `LICENSE` are user decisions; Qt's third-party notices are `unresolved` | Fable, the user |
 | `SelfTestWorker` location (§14) | Closed by D-046g. The class is in `ui/workers.py`, `create_shell` composes it and passes `selftests=` to `MainWindow` (main 76f054b, `verified` by reading). The `getattr` in `selftest/runner.py` is gone | none |
 
+14. Open points after U-D17 (revision 2026-10-17, claude-sonnet-5-5; D-051; main 0547f20, `verified` by reading unless the
+    row says otherwise). Each row is a point that D-051 or the brief of U-D17 does not settle.
+
+| Item | State | Owner |
+|---|---|---|
+| Where `None` sorts in the violation order (§7) | D-051f names the key (kind, layer, objects) and not the place of a `None` layer. §7 proposes `None` first | Fable decides |
+| Which 1000 violations the report keeps (§7) | The key of D-051f replaces the margin key, so the report keeps the first 1000 in canonical order, not the 1000 with the least margin. The DRC table reads the list in order (`ui/viewmodels/results.py` l.352), and so does the export dialog (`ui/viewmodels/export.py` l.149). Whether a least-margin view is wanted is `unresolved` | Fable decides, then Agent 1 and Agent 3 |
+| Names with "balanced" that D-051b does not list (§4) | `Feasibility.balanced` (`src/embodic/winding/feasibility.py` l.19), `balanced_coil_counts` (l.49) and `is_balanced` (`src/embodic/winding/star_of_slots.py` l.61) keep their names. D-051b renames two issue codes, the copy and the text of option M4. The option M4 text is in no file of this folder (`verified` by grep for "Q = 2p" and "2p rule") | Fable decides |
+| The milestone argument of `--fail-untested-through` (§3.2) | D-051e names the flag. `M5` is the proposal of v3_contract_rulings.md §2 point 1 | Fable confirms |
+| The manual-record index and its format (§3.2) | Proposed: `docs/phase3/verification/manual_records.json`, five keys per record. D-051e asks for the input and fixes neither | Fable confirms; Agent 4 owns the file |
+| A manual record of an earlier build (§3.2) | The script counts a `passed` record whatever its `embodic_version`. If Fable wants a 0.0.2 walkthrough for REQ-N-07, the 0.0.2 gate cannot pass before the Windows campaign (v3_contract_rulings.md, open question 2) | Fable decides |
+| Two record inputs for Agent 4 (§3.2) | `req_audit.py` holds its own `RECORDS` dict (l.58-62), and the index above lists records for TR-01. Whether the audit reads the index is not settled | Agent 4 |
+| The six rows that the flag fails (§3.2) | On the 0.0.1 release report they are REQ-N-07, REQ-N-10, REQ-T-10, REQ-T-11, REQ-L-03 and REQ-L-05 (v3_contract_rulings.md §2, reproduced there). LG-03 to LG-06 have no row in `test_plan.md` §5.4 yet, and D-051 does not ask for them. The 0.0.2 gate cannot pass until each row has a passing test or a `passed` manual record | Fable decides who writes the rows |
+| REQ-N-10 acceptance (`requirements.md`) | It says "matrix generator lists 0 untested live REQs", and TR-01 checks only must rows (`tools/trace_matrix.py` l.95). v3_contract_rulings.md §2 point 6 proposes "0 untested live must REQs". D-051 does not rule on it, so the row is unchanged | Fable decides |
+| PK-04 array definition and scale (`test_plan.md` §5.7) | D-051f says an array compares at 1e-9 relative to "its own largest magnitude". §5.7 reads that as the largest absolute value over both arrays, and reads an array as a JSON list of numbers. Another reading of either word changes which element pairs fail | Fable confirms |
+| `pk04_compare.py` (Agent 4's file) | It compares each float pair against the larger magnitude of the pair (docstring l.6) and compares hash strings exactly (l.28-29). PK-04 as `test_plan.md` §5.7 now states it needs the array rule and the excluded pointers | Agent 4, through Fable |
+
 ## 14. `embodic.selftest`: self-tests for an installed build (revision 2026-10-12, U-D13; D-042a, screens.md §13)
 
 The installed wheel carries no pytest tests and no pytest (`package_layout.md` §5.2). The self-test is a small runner in
@@ -4226,7 +4441,7 @@ The catalogue holds the values as literals, because the wheel carries neither `d
 | ST-CF10-LENGTH | closed form | the same for `spiral_12c10p_d08` | 160.2750 mm, abs. 5e-5 | `test_spiral_generate.py::test_d08_builds_three_turns_with_the_half_closing` |
 | ST-EX-<example_id>-HASH, 5 checks | examples | `compute(...).design_hash` of each packaged example | the pinned `EXAMPLE_HASHES` value, exact | `tests/unit/embodic_io/project/test_examples.py::test_ut_io_08_the_packaged_design_hashes_are_pinned` |
 | ST-EX-<example_id>-COMPUTES, 5 checks | examples | the outcome has an analysis and no ERROR issue | True | `test_examples.py::test_ut_io_08_example_validates_and_computes_drc_clean` (three spirals), `tests/unit/generators/serpentine/test_serpentine_example.py::test_the_example_validates_and_computes_drc_clean`, `tests/unit/ui/results/test_rail_cards.py::test_drc_card_of_the_wave_example_counts_186_failures` |
-| ST-DRC-DEFAULT-CLEAN, ST-DRC-DEFAULT-TRACE | drc | the DRC report of `spiral_12c16p_default`: `violation_count`, the `trace_trace` `measured_min_mm` | 0 exact; 0.2 mm abs. 1e-6 | `test_spiral_generate.py::test_default_example_passes_drc` |
+| ST-DRC-DEFAULT-CLEAN, ST-DRC-DEFAULT-TRACE | drc | the DRC report of `spiral_12c16p_default`: `violation_count`, the `trace_trace` `least_clearance_mm` (was `measured_min_mm` until revision 2026-10-17, U-D17, D-051a; the check reads it at `selftest/catalogue.py` l.181) | 0 exact; 0.2 mm abs. 1e-6 | `test_spiral_generate.py::test_default_example_passes_drc` |
 | ST-IO-ROUNDTRIP | export | save, load and save `spiral_12c16p_default` with `ui_state={"zoom": 1.5}` in the scratch folder, both saves with `saved_utc="2026-10-08T12:00:00Z"` (revision 2026-10-13, U-D15; §9.1) | the two files are byte-identical | `tests/unit/embodic_io/project/test_project.py::test_ut_io_01_save_load_save_is_byte_identical` |
 | ST-EXP-BUNDLE | export | `write_bundle` of SVG, DXF complete, DXF outline, PDF report and project JSON to `motor.zip` with `allow_drc_errors=True` | members `README.txt`, `motor.dxf`, `motor.embodic.json`, `motor.svg`, `motor_outline.dxf`, `motor_report.pdf` | `tests/unit/embodic_io/exporters/test_report_readme_bundle.py::test_ut_exp_05_bundle_holds_selected_files_and_readme` |
 
