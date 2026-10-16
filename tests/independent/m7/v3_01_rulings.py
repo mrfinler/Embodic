@@ -405,3 +405,38 @@ CAUSE_B_RULINGS: dict[tuple[str, str], tuple[str, str, tuple[str, ...]]] = {
         ),
     ),
 }
+
+# D-051e: the SHA-256 of each source a `checks` sample ruling cites, as I read it at the release commit
+# (`git show 5e74acc:<path> | sha256sum`; the gate log by its absolute path). req_audit.py counts the row
+# `verified` only while every hash still matches; a changed source turns the row back to `partial` until I re-rule it
+# and re-pin.
+CHECKS_PINS: dict[str, dict[str, str]] = {
+    "REQ-F-36": {
+        "tests/ui/qt_design/test_new_design_and_examples.py": (
+            "28aa167bbb4276133f60223a4eaaaba28cd71f133918c6d1f62f966088f0eaef"
+        ),
+    },
+    "REQ-N-08": {
+        "/home/claude/release_0.0.1/gate_release_5e74acc.log": (
+            "7d62341dfa5d4af582f0e7b64c76d07e56f6a999ac5de63b0d22748be272a5b2"
+        ),
+    },
+    "REQ-N-11": {
+        "tests/unit/ui/shell/test_contrast_check.py": (
+            "50453bcd2ba1b5dd7a2a4c6a25f1e7e4bad6e311016358519017034dd57c3584"
+        ),
+    },
+    "REQ-N-14": {
+        "tests/independent/m4/records/AX-05.md": "170112b5079f70fa7a28ed7f4bbcf1469c726892776c7cf2ef7835260b7782a3",
+    },
+    "REQ-N-18": {
+        "tests/ui/qt_shell/test_worker_and_errors.py": (
+            "3011581f11bedbdcf21a83cad280db19babc877a8e7ac3111562bc65c3c45a25"
+        ),
+    },
+    "REQ-L-08": {
+        "tests/unit/ui/results/test_checks_charts_compare_guide.py": (
+            "4798f4a5bd257b33615c4b7a874e8942c2d59b5e1c1cb09851da746035e55210"
+        ),
+    },
+}
