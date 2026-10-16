@@ -239,9 +239,9 @@ def _export(args: argparse.Namespace) -> ExitCode:
     return ExitCode.OK
 
 
-def format_selftest_result(result: SelfTestResult) -> str:
-    """Return one check as a line: verdict, ID, seconds and, for a failure, the message."""
-    line = f"{result.verdict.value:<7}  {result.check_id:<34}  {result.duration_s:6.2f} s"
+def format_selftest_result(result: SelfTestResult, id_width: int) -> str:
+    """Return one check as a line: verdict, ID padded to ``id_width``, seconds and, for a failure, the message."""
+    line = f"{result.verdict.value:<7}  {result.check_id:<{id_width}}  {result.duration_s:6.2f} s"
     return f"{line}  {result.message}" if result.message else line
 
 
@@ -263,10 +263,11 @@ def _selftest(args: argparse.Namespace) -> ExitCode:
     if args.json is not None and (bad := _unwritable(args.json)) is not None:
         return _refuse((bad,))
     cancel = CancelToken()
+    id_width = max(len(check.id) for check in SELFTESTS)
     previous = signal.signal(signal.SIGINT, lambda *_: cancel.cancel())
     try:
         report = run_selftests(
-            SELFTESTS, cancel=cancel, on_result=lambda r: print(format_selftest_result(r), flush=True)
+            SELFTESTS, cancel=cancel, on_result=lambda r: print(format_selftest_result(r, id_width), flush=True)
         )
     finally:
         signal.signal(signal.SIGINT, previous)

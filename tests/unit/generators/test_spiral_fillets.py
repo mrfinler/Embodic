@@ -105,7 +105,7 @@ def test_filleted_examples_pass_drc_with_the_tightest_gaps_at_s(
     design = _with_coil(make(), corner_radius_mm=rho)
     report = run_drc(_board(design, registry), design.drc_rules)
     assert report is not None and report.violation_count == 0, [v.objects for v in report.violations]
-    least = {s.kind.value: s.measured_min_mm for s in report.summaries}
+    least = {s.kind.value: s.least_clearance_mm for s in report.summaries}
     s_mm = design.winding.coil.clearance_mm  # type: ignore[union-attr]
     assert least["trace_trace"] == pytest.approx(s_mm, abs=1e-6)
     assert least["trace_via"] == pytest.approx(s_mm, abs=1e-6)

@@ -614,7 +614,7 @@ def _balance_text(outcome: ComputeOutcome) -> str | None:
     winding = design.winding
     if not isinstance(winding, SpiralWindingSpec):
         return None
-    if not any(found.code == "UNBUILDABLE_UNBALANCED_WINDING" for found in outcome.issues):
+    if not any(found.code == "UNBUILDABLE_ASYMMETRIC_WINDING" for found in outcome.issues):
         return None
     poles, coils = design.rotor.poles, winding.coil.coil_count
     counts = (poles,) if _phase_per_pair(winding) else balanced_coil_counts(poles)

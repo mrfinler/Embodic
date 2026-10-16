@@ -416,7 +416,7 @@ def _drc_summary(board: Layout, rules: DrcRules) -> dict[str, float | None]:
     report = run_drc(board, rules)
     assert report is not None
     assert report.violation_count == 0 and report.passed, [v.objects for v in report.violations]
-    return {s.kind.value: s.measured_min_mm for s in report.summaries}
+    return {s.kind.value: s.least_clearance_mm for s in report.summaries}
 
 
 @pytest.mark.req("REQ-F-05")

@@ -51,9 +51,9 @@ REQUIRED_MM: Mapping[DrcCheckKind, Callable[[DrcRules], float]] = MappingProxyTy
 )
 
 
-def violates(measured_mm: float, required_mm: float, epsilon_mm: float = DRC_EPSILON_MM) -> bool:
+def violates(clearance_mm: float, required_mm: float, epsilon_mm: float = DRC_EPSILON_MM) -> bool:
     """Rule D-006: a violation is a measured value below ``required - epsilon``; there is no slack band."""
-    return measured_mm < required_mm - epsilon_mm
+    return clearance_mm < required_mm - epsilon_mm
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -65,7 +65,7 @@ class DrcViolation:
 
     kind: DrcCheckKind
     layer: str | None  # None for checks that hold on every layer (through vias, through-hole pads, drills)
-    measured_mm: float
+    clearance_mm: float
     required_mm: float
     at_mm: tuple[float, float]
     objects: tuple[str, ...]
@@ -76,14 +76,18 @@ class DrcCheckSummary:
     """Least measured value of one check kind over the pairs or objects it checked; None when it checked none."""
 
     kind: DrcCheckKind
-    measured_min_mm: float | None
+    least_clearance_mm: float | None
     required_mm: float
     pairs_checked: int
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class DrcReport:
-    """Outcome of ``run_drc``; ``violations`` holds the worst ``MAX_REPORTED_VIOLATIONS`` of ``violation_count``."""
+    """Outcome of ``run_drc``; ``violations`` holds the first ``MAX_REPORTED_VIOLATIONS`` of ``violation_count``.
+
+    The order is canonical: check kind, then copper layer (every-layer checks last), then object ids, so neither the
+    order of the layout's objects nor float noise in the clearances moves a violation (DEF-W-01, D-051 f).
+    """
 
     passed: bool
     summaries: tuple[DrcCheckSummary, ...]

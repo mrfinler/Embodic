@@ -1,6 +1,7 @@
 """``run_drc``: grid broad phase, exact narrow phase, rule D-006 verdicts and the optional symmetry shortcut."""
 
 import math
+import re
 from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
@@ -322,21 +323,22 @@ def _report(
         least = float(mine.min()) if len(mine) else None
         summaries.append(
             DrcCheckSummary(
-                kind=kind, measured_min_mm=least, required_mm=float(required_mm[index]), pairs_checked=len(mine)
+                kind=kind, least_clearance_mm=least, required_mm=float(required_mm[index]), pairs_checked=len(mine)
             )
         )
     for m in measured:
         bad = np.flatnonzero(m.clearance_mm < required_mm[m.kind] - DRC_EPSILON_MM)
         for i in bad:
             kind = PAIR_KINDS[int(m.kind[i])]
+            pair = sorted((int(m.a[i]), int(m.b[i])), key=lambda j: (items.item_class[j], _label_key(items.labels[j])))
             violations.append(
                 DrcViolation(
                     kind=kind,
                     layer=m.layer,
-                    measured_mm=float(m.clearance_mm[i]),
+                    clearance_mm=float(m.clearance_mm[i]),
                     required_mm=float(required_mm[m.kind[i]]),
                     at_mm=(float(m.at_mm[i, 0]), float(m.at_mm[i, 1])),
-                    objects=(items.labels[int(m.a[i])], items.labels[int(m.b[i])]),
+                    objects=tuple(items.labels[j] for j in pair),
                 )
             )
     for kind, rows in _item_checks(layout, rules).items():
@@ -345,15 +347,16 @@ def _report(
         need_mm = REQUIRED_MM[kind](rules)
         summaries.append(
             DrcCheckSummary(
-                kind=kind, measured_min_mm=min(r[0] for r in rows), required_mm=need_mm, pairs_checked=len(rows)
+                kind=kind, least_clearance_mm=min(r[0] for r in rows), required_mm=need_mm, pairs_checked=len(rows)
             )
         )
         violations += [
-            DrcViolation(kind=kind, layer=layer, measured_mm=value_mm, required_mm=need_mm, at_mm=at, objects=(label,))
+            DrcViolation(kind=kind, layer=layer, clearance_mm=value_mm, required_mm=need_mm, at_mm=at, objects=(label,))
             for value_mm, layer, at, label in rows
             if violates(value_mm, need_mm)
         ]
-    violations.sort(key=lambda v: (v.measured_mm - v.required_mm, v.kind, v.objects))
+    layer_rank: dict[str | None, int] = {name: rank for rank, name in enumerate((*layout.copper_layers, None))}
+    violations.sort(key=lambda v: (_KIND_RANK[v.kind], layer_rank[v.layer], tuple(map(_label_key, v.objects))))
     return DrcReport(
         passed=not violations,
         summaries=tuple(summaries),
@@ -361,6 +364,14 @@ def _report(
         violation_count=len(violations),
         method="grid+exact" if maps is None else "symmetric+grid+exact",
     )
+
+
+_KIND_RANK = {kind: rank for rank, kind in enumerate(DrcCheckKind)}
+
+
+def _label_key(label: str) -> tuple[str | int, ...]:
+    """Sort key of an object id; digit runs compare as numbers, so ``path:9`` comes before ``path:10``."""
+    return tuple(int(part) if part.isdigit() else part for part in re.split(r"(\d+)", label))
 
 
 def _applicable(items: Items, kind: DrcCheckKind) -> bool:

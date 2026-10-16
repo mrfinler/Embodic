@@ -153,6 +153,19 @@ def test_ut_exp_03_a_character_without_a_glyph_fails_instead_of_vanishing() -> N
     assert failure.value.issue.value == "U+0E01"
 
 
+@pytest.mark.req("REQ-T-10")
+def test_report_drc_table_calls_the_computed_distance_clearance(
+    outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path
+) -> None:
+    """Catches DEF-UV8-03 in the PDF: the DRC summary header called the computed least distance "measured"."""
+    summary = write_report_pdf(outcome_of(WAVE), tmp_path / "report.pdf")
+    assert isinstance(summary, ExportSummary)
+    _, text = _pdf_text(summary.path)
+    section = text.split("DRC summary", 1)[1]
+    assert "Check Least clearance Required Pairs" in section
+    assert "measured" not in section.lower()
+
+
 def test_ut_io_06_report_carries_the_stamp(outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path) -> None:
     """UT-IO-06. Catches a PDF without the REQ-T-07 fields in its text and information dictionary."""
     outcome = outcome_of(WAVE)

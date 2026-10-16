@@ -109,7 +109,7 @@ def _pads_clearance(x: Mapping[str, Any], golden: Mapping[str, Any]) -> Comparis
     """Compare the clearance only: Xcoil's ``at`` is the first pad's centre, embodic's the closest-point midpoint."""
     report = run_drc(_pads_layout(x), WIDE_REACH)
     assert report is not None
-    least = {s.kind: s.measured_min_mm for s in report.summaries}.get(DrcCheckKind.PAD_PAD)
+    least = {s.kind: s.least_clearance_mm for s in report.summaries}.get(DrcCheckKind.PAD_PAD)
     return compare_scalar(golden["clearance"], math.inf if least is None else least, KERNEL_MM, path="$.clearance")
 
 

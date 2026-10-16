@@ -46,7 +46,7 @@ def test_ut_geo_21_screw_holes_are_built_on_the_pitch_circle_clear_of_copper() -
     assert {round(math.hypot(h.x_mm, h.y_mm), 9) for h in board.outline.holes} == {15.9}
     report = run_drc(board, design.drc_rules)
     assert report is not None and report.violation_count == 0
-    least = {s.kind: s.measured_min_mm for s in report.summaries}
+    least = {s.kind: s.least_clearance_mm for s in report.summaries}
     assert least[DrcCheckKind.COPPER_HOLE] == pytest.approx(0.4, abs=1e-6)
 
 
@@ -62,7 +62,7 @@ def test_ut_geo_21_a_hole_over_copper_is_a_drc_copper_hole_violation() -> None:
     report = run_drc(stack.boards[0], design.drc_rules)
     assert report is not None and report.violation_count > 0
     assert {v.kind for v in report.violations} == {DrcCheckKind.COPPER_HOLE}
-    least = {s.kind: s.measured_min_mm for s in report.summaries}
+    least = {s.kind: s.least_clearance_mm for s in report.summaries}
     assert least[DrcCheckKind.COPPER_HOLE] == pytest.approx(18.0 - 18.7, abs=1e-6)
 
 

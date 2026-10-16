@@ -134,13 +134,15 @@ def _drc(flow: _Flow, outcome: ComputeOutcome) -> None:
         epsilon = f"{report.epsilon_mm}{UNIT_SPACE}mm"
         flow.row([(MARGIN, f"Board {board}: {verdict} (method {report.method}, epsilon {epsilon})")])
         flow.row(
-            [(MARGIN, "Check"), (MARGIN + 130, "Least measured"), (MARGIN + 240, "Required"), (MARGIN + 330, "Pairs")],
+            [(MARGIN, "Check"), (MARGIN + 130, "Least clearance"), (MARGIN + 240, "Required"), (MARGIN + 330, "Pairs")],
             bold=True,
         )
         for s in report.summaries:
             # six figures, so a measured 0.19997 mm against a 0.2 mm rule does not print as 0.200 mm
             measured = (
-                "none checked" if s.measured_min_mm is None else value_text(s.measured_min_mm, Unit.MM, significant=6)
+                "none checked"
+                if s.least_clearance_mm is None
+                else value_text(s.least_clearance_mm, Unit.MM, significant=6)
             )
             flow.row(
                 [

@@ -142,8 +142,8 @@ def _measures(design: DesignParameters, stack: BoardStack) -> tuple[float, float
         report = run_drc(layout, design.drc_rules)
         assert report is not None
         for s in report.summaries:
-            if s.measured_min_mm is not None:
-                drc[s.kind.value] = min(drc.get(s.kind.value, math.inf), s.measured_min_mm)
+            if s.least_clearance_mm is not None:
+                drc[s.kind.value] = min(drc.get(s.kind.value, math.inf), s.least_clearance_mm)
     ke = math.fsum(p.ke_peak_v_s_per_rad.value for p in analysis.phases) / len(analysis.phases)
     return (
         _first_phase_angle_rad(analysis.emf_waveform_v.value),

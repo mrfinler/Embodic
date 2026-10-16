@@ -307,7 +307,7 @@ class DrcRow:
     severity: Literal["error"]
     rule_code: str
     message: str
-    measured_text: str
+    clearance_text: str
     required_text: str
     layer_text: str
     at_mm: tuple[float, float]
@@ -357,7 +357,7 @@ def drc_table(outcome: ComputeOutcome | None) -> DrcTable | None:
             severity="error",
             rule_code=v.kind.issue_code,
             message=message_for(v.kind.issue_code),
-            measured_text=drc_length_text(v.measured_mm),
+            clearance_text=drc_length_text(v.clearance_mm),
             required_text=drc_length_text(v.required_mm),
             layer_text=v.layer or text("drc.layer.all"),
             at_mm=v.at_mm,

@@ -11,6 +11,7 @@ from tests.unit.generators.default_example import default_design
 from embodic.drc import run_drc
 from embodic.errors import Unbuildable
 from embodic.generators import generate_spiral
+from embodic.generators.spiral.turns import CoilFrame
 from embodic.geometry.details import SpiralDetail, TurnClosing
 from embodic.geometry.layout import BoardStack, Layout
 from embodic.geometry.paths import is_continuous
@@ -45,7 +46,7 @@ def _coil0_x(board: Layout) -> tuple[Line | Arc, ...]:
 def _clean(board: Layout, design: DesignParameters) -> dict[str, float | None]:
     report = run_drc(board, design.drc_rules)
     assert report is not None and report.violation_count == 0, [v.objects for v in report.violations]
-    return {s.kind.value: s.measured_min_mm for s in report.summaries}
+    return {s.kind.value: s.least_clearance_mm for s in report.summaries}
 
 
 EXAMPLES: list[tuple[str, Callable[[], DesignParameters]]] = [("CF-11", default_design), ("D08", d08_design)]
@@ -147,3 +148,15 @@ def test_stadium_refusal_does_not_hide_another_unsupported_option(registry: Regi
         ("UNBUILDABLE_UNSUPPORTED_END_STYLE", ("/winding/coil/end_style",)),
         ("UNBUILDABLE_SPIRAL_OPTION_NOT_IMPLEMENTED", ("/winding/parallel_paths",)),
     ]
+
+
+@pytest.mark.req("REQ-F-06")
+@pytest.mark.parametrize("end", [EndStyle.ARC, EndStyle.STRAIGHT])
+def test_parallel_sides_run_parallel_to_the_sector_edge_as_side_style_says(end: EndStyle) -> None:
+    """Catches DEF-UE13-01: SideStyle said "parallel to the coil axis", but the sides follow the sector edge at -h."""
+    design = _styled(default_design(), SideStyle.PARALLEL, end)
+    assert isinstance(design.winding, SpiralWindingSpec)
+    frame = CoilFrame.of(design.winding.coil, via_pad_mm=0.6)
+    (x1, y1), (x2, y2) = (frame.on_right(1.0, r) for r in (frame.centre_inner_mm + 1, frame.centre_outer_mm - 1))
+    assert math.atan2(y2 - y1, x2 - x1) == pytest.approx(-frame.half_angle_rad, rel=0.0, abs=1e-12)
+    assert SideStyle.__doc__ is not None and "parallel to the sector edge" in SideStyle.__doc__

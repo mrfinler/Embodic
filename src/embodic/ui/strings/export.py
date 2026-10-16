@@ -42,5 +42,5 @@ STRINGS: Mapping[str, str] = {
     "export.confirm.more": "... and {count} more",
     "export.confirm.cancel": "Cancel",
     "export.confirm.export": "Export anyway",
-    "export.confirm.row": "{message} {layer}: {measured} measured, {required} required.",
+    "export.confirm.row": "{message} {layer}: {clearance} clearance, {required} required.",
 }

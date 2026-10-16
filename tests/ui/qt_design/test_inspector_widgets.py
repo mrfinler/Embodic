@@ -172,7 +172,12 @@ def test_phase_balance_status_and_manual_assignment_follow_the_winding_plan(make
     window.session.load_example(D08)
     wait_computed(window)
     status = find(window, "phase-balance-status")
-    assert status.text() == "Balanced."
+    assert status.text() == "Symmetric 3-phase pattern."
+    tooltip = (
+        "A symmetric 3-phase pattern has its three phases 120° electrical apart. The check reads only the coil count, "
+        "the pole count and the phase assignment. It does not look at the copper or the layer positions."
+    )
+    assert status.toolTip() == tooltip
     table: QTableWidget = find(window, "phase-table")
     pattern = "".join(
         table.item(r, 1).text() if table.item(r, 2).text() == "1" else table.item(r, 1).text().lower()
@@ -185,14 +190,17 @@ def test_phase_balance_status_and_manual_assignment_follow_the_winding_plan(make
     assert table.item(0, 1).flags() & Qt.ItemFlag.ItemIsEditable
     table.item(0, 2).setText("-1" if table.item(0, 2).text() == "1" else "1")
     wait_computed(window)
-    assert status.text() == "Not balanced: each phase needs the same number of coils."
+    assert status.text() == (
+        "Not a symmetric 3-phase pattern: the other two phases must repeat phase A at 120° and 240° electrical."
+    )
     enter(qtbot, window, "param-phase-assign-mode", "auto")
     wait_computed(window)
     assert window.session.document.draft.values["/winding/assignment"] is None
-    assert status.text() == "Balanced."
+    assert status.text() == "Symmetric 3-phase pattern."
     enter(qtbot, window, "param-coil-count", "11")
     wait_computed(window)
-    assert status.text() == "Not balanced: choose 9, 12 or 15 coils."
+    assert status.text() == "No symmetric 3-phase pattern: choose 9, 12 or 15 coils."
+    assert status.toolTip() == tooltip
 
 
 def _announced(widget) -> str:

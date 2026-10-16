@@ -50,6 +50,17 @@ def test_ut_cli_03_one_failing_check_exits_1_and_its_line_names_it(run, monkeypa
 
 
 @pytest.mark.req("REQ-F-18")
+def test_ut_cli_03_the_time_column_lines_up_for_the_longest_check_ids(run, monkeypatch) -> None:
+    """Catches DEF-UV5-04: the two longest check IDs pushed their time 2 and 3 characters right of the other lines."""
+    longest = sorted((check.id for check in SELFTESTS), key=len)[-2:]
+    monkeypatch.setattr("embodic.cli.commands.SELFTESTS", tuple(fake(i, 1.0) for i in ("ST-SHORT", *longest)))
+    code, stdout, _ = run("selftest")
+    lines = stdout.splitlines()[:-1]
+    assert (code, [line.split()[1] for line in lines]) == (0, ["ST-SHORT", *longest])
+    assert len({line.index(" s", len(line) - 2) for line in lines}) == 1, lines
+
+
+@pytest.mark.req("REQ-F-18")
 def test_ut_cli_03_json_writes_the_selftest_document(run, monkeypatch, tmp_path: Path) -> None:
     """Catches --json that is parsed and ignored, or a file that is not the selftest_to_json document."""
     monkeypatch.setattr("embodic.cli.commands.SELFTESTS", (fake("ST-GOOD", 1.0), fake("ST-BAD", 1.5)))

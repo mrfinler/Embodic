@@ -113,12 +113,14 @@ def test_gr18_run_drc_agrees_with_xcoil_outside_the_slack_band(case: GoldenCase,
     report = run_drc(_layout(call.inputs["objs"]), _rules(rule_mm))
     assert report is not None
     (summary,) = [s for s in report.summaries if s.kind is DrcCheckKind.TRACE_TRACE]
-    assert summary.measured_min_mm is not None
-    comparison = compare_drc(golden["clearance"], summary.measured_min_mm, rule_mm=rule_mm, golden_pass=golden["pass"])
+    assert summary.least_clearance_mm is not None
+    comparison = compare_drc(
+        golden["clearance"], summary.least_clearance_mm, rule_mm=rule_mm, golden_pass=golden["pass"]
+    )
     assert comparison.verdict is VERDICT_BY_REGION[_region(case)], comparison.describe()
     golden_report.check(case.case_id, comparison)
     reported = any(v.kind is DrcCheckKind.TRACE_TRACE for v in report.violations)
-    assert reported is not d006_pass(summary.measured_min_mm, rule_mm)
+    assert reported is not d006_pass(summary.least_clearance_mm, rule_mm)
 
 
 @pytest.mark.skipif(shutil.which("node") is None or not ENGINE.is_file(), reason="needs Node and the Xcoil engine")

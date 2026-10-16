@@ -40,7 +40,7 @@ from embodic.ui.views.results_view import FocusRoomDelegate
 from embodic.ui.views.status_badge import repolish
 from embodic.ui.views.style import themed_icon
 
-COLUMNS = ("severity", "board", "message", "measured", "required", "layer")  # screens.md section 7, ruling d
+COLUMNS = ("severity", "board", "message", "clearance", "required", "layer")  # screens.md section 7, ruling d
 GLYPH_PX = 24
 LOCATED_COPPER_OPACITY = 0.35
 LOCATE_ZOOM = 12.0
@@ -172,13 +172,13 @@ class DrcTab(QWidget):
         fail_icon = themed_icon("check-fail", tokens)
         mono = QFont(JETBRAINS_MONO)
         for row in rows:
-            numbers = (row.measured_text.partition(UNIT_SPACE)[0], row.required_text.partition(UNIT_SPACE)[0])
+            numbers = (row.clearance_text.partition(UNIT_SPACE)[0], row.required_text.partition(UNIT_SPACE)[0])
             cells = [QStandardItem(v) for v in ("", row.board_text, row.message, *numbers, row.layer_text)]
             described = row_description(row)
             for cell in cells:
                 cell.setToolTip(described)
                 cell.setData(described, Qt.ItemDataRole.AccessibleDescriptionRole)
-            for cell in cells[COLUMNS.index("measured") : COLUMNS.index("required") + 1]:
+            for cell in cells[COLUMNS.index("clearance") : COLUMNS.index("required") + 1]:
                 cell.setFont(mono)
                 cell.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
             if fail_icon is not None:
@@ -214,7 +214,7 @@ def row_description(row: DrcRow) -> str:
         "drc.row.description",
         code=row.rule_code,
         message=row.message,
-        measured=row.measured_text,
+        clearance=row.clearance_text,
         required=row.required_text,
         layer=row.layer_text,
     )

@@ -1,17 +1,21 @@
 """UT-DRC-03 to UT-DRC-07 on hand-built layouts, rule validation, catalogue codes and cancellation."""
 
 import math
+import random
 import threading
 from dataclasses import replace
 from itertools import pairwise
 
 import pytest
 
+from embodic.api import compute
 from embodic.drc import CancelToken, DrcCheckKind, DrcReport, run_drc
 from embodic.errors import MESSAGES
 from embodic.geometry.layout import Hole, Via, ViaRole
 from embodic.geometry.paths import CopperPath
 from embodic.geometry.primitives import PrimitiveRole
+from embodic.io.examples import load_example
+from embodic.io.project import project_from_example, project_provenance
 from embodic.model.drc_rules import validate_drc_rules
 
 from .layouts import RULES, arc, circle_outline, layout, line, pad, path, via
@@ -36,7 +40,7 @@ def test_ut_drc_04_same_net_turns_closer_than_the_rule_are_a_violation() -> None
     assert [(v.kind, v.objects) for v in report.violations] == [
         (DrcCheckKind.TRACE_TRACE, ("path:0/prim:0", "path:0/prim:2"))
     ]
-    assert report.violations[0].measured_mm == pytest.approx(0.199, abs=1e-12)
+    assert report.violations[0].clearance_mm == pytest.approx(0.199, abs=1e-12)
 
 
 def test_ut_drc_04_adjacent_primitives_and_corner_fillets_are_exempt() -> None:
@@ -75,7 +79,7 @@ def test_ut_drc_04_fillet_is_checked_against_the_main_primitive_two_steps_back()
     assert [(v.kind, v.objects) for v in report.violations] == [
         (DrcCheckKind.TRACE_TRACE, ("path:0/prim:0", "path:0/prim:3"))
     ]
-    assert report.violations[0].measured_mm == pytest.approx(math.hypot(0.05, 0.30) - 0.2, abs=1e-12)
+    assert report.violations[0].clearance_mm == pytest.approx(math.hypot(0.05, 0.30) - 0.2, abs=1e-12)
 
 
 def test_ut_drc_04_terminating_via_is_exempt_but_a_foreign_via_is_not() -> None:
@@ -227,7 +231,7 @@ def test_ut_drc_04_same_net_via_tap_leaves_a_far_primitive_of_the_same_path_chec
     report = run_drc(layout(paths=[uturn], vias=[via(0, 0, 0, net="A")]), RULES)
     assert report is not None
     assert [(v.kind, v.objects) for v in report.violations] == [(DrcCheckKind.TRACE_VIA, ("path:0/prim:2", "via:0"))]
-    assert report.violations[0].measured_mm == pytest.approx(0.1, abs=1e-12)
+    assert report.violations[0].clearance_mm == pytest.approx(0.1, abs=1e-12)
 
 
 @pytest.mark.parametrize(
@@ -354,7 +358,7 @@ def test_ut_drc_03_one_micron_intrusion_is_exactly_one_new_violation_at_its_plac
     assert report is not None
     assert [v.objects for v in report.violations] == [("path:1/prim:0", "path:2/prim:0")]
     (hit,) = report.violations
-    assert hit.measured_mm == pytest.approx(0.199, abs=1e-12)
+    assert hit.clearance_mm == pytest.approx(0.199, abs=1e-12)
     assert math.hypot(*hit.at_mm) == pytest.approx(5.4 + 0.1 + 0.0995, abs=1e-9)
 
 
@@ -372,7 +376,7 @@ def test_ut_drc_05_through_via_is_checked_against_copper_on_every_layer() -> Non
     assert report is not None
     (hit,) = report.violations
     assert (hit.kind, hit.layer, hit.objects) == (DrcCheckKind.TRACE_VIA, "B.Cu", ("path:0/prim:0", "via:0"))
-    assert hit.measured_mm == pytest.approx(0.5 - 0.3 - 0.1, abs=1e-12)
+    assert hit.clearance_mm == pytest.approx(0.5 - 0.3 - 0.1, abs=1e-12)
 
 
 def test_ut_drc_06_copper_near_the_board_edge_and_a_screw_hole_fails() -> None:
@@ -382,7 +386,7 @@ def test_ut_drc_06_copper_near_the_board_edge_and_a_screw_hole_fails() -> None:
     hole = Hole(x_mm=-5, y_mm=0, diameter_mm=1.4, label="M1.2 normal")
     report = run_drc(layout(paths=[near_edge, near_hole], outer=circle_outline(10), holes=[hole]), RULES)
     assert report is not None
-    found = {v.kind: v.measured_mm for v in report.violations}
+    found = {v.kind: v.clearance_mm for v in report.violations}
     assert found == pytest.approx({DrcCheckKind.COPPER_EDGE: 0.25, DrcCheckKind.COPPER_HOLE: 0.2}, abs=1e-12)
     required = {v.kind: v.required_mm for v in report.violations}
     assert required == {DrcCheckKind.COPPER_EDGE: 0.3, DrcCheckKind.COPPER_HOLE: 0.4}
@@ -436,7 +440,7 @@ def test_pad_pad_and_pad_trace_use_xcoil_pad_kernels() -> None:
     trace = path(0, [line(-1, 0.65, 1, 0.65)], net="B")
     report = run_drc(layout(paths=[trace], pads=[rect, near]), RULES)
     assert report is not None
-    found = {v.kind: v.measured_mm for v in report.violations}
+    found = {v.kind: v.clearance_mm for v in report.violations}
     assert found[DrcCheckKind.PAD_TRACE] == pytest.approx(0.05, abs=1e-12)
     assert found[DrcCheckKind.PAD_PAD] == pytest.approx(1.8 - math.hypot(2, 1) / 2 - 0.5, abs=1e-12)
 
@@ -457,6 +461,35 @@ def test_summaries_cover_every_applicable_kind_and_no_other() -> None:
         DrcCheckKind.ANNULAR_RING,
     }
     assert all(s.pairs_checked > 0 for s in report.summaries if s.kind is DrcCheckKind.TRACE_TRACE)
+
+
+@pytest.fixture(scope="module")
+def wave_outcome():
+    """Return the computed wave example, whose board fails DRC with 186 violations (D-045g)."""
+    project = project_from_example(load_example("wave_16p_example"))
+    return compute(project.design, project_provenance(project))
+
+
+@pytest.mark.parametrize("seed", [None, 7], ids=["reversed", "shuffled"])
+def test_violation_order_is_canonical_whatever_the_order_of_paths_and_vias(wave_outcome, seed: int | None) -> None:
+    """Catches DEF-W-01: the 186 wave violations came out in another order on Windows.
+
+    The list must follow (kind, layer, objects), so neither the input order nor float noise in the clearances moves it.
+    """
+    board = wave_outcome.boards.boards[0]
+    paths, vias = list(board.paths), list(board.vias)
+    if seed is None:
+        paths.reverse()
+        vias.reverse()
+    else:
+        random.Random(seed).shuffle(paths)
+        random.Random(seed).shuffle(vias)
+    report = run_drc(replace(board, paths=tuple(paths), vias=tuple(vias)), wave_outcome.design.drc_rules)
+    assert report is not None
+    expected = [(v.kind, v.layer, v.objects) for v in wave_outcome.drc[0].violations]
+    assert len(expected) == len(set(expected)) == 186
+    assert [kind for kind, _, _ in expected] == [DrcCheckKind.TRACE_TRACE] * 6 + [DrcCheckKind.TRACE_VIA] * 180
+    assert [(v.kind, v.layer, v.objects) for v in report.violations] == expected
 
 
 def test_every_check_kind_has_a_catalogue_message() -> None:

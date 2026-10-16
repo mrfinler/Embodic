@@ -103,7 +103,7 @@ def test_ui15_no_silent_rewrite_the_suggestion_applies_only_on_apply_with_notice
     assert session_hash(window) != typed
     notice = find(window, "design-notice")
     assert notice.isVisibleTo(window)
-    expected = "Changed from 60 to 50: Xcoil clamps to the supported range."
+    expected = "Changed from 60 to 50: Values outside the supported range move to the nearest limit."
     assert find(window, "design-notice-text").text() == expected
     qtbot.mouseClick(find(window, "btn-notice-undo"), Qt.MouseButton.LeftButton)
     assert (find(window, "param-air-gap").text(), session_hash(window)) == ("60", typed)
@@ -139,7 +139,8 @@ def test_ui19_feasibility_hints_follow_the_winding_plan_after_each_recompute(mak
     window.session.load_example(D08)
     wait_computed(window)
     combination = find(window, "hint-combination")
-    assert combination.text() == "Balanced: q = 2/5, periodicity t = 1."  # 12 coils, 10 poles: q = 12/(3*10)
+    # 12 coils, 10 poles: q = 12/(3*10)
+    assert combination.text() == "Symmetric 3-phase pattern: q = 2/5, periodicity t = 1."
     detail = window.session.state.value.outcome.boards.boards[0].detail
     assert find(window, "phase-pattern-string").text() == detail.plan.pattern
     assert find(window, "param-turns-hint").text() == (
@@ -148,7 +149,8 @@ def test_ui19_feasibility_hints_follow_the_winding_plan_after_each_recompute(mak
     enter(qtbot, window, "param-coil-count", "9")
     wait_computed(window)
     assert window.session.state.value.design.winding.coil.coil_count == 9
-    assert combination.text() == "Balanced: q = 3/10, periodicity t = 1."  # 9 coils, 10 poles: q = 9/(3*10)
+    # 9 coils, 10 poles: q = 9/(3*10)
+    assert combination.text() == "Symmetric 3-phase pattern: q = 3/10, periodicity t = 1."
     assert len(find(window, "phase-pattern-string").text()) == 9
 
 

@@ -117,12 +117,20 @@ def _check_limits(spec: FieldSpec, pointer: str, number: float) -> Iterator[Vali
         yield issue("INVALID_NEGATIVE", [pointer], value=number, limit=0, unit=spec.unit)
         return
     if limits.low is not None and number < limits.low:
-        clamp = Suggestion(pointer=pointer, proposed_value=limits.low, reason="Xcoil clamps to the supported range.")
+        clamp = Suggestion(
+            pointer=pointer,
+            proposed_value=limits.low,
+            reason="Values outside the supported range move to the nearest limit.",
+        )
         yield issue(
             "RANGE_BELOW_SUPPORTED", [pointer], value=number, limit=limits.low, unit=spec.unit, suggestion=clamp
         )
     elif limits.high is not None and number > limits.high:
-        clamp = Suggestion(pointer=pointer, proposed_value=limits.high, reason="Xcoil clamps to the supported range.")
+        clamp = Suggestion(
+            pointer=pointer,
+            proposed_value=limits.high,
+            reason="Values outside the supported range move to the nearest limit.",
+        )
         yield issue(
             "RANGE_ABOVE_SUPPORTED", [pointer], value=number, limit=limits.high, unit=spec.unit, suggestion=clamp
         )
@@ -131,7 +139,9 @@ def _check_limits(spec: FieldSpec, pointer: str, number: float) -> Iterator[Vali
 def _poles_even(design: DesignParameters) -> Iterator[ValidationIssue]:
     poles = design.rotor.poles
     if poles % 2:
-        fix = Suggestion(pointer="/rotor/poles", proposed_value=poles + 1, reason="Xcoil rounds up to an even count.")
+        fix = Suggestion(
+            pointer="/rotor/poles", proposed_value=poles + 1, reason="Odd counts round up to the next even count."
+        )
         yield issue("INVALID_POLE_COUNT_ODD", ["/rotor/poles"], value=poles, suggestion=fix)
 
 
@@ -186,7 +196,9 @@ def _serpentine_layers(design: DesignParameters) -> Iterator[ValidationIssue]:
     count = spec.layers_per_phase
     if count != 1 and count % 2:
         fix = Suggestion(
-            pointer="/winding/layers_per_phase", proposed_value=count + 1, reason="Xcoil rounds up to an even count."
+            pointer="/winding/layers_per_phase",
+            proposed_value=count + 1,
+            reason="Odd counts round up to the next even count.",
         )
         yield issue("INVALID_LAYERS_PER_PHASE", ["/winding/layers_per_phase"], value=count, suggestion=fix)
     pairs = 1 if count == 1 else count // 2

@@ -83,9 +83,10 @@ def test_default_example_plan(registry: Registry) -> None:
 def test_ut_wnd_04_16_16_with_all_phases_on_every_pair_is_unbuildable(registry: Registry) -> None:
     """Catches a 16/16 FSCW winding slipping through: Q = 2p puts every phasor at 0° or 180°."""
     result = _plan(_design(16, 16), registry)
-    assert _codes(result) == ["UNBUILDABLE_UNBALANCED_WINDING"]
+    assert _codes(result) == ["UNBUILDABLE_ASYMMETRIC_WINDING"]
     assert isinstance(result, Unbuildable)
     assert result.issues[0].category is IssueCategory.UNBUILDABLE
+    assert result.issues[0].message == "No symmetric 3-phase pattern exists for this coil count and pole count."
 
 
 @pytest.mark.req("REQ-F-02", "REQ-F-03")
@@ -168,7 +169,11 @@ def test_ut_wnd_09_unbalanced_manual_assignment_is_accepted_with_a_warning(regis
     assert plan.pattern == "AABC" * 3
     assert not plan.feasibility.balanced
     issues = plan_issues(plan, design)
-    assert [i.code for i in issues] == ["RANGE_MANUAL_ASSIGNMENT_UNBALANCED"]
+    assert [i.code for i in issues] == ["RANGE_MANUAL_ASSIGNMENT_ASYMMETRIC"]
+    assert issues[0].message == (
+        "The manual phase assignment is not a symmetric 3-phase pattern; the value is the relative spread of the three "
+        "phase phasor sums, each coil counted as a unit phasor."
+    )
     assert isinstance(issues[0].value, float)
     assert 0.0 < issues[0].value <= 1.0
 

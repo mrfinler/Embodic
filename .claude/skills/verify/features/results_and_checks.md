@@ -9,7 +9,7 @@ Results cards (`res-<key>-value`, `-eq`, `-asm`, `-how-toggle`, `-how`), status 
 ## How to get to it (user POV)
 
 After a compute the Results tab shows cards; "How was this computed" opens the derivation; the DRC tab lists
-failures with Measured and Required; Locate zooms the canvas to the marker.
+failures with Clearance and Required; Locate zooms the canvas to the marker.
 
 ## Driving it with pytest-qt
 

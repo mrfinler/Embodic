@@ -59,7 +59,7 @@ def _exact_mm(p: Primitive, q: Primitive) -> float:
 
 
 def _trace_violations(report: DrcReport) -> dict[frozenset[str], float]:
-    return {frozenset(v.objects): v.measured_mm for v in report.violations if v.kind is DrcCheckKind.TRACE_TRACE}
+    return {frozenset(v.objects): v.clearance_mm for v in report.violations if v.kind is DrcCheckKind.TRACE_TRACE}
 
 
 def _exhaustive(paths: list[CopperPath]) -> dict[frozenset[str], float]:
@@ -188,7 +188,7 @@ def _symmetric_layout(order: int = 12, nudge_mm: float = 0.0) -> Layout:
 
 def _comparable(report: DrcReport) -> tuple[set[tuple[DrcCheckKind, str | None, frozenset[str]]], dict]:
     violations = {(v.kind, v.layer, frozenset(v.objects)) for v in report.violations}
-    return violations, {s.kind: s.measured_min_mm for s in report.summaries}
+    return violations, {s.kind: s.least_clearance_mm for s in report.summaries}
 
 
 @pytest.mark.req("REQ-F-10", "REQ-N-01")

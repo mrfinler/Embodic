@@ -168,7 +168,7 @@ def test_locate_sets_the_picker_to_the_failures_board(per_phase):
         severity="error",
         rule_code="DRC_TRACE_VIA",
         message="",
-        measured_text="",
+        clearance_text="",
         required_text="",
         layer_text="L1",
         at_mm=(0.0, 0.0),
