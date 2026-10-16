@@ -187,6 +187,8 @@ class MainWindow(QMainWindow):
         self.toolstrip.board_selected.connect(outcome.select_board)
         self._shortcuts()
         self.apply_theme()
+        for panel in self.panels.values():
+            panel.prebuild()
         self._show_issues()
         self._on_session()
 

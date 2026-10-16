@@ -92,10 +92,9 @@ class LayerPanel(FieldPanel):
 
     def add_helpers(self, group: FieldGroup, form: QFormLayout) -> None:
         """Add the copper count before the first layer row, and for spiral the pair rotation mode and field."""
-        document = self.session.document
-        if group is not FieldGroup.LAYERS or document is None or "copper-count" in self.helpers:
+        if group is not FieldGroup.LAYERS or "copper-count" in self.helpers:
             return
-        wave = document.draft.topology is TopologyKind.WAVE
+        wave = self._building is TopologyKind.WAVE
         name = "param-wave-layers" if wave else "param-layer-count"
         count = QComboBox()
         count.setObjectName(name)
@@ -110,7 +109,7 @@ class LayerPanel(FieldPanel):
         count.activated.connect(lambda index: self.session.set_stackup_input("copper_count", count.itemData(index)))
         form.addRow(label_above(text(f"{name}.label"), count))
         self.helpers["copper-count"] = count
-        if document.draft.topology is TopologyKind.SPIRAL:
+        if self._building is TopologyKind.SPIRAL:
             mode = Segment(
                 "param-rotation-mode",
                 tuple(ROTATION_MODES),
