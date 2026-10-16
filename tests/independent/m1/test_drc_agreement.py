@@ -142,10 +142,10 @@ def test_symmetry_shortcut_reports_the_same_violations_as_the_full_check(seed: i
     assert all(a[k][1] == pytest.approx(b[k][1], abs=1e-9) for k in a)
     mine = sweep(items, range(layers), lambda kind: 0.2, contract_exemptions(items))
     assert set(a) == {frozenset((r.a, r.b)) for r in mine if r.verdict is Verdict.VIOLATION}
-    mins = {s.kind: s.measured_min_mm for s in full.summaries}
+    mins = {s.kind: s.least_clearance_mm for s in full.summaries}
     for s in fast.summaries:
-        if s.measured_min_mm is not None and mins[s.kind] is not None and s.measured_min_mm < 0.2:
-            assert s.measured_min_mm == pytest.approx(mins[s.kind], abs=1e-9)
+        if s.least_clearance_mm is not None and mins[s.kind] is not None and s.least_clearance_mm < 0.2:
+            assert s.least_clearance_mm == pytest.approx(mins[s.kind], abs=1e-9)
 
 
 @pytest.mark.parametrize("seed", range(4))
