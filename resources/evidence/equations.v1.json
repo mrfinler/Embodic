@@ -42,7 +42,8 @@
   "v1.0: EQ-23...EQ-30 added for the serpentine/wave port (D-013); EC-05 labels per DEF-23; EQ-02 eye counts per EQ-25",
   "v1.0 rev. U-E2 (2026-10-05): DEF-M2b-01 EC-05 typed fields; DEF-M2b-02 EV-24 on EQ-20, EV-82/EV-83 on EQ-15, unsourced equations listed in equation_specification.md 'Source and unit gaps'; DEF-M2b-03 label, constants, object-form dominant_assumptions",
   "v1.0 rev. U-E10 (2026-10-13, D-046 d): for a test ID EQT-nn-CFxx the closed-form case CF-xx of oracle_cases.json (its inputs, expected values and tolerances) governs over the equation's Phase 1 reference_case and tolerance texts, which stay as the Phase 1 record; the texts that differ are the EQ-06 tolerance (1e-4 vs CF-02 1e-9 and CF-03 1e-5) and the EQ-12 and EQ-13 reference_case (Xcoil rho, 1e-4 and 5e-3 mm vs CF-05 1e-9); eqt_map_review.md section b",
-  "v1.0 rev. U-E12 (2026-10-16, D-049 d): EQ-14 is the one 'cannot verify yet' entry without an Xcoil port. embodic implements form (a) (src/embodic/physics/estimates.py inductance_estimate_h, called from analyse.py l.408); the current-sheet functions move to replaced_functions; EQT-14-GR is withdrawn (nothing to compare) and EQT-14-CF12 (oracle_cases.json CF-12) checks the code against the form (a) formula. The status stays unresolved and the label estimate"
+  "v1.0 rev. U-E12 (2026-10-16, D-049 d): EQ-14 is the one 'cannot verify yet' entry without an Xcoil port. embodic implements form (a) (src/embodic/physics/estimates.py inductance_estimate_h, called from analyse.py l.408); the current-sheet functions move to replaced_functions; EQT-14-GR is withdrawn (nothing to compare) and EQT-14-CF12 (oracle_cases.json CF-12) checks the code against the form (a) formula. The status stays unresolved and the label estimate",
+  "v1.0 rev. U-E14 (2026-10-17, DEF-UV8-05, REQ-L-03): the equation guide shows `name` and `formula` (src/embodic/ui/viewmodels/results.py l.736 to l.737, disclosure l.226) but not `source_notes`. The program name moves from the formula of EQ-14, EQ-20 and EQ-27 to their source_notes. The mathematics, status, gate and tests of each entry are unchanged; docs/phase3/engineering/checks/guide_name_scan.py lists displayed texts that name Xcoil"
  ],
  "golden_tolerance_default": "relative 1e-9 vs Xcoil engine.js at function level, same inputs, Xcoil-compatible constants injected",
  "fields_added_in_v1": {
@@ -1606,7 +1607,7 @@
   {
    "id": "EQ-14",
    "name": "Inductance - first estimate only",
-   "formula": "L_m = (3*mu0/(4*pi))*(N*k_w1)^2*(D_o^2 - D_i^2)/(p^2*delta'), delta' = 2*l_m + 2*g + t_s (form (a) only; Xcoil's current-sheet model is not ported, D-049 d)",
+   "formula": "L_m = (3*mu0/(4*pi))*(N*k_w1)^2*(D_o^2 - D_i^2)/(p^2*delta'), delta' = 2*l_m + 2*g + t_s (form (a) only, D-049 d)",
    "variables": [
     {
      "symbol": "N",
@@ -1644,7 +1645,7 @@
     "EV-44",
     "EV-19"
    ],
-   "source_notes": "D10 eq. 14 p.5 as printed (confirmed by two derivations; error in eq. 12 of D10/D15; D15 eq. 14 pi/2 too large); G1 stays unresolved (no end-turn/leakage/sub-harmonic terms, no multi-layer spiral oracle)",
+   "source_notes": "D10 eq. 14 p.5 as printed (confirmed by two derivations; error in eq. 12 of D10/D15; D15 eq. 14 pi/2 too large); G1 stays unresolved (no end-turn/leakage/sub-harmonic terms, no multi-layer spiral oracle); the current-sheet model of Xcoil engine.js windingInductance (l.2617) is not ported (D-049 d; moved out of the formula, revision 2026-10-17, U-E14)",
    "gate_verdict": "cannot verify yet",
    "status": "unresolved",
    "tolerance": {
@@ -2143,7 +2144,7 @@
   {
    "id": "EQ-20",
    "name": "Torque-speed envelope (drive)",
-   "formula": "steady-state dq model with R_ph, L_s, Ke, inverter limit (SVPWM V_LL,rms = V_dc/sqrt(2); SPWM sqrt(3)*V_dc/(2*sqrt(2)); six-step sqrt(6)*V_dc/pi) and current limit; inverter fundamental: SVPWM V_LL,rms = V_dc/sqrt2; SPWM sqrt3 V_dc/(2 sqrt2); six-step sqrt6 V_dc/pi; open phases (full bridge) V_dc/sqrt2 or 4 V_dc/(pi sqrt2); pull-out T_po = m (E/Z)(V - E R/Z)/omega; pull-in T_pi = T_po - J omega f_e (Xcoil estimate)",
+   "formula": "steady-state dq model with R_ph, L_s, Ke, inverter limit (SVPWM V_LL,rms = V_dc/sqrt(2); SPWM sqrt(3)*V_dc/(2*sqrt(2)); six-step sqrt(6)*V_dc/pi) and current limit; inverter fundamental: SVPWM V_LL,rms = V_dc/sqrt2; SPWM sqrt3 V_dc/(2 sqrt2); six-step sqrt6 V_dc/pi; open phases (full bridge) V_dc/sqrt2 or 4 V_dc/(pi sqrt2); pull-out T_po = m (E/Z)(V - E R/Z)/omega; pull-in T_pi = T_po - J omega f_e (estimate)",
    "variables": [
     {
      "symbol": "V_dc",
@@ -2165,7 +2166,7 @@
     "EV-24",
     "EV-92"
    ],
-   "source_notes": "standard PMSM/inverter theory - textbook source needed; depends on EQ-14; EV-24 (D06 eq. 2) supports only the torque relation T = m E I / omega; EV-92 (Microchip AN955, an induction-motor note) gives the SPWM and SVPWM linear limits only; the six-step fundamental and the pull-out and pull-in formulas still have no source (revision 2026-10-08, U-E5)",
+   "source_notes": "standard PMSM/inverter theory - textbook source needed; depends on EQ-14; the pull-in estimate is the one of Xcoil engine.js torqueSpeed l.2713 (moved out of the formula, revision 2026-10-17, U-E14); EV-24 (D06 eq. 2) supports only the torque relation T = m E I / omega; EV-92 (Microchip AN955, an induction-motor note) gives the SPWM and SVPWM linear limits only; the six-step fundamental and the pull-out and pull-in formulas still have no source (revision 2026-10-08, U-E5)",
    "gate_verdict": "cannot verify yet",
    "status": "unresolved",
    "tolerance": {
@@ -2637,7 +2638,7 @@
   {
    "id": "EQ-27",
    "name": "Numerical utilisation factor and analytic distribution factor",
-   "formula": "k_u = Ke1 / (sum over series conductors of integral B_z1 r dr over the magnet span) (Xcoil 'kw1'); serpentine k_d = sin(N gamma/2)/(N sin(gamma/2)), gamma = p d_alpha (radial) or p (w + s)/r_mean (parallel); wave k_d = |sum_i w_i e^{j gamma (i - (q-1)/2)}| / sum_i w_i, w_0 = 2p - 1, w_i = 2p",
+   "formula": "k_u = Ke1 / (sum over series conductors of integral B_z1 r dr over the magnet span); serpentine k_d = sin(N gamma/2)/(N sin(gamma/2)), gamma = p d_alpha (radial) or p (w + s)/r_mean (parallel); wave k_d = |sum_i w_i e^{j gamma (i - (q-1)/2)}| / sum_i w_i, w_0 = 2p - 1, w_i = 2p",
    "variables": [
     {
      "symbol": "k_u",
@@ -2654,7 +2655,7 @@
     "EV-59",
     "EV-26"
    ],
-   "source_notes": "D15 eq. 6 p.7 (average of per-turn factors); D04 eq. 1 p.5 (distribution factor); engine.js analyze 975-986, analyzeWave 2073-2077",
+   "source_notes": "D15 eq. 6 p.7 (average of per-turn factors); D04 eq. 1 p.5 (distribution factor); engine.js analyze 975-986, analyzeWave 2073-2077; k_u is the quantity Xcoil engine.js names 'kw1' (analyze l.983; moved out of the formula, revision 2026-10-17, U-E14)",
    "gate_verdict": "reuse with change",
    "status": "inferred",
    "changes": [
