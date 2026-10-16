@@ -57,6 +57,7 @@ class PhasePanel(FieldPanel):
         self.balance.setObjectName("phase-balance-status")
         self.balance.setProperty("class", "check-state")
         self.balance.setWordWrap(True)
+        self.balance.setToolTip(text("phase-balance-status.tooltip"))
         section = QWidget()
         column = QVBoxLayout(section)
         column.setContentsMargins(0, 0, 0, 0)

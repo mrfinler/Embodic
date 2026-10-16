@@ -139,7 +139,8 @@ def test_ui19_feasibility_hints_follow_the_winding_plan_after_each_recompute(mak
     window.session.load_example(D08)
     wait_computed(window)
     combination = find(window, "hint-combination")
-    assert combination.text() == "Balanced: q = 2/5, periodicity t = 1."  # 12 coils, 10 poles: q = 12/(3*10)
+    # 12 coils, 10 poles: q = 12/(3*10)
+    assert combination.text() == "Symmetric 3-phase pattern: q = 2/5, periodicity t = 1."
     detail = window.session.state.value.outcome.boards.boards[0].detail
     assert find(window, "phase-pattern-string").text() == detail.plan.pattern
     assert find(window, "param-turns-hint").text() == (
@@ -148,7 +149,8 @@ def test_ui19_feasibility_hints_follow_the_winding_plan_after_each_recompute(mak
     enter(qtbot, window, "param-coil-count", "9")
     wait_computed(window)
     assert window.session.state.value.design.winding.coil.coil_count == 9
-    assert combination.text() == "Balanced: q = 3/10, periodicity t = 1."  # 9 coils, 10 poles: q = 9/(3*10)
+    # 9 coils, 10 poles: q = 9/(3*10)
+    assert combination.text() == "Symmetric 3-phase pattern: q = 3/10, periodicity t = 1."
     assert len(find(window, "phase-pattern-string").text()) == 9
 
 

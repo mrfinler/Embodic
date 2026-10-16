@@ -117,11 +117,12 @@ def test_phase_balance_status_follows_the_engine_and_names_balanced_coil_counts(
     """Catches no status for an unbalanced winding (the build refuses it), or suggested counts the engine rejects."""
     ref, design = load_example(D08)
     provenance = project_provenance(ProjectFile(design=design, origin=ref))
-    assert feasibility_hints(compute(design, provenance))["phase-balance-status"] == "Balanced."
+    assert feasibility_hints(compute(design, provenance))["phase-balance-status"] == "Symmetric 3-phase pattern."
     coil = dataclasses.replace(design.winding.coil, coil_count=11)
     unbalanced = dataclasses.replace(design, winding=dataclasses.replace(design.winding, coil=coil))
     hints = feasibility_hints(compute(unbalanced, project_provenance(ProjectFile(design=unbalanced, origin=None))))
-    assert hints["phase-balance-status"] == "Not balanced: choose 9, 12 or 15 coils."  # 10 poles: 3, 6, 9, 12, 15...
+    # 10 poles: 3, 6, 9, 12, 15...
+    assert hints["phase-balance-status"] == "No symmetric 3-phase pattern: choose 9, 12 or 15 coils."
 
 
 # Ruling c (m4_review.md): `param-bore` is the shape control; each bore pointer has its own input.

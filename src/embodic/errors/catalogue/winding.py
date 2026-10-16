@@ -3,9 +3,7 @@
 from collections.abc import Mapping
 
 MESSAGES: Mapping[str, str] = {
-    "UNBUILDABLE_UNBALANCED_WINDING": (
-        "The star of slots gives no balanced 3-phase winding for this coil count and pole count."
-    ),
+    "UNBUILDABLE_ASYMMETRIC_WINDING": "No symmetric 3-phase pattern exists for this coil count and pole count.",
     "UNBUILDABLE_PARALLEL_PATHS_NOT_DIVISOR": (
         "The number of parallel paths must divide the machine periodicity t = gcd(Q, p) = {limit}."
     ),
@@ -13,7 +11,8 @@ MESSAGES: Mapping[str, str] = {
     "RANGE_DELTA_TRIPLEN": (
         "Delta connection with a third-harmonic winding factor that is not zero drives a circulating current."
     ),
-    "RANGE_MANUAL_ASSIGNMENT_UNBALANCED": (
-        "The manual phase assignment is not balanced; the value is the spread of the phase EMF phasor magnitudes."
+    "RANGE_MANUAL_ASSIGNMENT_ASYMMETRIC": (
+        "The manual phase assignment is not a symmetric 3-phase pattern; the value is the relative spread of the three "
+        "phase phasor sums, each coil counted as a unit phasor."
     ),
 }

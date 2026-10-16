@@ -55,7 +55,7 @@ def plan_spiral_winding(
     if spec.assignment is None:
         assignment = assign_phases(coils, poles, design.phases, spec.phase_sequence)
         if not feasibility.balanced:
-            issues.append(_issue("UNBUILDABLE_UNBALANCED_WINDING", ["/winding/coil/coil_count", "/rotor/poles"]))
+            issues.append(_issue("UNBUILDABLE_ASYMMETRIC_WINDING", ["/winding/coil/coil_count", "/rotor/poles"]))
     elif sorted(c.coil_index for c in spec.assignment) != list(range(coils)):
         issues.append(_issue("UNBUILDABLE_ASSIGNMENT_COVERAGE", ["/winding/assignment"]))
         assignment = ()
@@ -93,7 +93,7 @@ def plan_issues(plan: SpiralWindingPlan, design: DesignParameters) -> tuple[Vali
     manual = isinstance(design.winding, SpiralWindingSpec) and design.winding.assignment is not None
     if manual and not plan.feasibility.balanced:
         spread = _phase_magnitude_spread(plan.assignment, plan.feasibility.coils)
-        issues.append(_issue("RANGE_MANUAL_ASSIGNMENT_UNBALANCED", ["/winding/assignment"], value=spread))
+        issues.append(_issue("RANGE_MANUAL_ASSIGNMENT_ASYMMETRIC", ["/winding/assignment"], value=spread))
     return tuple(issues)
 
 

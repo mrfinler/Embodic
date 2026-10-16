@@ -215,17 +215,23 @@ STRINGS: Mapping[str, str] = {
     "design.hint.layer-order": "Not used with one board per phase: each board holds one phase.",
     "design.hint.terminal-drill": "0 mm makes a surface-mount pad.",
     "design.hint.turns-maximum": "Empty means the maximum that fits.",
-    "hint-combination.balanced": "Balanced: q = {q}, periodicity t = {t}.",
-    "hint-combination.unbalanced": "Not balanced for {coils} coils and {poles} poles.",
+    "hint-combination.balanced": "Symmetric 3-phase pattern: q = {q}, periodicity t = {t}.",
+    "hint-combination.unbalanced": "No symmetric 3-phase pattern for {coils} coils and {poles} poles.",
     "hint-turns.spiral": "Built {turns} turns per coil; limited by the {reason} bound.",
     "hint-turns.serpentine": "Up to {turns} turns fit per layer.",
     "hint-turns.wave": "{tracks} tracks per layer.",
     "phase-pattern-string.label": "Coil pattern",
     "phase-pattern-string.hint": "Upper case +, lower case \u2212.",
-    "phase-balance-status.balanced": "Balanced.",
-    "phase-balance-status.manual": "Not balanced: each phase needs the same number of coils.",
-    "phase-balance-status.choose": "Not balanced: choose {counts} coils.",
-    "phase-balance-status.unbalanced": "Not balanced.",
+    "phase-balance-status.balanced": "Symmetric 3-phase pattern.",
+    "phase-balance-status.manual": (
+        "Not a symmetric 3-phase pattern: the other two phases must repeat phase A at 120° and 240° electrical."
+    ),
+    "phase-balance-status.choose": "No symmetric 3-phase pattern: choose {counts} coils.",
+    "phase-balance-status.unbalanced": "No symmetric 3-phase pattern.",
+    "phase-balance-status.tooltip": (
+        "A symmetric 3-phase pattern has its three phases 120° electrical apart. The check reads only the coil count, "
+        "the pole count and the phase assignment. It does not look at the copper or the layer positions."
+    ),
     "phase-table.coil": "Coil",
     "phase-table.phase": "Phase",
     "phase-table.polarity": "Polarity",
