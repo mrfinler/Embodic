@@ -338,7 +338,9 @@ class ResultsTab(QWidget):
         vm.stale.subscribe(lambda _: self.refresh())
 
     def set_tokens(self, tokens: ThemeTokens) -> None:
-        """Take a theme and redraw the cards."""
+        """Take a theme and redraw the cards; the theme already shown redraws nothing."""
+        if tokens is self.tokens:
+            return
         self.tokens = tokens
         self.refresh()
 
