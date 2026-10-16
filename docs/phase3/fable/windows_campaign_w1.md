@@ -58,3 +58,12 @@ per-example summary):
   depends on float noise (DEF-W-01, product: the violation list needs a canonical order).
 Verdict: PK-04 `failed` as written; numerically the platforms agree; three defects to fix (two in the criterion/contract,
 one in the product).
+
+## Run 2 (warm pip cache) and the real display
+
+Run 2 of the same script, 2026-10-17, new folder and venv, packages from the pip cache (`verified`, steps.tsv): python
+0.05 s, venv 4.77 s, activate 0.08 s, lock file 10.59 s, wheel 1.47 s, pip list 0.53 s, compute 3.97 s — first computed
+example after 21.57 s (PK-06's 10 minutes met with a warm cache); validate 0.51 s, export svg 3.93 s, selftest 9.26 s
+(45 of 45). Step 4 on the real display: `embodic --smoke` (Windows platform plugin, not offscreen) opened the window,
+loaded D08, computed and exited 0 in 6.83 s (`verified`). Display: Intel Arc graphics, 1920 × 1200 physical, 1536 × 960
+logical (125 % scaling), one screen. The interactive window and the UI rows of U-S7 wait for 0.0.2 (D-049g).
