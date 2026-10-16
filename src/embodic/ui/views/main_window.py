@@ -342,9 +342,8 @@ class MainWindow(QMainWindow):
         regions = [region for name in REGION_ORDER if (region := self.findChild(QWidget, name)) is not None]
         stops = self._tab_stops()
         firsts = [next((w for w in stops if region is w or region.isAncestorOf(w)), None) for region in regions]
-        holding = [i for i, region in enumerate(regions) if focus is not None and region.isAncestorOf(focus)]
-        holding += [regions.index(focus)] if focus in regions else []
-        here = max(holding) if holding else (-1 if step > 0 else len(regions))
+        holding = [i for i, r in enumerate(regions) if focus is not None and (r is focus or r.isAncestorOf(focus))]
+        here = holding[-1] if holding else (-1 if step > 0 else len(regions))
         for k in range(1, len(regions) + 1):
             target = firsts[(here + step * k) % len(regions)]
             if target is not None and target is not focus:
