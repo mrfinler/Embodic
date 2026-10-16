@@ -1,0 +1,42 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "nCu": 8,
+        "p": {"boardThickness": 1.6, "copperOzInner": 2, "copperOzOuter": 2, "dielectricEr": 0, "dielectricMaterial": "FR-4", "stackupMode": "auto"}
+      },
+      "output": {
+        "boardThickness": 1.6,
+        "custom": false,
+        "entries": [
+          {"oz": 2, "t": 0.0696, "type": "cu"},
+          {"density": 1.85, "er": 4.4, "material": "FR-4", "t": 0.14902857142857145, "type": "diel"},
+          {"oz": 2, "t": 0.0696, "type": "cu"},
+          {"density": 1.85, "er": 4.4, "material": "FR-4", "t": 0.14902857142857145, "type": "diel"},
+          {"oz": 2, "t": 0.0696, "type": "cu"},
+          {"density": 1.85, "er": 4.4, "material": "FR-4", "t": 0.14902857142857145, "type": "diel"},
+          {"oz": 2, "t": 0.0696, "type": "cu"},
+          {"density": 1.85, "er": 4.4, "material": "FR-4", "t": 0.1490285714285714, "type": "diel"},
+          {"oz": 2, "t": 0.0696, "type": "cu"},
+          {"density": 1.85, "er": 4.4, "material": "FR-4", "t": 0.1490285714285714, "type": "diel"},
+          {"oz": 2, "t": 0.0696, "type": "cu"},
+          {"density": 1.85, "er": 4.4, "material": "FR-4", "t": 0.14902857142857162, "type": "diel"},
+          {"oz": 2, "t": 0.0696, "type": "cu"},
+          {"density": 1.85, "er": 4.4, "material": "FR-4", "t": 0.1490285714285714, "type": "diel"},
+          {"oz": 2, "t": 0.0696, "type": "cu"}
+        ],
+        "matches": true,
+        "t": [0.0696, 0.0696, 0.0696, 0.0696, 0.0696, 0.0696, 0.0696, 0.0696],
+        "z": [0.0348, 0.25342857142857145, 0.4720571428571429, 0.6906857142857143, 0.9093142857142857, 1.1279428571428571, 1.3465714285714288, 1.5652000000000001]
+      }
+    }
+  ],
+  "case_id": "stackupfor-auto-8cu-2oz",
+  "eq_ids": [],
+  "fn": "stackupFor",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "GR-07 case 1: auto mode, 8 copper layer(s) of 2 oz, inner equal to outer, board 1.6 mm",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["auto", "8cu", "2oz"]
+}

@@ -1,0 +1,42 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "nCu": 8,
+        "p": {"boardThickness": 0.4, "copperOzInner": 2, "copperOzOuter": 2, "dielectricEr": 0, "dielectricMaterial": "FR-4", "stackupMode": "auto"}
+      },
+      "output": {
+        "boardThickness": 0.4,
+        "custom": false,
+        "entries": [
+          {"oz": 2, "t": 0.0696, "type": "cu"},
+          {"density": 1.85, "er": 4.4, "material": "FR-4", "t": 0, "type": "diel"},
+          {"oz": 2, "t": 0.0696, "type": "cu"},
+          {"density": 1.85, "er": 4.4, "material": "FR-4", "t": 0, "type": "diel"},
+          {"oz": 2, "t": 0.0696, "type": "cu"},
+          {"density": 1.85, "er": 4.4, "material": "FR-4", "t": 0, "type": "diel"},
+          {"oz": 2, "t": 0.0696, "type": "cu"},
+          {"density": 1.85, "er": 4.4, "material": "FR-4", "t": 0, "type": "diel"},
+          {"oz": 2, "t": 0.0696, "type": "cu"},
+          {"density": 1.85, "er": 4.4, "material": "FR-4", "t": 0, "type": "diel"},
+          {"oz": 2, "t": 0.0696, "type": "cu"},
+          {"density": 1.85, "er": 4.4, "material": "FR-4", "t": 0, "type": "diel"},
+          {"oz": 2, "t": 0.0696, "type": "cu"},
+          {"density": 1.85, "er": 4.4, "material": "FR-4", "t": 0, "type": "diel"},
+          {"oz": 2, "t": 0.0696, "type": "cu"}
+        ],
+        "matches": true,
+        "t": [0.0696, 0.0696, 0.0696, 0.0696, 0.0696, 0.0696, 0.0696, 0.0696],
+        "z": [0.0348, 0.082, 0.1292, 0.1764, 0.22360000000000002, 0.27080000000000004, 0.318, 0.3652]
+      }
+    }
+  ],
+  "case_id": "stackupfor-auto-thin-8cu-2oz-0p4mm",
+  "eq_ids": [],
+  "fn": "stackupFor",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "GR-07 case 3: 8 layers of 2 oz on a 0.4 mm board, so every dielectric gap clamps to 0",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["auto", "8cu", "2oz", "thin-board", "gap-clamp"]
+}
