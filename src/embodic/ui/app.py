@@ -136,7 +136,7 @@ def create_shell(
     selftests.setParent(window)
     worker.finished.connect(outcome.on_finished)
     worker.failed.connect(window.on_compute_failed)
-    QGuiApplication.styleHints().colorSchemeChanged.connect(lambda _scheme: window.on_os_scheme_changed())
+    QGuiApplication.styleHints().colorSchemeChanged.connect(window.on_os_scheme_changed)
     return Shell(window, worker)
 
 

@@ -84,8 +84,14 @@ def palette_for(tokens: ThemeTokens) -> QPalette:
 
 
 def apply_theme(app: QApplication, tokens: ThemeTokens) -> None:
-    """Restyle every widget of the application with one theme."""
+    """Restyle every widget of the application with one theme.
+
+    Setting a style sheet repolishes every widget of the application, even when the text is the one already applied:
+    a second window's build spent about 0.7 s of its 1.7 s there (U-M6f), so an unchanged sheet is not set again.
+    """
     app.setStyle("Fusion")
     QDir.setSearchPaths("theme", [str(themes_dir())])
     app.setPalette(palette_for(tokens))
-    app.setStyleSheet((themes_dir() / f"{tokens.name}.qss").read_text(encoding="utf-8"))
+    sheet = (themes_dir() / f"{tokens.name}.qss").read_text(encoding="utf-8")
+    if app.styleSheet() != sheet:
+        app.setStyleSheet(sheet)
