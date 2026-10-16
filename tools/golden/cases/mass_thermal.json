@@ -1,0 +1,118 @@
+{
+ "format": "embodic.golden-cases",
+ "format_version": 1,
+ "area": "mass_thermal",
+ "cases": [
+  {
+   "id": "mass-thermal-sector-default",
+   "fn": "massThermal",
+   "note": "EQ-16, EQ-17 on Xcoil sector compute(), the params of m1_layout layout-sector-default",
+   "tags": [
+    "sector",
+    "mass",
+    "thermal"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "sector"
+    }
+   }
+  },
+  {
+   "id": "connection-sector-default",
+   "fn": "applyConnection",
+   "note": "EQ-22 current density on Xcoil sector compute(), star, the params of m1_layout layout-sector-default",
+   "tags": [
+    "sector",
+    "current-density",
+    "star"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "sector"
+    }
+   }
+  },
+  {
+   "id": "mass-thermal-serpentine-default",
+   "fn": "massThermal",
+   "note": "EQ-16, EQ-17 on Xcoil serpentine compute(), the params of m1_layout layout-serpentine-default",
+   "tags": [
+    "serpentine",
+    "mass",
+    "thermal"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "serpentine"
+    }
+   }
+  },
+  {
+   "id": "connection-serpentine-default",
+   "fn": "applyConnection",
+   "note": "EQ-22 current density on Xcoil serpentine compute(), star, the params of m1_layout layout-serpentine-default",
+   "tags": [
+    "serpentine",
+    "current-density",
+    "star"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "serpentine"
+    }
+   }
+  },
+  {
+   "id": "mass-thermal-wave-turns-2",
+   "fn": "massThermal",
+   "note": "EQ-16, EQ-17 on Xcoil wave compute(), the params of m1_layout layout-wave-turns-2",
+   "tags": [
+    "wave",
+    "mass",
+    "thermal"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "turns": 2
+    }
+   }
+  },
+  {
+   "id": "connection-wave-turns-2",
+   "fn": "applyConnection",
+   "note": "EQ-22 current density on Xcoil wave compute(), star, the params of m1_layout layout-wave-turns-2",
+   "tags": [
+    "wave",
+    "current-density",
+    "star"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "wave",
+     "turns": 2
+    }
+   }
+  },
+  {
+   "id": "connection-sector-15c14p-delta",
+   "fn": "applyConnection",
+   "note": "EQ-19, EQ-22: 15 sector coils, 14 poles, delta; k_w3 is not 0, so triplen EMF circulates (Xcoil refuses 12/14 as SECTOR_UNBALANCED)",
+   "tags": [
+    "sector",
+    "delta",
+    "triplen",
+    "current-density"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "sector",
+     "sectors": 15,
+     "poles": 14,
+     "connection": "delta"
+    }
+   }
+  }
+ ]
+}
