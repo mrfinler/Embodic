@@ -254,6 +254,7 @@ class MainWindow(QMainWindow):
         issues_title.setProperty("class", "section-title")
         self.issues_list = QListWidget()
         self.issues_list.setObjectName("issues-list")
+        self.issues_list.setAccessibleName(issues_title.text())
         self.issues_list.itemActivated.connect(self._issue_activated)
         self.issues_list.itemClicked.connect(self._issue_activated)
         self.issues_list.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.MinimumExpanding)
@@ -271,6 +272,7 @@ class MainWindow(QMainWindow):
 
         self.rail_scroll = QScrollArea()
         self.rail_scroll.setObjectName("rail-scroll")
+        self.rail_scroll.setAccessibleName(text("shell.results-rail.title"))
         self.rail_scroll.setWidgetResizable(True)
         self.rail_scroll.setFrameShape(QFrame.Shape.NoFrame)
         self.rail_scroll.setWidget(rail)
