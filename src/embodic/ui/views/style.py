@@ -1,5 +1,6 @@
 """Apply a theme to the application: Fusion style, a QPalette from the tokens, Agent 1's style sheet, icons."""
 
+import functools
 import logging
 from pathlib import Path
 
@@ -29,6 +30,7 @@ def _svg_text(stem: str) -> str | None:
     return path.read_text(encoding="utf-8")
 
 
+@functools.cache
 def _pixmap(svg: str, colour_hex: str, size_px: int) -> QPixmap:
     renderer = QSvgRenderer(QByteArray(recolour_svg(svg, colour_hex, size_px).encode("utf-8")))
     pixmap = QPixmap(QSize(size_px, size_px))
