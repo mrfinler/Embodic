@@ -5,6 +5,7 @@ What a row shows comes from `DesignSession.rows()`; a row only parses the typed 
 """
 
 from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
 
 from PySide6.QtCore import QEvent, QObject, QPoint, Qt
 from PySide6.QtWidgets import (
@@ -27,9 +28,11 @@ from PySide6.QtWidgets import (
 )
 
 from embodic.errors import IssueCategory, Severity
+from embodic.model.draft import blank_draft
 from embodic.model.fields import FieldGroup, FieldKind, FieldSpec
 from embodic.model.provenance import MeasuredValue
 from embodic.model.schema import Choice, JsonValue, ValueType
+from embodic.model.vocabulary import TopologyKind
 from embodic.ui.strings import STRINGS, text
 from embodic.ui.viewmodels.session import (
     TAB_OF_GROUP,
@@ -37,6 +40,7 @@ from embodic.ui.viewmodels.session import (
     FieldRow,
     display_text,
     feasibility_hints,
+    form_rows,
     parse_text,
 )
 from embodic.ui.views.widgets import check_box
@@ -325,8 +329,24 @@ class FieldEditor(QWidget):
         repolish(self.input)
 
 
+@dataclass(frozen=True, slots=True, kw_only=True)
+class _Form:
+    """The widgets one topology's form of a tab is made of; the panel shows one form at a time."""
+
+    body: QWidget
+    editors: dict[str, "FieldEditor"]
+    helpers: dict[str, QWidget]
+    extras: dict[str, object]  # the attributes of FORM_ATTRIBUTES this form's build set
+
+
 class FieldPanel(QScrollArea):
-    """One inspector tab: the field rows of that tab for the open topology, in form order, plus its helpers."""
+    """One inspector tab: the field rows of that tab for the open topology, in form order, plus its helpers.
+
+    The form of every topology is built once, when the window is built, and a design only fills it: building the
+    forms when a design opened held the GUI thread about 150 ms (DEF-U-M5h-01, D-050a).
+    """
+
+    FORM_ATTRIBUTES: tuple[str, ...] = ()  # attributes a subclass's build sets for one topology's form
 
     def __init__(self, tab: str, session: DesignSession) -> None:
         super().__init__()
@@ -348,6 +368,14 @@ class FieldPanel(QScrollArea):
         self.empty.setWordWrap(True)
         self._layout.addWidget(self.empty)
         self._layout.addStretch(1)
+        self._building = TopologyKind.SPIRAL  # the topology whose form build() makes
+        self._forms: dict[str | None, _Form] = {None: _Form(body=self._body, editors={}, helpers={}, extras={})}
+
+    def prebuild(self) -> None:
+        """Build the form of every topology now; opening a design then only shows and fills one."""
+        for topology in TopologyKind:
+            if topology.value not in self._forms:
+                self._forms[topology.value] = self._build_form(topology)
 
     def refresh(self) -> None:
         """Rebuild for a new topology, then show the session's rows."""
@@ -371,25 +399,38 @@ class FieldPanel(QScrollArea):
             unit.setFixedWidth(widest)
 
     def _rebuild(self, topology: str | None) -> None:
+        """Show the form of ``topology``, building it if the window did not; the other forms stay detached."""
         self._topology = topology
-        while self._layout.count():
-            item = self._layout.takeAt(0)
-            if item is not None and (widget := item.widget()) is not None and widget is not self.empty:
-                widget.setParent(None)
-                widget.deleteLater()
-        self.editors, self.helpers = {}, {}
-        self.empty.setVisible(topology is None)
-        self._layout.addWidget(self.empty)
-        if topology is not None:
-            self.build()
+        if topology is not None and topology not in self._forms:
+            self._forms[topology] = self._build_form(TopologyKind(topology))
+        form = self._forms[topology]
+        if self.widget() is not form.body:
+            self.takeWidget()
+            self.setWidget(form.body)
+        self._body, self.editors, self.helpers = form.body, form.editors, form.helpers
+        layout = form.body.layout()
+        assert isinstance(layout, QVBoxLayout)
+        self._layout = layout
+        for name, value in form.extras.items():
+            setattr(self, name, value)
+
+    def _build_form(self, topology: TopologyKind) -> _Form:
+        """Build one topology's form into a body of its own, detached until ``_rebuild`` shows it."""
+        shown = (self._body, self._layout, self.editors, self.helpers)
+        body = QWidget()
+        self._body, self._layout, self.editors, self.helpers = body, QVBoxLayout(body), {}, {}
+        self._building = topology
+        self.build()
         self._layout.addStretch(1)
-        # A widget added to a shown layout appears only after a queued show; show the new sections now so focus
-        # and visibility queries see them at once.
-        for index in range(self._layout.count()):
-            item = self._layout.itemAt(index)
-            widget = None if item is None else item.widget()
-            if widget is not None and widget is not self.empty:
-                widget.show()
+        form = _Form(
+            body=body,
+            editors=self.editors,
+            helpers=self.helpers,
+            extras={name: getattr(self, name) for name in self.FORM_ATTRIBUTES},
+        )
+        self._body, self._layout, self.editors, self.helpers = shown
+        body.ensurePolished()
+        return form
 
     def build(self) -> None:
         """Add the field rows of this tab, one group box per form group where the tab has several.
@@ -397,7 +438,7 @@ class FieldPanel(QScrollArea):
         A field placed on another tab than its group's (Poles on the Coil tab) joins that tab's untitled section.
         """
         sections: dict[str, QFormLayout] = {}
-        for row in self.session.rows():
+        for row in form_rows(blank_draft(self._building), {}, ()):
             if row.tab != self.tab:
                 continue
             group = row.spec.group
@@ -535,6 +576,8 @@ def hint_label(name: str) -> QLabel:
 
 class CoilPanel(FieldPanel):
     """The Coil tab (`tab-coil`) with the coil-combination and turns hints of the last compute (UI-19)."""
+
+    FORM_ATTRIBUTES = ("hints",)
 
     def __init__(self, session: DesignSession) -> None:
         super().__init__("tab-coil", session)

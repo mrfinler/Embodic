@@ -25,13 +25,14 @@ _EDIT_TRIGGERS = QAbstractItemView.EditTrigger.EditKeyPressed | QAbstractItemVie
 class PhasePanel(FieldPanel):
     """Phase rows from the field table, the assignment mode and table, the pattern and the balance status."""
 
+    FORM_ATTRIBUTES = ("pattern", "pattern_caption", "pattern_hint", "balance")
+
     def __init__(self, session: DesignSession) -> None:
         super().__init__("tab-phases", session)
 
     def add_helpers(self, group: FieldGroup, form: QFormLayout) -> None:
         """Add the assignment mode (spiral): Auto writes null, Manual writes the list from the computed pattern."""
-        document = self.session.document
-        if group is not FieldGroup.PHASES or document is None or document.draft.topology is not TopologyKind.SPIRAL:
+        if group is not FieldGroup.PHASES or self._building is not TopologyKind.SPIRAL:
             return
         mode = Segment(
             "param-phase-assign-mode",

@@ -109,6 +109,8 @@ INSPECTOR_PX = (300, 340)  # two-pane and three-pane widths (design_spec.md sect
 RAIL_PX = 360
 HOME_PLACEHOLDER = "%USERPROFILE%"
 EXPORT_ACTIONS = ("act-export-svg", "act-export-dxf", "act-export-pdf", "act-export-all")
+REGION_ORDER = ("toolstrip", "inspector", "inspector-tabs", "fig-canvas", "results-tabs", "results-rail", "statusbar")
+INSPECTOR_TAB_ORDER = ("tab-coil", "tab-phases", "tab-layers", "tab-board")  # Alt+1 ... Alt+4
 
 
 def redact_home(text_with_paths: str) -> str:
@@ -185,6 +187,8 @@ class MainWindow(QMainWindow):
         self.toolstrip.board_selected.connect(outcome.select_board)
         self._shortcuts()
         self.apply_theme()
+        for panel in self.panels.values():
+            panel.prebuild()
         self._show_issues()
         self._on_session()
 
@@ -254,6 +258,7 @@ class MainWindow(QMainWindow):
         issues_title.setProperty("class", "section-title")
         self.issues_list = QListWidget()
         self.issues_list.setObjectName("issues-list")
+        self.issues_list.setAccessibleName(issues_title.text())
         self.issues_list.itemActivated.connect(self._issue_activated)
         self.issues_list.itemClicked.connect(self._issue_activated)
         self.issues_list.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.MinimumExpanding)
@@ -271,6 +276,7 @@ class MainWindow(QMainWindow):
 
         self.rail_scroll = QScrollArea()
         self.rail_scroll.setObjectName("rail-scroll")
+        self.rail_scroll.setAccessibleName(text("shell.results-rail.title"))
         self.rail_scroll.setWidgetResizable(True)
         self.rail_scroll.setFrameShape(QFrame.Shape.NoFrame)
         self.rail_scroll.setWidget(rail)
@@ -310,14 +316,52 @@ class MainWindow(QMainWindow):
             self.results_tabs.setCurrentWidget(self.canvas_page)
 
     def _shortcuts(self) -> None:
+        """Bind the global keys of design_spec.md section 10 that no toolstrip action carries."""
+        inspector_keys = [
+            (f"Alt+{n}", partial(self.inspector_tabs.setCurrentWidget, self.panels[tab]))
+            for n, tab in enumerate(INSPECTOR_TAB_ORDER, 1)
+        ]
         for keys, slot in (
             ("F1", self.show_help),
+            ("F6", partial(self.cycle_region, 1)),
+            ("Shift+F6", partial(self.cycle_region, -1)),
+            ("Ctrl+Shift+N", self.show_examples),
+            ("Ctrl+Shift+T", self.appearance.cycle_theme),
+            *inspector_keys,
             ("Alt+5", partial(self.show_results_tab, "tab-results")),
             ("Alt+6", partial(self.show_results_tab, "tab-drc")),
         ):
             shortcut = QShortcut(QKeySequence(keys), self)
             shortcut.setContext(Qt.ShortcutContext.WindowShortcut)
             shortcut.activated.connect(slot)
+
+    def cycle_region(self, step: int) -> None:
+        """F6 (+1) and Shift+F6 (-1): focus the first Tab stop of the next region, in design_spec.md section 5 order.
+
+        A region with no visible Tab stop, or whose first stop already has focus, is passed over.
+        """
+        focus = QApplication.focusWidget()
+        regions = [region for name in REGION_ORDER if (region := self.findChild(QWidget, name)) is not None]
+        stops = self._tab_stops()
+        firsts = [next((w for w in stops if region is w or region.isAncestorOf(w)), None) for region in regions]
+        holding = [i for i, r in enumerate(regions) if focus is not None and (r is focus or r.isAncestorOf(focus))]
+        here = holding[-1] if holding else (-1 if step > 0 else len(regions))
+        for k in range(1, len(regions) + 1):
+            target = firsts[(here + step * k) % len(regions)]
+            if target is not None and target is not focus:
+                target.setFocus(Qt.FocusReason.OtherFocusReason)
+                return
+
+    def _tab_stops(self) -> list[QWidget]:
+        """Return the window's Tab stops in focus-chain order, chosen as Qt's Tab key chooses them."""
+        stops: list[QWidget] = []
+        widget = self.nextInFocusChain()
+        while widget is not None and widget is not self:
+            tab_focus = widget.focusPolicy().value & Qt.FocusPolicy.TabFocus.value
+            if tab_focus and widget.isVisible() and widget.isEnabled() and widget.focusProxy() is None:
+                stops.append(widget)
+            widget = widget.nextInFocusChain()
+        return stops
 
     def show_results_tab(self, tab_id: str) -> None:
         """Bring a results tab forward (Alt+5 Results, Alt+6 DRC, the DRC command and the status bar link)."""

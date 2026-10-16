@@ -57,6 +57,7 @@ from embodic.ui.viewmodels.results import (
     compare_rows,
     disclosure,
     result_key,
+    result_quantities,
 )
 from embodic.ui.views.charts import ChartPanel, delta_icon
 from embodic.ui.views.dialogs import confirm_replace_reference
@@ -165,26 +166,8 @@ class ResultCard(QFrame):
         self.how_toggle.toggled.connect(self._toggle_how)
         self.how = QFrame()
         self.how.setObjectName(f"{prefix}-how")
-        how_layout = QVBoxLayout(self.how)
-        how_layout.setContentsMargins(0, 4, 0, 0)
-        # The disclosure always has the same six sections, so its labels are made once and only their text changes:
-        # a rebuilt label waiting for deleteLater would stay on screen over its successor (U-S4g S22).
-        self.how_sections: list[tuple[QLabel, QLabel]] = []
-        for _ in DISCLOSURE_KEYS:
-            title = QLabel()
-            title.setProperty("class", "section-title")
-            body = QLabel()
-            body.setTextFormat(Qt.TextFormat.PlainText)
-            body.setWordWrap(True)
-            body.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-            how_layout.addWidget(title)
-            how_layout.addWidget(body)
-            self.how_sections.append((title, body))
-        copy = QPushButton(text("results.how.copy"))
-        copy.setObjectName(f"{prefix}-copy")
-        copy.clicked.connect(self._copy)
-        how_layout.addWidget(copy, 0, Qt.AlignmentFlag.AlignLeft)
         self.how.setVisible(False)
+        self.how_sections: list[tuple[QLabel, QLabel]] = []
 
         value_line = QHBoxLayout()
         value_line.addWidget(self.value)
@@ -242,9 +225,32 @@ class ResultCard(QFrame):
             self._fill_how()
         set_revealed(self.how, shown)
 
+    def _build_how(self) -> None:
+        """Make the disclosure's widgets on its first opening; a card that never opens costs none (DEF-U-M5h-01)."""
+        how_layout = QVBoxLayout(self.how)
+        how_layout.setContentsMargins(0, 4, 0, 0)
+        # The disclosure always has the same six sections, so its labels are made once and only their text changes:
+        # a rebuilt label waiting for deleteLater would stay on screen over its successor (U-S4g S22).
+        for _ in DISCLOSURE_KEYS:
+            title = QLabel()
+            title.setProperty("class", "section-title")
+            body = QLabel()
+            body.setTextFormat(Qt.TextFormat.PlainText)
+            body.setWordWrap(True)
+            body.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+            how_layout.addWidget(title)
+            how_layout.addWidget(body)
+            self.how_sections.append((title, body))
+        copy = QPushButton(text("results.how.copy"))
+        copy.setObjectName(f"{self.prefix}-copy")
+        copy.clicked.connect(self._copy)
+        how_layout.addWidget(copy, 0, Qt.AlignmentFlag.AlignLeft)
+
     def _fill_how(self) -> None:
         if self.row is None:
             return
+        if not self.how_sections:
+            self._build_how()
         sections = disclosure(self.row, self._registry)
         for (title, body), section in zip(self.how_sections, sections, strict=True):
             title.setText(section.title)
@@ -269,8 +275,8 @@ class ResultsTab(QWidget):
         self.setObjectName("tab-results")
         self.vm = vm
         self.tokens: ThemeTokens | None = None
-        self.cards: dict[str, ResultCard] = {}
-        self._columns = 0
+        self.cards: dict[str, ResultCard] = {}  # the cards of the shown rows
+        self._gridded: tuple[int, tuple[str, ...]] = (0, ())  # columns and card keys the grid holds
         self._keys: list[str] = []
         self.pages = QStackedWidget()
         empty = QWidget()
@@ -310,9 +316,13 @@ class ResultsTab(QWidget):
         self.grid.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.card_scroll = QScrollArea()
         self.card_scroll.setObjectName("results-scroll")
+        self.card_scroll.setAccessibleName(text("results.tab-results.label"))
         self.card_scroll.setWidgetResizable(True)
         self.card_scroll.setWidget(self.grid_host)
         self.card_scroll.installEventFilter(self)
+        # Every card is built once, here, and later results only fill it: building 30 cards when the first result
+        # arrived held the GUI thread about 150 ms (DEF-U-M5h-01, D-050a).
+        self._built = {key: self._card(key) for key in map(result_key, result_quantities())}
         content_layout = QVBoxLayout(content)
         # No side margins: the filter row then fits the 572 px centre pane of a 1280 px window (U-S4e ruling c).
         content_layout.setContentsMargins(0, 8, 0, 0)
@@ -336,8 +346,18 @@ class ResultsTab(QWidget):
         vm.rows.subscribe(lambda _: self.refresh())
         vm.stale.subscribe(lambda _: self.refresh())
 
+    def _card(self, key: str) -> "ResultCard":
+        card = ResultCard(f"res-card-{key}", f"res-{key}", self.vm.registry, self.vm.copy_trace)
+        card.open_equation.connect(self.open_equation)
+        card.setParent(self.grid_host)
+        card.hide()
+        card.ensurePolished()
+        return card
+
     def set_tokens(self, tokens: ThemeTokens) -> None:
-        """Take a theme and redraw the cards."""
+        """Take a theme and redraw the cards; the theme already shown redraws nothing."""
+        if tokens is self.tokens:
+            return
         self.tokens = tokens
         self.refresh()
 
@@ -366,25 +386,24 @@ class ResultsTab(QWidget):
         self.stale_stamp.setVisible(self.vm.stale.value)
         self._keys = [result_key(r.quantity) for r in rows]
         for key in set(self.cards) - set(self._keys):
-            self.cards.pop(key).deleteLater()
+            self.cards.pop(key).hide()
         for row, key in zip(rows, self._keys, strict=True):
-            card = self.cards.get(key)
-            if card is None:
-                card = ResultCard(f"res-card-{key}", f"res-{key}", self.vm.registry, self.vm.copy_trace)
-                card.open_equation.connect(self.open_equation)
-                self.cards[key] = card
+            card = self.cards[key] = self._built[key]
             card.show_row(row, self.tokens, stale=self.vm.stale.value)
-        self._layout_cards(self.card_scroll.width(), force=True)
+        self._layout_cards(self.card_scroll.width())
 
-    def _layout_cards(self, scroll_width: int, *, force: bool = False) -> None:
-        columns = self._columns_that_fit(scroll_width)
-        if columns == self._columns and not force:
+    def _layout_cards(self, scroll_width: int) -> None:
+        """Place the shown cards in as many columns as fit; the grid stays as it is while neither changes."""
+        gridded = (self._columns_that_fit(scroll_width), tuple(self._keys))
+        if gridded == self._gridded:
             return
-        self._columns = columns
-        for key in self._keys:
-            self.grid.removeWidget(self.cards[key])
+        self._gridded = gridded
+        columns = gridded[0]
+        for card in self._built.values():
+            self.grid.removeWidget(card)
         for index, key in enumerate(self._keys):
             self.grid.addWidget(self.cards[key], index // columns, index % columns, Qt.AlignmentFlag.AlignTop)
+            self.cards[key].show()
 
     def _columns_that_fit(self, scroll_width: int) -> int:
         """Return how many cards of at least CARD_MIN_WIDTH_PX fit a scroll area of this width beside its scroll bar."""
@@ -451,6 +470,7 @@ class CompareTab(QWidget):
         page_layout.addStretch(1)
         self.page_scroll = QScrollArea()
         self.page_scroll.setObjectName("compare-scroll")
+        self.page_scroll.setAccessibleName(text("results.tab-compare.label"))
         self.page_scroll.setFrameShape(QFrame.Shape.NoFrame)
         self.page_scroll.setWidgetResizable(True)
         self.page_scroll.setWidget(page)
