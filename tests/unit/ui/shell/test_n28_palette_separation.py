@@ -9,6 +9,7 @@ adjacent OKLCH lightness steps of at least 0.06 (section 3.4).
 
 import json
 import math
+from collections.abc import Sequence
 from itertools import combinations, pairwise
 
 import pytest
@@ -41,12 +42,12 @@ SPEC_TABLE = {
 }
 
 
-def _linear(hex_colour: str) -> tuple[float, float, float]:
+def _linear(hex_colour: str) -> tuple[float, ...]:
     channels = (int(hex_colour.lstrip("#")[i : i + 2], 16) / 255 for i in (0, 2, 4))
-    return tuple(c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4 for c in channels)  # type: ignore[return-value]
+    return tuple(c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4 for c in channels)
 
 
-def _oklab(rgb: tuple[float, float, float]) -> tuple[float, float, float]:
+def _oklab(rgb: Sequence[float]) -> tuple[float, float, float]:
     r, g, b = rgb
     l = (0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b) ** (1 / 3)  # noqa: E741
     m = (0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b) ** (1 / 3)
@@ -61,12 +62,12 @@ def _oklab(rgb: tuple[float, float, float]) -> tuple[float, float, float]:
 def delta_e(a: str, b: str, vision: str | None = None) -> float:
     """Return the OKLab distance times 100 between two colours, optionally as a dichromat sees them."""
 
-    def seen(hex_colour: str) -> tuple[float, float, float]:
+    def seen(hex_colour: str) -> tuple[float, ...]:
         rgb = _linear(hex_colour)
         if vision is None:
             return rgb
         rows = MACHADO[vision]
-        return tuple(max(0.0, min(1.0, sum(w * c for w, c in zip(row, rgb, strict=True)))) for row in rows)  # type: ignore[return-value]
+        return tuple(max(0.0, min(1.0, sum(w * c for w, c in zip(row, rgb, strict=True)))) for row in rows)
 
     return 100 * math.dist(_oklab(seen(a)), _oklab(seen(b)))
 
