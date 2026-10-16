@@ -43,7 +43,8 @@
   "v1.0 rev. U-E2 (2026-10-05): DEF-M2b-01 EC-05 typed fields; DEF-M2b-02 EV-24 on EQ-20, EV-82/EV-83 on EQ-15, unsourced equations listed in equation_specification.md 'Source and unit gaps'; DEF-M2b-03 label, constants, object-form dominant_assumptions",
   "v1.0 rev. U-E10 (2026-10-13, D-046 d): for a test ID EQT-nn-CFxx the closed-form case CF-xx of oracle_cases.json (its inputs, expected values and tolerances) governs over the equation's Phase 1 reference_case and tolerance texts, which stay as the Phase 1 record; the texts that differ are the EQ-06 tolerance (1e-4 vs CF-02 1e-9 and CF-03 1e-5) and the EQ-12 and EQ-13 reference_case (Xcoil rho, 1e-4 and 5e-3 mm vs CF-05 1e-9); eqt_map_review.md section b",
   "v1.0 rev. U-E12 (2026-10-16, D-049 d): EQ-14 is the one 'cannot verify yet' entry without an Xcoil port. embodic implements form (a) (src/embodic/physics/estimates.py inductance_estimate_h, called from analyse.py l.408); the current-sheet functions move to replaced_functions; EQT-14-GR is withdrawn (nothing to compare) and EQT-14-CF12 (oracle_cases.json CF-12) checks the code against the form (a) formula. The status stays unresolved and the label estimate",
-  "v1.0 rev. U-E14 (2026-10-17, DEF-UV8-05, REQ-L-03): the equation guide shows `name` and `formula` (src/embodic/ui/viewmodels/results.py l.736 to l.737, disclosure l.226) but not `source_notes`. The program name moves from the formula of EQ-14, EQ-20 and EQ-27 to their source_notes. The mathematics, status, gate and tests of each entry are unchanged; docs/phase3/engineering/checks/guide_name_scan.py lists displayed texts that name Xcoil"
+  "v1.0 rev. U-E14 (2026-10-17, DEF-UV8-05, REQ-L-03): the equation guide shows `name` and `formula` (src/embodic/ui/viewmodels/results.py l.736 to l.737, disclosure l.226) but not `source_notes`. The program name moves from the formula of EQ-14, EQ-20 and EQ-27 to their source_notes. The mathematics, status, gate and tests of each entry are unchanged; docs/phase3/engineering/checks/guide_name_scan.py lists displayed texts that name Xcoil",
+  "v1.0 rev. U-E15 (2026-10-17, U-S9 T10-6, REQ-T-10, D-051 a): the EQ-30 `name` reads 'DRC clearance computation and acceptance'. embodic computes the clearance from the layout geometry and measures nothing; `measured` is kept for a provenance with a named source (D-007). The formula, status, gate and tests of EQ-30 are unchanged"
  ],
  "golden_tolerance_default": "relative 1e-9 vs Xcoil engine.js at function level, same inputs, Xcoil-compatible constants injected",
  "fields_added_in_v1": {
@@ -2844,7 +2845,7 @@
   },
   {
    "id": "EQ-30",
-   "name": "DRC clearance measurement and acceptance",
+   "name": "DRC clearance computation and acceptance",
    "formula": "clearance(a, b) = min distance between discretised centre-line segments - (w_a + w_b)/2 (pads: distance to pad outline); violation iff clearance < rule - eps, eps <= 1e-6 mm (D-006); discretisation error bounded by the sagitta tolerance and subtracted (conservative)",
    "variables": [
     {
