@@ -11,6 +11,7 @@ shows reads ``%USERPROFILE%`` or a relative name, never a user's folder. It prin
 ``{"row": "S01", "files": [...], "notes": [...]}``; a row the app cannot show yet has an empty file list and a note.
 """
 
+import contextlib
 import json
 import os
 import shutil
@@ -625,7 +626,7 @@ def _s41(run: Run) -> None:
 
 
 def _tool(argv: list[str]) -> str:
-    return subprocess.run(argv, check=True, capture_output=True, text=True).stdout
+    return subprocess.run(argv, check=True, capture_output=True, encoding="utf-8").stdout
 
 
 ROWS: dict[str, Callable[[Run], None]] = {
@@ -698,9 +699,9 @@ def main(argv: list[str]) -> int:
     out = Path(argv[0]).resolve()
     out.mkdir(parents=True, exist_ok=True)
     wanted = [a for a in argv[1:] if a != "--scaling"]
-    with tempfile.TemporaryDirectory() as scratch:
+    # chdir back before the cleanup: Windows cannot remove a process's current folder (DEF-W-07)
+    with tempfile.TemporaryDirectory() as scratch, contextlib.chdir(scratch):
         os.environ["HOME"] = scratch
-        os.chdir(scratch)
         app = qt_application()
         jobs = {"UI09": _scaling} if "--scaling" in argv else {row: ROWS[row] for row in (wanted or ROWS)}
         for row, take in jobs.items():
