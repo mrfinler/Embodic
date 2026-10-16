@@ -374,7 +374,8 @@ class FieldPanel(QScrollArea):
     def prebuild(self) -> None:
         """Build the form of every topology now; opening a design then only shows and fills one."""
         for topology in TopologyKind:
-            self._forms.setdefault(topology.value, self._build_form(topology))
+            if topology.value not in self._forms:
+                self._forms[topology.value] = self._build_form(topology)
 
     def refresh(self) -> None:
         """Rebuild for a new topology, then show the session's rows."""
