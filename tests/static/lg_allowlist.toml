@@ -1,0 +1,200 @@
+# Allow-list of LG-03 to LG-06 (test_plan.md sections 5.8.2 to 5.8.5, U-D18, D-053d).
+#
+# A rule admits a hit of one class when `place` (searched), `kind` (full match) and `text` (searched) all match.
+# Every text pattern is anchored to the whole string unless the reason says why it is not. A new sentence that names
+# balance, torque or efficiency is therefore a hit. `status` is one label of standing order 2.
+#
+# Classes: measur (LG-03), claim = balance, torque, efficiency (LG-04), xcoil and program (LG-05).
+
+# ---------------------------------------------------------------------------------------------------------------
+# measur (LG-03, REQ-T-10). Plan 5.8.2.
+# ---------------------------------------------------------------------------------------------------------------
+
+[[allow]]
+class = "measur"
+place = '^embodic/ui/strings/(?:design|results)\.py:'
+kind = "literal"
+text = '^(?:measured|Measured: \{source\}|Mark as measured(?:\.\.\.)?|Source of the measured value \(.*\):|property not measured)$'
+reason = "The provenance word of an input. REQ-T-06 and D-007 give it one meaning: an input that the user marked with a named source. The bare word 'measured' is the chip text (design.py l.201); the plan lists it as an identifier, and the scan counts a catalogue value as shown text."
+status = "verified"
+
+[[allow]]
+class = "measur"
+place = '^embodic/(?:model/provenance|ui/viewmodels/session|errors/catalogue/base)\.py:'
+kind = "literal"
+text = '^INVALID_MEASURED_(?:SOURCE_EMPTY|DESIGN_FIELD)$'
+reason = "The two codes of the provenance refusals (REQ-T-06, D-007)."
+status = "verified"
+
+[[allow]]
+class = "measur"
+place = '^embodic/errors/catalogue/base\.py:'
+kind = "literal"
+text = '^(?:A measured value needs a named source, such as a datasheet or a test record\.|Only material and property fields can be marked as measured\.|A measured entry needs a source and must belong to a property field\.)$'
+reason = "The three messages of the error catalogue for the provenance refusals."
+status = "verified"
+
+[[allow]]
+class = "measur"
+place = '^resources/themes/(?:dark|light)\.qss:'
+kind = "text-line"
+text = 'QLabel\[class="prov-chip"\]\[provenance="measured"\]'
+reason = "The style selector of the provenance chip `measured`, not shown text."
+status = "verified"
+
+[[allow]]
+class = "measur"
+place = '^disclosure:'
+kind = "text-line"
+text = '\(property not measured[,;] '
+reason = "The disclosure line of an assumed input renders the catalogue text 'property not measured' (ui/strings/results.py l.50): the input was not marked measured, which is the provenance meaning."
+status = "verified"
+
+[[allow]]
+class = "measur"
+place = '^(?:embodic/io/readme_writer\.py:\d+|export:[a-z0-9_]+/bundle!README\.txt:\d+)$'
+kind = "literal|export-text"
+text = 'Check them with a field simulation or a measurement before you build or order boards\.'
+reason = "Advice to compare with a measurement of the user's own, not a claim about a computed value (io/readme_writer.py l.21). Not anchored at the start because the README line begins 'Estimate caveat:'."
+status = "verified"
+
+[[allow]]
+class = "measur"
+place = '^(?:export:[a-z0-9_]+/outcome\.json#/analysis/.+/tolerance/(?:against|source_ref)|disclosure:[a-z0-9_]+/[a-z0-9_]+/Validation state)$'
+kind = "json-value|text-line"
+text = '(?:vs D\d\d measured Ke \(O\d+\)|vs measured DC resistance at known temperature|D\d\d measured \+\d+(?:\.\d+)? % over (?:its simulation|calc)|compare synthesised waveform peak with measured peak voltages|vs LCR measurement after validation)'
+reason = "A measurement in a cited paper, or the benchmark that a tolerance is stated against (the Phase 1 entry 'reference (paper, measured)'). U-D18 listed these registry fields as not rendered; the disclosure and the outcome JSON render them, so this rule is narrower than a field rule. Not anchored: the tolerance text holds several clauses."
+status = "inferred"
+
+# ---------------------------------------------------------------------------------------------------------------
+# claim: balance, torque, efficiency (LG-04, REQ-T-11). Plan 5.8.3.
+# ---------------------------------------------------------------------------------------------------------------
+
+[[allow]]
+class = "claim"
+place = '^embodic/(?:results/__init__|results/labels|selftest/catalogue|ui/strings/results)\.py:'
+kind = "literal"
+text = '^(?:Torque|Torque-speed|Torque-speed envelope|Torque constant(?:, (?:star|delta)| per line current, rms)?|Efficiency, electromagnetic only|TorqueSpeedEstimate|The torque-speed estimate needs a DC-link voltage \(Board and rotor, operating point\)\.)$'
+reason = "The name of a computed result. The UI shows each result with a unit, an EQ-ID and a status badge (REQ-T-01), so the value carries its own status."
+status = "inferred"
+
+[[allow]]
+class = "claim"
+place = '^embodic/selftest/catalogue\.py:'
+kind = "literal"
+text = '^tests/unit/winding/test_star_of_slots\.py::test_cf09_patterns_and_balance$'
+reason = "The node ID of a test function. Whether the Tests dialog shows it is not tested."
+status = "inferred"
+
+[[allow]]
+class = "claim"
+place = '^guide:EQ-(?:09|20|26)(?:/Name:\d+)?$'
+kind = "text-line"
+text = '.'
+reason = "The name of EQ-09, EQ-20 or EQ-26 in the guide: a name, not a claim about the user's design."
+status = "inferred"
+
+[[allow]]
+class = "claim"
+place = '^disclosure:[a-z0-9_]+/[a-z0-9_]+/Equation$'
+kind = "text-line"
+text = '^EQ-(?:09|26): '
+reason = "The Equation line of a disclosure repeats the name of EQ-09 or EQ-26 and its formula."
+status = "inferred"
+
+[[allow]]
+class = "claim"
+place = '^guide:EQ-05/Validity checks:\d+$'
+kind = "text-line"
+text = '^EC-05 radial edge leakage \(graded\): e_edge <= 0\.10: '
+reason = "The validity rule of EQ-05 lists Ke, EMF and torque as the quantities that the add-on covers: a definition, not a claim."
+status = "inferred"
+
+[[allow]]
+class = "claim"
+place = '^guide:EQ-08/Formula:\d+$'
+kind = "text-line"
+text = '^alpha_k = p\*theta_k; 60-degree belts '
+reason = "The formula of EQ-08 defines the pattern property 'balance' as signed angle sets. The wording is an open point (plan 5.8.9)."
+status = "inferred"
+
+[[allow]]
+class = "claim"
+place = '^resources/icons/ICONS\.md:'
+kind = "text-line"
+text = 'Toolstrip Verify > Torque-speed; results tab Torque-speed'
+reason = "Icon documentation naming a tab of the UI, the unresolved torque-speed estimate (REQ-F-20)."
+status = "inferred"
+
+[[allow]]
+class = "claim"
+place = '^export:[a-z0-9_]+/outcome\.json#/analysis/'
+kind = "json-key|json-value"
+text = '^(?:torque|efficiency|torque_n_m|torque_speed|torque_speed_(?:rpm|torque|power))$'
+reason = "The key or quantity id of a computed Traceable in the outcome JSON. The object carries its own status."
+status = "inferred"
+
+[[allow]]
+class = "claim"
+place = '^export:[a-z0-9_]+/bundle!.*_report\.pdf:\d+$'
+kind = "export-text"
+text = '^(?:Torque T|Torque constant per line current, rms Kt|Efficiency, electromagnetic only η) .* (?:not tested|unresolved|inferred|verified|assumption)(?: \(.*\))?$'
+reason = "A report row of a computed result with its unit and its status label."
+status = "inferred"
+
+# ---------------------------------------------------------------------------------------------------------------
+# xcoil (LG-05, REQ-L-03). Plan 5.8.4. The class `program` has no rule: the real tree holds no hit.
+# ---------------------------------------------------------------------------------------------------------------
+
+[[allow]]
+class = "xcoil"
+place = '^embodic/io/board_dump\.py:'
+kind = "literal"
+text = "^\\{name: 'xcoil-v3' \\| 'embodic', version, engine_sha256 \\(Xcoil only, else null\\), runtime\\}$"
+reason = "The board-dump schema text names the format of the golden harness (REQ-F-40). No CLI format or UI export writes a board dump."
+status = "inferred"
+
+[[allow]]
+class = "xcoil"
+place = '^resources/examples/(?:serpentine_16p_example|wave_16p_example)\.embodic\.json#/example/source_note$'
+kind = "json-value"
+text = '^Xcoil (?:default serpentine preset|v3 default wave preset)'
+reason = "The source_note of an example is never shown (io/examples.py l.39). The export scan shows 0 hits for all five examples, which the plan makes the condition of this rule."
+status = "inferred"
+
+# ---------------------------------------------------------------------------------------------------------------
+# personal (LG-06, REQ-L-05). Plan 5.8.5. The code corpus holds tests, so four lines of the scanners themselves match.
+# The build account `claude` and the placeholders are not hits by the pattern itself (lg_scan.HOME_PLACEHOLDERS).
+# ---------------------------------------------------------------------------------------------------------------
+
+[[allow]]
+class = "personal"
+place = '^tests/independent/m7/v3_14_scan\.py:\d+$'
+kind = "text-line"
+text = 'planted@example\.org|plantedperson'
+reason = "Agent 4's planted control string: an invented address and account name that prove V3-14's scan can fail."
+status = "verified"
+
+[[allow]]
+class = "personal"
+place = '^tests/independent/m7/v3_14_scan\.py:\d+$'
+kind = "text-line"
+text = '^HOME = re\.compile\('
+reason = "The regular expression of V3-14's home-path scan: its text holds the prefixes of a home folder path."
+status = "verified"
+
+[[allow]]
+class = "personal"
+place = '^tests/static/lg_scan\.py:\d+$'
+kind = "text-line"
+text = '^HOME_PATH = re\.compile\('
+reason = "The regular expression of this scanner's home-path pattern: its text holds the prefixes of a home folder path."
+status = "verified"
+
+[[allow]]
+class = "personal"
+place = '^tests/unit/embodic_io/project/test_examples\.py:\d+$'
+kind = "text-line"
+text = '^OTHER_PROGRAM_OR_PATH = re\.compile\('
+reason = "A regular expression that detects a program name or a path in an example's source note: its text holds the prefixes of a home folder path."
+status = "verified"
