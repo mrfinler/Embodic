@@ -113,5 +113,5 @@ def pair_violations(report: DrcReport) -> dict[frozenset[str], tuple[str, float]
         if v.kind.value in PAIR_KINDS:
             key = frozenset(v.objects)
             assert key not in out, f"pair reported twice: {sorted(key)}"
-            out[key] = (v.kind.value, v.measured_mm)
+            out[key] = (v.kind.value, v.clearance_mm)
     return out

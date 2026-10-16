@@ -94,7 +94,7 @@ def test_example_drc_counts() -> None:
     unexplained = [
         v
         for v in report.violations
-        if not (rule - 0.004 <= v.measured_mm < rule) and not any(o.split("/")[0] in interconnect for o in v.objects)
+        if not (rule - 0.004 <= v.clearance_mm < rule) and not any(o.split("/")[0] in interconnect for o in v.objects)
     ]
     assert report.violation_count == len(report.violations) > 0
     assert unexplained == []

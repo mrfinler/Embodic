@@ -120,7 +120,7 @@ def test_run_drc_minima_lie_in_brute_brackets(case_id: str) -> None:
         else:
             near = [r for r in mine if r.clearance.lo < RULE_MM + 1e-6]
             brackets = [clearance_bracket(prims[r.a], prims[r.b], tol=1e-8) for r in near]
-        measured = summary.measured_min_mm
+        measured = summary.least_clearance_mm
         if brackets:
             lo, hi = min(b.lo for b in brackets), min(b.hi for b in brackets)
             assert measured is not None and lo - 1e-12 <= measured <= hi + 1e-12, (kind, lo, measured, hi)
