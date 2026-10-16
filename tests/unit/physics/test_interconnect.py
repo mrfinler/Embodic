@@ -58,7 +58,7 @@ def test_ring_segments_are_the_arc_between_consecutive_taps(sweep_sign: float) -
     taps = [_at(sweep_sign * a) for a in angles]
     got = ring_segment_resistance_ohm([ring], taps, T_MM, RHO)
     expected = [30.0 * math.radians(50.0) * OHM_PER_MM, 30.0 * math.radians(70.0) * OHM_PER_MM]
-    assert got == pytest.approx(expected, rel=1e-12)
+    assert got == pytest.approx(expected, rel=1e-12, abs=0.0)
 
 
 def test_a_tap_a_rounding_error_before_the_ring_start_lands_on_the_start() -> None:
@@ -74,4 +74,4 @@ def test_a_segment_spanning_two_primitives_adds_both_parts() -> None:
     first = Line(x1_mm=0.0, y1_mm=0.0, x2_mm=10.0, y2_mm=0.0, width_mm=W_MM, role=PrimitiveRole.RING)
     second = Line(x1_mm=10.0, y1_mm=0.0, x2_mm=10.0, y2_mm=10.0, width_mm=2.0 * W_MM, role=PrimitiveRole.RING)
     got = ring_segment_resistance_ohm([first, second], [(4.0, 0.3), (10.2, 5.0)], T_MM, RHO)
-    assert got == pytest.approx([6.0 * OHM_PER_MM + 5.0 * OHM_PER_MM / 2.0], rel=1e-12)
+    assert got == pytest.approx([6.0 * OHM_PER_MM + 5.0 * OHM_PER_MM / 2.0], rel=1e-12, abs=0.0)

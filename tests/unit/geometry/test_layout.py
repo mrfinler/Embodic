@@ -94,7 +94,7 @@ def test_layout_arrays_rows_map_back_to_their_primitive() -> None:
 def test_board_stack_thickness_matches_xcoil_stator_thickness() -> None:
     """Defect caught: gap counted n times instead of n - 1 (Xcoil engine.js l.689: 3 * 1.6 + 2 * 0.5 = 5.8 mm)."""
     stack = BoardStack(boards=(_layout(), _layout(6.0), _layout(7.0)), board_thickness_mm=1.6, board_gap_mm=0.5)
-    assert stack.stack_thickness_mm == pytest.approx(5.8, rel=1e-15)
+    assert stack.stack_thickness_mm == pytest.approx(5.8, rel=1e-15, abs=0.0)
     assert BoardStack(boards=(_layout(),), board_thickness_mm=1.6, board_gap_mm=0.0).stack_thickness_mm == 1.6
 
 

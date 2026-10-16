@@ -36,17 +36,21 @@ def _curve(inductance_h: float = 0.0) -> tuple[np.ndarray, np.ndarray]:
 
 def test_inverter_limit_per_modulation() -> None:
     """Defect caught: a modulation mapped to another one's voltage limit (SVPWM, sine PWM and six-step differ)."""
-    assert inverter_phase_voltage_v(V_DC, Modulation.SVPWM, STAR) == pytest.approx(V_DC / math.sqrt(6.0), rel=1e-14)
-    assert inverter_phase_voltage_v(V_DC, Modulation.SPWM, STAR) == pytest.approx(V_DC / math.sqrt(8.0), rel=1e-14)
+    assert inverter_phase_voltage_v(V_DC, Modulation.SVPWM, STAR) == pytest.approx(
+        V_DC / math.sqrt(6.0), rel=1e-14, abs=0.0
+    )
+    assert inverter_phase_voltage_v(V_DC, Modulation.SPWM, STAR) == pytest.approx(
+        V_DC / math.sqrt(8.0), rel=1e-14, abs=0.0
+    )
     assert inverter_phase_voltage_v(V_DC, Modulation.SIX_STEP, STAR) == pytest.approx(
-        V_DC * math.sqrt(2.0) / math.pi, rel=1e-14
+        V_DC * math.sqrt(2.0) / math.pi, rel=1e-14, abs=0.0
     )
 
 
 def test_no_load_speed_is_v_dc_over_ke_line_for_svpwm() -> None:
     """Defect caught: a no-load speed from the phase constant instead of V_dc / Ke_LL with Ke_LL = sqrt(3) Ke."""
     expected = V_DC / (math.sqrt(3.0) * KE) * RPM_PER_RAD_S
-    assert no_load_speed_rpm(KE, V_DC, Modulation.SVPWM, STAR) == pytest.approx(expected, rel=1e-13)
+    assert no_load_speed_rpm(KE, V_DC, Modulation.SVPWM, STAR) == pytest.approx(expected, rel=1e-13, abs=0.0)
 
 
 def test_curve_runs_from_standstill_to_115_percent_of_the_no_load_speed() -> None:
@@ -54,14 +58,14 @@ def test_curve_runs_from_standstill_to_115_percent_of_the_no_load_speed() -> Non
     speed, torque = _curve()
     assert len(speed) == len(torque) == POINTS
     assert speed[0] == 0.0
-    assert speed[-1] == pytest.approx(1.15 * V_PHASE / KE_RMS * RPM_PER_RAD_S, rel=1e-13)
+    assert speed[-1] == pytest.approx(1.15 * V_PHASE / KE_RMS * RPM_PER_RAD_S, rel=1e-13, abs=0.0)
 
 
 def test_stall_torque_is_kt_times_the_current_limit() -> None:
     """Defect caught: a stall torque limited by V / R instead of I_max, or a Kt without the 3 phases."""
     _, torque = _curve()
     assert V_PHASE / R_OHM > I_MAX  # the current limit binds at standstill
-    assert torque[0] == pytest.approx(0.3 * math.sqrt(2.0), rel=1e-13)  # 3 * 0.02 / sqrt(2) * 10 A
+    assert torque[0] == pytest.approx(0.3 * math.sqrt(2.0), rel=1e-13, abs=0.0)  # 3 * 0.02 / sqrt(2) * 10 A
 
 
 def test_corner_speed_and_the_voltage_limited_branch() -> None:
@@ -137,15 +141,17 @@ def test_open_winding_uses_a_full_bridge_per_phase_and_m_phases(phases: int) -> 
     plateau is Kt I_max up to (V_ph - R I_max) / Ke_rms and the curve ends at 1.15 V_ph / Ke_rms.
     """
     v_open = V_DC / math.sqrt(2.0)
-    assert inverter_phase_voltage_v(V_DC, Modulation.SVPWM, ConnectionTopology.OPEN) == pytest.approx(v_open, rel=1e-14)
+    assert inverter_phase_voltage_v(V_DC, Modulation.SVPWM, ConnectionTopology.OPEN) == pytest.approx(
+        v_open, rel=1e-14, abs=0.0
+    )
     assert inverter_phase_voltage_v(V_DC, Modulation.SIX_STEP, ConnectionTopology.OPEN) == pytest.approx(
-        4.0 * V_DC / (math.pi * math.sqrt(2.0)), rel=1e-14
+        4.0 * V_DC / (math.pi * math.sqrt(2.0)), rel=1e-14, abs=0.0
     )
     speed, torque = torque_speed_envelope(
         R_OHM, 0.0, KE, V_DC, Modulation.SVPWM, I_MAX, POLES, POINTS, phases=phases, connection=ConnectionTopology.OPEN
     )
-    assert torque[0] == pytest.approx(phases * KE / math.sqrt(2.0) * I_MAX, rel=1e-13)
-    assert speed[-1] == pytest.approx(1.15 * v_open / KE_RMS * RPM_PER_RAD_S, rel=1e-13)
+    assert torque[0] == pytest.approx(phases * KE / math.sqrt(2.0) * I_MAX, rel=1e-13, abs=0.0)
+    assert speed[-1] == pytest.approx(1.15 * v_open / KE_RMS * RPM_PER_RAD_S, rel=1e-13, abs=0.0)
 
 
 @pytest.mark.parametrize("connection", [ConnectionTopology.STAR, ConnectionTopology.DELTA])

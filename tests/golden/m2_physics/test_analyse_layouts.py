@@ -170,7 +170,9 @@ def test_three_balanced_phases_produce_emf_and_finite_results(results: Mapping[s
 def test_star_line_constant_is_sqrt3_of_the_phase_constant(results: Mapping[str, AnalysisResult]) -> None:
     """Defect caught: analyse() feeding EQ-09 a different Ke than the one it reports."""
     r = results["layout-sector-default"]
-    assert r.ke_line_v_s_per_rad.value == pytest.approx(math.sqrt(3.0) * r.ke_phase_v_s_per_rad.value, rel=1e-12)
+    assert r.ke_line_v_s_per_rad.value == pytest.approx(
+        math.sqrt(3.0) * r.ke_phase_v_s_per_rad.value, rel=1e-12, abs=0.0
+    )
 
 
 def test_inductance_and_ipc_carry_their_labels(results: Mapping[str, AnalysisResult]) -> None:
@@ -251,12 +253,12 @@ def test_torque_speed_estimate_is_an_unresolved_estimate_tied_to_the_other_resul
         assert t.eq_ids[0] == "EQ-20", t.quantity
     raw = _raw(case)["params"]
     assert estimate.no_load_speed_rpm.value == pytest.approx(
-        raw["vDc"] / r.ke_line_v_s_per_rad.value * 60.0 / (2.0 * math.pi), rel=1e-12
+        raw["vDc"] / r.ke_line_v_s_per_rad.value * 60.0 / (2.0 * math.pi), rel=1e-12, abs=0.0
     )
     speed, torque, power = estimate.speed_rpm.value, estimate.torque_n_m.value, estimate.power_w.value
-    assert speed[0] == 0.0 and speed[-1] == pytest.approx(1.15 * estimate.no_load_speed_rpm.value, rel=1e-12)
+    assert speed[0] == 0.0 and speed[-1] == pytest.approx(1.15 * estimate.no_load_speed_rpm.value, rel=1e-12, abs=0.0)
     assert 0.0 < estimate.base_speed_rpm.value < speed[-1]
-    assert torque[0] == pytest.approx(r.torque_n_m.value, rel=1e-12)
+    assert torque[0] == pytest.approx(r.torque_n_m.value, rel=1e-12, abs=0.0)
     for rpm, t, p in zip(speed, torque, power, strict=True):
         assert p == pytest.approx(t * rpm * 2.0 * math.pi / 60.0, rel=1e-12, abs=1e-15)
 

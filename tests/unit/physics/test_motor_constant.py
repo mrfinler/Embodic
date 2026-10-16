@@ -45,7 +45,7 @@ def test_motor_constant_is_torque_over_the_root_of_phase_copper_loss_only(regist
         / math.sqrt(3.0 * result.resistance_phase_operating_ohm.value)
     )
     km = result.motor_constant_n_m_per_sqrt_w
-    assert km.value == pytest.approx(expected, rel=1e-12)
+    assert km.value == pytest.approx(expected, rel=1e-12, abs=0.0)
     assert km.unit is Unit.N_M_PER_SQRT_W
     assert "EQ-26" in km.eq_ids
     assert result.loss_total_w.value > result.loss_copper_w.value  # the root would differ if P_total were used
@@ -55,7 +55,9 @@ def test_motor_constant_does_not_depend_on_the_current(registry: Registry) -> No
     """Catches a K_m with a stray current or eddy term: T and sqrt(P_Cu) both scale with I."""
     low, high = _analysis(registry, 1.0), _analysis(registry, 4.0)
     assert low.torque_n_m.value != pytest.approx(high.torque_n_m.value)
-    assert low.motor_constant_n_m_per_sqrt_w.value == pytest.approx(high.motor_constant_n_m_per_sqrt_w.value, rel=1e-12)
+    assert low.motor_constant_n_m_per_sqrt_w.value == pytest.approx(
+        high.motor_constant_n_m_per_sqrt_w.value, rel=1e-12, abs=0.0
+    )
 
 
 def test_motor_constant_is_zero_without_phase_current(registry: Registry) -> None:
