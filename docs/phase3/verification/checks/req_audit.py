@@ -6,7 +6,9 @@
 
 Inputs (read only): requirements.md and the two test plans of this checkout; the REQ report and the gate log of
 Fable's release run on 5e74acc (/home/claude/release_0.0.1); the test sources of that run (`git archive 5e74acc tests`,
-or the folder given with --tree); Agent 4's V3-01 rulings and source pins (tests/independent/m7/v3_01_rulings.py).
+or the folder given with --tree); Agent 4's V3-01 rulings and source pins (tests/independent/m7/v3_01_rulings.py),
+and the union rulings of the REQ-F rows (tests/independent/m7/v3_01_rulings_f.py), each of which replaces the sample
+ruling of its row.
 
 For each planned test ID of a row, the evidence is the first that holds:
   gate   a PASS line of the release gate log names the ID
@@ -48,6 +50,7 @@ REPO = HERE.parents[4]
 RELEASE = Path("/home/claude/release_0.0.1")
 RELEASE_COMMIT = "5e74acc"
 RULINGS = REPO / "tests/independent/m7/v3_01_rulings.py"
+RULINGS_F = REPO / "tests/independent/m7/v3_01_rulings_f.py"
 REQUIREMENTS = REPO / "docs/phase2/architecture/requirements.md"
 PLANS = (REPO / "docs/phase1/architecture/test_plan_draft.md", REPO / "docs/phase2/architecture/test_plan.md")
 REPORT = RELEASE / "req_report.json"
@@ -202,9 +205,9 @@ def render(results, notes, inputs) -> str:
     return "\n".join(lines) + "\n"
 
 
-def load_rulings():
-    """Import Agent 4's V3-01 rulings file by path."""
-    spec = importlib.util.spec_from_file_location("v3_01_rulings", RULINGS)
+def load_rulings(path: Path = RULINGS):
+    """Import one of Agent 4's V3-01 rulings files by path."""
+    spec = importlib.util.spec_from_file_location(path.stem, path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -259,15 +262,17 @@ def run_audit(tree: Path):
     files = {r["nodeid"].split("::")[0] for r in records}
     sources = {f: (tree / f).read_text(encoding="utf-8", errors="replace") for f in files}
     text_results = audit(rows, records, gates, eqs, sources)
-    rulings = load_rulings()
-    gated, notes = apply_rulings(text_results, rulings.SAMPLE_RULINGS, rulings.CHECKS_PINS, tree)
+    rulings, union_f = load_rulings(), load_rulings(RULINGS_F)
+    row_rulings = {**rulings.SAMPLE_RULINGS, **union_f.UNION_RULINGS}
+    pins = {**rulings.CHECKS_PINS, **union_f.UNION_PINS}
+    gated, notes = apply_rulings(text_results, row_rulings, pins, tree)
     return text_results, gated, notes
 
 
 def self_test(tree: Path) -> int:
     """Control for D-051e: a ruled row stays verified on the ruled sources and drops when a copy of its test changes."""
     req, cited = "REQ-F-36", "tests/ui/qt_design/test_new_design_and_examples.py"
-    unruled = "REQ-F-01"
+    unruled = "REQ-F-02"
     ok = True
 
     def status_of(results, req_id):
@@ -320,7 +325,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.self_test:
             return self_test(tree)
         _, results, notes = run_audit(tree)
-    inputs = [(p, sha(p)) for p in (REQUIREMENTS, *PLANS, REPORT, GATE_LOG, RULINGS)]
+    inputs = [(p, sha(p)) for p in (REQUIREMENTS, *PLANS, REPORT, GATE_LOG, RULINGS, RULINGS_F)]
     shown = [(str(p.relative_to(REPO)) if p.is_relative_to(REPO) else str(p), h) for p, h in inputs]
     text = render(results, notes, shown)
 
