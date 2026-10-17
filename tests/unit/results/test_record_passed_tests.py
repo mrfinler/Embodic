@@ -9,6 +9,7 @@ import pytest
 from tests.unit.results.registries import REPO
 
 from embodic.results.registry import load_registry, parse_passed_tests
+from embodic.results.status import Status
 
 KNOWN = frozenset({"EQT-10-GR", "EQT-10-CF04", "EQT-10-O2", "EQT-05-GR"})
 
@@ -19,6 +20,12 @@ def load_tool():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def verified_linked_tests() -> frozenset[str]:
+    """Return every EQT ID that a `verified` equation of the packaged registry links; a release run must pass all."""
+    equations = load_registry().equations.values()
+    return frozenset(t for e in equations if e.status is Status.VERIFIED for t in e.tests)
 
 
 def records(tool, *rows):
@@ -84,12 +91,15 @@ def test_tr05_record_main_refuses_and_writes_nothing(tmp_path, profile, rows):
 @pytest.mark.req("REQ-T-05")
 def test_tr05_record_main_writes_a_file_the_reader_parses_back(tmp_path, capsys):
     """Catches a writer whose file the reader rejects, unsorted keys, or a host name or home path in the file."""
+    explicit = {"EQT-10-GR", "EQT-10-CF04", "EQT-10-O2"}
+    other_verified = verified_linked_tests() - explicit
     report = write_report(
         tmp_path / "req_report.json",
         ("tests/x.py::a", "passed", ["EQT-10-GR", "EQT-10-CF04"]),
         ("tests/x.py::b", "passed", ["EQT-10-O2"]),
         ("tests/x.py::c", "skipped", []),
         ("tests/x.py::d", "not run", []),
+        ("tests/x.py::verified", "passed", sorted(other_verified)),
     )
     out = tmp_path / "evidence" / "passed_tests.v1.json"
     argv = ["--report", str(report), "--profile", "release", "--out", str(out)]
@@ -99,12 +109,12 @@ def test_tr05_record_main_writes_a_file_the_reader_parses_back(tmp_path, capsys)
     document = json.loads(text)
     evidence = parse_passed_tests(document)
     assert evidence is not None
-    assert evidence.passed_tests == frozenset({"EQT-10-CF04", "EQT-10-GR", "EQT-10-O2"})
+    assert evidence.passed_tests == explicit | other_verified
     assert dict(evidence.realised_by) == {
         "EQT-10-CF04": ("tests/x.py::a",),
         "EQT-10-GR": ("tests/x.py::a",),
         "EQT-10-O2": ("tests/x.py::b",),
-    }
+    } | {test_id: ("tests/x.py::verified",) for test_id in other_verified}
     assert list(document) == sorted(document)
     assert document["platform"] == platform.platform()
     assert document["gate_profile"] == "release"
@@ -113,14 +123,21 @@ def test_tr05_record_main_writes_a_file_the_reader_parses_back(tmp_path, capsys)
     assert platform.node() not in text
     assert str(Path.home()) not in text
     total = len({t for e in load_registry().equations.values() for t in e.tests})
-    assert capsys.readouterr().out.startswith(f"3 of {total} registry test IDs passed; {total - 3} carried by no test")
+    passed = len(explicit | other_verified)
+    assert capsys.readouterr().out.startswith(
+        f"{passed} of {total} registry test IDs passed; {total - passed} carried by no test"
+    )
 
 
 @pytest.mark.req("REQ-T-05")
-def test_tr05_a_report_without_eqt_keys_records_no_passed_test(tmp_path):
-    """Catches a writer that crashes on a report written before the eqt markers existed (U-M5o)."""
+def test_tr05_a_report_without_eqt_keys_is_refused_and_writes_nothing(tmp_path, capsys):
+    """Catches a writer that crashes on a report written before the eqt markers existed (U-M5o), or that records it.
+
+    Such a report carries no registry test, so no `verified` equation has a passing test and the release stops.
+    """
     report = tmp_path / "req_report.json"
     report.write_text(json.dumps([{"nodeid": "t.py::a", "req": [], "eq": [], "outcome": "passed"}]), encoding="utf-8")
     out = tmp_path / "passed_tests.v1.json"
-    assert load_tool().record_main(["--report", str(report), "--profile", "release", "--out", str(out)]) == 0
-    assert json.loads(out.read_text(encoding="utf-8"))["passed_tests"] == []
+    assert load_tool().record_main(["--report", str(report), "--profile", "release", "--out", str(out)]) == 1
+    assert "EQ-10" in capsys.readouterr().err
+    assert not out.exists()
