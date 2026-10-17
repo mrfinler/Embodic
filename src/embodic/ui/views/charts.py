@@ -50,6 +50,7 @@ from embodic.ui.viewmodels.results import (
     torque_speed_charts,
 )
 from embodic.ui.views.status_badge import AssumptionTag, EqChip, StatusBadge
+from embodic.ui.views.widgets import table_widget
 
 MARGIN_LEFT, MARGIN_RIGHT, MARGIN_TOP, MARGIN_BOTTOM = 64.0, 84.0, 34.0, 44.0
 LINE_PX = 2.0
@@ -380,7 +381,7 @@ class ChartPanel(QWidget):
         self.table_toggle.setObjectName(f"{chart_id}-table-toggle")
         self.table_toggle.setText(text("chart.data-table"))
         self.table_toggle.setCheckable(True)
-        self.table = QTableWidget()
+        self.table = table_widget()
         self.table.setObjectName(f"{chart_id}-table")
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)

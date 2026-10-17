@@ -37,6 +37,7 @@ from embodic.ui.viewmodels.session import (
     series_groups,
 )
 from embodic.ui.views.coil_panel import FieldEditor, FieldPanel, Segment, fit_rows, fit_width, label_above, repolish
+from embodic.ui.views.widgets import table_widget
 
 COPPER_COUNTS = (2, 4, 6, 8)
 LAYER_COLUMNS = ("layer", "kind", "thickness")
@@ -67,7 +68,7 @@ def pair_slots(copper: list[str], pairs: tuple[LayerPair, ...]) -> list[PairSlot
 
 
 def _table(name: str, columns: tuple[str, ...]) -> QTableWidget:
-    table = QTableWidget(0, len(columns))
+    table = table_widget(0, len(columns))
     table.setObjectName(name)
     table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
     table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)

@@ -1,7 +1,7 @@
 """Widgets every view builds the same way."""
 
 from PySide6.QtCore import QPoint
-from PySide6.QtWidgets import QCheckBox
+from PySide6.QtWidgets import QCheckBox, QTableWidget
 
 
 class _RowCheckBox(QCheckBox):
@@ -16,3 +16,13 @@ def check_box(label: str = "") -> QCheckBox:
     the widget.
     """
     return _RowCheckBox(label)
+
+
+def table_widget(rows: int = 0, columns: int = 0) -> QTableWidget:
+    """Return a table that the arrow keys move inside and Tab leaves (design_spec.md section 10).
+
+    Qt's default lets Tab walk the cells and wrap from the last to the first, so focus never left the table.
+    """
+    table = QTableWidget(rows, columns)
+    table.setTabKeyNavigation(False)
+    return table

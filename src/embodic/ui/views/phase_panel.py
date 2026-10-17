@@ -17,6 +17,7 @@ from embodic.model.vocabulary import TopologyKind
 from embodic.ui.strings import text
 from embodic.ui.viewmodels.session import ASSIGNMENT_MODES, ASSIGNMENT_POINTER, DesignSession, assignment_mode
 from embodic.ui.views.coil_panel import FieldPanel, Segment, fit_rows, hint_label, label_above, repolish, show_hints
+from embodic.ui.views.widgets import table_widget
 
 PHASE_COLUMNS = ("coil_index", "phase", "polarity")
 _EDIT_TRIGGERS = QAbstractItemView.EditTrigger.EditKeyPressed | QAbstractItemView.EditTrigger.DoubleClicked
@@ -66,7 +67,7 @@ class PhasePanel(FieldPanel):
         column.addWidget(self.pattern_hint)
         column.addWidget(self.balance)
         if "param-phase-assign-mode" in self.helpers:
-            table = QTableWidget(0, len(PHASE_COLUMNS))
+            table = table_widget(0, len(PHASE_COLUMNS))
             table.setObjectName("phase-table")
             table.setHorizontalHeaderLabels([text(f"phase-table.{c.split('_')[0]}") for c in PHASE_COLUMNS])
             table.verticalHeader().setVisible(False)

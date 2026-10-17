@@ -45,6 +45,7 @@ from embodic.ui.viewmodels.session import (
     form_rows,
     parse_text,
 )
+from embodic.ui.views.focus_order import chain, reading_order, stop_before
 from embodic.ui.views.widgets import check_box
 
 MIN_INPUT_PX = 72
@@ -336,6 +337,7 @@ class _Form:
     """The widgets one topology's form of a tab is made of; the panel shows one form at a time."""
 
     body: QWidget
+    stops: list[QWidget]  # the body's Tab stops in reading order
     editors: dict[str, "FieldEditor"]
     helpers: dict[str, QWidget]
     extras: dict[str, object]  # the attributes of FORM_ATTRIBUTES this form's build set
@@ -382,7 +384,8 @@ class FieldPanel(QScrollArea):
         self._layout.addWidget(self.empty)
         self._layout.addStretch(1)
         self._building = TopologyKind.SPIRAL  # the topology whose form build() makes
-        self._forms: dict[str | None, _Form] = {None: _Form(body=self._body, editors={}, helpers={}, extras={})}
+        empty = _Form(body=self._body, stops=[], editors={}, helpers={}, extras={})
+        self._forms: dict[str | None, _Form] = {None: empty}
         self.destroyed.connect(partial(_delete_detached_forms, self._forms))
 
     def prebuild(self) -> None:
@@ -421,6 +424,7 @@ class FieldPanel(QScrollArea):
         if self.widget() is not form.body:
             self.takeWidget()
             self.setWidget(form.body)
+            chain([stop_before(self), *form.stops])
         self._body, self.editors, self.helpers = form.body, form.editors, form.helpers
         layout = form.body.layout()
         assert isinstance(layout, QVBoxLayout)
@@ -438,6 +442,7 @@ class FieldPanel(QScrollArea):
         self._layout.addStretch(1)
         form = _Form(
             body=body,
+            stops=reading_order(body),
             editors=self.editors,
             helpers=self.helpers,
             extras={name: getattr(self, name) for name in self.FORM_ATTRIBUTES},

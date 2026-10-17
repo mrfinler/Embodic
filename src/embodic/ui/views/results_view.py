@@ -62,7 +62,7 @@ from embodic.ui.viewmodels.results import (
 from embodic.ui.views.charts import ChartPanel, delta_icon
 from embodic.ui.views.dialogs import confirm_replace_reference
 from embodic.ui.views.status_badge import AssumptionTag, EqChip, StatusBadge, badge_property, repolish
-from embodic.ui.views.widgets import check_box
+from embodic.ui.views.widgets import check_box, table_widget
 
 COMPUTING_DIM_AFTER_MS = 300
 COMPUTING_OPACITY = 0.6
@@ -447,7 +447,7 @@ class CompareTab(QWidget):
         self.empty.setObjectName("compare-empty")
         self.empty.setWordWrap(True)
         self.empty.setProperty("class", "hint")
-        self.table = QTableWidget(0, len(self.COLUMNS))
+        self.table = table_widget(0, len(self.COLUMNS))
         self.table.setObjectName("compare-table")
         self.table.setHorizontalHeaderLabels([text(c) for c in self.COLUMNS])
         header = self.table.horizontalHeader()

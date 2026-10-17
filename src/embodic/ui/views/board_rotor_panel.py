@@ -32,6 +32,7 @@ from embodic.ui.viewmodels.session import (
     screw_patterns,
 )
 from embodic.ui.views.coil_panel import FieldEditor, FieldPanel, choice_text, fit_rows, fit_width, label_above
+from embodic.ui.views.widgets import table_widget
 
 BORE_CHOICES = ("none", "circle", "polygon")
 HOLE_WIDGET = "param-screw-hole-diameter"
@@ -103,7 +104,7 @@ class BoardRotorPanel(FieldPanel):
     def _fasteners(self) -> QGroupBox:
         box = QGroupBox(text("design.group.fasteners"))
         box.setObjectName("tab-board-group-fasteners")
-        table = QTableWidget(0, len(SCREW_COLUMNS))
+        table = table_widget(0, len(SCREW_COLUMNS))
         table.setObjectName("screw-table")
         table.setHorizontalHeaderLabels([text(f"screw-table.{key}") for _, key in SCREW_COLUMNS])
         table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
