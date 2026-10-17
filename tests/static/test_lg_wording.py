@@ -171,12 +171,6 @@ def test_lg03_resources_outside_the_fonts_notes_never_call_a_computed_value_meas
 
 
 @pytest.mark.req("REQ-T-10")
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="resources/fonts/FONTS.md l.24-25 say 'measured with sha256sum' and 'verified by measuring' "
-    "(v3_contract_rulings.md section 1: 'computed ... by computing'). The owner removes this mark with the edit.",
-)
 def test_lg03_resources_never_call_a_computed_value_measured(resource_corpus, rules):
     """LG-03 on every resource file. Catches 'measured' for a hash that the tool computed."""
     assert find_hits(MEASUR, resource_corpus, rules) == []
