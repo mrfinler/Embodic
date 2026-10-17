@@ -1,25 +1,31 @@
 """Copy the equation and evidence registries into resources/evidence and record their SHA-256 (REQ-T-04).
 
-Usage, from anywhere::
+Usage, from anywhere (the example step needs embodic importable, for example ``PYTHONPATH=src``)::
 
-    python tools/sync_registry.py           # write both copies and the manifest
-    python tools/sync_registry.py --check   # exit 1 when a copy or the manifest differs from its source
+    python tools/sync_registry.py           # write both copies and the manifest, then regenerate the examples
+    python tools/sync_registry.py --check   # exit 1 when a copy, the manifest or an example differs from its source
 
 The equation registry is copied byte for byte. The evidence register ships only its `phase2_scope` entries and the
 documents they cite: the out-of-scope entries are the KiCad evidence that D-009 removed, and MT-07 forbids KiCad text
 in shipped files. Nothing is edited by hand: Agent 2 owns the equation registry, Agent 5 the evidence register.
+
+Every packaged example file carries `registry_version` (REQ-T-07, interfaces.md 9.1), which is built from the hashes
+of the two copies. A registry change therefore changes the bytes of all examples, and this tool rewrites them with
+the example builders under tests/ (D-056b).
 """
 
 import argparse
 import hashlib
 import json
 import sys
+import tempfile
 from collections.abc import Callable
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 DESTINATION = REPO / "resources" / "evidence"
 MANIFEST = DESTINATION / "manifest.v1.json"
+EXAMPLES_DIR = REPO / "resources" / "examples"
 
 
 def verbatim(source: bytes) -> bytes:
@@ -67,8 +73,57 @@ def manifest_text(copies: dict[str, bytes]) -> str:
     return json.dumps({"schema": "embodic registry manifest v1", "files": files}, indent=1) + "\n"
 
 
+def expected_examples(copies: dict[str, bytes]) -> dict[str, bytes]:
+    """Return the bytes of each example file once the registry copies are `copies`: file name -> content.
+
+    The registry version is read back from the copies by the loader that the program uses, so the format of the
+    version string lives in one place. The builders write into a scratch folder and the packaged files stay as they are.
+    """
+    if str(REPO) not in sys.path:  # the builders import `tests.unit...`; a script run puts tools/ first, not the root
+        sys.path.insert(0, str(REPO))
+    from tests.unit.embodic_io.project.make_examples import write_examples
+    from tests.unit.generators.serpentine.make_example import write_example as write_serpentine
+    from tests.unit.generators.wave.make_example import write_example as write_wave
+
+    from embodic.results import load_registry
+
+    with tempfile.TemporaryDirectory() as scratch:
+        root = Path(scratch)
+        evidence = root / "evidence"
+        evidence.mkdir()
+        for name, data in copies.items():
+            (evidence / name).write_bytes(data)
+        (evidence / MANIFEST.name).write_text(manifest_text(copies), encoding="utf-8")
+        version = load_registry(root).version
+        folder = root / "examples"
+        folder.mkdir()
+        written = [
+            *write_examples(folder, registry_version=version),
+            write_serpentine(folder, registry_version=version),
+            write_wave(folder, registry_version=version),
+        ]
+        return {path.name: path.read_bytes() for path in written}
+
+
+def example_drift(examples: dict[str, bytes]) -> list[str]:
+    """Return one line per example file that is missing, differs from the builder output or has no builder."""
+    problems = []
+    for name, data in examples.items():
+        packaged = EXAMPLES_DIR / name
+        if not packaged.is_file():
+            problems.append(f"{name}: missing")
+        elif packaged.read_bytes() != data:
+            problems.append(f"{name}: differs from the generator output")
+    problems += [
+        f"{path.name}: no builder writes it"
+        for path in sorted(EXAMPLES_DIR.glob("*.embodic.json"))
+        if path.name not in examples
+    ]
+    return problems
+
+
 def drift() -> list[str]:
-    """Return one line per copy or manifest that differs from what the sources give."""
+    """Return one line per copy, manifest or example that differs from what the sources give."""
     copies = expected_copies()
     problems = []
     for name, data in copies.items():
@@ -79,16 +134,26 @@ def drift() -> list[str]:
             problems.append(f"{name}: differs from {SOURCES[name][0].relative_to(REPO)}")
     if not MANIFEST.is_file() or MANIFEST.read_text(encoding="utf-8") != manifest_text(copies):
         problems.append(f"{MANIFEST.name}: missing or stale")
-    return problems
+    return problems + example_drift(expected_examples(copies))
 
 
-def sync() -> None:
-    """Write every copy and the manifest; running it twice changes nothing."""
+def sync() -> list[str]:
+    """Write every copy, the manifest and each example whose bytes change; running it twice changes nothing.
+
+    Returns the names of the example files that were rewritten.
+    """
     DESTINATION.mkdir(parents=True, exist_ok=True)
     copies = expected_copies()
     for name, data in copies.items():
         (DESTINATION / name).write_bytes(data)
     MANIFEST.write_text(manifest_text(copies), encoding="utf-8")
+    rewritten = []
+    for name, data in expected_examples(copies).items():
+        packaged = EXAMPLES_DIR / name
+        if not packaged.is_file() or packaged.read_bytes() != data:
+            packaged.write_bytes(data)
+            rewritten.append(name)
+    return rewritten
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -97,7 +162,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--check", action="store_true", help="report drift instead of writing")
     args = parser.parse_args(argv)
     if not args.check:
-        sync()
+        for name in sync():
+            print(f"{name}: rewritten")
     problems = drift()
     for line in problems:
         print(line)

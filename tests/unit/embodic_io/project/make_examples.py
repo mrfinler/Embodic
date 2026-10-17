@@ -25,6 +25,7 @@ from embodic.model.draft import parse_draft
 from embodic.model.outline import PolygonOutline
 from embodic.model.provenance import ExampleRef, derive_provenance
 from embodic.model.schema import JsonValue, flatten, unflatten
+from embodic.results import load_registry
 
 SAVED_UTC = "2026-10-08T00:00:00Z"  # fixed, so a rerun rewrites identical files
 ROUND_DECIMALS = 9
@@ -82,14 +83,21 @@ EXAMPLES: dict[str, tuple[str, str, Callable[[], DesignParameters]]] = {
 }
 
 
-def write_examples(folder: Path) -> list[Path]:
-    """Write every example file into `folder` and return the paths."""
+def write_examples(folder: Path, *, registry_version: str | None = None) -> list[Path]:
+    """Write every example file into `folder` and return the paths.
+
+    The files carry `registry_version`: the packaged registry's unless the caller passes the version it is about to
+    package (tools/sync_registry.py does, before the packaged copy has changed).
+    """
     written = []
+    registry_version = load_registry().version if registry_version is None else registry_version
     for example_id, (title, source_note, build) in EXAMPLES.items():
         design = rounded_design(dataclasses.replace(build(), name=title))
         ref = ExampleRef(example_id=example_id, example_sha256=design_hash(design))
         provenance = derive_provenance(design, (ref, design), ())
-        document = project_document(ProjectFile(design=design, origin=ref), provenance, saved_utc=SAVED_UTC)
+        document = project_document(
+            ProjectFile(design=design, origin=ref), provenance, saved_utc=SAVED_UTC, registry_version=registry_version
+        )
         document["example"] = {"title": title, "source_note": source_note}
         path = folder / f"{example_id}{EXAMPLE_SUFFIX}"
         path.write_text(encode_project(document), encoding="utf-8", newline="\n")
