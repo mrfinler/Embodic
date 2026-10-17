@@ -434,7 +434,7 @@ def analyse(
     sum_eq = ("EQ-26", "EQ-10", "EQ-11", "EQ-12", "EQ-07", "EQ-19", "EQ-23", "EQ-09", "EQ-06")
     sum_refs = [*emf_refs, *loss_refs, speed]
     sum_validity = (*emf_validity, *skin_validity, *ic_validity)
-    d_t = temperature_rise_k(loss_total, board_area * len(boards.boards), op.convection_h_w_m2k)
+    d_t = temperature_rise_k(loss_total, board_area, op.convection_h_w_m2k)  # a stack cools through its outer faces
 
     ke_t = tr("ke_phase_v_s_per_rad", ke1, Unit.V_S_PER_RAD, ("EQ-06", "EQ-07", "EQ-05"), emf_refs, emf_validity)
     edge_t = traced_validity_metric("edge_leakage_fraction", check, "EQ-05", e_edge, inputs=emf_refs, registry=registry)
