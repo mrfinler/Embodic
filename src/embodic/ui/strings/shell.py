@@ -66,6 +66,7 @@ STRINGS: Mapping[str, str] = {
     "act-theme.tooltip": "Switch the colour theme: light, dark, then follow the system.",
     "act-greyscale.label": "Greyscale",
     "act-greyscale.tooltip": "Greyscale with hatching for phases.",
+    "act-greyscale.high-contrast": "On while Windows high contrast is on.",
     "act-fit.label": "Fit",
     "act-fit.tooltip": "Fit the drawing to the view.",
     "act-tests.label": "Self-tests",

@@ -50,6 +50,8 @@ class AppearanceViewModel:
         initial = ThemeName(stored) if stored in tuple(ThemeName) else ThemeName.SYSTEM
         self.theme: Observable[ThemeName] = Observable(initial)
         self.phase_render_mode: Observable[PhaseRenderMode] = Observable(PhaseRenderMode.COLOUR)
+        self.high_contrast: Observable[bool] = Observable(False)
+        self._chosen_mode = PhaseRenderMode.COLOUR
         share = store.load_canvas_share()
         self.canvas_share = share if share is not None and 0.0 <= share <= 1.0 else CANVAS_SHARE
 
@@ -69,6 +71,14 @@ class AppearanceViewModel:
         self.set_theme(THEME_CYCLE[self.theme.value])
 
     def toggle_phase_render_mode(self) -> None:
-        """Switch between colour and greyscale with hatching."""
+        """Switch between colour and greyscale with hatching; under high contrast greyscale stays on."""
+        if self.high_contrast.value:
+            return
         modes = tuple(PhaseRenderMode)
-        self.phase_render_mode.set(modes[1 - modes.index(self.phase_render_mode.value)])
+        self._chosen_mode = modes[1 - modes.index(self._chosen_mode)]
+        self.phase_render_mode.set(self._chosen_mode)
+
+    def set_high_contrast(self, on: bool) -> None:
+        """Windows high contrast draws the phases in greyscale with hatching; off, the user's mode comes back."""
+        self.high_contrast.set(on)
+        self.phase_render_mode.set(PhaseRenderMode.GREYSCALE_HATCH if on else self._chosen_mode)

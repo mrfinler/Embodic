@@ -17,7 +17,7 @@ from types import TracebackType
 from typing import NamedTuple
 
 from PySide6.QtCore import QSettings, QStandardPaths, Qt
-from PySide6.QtGui import QFontDatabase, QGuiApplication
+from PySide6.QtGui import QFontDatabase, QGuiApplication, QPalette
 from PySide6.QtWidgets import QApplication
 
 from embodic.api import compute
@@ -105,6 +105,11 @@ def os_prefers_dark() -> bool:
     return QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Dark
 
 
+def os_prefers_high_contrast() -> bool:
+    """Return True while the OS asks for high contrast (a Windows 11 contrast theme; Qt 6.10 and later)."""
+    return QGuiApplication.styleHints().accessibility().contrastPreference() == Qt.ContrastPreference.HighContrast
+
+
 class Shell(NamedTuple):
     """The window and the compute worker behind it."""
 
@@ -117,8 +122,15 @@ def create_shell(
     paths: ShellPaths,
     compute_fn: ComputeFn = compute,
     prefers_dark: Callable[[], bool] = os_prefers_dark,
+    *,
+    prefers_high_contrast: Callable[[], bool] = os_prefers_high_contrast,
+    system_palette: Callable[[], QPalette] = QPalette,
 ) -> Shell:
-    """Wire the view-models, the workers and the window."""
+    """Wire the view-models, the workers and the window.
+
+    ``prefers_high_contrast`` and ``system_palette`` are the seams of fix_wave_f1.md (b): the contrast property has
+    no setter, so a test injects both. The default palette, an empty QPalette(), gives the platform palette back.
+    """
     worker = ComputeWorker(compute_fn)
     selftests = SelfTestWorker()
     outcome = OutcomeViewModel(worker)
@@ -133,6 +145,8 @@ def create_shell(
         worker.shutdown,
         registry=load_registry(),
         selftests=selftests,
+        prefers_high_contrast=prefers_high_contrast,
+        system_palette=system_palette,
     )
     worker.setParent(window)
     selftests.setParent(window)
@@ -140,6 +154,7 @@ def create_shell(
     worker.finished.connect(outcome.on_finished)
     worker.failed.connect(window.on_compute_failed)
     QGuiApplication.styleHints().colorSchemeChanged.connect(window.on_os_scheme_changed)
+    QGuiApplication.styleHints().accessibility().contrastPreferenceChanged.connect(window.on_os_contrast_changed)
     return Shell(window, worker)
 
 

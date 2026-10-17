@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 from PySide6.QtCore import QSettings, QStandardPaths
+from PySide6.QtGui import QPalette
 
 from embodic.api import compute
 from embodic.ui.app import QSettingsStore, create_shell
@@ -21,6 +22,14 @@ READY_TIMEOUT_MS = 60_000  # hang guard only; no assertion depends on it
 
 
 @dataclass
+class SystemContrast:
+    """What the injected seams of fix_wave_f1.md (b) report: Windows high contrast and the system palette."""
+
+    high_contrast: bool
+    palette: QPalette | None  # None: the default, an empty QPalette()
+
+
+@dataclass
 class Shell:
     """One shell window and what a test can change around it."""
 
@@ -29,6 +38,7 @@ class Shell:
     settings_path: Path
     recovery_dir: Path
     calls: list
+    system: SystemContrast
 
 
 @pytest.fixture(autouse=True)
@@ -40,9 +50,12 @@ def _qt_test_paths():
 
 @pytest.fixture
 def make_shell(qtbot, tmp_path):
-    """Return a factory: make_shell(compute_fn=None, os_dark=False) opens a shown 1280 x 800 shell window."""
+    """Return a factory: make_shell(compute_fn=None, os_dark=False) opens a shown 1280 x 800 shell window.
 
-    def factory(compute_fn=None, os_dark=False, settings_path=None):
+    ``high_contrast`` and ``system_palette`` start the seams of fix_wave_f1.md (b); a test flips ``shell.system``.
+    """
+
+    def factory(compute_fn=None, os_dark=False, settings_path=None, high_contrast=False, system_palette=None):
         calls = []
         inner = compute_fn or compute
 
@@ -53,12 +66,27 @@ def make_shell(qtbot, tmp_path):
         settings_path = settings_path or tmp_path / "settings.ini"
         store = QSettingsStore(QSettings(str(settings_path), QSettings.Format.IniFormat))
         recovery = tmp_path / "recovery"
-        window, worker = create_shell(store, ShellPaths(recovery_dir=recovery), counting, lambda: os_dark)
+        system = SystemContrast(high_contrast=high_contrast, palette=system_palette)
+        window, worker = create_shell(
+            store,
+            ShellPaths(recovery_dir=recovery),
+            counting,
+            lambda: os_dark,
+            prefers_high_contrast=lambda: system.high_contrast,
+            system_palette=lambda: QPalette() if system.palette is None else system.palette,
+        )
         qtbot.addWidget(window)
         window.resize(1280, 800)
         window.show()
         qtbot.waitExposed(window)
-        return Shell(window=window, worker=worker, settings_path=settings_path, recovery_dir=recovery, calls=calls)
+        return Shell(
+            window=window,
+            worker=worker,
+            settings_path=settings_path,
+            recovery_dir=recovery,
+            calls=calls,
+            system=system,
+        )
 
     return factory
 

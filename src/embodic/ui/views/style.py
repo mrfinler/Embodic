@@ -11,6 +11,7 @@ from PySide6.QtWidgets import QApplication
 
 from embodic.paths import resource_root
 from embodic.ui.theme import ThemeTokens, recolour_svg, themes_dir
+from embodic.ui.views.high_contrast import TEMPLATE_FILE, high_contrast_sheet, high_contrast_tokens, write_glyphs
 
 logger = logging.getLogger(__name__)
 
@@ -92,6 +93,25 @@ def apply_theme(app: QApplication, tokens: ThemeTokens) -> None:
     app.setStyle("Fusion")
     QDir.setSearchPaths("theme", [str(themes_dir())])
     app.setPalette(palette_for(tokens))
-    sheet = (themes_dir() / f"{tokens.name}.qss").read_text(encoding="utf-8")
+    _set_sheet(app, (themes_dir() / f"{tokens.name}.qss").read_text(encoding="utf-8"))
+
+
+def apply_high_contrast(app: QApplication, tokens: ThemeTokens, system: QPalette) -> ThemeTokens:
+    """Restyle the chrome in the system colours of ``system``, the palette already applied (fix_wave_f1.md (b)).
+
+    Return the chrome tokens. The sheet is rendered as text, not from palette() references: a disabled label styled
+    with palette(window-text) painted the active colour, and a palette change reached it only with the next sheet.
+    """
+    app.setStyle("Fusion")
+    chrome = high_contrast_tokens(tokens, system)
+    glyphs = write_glyphs(tokens.name, tokens.colours, chrome.colours)
+    QDir.setSearchPaths("theme", [str(glyphs), str(themes_dir())])
+    theme_sheet = (themes_dir() / f"{tokens.name}.qss").read_text(encoding="utf-8")
+    template = (themes_dir() / TEMPLATE_FILE).read_text(encoding="utf-8")
+    _set_sheet(app, high_contrast_sheet(theme_sheet, template, chrome.colours))
+    return chrome
+
+
+def _set_sheet(app: QApplication, sheet: str) -> None:
     if app.styleSheet() != sheet:
         app.setStyleSheet(sheet)
