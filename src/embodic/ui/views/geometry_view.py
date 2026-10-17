@@ -43,6 +43,7 @@ from embodic.geometry.layout import Layout
 from embodic.geometry.marks import CoilMark
 from embodic.geometry.primitives import Line, Primitive
 from embodic.model.vocabulary import Phase
+from embodic.ui.fonts import JETBRAINS_MONO
 from embodic.ui.strings import text
 from embodic.ui.theme import PhaseStyle, ThemeTokens
 from embodic.ui.viewmodels.appearance import PhaseRenderMode
@@ -66,6 +67,9 @@ LEGEND_ROW_PX = 20
 LEGEND_BAR_PX = (20, 3)  # solid copper bar: length, thickness
 LEGEND_SWATCH_PX = 12  # eye swatch diameter
 LEGEND_GAP_PX = 6
+STAMP_MARGIN_PX = 8
+STAMP_PAD_PX = 4
+STAMP_PX = 12
 DATA_LAYER = 0  # QGraphicsItem.data key: copper layer name ("" for board items)
 DATA_PHASE = 1  # QGraphicsItem.data key: phase letter or ""
 DATA_KIND = 2  # QGraphicsItem.data key: "copper", "eye", "hatch", "label", "label-halo", "leader", "via", "pad",
@@ -137,6 +141,13 @@ def label_font() -> QFont:
     return font
 
 
+def stamp_font() -> QFont:
+    """Return the font of the version stamp (fix_wave_f1.md (d))."""
+    font = QFont(JETBRAINS_MONO)
+    font.setPixelSize(STAMP_PX)
+    return font
+
+
 class GeometryView(QGraphicsView):
     """Draws a GeometryScene; layers in ``hidden`` are left out of the scene, not merely hidden."""
 
@@ -169,6 +180,9 @@ class GeometryView(QGraphicsView):
         self._labels_held = False
         self._font = label_font()
         self._metrics = QFontMetricsF(self._font)
+        self._stamp: str | None = None
+        self._stamp_font = stamp_font()
+        self._stamp_metrics = QFontMetricsF(self._stamp_font)
 
     def show_geometry(
         self,
@@ -176,8 +190,13 @@ class GeometryView(QGraphicsView):
         tokens: ThemeTokens,
         mode: PhaseRenderMode,
         hidden: frozenset[str],
+        stamp: str | None = None,
     ) -> None:
-        """Redraw with new content, theme, render mode or layer visibility; keeps the zoom when the extent stays."""
+        """Redraw with new content, theme, render mode or layer visibility; keeps the zoom when the extent stays.
+
+        ``stamp`` names the outcome of ``geometry`` (REQ-T-14); None while nothing is drawn.
+        """
+        self.set_stamp(stamp)
         if geometry is self._geometry and tokens is self._tokens and mode is self._mode and hidden == self._hidden:
             return
         first = self._geometry is None and geometry is not None
@@ -297,11 +316,10 @@ class GeometryView(QGraphicsView):
     def _text_size(self, label: str) -> tuple[float, float]:
         return self._metrics.horizontalAdvance(label), self._metrics.height()
 
-    def _legend_box_mm(self) -> Box | None:
-        legend = self.legend_rect()
-        if legend.isEmpty():
+    def _box_mm(self, rect: QRectF) -> Box | None:
+        if rect.isEmpty():
             return None
-        corners = self.mapToScene(legend.toAlignedRect()).boundingRect()
+        corners = self.mapToScene(rect.toAlignedRect()).boundingRect()
         return Box(
             x_min_mm=corners.left(), y_min_mm=-corners.bottom(), x_max_mm=corners.right(), y_max_mm=-corners.top()
         )
@@ -317,8 +335,9 @@ class GeometryView(QGraphicsView):
             return
         anchors = [a for _, m in shown for a in m.anchors]
         obstacles = [box for _, m in shown for box in m.pads]
-        if (legend := self._legend_box_mm()) is not None:
-            obstacles.append(legend)
+        obstacles += [
+            box for rect in (self.legend_rect(), self.stamp_rect()) if (box := self._box_mm(rect)) is not None
+        ]
         copper: dict[Phase, list[tuple[float, float]]] = {}
         for _, marks in shown:
             for phase, spots in marks.copper.items():
@@ -420,6 +439,36 @@ class GeometryView(QGraphicsView):
             painter.setPen(QColor(colours["text-1"]))
             painter.drawText(origin, text("shell.legend.phase", phase=phase.value))
 
+    def set_stamp(self, stamp: str | None) -> None:
+        """Show ``stamp`` at the bottom left and end the accessible description with it; labels avoid it once placed."""
+        if stamp == self._stamp:
+            return
+        self._stamp = stamp
+        self.setAccessibleDescription(stamp or "")
+        self.viewport().update()
+
+    def stamp(self) -> str | None:
+        """Return the version stamp drawn on the canvas (UI-32), or None while nothing is drawn."""
+        return self._stamp
+
+    def stamp_rect(self) -> QRectF:
+        """Return the stamp plate in viewport pixels, bottom left; empty without a stamp."""
+        if self._stamp is None:
+            return QRectF()
+        width = self._stamp_metrics.horizontalAdvance(self._stamp) + 2 * STAMP_PAD_PX
+        height = self._stamp_metrics.height() + 2 * STAMP_PAD_PX
+        return QRectF(STAMP_MARGIN_PX, self.viewport().height() - STAMP_MARGIN_PX - height, width, height)
+
+    def _draw_stamp(self, painter: QPainter) -> None:
+        assert self._tokens is not None
+        if self._stamp is None:
+            return
+        plate = self.stamp_rect()
+        painter.fillRect(plate, QColor(self._tokens.colours["canvas"]))
+        painter.setFont(self._stamp_font)
+        painter.setPen(QColor(self._tokens.colours["text-3"]))
+        painter.drawText(plate, Qt.AlignmentFlag.AlignCenter, self._stamp)
+
     def zoom_factor(self) -> float:
         """Return the current scale relative to the fitted view."""
         return self.transform().m11() / self._fit_scale
@@ -502,12 +551,13 @@ class GeometryView(QGraphicsView):
         super().mouseMoveEvent(event)
 
     def drawForeground(self, painter: QPainter, rect: QRectF | QRect) -> None:  # noqa: N802 (Qt override)
-        """Draw the legend, and the focus ring inside the viewport edge while the canvas has focus (AX-03)."""
+        """Draw the legend, the stamp and, with focus, the focus ring inside the viewport edge (AX-03)."""
         if self._tokens is None:
             return
         painter.save()
         painter.resetTransform()
         self._draw_legend(painter)
+        self._draw_stamp(painter)
         painter.restore()
         if not self.hasFocus():
             return

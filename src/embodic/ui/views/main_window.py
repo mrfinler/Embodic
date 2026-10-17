@@ -11,7 +11,7 @@ from functools import partial
 from pathlib import Path
 
 from PySide6.QtCore import QEvent, QObject, QPoint, Qt
-from PySide6.QtGui import QAction, QCloseEvent, QKeySequence, QShortcut
+from PySide6.QtGui import QAction, QCloseEvent, QKeySequence, QPalette, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -62,6 +62,7 @@ from embodic.ui.viewmodels.outcome import (
     board_letters,
     counts_text,
     scene_of_board,
+    stamp_text,
 )
 from embodic.ui.viewmodels.results import (
     CompareViewModel,
@@ -93,6 +94,7 @@ from embodic.ui.views.examples_gallery import ExamplesGallery
 from embodic.ui.views.export_view import ExportDialog
 from embodic.ui.views.focus_order import chain, reading_order, stop_before, takes_tab
 from embodic.ui.views.geometry_view import GeometryView
+from embodic.ui.views.high_contrast import SystemColour, prefers_dark, system_colours
 from embodic.ui.views.layer_panel import LayerPanel
 from embodic.ui.views.new_design_dialog import NewDesignDialog
 from embodic.ui.views.phase_panel import PhasePanel
@@ -140,6 +142,8 @@ class MainWindow(QMainWindow):
         *,
         registry: Registry,
         selftests: WaitingRunner,
+        prefers_high_contrast: Callable[[], bool] = lambda: False,
+        system_palette: Callable[[], QPalette] = QPalette,
     ) -> None:
         super().__init__()
         self.appearance, self.outcome, self.session, self.paths = appearance, outcome, session, paths
@@ -152,7 +156,10 @@ class MainWindow(QMainWindow):
         self.tests_dialog: TestsDialog | None = None
         self._on_close = on_close
         self._os_prefers_dark = os_prefers_dark
-        self.tokens: ThemeTokens = load_theme("light")
+        self._prefers_high_contrast, self._system_palette = prefers_high_contrast, system_palette
+        self._contrast_key: dict[SystemColour, str] | None = None  # system colours applied under high contrast
+        self.tokens: ThemeTokens = load_theme("light")  # the chrome's tokens: system colours under high contrast
+        self.drawing_tokens: ThemeTokens = self.tokens  # the canvas, charts and board swatches keep the theme's
         self.setObjectName("main-window")
         self.setWindowTitle(text("shell.window.title"))
         self.setMinimumSize(*MIN_SIZE_PX)
@@ -183,6 +190,8 @@ class MainWindow(QMainWindow):
         appearance.phase_render_mode.subscribe(
             lambda mode: greyscale.setChecked(mode is PhaseRenderMode.GREYSCALE_HATCH)
         )
+        tooltip = greyscale.toolTip()
+        appearance.high_contrast.subscribe(lambda on: self._show_forced_greyscale(greyscale, tooltip, on))
         self.canvas.cursor_moved.connect(self._show_cursor)
         self.canvas.board_step.connect(outcome.step_board)
         self.canvas.layer_step.connect(outcome.step_layer_solo)
@@ -196,24 +205,32 @@ class MainWindow(QMainWindow):
 
     def _commands(self) -> CommandTable:
         session = self.session
-        return {
+        reads_design: dict[str, Callable[[], None]] = {
             "new_design": self.show_new_design,
             "open_project": self.open_project_dialog,
             "undo": session.undo,
             "redo": session.redo,
-            **{f"set_topology_{t.value}": partial(session.set_topology, t) for t in TopologyKind},
-            **{f"set_connection_{c}": partial(session.edit, "/connection/topology", c) for c in ("star", "delta")},
             "save_project": self.save_project_dialog,
             "show_examples": self.show_examples,
             "compute_now": self.compute_now,
+            **{command: partial(self.show_export, command) for command in PRESETS},
+        }
+        return {
+            # A toolstrip click leaves the focus in a field, so its typed text is committed first (DEF-US11-03).
+            **{command: partial(self._after_commit, run) for command, run in reads_design.items()},
+            **{f"set_topology_{t.value}": partial(session.set_topology, t) for t in TopologyKind},
+            **{f"set_connection_{c}": partial(session.edit, "/connection/topology", c) for c in ("star", "delta")},
             "cycle_theme": self.appearance.cycle_theme,
             "toggle_phase_render_mode": self.appearance.toggle_phase_render_mode,
             "fit_view": self.canvas.fit_view,
             "show_checks": partial(self.show_results_tab, "tab-drc"),
             "show_equations": self.show_equations,
             "show_tests": self.show_tests,
-            **{command: partial(self.show_export, command) for command in PRESETS},
         }
+
+    def _after_commit(self, run: Callable[[], None]) -> None:
+        self.session.commit_typing()
+        run()
 
     def _work_area(self) -> QWidget:
         inspector = QWidget()
@@ -310,7 +327,7 @@ class MainWindow(QMainWindow):
         """Show the failure's board in the picker, then the drawing, then zoom to it (screens.md section 4.1)."""
         self.outcome.select_board(row.board - 1)
         self._show_drawing()
-        locate_on_canvas(self.canvas, row, self.tokens)
+        locate_on_canvas(self.canvas, row, self.drawing_tokens)
 
     def _show_drawing(self) -> None:
         """Bring the "Drawing" tab forward when the canvas is one (compact height, design_spec.md section 5)."""
@@ -327,7 +344,7 @@ class MainWindow(QMainWindow):
             ("F1", self.show_help),
             ("F6", partial(self.cycle_region, 1)),
             ("Shift+F6", partial(self.cycle_region, -1)),
-            ("Ctrl+Shift+N", self.show_examples),
+            ("Ctrl+Shift+N", partial(self._after_commit, self.show_examples)),
             ("Ctrl+Shift+T", self.appearance.cycle_theme),
             *inspector_keys,
             ("Alt+5", partial(self.show_results_tab, "tab-results")),
@@ -676,12 +693,25 @@ class MainWindow(QMainWindow):
         self.setStatusBar(bar)
 
     def apply_theme(self) -> None:
-        """Resolve the theme choice against the OS and restyle the whole application with it."""
-        name = resolve_theme(self.appearance.theme.value, self._os_prefers_dark())
-        self.tokens = load_theme(name)
+        """Resolve the theme choice against the OS and restyle the whole application with it.
+
+        Under high contrast the chrome takes the system colours and the drawing goes greyscale; while the choice is
+        System, the drawing is dark when the system window colour is (fix_wave_f1.md (b), DEF-US11-05).
+        """
         app = QApplication.instance()
         assert isinstance(app, QApplication)
-        style.apply_theme(app, self.tokens)
+        choice = self.appearance.theme.value
+        if self._prefers_high_contrast():
+            app.setPalette(self._system_palette())
+            system = app.palette()
+            self.drawing_tokens = load_theme(resolve_theme(choice, prefers_dark(system)))
+            self.tokens = style.apply_high_contrast(app, self.drawing_tokens, system)
+            self._contrast_key = system_colours(system)
+        else:
+            self.tokens = self.drawing_tokens = load_theme(resolve_theme(choice, self._os_prefers_dark()))
+            style.apply_theme(app, self.tokens)
+            self._contrast_key = None
+        self.appearance.set_high_contrast(self._contrast_key is not None)
         self.toolstrip.apply_theme(self.tokens)
         for region in (self.results_tabs, self.rail_scroll):
             region.setStyleSheet(focus_ring_qss(self.tokens))
@@ -691,6 +721,24 @@ class MainWindow(QMainWindow):
         """Follow an OS light / dark change while the choice is 'system'."""
         if self.appearance.theme.value is ThemeName.SYSTEM:
             self.apply_theme()
+
+    def on_os_contrast_changed(self) -> None:
+        """Follow Windows high contrast turning on or off."""
+        self.apply_theme()
+
+    def event(self, event: QEvent) -> bool:
+        """Under high contrast, restyle when the system colours change; the app's own palette change is no change."""
+        if (
+            event.type() == QEvent.Type.ApplicationPaletteChange
+            and self._contrast_key is not None
+            and system_colours(self._system_palette()) != self._contrast_key
+        ):
+            self.apply_theme()
+        return super().event(event)
+
+    def _show_forced_greyscale(self, action: QAction, tooltip: str, on: bool) -> None:
+        action.setEnabled(not on)
+        action.setToolTip(f"{tooltip} {text('act-greyscale.high-contrast')}" if on else tooltip)
 
     def _render(self) -> None:
         state: OutcomeState = self.outcome.state.value
@@ -715,7 +763,7 @@ class MainWindow(QMainWindow):
         scene = None if shown is None else shown.scene
         letters = board_letters(scene)
         board = self.outcome.board.value if self.outcome.board.value in range(len(letters)) else None
-        self.toolstrip.show_boards(letters, board, self.tokens, self.appearance.phase_render_mode.value)
+        self.toolstrip.show_boards(letters, board, self.drawing_tokens, self.appearance.phase_render_mode.value)
         if shown is None:
             self.status["st-drc"].setText(text("shell.st-drc.none"))
             self.status["st-counts"].setText("")
@@ -724,9 +772,10 @@ class MainWindow(QMainWindow):
         self._sync_layer_boxes(scene.layers if scene else ())
         self.canvas.show_geometry(
             None if scene is None else scene_of_board(scene, board),
-            self.tokens,
+            self.drawing_tokens,
             self.appearance.phase_render_mode.value,
             self.outcome.hidden_layers.value,
+            None if shown is None or scene is None else stamp_text(shown.outcome),
         )
 
     def _show_counts(self, shown: OutcomeReady) -> None:
@@ -752,8 +801,8 @@ class MainWindow(QMainWindow):
         self.results_tab.set_tokens(self.tokens)
         self.results_tab.set_computing(isinstance(state, OutcomeComputing))
         self.drc_tab.show_table(table, self.tokens)
-        self.back_emf_tab.show_outcome(outcome, self.tokens, mode)
-        self.torque_speed_tab.show_outcome(outcome, self.tokens, mode)
+        self.back_emf_tab.show_outcome(outcome, self.drawing_tokens, mode)
+        self.torque_speed_tab.show_outcome(outcome, self.drawing_tokens, mode)
         self.compare_tab.show_outcome(outcome, self.tokens)
 
     def _sync_layer_boxes(self, layers: tuple[str, ...]) -> None:
@@ -814,11 +863,15 @@ class MainWindow(QMainWindow):
         return dialog
 
     def save_project_dialog(self) -> None:
-        """Ask for a file name and save the open project."""
-        if self.outcome.project is None:
+        """Ask for a file name and save what the inspector holds, or the project the shell opened directly."""
+        if self.session.document is None and self.outcome.project is None:
             return
         name, _ = QFileDialog.getSaveFileName(self, text("shell.save.title"), "", text("shell.save.filter"))
-        if name:
+        if not name:
+            return
+        if self.session.document is not None:
+            self.session.save_project(Path(name))
+        else:
             self.outcome.save_project(Path(name))
 
     def save_recovery(self, correlation_id: str) -> Path | None:

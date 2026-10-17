@@ -29,6 +29,7 @@ from embodic.io.report import write_report_pdf
 from embodic.io.svg_writer import write_svg
 from embodic.outcome import ComputeOutcome
 from embodic.ui.strings import text
+from embodic.ui.viewmodels.outcome import design_hash12
 from embodic.ui.viewmodels.results import result_rows
 
 BUNDLE: Literal["zip"] = "zip"
@@ -155,7 +156,9 @@ class ExportViewModel:
         if outcome is None:
             return ()
         v = outcome.versions
-        stamp = text("export.check.stamp", embodic=v.embodic, registry=v.registry, hash=outcome.design_hash[:12])
+        stamp = text(
+            "export.check.stamp", embodic=v.embodic, registry=v.registry, hash=design_hash12(outcome.design_hash)
+        )
         if outcome.drc is None:
             drc = ChecklistItem(key="drc", text=text("export.check.drc-not-run"), state="fail")
         elif drc_passed(outcome):

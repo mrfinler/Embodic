@@ -57,15 +57,18 @@ class ComputeWorker(QObject):
 
     def submit(self, request: ComputeRequest) -> None:
         """Start a request after cancelling the one before it."""
-        if self._cancel is not None:
-            self._cancel.cancel()
+        self.cancel()
         self._cancel = CancelToken()
         self._pool.start(_Job(self, request, self._cancel))
 
-    def shutdown(self) -> None:
-        """Cancel the running request and wait for the thread to finish."""
+    def cancel(self) -> None:
+        """Cancel the running request; its job ends at its next check of the token."""
         if self._cancel is not None:
             self._cancel.cancel()
+
+    def shutdown(self) -> None:
+        """Cancel the running request and wait for the thread to finish."""
+        self.cancel()
         self._pool.waitForDone()
 
 

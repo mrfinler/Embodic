@@ -79,6 +79,13 @@ def test_checklist_states_stamp_drc_staleness_and_assumption_count(d08, wave):
     assert wave_items["stale"].state == "warn"
 
 
+@pytest.mark.req("REQ-T-14")
+def test_checklist_stamp_names_twelve_hex_digits_of_the_design_hash(d08):
+    """DEF-US11-01: catches the stamp printing "sha256:32791", the prefix and 5 digits, instead of 12 hex digits."""
+    stamp = next(i for i in vm_for(d08).checklist() if i.key == "stamp")
+    assert stamp.text.endswith(", design 327919a0eef5")
+
+
 @pytest.mark.req("REQ-F-33")
 @pytest.mark.parametrize(
     ("formats", "folder", "problem"),

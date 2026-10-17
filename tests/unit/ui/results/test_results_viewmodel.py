@@ -95,6 +95,8 @@ def test_ui33_ke_disclosure_states_e_edge_at_least_assumption_and_the_10_percent
     assert limitations == (
         "EC-05 radial edge leakage (graded): e_edge is at least 1.74\u00a0% (lower bound). Badge cap above 10\u00a0% "
         "(assumption). Calibration inferred; transfer to this design assumption.",
+        "OR-07 and OR-08 are not independent of EC-05. They compare with data from the source that calibrates EC-05, "
+        "so they cannot confirm EC-05. OR-01 is the independent check.",
     )
 
 
