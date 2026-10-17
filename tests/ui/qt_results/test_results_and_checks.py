@@ -102,6 +102,21 @@ def test_ui33_ke_disclosure_in_the_window_shows_e_edge_at_least_assumption_and_t
     assert QGuiApplication.clipboard().text() == window.results.copy_trace("ke_phase_v_s_per_rad")
 
 
+@pytest.mark.req("REQ-T-16")
+def test_t16_6_ke_disclosure_in_the_window_holds_the_oracle_dependency_note(make_window, load, qtbot):
+    """T16-6 (fix_wave_f1.md (c)). Catches the note built by the view-model but not shown in the opened disclosure."""
+    window = load(make_window(), D08)
+    card = window.results_tab.cards["ke"]
+    qtbot.mouseClick(card.how_toggle, Qt.MouseButton.LeftButton)
+    note = (
+        "OR-07 and OR-08 are not independent of EC-05. They compare with data from the source that calibrates EC-05, "
+        "so they cannot confirm EC-05. OR-01 is the independent check."
+    )
+    how = window.findChild(QWidget, "res-ke-how")
+    assert how.isVisible()
+    assert sum(note in label.text() for label in how.findChildren(QLabel)) == 1
+
+
 @pytest.mark.req("REQ-N-26")
 @pytest.mark.parametrize("animations", [False, True])
 def test_ui31_disclosure_slides_only_when_the_os_allows_animation(make_window, load, qtbot, animations):

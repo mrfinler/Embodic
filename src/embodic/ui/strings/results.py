@@ -62,6 +62,16 @@ STRINGS: Mapping[str, str] = {
         "{code} {name}: {metric} is {bound} {value} ({bound_name}). Badge cap above {threshold} ({threshold_status}). "
         "Calibration {calibration_status}; transfer to this design {transfer_status}."
     ),
+    "results.how.oracles.dependent-many": (
+        "{oracles} are not independent of {code}. They compare with data from the source that calibrates {code}, "
+        "so they cannot confirm {code}."
+    ),
+    "results.how.oracles.dependent-one": (
+        "{oracles} is not independent of {code}. It compares with data from the source that calibrates {code}, "
+        "so it cannot confirm {code}."
+    ),
+    "results.how.oracles.independent-many": " {oracles} are the independent checks.",
+    "results.how.oracles.independent-one": " {oracles} is the independent check.",
     "results.how.source": "{id}: {document}, {location} ({status})",
     "results.how.source-missing": "{id}: not in the evidence register",
     "results.eq.tag-input": "input",
@@ -156,6 +166,7 @@ STRINGS: Mapping[str, str] = {
     "guide.eq.sources": "Sources",
     "guide.eq.assumptions": "Dominant assumptions",
     "guide.eq.checks": "Validity checks",
+    "guide.eq.oracles": "Oracles",
     "guide.eq.tests": "Tests",
     "guide.eq.constants": "Constants",
     "guide.eq.implementation": "Implementation",

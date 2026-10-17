@@ -16,7 +16,7 @@ from embodic.errors import IssueCategory, Severity, ValidationIssue, message_for
 from embodic.model.vocabulary import Phase
 from embodic.outcome import ComputeOutcome
 from embodic.physics.waveform import XCOIL_WAVEFORM_SAMPLES, emf_waveform_v
-from embodic.results import QUANTITY_LABELS, AnalysisResult, Registry, Traceable
+from embodic.results import QUANTITY_LABELS, AnalysisResult, Registry, Traceable, ValidityCheckSpec
 from embodic.results.formatting import (
     MINUS,
     NOT_A_NUMBER,
@@ -146,12 +146,44 @@ def assumed_input_text(a: AssumedInput) -> str:
     return f"{head} ({reason}{dominant}; {a.label})"
 
 
+def _check_spec(flag: ValidityFlag, registry: Registry) -> ValidityCheckSpec | None:
+    return next((c for c in registry.equation(flag.eq_id).validity_checks if c.id == flag.code), None)
+
+
+def _id_list(ids: Sequence[str]) -> str:
+    """Join IDs as "A", "A and B" or "A, B, and C"."""
+    if len(ids) < 3:
+        return " and ".join(ids)
+    return f"{', '.join(ids[:-1])}, and {ids[-1]}"
+
+
+def _number(ids: Sequence[str]) -> str:
+    return "one" if len(ids) == 1 else "many"
+
+
+def oracle_note(spec: ValidityCheckSpec) -> str | None:
+    """Return the line that marks the oracles calibrated by the same source as a check (REQ-T-16); None without any."""
+    dependent, independent = spec.dependent_oracles, spec.independent_oracles
+    if not dependent:
+        return None
+    note = text(f"results.how.oracles.dependent-{_number(dependent)}", oracles=_id_list(dependent), code=spec.id)
+    if independent:
+        note += text(f"results.how.oracles.independent-{_number(independent)}", oracles=_id_list(independent))
+    return note
+
+
+def _with_oracle_note(line: str, flag: ValidityFlag, registry: Registry) -> tuple[str, ...]:
+    spec = _check_spec(flag, registry)
+    note = None if spec is None else oracle_note(spec)
+    return (line,) if note is None else (line, note)
+
+
 def check_text(flag: ValidityFlag, registry: Registry) -> str:
     """Return a validity flag in words; a registry check states its metric, bound, cap and the status of each part.
 
     The metric and the threshold of a registry validity check are fractions (EC-05 e_edge), so they print as percent.
     """
-    spec = next((c for c in registry.equation(flag.eq_id).validity_checks if c.id == flag.code), None)
+    spec = _check_spec(flag, registry)
     if spec is None or flag.metric is None:
         return f"{flag.code}: {flag.message}"
     metric_name = spec.metric.partition("=")[0].strip()
@@ -224,14 +256,22 @@ def disclosure(row: ResultRow, registry: Registry) -> tuple[DisclosureSection, .
     """
     t = row.traceable
     equations = tuple(f"{eq}: {registry.equation(eq).name}. {registry.equation(eq).formula}" for eq in t.eq_ids)
-    limitations = [check_text(f, registry) for f in t.validity if f.effect is ValidityEffect.LIMITATION]
+    limitations = [
+        line
+        for f in t.validity
+        if f.effect is ValidityEffect.LIMITATION
+        for line in _with_oracle_note(check_text(f, registry), f, registry)
+    ]
     if t.label is not None:
         limitations.append(text("results.how.label", label=t.label))
     validity = [text("results.how.status", status=t.status, reasons="; ".join(t.status_reasons))]
     validity += [
-        text("results.how.cap", code=f.code, message=check_text(f, registry))
+        line
         for f in t.validity
         if f.effect is ValidityEffect.CAP
+        for line in _with_oracle_note(
+            text("results.how.cap", code=f.code, message=check_text(f, registry)), f, registry
+        )
     ]
     if t.tolerance is not None:
         validity.append(text("results.how.tolerance", against=t.tolerance.against, source=t.tolerance.source_ref))
@@ -711,8 +751,9 @@ def equation_topic(eq_id: str, registry: Registry) -> GuideTopic:
             "results.how.source", id=ev_id, document=entry.document, location=entry.location, status=entry.status
         )
 
-    checks = [
-        text(
+    checks: list[tuple[str, str]] = []
+    for c in e.validity_checks:
+        line = text(
             "guide.eq.check",
             id=c.id,
             name=c.name,
@@ -720,8 +761,10 @@ def equation_topic(eq_id: str, registry: Registry) -> GuideTopic:
             threshold=f"{c.threshold:g}",
             threshold_status=c.threshold_status,
         )
-        for c in e.validity_checks
-    ]
+        checks.append(("guide.eq.checks", line))
+        note = oracle_note(c)
+        if note is not None:
+            checks.append(("guide.eq.oracles", note))
     constants = [
         text(
             "guide.eq.constant",
@@ -741,7 +784,7 @@ def equation_topic(eq_id: str, registry: Registry) -> GuideTopic:
         ("guide.eq.label", e.label or ""),
         *(("guide.eq.sources", source(ev)) for ev in e.sources),
         ("guide.eq.assumptions", "\n".join(e.dominant_assumptions)),
-        *(("guide.eq.checks", c) for c in checks),
+        *checks,
         *(("guide.eq.tests", t) for t in e.tests),
         *(("guide.eq.constants", c) for c in constants),
         ("guide.eq.implementation", e.implementation or ""),
