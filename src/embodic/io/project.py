@@ -58,7 +58,8 @@ TOP_LEVEL_KEYS_V1 = frozenset(
         "ui",
     }
 )
-TOP_LEVEL_KEYS = TOP_LEVEL_KEYS_V1 | {"engine_version", "registry_version"}
+VERSION_STAMP_KEYS = ("engine_version", "registry_version")
+TOP_LEVEL_KEYS = TOP_LEVEL_KEYS_V1 | set(VERSION_STAMP_KEYS)
 _TOP_LEVEL_KEYS_BY_VERSION = {1: TOP_LEVEL_KEYS_V1, 2: TOP_LEVEL_KEYS}
 _ORIGIN_KEYS = frozenset({"example_id", "example_sha256"})
 _EXAMPLE_KEY = "example"  # optional: the gallery metadata of a packaged example file, never written by save_project
@@ -300,6 +301,20 @@ def _unknown_keys(document: Mapping[str, Any]) -> list[str]:
     return unknown
 
 
+def _mistyped_stamps(document: Mapping[str, Any]) -> list[str]:
+    """Return the pointer of each version stamp this file's schema allows whose value is not a string.
+
+    project.v2.schema.json types both stamps `string`. A v1 file cannot hold them, and `_unknown_keys` already names
+    them, so only the keys of the file's own version are checked.
+    """
+    allowed = _TOP_LEVEL_KEYS_BY_VERSION[document["schema_version"]]
+    return [
+        f"/{key}"
+        for key in VERSION_STAMP_KEYS
+        if key in allowed and key in document and not isinstance(document[key], str)
+    ]
+
+
 def _malformed(document: object) -> str | None:
     """Return the pointer of the first top-level key that breaks the v1 file shape, or None."""
     if not isinstance(document, dict) or document.get("format") != PROJECT_FORMAT:
@@ -327,8 +342,10 @@ def parse_project(text: str) -> tuple[ProjectFile | LoadedDraft | None, tuple[Va
         return None, (_issue("INVALID_PROJECT_FILE", (), value=str(error)),)
     if (pointer := _malformed(document)) is not None:
         return _refuse(pointer)
-    if document["schema_version"] <= PROJECT_SCHEMA_VERSION and (unknown := _unknown_keys(document)):
-        return None, tuple(_issue("INVALID_PROJECT_FILE", (pointer,)) for pointer in unknown)
+    if document["schema_version"] <= PROJECT_SCHEMA_VERSION and (
+        refused := [*_unknown_keys(document), *_mistyped_stamps(document)]
+    ):
+        return None, tuple(_issue("INVALID_PROJECT_FILE", (pointer,)) for pointer in refused)
     migrated, issues = migrate(document)
     if migrated is None:
         return None, issues

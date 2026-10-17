@@ -129,3 +129,50 @@ def test_a_file_from_a_newer_format_is_refused_as_newer_even_when_it_holds_keys_
     loaded, issues = parse_project(json.dumps(document))
     assert loaded is None
     assert [i.code for i in issues] == ["INVALID_SCHEMA_VERSION_NEWER"]
+
+
+@pytest.mark.req("REQ-T-07")
+@pytest.mark.parametrize("key", NEW_KEYS)
+@pytest.mark.parametrize("stamp", [5, None, ["0.0.1"], {"v": "0.0.1"}], ids=["int", "null", "list", "object"])
+def test_a_v2_file_whose_version_stamp_is_not_a_string_is_refused_with_the_key_pointer(
+    tmp_path: Path, key: str, stamp: object
+) -> None:
+    """Catches a loader that reads a stamp project.v2.schema.json types as a string and passes any other type."""
+    document = _saved(tmp_path)
+    document[key] = stamp
+    loaded, issues = parse_project(json.dumps(document))
+    assert loaded is None
+    assert [(i.code, i.pointers) for i in issues] == [("INVALID_PROJECT_FILE", (f"/{key}",))]
+
+
+@pytest.mark.req("REQ-T-07")
+@pytest.mark.parametrize("key", NEW_KEYS)
+def test_a_v2_file_with_string_version_stamps_loads_without_notice(tmp_path: Path, key: str) -> None:
+    """Catches a type check that refuses the strings embodic writes, such as the registry text `v1+<hex>.<hex>`."""
+    document = _saved(tmp_path)
+    assert isinstance(document[key], str)
+    loaded, issues = parse_project(json.dumps(document))
+    assert isinstance(loaded, ProjectFile)
+    assert issues == ()
+
+
+@pytest.mark.req("REQ-F-15")
+@pytest.mark.parametrize("key", NEW_KEYS)
+def test_a_v1_file_with_a_mistyped_v2_key_reports_the_key_once(key: str) -> None:
+    """Catches the unknown-key check and the type check both reporting one key, which doubles the issue."""
+    document = _v1_document()
+    document[key] = 5
+    loaded, issues = parse_project(json.dumps(document))
+    assert loaded is None
+    assert [(i.code, i.pointers) for i in issues] == [("INVALID_PROJECT_FILE", (f"/{key}",))]
+
+
+@pytest.mark.req("REQ-F-15")
+def test_a_newer_format_file_with_a_stamp_of_another_type_is_refused_as_newer(tmp_path: Path) -> None:
+    """Catches a type check that runs before the version check: a later format may type the stamp differently."""
+    document = _saved(tmp_path)
+    document["schema_version"] = PROJECT_SCHEMA_VERSION + 1
+    document["engine_version"] = {"name": "embodic", "version": "9.0.0"}
+    loaded, issues = parse_project(json.dumps(document))
+    assert loaded is None
+    assert [i.code for i in issues] == ["INVALID_SCHEMA_VERSION_NEWER"]
