@@ -28,3 +28,27 @@ def test_n17_local_socket_pairs_still_work():
     with left, right:
         left.sendall(b"ping")
         assert right.recv(4) == b"ping"
+
+
+def test_n17_a_listen_and_connect_socketpair_works_under_the_guard(monkeypatch):
+    """Catches a guard that refuses the loopback connect inside socket.socketpair, as CPython builds it on Windows.
+
+    There `socket.socketpair` is `_fallback_socketpair` (Lib/socket.py): listen on 127.0.0.1, connect to that port,
+    accept. Linux uses the native call, so this test binds the fallback by hand to run the Windows code path.
+    """
+    monkeypatch.setattr(socket, "socketpair", socket._fallback_socketpair)
+    left, right = socket.socketpair()
+    with left, right:
+        left.sendall(b"ping")
+        assert right.recv(4) == b"ping"
+        right.sendall(b"pong")
+        assert left.recv(4) == b"pong"
+
+
+def test_n17_a_direct_connect_to_a_listening_loopback_port_is_still_refused():
+    """Catches a guard that admits loopback in general: here a listener is up, so an unguarded connect would succeed."""
+    with socket.socket() as listener:
+        listener.bind(("127.0.0.1", 0))
+        listener.listen()
+        with socket.socket() as sock, pytest.raises(AssertionError, match="network connection attempted"):
+            sock.connect(listener.getsockname())
