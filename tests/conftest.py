@@ -3,6 +3,7 @@
 import json
 import os
 import shutil
+import socket
 import tempfile
 from pathlib import Path
 
@@ -34,6 +35,21 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         default=None,
         help="write one JSON record per test (node id, REQ, EQ and EQT markers, outcome) for tools/trace_matrix.py",
     )
+
+
+def _refuse_connection(*args: object, **kwargs: object) -> None:
+    raise AssertionError(f"network connection attempted during a test: {args!r} (REQ-N-17)")
+
+
+@pytest.fixture(autouse=True)
+def _no_network(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Refuse `socket.socket.connect` and `socket.create_connection` in every test (REQ-N-17, V3-01 gap N-17).
+
+    PK-07 scans imports and cannot see a dependency or a code path that connects at run time. The error is not an
+    OSError, so a caller that retries on connection errors cannot swallow it. `socket.socketpair` is unaffected.
+    """
+    monkeypatch.setattr(socket.socket, "connect", _refuse_connection)
+    monkeypatch.setattr(socket, "create_connection", _refuse_connection)
 
 
 SHIPPED_REGISTRIES = pytest.StashKey[tuple[pytest.MonkeyPatch, Path]]()
