@@ -361,6 +361,11 @@ def design_hash12(design_hash: str) -> str:
     return design_hash.removeprefix("sha256:")[:12]
 
 
+def stamp_text(outcome: ComputeOutcome) -> str:
+    """Return the version stamp of a drawn outcome; the separator matches the SVG footer (fix_wave_f1.md (d))."""
+    return text("shell.canvas.stamp", embodic=outcome.versions.embodic, hash12=design_hash12(outcome.design_hash))
+
+
 def ready_state(outcome: ComputeOutcome) -> OutcomeReady:
     """Build what the shell shows of an outcome; the worker calls this off the GUI thread."""
     return OutcomeReady(outcome=outcome, scene=geometry_scene(outcome))

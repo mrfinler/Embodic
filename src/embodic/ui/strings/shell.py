@@ -86,6 +86,7 @@ STRINGS: Mapping[str, str] = {
     "shell.results-rail.empty": "Results appear when every required field is valid.",
     "shell.layers.title": "Layers",
     "shell.canvas.blank": "The drawing appears when every required field is valid.",
+    "shell.canvas.stamp": "embodic {embodic} | design {hash12}",
     "shell.sum-drc.label": "DRC",
     "shell.sum-drc.pass": "Passed",
     "shell.sum-drc.not-run": "Not run",

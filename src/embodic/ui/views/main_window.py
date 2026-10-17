@@ -62,6 +62,7 @@ from embodic.ui.viewmodels.outcome import (
     board_letters,
     counts_text,
     scene_of_board,
+    stamp_text,
 )
 from embodic.ui.viewmodels.results import (
     CompareViewModel,
@@ -727,6 +728,7 @@ class MainWindow(QMainWindow):
             self.tokens,
             self.appearance.phase_render_mode.value,
             self.outcome.hidden_layers.value,
+            None if shown is None or scene is None else stamp_text(shown.outcome),
         )
 
     def _show_counts(self, shown: OutcomeReady) -> None:
