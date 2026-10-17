@@ -11,11 +11,12 @@ Tolerances (V3-01_gaps_a.md F11-1): the kernel class rel 1e-12 for EQ-22 (regist
 class rel 1e-9 for mass, the thermal estimate and the circulating loss.
 
 Fix wave F1 T-A4 adds one more fixture, Xcoil's outlinePrims and outlineArea for a rounded octagon. It pins the exact
-board area on corner arcs.
+board area on corner arcs, and the rounded polygon that build_outline builds (D-056h).
 """
 
 import dataclasses
 import json
+import math
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
@@ -23,11 +24,13 @@ from typing import Any
 import numpy as np
 import pytest
 from harness.codec import load_area
-from harness.compare import INTEGRATED, KERNEL, compare_scalar
+from harness.compare import INTEGRATED, KERNEL, Tolerance, compare_scalar
 from m1_layout.xcoil_map import layout_from_xcoil, prim_from_record
 from tests.unit.drc.layouts import layout
 
+from embodic.geometry.outline import build_outline
 from embodic.geometry.primitives import Arc, Line, Primitive
+from embodic.model.outline import OutlineSpec, PolygonOutline
 from embodic.physics import analyse
 from embodic.physics.analyse import board_area_mm2
 from embodic.physics.circuit import T_MM2_TO_V_S_PER_RAD, delta_circulating_loss_w
@@ -44,6 +47,8 @@ DELTA_CASE = "connection-sector-15c14p-delta"
 OUTLINE_CASE = "outline-polygon-8-r5"
 # fix_wave_f1.md T-A4: n a^2 tan(pi/n) - n r_c^2 (tan(pi/n) - pi/n) with n 8, a 50 mm, r_c 5 mm (engine.js l.1097).
 XCOIL_ROUNDED_OCTAGON_AREA_MM2 = 8279.968351327027
+COORDINATE_MM = Tolerance("coordinate_mm", rel=0.0, abs=1e-9)  # far above the 1e-14 rounding of two vertex formulas
+ANGLE_RAD = Tolerance("angle_rad", rel=0.0, abs=1e-12)
 
 
 def _output(case_id: str) -> Mapping[str, Any]:
@@ -192,6 +197,41 @@ def test_board_area_of_xcoils_rounded_octagon_equals_xcoil_outline_area() -> Non
     for name, area in areas.items():
         verdict = compare_scalar(x["area"], area, KERNEL)
         assert verdict.ok, f"{name}: {verdict}"
+
+
+def _geometry(p: Primitive) -> list[tuple[float, Tolerance]]:
+    """Return the numbers that place a primitive, each with the tolerance of its unit."""
+    if isinstance(p, Arc):
+        return [
+            (p.cx_mm, COORDINATE_MM),
+            (p.cy_mm, COORDINATE_MM),
+            (p.r_mm, COORDINATE_MM),
+            (p.start_rad, ANGLE_RAD),
+            (p.sweep_rad, ANGLE_RAD),
+        ]
+    return [(p.x1_mm, COORDINATE_MM), (p.y1_mm, COORDINATE_MM), (p.x2_mm, COORDINATE_MM), (p.y2_mm, COORDINATE_MM)]
+
+
+def test_built_polygon_with_rounded_corners_is_the_outline_of_xcoil() -> None:
+    """Catches DEF-UE17-01: build_outline ignored corner_radius_mm, sharp corners in the exports and the mass.
+
+    embodic puts a flat across +x at rotation 0 and Xcoil puts a vertex there, so Xcoil's rotation 0 is embodic's
+    -pi/n. The sharp octagon is 4.30 mm^2 larger than this one, 5.2e-4 relative.
+    """
+    x = _output(OUTLINE_CASE)
+    spec = OutlineSpec(
+        board=PolygonOutline(sides=8, across_flats_mm=100.0, corner_radius_mm=5.0, rotation_rad=-math.pi / 8),
+        bore=None,
+    )
+    built = build_outline(spec, (0.0, 0.0)).outer
+    xcoil = [prim_from_record(r) for r in x["prims"]]
+    assert [type(p) for p in built] == [type(p) for p in xcoil]
+    for k, (b, g) in enumerate(zip(built, xcoil, strict=True)):
+        for (golden, tolerance), (actual, _) in zip(_geometry(g), _geometry(b), strict=True):
+            verdict = compare_scalar(golden, actual, tolerance)
+            assert verdict.ok, f"primitive {k}: {verdict}"
+    verdict = compare_scalar(x["area"], board_area_mm2(layout(outer=built)), KERNEL)
+    assert verdict.ok, str(verdict)
 
 
 def test_every_fixture_of_the_area_is_compared() -> None:

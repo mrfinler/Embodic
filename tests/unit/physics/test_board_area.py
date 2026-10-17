@@ -55,3 +55,22 @@ def test_board_area_of_a_built_outline_equals_its_closed_form(spec: OutlineSpec,
     area = board_area_mm2(layout(outer=outline.outer, cutouts=outline.cutouts, holes=outline.holes))
     assert area == pytest.approx(expected_mm2, rel=1e-12)
     assert math.isfinite(area)
+
+
+@pytest.mark.parametrize(("sides", "rotation_rad"), [(8, 0.0), (8, 0.3), (12, -2.5), (4, 1.0)])
+def test_board_area_of_a_rounded_polygon_equals_its_closed_form(sides: int, rotation_rad: float) -> None:
+    """Catches a corner arc on the wrong side of its edges and an area that depends on the polygon's rotation.
+
+    A wrong-side arc moves the area by 2 r_c^2 (tan(pi/n) - pi/n) per corner.
+    """
+    apothem_mm, corner_mm = 50.0, 5.0
+    spec = OutlineSpec(
+        board=PolygonOutline(
+            sides=sides, across_flats_mm=2 * apothem_mm, corner_radius_mm=corner_mm, rotation_rad=rotation_rad
+        ),
+        bore=None,
+    )
+    outline = build_outline(spec, (0.0, 0.0))
+    half = math.pi / sides
+    expected_mm2 = sides * apothem_mm**2 * math.tan(half) - sides * corner_mm**2 * (math.tan(half) - half)
+    assert board_area_mm2(layout(outer=outline.outer)) == pytest.approx(expected_mm2, rel=1e-12)
