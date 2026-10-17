@@ -13,6 +13,7 @@ from PySide6.QtGui import QColor, QFont, QPalette
 from PySide6.QtWidgets import QApplication, QLabel, QLineEdit, QWidget
 from tests.ui.qt_shell.conftest import D08
 
+from embodic.ui.app import os_prefers_high_contrast
 from embodic.ui.theme import load_theme, themes_dir
 from embodic.ui.viewmodels.appearance import PhaseRenderMode
 from embodic.ui.views.geometry_view import DATA_KIND, DATA_PHASE
@@ -230,3 +231,12 @@ def test_glyphs_are_written_in_the_mapped_colours():
         name: re.search(r'stroke="(#[0-9a-f]{6})"', (folder / name).read_text()).group(1) for name in GLYPH_TOKENS
     }
     assert strokes == {"check.svg": "#000000", "chevron-down.svg": "#ffffff", "chevron-down-disabled.svg": "#a6a6a6"}
+
+
+@pytest.mark.req("REQ-N-23")
+def test_the_default_contrast_seam_reads_the_qt_property_again_and_again():
+    """Catches the default seam raising "QAccessibilityHints already deleted" once its QStyleHints wrapper is gone.
+
+    Offscreen Qt reports NoPreference (fix_wave_f1.md (b), Detection).
+    """
+    assert [os_prefers_high_contrast() for _ in range(3)] == [False, False, False]

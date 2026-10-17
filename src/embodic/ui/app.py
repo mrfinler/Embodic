@@ -107,7 +107,10 @@ def os_prefers_dark() -> bool:
 
 def os_prefers_high_contrast() -> bool:
     """Return True while the OS asks for high contrast (a Windows 11 contrast theme; Qt 6.10 and later)."""
-    return QGuiApplication.styleHints().accessibility().contrastPreference() == Qt.ContrastPreference.HighContrast
+    # The QStyleHints wrapper must outlive the call: a chained styleHints().accessibility() raises "Internal C++
+    # object (QAccessibilityHints) already deleted" in PySide6 6.11.2.
+    hints = QGuiApplication.styleHints()
+    return hints.accessibility().contrastPreference() == Qt.ContrastPreference.HighContrast
 
 
 class Shell(NamedTuple):
@@ -153,8 +156,9 @@ def create_shell(
     debounce.setParent(window)
     worker.finished.connect(outcome.on_finished)
     worker.failed.connect(window.on_compute_failed)
-    QGuiApplication.styleHints().colorSchemeChanged.connect(window.on_os_scheme_changed)
-    QGuiApplication.styleHints().accessibility().contrastPreferenceChanged.connect(window.on_os_contrast_changed)
+    hints = QGuiApplication.styleHints()
+    hints.colorSchemeChanged.connect(window.on_os_scheme_changed)
+    hints.accessibility().contrastPreferenceChanged.connect(window.on_os_contrast_changed)
     return Shell(window, worker)
 
 
