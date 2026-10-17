@@ -27,6 +27,7 @@ from embodic.ui.theme import ThemeName
 from embodic.ui.viewmodels.appearance import AppearanceViewModel
 from embodic.ui.viewmodels.outcome import OutcomeReady, OutcomeViewModel
 from embodic.ui.viewmodels.session import AUTOSAVE_NAME, DesignSession
+from embodic.ui.views.debounce import QtDebounce
 from embodic.ui.views.main_window import MainWindow, ShellPaths, redact_home
 from embodic.ui.workers import ComputeFn, ComputeWorker, SelfTestWorker
 
@@ -121,7 +122,8 @@ def create_shell(
     worker = ComputeWorker(compute_fn)
     selftests = SelfTestWorker()
     outcome = OutcomeViewModel(worker)
-    session = DesignSession(outcome, autosave_path=paths.recovery_dir / AUTOSAVE_NAME)
+    debounce = QtDebounce()
+    session = DesignSession(outcome, autosave_path=paths.recovery_dir / AUTOSAVE_NAME, debounce=debounce)
     window = MainWindow(
         AppearanceViewModel(store),
         outcome,
@@ -134,6 +136,7 @@ def create_shell(
     )
     worker.setParent(window)
     selftests.setParent(window)
+    debounce.setParent(window)
     worker.finished.connect(outcome.on_finished)
     worker.failed.connect(window.on_compute_failed)
     QGuiApplication.styleHints().colorSchemeChanged.connect(window.on_os_scheme_changed)

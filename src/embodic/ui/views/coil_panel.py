@@ -10,6 +10,7 @@ from functools import partial
 
 import shiboken6
 from PySide6.QtCore import QEvent, QObject, QPoint, Qt
+from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import (
     QButtonGroup,
     QCheckBox,
@@ -221,7 +222,9 @@ class FieldEditor(QWidget):
             return check
         edit = QLineEdit()
         edit.setMinimumWidth(MIN_INPUT_PX)
+        edit.textEdited.connect(lambda typed: self.session.type_text(self.pointer, parse_text(self.spec, typed)))
         edit.editingFinished.connect(self._commit_text)
+        edit.installEventFilter(self)
         if spec.kind is FieldKind.PROPERTY and spec.value_type is ValueType.FLOAT:
             edit.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
             edit.customContextMenuRequested.connect(lambda pos: self._show_context_menu(edit, pos))
@@ -262,8 +265,24 @@ class FieldEditor(QWidget):
         assert isinstance(self.input, QLineEdit)
         typed = self.input.text()
         if typed.strip() == self._shown:
+            self.session.revert_typing()
             return
         self._commit(parse_text(self.spec, typed))
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802 (Qt override)
+        """Esc in a field with uncommitted text puts the committed text back; focus stays (design_spec.md 10)."""
+        if (
+            watched is self.input
+            and event.type() == QEvent.Type.KeyPress
+            and isinstance(event, QKeyEvent)
+            and event.key() == Qt.Key.Key_Escape
+            and isinstance(self.input, QLineEdit)
+            and self.input.text() != self._shown
+        ):
+            self.input.setText(self._shown)
+            self.session.revert_typing()
+            return True
+        return False
 
     def show_row(self, row: FieldRow, topology: str) -> None:
         """Show what the session says about this field."""

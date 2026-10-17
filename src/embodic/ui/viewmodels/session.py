@@ -14,16 +14,16 @@ import dataclasses
 import functools
 import logging
 import math
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, TypeAlias
+from typing import Literal, Protocol, TypeAlias
 
 from embodic.errors import Suggestion, ValidationIssue
 from embodic.geometry.details import SerpentineDetail, SpiralDetail, WaveDetail
 from embodic.io.examples import list_examples, packaged_example
 from embodic.io.examples import load_example as load_packaged_example
-from embodic.io.project import LoadedDraft, ProjectFile, load_project, project_provenance, save_project
+from embodic.io.project import LoadedDraft, ProjectFile, load_project, save_project
 from embodic.model.design import DesignParameters
 from embodic.model.draft import DesignDraft, DraftIncomplete, blank_draft, derive_layer_pairs, draft_from_design
 from embodic.model.draft import parse_draft as parse
@@ -35,7 +35,9 @@ from embodic.model.provenance import (
     FieldProvenance,
     MeasuredValue,
     Measurement,
+    ProvenanceMap,
     UserValue,
+    derive_provenance,
 )
 from embodic.model.provenance import mark_measured as mark_design_measured
 from embodic.model.schema import JsonValue, ValueType, flatten, pattern_of, to_json
@@ -110,6 +112,41 @@ class EditNotice:
 
     pointer: str
     text: str
+
+
+class Debounce(Protocol):
+    """A single-shot wait that every keystroke restarts (REQ-N-02, fix_wave_f1.md (a))."""
+
+    def start(self, action: Callable[[], None]) -> None:
+        """Start the wait again; ``action`` runs once when it ends, instead of the action of an earlier start."""
+
+    def stop(self) -> None:
+        """End the wait without running its action."""
+
+
+class NoDebounce:
+    """The wait of a session without a GUI timer: it never ends, so typed text computes only when committed."""
+
+    def start(self, action: Callable[[], None]) -> None:
+        """Ignore the action."""
+
+    def stop(self) -> None:
+        """Nothing waits."""
+
+
+DesignKey: TypeAlias = tuple[DesignParameters, ProvenanceMap]
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Preview:
+    """The typed, uncommitted text of a field, computed: it changes the drawing and the results, nothing else."""
+
+    pending: DesignKey | None  # the preview request in flight; None once its result arrived or a keystroke cancelled it
+    shown: OutcomeReady | None  # the latest preview result, on screen until a commit or Esc
+
+
+def _key_of(ready: OutcomeReady) -> DesignKey:
+    return ready.outcome.design, ready.outcome.provenance
 
 
 StackupInput: TypeAlias = Literal["copper_count", "copper_oz", "board_thickness_mm"]
@@ -664,9 +701,15 @@ def example_title(example_id: str) -> str:
 class DesignSession:
     """Implements DesignSessionViewModel (interfaces.md section 11). Every command returns at once."""
 
-    def __init__(self, outcome: OutcomeViewModel, autosave_path: Path | None = None) -> None:
+    def __init__(
+        self, outcome: OutcomeViewModel, autosave_path: Path | None = None, debounce: Debounce | None = None
+    ) -> None:
         self._outcome = outcome
         self._autosave_path = autosave_path
+        self._debounce = debounce or NoDebounce()
+        self._typed: tuple[str, JsonValue] | None = None  # the field text a keystroke left uncommitted
+        self._preview: Preview | None = None
+        self._submitting = False
         self.state: Observable[SessionState] = Observable(SessionEmpty())
         self.can_undo: Observable[bool] = Observable(False)
         self.can_redo: Observable[bool] = Observable(False)
@@ -717,26 +760,92 @@ class DesignSession:
         """Set several values as one undoable edit; a stack-up change re-derives the spiral layer pairs (D-024)."""
         self._edit(changes)
 
-    def _edit(self, changes: Mapping[str, JsonValue], *, pairs_notice: str | None = None) -> None:
-        document = self.document
-        if document is None:
-            return
+    def type_text(self, pointer: str, value: JsonValue) -> None:
+        """Take a keystroke in a field: cancel the preview in flight, and preview ``value`` when the wait ends.
+
+        ``value`` is the field's text as a commit would parse it. Nothing changes until the wait ends.
+        """
+        self._typed = (pointer, value)
+        self._debounce.start(self._preview_typed)
+        preview = self._preview
+        if preview is not None and preview.pending is not None:
+            self._preview = dataclasses.replace(preview, pending=None)
+            self._outcome.cancel()
+
+    def revert_typing(self) -> None:
+        """Esc, or text typed back to the committed value: forget the typed text; the committed outcome comes back."""
+        self._debounce.stop()
+        self._typed = None
+        self._bring_back(self._take_preview())
+
+    def commit_typing(self) -> None:
+        """Commit the text a keystroke left in a field, before a command reads the design (DEF-US11-03)."""
+        if self._typed is not None:
+            pointer, value = self._typed
+            self.edit(pointer, value)
+
+    def _edited(self, document: SessionDocument, changes: Mapping[str, JsonValue]) -> SessionDocument | None:
+        """Return the document with ``changes`` applied, or None when they change nothing."""
         old = document.draft.values
         values = dict(old)
         for pointer, value in changes.items():
             values = _with_value(values, pointer, value)
         draft = DesignDraft(topology=document.draft.topology, values=values)
-        stackup = any(pointer.startswith(STACKUP_POINTER) for pointer in changes)
-        if stackup:
+        if any(pointer.startswith(STACKUP_POINTER) for pointer in changes):
             draft = derive_layer_pairs(draft)
         new = draft.values
         if new == old:
-            return
+            return None
         measurements = tuple(
             m for m in document.measurements if m.pointer in new and new[m.pointer] == old.get(m.pointer)
         )
-        notice = layer_pairs_notice(old, new) if stackup else pairs_notice
-        self._commit(dataclasses.replace(document, draft=draft, measurements=measurements), pairs_notice=notice)
+        return dataclasses.replace(document, draft=draft, measurements=measurements)
+
+    def _edit(self, changes: Mapping[str, JsonValue], *, pairs_notice: str | None = None) -> None:
+        document = self.document
+        if document is None:
+            return
+        edited = self._edited(document, changes)
+        if edited is None:
+            self.revert_typing()
+            return
+        if any(pointer.startswith(STACKUP_POINTER) for pointer in changes):
+            pairs_notice = layer_pairs_notice(document.draft.values, edited.draft.values)
+        self._commit(edited, pairs_notice=pairs_notice)
+
+    def _preview_typed(self) -> None:
+        """Compute the typed text as committing it would, without committing it (fix_wave_f1.md (a))."""
+        committed, document = self.state.value, self.document
+        if self._typed is None or document is None or not isinstance(committed, SessionComputed):
+            return
+        pointer, value = self._typed
+        edited = self._edited(document, {pointer: value})
+        parsed = None if edited is None else parse(edited.draft)
+        if edited is None or not isinstance(parsed, DesignParameters):
+            self._bring_back(self._take_preview())
+            return
+        project = ProjectFile(design=parsed, origin=edited.origin, measurements=edited.measurements)
+        key = (parsed, self._provenance(project))
+        preview = self._preview
+        if preview is not None and (
+            preview.pending == key or (preview.shown is not None and _key_of(preview.shown) == key)
+        ):
+            return
+        self._preview = Preview(pending=key, shown=None if preview is None else preview.shown)
+        self._outcome.open_project(project, key[1])
+
+    def _take_preview(self) -> Preview | None:
+        preview, self._preview = self._preview, None
+        return preview
+
+    def _bring_back(self, preview: Preview | None) -> None:
+        """Show the committed outcome again after a preview: compute the committed design again (the cache is warm)."""
+        if preview is None or (preview.pending is None and preview.shown is None):
+            return
+        if isinstance(self.state.value, SessionComputed):
+            self.compute_now()
+        elif preview.pending is not None:
+            self._outcome.cancel()
 
     def set_rotation_mode(self, mode: RotationMode) -> None:
         """None writes 0 to every pair, Alternate pi/Q to every second pair; Custom writes nothing (R4)."""
@@ -896,7 +1005,7 @@ class DesignSession:
         """Compute the open design again; does nothing while the design is incomplete."""
         project = self._project()
         if isinstance(project, ProjectFile):
-            self._outcome.open_project(project)
+            self._outcome.open_project(project, self._provenance(project))
 
     def stackup_inputs(self) -> StackupInputs:
         """Return the stack-up generator inputs: read back from the stack-up, overlaid with the ones being entered."""
@@ -964,6 +1073,8 @@ class DesignSession:
             return shown_result(latest), False
         if isinstance(state, SessionDrafting):
             return self._drawn, self._drawn is not None
+        if self._preview is not None and self._preview.shown is not None:
+            return self._preview.shown, False
         return self._drawn or shown_result(latest), state.stale and not state.computing
 
     def title(self) -> str:
@@ -992,6 +1103,16 @@ class DesignSession:
             self._origins[origin] = packaged_example(origin)
         return self._origins[origin]
 
+    def _provenance(self, project: ProjectFile) -> ProvenanceMap:
+        """Return ``project_provenance(project)`` with the origin read once per session, not once per keystroke."""
+        origin = project.origin
+        packaged = self._origin_design(origin)
+        pair = None if origin is None or packaged is None else (origin, packaged)
+        derived = derive_provenance(project.design, pair, project.measurements)
+        if origin is None or packaged is not None:
+            return derived
+        return {pointer: UserValue() if isinstance(kind, DefaultValue) else kind for pointer, kind in derived.items()}
+
     def _project(self) -> ProjectFile | LoadedDraft | None:
         document = self.document
         if document is None:
@@ -1010,6 +1131,9 @@ class DesignSession:
     def _commit(
         self, document: SessionDocument | None, *, record: bool = True, pairs_notice: str | None = None
     ) -> None:
+        self._debounce.stop()
+        self._typed = None
+        preview = self._take_preview()
         if record:
             self._undo = [*self._undo, self.document][-UNDO_LIMIT:]
             self._redo = []
@@ -1021,10 +1145,10 @@ class DesignSession:
         self.pairs_notice.set(pairs_notice)
         self.can_undo.set(bool(self._undo))
         self.can_redo.set(bool(self._redo))
-        self._refresh()
+        self._refresh(preview)
         self._autosave()
 
-    def _refresh(self) -> None:
+    def _refresh(self, preview: Preview | None = None) -> None:
         document = self.document
         if document is None:
             self.issues.set(())
@@ -1036,19 +1160,43 @@ class DesignSession:
             self.state.set(SessionDrafting(draft=document.draft, missing=parsed.missing))
             return
         project = ProjectFile(design=parsed, origin=document.origin, measurements=document.measurements)
-        provenance = project_provenance(project)
+        provenance = self._provenance(project)
+        key = (parsed, provenance)
         current = self.state.value
-        if isinstance(current, SessionComputed) and (current.design, current.provenance) == (parsed, provenance):
+        if isinstance(current, SessionComputed) and (current.design, current.provenance) == key:
+            self._bring_back(preview)
             return
-        self.issues.set(validate_design(parsed))
         kept = self._drawn.outcome if self._drawn is not None else None
-        self.state.set(
-            SessionComputed(design=parsed, provenance=provenance, outcome=kept, stale=kept is not None, computing=True)
+        computed = SessionComputed(
+            design=parsed, provenance=provenance, outcome=kept, stale=kept is not None, computing=True
         )
-        self._outcome.open_project(project)
+        shown = None if preview is None else preview.shown
+        if shown is not None and _key_of(shown) == key:
+            if shown.scene is not None:
+                self._drawn = shown
+            self._take_result(computed, shown)
+            return
+        if preview is None or preview.pending != key:
+            # Submit first: the window's refresh of the new issues and state holds the GUI thread for 100 ms or more.
+            self._submitting = True
+            try:
+                self._outcome.open_project(project, provenance)
+            finally:
+                self._submitting = False
+        self.issues.set(validate_design(parsed))
+        self.state.set(computed)
 
     def _on_outcome(self, latest: OutcomeState) -> None:
+        if self._submitting:
+            return  # the new state follows at once
         ready = latest if isinstance(latest, OutcomeReady) else None
+        preview = self._preview
+        if preview is not None:
+            if ready is None or ready is preview.shown:
+                return  # a preview computing, or the preview result shown again after a cancel
+            if preview.pending == _key_of(ready):
+                self._preview = Preview(pending=None, shown=ready)
+                return
         if ready is not None and ready.scene is not None:
             self._drawn = ready
         state = self.state.value
@@ -1060,6 +1208,10 @@ class DesignSession:
             return
         if ready.outcome.design != state.design:
             return
+        self._take_result(state, ready)
+
+    def _take_result(self, state: SessionComputed, ready: OutcomeReady) -> None:
+        """Show the result of the committed design; one without a board keeps the last drawing, outdated."""
         self.issues.set(ready.outcome.issues)
         if ready.scene is not None:
             self.state.set(dataclasses.replace(state, outcome=ready.outcome, stale=False, computing=False))

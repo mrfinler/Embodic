@@ -50,6 +50,9 @@ class ComputeSubmitter(Protocol):
     def submit(self, request: ComputeRequest) -> None:
         """Start a request and cancel the one still running."""
 
+    def cancel(self) -> None:
+        """Cancel the request still running, if any."""
+
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class BoardMarks:
@@ -134,21 +137,30 @@ class OutcomeViewModel:
         """Open a packaged example and compute it."""
         self.open_project(project_from_example(load_example(example_id)))
 
-    def open_project(self, project: ProjectFile) -> None:
-        """Show a complete project and compute it."""
+    def open_project(self, project: ProjectFile, provenance: ProvenanceMap | None = None) -> None:
+        """Show a complete project and compute it; ``provenance`` saves deriving it again when the caller has it."""
         self.project = project
-        self.compute_now()
+        self._submit(project, project_provenance(project) if provenance is None else provenance)
 
     def compute_now(self) -> None:
         """Compute the open project again; does nothing while no project is open."""
-        if self.project is None:
+        if self.project is not None:
+            self._submit(self.project, project_provenance(self.project))
+
+    def _submit(self, project: ProjectFile, provenance: ProvenanceMap) -> None:
+        # The worker starts before the subscribers redraw for the computing state (REQ-N-02: compute within 50 ms).
+        self._latest_id += 1
+        self._submitter.submit(ComputeRequest(request_id=self._latest_id, design=project.design, provenance=provenance))
+        self.state.set(OutcomeComputing(previous=shown_result(self.state.value)))
+
+    def cancel(self) -> None:
+        """Cancel the request in flight; the result shown before it comes back, and a late result is dropped."""
+        state = self.state.value
+        if not isinstance(state, OutcomeComputing):
             return
         self._latest_id += 1
-        self.state.set(OutcomeComputing(previous=shown_result(self.state.value)))
-        request = ComputeRequest(
-            request_id=self._latest_id, design=self.project.design, provenance=project_provenance(self.project)
-        )
-        self._submitter.submit(request)
+        self._submitter.cancel()
+        self.state.set(state.previous or OutcomeEmpty())
 
     def save_project(self, path: Path) -> str:
         """Write the open project; return its design hash."""

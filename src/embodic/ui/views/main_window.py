@@ -197,24 +197,32 @@ class MainWindow(QMainWindow):
 
     def _commands(self) -> CommandTable:
         session = self.session
-        return {
+        reads_design: dict[str, Callable[[], None]] = {
             "new_design": self.show_new_design,
             "open_project": self.open_project_dialog,
             "undo": session.undo,
             "redo": session.redo,
-            **{f"set_topology_{t.value}": partial(session.set_topology, t) for t in TopologyKind},
-            **{f"set_connection_{c}": partial(session.edit, "/connection/topology", c) for c in ("star", "delta")},
             "save_project": self.save_project_dialog,
             "show_examples": self.show_examples,
             "compute_now": self.compute_now,
+            **{command: partial(self.show_export, command) for command in PRESETS},
+        }
+        return {
+            # A toolstrip click leaves the focus in a field, so its typed text is committed first (DEF-US11-03).
+            **{command: partial(self._after_commit, run) for command, run in reads_design.items()},
+            **{f"set_topology_{t.value}": partial(session.set_topology, t) for t in TopologyKind},
+            **{f"set_connection_{c}": partial(session.edit, "/connection/topology", c) for c in ("star", "delta")},
             "cycle_theme": self.appearance.cycle_theme,
             "toggle_phase_render_mode": self.appearance.toggle_phase_render_mode,
             "fit_view": self.canvas.fit_view,
             "show_checks": partial(self.show_results_tab, "tab-drc"),
             "show_equations": self.show_equations,
             "show_tests": self.show_tests,
-            **{command: partial(self.show_export, command) for command in PRESETS},
         }
+
+    def _after_commit(self, run: Callable[[], None]) -> None:
+        self.session.commit_typing()
+        run()
 
     def _work_area(self) -> QWidget:
         inspector = QWidget()
@@ -328,7 +336,7 @@ class MainWindow(QMainWindow):
             ("F1", self.show_help),
             ("F6", partial(self.cycle_region, 1)),
             ("Shift+F6", partial(self.cycle_region, -1)),
-            ("Ctrl+Shift+N", self.show_examples),
+            ("Ctrl+Shift+N", partial(self._after_commit, self.show_examples)),
             ("Ctrl+Shift+T", self.appearance.cycle_theme),
             *inspector_keys,
             ("Alt+5", partial(self.show_results_tab, "tab-results")),
@@ -816,11 +824,15 @@ class MainWindow(QMainWindow):
         return dialog
 
     def save_project_dialog(self) -> None:
-        """Ask for a file name and save the open project."""
-        if self.outcome.project is None:
+        """Ask for a file name and save what the inspector holds, or the project the shell opened directly."""
+        if self.session.document is None and self.outcome.project is None:
             return
         name, _ = QFileDialog.getSaveFileName(self, text("shell.save.title"), "", text("shell.save.filter"))
-        if name:
+        if not name:
+            return
+        if self.session.document is not None:
+            self.session.save_project(Path(name))
+        else:
             self.outcome.save_project(Path(name))
 
     def save_recovery(self, correlation_id: str) -> Path | None:
