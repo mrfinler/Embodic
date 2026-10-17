@@ -64,11 +64,12 @@ def make_shell(qtbot, tmp_path):
 
 
 @pytest.fixture
-def wait_ready(qtbot):
+def wait_ready(qtbot, settle):
     """Return a function that waits until the latest compute of a window is on screen."""
 
     def wait(window):
         qtbot.waitUntil(lambda: isinstance(window.outcome.state.value, OutcomeReady), timeout=READY_TIMEOUT_MS)
+        settle()
 
     return wait
 

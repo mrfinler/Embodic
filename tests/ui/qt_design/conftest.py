@@ -61,7 +61,7 @@ def make_shell(qtbot, tmp_path):
 
 
 @pytest.fixture
-def wait_computed(qtbot):
+def wait_computed(qtbot, settle):
     """Return a function that waits until the session's current design has its compute result."""
 
     def wait(window):
@@ -70,6 +70,7 @@ def wait_computed(qtbot):
             return isinstance(state, SessionComputed) and not state.computing and state.outcome is not None
 
         qtbot.waitUntil(done, timeout=READY_TIMEOUT_MS)
+        settle()
 
     return wait
 

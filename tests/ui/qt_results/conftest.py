@@ -43,7 +43,7 @@ def make_window(qtbot, tmp_path):
 
 
 @pytest.fixture
-def load(qtbot):
+def load(qtbot, settle):
     """Return a function that loads an example into a window and waits for its compute result on screen."""
 
     def run(window: MainWindow, example_id: str) -> MainWindow:
@@ -59,6 +59,9 @@ def load(qtbot):
             )
 
         qtbot.waitUntil(done, timeout=READY_TIMEOUT_MS)
+        settle()
+        squashed = [key for key, card in window.results_tab.cards.items() if card.how_toggle.height() == 0]
+        assert squashed == [], "result cards still at 0 px height after settling: a click on them would be lost"
         return window
 
     return run
