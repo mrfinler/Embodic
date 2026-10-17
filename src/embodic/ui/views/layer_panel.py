@@ -36,7 +36,7 @@ from embodic.ui.viewmodels.session import (
     rotation_mode,
     series_groups,
 )
-from embodic.ui.views.coil_panel import FieldEditor, FieldPanel, Segment, fit_rows, fit_width, label_above, repolish
+from embodic.ui.views.coil_panel import FieldEditor, FieldPanel, Segment, fit_rows, fit_width, label_above
 from embodic.ui.views.widgets import table_widget
 
 COPPER_COUNTS = (2, 4, 6, 8)
@@ -332,9 +332,8 @@ def _value_with_chip(value: str, word: str, provenance: str) -> QWidget:
     shown = QLabel(value)
     chip = QLabel(word)
     chip.setProperty("class", "prov-chip")
-    chip.setProperty("provenance", provenance)
+    chip.setProperty("provenance", provenance)  # a new label: its first polish reads it
     chip.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    repolish(chip)
     line.addWidget(shown)
     line.addStretch(1)
     line.addWidget(chip)

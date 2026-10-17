@@ -16,8 +16,8 @@ from embodic.model.schema import JsonValue
 from embodic.model.vocabulary import TopologyKind
 from embodic.ui.strings import text
 from embodic.ui.viewmodels.session import ASSIGNMENT_MODES, ASSIGNMENT_POINTER, DesignSession, assignment_mode
-from embodic.ui.views.coil_panel import FieldPanel, Segment, fit_rows, hint_label, label_above, repolish, show_hints
-from embodic.ui.views.widgets import table_widget
+from embodic.ui.views.coil_panel import FieldPanel, Segment, fit_rows, hint_label, label_above, show_hints
+from embodic.ui.views.widgets import set_style_property, table_widget
 
 PHASE_COLUMNS = ("coil_index", "phase", "polarity")
 _EDIT_TRIGGERS = QAbstractItemView.EditTrigger.EditKeyPressed | QAbstractItemView.EditTrigger.DoubleClicked
@@ -81,10 +81,8 @@ class PhasePanel(FieldPanel):
         show_hints({"phase-pattern-string": self.pattern, "phase-balance-status": self.balance}, self.session)
         for part in (self.pattern_caption, self.pattern_hint):
             part.setVisible(not self.pattern.isHidden())
-        self.balance.setProperty(
-            "state", "pass" if self.balance.text() == text("phase-balance-status.balanced") else "fail"
-        )
-        repolish(self.balance)
+        balanced = self.balance.text() == text("phase-balance-status.balanced")
+        set_style_property(self.balance, "state", "pass" if balanced else "fail")
         mode, table = self.helpers.get("param-phase-assign-mode"), self.helpers.get("phase-table")
         document = self.session.document
         if not isinstance(mode, Segment) or not isinstance(table, QTableWidget) or document is None:

@@ -61,8 +61,8 @@ from embodic.ui.viewmodels.results import (
 )
 from embodic.ui.views.charts import ChartPanel, delta_icon
 from embodic.ui.views.dialogs import confirm_replace_reference
-from embodic.ui.views.status_badge import AssumptionTag, EqChip, StatusBadge, badge_property, repolish
-from embodic.ui.views.widgets import check_box, table_widget
+from embodic.ui.views.status_badge import AssumptionTag, EqChip, StatusBadge, badge_property
+from embodic.ui.views.widgets import check_box, repolish, set_style_property, table_widget
 
 COMPUTING_DIM_AFTER_MS = 300
 COMPUTING_OPACITY = 0.6
@@ -211,9 +211,9 @@ class ResultCard(QFrame):
         self.asm_list.setText("\n".join(assumed_input_text(a) for a in t.assumed_inputs))
         self.setAccessibleName(row.accessible_name)
         self.setWhatsThis(row.eq_ids[0] if row.eq_ids else "")
-        self.setProperty("stale", "true" if stale else "false")
-        for widget in (self, self.value, self.unit, self.badge.label):
-            repolish(widget)
+        if set_style_property(self, "stale", "true" if stale else "false"):
+            for widget in (self.value, self.unit, self.badge.label):  # the sheet selects them by the card's stale
+                repolish(widget)
         if stale:
             self.badge.icon.setPixmap(inked(self.badge.icon.pixmap(), tokens.colours["text-3"]))
         if self.how_toggle.isChecked():

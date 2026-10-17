@@ -46,7 +46,7 @@ from embodic.ui.viewmodels.session import (
     parse_text,
 )
 from embodic.ui.views.focus_order import chain, reading_order, stop_before
-from embodic.ui.views.widgets import check_box
+from embodic.ui.views.widgets import check_box, set_style_property
 
 MIN_INPUT_PX = 72
 CHIP_COLUMN_PX = 72  # "example" and "default" fit; "measured" grows its row
@@ -79,12 +79,6 @@ SEGMENT_WIDGETS = frozenset(
         "param-magnet-shape",
     }
 )
-
-
-def repolish(widget: QWidget) -> None:
-    """Re-apply the style sheet after a dynamic property changed (design_spec.md section 8)."""
-    widget.style().unpolish(widget)
-    widget.style().polish(widget)
 
 
 def label_text(widget_id: str, topology: str, variant: str | None = None) -> str:
@@ -307,10 +301,9 @@ class FieldEditor(QWidget):
         self.chip.setVisible(chip is not None)
         if chip is not None:
             self.chip.setText(text(f"design.prov.{chip.provenance.value}"))
-            self.chip.setProperty("provenance", chip.provenance.value)
+            set_style_property(self.chip, "provenance", chip.provenance.value)
             tip = text("design.prov.measured-tooltip", source=chip.source) if isinstance(chip, MeasuredValue) else ""
             self.chip.setToolTip(tip)
-            repolish(self.chip)
 
     def _show_message(self, row: FieldRow) -> None:
         found = row.issue
@@ -324,12 +317,10 @@ class FieldEditor(QWidget):
         if found is not None:
             warning = found.severity is Severity.WARNING
             self.error.setText(text("design.warning.prefix", message=found.message) if warning else found.message)
-            self.error.setProperty("state", "warn" if warning else "")
-            repolish(self.error)
+            set_style_property(self.error, "state", "warn" if warning else "")
         self.hint.setText(hint)
         self.hint.setVisible(bool(hint))
-        self.input.setProperty("invalid", "true" if invalid else "false")
-        repolish(self.input)
+        set_style_property(self.input, "invalid", "true" if invalid else "false")
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

@@ -6,8 +6,11 @@ docs/phase3/design/checks/first_paint_probe.py.
 """
 
 import pytest
+from PySide6.QtWidgets import QCommonStyle
 
 from embodic.ui.views import geometry_view
+
+from .conftest import D08
 
 
 def count_label_layouts(monkeypatch) -> list[int]:
@@ -58,3 +61,25 @@ def test_a_new_result_on_screen_lays_the_labels_out_once_per_drawing(d08_shell, 
     window.outcome.compute_now()
     wait_ready(window)
     assert calls[0] == 1
+
+
+@pytest.mark.req("REQ-N-02")
+def test_showing_the_same_session_again_restyles_no_widget(make_shell, wait_ready, monkeypatch):
+    """Catches a refresh that re-polishes widgets whose style property kept its value.
+
+    On main e68d5ff each result re-polished every field input, chip and message, every card and its badge: 295
+    re-polishes, about a third of the GUI thread's profiled time at result arrival (U-M8a stall_profile.py).
+    """
+    window = make_shell().window
+    window.session.load_example(D08)
+    wait_ready(window)
+    restyled: list[str] = []
+    unpolish = QCommonStyle.unpolish
+
+    def counting(style, widget, *args):
+        restyled.append(widget.objectName() or type(widget).__name__)
+        return unpolish(style, widget, *args)
+
+    monkeypatch.setattr(QCommonStyle, "unpolish", counting)
+    window._on_session()
+    assert (len(restyled), sorted(set(restyled))[:6]) == (0, [])

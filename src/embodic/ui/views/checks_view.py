@@ -37,8 +37,8 @@ from embodic.ui.theme import ThemeTokens
 from embodic.ui.viewmodels.results import DrcRow, DrcTable
 from embodic.ui.views.geometry_view import DATA_KIND, GeometryView
 from embodic.ui.views.results_view import FocusRoomDelegate
-from embodic.ui.views.status_badge import repolish
 from embodic.ui.views.style import themed_icon
+from embodic.ui.views.widgets import set_style_property
 
 COLUMNS = ("severity", "board", "message", "clearance", "required", "layer")  # screens.md section 7, ruling d
 GLYPH_PX = 24
@@ -156,8 +156,7 @@ class DrcTab(QWidget):
         self.table.setItemDelegate(_FailBorder(QColor(tokens.colours["status-fail"])))
         state = "warn" if table is None else table.state
         self.summary.setText(text("drc.empty") if table is None else table.summary)
-        self.summary.setProperty("state", {"not-run": "warn"}.get(state, state))
-        repolish(self.summary)
+        set_style_property(self.summary, "state", {"not-run": "warn"}.get(state, state))
         icon = themed_icon(
             "check-pass" if state == "pass" else "check-fail" if state == "fail" else "check-warn", tokens
         )
