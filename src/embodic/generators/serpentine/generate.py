@@ -13,6 +13,7 @@ from types import MappingProxyType
 
 from embodic.errors import IssueCategory, Severity, Unbuildable, ValidationIssue, message_for
 from embodic.generators.base import unusable_sizes
+from embodic.generators.fasteners import design_keep_out_issues
 from embodic.generators.serpentine.canonical import BuildFailure, CanonFailure
 from embodic.generators.serpentine.derived import serpentine_derived
 from embodic.generators.serpentine.fit import max_traces_fit
@@ -110,6 +111,14 @@ def _out_of_range(design: DesignParameters, spec: SerpentineWindingSpec) -> tupl
     if spec.layers_per_phase < 1:
         bad.append("/winding/layers_per_phase")
     return tuple(bad)
+
+
+def _refused_before_build(design: DesignParameters, spec: SerpentineWindingSpec) -> tuple[ValidationIssue, ...]:
+    """Screw keep-outs, and parallel vias: one via per transition is all the builder and the analysis know (D-054d)."""
+    issues = design_keep_out_issues(design, (spec.r_inner_mm, spec.r_outer_mm))
+    if design.vias.vias_per_transition != 1:
+        issues += _issue("UNBUILDABLE_SERPENTINE_OPTION_NOT_IMPLEMENTED", ("/vias/vias_per_transition",)).issues
+    return issues
 
 
 def _refusal(failure: CanonFailure) -> Unbuildable:
@@ -414,6 +423,8 @@ def generate_serpentine(design: DesignParameters, registry: Registry) -> BoardSt
         raise TypeError(f"generate_serpentine needs a serpentine winding, got {type(spec).__name__}")
     if pointers := _out_of_range(design, spec):
         return _issue("UNBUILDABLE_SERPENTINE_INPUT_OUT_OF_RANGE", pointers)
+    if refused := _refused_before_build(design, spec):
+        return Unbuildable(issues=refused)
     d = derive(params_from_design(design, spec))
     plan = plan_stack(d)
     if isinstance(plan, CanonFailure):

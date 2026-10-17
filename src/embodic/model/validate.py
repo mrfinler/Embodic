@@ -13,7 +13,7 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 from embodic.errors import IssueCategory, Severity, Suggestion, ValidationIssue, message_for
 from embodic.model.design import DesignParameters
 from embodic.model.fields import FieldSpec, Limits, Sign, field_for
-from embodic.model.schema import JsonValue, ValueType, design_values
+from embodic.model.schema import JsonValue, ValueType, design_values, pattern_of
 from embodic.model.stackup import CopperLayer, copper_total_mm
 from embodic.model.winding_specs import (
     PairConnection,
@@ -321,15 +321,18 @@ SUPPORTED_RANGES: Mapping[str, Limits] = types.MappingProxyType(
         "/outline/board/across_flats_mm": Limits(high=OUTLINE_MAX_MM),
         "/outline/bore/radius_mm": Limits(high=OUTLINE_MAX_MM),
         "/outline/bore/across_flats_mm": Limits(high=OUTLINE_MAX_MM),
+        # A pitch circle or hole larger than the largest board cannot lie on it (DEF-M7a-01: 1e30 mm overflowed DRC).
+        "/outline/screws/*/pitch_radius_mm": Limits(high=OUTLINE_MAX_MM),
+        "/outline/screws/*/hole_diameter_mm": Limits(high=2 * OUTLINE_MAX_MM),
     }
 )
 
 
 def _supported_ranges(design: DesignParameters) -> Iterator[ValidationIssue]:
     values = design_values(design)
-    for pointer, limits in SUPPORTED_RANGES.items():
-        value = values.get(pointer)
-        if _is_number(value) and isinstance(value, int | float):
+    for pointer, value in values.items():
+        limits = SUPPORTED_RANGES.get(pattern_of(pointer))
+        if limits is not None and _is_number(value) and isinstance(value, int | float):
             yield from _check_limits(dataclasses.replace(field_for(pointer, values), limits=limits), pointer, value)
 
 

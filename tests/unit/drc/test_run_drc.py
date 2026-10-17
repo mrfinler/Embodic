@@ -3,6 +3,7 @@
 import math
 import random
 import threading
+import warnings
 from dataclasses import replace
 from itertools import pairwise
 
@@ -546,3 +547,31 @@ def test_cancel_from_another_thread_stops_a_long_run() -> None:
     token = _FlippedByAnotherThread(middle)
     assert run_drc(board, RULES, cancel=token) is None
     assert token.reads == middle
+
+
+_TOUCHING = [path(1, [line(0, 0, 0, 1)], net="A"), path(2, [line(0.3, 0, 0.3, 1)], net="B")]
+
+
+@pytest.mark.parametrize("far_mm", [1e30, 1e20])
+def test_a_coordinate_whose_grid_cell_index_is_not_representable_is_refused_by_name(far_mm: float) -> None:
+    """Catches DEF-M7a-01: floor(x / cell) of a 1e30 mm item was cast to int64 as garbage and the cell key overflowed.
+
+    The run must stop with the broad phase's own error, before numpy warns about the cast.
+    """
+    board = layout(paths=[*_TOUCHING, path(3, [line(far_mm, 0, far_mm, 1)], net="C")])
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        with pytest.raises(OverflowError, match="DRC grid cell index"):
+            run_drc(board, RULES)
+
+
+def test_items_on_the_largest_supported_board_keep_their_grid_and_violations() -> None:
+    """Catches a grid guard tighter than the outline maximum: copper 2000 mm out still finds the 0.1 mm overlap."""
+    edge = [path(4, [line(2000, 0, 2000, 1)], net="C"), path(5, [line(-2000, 0, -2000, 1)], net="D")]
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        report = run_drc(layout(paths=[*_TOUCHING, *edge]), RULES)
+    assert report is not None
+    assert [(v.kind, v.objects) for v in report.violations] == [
+        (DrcCheckKind.TRACE_TRACE, ("path:1/prim:0", "path:2/prim:0"))
+    ]

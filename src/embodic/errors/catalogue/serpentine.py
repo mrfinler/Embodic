@@ -19,6 +19,9 @@ MESSAGES: Mapping[str, str] = {
         "The radial span between the inner and outer radius is too short for the start via and the fillets, or a "
         "corner does not close. Increase the span or reduce the fillet radius."
     ),
+    "UNBUILDABLE_SERPENTINE_OPTION_NOT_IMPLEMENTED": (
+        "The serpentine generator does not build this option yet; the pointers name the inputs to change."
+    ),
     "UNBUILDABLE_SERPENTINE_INPUT_OUT_OF_RANGE": (
         "A serpentine winding input is outside the range the geometry can use."
     ),

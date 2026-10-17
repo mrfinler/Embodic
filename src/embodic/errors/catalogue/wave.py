@@ -24,6 +24,9 @@ MESSAGES: Mapping[str, str] = {
     "INVALID_WAVE_COPPER_COUNT": (
         "The wave winding needs an even number of copper layers, from 2 to {limit} (T/B pairs)."
     ),
+    "UNBUILDABLE_WAVE_OPTION_NOT_IMPLEMENTED": (
+        "The wave generator does not build this option yet; the pointers name the inputs to change."
+    ),
     "UNBUILDABLE_WAVE_INPUT_OUT_OF_RANGE": "A wave winding input is outside the range the geometry can use.",
     "UNBUILDABLE_WAVE_END_TURN_DEGENERATE": (
         "The involute end-turns collapse to a point at this radius and turn count. Increase the inner radius or the "

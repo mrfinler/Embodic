@@ -13,6 +13,7 @@ import math
 
 from embodic.errors import IssueCategory, Severity, Unbuildable, ValidationIssue, message_for
 from embodic.generators.base import unusable_sizes
+from embodic.generators.fasteners import design_keep_out_issues
 from embodic.generators.wave.assemble import Obj, SeriesElement, WaveBuild, assemble_layout, build_in_layer_order
 from embodic.generators.wave.build import Track, WaveGeometry, build_wave
 from embodic.generators.wave.derive import WaveFrame, WaveParams, WaveRefusal, derive_wave, max_wave_turns
@@ -72,6 +73,14 @@ def _out_of_range(design: DesignParameters, spec: WaveWindingSpec) -> tuple[str,
     elif design.rotor.poles * design.phases * spec.turns > MAX_SLOTS:
         bad.append("/winding/turns")
     return tuple(bad)
+
+
+def _refused_before_build(design: DesignParameters, spec: WaveWindingSpec) -> tuple[ValidationIssue, ...]:
+    """Screw keep-outs, and parallel vias: one via per transition is all the builder and the analysis know (D-054d)."""
+    issues = design_keep_out_issues(design, (spec.r_inner_mm, spec.r_outer_mm))
+    if design.vias.vias_per_transition != 1:
+        issues += (_issue("UNBUILDABLE_WAVE_OPTION_NOT_IMPLEMENTED", ("/vias/vias_per_transition",)),)
+    return issues
 
 
 def wave_params(design: DesignParameters, spec: WaveWindingSpec, start_angle_deg: float = 0.0) -> WaveParams:
@@ -216,6 +225,8 @@ def generate_wave_rotated(
         raise TypeError(f"generate_wave needs a wave winding, got {type(spec).__name__}")
     if pointers := _out_of_range(design, spec):
         return _unbuildable("UNBUILDABLE_WAVE_INPUT_OUT_OF_RANGE", pointers)
+    if refused := _refused_before_build(design, spec):
+        return Unbuildable(issues=refused)
     layers = len(design.stackup.copper_layers())
     if layers < 2 or layers % 2 != 0 or layers > WAVE_LAYERS_MAX:
         return _unbuildable("UNBUILDABLE_WAVE_LAYER_COUNT", ("/stackup/layers",))
