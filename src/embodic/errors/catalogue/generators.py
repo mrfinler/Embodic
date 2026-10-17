@@ -3,7 +3,6 @@
 from collections.abc import Mapping
 
 MESSAGES: Mapping[str, str] = {
-    "UNBUILDABLE_UNSUPPORTED_TOPOLOGY": "This topology has no generator yet; only spiral coils can be built.",
     "UNBUILDABLE_SPIRAL_OPTION_NOT_IMPLEMENTED": (
         "The spiral generator does not build this option yet; the pointers name the inputs to change."
     ),
