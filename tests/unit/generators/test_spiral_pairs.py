@@ -16,6 +16,7 @@ from embodic.geometry.primitives import PrimitiveRole
 from embodic.model.design import DesignParameters
 from embodic.model.layers import LayerConfig, LayerPair
 from embodic.model.stackup import generate_even_stackup
+from embodic.model.vocabulary import Phase
 from embodic.model.winding_specs import SpiralWindingSpec
 from embodic.results import Registry, load_registry
 
@@ -202,4 +203,27 @@ def test_ut_geo_11_pairs_rotated_against_each_other_are_refused(
     assert isinstance(refused, Unbuildable)
     assert [(i.code, i.pointers) for i in refused.issues] == [
         ("UNBUILDABLE_PAIRS_ROTATED_APART", ("/winding/layers/pairs",))
+    ]
+
+
+@pytest.mark.req("REQ-F-03")
+@pytest.mark.parametrize(("coils", "poles"), [(16, 16), (12, 16)], ids=["16-16", "12-16"])
+def test_m4_one_phase_per_pair_is_refused_until_phase_5(registry: Registry, coils: int, poles: int) -> None:
+    """REQ-F-03 (d), D-054c: option M4 (one phase per pair) is refused with NOT_IMPLEMENTED at the pair list, alone.
+
+    Catches a generator that accepts `phases` and then fails with another code or builds a board. The 16/16 case is
+    the one the requirement names. The 12/16 design builds without `phases`, so only the pair list stops it.
+    """
+    design = _three_pairs(((0,), (1,), (2,)))
+    assert isinstance(design.winding, SpiralWindingSpec)
+    one_phase_each = zip(design.winding.layers.pairs, Phase, strict=True)
+    pairs = tuple(dataclasses.replace(p, phases=(phase,)) for p, phase in one_phase_each)
+    layers = dataclasses.replace(design.winding.layers, pairs=pairs)
+    coil = dataclasses.replace(design.winding.coil, coil_count=coils)
+    winding = dataclasses.replace(design.winding, coil=coil, layers=layers)
+    rotor = dataclasses.replace(design.rotor, poles=poles)
+    refused = generate_spiral(dataclasses.replace(design, winding=winding, rotor=rotor), registry)
+    assert isinstance(refused, Unbuildable)
+    assert [(i.code, i.pointers) for i in refused.issues] == [
+        ("UNBUILDABLE_SPIRAL_OPTION_NOT_IMPLEMENTED", ("/winding/layers/pairs",))
     ]
