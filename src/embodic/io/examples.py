@@ -4,6 +4,7 @@ An example file is a project file with an `example` object (`title`, `source_not
 `.embodic.json` is the example id. No index file lists them (work_breakdown.md section 4).
 """
 
+import functools
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -78,10 +79,20 @@ def list_examples() -> tuple[ExampleInfo, ...]:
     return tuple(infos)
 
 
+@functools.cache
+def _load(path: Path) -> tuple[ExampleRef, DesignParameters]:
+    """Parse one packaged file once per process: the files ship with the program and do not change while it runs.
+
+    The result is shared by every caller. ExampleRef and DesignParameters are frozen all the way down, so no caller can
+    change what a later lookup returns.
+    """
+    _, design = _parse(path)
+    return ExampleRef(example_id=path.name.removesuffix(EXAMPLE_SUFFIX), example_sha256=design_hash(design)), design
+
+
 def load_example(example_id: str) -> tuple[ExampleRef, DesignParameters]:
     """Return the reference and design of a packaged example; KeyError for an unknown id."""
-    _, design = _parse(_example_files()[example_id])
-    return ExampleRef(example_id=example_id, example_sha256=design_hash(design)), design
+    return _load(_example_files()[example_id])
 
 
 def packaged_example(ref: ExampleRef) -> DesignParameters | None:
