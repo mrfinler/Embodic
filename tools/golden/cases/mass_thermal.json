@@ -113,6 +113,23 @@
      "connection": "delta"
     }
    }
+  },
+  {
+   "id": "outline-polygon-8-r5",
+   "fn": "xcoilOutline",
+   "note": "EQ-16 board area: Xcoil outlinePrims and outlineArea for an octagon with 50 mm apothem, rotation 0 and 5 mm corners (fix wave F1 T-A4)",
+   "tags": [
+    "polygon",
+    "rounded",
+    "outline"
+   ],
+   "inputs": {
+    "shape": "polygon",
+    "sides": 8,
+    "apothem": 50,
+    "rotRad": 0,
+    "cornerR": 5
+   }
   }
  ]
 }

@@ -13,9 +13,8 @@ from typing import Protocol
 import numpy as np
 from numpy.typing import NDArray
 
-from embodic.geometry.discretise import discretise
 from embodic.geometry.layout import BoardStack, Layout
-from embodic.geometry.primitives import Primitive, PrimitiveRole, primitive_length_mm
+from embodic.geometry.primitives import Arc, Primitive, PrimitiveRole, primitive_length_mm
 from embodic.model.design import DesignParameters
 from embodic.model.fields import FieldKind, field_for
 from embodic.model.provenance import Provenance, ProvenanceMap
@@ -152,15 +151,24 @@ class _BoardFields:
 
 
 def _loop_area_mm2(loop: Sequence[Primitive]) -> float:
-    points = np.concatenate([discretise(p, 0.5)[:-1] for p in loop])
-    x, y = points[:, 0], points[:, 1]
-    return float(abs(np.dot(x, np.roll(y, -1)) - np.dot(y, np.roll(x, -1))) / 2.0)
+    """Exact area of a chained closed loop by Green's theorem, A = 1/2 sum (x dy - y dx) over its primitives.
+
+    An arc adds its chord term plus the signed circular segment r^2 (s - sin s) / 2, so a clockwise arc of a clockwise
+    loop keeps the sign of the loop. The absolute value makes the orientation irrelevant (DEF-M7b-01).
+    """
+    twice_area_mm2 = 0.0
+    for p in loop:
+        (x1, y1), (x2, y2) = p.start_point(), p.end_point()
+        twice_area_mm2 += x1 * y2 - x2 * y1
+        if isinstance(p, Arc):
+            twice_area_mm2 += p.r_mm**2 * (p.sweep_rad - math.sin(p.sweep_rad))
+    return abs(twice_area_mm2) / 2.0
 
 
 def board_area_mm2(layout: Layout) -> float:
-    """Return the board face area: outline minus cutouts minus screw holes.
+    """Return the exact board face area: outline minus cutouts minus screw holes.
 
-    References: EQ-16 and EQ-17 (A_board).
+    References: EQ-16 and EQ-17 (A_board). Arcs count as arcs, not as their 0.5 mm chords.
 
     Parameters
     ----------

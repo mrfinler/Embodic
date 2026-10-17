@@ -9,6 +9,9 @@ element list, so their loss total is not Xcoil's (test_analysis_golden.py), and 
 
 Tolerances (V3-01_gaps_a.md F11-1): the kernel class rel 1e-12 for EQ-22 (registry tolerance exact), the integrated
 class rel 1e-9 for mass, the thermal estimate and the circulating loss.
+
+Fix wave F1 T-A4 adds one more fixture, Xcoil's outlinePrims and outlineArea for a rounded octagon. It pins the exact
+board area on corner arcs.
 """
 
 import dataclasses
@@ -21,8 +24,12 @@ import numpy as np
 import pytest
 from harness.codec import load_area
 from harness.compare import INTEGRATED, KERNEL, compare_scalar
+from m1_layout.xcoil_map import layout_from_xcoil, prim_from_record
+from tests.unit.drc.layouts import layout
 
+from embodic.geometry.primitives import Arc, Line, Primitive
 from embodic.physics import analyse
+from embodic.physics.analyse import board_area_mm2
 from embodic.physics.circuit import T_MM2_TO_V_S_PER_RAD, delta_circulating_loss_w
 from embodic.physics.estimates import mass_g
 from embodic.physics.thermal import temperature_rise_k
@@ -34,6 +41,9 @@ AREA = load_area("mass_thermal")
 LAYOUTS = ("sector-default", "serpentine-default", "wave-turns-2")
 XCOIL_DENSITY_G_PER_CM3 = {"copper_density_g_per_cm3": 8.96, "laminate_density_g_per_cm3": 1.85}  # engine.js l.1377
 DELTA_CASE = "connection-sector-15c14p-delta"
+OUTLINE_CASE = "outline-polygon-8-r5"
+# fix_wave_f1.md T-A4: n a^2 tan(pi/n) - n r_c^2 (tan(pi/n) - pi/n) with n 8, a 50 mm, r_c 5 mm (engine.js l.1097).
+XCOIL_ROUNDED_OCTAGON_AREA_MM2 = 8279.968351327027
 
 
 def _output(case_id: str) -> Mapping[str, Any]:
@@ -104,17 +114,21 @@ def test_laminate_mass_kernel_matches_xcoil_on_xcoils_board_area(tag: str) -> No
 
 @pytest.mark.eqt("EQT-16-GR")
 @pytest.mark.parametrize("tag", LAYOUTS)
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEF-M7b-01: board_area_mm2 integrates 0.5 mm chords of the outline arcs; Xcoil uses the analytic area "
-    "(engine.js l.1144), so the board area is 5.6e-6 to 7.5e-6 relative low and the laminate mass with it",
-)
 def test_laminate_mass_of_the_mapped_layout_matches_xcoil_mass_thermal(
     results: Mapping[str, AnalysisResult], tag: str
 ) -> None:
-    """Catches a board area or laminate volume that differs from Xcoil's on the same outline (EQ-16)."""
+    """Catches the DEF-M7b-01 chord area, 5.6e-6 to 7.5e-6 low on these outlines, 5600 times the tolerance (EQ-16)."""
     xcoil = _output(f"mass-thermal-{tag}")["thermal"]["massLaminate"]
     verdict = compare_scalar(xcoil, results[tag].mass_laminate_g.value, INTEGRATED)
+    assert verdict.ok, f"{tag}: {verdict}"
+
+
+@pytest.mark.eqt("EQT-16-GR")
+@pytest.mark.parametrize("tag", LAYOUTS)
+def test_board_area_of_the_mapped_layout_matches_xcoil_board_area(tag: str) -> None:
+    """Catches the chord area (5.6e-6 to 7.5e-6 low) and a bore or the screw holes left in the board (10 % or more)."""
+    xcoil = _output(f"mass-thermal-{tag}")["boardArea"]
+    verdict = compare_scalar(xcoil, board_area_mm2(layout_from_xcoil(_raw(f"layout-{tag}"))), KERNEL)
     assert verdict.ok, f"{tag}: {verdict}"
 
 
@@ -157,9 +171,32 @@ def test_current_density_of_the_mapped_layout_matches_xcoil(results: Mapping[str
     assert verdict.ok, f"{tag}: {verdict}"
 
 
+def _reversed(loop: list[Primitive]) -> list[Primitive]:
+    """Return the same closed loop traversed the other way: arcs start at their end and sweep back."""
+    out: list[Primitive] = []
+    for p in reversed(loop):
+        if isinstance(p, Arc):
+            out.append(dataclasses.replace(p, start_rad=p.start_rad + p.sweep_rad, sweep_rad=-p.sweep_rad))
+        else:
+            out.append(dataclasses.replace(p, x1_mm=p.x2_mm, y1_mm=p.y2_mm, x2_mm=p.x1_mm, y2_mm=p.y1_mm))
+    return out
+
+
+def test_board_area_of_xcoils_rounded_octagon_equals_xcoil_outline_area() -> None:
+    """Catches the chord area on small corner arcs (-2.4e-6) and a segment term of the wrong sign (EQ-16, T-A4)."""
+    x = _output(OUTLINE_CASE)
+    assert x["area"] == XCOIL_ROUNDED_OCTAGON_AREA_MM2
+    loop = [prim_from_record(r) for r in x["prims"]]
+    assert [type(p) for p in loop] == [Arc, Line] * 8
+    areas = {"as dumped": board_area_mm2(layout(outer=loop)), "reversed": board_area_mm2(layout(outer=_reversed(loop)))}
+    for name, area in areas.items():
+        verdict = compare_scalar(x["area"], area, KERNEL)
+        assert verdict.ok, f"{name}: {verdict}"
+
+
 def test_every_fixture_of_the_area_is_compared() -> None:
     """Catches a fixture dumped for this area that no test reads."""
-    read = {f"mass-thermal-{t}" for t in LAYOUTS} | {f"connection-{t}" for t in LAYOUTS} | {DELTA_CASE}
+    read = {f"mass-thermal-{t}" for t in LAYOUTS} | {f"connection-{t}" for t in LAYOUTS} | {DELTA_CASE, OUTLINE_CASE}
     on_disk = {p.stem for p in (Path(__file__).parents[1] / "data" / "mass_thermal").glob("*.json")}
     assert on_disk == read
     assert json.loads((Path(__file__).parents[3] / "tools/golden/cases/mass_thermal.json").read_text())["area"] == (
