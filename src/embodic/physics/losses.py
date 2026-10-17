@@ -63,7 +63,8 @@ def thd(harmonic_amplitudes: Mapping[int, float]) -> float:
     Parameters
     ----------
     harmonic_amplitudes : Mapping[int, float]
-        Amplitude by harmonic order, any consistent unit; must contain order 1.
+        Amplitude by harmonic order, in V*s/rad at the call site (any one consistent unit gives the same THD); must
+        contain order 1.
 
     Returns
     -------

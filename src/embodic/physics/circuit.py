@@ -22,9 +22,9 @@ def add_phasors(phasors: Iterable[NDArray[np.complex128]], like: NDArray[np.comp
     Parameters
     ----------
     phasors : Iterable[NDArray[np.complex128]]
-        Phasor arrays per harmonic, any one unit.
+        Phasor arrays per harmonic, all in one unit (T*mm^2, T*mm^2/ohm, V*s/rad or V at the call sites).
     like : NDArray[np.complex128]
-        Array whose shape and dtype the sum takes.
+        Array whose shape and dtype the sum takes; only those are read, so its unit (T*mm^2, V*s/rad or V) is free.
 
     Returns
     -------
@@ -73,7 +73,7 @@ def solve_phase_circuit(
     via_r_ohm : Mapping[int, float]
         Resistance of each via id in ohm.
     mechanical_speed_rad_per_s : float
-        omega_m for the circulating loss.
+        omega_m in rad/s for the circulating loss.
 
     Returns
     -------

@@ -72,7 +72,7 @@ def interconnect_resistance(
     layer_thickness_mm : Mapping[str, float]
         Copper thickness of each layer in mm.
     resistivity_ohm_m : float
-        Resistivity at the same temperature as `path_r_ohm`, for the ring segments.
+        Resistivity in ohm*m at the same temperature as `path_r_ohm`, for the ring segments.
 
     Returns
     -------
