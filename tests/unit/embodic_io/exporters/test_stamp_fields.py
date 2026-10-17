@@ -44,12 +44,6 @@ def test_t07_project_json_holds_the_embodic_version_the_design_hash_and_a_utc_da
 
 
 @pytest.mark.req("REQ-T-07")
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="DEF-UM7d-01: the project file holds app_version, saved_utc and design_hash only (interfaces.md l.3067). "
-    "REQ-T-07 lists the project JSON among the files that carry the engine version and the registry version.",
-)
 def test_t07_project_json_holds_the_engine_version_and_the_registry_version(
     outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path
 ) -> None:

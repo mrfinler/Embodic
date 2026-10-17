@@ -1,4 +1,4 @@
-"""Project file v1: save and load a design or an incomplete draft with its origin and provenance (interfaces.md 9.1).
+"""Project file v2: save and load a design or an incomplete draft with its origin and provenance (interfaces.md 9.1).
 
 `load_project` is the boundary: it parses untrusted JSON into typed values and reports every problem as an issue.
 Everything past it trusts the types.
@@ -41,10 +41,11 @@ from embodic.model.provenance import (
     derive_provenance,
 )
 from embodic.model.schema import JsonValue, ValueType, flatten, pattern_of
+from embodic.results import load_registry
 
 PROJECT_FORMAT = "embodic-project"
 PROJECT_SUFFIX = ".embodic.json"
-TOP_LEVEL_KEYS = frozenset(
+TOP_LEVEL_KEYS_V1 = frozenset(
     {
         "format",
         "schema_version",
@@ -57,6 +58,8 @@ TOP_LEVEL_KEYS = frozenset(
         "ui",
     }
 )
+TOP_LEVEL_KEYS = TOP_LEVEL_KEYS_V1 | {"engine_version", "registry_version"}
+_TOP_LEVEL_KEYS_BY_VERSION = {1: TOP_LEVEL_KEYS_V1, 2: TOP_LEVEL_KEYS}
 _ORIGIN_KEYS = frozenset({"example_id", "example_sha256"})
 _EXAMPLE_KEY = "example"  # optional: the gallery metadata of a packaged example file, never written by save_project
 _EXAMPLE_KEYS = frozenset({"title", "source_note"})
@@ -140,9 +143,12 @@ def _utc_now() -> str:
 
 
 def project_document(
-    project: ProjectFile | LoadedDraft, provenance: ProvenanceMap, *, saved_utc: str
+    project: ProjectFile | LoadedDraft, provenance: ProvenanceMap, *, saved_utc: str, registry_version: str
 ) -> dict[str, JsonValue]:
-    """Return the file's JSON data; pure, so the caller supplies the provenance and the save time."""
+    """Return the file's JSON data; pure, so the caller supplies the provenance, the save time and the registry version.
+
+    `engine_version` is the embodic version: there is no separate engine (D-038d).
+    """
     origin: JsonValue = None
     if project.origin is not None:
         origin = {"example_id": project.origin.example_id, "example_sha256": project.origin.example_sha256}
@@ -154,6 +160,8 @@ def project_document(
         "format": PROJECT_FORMAT,
         "schema_version": PROJECT_SCHEMA_VERSION,
         "app_version": embodic.__version__,
+        "engine_version": embodic.__version__,
+        "registry_version": registry_version,
         "saved_utc": saved_utc,
         "design_hash": hash_,
         "origin_example": origin,
@@ -168,18 +176,21 @@ def encode_project(document: Mapping[str, JsonValue]) -> str:
     return json.dumps(document, sort_keys=True, indent=1, ensure_ascii=False, allow_nan=False) + "\n"
 
 
-def save_project(path: Path, project: ProjectFile | LoadedDraft, *, saved_utc: str | None = None) -> str:
+def save_project(
+    path: Path, project: ProjectFile | LoadedDraft, *, saved_utc: str | None = None, registry_version: str | None = None
+) -> str:
     """Write atomically (temp file + os.replace) and return the design hash ('' for a draft).
 
     saved_utc defaults to the current UTC second. A caller that compares two saves byte for byte passes one stamp to
-    both, since two clock reads can straddle a second.
+    both, since two clock reads can straddle a second. registry_version defaults to the packaged registry's.
     """
     if isinstance(project, ProjectFile):
         provenance: ProvenanceMap = project_provenance(project)
     else:  # a draft is not a design, so only its measurements have a provenance to keep
         provenance = {m.pointer: MeasuredValue(source=m.source) for m in project.measurements}
     stamp = _utc_now() if saved_utc is None else saved_utc
-    document = project_document(project, provenance, saved_utc=stamp)
+    registry = load_registry().version if registry_version is None else registry_version
+    document = project_document(project, provenance, saved_utc=stamp, registry_version=registry)
     descriptor, temp_name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
@@ -271,11 +282,16 @@ def _refuse(pointer: str) -> tuple[None, tuple[ValidationIssue, ...]]:
 
 
 def _unknown_keys(document: Mapping[str, Any]) -> list[str]:
-    """Return the pointer of every key the project schema refuses; `ui` is free-form, `provenance` is checked apart."""
-    unknown = [f"/{key}" for key in sorted(document.keys() - TOP_LEVEL_KEYS - {_EXAMPLE_KEY})]
-    for key, allowed in (("origin_example", _ORIGIN_KEYS), (_EXAMPLE_KEY, _EXAMPLE_KEYS)):
+    """Return the pointer of every key the file's own schema version refuses.
+
+    `ui` is free-form and `provenance` is checked apart. The check runs before the migration, which adds the v2 keys
+    to a v1 document, so a v1 file that holds one of them is refused as its schema refuses it.
+    """
+    allowed = _TOP_LEVEL_KEYS_BY_VERSION[document["schema_version"]]
+    unknown = [f"/{key}" for key in sorted(document.keys() - allowed - {_EXAMPLE_KEY})]
+    for key, nested_keys in (("origin_example", _ORIGIN_KEYS), (_EXAMPLE_KEY, _EXAMPLE_KEYS)):
         if isinstance(nested := document.get(key), dict):
-            unknown += [f"/{key}/{name}" for name in sorted(nested.keys() - allowed)]
+            unknown += [f"/{key}/{name}" for name in sorted(nested.keys() - nested_keys)]
     unknown += [
         f"/design{pointer}"
         for pointer in sorted(flatten(document["design"]))
@@ -311,11 +327,11 @@ def parse_project(text: str) -> tuple[ProjectFile | LoadedDraft | None, tuple[Va
         return None, (_issue("INVALID_PROJECT_FILE", (), value=str(error)),)
     if (pointer := _malformed(document)) is not None:
         return _refuse(pointer)
+    if document["schema_version"] <= PROJECT_SCHEMA_VERSION and (unknown := _unknown_keys(document)):
+        return None, tuple(_issue("INVALID_PROJECT_FILE", (pointer,)) for pointer in unknown)
     migrated, issues = migrate(document)
     if migrated is None:
         return None, issues
-    if unknown := _unknown_keys(migrated):
-        return None, tuple(_issue("INVALID_PROJECT_FILE", (pointer,)) for pointer in unknown)
     origin = _origin(migrated.get("origin_example"))
     if isinstance(origin, ValidationIssue):
         return None, (origin,)

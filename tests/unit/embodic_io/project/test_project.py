@@ -1,4 +1,4 @@
-"""UT-IO-01, 02, 04, 05, 07: project file v1 save and load, canonical hash, migrations, provenance and drafts."""
+"""UT-IO-01, 02, 04, 05, 07: project file save and load, canonical hash, migrations, provenance and drafts."""
 
 import dataclasses
 import hashlib
@@ -11,7 +11,7 @@ from embodic.errors import Severity
 from embodic.io import project as project_module
 from embodic.io.canonical import canonical_json, design_hash
 from embodic.io.examples import examples_dir, load_example
-from embodic.io.migrations import migrate
+from embodic.io.migrations import PROJECT_SCHEMA_VERSION, migrate
 from embodic.io.project import (
     LoadedDraft,
     ProjectFile,
@@ -122,7 +122,7 @@ def test_ut_io_04_newer_schema_version_is_refused(tmp_path: Path) -> None:
     path = tmp_path / "new.embodic.json"
     save_project(path, _cf11_project())
     document = json.loads(path.read_text())
-    document["schema_version"] = 2
+    document["schema_version"] = PROJECT_SCHEMA_VERSION + 1
     loaded, issues = parse_project(json.dumps(document))
     assert loaded is None
     assert [i.code for i in issues] == ["INVALID_SCHEMA_VERSION_NEWER"]
@@ -257,7 +257,9 @@ def test_def_u_d6_02_unknown_keys_are_refused_with_their_pointer(edit, pointers)
     """
     project = _cf11_project()
     document = json.loads(
-        json.dumps(project_module.project_document(project, project_provenance(project), saved_utc="t"))
+        json.dumps(
+            project_module.project_document(project, project_provenance(project), saved_utc="t", registry_version="v")
+        )
     )
     edit(document)
     loaded, issues = parse_project(json.dumps(document))
@@ -281,7 +283,9 @@ def test_every_packaged_example_file_loads_as_a_project(path: Path) -> None:
 def test_def_u_d6_02_ui_stays_free_form_and_every_packaged_example_still_loads() -> None:
     """Catches an unknown-key check that rejects the free-form `ui` object or a key the writer itself emits."""
     project = _cf11_project()
-    document = project_module.project_document(project, project_provenance(project), saved_utc="t")
+    document = project_module.project_document(
+        project, project_provenance(project), saved_utc="t", registry_version="v"
+    )
     assert set(document) == project_module.TOP_LEVEL_KEYS
     document["ui"] = {"anything": {"nested": [1, 2]}}
     loaded, issues = parse_project(json.dumps(document))

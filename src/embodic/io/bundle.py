@@ -41,7 +41,9 @@ def _packaged_origin(outcome: ComputeOutcome) -> ExampleRef | None:
 
 def _write_project(outcome: ComputeOutcome, path: Path, generated_utc: str) -> ExportSummary:
     project = ProjectFile(design=outcome.design, origin=_packaged_origin(outcome))
-    document = project_document(project, outcome.provenance, saved_utc=generated_utc)
+    document = project_document(
+        project, outcome.provenance, saved_utc=generated_utc, registry_version=outcome.versions.registry
+    )
     path.write_text(encode_project(document), encoding="utf-8", newline="\n")
     return ExportSummary(
         kind=ExportKind.PROJECT_JSON, path=path, lines=0, arcs=0, circles=0, vias=0, pads=0, holes=0, pages=0

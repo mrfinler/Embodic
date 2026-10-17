@@ -36,6 +36,7 @@ def test_pk03_the_wheel_holds_the_package_resources_and_licences_and_nothing_els
     expected = {
         "embodic/__init__.py",
         "embodic/io/schema/project.v1.schema.json",
+        "embodic/io/schema/project.v2.schema.json",
         "embodic/_resources/evidence/equations.v1.json",
         "embodic/_resources/fonts/Inter/LICENSE.txt",
         "embodic/_resources/fonts/JetBrainsMono/OFL.txt",

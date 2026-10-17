@@ -1,9 +1,10 @@
-"""Write src/embodic/io/schema/project.v1.schema.json from FIELDS; rerunning gives the same bytes.
+"""Write src/embodic/io/schema/project.v<n>.schema.json for each file version; rerunning gives the same bytes.
 
 Run from the repository root: ``python -m tests.unit.embodic_io.project.make_schema``. The `design` object lists every
 key of every topology in its file form (degrees under `_deg` names), so an added, removed or renamed field changes the
 schema and fails UT-IO-03 until the schema version rule of interfaces.md 9.1 is followed. No key is required inside
-`design`, because an incomplete draft is a valid file (D-014).
+`design`, because an incomplete draft is a valid file (D-014). A version's schema stays as it was written for the files
+of that version: v2 adds `engine_version` and `registry_version`, and v1 is unchanged.
 """
 
 import json
@@ -12,13 +13,18 @@ from pathlib import Path
 from typing import Any
 
 from embodic.io.canonical import RAD_PATTERNS
+from embodic.io.migrations import PROJECT_SCHEMA_VERSION
 from embodic.io.project import PROJECT_FORMAT
 from embodic.model.fields import FIELDS, FieldKind, FieldSpec, Sign
 from embodic.model.provenance import Provenance
 from embodic.model.schema import LIST_ITEM, ValueType
 from embodic.model.vocabulary import TopologyKind
 
-SCHEMA_PATH = Path(__file__).resolve().parents[4] / "src" / "embodic" / "io" / "schema" / "project.v1.schema.json"
+SCHEMA_DIR = Path(__file__).resolve().parents[4] / "src" / "embodic" / "io" / "schema"
+SCHEMA_VERSIONS = tuple(range(1, PROJECT_SCHEMA_VERSION + 1))
+ADDED_TOP_LEVEL_KEYS: dict[int, dict[str, dict[str, Any]]] = {  # the version that introduced each optional string key
+    2: {"engine_version": {"type": "string"}, "registry_version": {"type": "string"}},
+}
 CONSTANTS: dict[str, dict[str, Any]] = {  # one-value fields the file writes and the model does not list in FIELDS
     "/winding/kind": {"enum": [t.value for t in TopologyKind]},
     "/analysis/edge_correction": {"const": "off"},
@@ -103,8 +109,13 @@ def _measurable_regex() -> str:
     return "^(" + "|".join(patterns) + ")$"
 
 
-def build_schema() -> dict[str, Any]:
-    """Return the JSON Schema (Draft 2020-12) of project file v1."""
+def schema_path(version: int) -> Path:
+    """Return the schema file of a project file version."""
+    return SCHEMA_DIR / f"project.v{version}.schema.json"
+
+
+def build_schema(version: int = PROJECT_SCHEMA_VERSION) -> dict[str, Any]:
+    """Return the JSON Schema (Draft 2020-12) of one project file version."""
     design: dict[str, Any] = {"type": "object"}
     for spec in FIELDS:
         _merge(design, _file_pattern(spec).split("/")[1:], _leaf(spec), spec.nullable)
@@ -131,15 +142,15 @@ def build_schema() -> dict[str, Any]:
             "additionalProperties": False,
         },
     }
-    return {
+    schema: dict[str, Any] = {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "title": "embodic project file v1",
+        "title": f"embodic project file v{version}",
         "type": "object",
         "required": ["format", "schema_version", "design"],
         "additionalProperties": False,
         "properties": {
             "format": {"const": PROJECT_FORMAT},
-            "schema_version": {"const": 1},
+            "schema_version": {"const": version},
             "app_version": {"type": "string"},
             "saved_utc": {"type": "string"},
             "design_hash": {"type": "string"},
@@ -175,14 +186,19 @@ def build_schema() -> dict[str, Any]:
         },
         "$defs": entry,
     }
+    for added_in, keys in ADDED_TOP_LEVEL_KEYS.items():
+        if added_in <= version:
+            schema["properties"].update(keys)
+    return schema
 
 
-def schema_text() -> str:
-    """Return the schema file text: sorted keys, one-space indent, trailing newline."""
-    return json.dumps(build_schema(), sort_keys=True, indent=1) + "\n"
+def schema_text(version: int = PROJECT_SCHEMA_VERSION) -> str:
+    """Return the schema file text of a version: sorted keys, one-space indent, trailing newline."""
+    return json.dumps(build_schema(version), sort_keys=True, indent=1) + "\n"
 
 
 if __name__ == "__main__":
-    SCHEMA_PATH.parent.mkdir(parents=True, exist_ok=True)
-    SCHEMA_PATH.write_text(schema_text(), encoding="utf-8", newline="\n")
-    print(SCHEMA_PATH)
+    SCHEMA_DIR.mkdir(parents=True, exist_ok=True)
+    for file_version in SCHEMA_VERSIONS:
+        schema_path(file_version).write_text(schema_text(file_version), encoding="utf-8", newline="\n")
+        print(schema_path(file_version))
