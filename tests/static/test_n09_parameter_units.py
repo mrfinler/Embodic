@@ -1,7 +1,9 @@
 """REQ-N-09 (V3-01 gap N-09): a Parameters entry of a physics docstring names a unit, not only the parameter.
 
 MT-04 (`test_mt04_physics_docstrings.py`) matches `name:` only, so `width : float / Trace width.` passes it.
-The unit tokens come from `embodic.units.Unit` (canonical code and display form).
+The unit tokens come from `embodic.units.Unit` (canonical code and display form). A quantity of dimension one has no
+unit to name; its description says `dimensionless` (D-056f, BIPM SI Brochure 9th edition 2019, quantities of dimension
+one).
 """
 
 import ast
@@ -20,12 +22,15 @@ UNIT_TOKENS = tuple(
     )
 )
 NUMERIC_TYPE = re.compile(r"float|FloatArray|NDArray")
+DIMENSIONLESS = re.compile(r"(?<!\w)dimensionless(?!\w)")
 ENTRY = re.compile(r"^(?P<name>\w+)\s*:\s*(?P<type>.+)$")
 SECTION_RULE = re.compile(r"^-{3,}$")
 
 
 def _has_unit_token(description: str) -> bool:
-    return any(re.search(rf"(?<!\w){re.escape(token)}(?!\w)", description) for token in UNIT_TOKENS)
+    return bool(DIMENSIONLESS.search(description)) or any(
+        re.search(rf"(?<!\w){re.escape(token)}(?!\w)", description) for token in UNIT_TOKENS
+    )
 
 
 def numeric_parameters_without_unit(doc: str) -> list[str]:
@@ -83,30 +88,12 @@ def trace_resistance(width: float) -> float:
 '''
 
 
-# Dimensionless float parameters: Unit.ONE and Unit.COUNT are left out of UNIT_TOKENS as plain English words, so no
-# wording of "no unit" passes the checker. Whether it accepts "dimensionless" is Fable's decision (U-M8b report).
-DIMENSIONLESS_PENDING = (
-    "edge_leakage_fraction() Parameters name no unit for amplitude",
-    "inductance_estimate_h() Parameters name no unit for series_turns, winding_factor_1",
-)
-
-
 @pytest.mark.req("REQ-N-09")
-def test_n09_every_dimensional_parameter_of_a_public_physics_function_names_a_unit(src_modules):
-    """REQ-N-09 on the real package: catches a physics docstring that documents a float parameter without its unit."""
-    unitless = [v for v in check_parameter_units(src_modules) if v.split(": ", 1)[1] not in DIMENSIONLESS_PENDING]
-    assert unitless == []
-
-
-@pytest.mark.req("REQ-N-09")
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="amplitude (edge_leakage_fraction), series_turns and winding_factor_1 (inductance_estimate_h) have no unit "
-    "to name (DIMENSIONLESS_PENDING). The owner removes this mark, and the tuple, with the decision on the checker.",
-)
 def test_n09_every_numeric_parameter_of_a_public_physics_function_names_a_unit(src_modules):
-    """REQ-N-09 on the real package, with no exception for a dimensionless parameter."""
+    """REQ-N-09 on the real package: catches a physics docstring that documents a float parameter without its unit.
+
+    A parameter of dimension one passes with the word `dimensionless` (D-056f). There is no exception list.
+    """
     assert check_parameter_units(src_modules) == []
 
 
@@ -124,6 +111,30 @@ def test_n09_the_same_parameter_with_a_unit_is_not_reported(planted):
     """Catches a checker that reports every numeric parameter, so MT-04 could never go green again."""
     module = planted("embodic.physics.trace", trace_function("Trace width in mm."))
     assert check_parameter_units([module]) == []
+
+
+@pytest.mark.req("REQ-N-09")
+def test_n09_a_dimensionless_parameter_that_says_so_is_not_reported(planted):
+    """Catches a checker with no way to document a quantity of dimension one, so MT-04 never goes green (D-056f)."""
+    module = planted("embodic.physics.trace", trace_function("Fundamental winding factor, dimensionless."))
+    assert check_parameter_units([module]) == []
+
+
+@pytest.mark.req("REQ-N-09")
+@pytest.mark.parametrize(
+    "description", ["Winding factor.", "Winding factor, no unit.", "Winding factor, a pure number."]
+)
+def test_n09_a_dimensionless_parameter_that_does_not_say_so_is_reported(planted, description):
+    """Catches a checker that lets the other wordings for dimension one pass: only `dimensionless` is the word."""
+    (violation,) = check_parameter_units([planted("embodic.physics.trace", trace_function(description))])
+    assert "width" in violation
+
+
+@pytest.mark.req("REQ-N-09")
+def test_n09_the_word_dimensionless_must_stand_alone_to_count(planted):
+    """Catches a substring match, which would accept `nondimensionless` or `dimensionlessness` as the word."""
+    module = planted("embodic.physics.trace", trace_function("Trace width, nondimensionless."))
+    assert len(check_parameter_units([module])) == 1
 
 
 @pytest.mark.req("REQ-N-09")
