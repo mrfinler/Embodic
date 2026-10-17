@@ -102,6 +102,11 @@ pointers, condition, `value`, `limit` and source line, and `checks/issue_code_co
 adds `engine_version` and `registry_version` to the project file, raises its format version to 2 and gives the load
 rule for a v1 file (DEF-UM7d-01, REQ-T-07).
 
+Revision 2026-10-17 (U-D21, claude-sonnet-5-5, D-056; main b977621 read for every item). §1.1 no longer names the issue
+code for a topology with no generator, because no code path returns it (D-056e). §9.1 states that
+`tools/sync_registry.py` regenerates the example project files after a registry change (D-056b). `checks/check_contract.py`
+runs `checks/issue_code_coverage.py` (D-056d).
+
 ## 0. Rules for every public boundary
 
 - Lengths are millimetres (`_mm`), angles radians (`_rad`) inside the core, temperature °C (`_degc`), current A (`_a`),
@@ -394,9 +399,14 @@ and `value` None unless the row says otherwise. Every generator runs `design_kee
 
 `derive_wave` can return `UNBUILDABLE_WAVE_MIN_POLES` and `UNBUILDABLE_WAVE_SLOT_PITCH` together (l.314-320). Every
 other wave refusal and every serpentine refusal is one issue: `_refusal` reports only the first reason of a
-`CanonFailure` (`serpentine/generate.py` l.125). `UNBUILDABLE_UNSUPPORTED_TOPOLOGY` is in `errors/catalogue/generators.py`
-and no code path returns it. The lever finds no literal outside the catalogue and no f-string that builds it, and
-`build_layout` indexes `GENERATORS`, which has all three topologies (`generators/__init__.py` l.25-27).
+`CanonFailure` (`serpentine/generate.py` l.125). `build_layout` indexes `GENERATORS`, which has all three topologies
+(`generators/__init__.py` l.25-27), so no path refuses a topology.
+
+Revision 2026-10-17 (U-D21; D-056e). The catalogue still holds one code for that refusal, and this file no longer names
+it. `checks/issue_code_coverage.py` finds no literal of it outside the catalogue (`verified (run)`, main b977621), and its
+message says that only spiral coils can be built (`errors/catalogue/generators.py` l.6, `verified` by reading), which is
+false. D-056e removes the code, and unit U-M8e removes it from `src`. Until that unit merges, `checks/issue_code_coverage.py`
+and `checks/check_contract.py` report the code as absent from this file. Do not add its name here to silence the report.
 
 Project file, compute facade, exporters and command line. None of these codes has a pointer unless the row says so.
 
@@ -3520,6 +3530,17 @@ def save_project(
   with `saved_utc`. The second save of a loaded v1 file writes a v2 file. That is the migration, not a round trip.
 - Design hash. `design_hash` covers `design` only (rule above; `project.py` l.150 hashes `project.design`). The two keys
   change no design hash, no `EXAMPLE_HASHES` pin (UT-IO-08) and no stored `origin_example`.
+
+Revision 2026-10-17 (U-D21, claude-sonnet-5-5; D-056b; `tools/sync_registry.py` on main b977621 read). The packaged
+examples depend on the registry, because each holds `registry_version`, and a registry change alters that value.
+
+- Contract. `tools/sync_registry.py` regenerates the five example project files under `resources/examples/`
+  (`serpentine_16p_example`, `spiral_12c10p_d08`, `spiral_12c14p`, `spiral_12c16p_default`, `wave_16p_example`) after every
+  registry change. `tools/sync_registry.py --check` reports an example that differs from what the regeneration gives, as
+  it reports a registry copy or the manifest that differs. A registry change alters `registry_version` in the files. It
+  alters no design hash (bullet above).
+- State. Not built on main b977621. `SOURCES` lists the two registry files only (l.40-43), and `sync()` writes the two
+  copies and the manifest (l.85-91) (`verified` by reading). U-M8e builds the regeneration and regenerates the five files.
 
 ### 9.2 Board dump (Agent 3 format, frozen here as v1)
 

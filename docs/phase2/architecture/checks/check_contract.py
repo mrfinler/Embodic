@@ -5,6 +5,9 @@ Run from anywhere:
     python3 docs/phase2/architecture/checks/check_contract.py          # check only
     python3 docs/phase2/architecture/checks/check_contract.py --write  # regenerate the matrix in test_plan.md, then check
 
+It also runs issue_code_coverage.py (revision 2026-10-17, U-D21, D-056d). Each code that src defines or emits and that
+interfaces.md does not name is one problem.
+
 Exit code 0 when every check passes, 1 otherwise.
 """
 
@@ -13,6 +16,7 @@ from __future__ import annotations
 import argparse
 import ast
 import re
+import subprocess
 import sys
 import types
 from pathlib import Path
@@ -29,6 +33,7 @@ WORK = ARCH / "work_breakdown.md"
 LAYOUT = ARCH / "package_layout.md"
 ADR_DIR = ARCH / "decisions"
 REQUIRED_ADRS = ("ADR-0004", "ADR-0005", "ADR-0010", "ADR-0011", "ADR-0012")
+ISSUE_CODE_CHECK = ARCH / "checks/issue_code_coverage.py"
 
 MODEL_LINE = re.compile(r"Prepared by: Agent 6 .* model: claude-(?:opus|sonnet)-5-5")
 THAI = re.compile("[" + chr(0x0E00) + "-" + chr(0x0E7F) + "]")
@@ -149,6 +154,17 @@ def check_interfaces(errors: list[str]) -> int:
     except Exception as exc:  # noqa: BLE001 - any failure while defining the stubs is a contract defect
         errors.append(f"interfaces.md blocks fail when executed in order: {type(exc).__name__}: {exc}")
     return len(blocks)
+
+
+def check_issue_codes(errors: list[str]) -> str:
+    """Run issue_code_coverage.py (D-056d); return its summary line. Each MISSING line it prints is one problem."""
+    run = subprocess.run([sys.executable, str(ISSUE_CODE_CHECK)], capture_output=True, text=True, check=False)
+    lines = run.stdout.splitlines()
+    missing = [line for line in lines if line.startswith("MISSING ")]
+    errors.extend(f"issue_code_coverage.py: {line}" for line in missing)
+    if run.returncode != 0 and not missing:
+        errors.append(f"issue_code_coverage.py exited {run.returncode}: {(run.stderr or run.stdout).strip()}")
+    return lines[0] if lines else "no output"
 
 
 def parse_units() -> list[dict[str, object]]:
@@ -311,6 +327,7 @@ def main() -> int:
     if reqs:
         check_matrix(reqs, args.write, errors)
     blocks = check_interfaces(errors) if INTERFACES.exists() else 0
+    issue_codes = check_issue_codes(errors)
     units = check_work(errors) if WORK.exists() else []
     test_packages = check_test_packages(units, errors)
     batch_rows, batch_count = check_batches(units, errors) if WORK.exists() else (0, 0)
@@ -319,6 +336,7 @@ def main() -> int:
     print(f"requirements: {len(reqs)} total, {len(live)} live, {len(reqs) - len(live)} withdrawn; "
           f"by disposition: { {d: sum(r['disposition'] == d for r in reqs) for d in sorted(DISPOSITIONS)} }")
     print(f"interfaces.md python blocks: {blocks} (ast.parse each, then exec in order)")
+    print(f"issue codes (issue_code_coverage.py): {issue_codes}")
     print(f"work units: {len(units)}; milestones: {sorted({str(u['milestone']) for u in units})}")
     print(f"planned top-level test packages: {test_packages}")
     print(f"section 8 units: {batch_rows} in {batch_count} batches")
@@ -328,7 +346,8 @@ def main() -> int:
             print(f"  - {e}")
         return 1
     print("PASS: REQ IDs unique; every REQ has >= 1 defined test ID; Phase 1 REQs all dispositioned; "
-          "matrix current; interfaces parse and execute; concurrent and same-milestone write paths disjoint; "
+          "matrix current; interfaces parse and execute; interfaces.md names every issue code in src; "
+          "concurrent and same-milestone write paths disjoint; "
           "section 8 batch write paths disjoint; "
           "planned test package names unique and not stdlib; model line first; no Thai; no long dashes")
     return 0
