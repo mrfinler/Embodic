@@ -51,7 +51,7 @@ def _admit_socketpair_connect(real_connect: _Connect) -> _Connect:
     """Return a `socket.connect` that refuses every call except the one inside CPython's socketpair fallback.
 
     On Windows `socket.socketpair` is `_fallback_socketpair`, which listens on a loopback port and connects to it
-    (Lib/socket.py). The caller's code object is the whole test: a connect from anywhere else, loopback included, fails.
+    (Lib/socket.py). Only a connect called directly from that function passes; any other, loopback included, fails.
     """
 
     def connect(sock: socket.socket, address: Any) -> None:
