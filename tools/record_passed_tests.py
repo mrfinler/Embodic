@@ -6,10 +6,12 @@ Usage, from the repository root after the release gate's pytest run::
         --out resources/evidence/passed_tests.v1.json
 
 Exit code 1, and nothing written, when the profile is not release, the report is missing or malformed, any test
-failed, or a test carries an eqt ID that the registry does not hold.
+failed, a test carries an eqt ID that the registry does not hold, or a `verified` equation has a linked test that did
+not pass (REQ-T-05: the badge would read `not tested`). The message names each such equation.
 """
 
 import argparse
+import dataclasses
 import datetime as dt
 import json
 import os
@@ -24,6 +26,7 @@ import numpy
 
 import embodic
 from embodic.results.registry import PASSED_TESTS_FORMAT, Registry, load_registry, package_source_sha256
+from embodic.results.status import Status
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -139,6 +142,14 @@ def record_main(argv: Sequence[str] | None = None) -> int:
         passed, realised_by = passed_registry_tests(records, registry_test_ids)
     except ValueError as error:
         return _refuse(str(error))
+    with_evidence = dataclasses.replace(registry, passed_tests=passed)
+    unproven = [
+        eq_id
+        for eq_id, entry in registry.equations.items()
+        if entry.status is Status.VERIFIED and not with_evidence.tests_passed(eq_id)
+    ]
+    if unproven:
+        return _refuse(f"verified equations with a linked test that did not pass in this build: {', '.join(unproven)}")
     source_sha256 = package_source_sha256(Path(embodic.__file__).resolve().parent)
     if source_sha256 is None:
         return _refuse("the embodic package holds no .py file to hash")

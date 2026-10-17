@@ -21,8 +21,8 @@ families are licensed under the SIL Open Font License 1.1; the licence text ship
   so v4.1 is the latest release (`verified` by requesting both tags).
 - The release archives on github.com could not be used: github.com, api.github.com and codeload.github.com answered
   HTTP 403 from this session's egress proxy. The files come from raw.githubusercontent.com at the release tag instead.
-  No hash is published for the single files, so each SHA-256 above is the one measured with `sha256sum` after download
-  (`verified` by measuring; equality with the files inside the release ZIPs is `not tested`).
+  No hash is published for the single files, so each SHA-256 above is the one computed with `sha256sum` after download
+  (`verified` by computing; equality with the files inside the release ZIPs is `not tested`).
 - The version strings were read from each file's `name` table with fontTools (`verified`).
 
 - U-M4e-1 (2026-10-09, U-S4e ruling e2) replaced `Inter/InterVariable.ttf` with the two static files above, because Qt

@@ -216,7 +216,7 @@ def edge_leakage_fraction(fields: Sequence[PathField], amplitude: float) -> floa
     fields : Sequence[PathField]
         Edge weights of every path (T*mm^2).
     amplitude : float
-        D_e, dimensionless.
+        D_e, dimensionless (no unit).
 
     Returns
     -------

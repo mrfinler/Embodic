@@ -61,7 +61,7 @@ def field_harmonic(
     symmetry_plane_mm : float
         G in mm from symmetry_plane_mm(); infinity for an open rotor.
     alpha_p : FloatArray
-        Pole-arc ratio, dimensionless (scalar or one per radius).
+        Pole-arc ratio, the magnet angle over the pole-pitch angle (rad per rad, so no unit); scalar or one per radius.
 
     Returns
     -------

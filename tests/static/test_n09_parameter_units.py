@@ -83,6 +83,33 @@ def trace_resistance(width: float) -> float:
 '''
 
 
+# Dimensionless float parameters: Unit.ONE and Unit.COUNT are left out of UNIT_TOKENS as plain English words, so no
+# wording of "no unit" passes the checker. Whether it accepts "dimensionless" is Fable's decision (U-M8b report).
+DIMENSIONLESS_PENDING = (
+    "edge_leakage_fraction() Parameters name no unit for amplitude",
+    "inductance_estimate_h() Parameters name no unit for series_turns, winding_factor_1",
+)
+
+
+@pytest.mark.req("REQ-N-09")
+def test_n09_every_dimensional_parameter_of_a_public_physics_function_names_a_unit(src_modules):
+    """REQ-N-09 on the real package: catches a physics docstring that documents a float parameter without its unit."""
+    unitless = [v for v in check_parameter_units(src_modules) if v.split(": ", 1)[1] not in DIMENSIONLESS_PENDING]
+    assert unitless == []
+
+
+@pytest.mark.req("REQ-N-09")
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason="amplitude (edge_leakage_fraction), series_turns and winding_factor_1 (inductance_estimate_h) have no unit "
+    "to name (DIMENSIONLESS_PENDING). The owner removes this mark, and the tuple, with the decision on the checker.",
+)
+def test_n09_every_numeric_parameter_of_a_public_physics_function_names_a_unit(src_modules):
+    """REQ-N-09 on the real package, with no exception for a dimensionless parameter."""
+    assert check_parameter_units(src_modules) == []
+
+
 @pytest.mark.req("REQ-N-09")
 def test_n09_a_numeric_parameter_without_a_unit_is_reported(planted):
     """Catches a docstring that names a parameter but no unit, which MT-04's `name:` match passes."""

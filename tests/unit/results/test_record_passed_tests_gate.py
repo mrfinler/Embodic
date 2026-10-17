@@ -1,6 +1,7 @@
 """REQ-T-05: a `verified` equation whose linked tests did not pass must stop the release (acceptance: CI fails)."""
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -19,14 +20,42 @@ def verified_equation_with_one_linked_test() -> tuple[str, str]:
     raise AssertionError("the packaged registry has no verified equation with exactly one linked test")
 
 
+def verified_equations() -> dict[str, tuple[str, ...]]:
+    """Return each `verified` equation of the packaged registry with its linked EQT IDs."""
+    registry = load_registry()
+    return {eq_id: e.tests for eq_id, e in registry.equations.items() if e.status is Status.VERIFIED}
+
+
+def release_report(path: Path, *, skipping: str | None = None) -> Path:
+    """Write a report in which every linked test of every verified equation passed, except `skipping` (skipped)."""
+    records = [
+        {"nodeid": f"tests/x.py::{eqt_id}", "req": ["REQ-T-05"], "eq": [], "outcome": "passed", "eqt": [eqt_id]}
+        for tests in verified_equations().values()
+        for eqt_id in tests
+        if eqt_id != skipping
+    ]
+    if skipping is not None:
+        skipped = {"nodeid": "tests/x.py::skipped", "req": ["REQ-T-05"], "eq": [], "outcome": "skipped"}
+        records.append({**skipped, "eqt": [skipping]})
+    path.write_text(json.dumps(records), encoding="utf-8")
+    return path
+
+
+def run_record(report: Path, out: Path) -> int:
+    """Run the release record step on a report and return its exit code."""
+    argv = ["--report", str(report), "--profile", "release", "--out", str(out)]
+    return load_tool().record_main(argv)
+
+
 @pytest.mark.req("REQ-T-05")
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="record_main exits 0 and prints the ID as 'carried by no test' (tests/unit/results/"
-    "test_record_passed_tests.py l.85-117). The acceptance says CI fails and names the equation, or Agent 6 rewords "
-    "it to the badge downgrade `not tested`. The decision is Fable's.",
-)
+def test_a_report_that_passes_every_linked_test_of_every_verified_equation_records_the_evidence(tmp_path: Path) -> None:
+    """Control for the refusals below: catches a gate that refuses a complete release run."""
+    out = tmp_path / "passed_tests.v1.json"
+    assert run_record(release_report(tmp_path / "req_report.json"), out) == 0
+    assert out.is_file()
+
+
+@pytest.mark.req("REQ-T-05")
 def test_a_verified_equation_whose_only_linked_test_did_not_pass_stops_the_release(tmp_path: Path, capsys) -> None:
     """Catches a release that ships a `verified` equation whose tests did not run: exit 1 and the equation named."""
     eq_id, eqt_id = verified_equation_with_one_linked_test()
@@ -39,3 +68,18 @@ def test_a_verified_equation_whose_only_linked_test_did_not_pass_stops_the_relea
     output = capsys.readouterr()
     assert code == 1
     assert eq_id in output.out + output.err
+
+
+@pytest.mark.req("REQ-T-05")
+def test_a_verified_equation_missing_one_of_several_linked_tests_stops_the_release(tmp_path: Path, capsys) -> None:
+    """Catches a gate that counts one passing linked test as enough: UT-RES-09 keeps such a result `not tested`.
+
+    Every other verified equation passed all its tests, so only the equation missing one test may be named.
+    """
+    eq_id, tests = next((k, t) for k, t in verified_equations().items() if len(t) > 1)
+    out = tmp_path / "passed_tests.v1.json"
+    code = run_record(release_report(tmp_path / "req_report.json", skipping=tests[-1]), out)
+    output = capsys.readouterr()
+    assert code == 1
+    assert re.findall(r"\bEQ-\d+\b", output.out + output.err) == [eq_id]
+    assert not out.exists()
