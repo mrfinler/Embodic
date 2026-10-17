@@ -39,12 +39,20 @@ class Profile:
     ignored_test_dirs: tuple[str, ...]
     records_evidence: bool = False
     untested_through: str | None = None  # TR-01: the last milestone whose live must rows need a test or a manual record
+    require_personal_tokens: bool = False  # LG-06 fails, not skips, when no personal-data token can be found
 
 
 PROFILES = {
     "commit": Profile("not slow and not manual", "commit", RELEASE_ONLY_TEST_DIRS),
     "nightly": Profile("not manual", "nightly", RELEASE_ONLY_TEST_DIRS),
-    "release": Profile("not manual", "nightly", (EVIDENCE_TEST_DIR,), records_evidence=True, untested_through="M5"),
+    "release": Profile(
+        "not manual",
+        "nightly",
+        (EVIDENCE_TEST_DIR,),
+        records_evidence=True,
+        untested_through="M5",
+        require_personal_tokens=True,
+    ),
 }
 
 
@@ -66,6 +74,8 @@ def gates_for(profile: Profile, *, record_baseline: bool = False) -> list[Gate]:
     pytest_env = {"EMBODIC_HYPOTHESIS_PROFILE": profile.hypothesis_profile}
     if record_baseline:
         pytest_env["EMBODIC_RECORD_BASELINE"] = "1"
+    if profile.require_personal_tokens:
+        pytest_env["EMBODIC_REQUIRE_PERSONAL_TOKENS"] = "1"  # name read by tests/static/lg_scan.py
     lint_imports = "import sys; from importlinter.cli import lint_imports_command; sys.exit(lint_imports_command())"
     trace_argv = [
         python,
