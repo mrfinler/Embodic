@@ -261,6 +261,7 @@ def _write_project(outcome: ComputeOutcome, path: Path) -> ExportSummary:
         ProjectFile(design=outcome.design, origin=origin),
         outcome.provenance,
         saved_utc=export_metadata(outcome).generated_utc,
+        registry_version=outcome.versions.registry,
     )
     path.write_text(encode_project(document), encoding="utf-8", newline="\n")
     return ExportSummary(
