@@ -44,7 +44,8 @@
   "v1.0 rev. U-E10 (2026-10-13, D-046 d): for a test ID EQT-nn-CFxx the closed-form case CF-xx of oracle_cases.json (its inputs, expected values and tolerances) governs over the equation's Phase 1 reference_case and tolerance texts, which stay as the Phase 1 record; the texts that differ are the EQ-06 tolerance (1e-4 vs CF-02 1e-9 and CF-03 1e-5) and the EQ-12 and EQ-13 reference_case (Xcoil rho, 1e-4 and 5e-3 mm vs CF-05 1e-9); eqt_map_review.md section b",
   "v1.0 rev. U-E12 (2026-10-16, D-049 d): EQ-14 is the one 'cannot verify yet' entry without an Xcoil port. embodic implements form (a) (src/embodic/physics/estimates.py inductance_estimate_h, called from analyse.py l.408); the current-sheet functions move to replaced_functions; EQT-14-GR is withdrawn (nothing to compare) and EQT-14-CF12 (oracle_cases.json CF-12) checks the code against the form (a) formula. The status stays unresolved and the label estimate",
   "v1.0 rev. U-E14 (2026-10-17, DEF-UV8-05, REQ-L-03): the equation guide shows `name` and `formula` (src/embodic/ui/viewmodels/results.py l.736 to l.737, disclosure l.226) but not `source_notes`. The program name moves from the formula of EQ-14, EQ-20 and EQ-27 to their source_notes. The mathematics, status, gate and tests of each entry are unchanged; docs/phase3/engineering/checks/guide_name_scan.py lists displayed texts that name Xcoil",
-  "v1.0 rev. U-E15 (2026-10-17, U-S9 T10-6, REQ-T-10, D-051 a): the EQ-30 `name` reads 'DRC clearance computation and acceptance'. embodic computes the clearance from the layout geometry and measures nothing; `measured` is kept for a provenance with a named source (D-007). The formula, status, gate and tests of EQ-30 are unchanged"
+  "v1.0 rev. U-E15 (2026-10-17, U-S9 T10-6, REQ-T-10, D-051 a): the EQ-30 `name` reads 'DRC clearance computation and acceptance'. embodic computes the clearance from the layout geometry and measures nothing; `measured` is kept for a provenance with a named source (D-007). The formula, status, gate and tests of EQ-30 are unchanged",
+  "v1.0 rev. U-E18 (2026-10-17, D-056 a, fix wave F2): EQ-06 status verified -> inferred. Its tests stay EQT-06-GR, -CF02, -CF03, -O1 and -O2; EQT-06-O2 is carried only by OR-07, a strict xfail while F-OR07 is open, and an equation is not verified by a case that fails. EQ-06 returns to verified when OR-07 passes on a build that matches D09 (eqt_map_review.md section d). EQ-22 is unchanged: EQT-22-GR is carried by tests/golden/m2_physics/test_gr_f11_mass_thermal_current.py, added after 0.0.1. EQ-17 variables P_loss and A_board and the EC-05 consequences_basis text follow fix_wave_f1.md Follow-up 1. Rulings: docs/phase3/engineering/fix_wave_f2.md"
  ],
  "golden_tolerance_default": "relative 1e-9 vs Xcoil engine.js at function level, same inputs, Xcoil-compatible constants injected",
  "fields_added_in_v1": {
@@ -605,6 +606,7 @@
       "O1_D08": 0.042,
       "O2_D09_N8": 0.058
      },
+     "consequences_basis": "Phase 1 idealised segment set: one radial line over the coil annulus within the magnet span at z = G (docs/phase1/engineering/checks/edge_zone_d09.js l.34-56); recomputed from the metric 0.05328140, 0.04208834, 0.05788521 (docs/phase3/engineering/fix_wave_f1.md section B.4); not the value on generated layouts, which sum the chords of the built coil at each copper layer",
      "geometry_threshold_example": "D09-like rotor (G 1.5 mm): cap for radial magnet length below ~12 mm (10 mm -> 12.4 %, 15 mm -> 8.4 %, 20 mm -> 6.3 %)",
      "transfer_basis": "scaling the decay length with G and keeping D_e = 0.47 for rotors with other magnet thickness, alpha_p, pole pitch or block/T-arrangement magnets is untested",
      "independence": "D09 is both the calibration source and oracle O2: O2 cannot validate EC-05. O1 (D08) is the only independent check and depends on the G10 gap reading (e_edge 4.21 % at G 1.4 mm, 5.11 % at G 1.7 mm, Agent 4 v12)",
@@ -762,7 +764,7 @@
    ],
    "source_notes": "D08 eq. 3.6-3.14; D09 eq. 5-11; D07 p.3; exactness for in-plane conductors derived by Agent 2",
    "gate_verdict": "reuse",
-   "status": "verified",
+   "status": "inferred",
    "tolerance": {
     "value": "1e-4 relative vs closed form; +/-8 % vs D08 measured Ke (O1); +/-5 % vs D09 calc/FEA (O2, once turns known)",
     "basis": "numerical integration; D08 p.98 reports max 8 % model deviation"
@@ -1928,7 +1930,7 @@
     {
      "symbol": "P_loss",
      "unit": "W",
-     "meaning": "total loss"
+     "meaning": "total loss of all boards"
     },
     {
      "symbol": "h",
@@ -1938,7 +1940,7 @@
     {
      "symbol": "A_board",
      "unit": "m^2",
-     "meaning": "board area per face"
+     "meaning": "face area of one board; a stack cools through its two outer faces"
     },
     {
      "symbol": "dT",
