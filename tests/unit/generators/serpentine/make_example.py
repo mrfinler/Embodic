@@ -51,12 +51,20 @@ def example_design() -> DesignParameters:
     return dataclasses.replace(base, name=TITLE, outline=outline, drc_rules=drc)
 
 
-def write_example(folder: Path) -> Path:
-    """Write the example file into `folder` and return its path."""
+def write_example(folder: Path, *, registry_version: str | None = None) -> Path:
+    """Write the example file into `folder` and return its path.
+
+    `registry_version` defaults to the packaged registry's (tools/sync_registry.py passes the one it is syncing to).
+    """
     design = example_design()
     ref = ExampleRef(example_id=EXAMPLE_ID, example_sha256=design_hash(design))
     provenance = derive_provenance(design, (ref, design), ())
-    document = project_document(ProjectFile(design=design, origin=ref), provenance, saved_utc=SAVED_UTC)
+    document = project_document(
+        ProjectFile(design=design, origin=ref),
+        provenance,
+        saved_utc=SAVED_UTC,
+        registry_version=load_registry().version if registry_version is None else registry_version,
+    )
     document["example"] = {"title": TITLE, "source_note": SOURCE_NOTE}
     path = folder / f"{EXAMPLE_ID}{EXAMPLE_SUFFIX}"
     path.write_text(encode_project(document), encoding="utf-8", newline="\n")

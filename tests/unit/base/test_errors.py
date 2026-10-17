@@ -9,6 +9,8 @@ import pytest
 
 from embodic import errors
 from embodic.errors import IssueCategory, Severity, Suggestion, ValidationIssue
+from embodic.generators import GENERATORS
+from embodic.model.vocabulary import TopologyKind
 
 UPPER_SNAKE = re.compile(r"[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+")
 
@@ -106,3 +108,11 @@ def test_errors_unbuildable_requires_an_unbuildable_error():
         errors.Unbuildable(issues=(warning,))
     with pytest.raises(ValueError, match="UNBUILDABLE"):
         errors.Unbuildable(issues=())
+
+
+@pytest.mark.req("REQ-F-14")
+def test_errors_catalogue_offers_no_refusal_for_a_topology_that_has_a_generator():
+    """Catches a stale "no generator yet" refusal (D-056e): all three topologies build, so no path can return it."""
+    assert set(GENERATORS) == set(TopologyKind)
+    stale = [code for code, text in errors.MESSAGES.items() if "no generator yet" in text]
+    assert stale == []

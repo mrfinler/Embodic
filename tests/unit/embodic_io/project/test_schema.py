@@ -16,18 +16,23 @@ import pytest
 from embodic.errors import IssueCategory, Severity
 from embodic.io import project as project_module
 from embodic.io.examples import examples_dir, load_example
+from embodic.io.migrations import PROJECT_SCHEMA_VERSION
 from embodic.io.project import LoadedDraft, ProjectFile, parse_project, save_project
 from embodic.model.draft import blank_draft
 from embodic.model.provenance import mark_measured
 from embodic.model.vocabulary import TopologyKind
 
-from .make_schema import SCHEMA_PATH, schema_text
+from .make_schema import SCHEMA_VERSIONS, schema_path, schema_text
 
 Mutation = Callable[[dict[str, Any]], None]
+V1_FIXTURES = Path(__file__).parent / "fixtures"
 
 
-def _validator() -> jsonschema.Draft202012Validator:
-    schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+def _validator(document: dict[str, Any]) -> jsonschema.Draft202012Validator:
+    """Return the validator of the schema the document's `schema_version` names (the current one if it names none)."""
+    version = document.get("schema_version")
+    named = version if type(version) is int and version in SCHEMA_VERSIONS else PROJECT_SCHEMA_VERSION
+    schema = json.loads(schema_path(named).read_text(encoding="utf-8"))
     jsonschema.Draft202012Validator.check_schema(schema)
     return jsonschema.Draft202012Validator(schema)
 
@@ -64,6 +69,11 @@ def _delete(path: str) -> Mutation:
     return mutate
 
 
+def _as_v1(document: dict[str, Any]) -> None:
+    document["schema_version"] = 1
+    del document["engine_version"], document["registry_version"]
+
+
 def _provenance(pointer: str, entry: object) -> Mutation:
     def mutate(document: dict[str, Any]) -> None:
         document["provenance"][pointer] = entry
@@ -77,6 +87,9 @@ ACCEPTED: dict[str, Mutation] = {
     "no provenance": _delete("/provenance"),
     "empty provenance": _set("/provenance", {}),
     "no origin": _set("/origin_example", None),
+    "no engine version": _delete("/engine_version"),
+    "no registry version": _delete("/registry_version"),
+    "v1 file": _as_v1,
     "ui with any keys": _set("/ui", {"zoom": 2.0, "view": {"x": 1}}),
     "poles missing": _delete("/design/rotor/poles"),
     "trace width missing": _delete("/design/winding/coil/trace_width_mm"),
@@ -95,6 +108,7 @@ REFUSED: dict[str, Mutation] = {
     "format other": _set("/format", "kicad"),
     "format missing": _delete("/format"),
     "version text": _set("/schema_version", "1"),
+    "v1 file holding the v2 keys": _set("/schema_version", 1),
     "version zero": _set("/schema_version", 0),
     "version bool": _set("/schema_version", True),
     "version fraction": _set("/schema_version", 1.5),
@@ -138,22 +152,28 @@ def _loader_accepts(document: dict[str, Any]) -> bool:
 
 
 @pytest.mark.req("REQ-F-15")
-def test_ut_io_03_schema_file_is_the_generator_output() -> None:
-    """Catches a design key added, removed or renamed without regenerating the schema (schema version rule)."""
-    assert SCHEMA_PATH.read_text(encoding="utf-8") == schema_text()
+@pytest.mark.parametrize("version", SCHEMA_VERSIONS)
+def test_ut_io_03_schema_file_is_the_generator_output(version: int) -> None:
+    """Catches a design key added, removed or renamed without regenerating the schema (schema version rule).
+
+    Every version keeps its own file, so v1 files stay checkable after the format moves on.
+    """
+    assert schema_path(version).read_text(encoding="utf-8") == schema_text(version)
 
 
 @pytest.mark.req("REQ-F-15")
 def test_ut_io_03_examples_and_saved_files_validate(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Catches a schema that refuses what embodic itself writes: examples, a design, a blank draft."""
     monkeypatch.setattr(project_module, "_utc_now", lambda: "2026-10-08T12:00:00Z")
-    validator = _validator()
-    for path in sorted(examples_dir().glob("*.embodic.json")):
-        assert list(validator.iter_errors(json.loads(path.read_text(encoding="utf-8")))) == [], path.name
+    for path in sorted((*examples_dir().glob("*.embodic.json"), *V1_FIXTURES.glob("*.embodic.json"))):
+        document = json.loads(path.read_text(encoding="utf-8"))
+        assert list(_validator(document).iter_errors(document)) == [], path.name
     draft_path = tmp_path / "draft.embodic.json"
     save_project(draft_path, LoadedDraft(draft=blank_draft(TopologyKind.SPIRAL), origin=None))
-    assert list(validator.iter_errors(json.loads(draft_path.read_text(encoding="utf-8")))) == []
-    assert list(validator.iter_errors(_base_document(tmp_path))) == []
+    draft = json.loads(draft_path.read_text(encoding="utf-8"))
+    assert list(_validator(draft).iter_errors(draft)) == []
+    base = _base_document(tmp_path)
+    assert list(_validator(base).iter_errors(base)) == []
 
 
 @pytest.mark.req("REQ-F-15")
@@ -161,8 +181,8 @@ def test_ut_io_03_examples_and_saved_files_validate(tmp_path: Path, monkeypatch:
     ("name", "expected"), [(n, True) for n in ACCEPTED] + [(n, False) for n in REFUSED], ids=lambda v: str(v)
 )
 def test_ut_io_03_loader_and_schema_agree_on_mutated_files(tmp_path: Path, name: str, expected: bool) -> None:
-    """Catches a loader and a schema that disagree on what a valid file is (52 mutations of one saved project)."""
+    """Catches a loader and a schema that disagree on what a valid file is (mutations of one saved project)."""
     document = copy.deepcopy(_base_document(tmp_path))
     {**ACCEPTED, **REFUSED}[name](document)
-    schema_accepts = not list(_validator().iter_errors(document))
+    schema_accepts = not list(_validator(document).iter_errors(document))
     assert (schema_accepts, _loader_accepts(document)) == (expected, expected)

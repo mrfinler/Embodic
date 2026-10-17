@@ -18,7 +18,7 @@ from embodic.model.provenance import Measurement
 
 pytestmark = pytest.mark.req("REQ-F-15")
 
-SCHEMA = Path(embodic.__file__).parent / "io" / "schema" / "project.v1.schema.json"
+SCHEMA = Path(embodic.__file__).parent / "io" / "schema" / "project.v2.schema.json"
 EXAMPLES = [e.example_id for e in list_examples()]
 
 

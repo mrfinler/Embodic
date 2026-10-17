@@ -17,6 +17,7 @@ from embodic.io.project import ProjectFile, encode_project, project_document
 from embodic.model.design import DesignParameters
 from embodic.model.outline import CircleOutline, ScrewPattern
 from embodic.model.provenance import ExampleRef, derive_provenance
+from embodic.results import load_registry
 
 SAVED_UTC = "2026-10-08T00:00:00Z"  # fixed, so a rerun rewrites identical files
 EXAMPLE_ID = "wave_16p_example"
@@ -47,12 +48,20 @@ def wave_example() -> DesignParameters:
     )  # fmt: skip
 
 
-def write_example(folder: Path) -> Path:
-    """Write the example file into ``folder`` and return its path."""
+def write_example(folder: Path, *, registry_version: str | None = None) -> Path:
+    """Write the example file into ``folder`` and return its path.
+
+    ``registry_version`` defaults to the packaged registry's (tools/sync_registry.py passes the one it is syncing to).
+    """
     design = wave_example()
     ref = ExampleRef(example_id=EXAMPLE_ID, example_sha256=design_hash(design))
     provenance = derive_provenance(design, (ref, design), ())
-    document = project_document(ProjectFile(design=design, origin=ref), provenance, saved_utc=SAVED_UTC)
+    document = project_document(
+        ProjectFile(design=design, origin=ref),
+        provenance,
+        saved_utc=SAVED_UTC,
+        registry_version=load_registry().version if registry_version is None else registry_version,
+    )
     document["example"] = {"title": TITLE, "source_note": SOURCE_NOTE}
     path = folder / f"{EXAMPLE_ID}{EXAMPLE_SUFFIX}"
     path.write_text(encode_project(document), encoding="utf-8", newline="\n")

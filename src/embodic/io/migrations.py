@@ -1,7 +1,7 @@
 """Project file versions and the migrations between them (interfaces.md 9.1, schema version rule of U-D4).
 
-v1 is the first version written, so no migration exists yet. A change that makes a v1 reader read a file differently
-adds `migrate_v1_to_v2` to MIGRATIONS and raises PROJECT_SCHEMA_VERSION in the same commit.
+v2 adds `engine_version` and `registry_version` (REQ-T-07). A change that makes a reader read a file differently adds
+`migrate_v<n>_to_v<n+1>` to MIGRATIONS and raises PROJECT_SCHEMA_VERSION in the same commit.
 """
 
 from collections.abc import Callable, Mapping
@@ -10,12 +10,18 @@ from typing import Any
 
 from embodic.errors import IssueCategory, Severity, ValidationIssue, message_for
 
-PROJECT_SCHEMA_VERSION = 1
+PROJECT_SCHEMA_VERSION = 2
 
 Document = dict[str, Any]
 Migration = Callable[[Document], Document]
 
-MIGRATIONS: Mapping[int, Migration] = MappingProxyType({})  # n -> migrate_v<n>_to_v<n+1>
+
+def migrate_v1_to_v2(document: Document) -> Document:
+    """Add the two version keys as null: a v1 writer recorded neither, and no invented value may stand in (D-014)."""
+    return {**document, "engine_version": None, "registry_version": None}
+
+
+MIGRATIONS: Mapping[int, Migration] = MappingProxyType({1: migrate_v1_to_v2})  # n -> migrate_v<n>_to_v<n+1>
 
 
 def _issue(code: str, category: IssueCategory, severity: Severity, value: int, limit: int) -> ValidationIssue:

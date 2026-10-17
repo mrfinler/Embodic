@@ -40,7 +40,7 @@ def test_cf11_runs_every_stage() -> None:
     assert outcome.boards is not None and outcome.drc is not None and outcome.analysis is not None
     assert len(outcome.drc) == len(outcome.boards.boards) == 1
     assert set(outcome.timings_s) == {"validate", "geometry", "drc", "physics"}
-    assert outcome.versions.schema == 1
+    assert outcome.versions.schema == 2
     assert outcome.analysis.ke_line_peak_v_s_per_rad.value > 0
 
 
@@ -214,4 +214,4 @@ def test_outcome_json_names_its_format_and_calls_the_drc_distance_clearance() ->
         "pairs_checked",
     }
     assert "measured" not in json.dumps(document["drc"])
-    assert document["versions"]["schema"] == 1
+    assert document["versions"]["schema"] == 2
