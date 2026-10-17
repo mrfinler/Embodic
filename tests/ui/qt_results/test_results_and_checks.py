@@ -14,6 +14,7 @@ from tests.ui.qt_results.conftest import find
 from embodic.api import compute
 from embodic.results.status import Status
 from embodic.ui.theme import ThemeName
+from embodic.ui.views import results_view
 from embodic.ui.views.geometry_view import DATA_KIND
 from embodic.ui.views.style import themed_icon
 
@@ -120,6 +121,32 @@ def test_ui31_disclosure_slides_only_when_the_os_allows_animation(make_window, l
             assert card.how.maximumHeight() == 16_777_215
     finally:
         QApplication.setEffectEnabled(Qt.UIEffect.UI_General, before)
+
+
+@pytest.mark.req("REQ-N-26")
+def test_ui31_a_disclosure_clicked_once_a_new_result_has_settled_opens(make_window, load, settle, monkeypatch, qtbot):
+    """Catches the UI-31 order flake: a wait that returned inside the update made the click land on a 0 px toggle.
+
+    Right after the render that shows a result, every card is squashed to 0 px height until its posted layout runs,
+    and QAbstractButton ignores a click outside its rectangle. The click here happens at that moment, after settling.
+    """
+    seen = []
+    refresh = results_view.ResultsTab.refresh
+
+    def click_when_shown(tab):
+        refresh(tab)
+        card = tab.cards.get("r-phase")
+        if card is None or seen:
+            return
+        seen.append(card.how_toggle.height())
+        settle()
+        qtbot.mouseClick(card.how_toggle, Qt.MouseButton.LeftButton)
+        seen.append(card.how.isVisibleTo(card))
+
+    monkeypatch.setattr(results_view.ResultsTab, "refresh", click_when_shown)
+    monkeypatch.setattr(QApplication, "isEffectEnabled", lambda effect: False)
+    load(make_window(), D08)
+    assert seen == [0, True]
 
 
 @pytest.mark.req("REQ-F-33")

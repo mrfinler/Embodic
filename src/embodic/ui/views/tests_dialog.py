@@ -11,7 +11,6 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QLabel,
     QPushButton,
-    QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
     QWidget,
@@ -22,6 +21,7 @@ from embodic.ui.strings import text
 from embodic.ui.theme import ThemeTokens
 from embodic.ui.viewmodels.selftest import SelfTestRunner, SelfTestViewModel
 from embodic.ui.views.style import themed_icon
+from embodic.ui.views.widgets import table_widget
 
 COLUMNS = ("id", "group", "result", "duration", "message")
 VERDICT_ICONS = {
@@ -51,7 +51,7 @@ class TestsDialog(QDialog):
         intro = QLabel(text("selftest.intro"))
         intro.setWordWrap(True)
         intro.setProperty("class", "hint")
-        self.table = QTableWidget(0, len(COLUMNS))
+        self.table = table_widget(0, len(COLUMNS))
         self.table.setObjectName("tests-table")
         self.table.setHorizontalHeaderLabels([text(f"selftest.column.{c}") for c in COLUMNS])
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)

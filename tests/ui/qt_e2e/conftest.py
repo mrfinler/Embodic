@@ -37,7 +37,7 @@ def window(qtbot, tmp_path) -> MainWindow:
 
 
 @pytest.fixture
-def wait_drawn(qtbot) -> Callable[[MainWindow], None]:
+def wait_drawn(qtbot, settle) -> Callable[[MainWindow], None]:
     """Return a function that waits until the current design's compute result is on screen."""
 
     def wait(window: MainWindow) -> None:
@@ -50,5 +50,6 @@ def wait_drawn(qtbot) -> Callable[[MainWindow], None]:
             )
 
         qtbot.waitUntil(drawn, timeout=READY_TIMEOUT_MS)
+        settle()
 
     return wait

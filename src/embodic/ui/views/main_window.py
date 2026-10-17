@@ -91,6 +91,7 @@ from embodic.ui.views.coil_panel import CoilPanel, FieldPanel, label_text
 from embodic.ui.views.equation_view import GuideWindow
 from embodic.ui.views.examples_gallery import ExamplesGallery
 from embodic.ui.views.export_view import ExportDialog
+from embodic.ui.views.focus_order import chain, reading_order, stop_before, takes_tab
 from embodic.ui.views.geometry_view import GeometryView
 from embodic.ui.views.layer_panel import LayerPanel
 from embodic.ui.views.new_design_dialog import NewDesignDialog
@@ -358,8 +359,7 @@ class MainWindow(QMainWindow):
         stops: list[QWidget] = []
         widget = self.nextInFocusChain()
         while widget is not None and widget is not self:
-            tab_focus = widget.focusPolicy().value & Qt.FocusPolicy.TabFocus.value
-            if tab_focus and widget.isVisible() and widget.isEnabled() and widget.focusProxy() is None:
+            if takes_tab(widget) and widget.isVisible() and widget.isEnabled():
                 stops.append(widget)
             widget = widget.nextInFocusChain()
         return stops
@@ -767,6 +767,7 @@ class MainWindow(QMainWindow):
                 box.toggled.connect(lambda checked, name=layer: self.outcome.set_layer_visible(name, checked))
                 self.layer_bar_layout.insertWidget(1 + index, box)
                 self.layer_boxes[layer] = box
+            chain([stop_before(self.layer_bar), *self.layer_boxes.values()])
         for layer, box in self.layer_boxes.items():
             box.blockSignals(True)
             box.setChecked(layer not in self.outcome.hidden_layers.value)
@@ -877,11 +878,13 @@ class MainWindow(QMainWindow):
         held = focus if focus is not None and self.canvas_page.isAncestorOf(focus) else None
         if compact:
             self.results_tabs.insertTab(0, self.canvas_page, text("shell.drawing.title"))
+            chain([self.results_tabs.tabBar(), *reading_order(self.canvas_page)])
             if held is not None:
                 self.results_tabs.setCurrentIndex(0)
         else:
             self.results_tabs.removeTab(index)
             self.centre_split.insertWidget(0, self.canvas_page)
+            chain([stop_before(self.results_tabs), *reading_order(self.canvas_page)])
             self.canvas_page.show()
         if held is not None:
             held.setFocus()

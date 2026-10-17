@@ -12,8 +12,8 @@ from embodic.ui.strings import text
 from embodic.ui.theme import ThemeTokens
 from embodic.ui.viewmodels.results import ResultsViewModel, StatusCard
 from embodic.ui.views.results_view import ResultCard
-from embodic.ui.views.status_badge import repolish
 from embodic.ui.views.style import themed_icon
+from embodic.ui.views.widgets import set_style_property
 
 # Rail card name and the AnalysisResult field it shows.
 KEY_CARDS: dict[str, str] = {"sum-ke": "ke_line_peak_v_s_per_rad", "sum-r-phase": "resistance_phase_operating_ohm"}
@@ -56,8 +56,7 @@ class CheckCard(QFrame):
         stem, qss_state = GLYPHS[card.state]
         self.title.setText(card.title)
         self.value.setText(card.word)
-        self.value.setProperty("state", qss_state)
-        repolish(self.value)
+        set_style_property(self.value, "state", qss_state)
         icon = themed_icon(stem, tokens)
         self.icon.setVisible(icon is not None)
         if icon is not None:

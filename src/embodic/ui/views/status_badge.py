@@ -14,6 +14,7 @@ from embodic.results.status import Status
 from embodic.ui.strings import text
 from embodic.ui.theme import ThemeTokens
 from embodic.ui.views.style import themed_icon
+from embodic.ui.views.widgets import set_style_property
 
 ICON_PX = 16
 
@@ -21,12 +22,6 @@ ICON_PX = 16
 def badge_property(status: Status) -> str:
     """Return the style sheet's ``status`` property value of a trust badge."""
     return status.value.replace(" ", "-")
-
-
-def repolish(widget: QWidget) -> None:
-    """Re-apply the style sheet after a dynamic property changed."""
-    widget.style().unpolish(widget)
-    widget.style().polish(widget)
 
 
 class StatusBadge(QWidget):
@@ -51,14 +46,13 @@ class StatusBadge(QWidget):
         self.status = status
         prop = badge_property(status)
         self.label.setText(status.value)
-        self.label.setProperty("status", prop)
+        set_style_property(self.label, "status", prop)
         self.label.setAccessibleName(f"Status: {status.value}")
         self.label.setToolTip("; ".join(reasons))
         icon = themed_icon(f"status-{prop}", tokens)
         self.icon.setVisible(icon is not None)
         if icon is not None:
             self.icon.setPixmap(icon.pixmap(ICON_PX, ICON_PX))
-        repolish(self.label)
 
 
 class _EqChipAccessible(QAccessibleWidget):

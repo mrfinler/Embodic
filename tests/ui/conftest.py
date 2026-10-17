@@ -17,6 +17,26 @@ def qapp() -> QApplication:
     return qt_application()
 
 
+SETTLE_ROUNDS = 5
+
+
+def settle_events() -> None:
+    """Run the events a GUI update posted, and those they post, as a user's event loop does before the next input.
+
+    A wait returns the moment its condition holds, which can be right after the update that made it true. Right
+    after a result the shell's cards are squashed to 0 px height until their posted layout request runs, and a click
+    on a 0 px button is lost: the UI-31 flake (U-M8a).
+    """
+    for _ in range(SETTLE_ROUNDS):
+        QCoreApplication.processEvents()
+
+
+@pytest.fixture
+def settle():
+    """Return settle_events, for the fixtures that wait for a result before a test acts on the window."""
+    return settle_events
+
+
 @pytest.fixture(autouse=True)
 def _delete_closed_widgets(qapp: QApplication):
     """Delete the widgets pytest-qt closed at teardown.

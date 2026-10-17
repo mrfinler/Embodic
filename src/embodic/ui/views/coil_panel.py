@@ -45,7 +45,8 @@ from embodic.ui.viewmodels.session import (
     form_rows,
     parse_text,
 )
-from embodic.ui.views.widgets import check_box
+from embodic.ui.views.focus_order import chain, reading_order, stop_before
+from embodic.ui.views.widgets import check_box, set_style_property
 
 MIN_INPUT_PX = 72
 CHIP_COLUMN_PX = 72  # "example" and "default" fit; "measured" grows its row
@@ -78,12 +79,6 @@ SEGMENT_WIDGETS = frozenset(
         "param-magnet-shape",
     }
 )
-
-
-def repolish(widget: QWidget) -> None:
-    """Re-apply the style sheet after a dynamic property changed (design_spec.md section 8)."""
-    widget.style().unpolish(widget)
-    widget.style().polish(widget)
 
 
 def label_text(widget_id: str, topology: str, variant: str | None = None) -> str:
@@ -306,10 +301,9 @@ class FieldEditor(QWidget):
         self.chip.setVisible(chip is not None)
         if chip is not None:
             self.chip.setText(text(f"design.prov.{chip.provenance.value}"))
-            self.chip.setProperty("provenance", chip.provenance.value)
+            set_style_property(self.chip, "provenance", chip.provenance.value)
             tip = text("design.prov.measured-tooltip", source=chip.source) if isinstance(chip, MeasuredValue) else ""
             self.chip.setToolTip(tip)
-            repolish(self.chip)
 
     def _show_message(self, row: FieldRow) -> None:
         found = row.issue
@@ -323,12 +317,10 @@ class FieldEditor(QWidget):
         if found is not None:
             warning = found.severity is Severity.WARNING
             self.error.setText(text("design.warning.prefix", message=found.message) if warning else found.message)
-            self.error.setProperty("state", "warn" if warning else "")
-            repolish(self.error)
+            set_style_property(self.error, "state", "warn" if warning else "")
         self.hint.setText(hint)
         self.hint.setVisible(bool(hint))
-        self.input.setProperty("invalid", "true" if invalid else "false")
-        repolish(self.input)
+        set_style_property(self.input, "invalid", "true" if invalid else "false")
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -336,6 +328,7 @@ class _Form:
     """The widgets one topology's form of a tab is made of; the panel shows one form at a time."""
 
     body: QWidget
+    stops: list[QWidget]  # the body's Tab stops in reading order
     editors: dict[str, "FieldEditor"]
     helpers: dict[str, QWidget]
     extras: dict[str, object]  # the attributes of FORM_ATTRIBUTES this form's build set
@@ -382,7 +375,8 @@ class FieldPanel(QScrollArea):
         self._layout.addWidget(self.empty)
         self._layout.addStretch(1)
         self._building = TopologyKind.SPIRAL  # the topology whose form build() makes
-        self._forms: dict[str | None, _Form] = {None: _Form(body=self._body, editors={}, helpers={}, extras={})}
+        empty = _Form(body=self._body, stops=[], editors={}, helpers={}, extras={})
+        self._forms: dict[str | None, _Form] = {None: empty}
         self.destroyed.connect(partial(_delete_detached_forms, self._forms))
 
     def prebuild(self) -> None:
@@ -421,6 +415,7 @@ class FieldPanel(QScrollArea):
         if self.widget() is not form.body:
             self.takeWidget()
             self.setWidget(form.body)
+            chain([stop_before(self), *form.stops])
         self._body, self.editors, self.helpers = form.body, form.editors, form.helpers
         layout = form.body.layout()
         assert isinstance(layout, QVBoxLayout)
@@ -438,6 +433,7 @@ class FieldPanel(QScrollArea):
         self._layout.addStretch(1)
         form = _Form(
             body=body,
+            stops=reading_order(body),
             editors=self.editors,
             helpers=self.helpers,
             extras={name: getattr(self, name) for name in self.FORM_ATTRIBUTES},
