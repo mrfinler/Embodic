@@ -42,6 +42,8 @@ from m2_physics.test_analyse_layouts import _design, _raw, _stack
 pytestmark = pytest.mark.req("REQ-F-11")
 AREA = load_area("mass_thermal")
 LAYOUTS = ("sector-default", "serpentine-default", "wave-turns-2")
+STACK = "serpentine-per-phase-3"  # fix wave F1 T-C3: no m1_layout fixture, so the kernels take Xcoil's own inputs
+KERNEL_TAGS = (*LAYOUTS, STACK)
 XCOIL_DENSITY_G_PER_CM3 = {"copper_density_g_per_cm3": 8.96, "laminate_density_g_per_cm3": 1.85}  # engine.js l.1377
 DELTA_CASE = "connection-sector-15c14p-delta"
 OUTLINE_CASE = "outline-polygon-8-r5"
@@ -95,7 +97,7 @@ def test_copper_mass_of_the_mapped_layout_matches_xcoil_mass_thermal(
 
 
 @pytest.mark.eqt("EQT-16-GR")
-@pytest.mark.parametrize("tag", LAYOUTS)
+@pytest.mark.parametrize("tag", KERNEL_TAGS)
 def test_laminate_mass_kernel_matches_xcoil_on_xcoils_board_area(tag: str) -> None:
     """Catches a laminate volume that keeps the copper in, or that counts one board of a stack (EQ-16)."""
     x = _output(f"mass-thermal-{tag}")
@@ -138,9 +140,12 @@ def test_board_area_of_the_mapped_layout_matches_xcoil_board_area(tag: str) -> N
 
 
 @pytest.mark.eqt("EQT-17-GR")
-@pytest.mark.parametrize("tag", LAYOUTS)
+@pytest.mark.parametrize("tag", KERNEL_TAGS)
 def test_temperature_rise_kernel_matches_xcoil_mass_thermal(tag: str) -> None:
-    """Catches a cooling area of one face instead of two, or a mm^2 to m^2 slip (EQ-17, dT = P / (h 2 A))."""
+    """Catches a cooling area of one face instead of two, or a mm^2 to m^2 slip (EQ-17, dT = P / (h 2 A)).
+
+    On the three-board stack the area is that of one board, so a kernel that takes n times A fails too (T-C3).
+    """
     x = _output(f"mass-thermal-{tag}")
     actual = temperature_rise_k(x["lossTotal"], x["boardArea"], x["params"]["hConv"])
     verdict = compare_scalar(x["thermal"]["tempRiseEst"], actual, INTEGRATED)
@@ -174,6 +179,13 @@ def test_current_density_of_the_mapped_layout_matches_xcoil(results: Mapping[str
     assert xcoil["connection"] == "star"
     verdict = compare_scalar(xcoil["currentDensity"], results[tag].current_density_a_per_mm2.value, KERNEL)
     assert verdict.ok, f"{tag}: {verdict}"
+
+
+def test_stack_case_is_three_boards_cooled_through_two_faces_of_one_board() -> None:
+    """Catches a stack fixture regenerated with other params, which would leave T-C3 comparing a single board."""
+    x = _output(f"mass-thermal-{STACK}")
+    assert x["nBoards"] == 3
+    assert x["thermal"]["coolingArea"] == pytest.approx(2 * x["boardArea"] * 1e-6, rel=1e-12)
 
 
 def _reversed(loop: list[Primitive]) -> list[Primitive]:
@@ -236,7 +248,9 @@ def test_built_polygon_with_rounded_corners_is_the_outline_of_xcoil() -> None:
 
 def test_every_fixture_of_the_area_is_compared() -> None:
     """Catches a fixture dumped for this area that no test reads."""
-    read = {f"mass-thermal-{t}" for t in LAYOUTS} | {f"connection-{t}" for t in LAYOUTS} | {DELTA_CASE, OUTLINE_CASE}
+    read = (
+        {f"mass-thermal-{t}" for t in KERNEL_TAGS} | {f"connection-{t}" for t in LAYOUTS} | {DELTA_CASE, OUTLINE_CASE}
+    )
     on_disk = {p.stem for p in (Path(__file__).parents[1] / "data" / "mass_thermal").glob("*.json")}
     assert on_disk == read
     assert json.loads((Path(__file__).parents[3] / "tools/golden/cases/mass_thermal.json").read_text())["area"] == (
