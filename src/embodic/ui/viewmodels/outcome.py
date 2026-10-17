@@ -356,6 +356,11 @@ def counts_text(scene: GeometryScene, topology: TopologyKind) -> str:
     return text("shell.st-counts.phases", layers=len(scene.layers), phases=phases, vias=vias)
 
 
+def design_hash12(design_hash: str) -> str:
+    """Return the first 12 hex digits of a ``"sha256:<hex>"`` design hash, as the stamps print it (REQ-T-14)."""
+    return design_hash.removeprefix("sha256:")[:12]
+
+
 def ready_state(outcome: ComputeOutcome) -> OutcomeReady:
     """Build what the shell shows of an outcome; the worker calls this off the GUI thread."""
     return OutcomeReady(outcome=outcome, scene=geometry_scene(outcome))
