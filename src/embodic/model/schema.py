@@ -72,6 +72,12 @@ class _ListOf:
     nullable: bool
 
 
+@functools.cache
+def _hints(cls: type) -> Mapping[str, Any]:
+    """Return the resolved annotations of a class; evaluating them costs the same on every call, so do it once."""
+    return types.MappingProxyType(typing.get_type_hints(cls))
+
+
 def _non_none(tp: Any) -> tuple[tuple[Any, ...], bool]:
     """Split an annotation into its non-None members and whether None is allowed."""
     if typing.get_origin(tp) in (types.UnionType, typing.Union):
@@ -83,7 +89,7 @@ def _non_none(tp: Any) -> tuple[tuple[Any, ...], bool]:
 def _tag_field(cls: type) -> tuple[str, Choice] | None:
     """Return the discriminator of a union member: the field typed as a one-value Literal with that default."""
     for f in dataclasses.fields(cls):
-        hint = typing.get_type_hints(cls)[f.name]
+        hint = _hints(cls)[f.name]
         if typing.get_origin(hint) is Literal and len(typing.get_args(hint)) == 1 and f.name in ("kind", "shape"):
             return f.name, typing.get_args(hint)[0]
     return None
@@ -139,7 +145,7 @@ def _scalar(tp: Any) -> tuple[ValueType, tuple[Choice, ...], bool]:
 
 def is_constant(cls: type, f: dataclasses.Field[Any]) -> bool:
     """Return True for a field that is not an input: a one-value Literal with that value as default."""
-    hint = typing.get_type_hints(cls)[f.name]
+    hint = _hints(cls)[f.name]
     return typing.get_origin(hint) is Literal and len(typing.get_args(hint)) == 1
 
 
@@ -156,7 +162,7 @@ def _field_type(cls: type, name: str, topology: TopologyKind) -> Any:
     """Annotation of a field, with the winding union narrowed to the topology's spec."""
     if cls is DesignParameters and name == "winding":
         return WINDING_BY_TOPOLOGY[topology]
-    return typing.get_type_hints(cls)[name]
+    return _hints(cls)[name]
 
 
 def _record_leaves(cls: type, pointer: str, topology: TopologyKind) -> Iterator[Leaf]:
@@ -269,7 +275,7 @@ def from_json(tp: Any, data: Any) -> Any:
 
 def _item_from_json(item: "type | _Variant", data: Mapping[str, Any]) -> Any:
     cls = item if isinstance(item, type) else item.classes[data[item.tag] if item.tag else ""]
-    hints = typing.get_type_hints(cls)
+    hints = _hints(cls)
     kwargs = {f.name: from_json(hints[f.name], data[f.name]) for f in dataclasses.fields(cls) if f.name in data}
     return cls(**kwargs)
 
@@ -289,7 +295,7 @@ def _scalar_from_json(base: Any, data: Any) -> Any:
 def design_from_json(topology: TopologyKind, data: Mapping[str, Any]) -> DesignParameters:
     """Build a design from checked JSON data; the winding variant comes from `topology`."""
     winding = from_json(WINDING_BY_TOPOLOGY[topology], data["winding"])
-    hints = typing.get_type_hints(DesignParameters)
+    hints = _hints(DesignParameters)
     kwargs = {
         f.name: winding if f.name == "winding" else from_json(hints[f.name], data[f.name])
         for f in dataclasses.fields(DesignParameters)
