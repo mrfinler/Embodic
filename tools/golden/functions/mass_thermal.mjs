@@ -1,6 +1,8 @@
 // F11-1 (U-M7b): Xcoil results the GR-22 analysis fixtures do not carry. EQ-16 and EQ-17 come from massThermal
 // (engine.js l.1378-1395), EQ-19 and EQ-22 from applyConnection (l.1398-1438), each on compute()'s own layout. The
 // inputs each function read are written next to its output, so a reader can feed embodic's kernels the same numbers.
+// U-M8d (fix wave F1 T-A4): outlinePrims and outlineArea (l.1055, l.1094) on one outline, for the rounded polygon.
+import { recordFromPrim } from '../lib/codec.mjs';
 
 function computed(E, params) {
   const r = E.compute(params);
@@ -54,7 +56,13 @@ function connectionOf(E, params) {
   };
 }
 
+function outlineOf(E, x) {
+  const prims = E.outlinePrims(x.shape, x.sides, x.apothem, x.rotRad, x.cornerR);
+  return { prims: prims.map((q) => recordFromPrim(E, q)), area: E.outlineArea(x.shape, x.sides, x.apothem, x.cornerR) };
+}
+
 export const FUNCTIONS = {
+  xcoilOutline: { required: ['shape', 'sides', 'apothem', 'rotRad', 'cornerR'], run: outlineOf },
   massThermal: { required: ['params'], run: (E, x) => massThermalOf(E, x.params) },
   applyConnection: { required: ['params'], run: (E, x) => connectionOf(E, x.params) },
 };

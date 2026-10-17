@@ -74,9 +74,9 @@ def inductance_estimate_h(
     Parameters
     ----------
     series_turns : float
-        Series turns per phase N, a pure number (no unit).
+        Series turns per phase N, dimensionless.
     winding_factor_1 : float
-        Fundamental winding factor k_w1, dimensionless (no unit).
+        Fundamental winding factor k_w1, dimensionless.
     r_outer_mm : float
         Active outer radius in mm (D_o = 2 r).
     r_inner_mm : float

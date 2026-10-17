@@ -96,6 +96,24 @@
    }
   },
   {
+   "id": "mass-thermal-serpentine-per-phase-3",
+   "fn": "massThermal",
+   "note": "EQ-16, EQ-17 on Xcoil serpentine compute(), one board per phase, boardGap 0.1 mm: three boards, the laminate adds, the cooling area is one board's two faces (fix wave F1 T-C3)",
+   "tags": [
+    "serpentine",
+    "per-phase",
+    "mass",
+    "thermal"
+   ],
+   "inputs": {
+    "params": {
+     "topology": "serpentine",
+     "stackMode": "perPhase",
+     "boardGap": 0.1
+    }
+   }
+  },
+  {
    "id": "connection-sector-15c14p-delta",
    "fn": "applyConnection",
    "note": "EQ-19, EQ-22: 15 sector coils, 14 poles, delta; k_w3 is not 0, so triplen EMF circulates (Xcoil refuses 12/14 as SECTOR_UNBALANCED)",
@@ -112,6 +130,23 @@
      "poles": 14,
      "connection": "delta"
     }
+   }
+  },
+  {
+   "id": "outline-polygon-8-r5",
+   "fn": "xcoilOutline",
+   "note": "EQ-16 board area: Xcoil outlinePrims and outlineArea for an octagon with 50 mm apothem, rotation 0 and 5 mm corners (fix wave F1 T-A4)",
+   "tags": [
+    "polygon",
+    "rounded",
+    "outline"
+   ],
+   "inputs": {
+    "shape": "polygon",
+    "sides": 8,
+    "apothem": 50,
+    "rotRad": 0,
+    "cornerR": 5
    }
   }
  ]
