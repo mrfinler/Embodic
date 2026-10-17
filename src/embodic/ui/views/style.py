@@ -11,7 +11,7 @@ from PySide6.QtWidgets import QApplication
 
 from embodic.paths import resource_root
 from embodic.ui.theme import ThemeTokens, recolour_svg, themes_dir
-from embodic.ui.views.high_contrast import TEMPLATE_FILE, high_contrast_sheet, high_contrast_tokens, write_glyphs
+from embodic.ui.views.high_contrast import high_contrast_sheet, high_contrast_tokens, template_tokens, write_glyphs
 
 logger = logging.getLogger(__name__)
 
@@ -107,8 +107,7 @@ def apply_high_contrast(app: QApplication, tokens: ThemeTokens, system: QPalette
     glyphs = write_glyphs(tokens.name, tokens.colours, chrome.colours)
     QDir.setSearchPaths("theme", [str(glyphs), str(themes_dir())])
     theme_sheet = (themes_dir() / f"{tokens.name}.qss").read_text(encoding="utf-8")
-    template = (themes_dir() / TEMPLATE_FILE).read_text(encoding="utf-8")
-    _set_sheet(app, high_contrast_sheet(theme_sheet, template, chrome.colours))
+    _set_sheet(app, high_contrast_sheet(theme_sheet, template_tokens(), chrome.colours))
     return chrome
 
 

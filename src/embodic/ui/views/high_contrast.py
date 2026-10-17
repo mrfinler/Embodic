@@ -3,14 +3,16 @@
 The high-contrast style sheet is the theme's generated sheet with each colour token replaced by its system colour.
 Which token a colour value stands for comes from the template the sheet was generated from: two tokens of one rule
 can share a value in a theme (dark `divider` and `surface-selected`) and still map to different system colours.
-`resources/themes/theme_template.qss` is a copy of `tools/design/theme_template.qss`, which a test keeps equal.
+`resources/themes/theme_template_tokens.json` lists the colour tokens of each line of `tools/design/theme_template.qss`
+in order; a test keeps it equal to the template.
 """
 
 import functools
 import hashlib
+import json
 import re
 import tempfile
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from pathlib import Path
 from typing import Literal, TypeAlias
@@ -55,10 +57,8 @@ GLYPH_TOKENS: Mapping[str, str] = {
 DARK_BELOW_LUMINANCE = 0.179
 
 _TOKEN_ROW = re.compile(r"^(?P<lead>\s+@(?P<token>[a-z0-9-]+)\s+)(?P<value>#[0-9a-fA-F]{6})$")
-_TEMPLATE_TOKEN = re.compile(r"@([a-z0-9-]+)")
-_NOT_A_COLOUR = frozenset({"dir", "focus-ring-px"})
 _HEX = re.compile(r"#[0-9a-fA-F]{6}")
-TEMPLATE_FILE = "theme_template.qss"
+TEMPLATE_TOKENS_FILE = "theme_template_tokens.json"
 
 
 def system_colours(palette: QPalette) -> dict[SystemColour, str]:
@@ -93,30 +93,29 @@ def high_contrast_tokens(tokens: ThemeTokens, palette: QPalette) -> ThemeTokens:
     return replace(tokens, colours=colours)
 
 
-def high_contrast_sheet(theme_sheet: str, template: str, colours: Mapping[str, str]) -> str:
+def template_tokens() -> list[list[str]]:
+    """Return the colour tokens of each template line, in order of appearance."""
+    document = json.loads((themes_dir() / TEMPLATE_TOKENS_FILE).read_text(encoding="utf-8"))
+    return [list(line) for line in document["lines"]]
+
+
+def high_contrast_sheet(theme_sheet: str, line_tokens: Sequence[Sequence[str]], colours: Mapping[str, str]) -> str:
     """Return a generated theme sheet with each colour token's value replaced by ``colours[token]``.
 
-    ``theme_sheet`` is the header build_themes.py writes followed by the rendered lines of ``template``. The n-th
-    colour value of a rendered line is the n-th colour token of its template line; a token ``colours`` lacks keeps
-    its value. The header's token table changes the same way.
+    ``theme_sheet`` is the header build_themes.py writes followed by one rendered line per template line. The n-th
+    colour value of a rendered line is the n-th of ``line_tokens`` for its template line; a token ``colours`` lacks
+    keeps its value. The header's token table changes the same way.
     """
     lines = theme_sheet.split("\n")
-    body = template.strip().split("\n")
-    start = len(lines) - 1 - len(body)
-    if start < 0 or lines[-1]:
-        raise ValueError("the sheet does not end with the lines of the template")
+    start = len(lines) - 1 - len(line_tokens)  # the sheet ends with a newline
     out = []
     for line in lines[:start]:
         row = _TOKEN_ROW.match(line)
         out.append(line if row is None else row["lead"] + colours.get(row["token"], row["value"]))
-    for line, source in zip(lines[start:-1], body, strict=True):
-        tokens = [t for t in _TEMPLATE_TOKEN.findall(source) if t not in _NOT_A_COLOUR]
+    for line, tokens in zip(lines[start:-1], line_tokens, strict=True):
         rule, comment, tail = line.partition(" /* ")
-        values = _HEX.findall(rule)
-        if len(values) != len(tokens):
-            raise ValueError(f"the rendered line does not match its template line: {source}")
         pieces = _HEX.split(rule)
-        swapped = [colours.get(token, value) for token, value in zip(tokens, values, strict=True)]
+        swapped = [colours.get(token, value) for token, value in zip(tokens, _HEX.findall(rule), strict=True)]
         out.append("".join(piece + new for piece, new in zip(pieces, [*swapped, ""], strict=True)) + comment + tail)
     return "\n".join([*out, ""])
 
@@ -140,5 +139,5 @@ def write_glyphs(theme: str, theme_colours: Mapping[str, str], colours: Mapping[
         text = svg.replace(f'stroke="{theme_colours[token]}"', f'stroke="{colours[token]}"')
         path = folder / name
         if not path.exists() or path.read_text(encoding="utf-8") != text:
-            path.write_text(text, encoding="utf-8")
+            path.write_text(text, encoding="utf-8", newline="\n")
     return root

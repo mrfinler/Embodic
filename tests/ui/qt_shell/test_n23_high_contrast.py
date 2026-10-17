@@ -19,10 +19,10 @@ from embodic.ui.views.geometry_view import DATA_KIND, DATA_PHASE
 from embodic.ui.views.high_contrast import (
     GLYPH_TOKENS,
     SYSTEM_PAIR,
-    TEMPLATE_FILE,
     high_contrast_sheet,
     high_contrast_tokens,
     prefers_dark,
+    template_tokens,
     write_glyphs,
 )
 from embodic.ui.views.style import palette_for
@@ -170,13 +170,19 @@ def test_n23_6_a_system_palette_change_restyles_once_and_the_drawing_follows_its
 
 
 @pytest.mark.req("REQ-N-23")
-def test_the_shipped_template_is_the_one_the_theme_sheets_are_generated_from():
-    """Catches resources/themes/theme_template.qss drifting from Agent 1's tools/design/theme_template.qss."""
-    shipped = (themes_dir() / TEMPLATE_FILE).read_text(encoding="utf-8")
-    source = (Path(__file__).resolve().parents[3] / "tools" / "design" / "theme_template.qss").read_text(
+def test_the_shipped_template_tokens_are_those_of_the_template_the_sheets_are_generated_from():
+    """Catches theme_template_tokens.json drifting from Agent 1's tools/design/theme_template.qss.
+
+    To regenerate: the colour tokens of each stripped template line, @dir and @focus-ring-px left out, in order.
+    """
+    template = (Path(__file__).resolve().parents[3] / "tools" / "design" / "theme_template.qss").read_text(
         encoding="utf-8"
     )
-    assert shipped == source
+    expected = [
+        [token for token in re.findall(r"@([a-z0-9-]+)", line) if token not in ("dir", "focus-ring-px")]
+        for line in template.strip().split("\n")
+    ]
+    assert template_tokens() == expected
 
 
 @pytest.mark.req("REQ-N-23")
@@ -188,7 +194,7 @@ def test_each_colour_value_of_a_theme_sheet_is_the_value_of_its_template_token(n
     so the token of a value must come from the template, not from the value.
     """
     sheet = (themes_dir() / f"{name}.qss").read_text(encoding="utf-8")
-    template = (themes_dir() / TEMPLATE_FILE).read_text(encoding="utf-8")
+    template = template_tokens()
     tokens = load_theme(name)
     own = {**tokens.colours, **{f"phase-{s.phase.value.lower()}": s.colour_hex for s in tokens.phases}}
     own |= {f"phase-{s.phase.value.lower()}-grey": s.grey_hex for s in tokens.phases}
