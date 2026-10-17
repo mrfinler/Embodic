@@ -143,6 +143,7 @@ def test_lg05_a_program_name_is_found_but_not_inside_a_longer_word(tmp_path):
     assert [h.split("] ", 1)[1] for h in hits] == ["Use FEMM here", "Motor-CAD and motorcad", "pcbnew"]
 
 
+@pytest.mark.req("REQ-T-10", "REQ-T-11")
 def test_lg_class_patterns_find_a_word_inside_an_identifier():
     """DEF-US9-01. Catches a plain word-boundary start, which treats the underscore as a letter and misses these."""
     cases = [
