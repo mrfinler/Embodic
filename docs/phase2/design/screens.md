@@ -2,7 +2,9 @@ Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5; section 1
 
 # embodic screens v2.3 (Phase 2, PySide6)
 
-Date 2026-10-08, revised 2026-10-12 (U-S4h): `compare-scroll` declared in section 10. Revised 2026-10-09 (U-S4f): `ts-section-board` declared in 14a; rulings i and j of
+Date 2026-10-08, revised 2026-10-17 (U-S12): field-row layout, `param-stack-mode`, the screw buttons and numeric
+stepping follow `docs/phase3/design/fix_wave_f2.md` sections (a) and (b). Revised 2026-10-12 (U-S4h): `compare-scroll`
+declared in section 10. Revised 2026-10-09 (U-S4f): `ts-section-board` declared in 14a; rulings i and j of
 `m4_review_2.md` section 5 applied to sections 4 and 5 (screw buttons, last table column). Revised 2026-10-09 (U-S4e): rulings a, c, d and g of `m4_review_2.md` applied to sections 4, 5, 6,
 7, 14a and 16 (`pair-list`, the screw fields, the card grid, the DRC columns, 26 declared names, example titles).
 Revised 2026-10-09 (U-S4d): rulings of `m4_review.md` applied to the conventions and sections 1, 2,
@@ -28,8 +30,8 @@ Conventions for every table:
   through the session view-model as one undoable edit.
 - Each objectName is defined in exactly one table row. Other mentions are references.
 - Numeric fields are `QLineEdit` with a parser in the view model, or `QDoubleSpinBox` with `NoButtons`. Up and Down
-  step by `FieldSpec.step`, Shift steps ten times, Enter and Tab commit, Esc reverts, the wheel does nothing without
-  focus. Segments and combo boxes move with the arrow keys; Space selects. Units sit in a `QLabel[class="unit"]` named
+  step by `FieldSpec.step` in the shown unit, Shift steps ten times, Enter and Tab commit, Esc reverts, the wheel does
+  nothing without focus. Bounds, text that is not a number and the preview timer: `fix_wave_f2.md` (b). Segments and combo boxes move with the arrow keys; Space selects. Units sit in a `QLabel[class="unit"]` named
   `<id>-unit` and are part of the accessible description. Angles show in degrees; the model stores radians (`*_rad`).
 - Start values (D-014, D-019). "required" fields start empty with a placeholder that shows only the unit, never a
   number, and a "Required" hint. "default" fields start at `FieldSpec.neutral_value` with a `default` chip. screens.md
@@ -45,9 +47,11 @@ Conventions for every table:
   `invalid=true`, and the Checks list gets the same text. An INFO issue shows as a hint under the field, not an error.
   A WARNING issue shows in `<id>-error` with `state=warn`, the `check-warn` icon and the word "Warning" before the
   text. The field does not get `invalid=true`, and compute still runs.
-- Layout of a field row (U-S4d g2). The label sits above the control for every field, choice fields included. The
-  row reserves the unit column and the chip column even when they are empty, so control edges align and nothing moves
-  when a chip appears or goes. Chips are 20 px tall and centred on the control.
+- Layout of a field row (U-S4d g2, U-S12 a). The label sits above the control for every field, choice fields
+  included. The provenance chip sits at the right end of the label line and keeps its width when hidden. The control
+  line holds the input and the unit column. The unit column has the width of the widest unit in the row's section (its
+  group box or untitled section), so control edges align inside a section and nothing moves when a chip appears or
+  goes. Chips are 24 px tall (UX-AC-28).
 - Choice fields with two or three options may be a `QComboBox` or a segment (U-M4c builds combo boxes). Either one
   takes the field's objectName.
 - Hidden vs disabled. A field that does not apply to the active topology or option is hidden with its label, unit and
@@ -145,7 +149,7 @@ State rules:
 | `param-rotation-mode` | "Pair rotation", segment None, Alternate, Custom | view model: writes `/winding/layers/pairs/*/rotation_rad` | spiral | none | none |
 | `param-pair-rotation` | "Rotation of the selected pair", degrees | `/winding/layers/pairs/*/rotation_rad` | spiral | default | none |
 | `param-layers-per-phase` | "Layers per phase" | `/winding/layers_per_phase` | serpentine | required | `INVALID_LAYERS_PER_PHASE` |
-| `param-stack-mode` | "Boards", segment "Single board", "One board per phase" | `/winding/stack_mode` | serpentine | default | `INVALID_SERPENTINE_COPPER_COUNT` |
+| `param-stack-mode` | "Boards", segment "Single board", "One board per phase", buttons stacked one per line (U-S12 a) | `/winding/stack_mode` | serpentine | default | `INVALID_SERPENTINE_COPPER_COUNT` |
 | `param-layer-order` | "Layer order", QComboBox Grouped, Interleaved | `/winding/layer_order` | serpentine | default | none |
 | `param-board-gap` | "Gap between boards", mm | `/winding/board_gap_mm` | serpentine | default | none |
 | `param-via-drill` | "Via drill", mm | `/vias/drill_mm` | spiral, serpentine, wave | required | `INVALID_VIA_RING` |
@@ -269,10 +273,11 @@ One `QGroupBox` per group, in this order. Every row applies to all three topolog
 | `param-screw-fit` | Fasteners | "Fit of the selected pattern", QComboBox | `/outline/screws/*/fit` | default | none |
 | `param-screw-hole-diameter` | Fasteners | "Hole diameter of the selected pattern", mm | `/outline/screws/*/hole_diameter_mm` | required when a pattern exists, no default (D-031a) | none |
 | `param-screw-angle-offset` | Fasteners | "Angle offset of the selected pattern", degrees | `/outline/screws/*/angle_offset_rad` | default | none |
-| `btn-screw-add` | Fasteners | QPushButton "Add pattern", secondary boundary like `btn-drc-locate` (U-S4f ruling i) | command | none | none |
-| `btn-screw-remove` | Fasteners | QPushButton "Remove pattern", secondary boundary (U-S4f ruling i) | command | none | none |
+| `btn-screw-add` | Fasteners | QPushButton "Add", accessible name "Add screw pattern", secondary boundary like `btn-drc-locate` (U-S4f ruling i, U-S12 a) | command | none | none |
+| `btn-screw-remove` | Fasteners | QPushButton "Remove", accessible name "Remove screw pattern", secondary boundary (U-S4f ruling i, U-S12 a) | command | none | none |
 | `param-copper-weight` | Stack-up and manufacturing | "Copper weight", oz | view model: stack-up generator writes `/stackup/layers` | empty | none |
 | `param-board-thickness` | Stack-up and manufacturing | "Board thickness", mm | view model: stack-up generator writes `/stackup/layers` | empty | none |
+| `param-board-thickness-error` | Stack-up and manufacturing | QLabel[class="field-error"] under the two stack-up inputs, hidden while empty (U-S12) | view model: `DesignSession.stackup_issues` (D-053a) | none | the message of each stack-up issue, one per line |
 | `param-min-trace` | Stack-up and manufacturing | "Minimum trace width", mm | `/drc_rules/min_trace_width_mm` | required | DRC `DRC_MIN_WIDTH` |
 | `param-min-space` | Stack-up and manufacturing | "Trace clearance (trace to trace, pad to trace)", mm | `/drc_rules/trace_clearance_mm` | required | DRC `DRC_TRACE_TRACE`, `DRC_PAD_TRACE` |
 | `param-min-via-space` | Stack-up and manufacturing | "Via clearance (to traces, vias and pads; pad to pad)", mm | `/drc_rules/via_clearance_mm` | required | DRC `DRC_TRACE_VIA`, `DRC_VIA_VIA`, `DRC_PAD_PAD` |
