@@ -96,6 +96,12 @@ with its manual-record input. §4 renames the two winding issue codes to `…_AS
 `DrcReport.violations` (D-051f). §10 adds `format` and `format_version` 2 to the outcome JSON, with the key map from
 version 1 (D-051a). §11 and §14 follow the rename. §13 adds point 14.
 
+Revision 2026-10-17 (U-D20, claude-opus-5-5, D-055; the code on main e68d5ff was read for every item). The new §1.1
+lists the 78 issue codes that `src` defines or emits and that this file did not name, with category, severity,
+pointers, condition, `value`, `limit` and source line, and `checks/issue_code_coverage.py` finds the next one. §9.1
+adds `engine_version` and `registry_version` to the project file, raises its format version to 2 and gives the load
+rule for a v1 file (DEF-UM7d-01, REQ-T-07).
+
 ## 0. Rules for every public boundary
 
 - Lengths are millimetres (`_mm`), angles radians (`_rad`) inside the core, temperature °C (`_degc`), current A (`_a`),
@@ -284,6 +290,138 @@ temperature coefficient or density, so U-M2a left those fields without a unit. T
 U-M1z implements (commit `eb7a2f1` on branch `unit/U-M1z`, read on 2026-10-05, not yet merged). The field table gives
 `/vias/plating_um`, `/operating/convection_h_w_m2k` and the material override values these units in the U-M2a fix round
 (`work_breakdown.md` §5).
+
+### 1.1 Issue codes by emitting module (revision 2026-10-17, U-D20; D-055)
+
+This section lists every issue code that `src` defines or emits and that no other section of this file names. The code
+on main e68d5ff was read for every row, and each Source cell gives the line that holds the code literal. The lever
+`checks/issue_code_coverage.py` lists the codes of the catalogue modules and the code literals of `src/embodic`, and
+prints each one that this file does not name. Run it after a unit adds a code. On main e68d5ff it found 78 codes
+before this section and 0 after it (`verified (run)`, 2026-10-17). `INVALID_HARMONIC_FUNDAMENTAL`, which the U-D20 brief
+names, was already in §2.2 (revision U-D15, `verified` by reading).
+
+Common fields. `message` is the catalogue text, formatted with `limit` and `unit` where the template names them.
+`hint` is `""` for every code below except the DRC kind codes. `eq_ids` is `()` for every code below. A pointer
+written `<i>` or `<k>` is a list index.
+
+Field checks and cross-field rules of `validate_design` (`src/embodic/model/validate.py`). The helper `issue()` (l.37)
+takes the category from the prefix: `INVALID_` gives INVALID and `RANGE_` gives UNSUPPORTED_RANGE. The severity is
+ERROR unless the row says otherwise. `check_value` runs per field in the order type, empty text, sign, range, and stops
+at the first hit, so a value that fails the sign check never also gets a `RANGE_` code.
+
+| Code | Category, severity | Pointers | Fires when | `value`, `limit`, `suggestion` | Source |
+|---|---|---|---|---|---|
+| `INVALID_NOT_INTEGER` | INVALID, ERROR | the field | an INT field holds a finite number that is not an integer | the number; none; none | l.97 |
+| `INVALID_TYPE` | INVALID, ERROR | the field | the value does not have the field's value type, and the field is not a CHOICE | the value if it is a number or text, else None; none; none | l.98 |
+| `INVALID_CHOICE` | INVALID, ERROR | the field | a CHOICE field holds a value outside `FieldSpec.choices` | as `INVALID_TYPE` | l.98 |
+| `INVALID_EMPTY_TEXT` | INVALID, ERROR | the field | a TEXT field holds only white space | none | l.101 |
+| `INVALID_NON_POSITIVE` | INVALID, ERROR | the field | `Limits.sign` is POSITIVE and the number is not above 0 | the number; 0 with the field unit; none | l.114 |
+| `INVALID_NEGATIVE` | INVALID, ERROR | the field | `Limits.sign` is NON_NEGATIVE and the number is below 0 | the number; 0 with the field unit; none | l.117 |
+| `RANGE_BELOW_SUPPORTED` | UNSUPPORTED_RANGE, ERROR | the field | the number is below `Limits.low` | the number; `Limits.low` with the field unit; proposes `Limits.low` | l.126 |
+| `RANGE_ABOVE_SUPPORTED` | UNSUPPORTED_RANGE, ERROR | the field | the number is above `Limits.high` | the number; `Limits.high` with the field unit; proposes `Limits.high` | l.135 |
+| `INVALID_POLE_COUNT_ODD` | INVALID, ERROR | `/rotor/poles` | the pole count is odd | the count; none; proposes the count + 1 | l.145 |
+| `INVALID_ORDER` | INVALID, ERROR | spiral: `/winding/coil/r_inner_mm`, `/winding/coil/r_outer_mm`; serpentine and wave: `/winding/r_inner_mm`, `/winding/r_outer_mm` | the outer radius is not above the inner radius | none | l.152, l.156 |
+| `INVALID_RADIAL_SPAN` | INVALID, ERROR | `/winding/r_inner_mm`, `/winding/r_outer_mm` | serpentine or wave: the outer radius is above the inner radius but not above inner + `RADIAL_SPAN_MIN_MM` (0.5 mm, Xcoil R_ORDER) | the outer radius; 0.5; none | l.158 |
+| `INVALID_MAGNET_ORDER` | INVALID, ERROR | `/rotor/magnet/r_inner_mm`, `/rotor/magnet/r_outer_mm` | an arc magnet whose outer radius is not above its inner radius | none | l.164 |
+| `INVALID_MAGNET_CROSSES_AXIS` | INVALID, ERROR | `/rotor/magnet/r_center_mm`, `/rotor/magnet/length_mm` | a block magnet whose radial span starts at or below radius 0 | none | l.179 |
+| `INVALID_MAGNET_WIDER_THAN_RADIUS` | INVALID, ERROR | `/rotor/magnet/r_center_mm`, `/rotor/magnet/length_mm`, `/rotor/magnet/width_mm` | a block magnet whose span starts below half its width (EQ-04 takes asin(w / 2r)) | the span's inner radius; half the width in mm; none | l.184 |
+| `RANGE_MAGNET_OUTSIDE_WINDING` | UNSUPPORTED_RANGE, ERROR | `/rotor/magnet` | the winding span is valid and the magnet's radial span does not overlap it (DEF-M2f-01) | the magnet's inner radius; the winding's outer radius in mm; none | l.189 |
+| `INVALID_LAYERS_PER_PHASE` | INVALID, ERROR | `/winding/layers_per_phase` | serpentine: the count is odd and not 1 | the count; none; proposes the count + 1 | l.203 |
+| `INVALID_SERIES_PAIRS_EXCEED_POLE_PAIRS` | INVALID, ERROR | `/winding/layers_per_phase`, `/winding/pair_connection`, `/rotor/poles` | serpentine with series pairs: the pair count exceeds poles // 2 | the pair count; poles // 2; none | l.207 |
+| `RANGE_TOO_MANY_TRACES` | UNSUPPORTED_RANGE, ERROR | `/winding/turns`, `/winding/strands` | serpentine: turns × strands above `TRACES_MAX` (400, Xcoil TOO_MANY) | the product; 400; none | l.215 |
+| `INVALID_VIA_RING` | INVALID, ERROR | `/vias/drill_mm`, `/vias/pad_mm` | the via pad is below drill + `VIA_RING_MIN_MM` (0.1 mm) | the pad; 0.1; none | l.233 |
+| `INVALID_TERMINAL_PAD_RING` | INVALID, ERROR | `/connection/terminal_drill_mm`, `/connection/terminal_pad_mm` | the terminal drill is above 0 and the pad is below drill + `TERMINAL_RING_MIN_MM` (0.3 mm) | the pad; 0.3; none | l.237 |
+| `INVALID_SPIRAL_PHASES` | INVALID, ERROR | `/phases` | spiral: the phase count is not 3 | the count; 3; none | l.245 |
+| `RANGE_COIL_GAP_BELOW_CLEARANCE` | UNSUPPORTED_RANGE, INFO | `/winding/coil/coil_gap_mm`, `/winding/coil/clearance_mm` | spiral: the coil gap is below the clearance | the gap; the clearance; proposes the clearance | l.254 |
+| `INVALID_END_WIDTH_BELOW_TRACE` | INVALID, ERROR | `/winding/coil/end_width_outer_mm` or `/winding/coil/end_width_inner_mm`, and `/winding/coil/trace_width_mm` | spiral: an end width is set and is below the trace width; one issue per end | the end width; the trace width; none | l.267 |
+| `RANGE_SPIRAL_COPPER_COUNT_ODD` | UNSUPPORTED_RANGE, WARNING | `/stackup/layers` | spiral: the copper layer count is odd | the count; none; none | l.274 |
+| `INVALID_PAIR_LAYER_UNKNOWN` | INVALID, ERROR | `/winding/layers/pairs/<i>/layer_in` or `/winding/layers/pairs/<i>/layer_out` | spiral: the pair names a layer that is not a copper layer of the stack-up; one issue per side | the name; none; none | l.281 |
+| `INVALID_PAIR_LAYER_SAME` | INVALID, ERROR | `/winding/layers/pairs/<i>/layer_in`, `/winding/layers/pairs/<i>/layer_out` | spiral: both sides name one layer | the name; none; none | l.283 |
+| `INVALID_PAIR_INDEX_DUPLICATE` | INVALID, ERROR | `/winding/layers/pairs/<i>/index` | spiral: the index occurs more than once; one issue per pair that holds it | the index; none; none | l.285 |
+| `INVALID_SERIES_GROUPS` | INVALID, ERROR | `/winding/layers/series_groups` | spiral: the sorted group members differ from the sorted pair indices | none | l.288 |
+| `INVALID_STACKUP_NO_COPPER` | INVALID, ERROR | `/stackup/layers` | the stack-up has no copper layer | none | l.294 |
+| `INVALID_LAYER_NAME_DUPLICATE` | INVALID, ERROR | `/stackup/layers/<i>/name` | a layer repeats the name of an earlier layer; one issue per repeat | the name; none; none | l.298 |
+| `RANGE_WINDING_BELOW_AMBIENT` | UNSUPPORTED_RANGE, ERROR | `/operating/winding_temperature_degc`, `/operating/ambient_temperature_degc` | the winding temperature is below the ambient temperature | the winding temperature; the ambient temperature in °C; none | l.344 |
+
+Supported ranges outside the field table. `SUPPORTED_RANGES` (`validate.py` l.304-328) holds bounds that `FIELDS` does
+not hold. `_supported_ranges` (l.331) applies them through `_check_limits` with the field's own unit, so they give
+`RANGE_BELOW_SUPPORTED` and `RANGE_ABOVE_SUPPORTED` as in the table above. The comment above the table marks each value
+an `assumption` unless a source is named, and gives the U-M2-fix3 timing of CF-11 as the reason. `OUTLINE_MAX_MM` is
+2000.0, the arc-magnet radius maximum of the field table (l.303).
+
+| Pointer pattern | Low | High | Reason in the code |
+|---|---|---|---|
+| `/analysis/max_segment_mm` | 0.1 | none | physics cuts each path into length / max_segment chords |
+| `/drc_rules/trace_clearance_mm`, `/drc_rules/via_clearance_mm`, `/drc_rules/edge_clearance_mm`, `/drc_rules/hole_clearance_mm` | none | 5.0 | the DRC broad phase keeps every pair closer than the rule |
+| `/vias/plating_um` | 1.0 | none | none given |
+| `/rotor/magnet/width_mm`, `/rotor/magnet/length_mm` | 0.1 | 100.0 | Xcoil magnet sizes 0.1 to 100 mm |
+| `/rotor/magnet/r_center_mm` | 0.5 | 2000.0 | follows the arc radii |
+| `/winding/coil/r_inner_mm`, `/winding/coil/r_outer_mm`, `/outline/board/radius_mm`, `/outline/board/across_flats_mm`, `/outline/bore/radius_mm`, `/outline/bore/across_flats_mm` | none | 2000.0 | `OUTLINE_MAX_MM` |
+| `/outline/screws/*/pitch_radius_mm` | none | 2000.0 | DEF-M7a-01: a pitch radius of 1e30 mm overflowed the DRC |
+| `/outline/screws/*/hole_diameter_mm` | none | 4000.0 | 2 × `OUTLINE_MAX_MM` |
+
+Other model codes.
+
+| Code | Category, severity | Pointers | Fires when | `value`, `limit` | Source |
+|---|---|---|---|---|---|
+| `INVALID_STACKUP_COPPER_EXCEEDS_BOARD` | INVALID, ERROR | `/stackup/layers` | `even_stackup_issues(copper_count, copper_thickness_mm, board_thickness_mm)` finds a board thickness not above the copper total n × t (D-053a). `validate_design` does not run it: its only caller is the stack-up generator of `ui/viewmodels/session.py` l.926 | the board thickness; the copper total in mm | `validate.py` l.385 |
+| `INVALID_LIST_SHAPE` | INVALID, ERROR | the list | `parse_draft`: `resolve` reports the list as malformed (missing or extra entries) | none | `model/draft.py` l.74 |
+| `INVALID_DRC_RULE_NOT_FINITE`, `INVALID_DRC_RULE_NEGATIVE` | INVALID, ERROR | `/drc_rules/<field>` | `validate_drc_rules`: the rule is not finite, or it is finite and below 0 | the rule; 0.0 | `model/drc_rules.py` l.30 |
+
+Generator refusals. Each generator returns these in `Unbuildable.issues`, with category UNBUILDABLE, severity ERROR
+and `value` None unless the row says otherwise. Every generator runs `design_keep_out_issues` before it builds
+(`generators/spiral/generate.py` l.144, `serpentine/generate.py` l.118, `wave/generate.py` l.80).
+
+| Code | Generator | Pointers | Fires when | `limit` | Source |
+|---|---|---|---|---|---|
+| `UNBUILDABLE_SCREW_HOLE_EDGE` | all | `/outline/screws/<k>/pitch_radius_mm` and `/outline/screws/<k>/hole_diameter_mm` for each pattern k that breaks the rule | a hole's gap to the board edge or a cutout violates `edge_clearance_mm` by the D-006 test | none | `generators/fasteners.py` l.40 |
+| `UNBUILDABLE_SCREW_HOLE_PITCH` | all | the same form, for both patterns of each pair | the gap between two holes violates `edge_clearance_mm` (the web rule is an `assumption`, module docstring) | none | `fasteners.py` l.40 |
+| `UNBUILDABLE_ZERO_TURNS` | spiral | `/winding/coil/turns` | `max_closing` finds no closing for the centre vias | none | `spiral/generate.py` l.396 |
+| `UNBUILDABLE_INTERCONNECT_CROSSING` | spiral | `/connection/topology` | the interconnect is drawn, the topology is not `open`, and `plan_links` returns None | none | `spiral/generate.py` l.415 |
+| `UNBUILDABLE_PHASE_CHAIN_UNROUTABLE` | spiral | `/connection/ring_width_mm` | `chain_coils` returns None for a phase | none | `spiral/generate.py` l.489 |
+| `UNBUILDABLE_SERPENTINE_OPTION_NOT_IMPLEMENTED` | serpentine | `/vias/vias_per_transition` | `vias_per_transition` is not 1 (D-054d) | none | `serpentine/generate.py` l.120 |
+| `UNBUILDABLE_SERPENTINE_R_TOO_SMALL` | serpentine | `/winding/r_inner_mm`, `/winding/turns`, `/winding/strands` | `plan_stack` returns a `CanonFailure` whose first reason is `BuildFailure.R_TOO_SMALL` | none | `serpentine/generate.py` l.126 builds the code as f"UNBUILDABLE_SERPENTINE_{reason.value}"; pointers l.64 |
+| `UNBUILDABLE_SERPENTINE_ACUTE_CORNER` | serpentine | `/winding/turns`, `/winding/corner_style`, `/winding/r_inner_mm` | the same, first reason `ACUTE_CORNER` | none | l.126; l.65 |
+| `UNBUILDABLE_SERPENTINE_BUNDLE_TOO_WIDE` | serpentine | `/winding/turns`, `/winding/strands`, `/winding/r_inner_mm` | the same, first reason `BUNDLE_TOO_WIDE` | none | l.126; l.66 |
+| `UNBUILDABLE_SERPENTINE_GEOMETRY` | serpentine | `/winding/r_outer_mm`, `/winding/fillet_radius_mm` | the same, first reason `GEOMETRY` (`serpentine/canonical.py` l.237, l.261) | none | l.126; l.67 |
+| `UNBUILDABLE_WAVE_OPTION_NOT_IMPLEMENTED` | wave | `/vias/vias_per_transition` | `vias_per_transition` is not 1 (D-054d) | none | `wave/generate.py` l.82 |
+| `UNBUILDABLE_WAVE_MIN_POLES` | wave | `/rotor/poles` | `derive_wave`: more than one phase and fewer than 2 pole pairs (`wave/derive.py` l.315) | none | `wave/generate.py` l.34 |
+| `UNBUILDABLE_WAVE_SLOT_PITCH` | wave | `/winding/turns` | `derive_wave`: the slot chord at the inner radius is below trace width + clearance - 1e-9 mm (`derive.py` l.317); or the chord style finds an inner via radius not above 0.5 mm or a gap that does not fit (l.212) | `max_wave_turns(params)`, or None when it is 0 | `wave/generate.py` l.35, l.102 |
+| `UNBUILDABLE_WAVE_OUTER_TIGHT` | wave | `/winding/end_width_outer_mm` | jog: no outer via radius keeps the pitch (`derive.py` l.268); involute: the outer spacing is below the need - 1e-9 mm (l.301) | none | `wave/generate.py` l.36 |
+| `UNBUILDABLE_WAVE_INNER_TIGHT` | wave | `/winding/turns` | jog, overlap or involute: the inner end turns do not fit (`derive.py` l.271, l.286, l.298) | as `UNBUILDABLE_WAVE_SLOT_PITCH` | `wave/generate.py` l.37, l.102 |
+| `UNBUILDABLE_WAVE_LINK_ROOM` | wave | `/winding/r_inner_mm` | involute, jog or chord: the group links leave less than 0.5 mm inside the inner via ring, or `build_wave` reports no link room | none | `wave/generate.py` l.183 |
+| `UNBUILDABLE_WAVE_INTERCONNECT_CROSSING` | wave | `/connection/topology` | the interconnect is wanted and `build_interconnect` reports it unroutable | none | `wave/generate.py` l.198 |
+
+`derive_wave` can return `UNBUILDABLE_WAVE_MIN_POLES` and `UNBUILDABLE_WAVE_SLOT_PITCH` together (l.314-320). Every
+other wave refusal and every serpentine refusal is one issue: `_refusal` reports only the first reason of a
+`CanonFailure` (`serpentine/generate.py` l.125). `UNBUILDABLE_UNSUPPORTED_TOPOLOGY` is in `errors/catalogue/generators.py`
+and no code path returns it. The lever finds no literal outside the catalogue and no f-string that builds it, and
+`build_layout` indexes `GENERATORS`, which has all three topologies (`generators/__init__.py` l.25-27).
+
+Project file, compute facade, exporters and command line. None of these codes has a pointer unless the row says so.
+
+| Code | Category, severity | Pointers | Fires when | `value`, `limit`, `hint` | Source |
+|---|---|---|---|---|---|
+| `INVALID_PROJECT_NOT_FOUND` | INVALID, ERROR | none | `load_project`: reading the file raises FileNotFoundError | the path as text | `io/project.py` l.263 |
+| `INFO_PROVENANCE_EXAMPLE_MISMATCH` | INVALID, INFO | the file pointer of the field | a stored `example` entry disagrees with the derivation from the packaged example (UT-IO-07) | the stored provenance word | `io/project.py` l.253. The category is INVALID because `IssueCategory` has no INFO member (l.69) |
+| `MISSING_DESIGN_INCOMPLETE` | MISSING, ERROR | the file pointers of the missing fields | `compute_project` loads a `LoadedDraft` | none | `api.py` l.317 |
+| `UNBUILDABLE_EXPORT_NO_LAYOUT` | UNBUILDABLE, ERROR | none | `exportable_boards`: the outcome has no boards; `ExportRefused.reason` is `no_layout` | none | `io/exporters.py` l.157 |
+| `INVALID_EXPORT_NO_SCREW_HOLES` | INVALID, ERROR | none | `no_screws()`; `ExportRefused.reason` is `no_screws` (§9.3) | none | `io/exporters.py` l.166 |
+| `INVALID_CLI_USAGE` | INVALID, ERROR | none | argparse reports a usage error; the process exits with `ExitCode.VALIDATION_ERRORS` | the argparse message | `cli/commands.py` l.290 |
+| `INVALID_CLI_OUTPUT_UNWRITABLE` | INVALID, ERROR | none | the output path is a folder, or its parent folder does not exist | the path as text | `cli/commands.py` l.113 |
+| `RANGE_NON_FINITE_RESULT` | UNSUPPORTED_RANGE, WARNING | none | a result carries the validity flag of this code (`physics/analyse.py` l.83) | the result's quantity name | `api.py` l.140-148 |
+| `DRC_TRACE_TRACE`, `DRC_TRACE_VIA`, `DRC_VIA_VIA`, `DRC_PAD_TRACE`, `DRC_PAD_PAD`, `DRC_COPPER_EDGE`, `DRC_COPPER_HOLE`, `DRC_MIN_WIDTH`, `DRC_MIN_DRILL`, `DRC_ANNULAR_RING` | DRC, ERROR | none | `_drc_failures`: one issue per failed `DrcCheckKind` of each board, after `DRC_EXPORT_NOT_CONFIRMED`. The code is `DrcCheckKind.issue_code`, f"DRC_{name}" (§7) | `least_clearance_mm`; `required_mm`; "board <n>" | `io/exporters.py` l.141-147; `drc/report.py` l.33 |
+| `INTERNAL_VALIDATE_FAILED`, `INTERNAL_GEOMETRY_FAILED`, `INTERNAL_DRC_FAILED`, `INTERNAL_PHYSICS_FAILED` | INTERNAL, ERROR | none | a pipeline stage raised; the code is f"INTERNAL_{stage.name}_FAILED" over `Stage` (`outcome.py` l.15) | the traceback | `api.py` l.151-160 |
+| `INTERNAL_CLI_FAILED` | INTERNAL, ERROR | none | a command raised | the traceback | `cli/commands.py` l.354 |
+| `INTERNAL_REGISTRY_EQUATION_UNSOURCED` | INTERNAL, WARNING | `/equations/<id>/sources` | an equation cites no evidence ID | the equation ID | `results/registry.py` l.301 |
+| `INTERNAL_REGISTRY_EVIDENCE_MISSING` | INTERNAL, WARNING | `/equations/<id>/sources` | an equation cites an evidence ID the register lacks; one issue per ID | the evidence ID | `registry.py` l.303 |
+| `INTERNAL_REGISTRY_UNIT_UNKNOWN` | INTERNAL, WARNING | `/equations/<id>/constants` | a constant's unit is outside `Unit`; the constant is not loaded | the unit text | `registry.py` l.423 |
+| `INTERNAL_REGISTRY_FIELD_UNTYPED` | INTERNAL, WARNING | `/equations/<id>/validity_checks/<check>` | a DEF-23 field is missing or written as prose; one issue per field | the field name | `registry.py` l.449 |
+
+The four registry codes go to `Registry.issues` (`registry.py` l.312) and never reach `ComputeOutcome.issues`
+(`inferred` from a grep of `api.py`, which reads no `registry.issues`). `INTERNAL_INTERCONNECT_UNCLASSIFIED` is not a
+`ValidationIssue`. It is the code of the `ValidityFlag` `UNCLASSIFIED_INTERCONNECT` (`physics/analyse.py` l.84-89,
+EQ-23, effect CAP).
 
 ## 2. `embodic.model`: design inputs, draft, provenance
 
@@ -3311,6 +3449,77 @@ note and the stub are the contract row.
   it. Two callers of `project_document`, which requires the keyword (`project.py` l.142-144), pass the export time:
   `write_bundle` (`io/bundle.py` l.44) and the JSON project export (`ui/viewmodels/export.py` l.260-264). A grep of
   `src` for `save_project(` and `saved_utc` finds no other call.
+
+Revision 2026-10-17 (U-D20, claude-opus-5-5; D-055, DEF-UM7d-01, REQ-T-07; `src/embodic/io/project.py`,
+`io/migrations.py`, `io/exporters.py`, `io/examples.py`, `results/registry.py`, `api.py` and
+`io/schema/project.v1.schema.json` on main e68d5ff, `verified` by reading unless a line says otherwise). The project file
+gets the engine version and the registry version, and its format version becomes 2.
+
+- The defect. REQ-T-07 lists the project JSON among the files that carry the engine version and the registry version.
+  `project_document` writes `app_version`, `saved_utc` and `design_hash` and neither of the two (`project.py` l.142-163).
+  The strict xfail `test_t07_project_json_holds_the_engine_version_and_the_registry_version`
+  (`tests/unit/embodic_io/exporters/test_stamp_fields.py` l.53) records it.
+- Names and place. Two top-level keys, `engine_version` and `registry_version`, beside `app_version`. The names are
+  those of `ExportMetadata` and `metadata_fields` (`exporters.py` l.47-48 and l.103-104), so one name finds the value
+  in every export. `app_version` keeps its name. `encode_project` sorts the keys (`project.py` l.166-168), so the place in
+  the text is alphabetical and does not depend on the order in `project_document`.
+- Values. `engine_version` is `embodic.__version__`. There is no separate engine (D-038d), and `export_metadata` sets
+  `engine_version` from `versions.embodic` (`exporters.py` l.91). `registry_version` is `Registry.version`, the text
+  `v1+<12 hex>.<12 hex>` built from the manifest copy hashes of the two registry files (`registry.py` l.282). It is the
+  value of `VersionInfo.registry` (`api.py` l.220) and of the evidence file's `registry_version` (§3.1).
+- Signatures. `project_document` stays pure and the caller supplies the value. `save_project` loads the packaged
+  registry when the caller passes none, as it reads the clock when the caller passes no `saved_utc`. The cost of that
+  load per save is `not tested`.
+
+```python
+def project_document(
+    project: ProjectFile | LoadedDraft, provenance: ProvenanceMap, *, saved_utc: str, registry_version: str
+) -> dict[str, JsonValue]:
+    """The file's JSON data; `engine_version` is embodic.__version__ (D-038d; revision 2026-10-17, U-D20)."""
+
+
+def save_project(
+    path: Path, project: ProjectFile | LoadedDraft, *, saved_utc: str | None = None, registry_version: str | None = None
+) -> str:
+    """Writes atomically and returns the design hash ('' for a draft). `registry_version` None writes
+    `embodic.results.load_registry().version` (revision 2026-10-17, U-D20)."""
+```
+
+- Callers. `write_bundle` (`io/bundle.py` l.44) and the JSON project export (`ui/viewmodels/export.py` l.260) call
+  `project_document` with `outcome.versions.registry` of the outcome they write. The example builders under `tests`
+  that call `project_document` (`make_examples.py` l.92 and the serpentine and wave `make_example.py`) pass
+  `load_registry().version`. A caller of `save_project` may omit the keyword.
+- Format version. `PROJECT_SCHEMA_VERSION` becomes 2 (`io/migrations.py` l.13) and `MIGRATIONS[1]` is
+  `migrate_v1_to_v2`. The schema version rule above requires it, because a key is added and a v1 reader refuses the
+  file: `_unknown_keys` refuses a top-level key outside `TOP_LEVEL_KEYS` (`project.py` l.273-275), and
+  `project.v1.schema.json` has `"additionalProperties": false` at the top level. With the bump, embodic 0.0.1 reports
+  `INVALID_SCHEMA_VERSION_NEWER` for a new file, not `INVALID_PROJECT_FILE` at `/engine_version`.
+  `VersionInfo.schema` and `/versions/schema` of the outcome JSON become 2 (`api.py` l.219). The §10 bullet "The
+  project file schema stays at 1" (revision U-D17) was true for D-051 and is superseded here. The outcome JSON's own
+  `format_version` stays 2, because none of its keys changes.
+- Schema files. `tests/unit/embodic_io/project/make_schema.py` also writes `project.v2.schema.json`: `schema_version`
+  const 2, and `engine_version` and `registry_version` typed `string` and not required, as `app_version` is.
+  `project.v1.schema.json` stays unchanged for v1 files. UT-IO-03 validates each file against the schema that its
+  `schema_version` names. The PK-03 member list (`tests/packaging/test_pk03_reproducible_wheel.py` l.38) gains the new
+  file.
+- Load rule for a file without the keys. `migrate_v1_to_v2` returns the document with `engine_version` and
+  `registry_version` set to null. A v1 writer recorded neither value, and the rule above forbids an invented one. The
+  loader reads neither key into `ProjectFile` or `LoadedDraft`, as it reads neither `app_version` nor `saved_utc`, so
+  a v1 file loads with the same design, provenance and issues as before, plus `INFO_MIGRATED` with `value` 1 and
+  `limit` 2 (`migrations.py` l.48). `_unknown_keys` checks the key set of the file's own version before `migrate` runs
+  (today it runs after, `project.py` l.314-317), so a v1 file that holds either key gives `INVALID_PROJECT_FILE` with
+  that key's pointer, as the v1 schema does (question 2 above).
+- Packaged examples. `load_example` reads only the `design` and `example` objects (`io/examples.py` l.52-61), so it
+  runs no migration and loads a v1 or a v2 file alike. The five files become v2 all the same, because their builders
+  call `project_document` and three tests assert that a rerun gives the same bytes (`test_examples.py` l.112,
+  `test_serpentine_example.py` l.30 and `test_wave_example.py` l.43). The unit reruns the builders. The five files
+  already hold `app_version` "0.0.1" (`verified` by grep), so a version bump already forces a rerun, and after this
+  change a registry sync forces one too. Their design hashes do not change (the design hash bullet below).
+- Round trip. Save, load, save stays byte-identical (REQ-F-15). Both saves run in one build, so `engine_version` is the
+  same constant, and `registry_version` is the same packaged value or the one value that the caller passes to both, as
+  with `saved_utc`. The second save of a loaded v1 file writes a v2 file. That is the migration, not a round trip.
+- Design hash. `design_hash` covers `design` only (rule above; `project.py` l.150 hashes `project.design`). The two keys
+  change no design hash, no `EXAMPLE_HASHES` pin (UT-IO-08) and no stored `origin_example`.
 
 ### 9.2 Board dump (Agent 3 format, frozen here as v1)
 
