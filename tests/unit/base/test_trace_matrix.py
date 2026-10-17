@@ -24,10 +24,10 @@ REQS = [
 
 @pytest.mark.req("REQ-T-09")
 def test_trace_matrix_parses_every_requirement_row():
-    """Catches a parser that drops rows: requirements.md holds 98 Phase 1 IDs plus 11 new rows (its own summary)."""
+    """Catches a parser that drops rows: requirements.md holds 98 Phase 1 IDs plus 12 new rows (its own summary)."""
     rows = trace_matrix.parse_requirements(trace_matrix.REQUIREMENTS.read_text(encoding="utf-8"))
-    assert len(rows) == 109
-    assert len({r.req_id for r in rows}) == 109
+    assert len(rows) == 110
+    assert len({r.req_id for r in rows}) == 110
     assert rows[0].req_id == "REQ-F-01"
 
 
