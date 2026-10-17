@@ -1,0 +1,8 @@
+# SHA-256 of the brand originals (LG-06, REQ-L-05). Hashes only; no asset is copied. Regenerate with sha256sum.
+# Source: the four copies under docs/phase1/design/mockups/brand/, which test_plan.md 5.8.5 records as byte-identical to
+# the originals (verified there by sha256sum over both folders).
+# embodic-logo-white.png has no copy in the checkout, so its hash is not recorded here (not tested). Append its line.
+ea62b87c6b0351eb9fd274ccf7f8917723cb16e5532866eb6d9523f323d217e7  embodic-rounded-triangle-icon.png
+1598b048a81a21e08c882a53fc02ba8fe551f033326a23c26b8bc8d2f05670ff  embodic-symbol-white.png
+d3f05b29f33d5158ee37103e3050f4312eca89513227ebedd237488e439fbefc  embodic-wordmark-white.png
+eee85749706826e78842b869fcd8c5feca83e464efcd761e0585e7ec6955d222  embodic_logo.png
