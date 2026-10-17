@@ -100,6 +100,29 @@ unchanged.
   cover requirement rows and `tools/trace_matrix.py`. Neither covers the test IDs of equations, so the choice between
   the two readings is open for Fable.
 
+Revision 2026-10-17 (U-D20, claude-opus-5-5; D-055; main e68d5ff read for every item). The acceptance of REQ-T-05,
+REQ-T-07 and REQ-L-01 changes. REQ-T-05 and REQ-L-01 become `amended`. No statement, ID or Tests column changes.
+
+- REQ-T-05 (D-055b). The release gate fails, and the badge downgrade is not the mechanism. The predicate is
+  `Registry.tests_passed` (`src/embodic/results/registry.py` l.150-153): the equation links at least one test and every
+  linked test passed. The badge uses the same predicate through `test_state` (l.155-157), so the gate fails exactly
+  when the shipped build would show a `verified` equation as `not tested`. D-055b says "has no linked test passing".
+  For an equation with two linked IDs of which one passed, that reading lets the release pass and the badge drop, so
+  this row takes the stricter predicate. The packaged registry has 11 `verified` equations, and each links 1 to 5 test
+  IDs (`verified (run)`, `load_registry()` on main e68d5ff). TR-03 and TR-05 in test_plan.md §5.7 hold the test
+  criteria.
+- REQ-T-07 (DEF-UM7d-01). The project JSON gains `engine_version` and `registry_version`, and its format version
+  becomes 2 (interfaces.md §9.1).
+- REQ-L-01 (U-M7d L-01). "0 words outside the allow-list" needs an English word list, and the repository has none
+  (test_plan.md LG-01). The new acceptance needs no data file. The character rule of LG-01 and LG-08 stays automatic.
+  It admits ASCII and a short list of unit symbols and Greek letters only, so a word in Thai or in another non-Latin
+  script cannot pass. A Latin-script word that is not
+  English, for example a transliteration, passes the character rule. A reviewer's manual record covers that case, as
+  for REQ-T-11 (test_plan.md §5.8.3). A probe of the non-docstring literals of `src` that hold a space found 1075
+  distinct words (`verified (run)`, 2026-10-17; resources and templates not counted). An automatic word check needs a
+  list such as SCOWL (Spell Checker Oriented Word Lists, http://wordlist.aspell.net/). Its licence was not read in
+  this unit (`unresolved`), and adoption, a THIRD_PARTY_LICENSES.md entry and the data file are Fable's decision.
+
 ## 1. Functional requirements (REQ-F)
 
 | ID | Disp. | Statement | Rationale | Prio | Acceptance | M | Owner module | Tests |
@@ -211,9 +234,9 @@ re-open these IDs. MT-07 fails the build if KiCad code, imports, export options 
 | REQ-T-02 | carried | Every computed result shall be a Traceable carrying value, unit, quantity, EQ-IDs or kind tag, evidence IDs, assumptions, inputs and status; the UI takes status from data only. | ADR-0003 | must | Walk all AnalysisResult fields for every example: no bare float; all IDs resolve. | M2 | embodic.results | UT-RES-01 |
 | REQ-T-03 | carried | The badge shall express calculation trust only (weakest of equation status, test state, validity cap); assumed inputs appear only in the tag. | D-007; DEF-02 | must | Truth table; tag lists exactly the assumed inputs used. | M2 | embodic.results | UT-RES-02, UT-RES-05 |
 | REQ-T-04 | carried | The application shall ship the equation and evidence registries and every shown ID shall resolve. | A2-EQ, A5-REG | must | Registry integrity: no dangling EQ or EV IDs. | M2 | embodic.results | UT-RES-03, TR-04 |
-| REQ-T-05 | carried | `cannot verify yet` equations shall give only `unresolved` estimates; an equation shows `verified` only with a linked test passing in this build. | Gate vocabulary | must | CI fails when a `verified` EQ lacks a passing linked test. | M2 | embodic.results | TR-03, UT-RES-02, UT-RES-08, UT-RES-09, TR-05 |
+| REQ-T-05 | amended | `cannot verify yet` equations shall give only `unresolved` estimates; an equation shows `verified` only with a linked test passing in this build. | Gate vocabulary; D-055b | must | CI fails when a `verified` EQ lacks a passing linked test: in the release profile, `record_main` of `tools/record_passed_tests.py` exits 1, writes no evidence file and names on stderr every equation of status `verified` for which `Registry.tests_passed` is false with the registry test IDs that passed in the run, because it links no test or one of its linked IDs did not pass (revision 2026-10-17, U-D20). | M2 | embodic.results | TR-03, UT-RES-02, UT-RES-08, UT-RES-09, TR-05 |
 | REQ-T-06 | amended | Every input shall carry a provenance `user`, `example` or `measured`; `measured` shall be accepted only for property fields with a named source, and only it retires the field's assumption label. | D-007; D-014 vocabulary | must | Marking B_r measured with a source removes it from the tag; without a source or on a design field it is refused. | M2 | embodic.model | UT-RES-06, UT-MOD-05 |
-| REQ-T-07 | amended | Every export shall contain the embodic version, engine version, registry version, design hash, generation date and the status labels of reported values. | Reproducibility | must | Metadata present in SVG `<metadata>`, DXF header comment, project JSON, PDF and README. | M4 | embodic.io | UT-IO-06 |
+| REQ-T-07 | amended | Every export shall contain the embodic version, engine version, registry version, design hash, generation date and the status labels of reported values. | Reproducibility | must | Metadata present in SVG `<metadata>`, DXF header comment, project JSON, PDF and README. The project JSON holds the top-level keys `app_version`, `engine_version`, `registry_version`, `design_hash` and `saved_utc` (interfaces.md §9.1, revision 2026-10-17, U-D20). | M4 | embodic.io | UT-IO-06 |
 | REQ-T-08 | amended | Equation validity limits shall be evaluated and shown next to affected results; graded checks follow the registry `validity_checks`, with EC-05 labelled per REQ-T-16. | EQ-13 threshold, EC-05 (DEF-18, DEF-23) | must | w above delta/3 raises RANGE_SKIN_DEPTH and marks R and eddy results; EC-05 values within 0.1 pp of Agent 2. | M2 | embodic.physics | UT-PHY-13, UT-PHY-21 |
 | REQ-T-09 | carried | Every automated test shall declare its REQ-IDs with a pytest marker, and CI shall generate the requirements-to-tests matrix. | User wish | must | 0 tests without REQ marker; 0 live must-REQs without a test. | M1 | tools/trace_matrix.py | TR-01, TR-02 |
 | REQ-T-10 | carried | Computed values shall never be called "measured". | Brief rule 5 | must | Wording scan of strings and templates. | M4 | embodic.ui.strings | LG-03 |
@@ -228,7 +251,7 @@ re-open these IDs. MT-07 fails the build if KiCad code, imports, export options 
 
 | ID | Disp. | Statement | Rationale | Prio | Acceptance | M | Owner module | Tests |
 |---|---|---|---|---|---|---|---|---|
-| REQ-L-01 | carried | All software-facing text shall be English. | Brief rule 8; standing order 1 | must | Scan finds 0 Thai characters and 0 words outside the allow-list in src, resources and templates. | M4 | embodic.ui.strings | LG-01, LG-08 |
+| REQ-L-01 | amended | All software-facing text shall be English. | Brief rule 8; standing order 1; D-055 | must | Scan finds 0 Thai characters in src, resources and templates (LG-08), and 0 string literals in `src` with a character outside printable ASCII, tab, newline, the allowed unit symbols and the symbols that `MODULE_SYMBOLS` admits for the module (LG-01). A manual record (interfaces.md §3.2) names the reviewer who read the sorted list of distinct words of the string catalogues and report templates that LG-01 prints, and found no word that is not English (revision 2026-10-17, U-D20). | M4 | embodic.ui.strings | LG-01, LG-08 |
 | REQ-L-02 | amended | UI strings should be defined in per-area catalogue modules under `embodic.ui.strings`, not inline in widget code. | Reviewability; one catalogue file per unit avoids shared writes | should | AST lint: no string literal passed to a widget text setter outside the catalogue. | M4 | embodic.ui.strings | LG-02 |
 | REQ-L-03 | carried | The product name shall be "embodic"; "Xcoil" shall not appear in user-facing text or outputs. | Brief §1 | must | 0 occurrences in strings, exports and report. | M4 | embodic.ui.strings | LG-05 |
 | REQ-L-04 | amended | UI chrome shall be white, grey and black in both themes; red, blue and green are reserved for phases A, B, C and status semantics, always with a non-colour cue. | D-011 | must | Contrast check, greyscale test and token review. | M4 | resources/themes | AX-01, AX-05, AX-08 |
