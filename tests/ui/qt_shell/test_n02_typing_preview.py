@@ -4,6 +4,7 @@ Rows N02-1 to N02-10 of docs/phase3/design/fix_wave_f1.md section (a). Field `pa
 """
 
 import dataclasses
+import itertools
 import time
 
 import pytest
@@ -280,3 +281,55 @@ def test_n02_10_keystroke_echo_while_a_preview_result_arrives(open_example, qtbo
         f"results set (ms, r_inner): {arrived}"
     )
     assert max(gaps) <= 100
+
+
+@pytest.mark.slow
+@pytest.mark.req("REQ-N-02")
+def test_n02_10_keystroke_echo_when_a_preview_result_lands_and_typing_goes_on(open_example, qtbot):
+    """N02-10, DEF-U-M8n-03. The largest gap between 10 ms GUI ticks while a preview result is set (nightly only).
+
+    The case above never sees a result set: its next keystroke cancels the preview in flight. Here the compute of the
+    11.6 preview returns at once with a result computed beforehand, so the worker spends the wait building its scene;
+    the keys "12345" start the moment that result is set, so their echo meets the redraw of the result. The ticks run
+    from the last key of "11.6" to 100 ms after the last key of "12345". Same 100 ms bound (assumption) and ticks.
+    """
+    precomputed = {}
+
+    def returns_at_once(design, provenance, *, cache, cancel):
+        if design.winding.coil.r_inner_mm != 11.6:
+            return compute(design, provenance, cache=cache, cancel=cancel)
+        return precomputed["11.6"]
+
+    _, window = open_example(timed=TimedCompute())
+    window.outcome._submitter.compute_fn = returns_at_once
+    committed = window.session.state.value
+    coil = dataclasses.replace(committed.design.winding.coil, r_inner_mm=11.6)
+    preview = dataclasses.replace(committed.design, winding=dataclasses.replace(committed.design.winding, coil=coil))
+    precomputed["11.6"] = compute(preview, committed.provenance)
+    clock = QElapsedTimer()
+    clock.start()
+    arrived = []
+    window.outcome.state.subscribe(
+        lambda state: (
+            arrived.append((clock.elapsed(), r_inner_of(state.outcome))) if isinstance(state, OutcomeReady) else None
+        )
+    )
+    field = focus_field(qtbot, window)
+    type_keys(qtbot, field, "11.6")
+    ticks = [clock.elapsed()]
+    ticker = QTimer()
+    ticker.setInterval(10)
+    ticker.timeout.connect(lambda: ticks.append(clock.elapsed()))
+    ticker.start()
+    qtbot.waitUntil(lambda: bool(arrived), timeout=WAIT_TIMEOUT_MS)
+    typing = clock.elapsed()
+    type_keys(qtbot, field, "12345")
+    qtbot.wait(100)
+    ticker.stop()
+    gap, ended = max((after - before, after) for before, after in itertools.pairwise(ticks))
+    print(
+        f"N02-10 largest GUI tick gap {gap} ms; window {ticks[0]} to {ticks[-1]} ms, keys from {typing} ms, largest "
+        f"gap ends at {ended} ms; results set (ms, r_inner): {arrived}"
+    )
+    assert [r_inner for _, r_inner in arrived] == [11.6], "precondition: the preview result is set, before the keys"
+    assert gap <= 100

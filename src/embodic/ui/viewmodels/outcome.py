@@ -9,6 +9,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Literal, Protocol, TypeAlias
 
+from embodic.drc import CancelToken
 from embodic.geometry.labels import (
     MINUS,
     Box,
@@ -231,12 +232,28 @@ def _label_of_path(board: Layout, anchors: tuple[LabelAnchor, ...]) -> dict[int,
     return named
 
 
-def board_marks(board: Layout) -> BoardMarks:
-    """Return the labels, eye fills and pad boxes of one board; the worker calls this (the eye search is slow)."""
-    anchors = label_anchors(board)
+class _SceneCancelledError(Exception):
+    """The cancel token stopped the scene build."""
+
+
+def _stop_if_cancelled(cancel: CancelToken | None) -> None:
+    if cancel is not None and cancel.cancelled:
+        raise _SceneCancelledError
+
+
+def board_marks(board: Layout, cancel: CancelToken | None = None) -> BoardMarks:
+    """Return the labels, eye fills and pad boxes of one board; the worker calls this (the eye search is slow).
+
+    ``cancel`` is read after each coil's eye search, the bulk of the work; `ready_state` catches the stop.
+    """
+    coils = []
+    for mark in coil_marks(board):
+        coils.append(mark)
+        _stop_if_cancelled(cancel)
+    anchors = label_anchors(board, coils)
     return BoardMarks(
         anchors=anchors,
-        coils=tuple(coil_marks(board)),
+        coils=tuple(coils),
         pads=pad_boxes(board),
         label_of_path=_label_of_path(board, anchors),
         copper=copper_spots(board),
@@ -313,12 +330,13 @@ def _layers_of(boards: Sequence[Layout]) -> tuple[str, ...]:
     return tuple(dict.fromkeys(layer for board in boards for layer in board.copper_layers))
 
 
-def geometry_scene(outcome: ComputeOutcome) -> GeometryScene | None:
-    """Return what the geometry view draws, or None when no board was built."""
+def geometry_scene(outcome: ComputeOutcome, cancel: CancelToken | None = None) -> GeometryScene | None:
+    """Return what the geometry view draws, or None when no board was built; see `board_marks` for ``cancel``."""
     if outcome.boards is None:
         return None
     boards = outcome.boards.boards
-    return GeometryScene(boards=boards, layers=_layers_of(boards), marks=tuple(board_marks(board) for board in boards))
+    marks = tuple(board_marks(board, cancel) for board in boards)
+    return GeometryScene(boards=boards, layers=_layers_of(boards), marks=marks)
 
 
 def board_letters(scene: GeometryScene | None) -> tuple[Phase, ...]:
@@ -378,6 +396,15 @@ def stamp_text(outcome: ComputeOutcome) -> str:
     return text("shell.canvas.stamp", embodic=outcome.versions.embodic, hash12=design_hash12(outcome.design_hash))
 
 
-def ready_state(outcome: ComputeOutcome) -> OutcomeReady:
-    """Build what the shell shows of an outcome; the worker calls this off the GUI thread."""
-    return OutcomeReady(outcome=outcome, scene=geometry_scene(outcome))
+def ready_state(outcome: ComputeOutcome, cancel: CancelToken | None = None) -> OutcomeReady | None:
+    """Build what the shell shows of an outcome; the worker calls this off the GUI thread.
+
+    None only when ``cancel`` was set before the build ended: a cancelled preview stops within one coil's eye search
+    instead of holding the GIL for the whole scene (DEF-U-M8n-01).
+    """
+    try:
+        scene = geometry_scene(outcome, cancel)
+        _stop_if_cancelled(cancel)
+    except _SceneCancelledError:
+        return None
+    return OutcomeReady(outcome=outcome, scene=scene)
