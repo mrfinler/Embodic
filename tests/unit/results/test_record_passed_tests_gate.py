@@ -83,3 +83,27 @@ def test_a_verified_equation_missing_one_of_several_linked_tests_stops_the_relea
     assert code == 1
     assert re.findall(r"\bEQ-\d+\b", output.out + output.err) == [eq_id]
     assert not out.exists()
+
+
+@pytest.mark.req("REQ-T-05")
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "DEF-U-M8p-01: record_main names the unproven equation only, not the registry test IDs of it that passed; "
+        "tools/record_passed_tests.py is outside U-M8p's scope. Remove this marker when the tool lists them."
+    ),
+)
+def test_stderr_alone_names_the_equation_and_the_registry_tests_of_it_that_passed(tmp_path: Path, capsys) -> None:
+    """Catches a refusal that names the equation but not which of its linked tests passed in the run.
+
+    requirements.md REQ-T-05 (revision 2026-10-17, U-D20): the gate names on stderr the equation with the registry test
+    IDs that passed. The assertions read stderr only, because a CI log keeps the two streams apart.
+    """
+    eq_id, tests = next((k, t) for k, t in verified_equations().items() if len(t) > 1)
+    skipped = tests[-1]
+    report = release_report(tmp_path / "req_report.json", skipping=skipped)
+    code = run_record(report, tmp_path / "passed_tests.v1.json")
+    named = set(re.findall(r"(?<![\w-])(?:EQ|EQT)-[\w-]*\w", capsys.readouterr().err))
+    assert code == 1
+    assert eq_id in named
+    assert set(tests) - {skipped} <= named
