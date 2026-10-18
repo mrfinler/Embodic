@@ -7,7 +7,8 @@ the build it names; otherwise the check is redone before that release gate. This
 `docs/phase3/verification/manual_records.json` on main c0f4894 and lists the index that the 0.0.2 gate reads.
 
 Lever: `python3 -I tests/independent/m7/v14_record_currency.py --index <index> [--target c0f4894]`. It runs
-`git diff --stat <build>..c0f4894` over each subject's fixed paths and the embodic modules its instrument imports. Its
+`git diff --stat <build>..c0f4894` over each subject's fixed paths and the embodic modules its instrument imports, and
+`--verbose` lists every file and every changed line count (798 lines on the c0f4894 index). Its
 output on the c0f4894 index (`git show c0f4894:docs/phase3/verification/manual_records.json`) gives the first three
 columns below (`verified` by running it).
 

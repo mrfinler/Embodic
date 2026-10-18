@@ -165,6 +165,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--target", default="c0f4894", help="the commit the next release gate builds")
     parser.add_argument("--index", type=Path, default=INDEX, help="manual-record index to judge")
+    parser.add_argument("--verbose", action="store_true", help="also print every file and every diff --stat line")
     args = parser.parse_args(argv)
 
     by_key = {(s.record, s.result): s for s in SUBJECTS}
@@ -182,6 +183,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"    files: {', '.join(subject.paths)}" + (f" + {len(closure)} imported modules" if closure else ""))
         print(f"    git diff --stat {subject.build}..{args.target}: {stat[-1].strip() if stat else 'no change'}")
         print(f"    verdict: {verdict}")
+        if args.verbose:
+            files = [f"      file {f}" for f in [*subject.paths, *closure]]
+            print(*files, *(f"      {line}" for line in stat), sep="\n")
     return 0
 
 
