@@ -36,7 +36,9 @@ SERPENTINE = "serpentine_16p_example"  # the packaged example that shows the che
 def test_n02_1_and_2_typing_previews_once_after_300_ms_and_return_commits_without_a_second_compute(open_example, qtbot):
     """N02-1, N02-2. Catches a compute per keystroke, or a commit after a preview that computes it again.
 
-    The timer must preview: no undo entry, chip or autosave change before the commit.
+    The timer must preview: no undo entry, chip or autosave change before the commit. The 300 ms run from the last
+    textEdited of the field, which starts the wait. A clock read after type_keys returns lags that signal by one key
+    delay (50 ms), so it sat on the lower tolerance edge and load pushed it past (D-058b).
     """
     timed = TimedCompute()
     shell, window = open_example(timed=timed)
@@ -44,12 +46,17 @@ def test_n02_1_and_2_typing_previews_once_after_300_ms_and_return_commits_withou
     chip = window.findChild(QLabel, "param-r-inner-prov")
     autosave = shell.recovery_dir / AUTOSAVE_NAME
     chip_before, saved_before = chip.text(), autosave.read_bytes()
+    timer = window.findChild(QTimer, "preview-timer")
+    assert (timer.isSingleShot(), timer.interval()) == (True, DEBOUNCE_MS)
     field = focus_field(qtbot, window)
+    edited_at: list[int] = []
+    field.textEdited.connect(lambda _text: edited_at.append(timed.now()))
     type_keys(qtbot, field, "11.48")
-    last_key = timed.now()
     qtbot.wait(600)
     assert timed.r_inner() == [11.48]
-    assert abs(timed.starts[0][0] - last_key - DEBOUNCE_MS) <= TOLERANCE_MS, timed.starts[0][0] - last_key
+    assert len(edited_at) == len("11.48")
+    last_edit = edited_at[-1]
+    assert abs(timed.starts[0][0] - last_edit - DEBOUNCE_MS) <= TOLERANCE_MS, timed.starts[0][0] - last_edit
     assert (chip.text(), autosave.read_bytes()) == (chip_before, saved_before)
     assert r_inner_of(session.state.value) == 11.47
 
