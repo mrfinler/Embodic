@@ -1,7 +1,8 @@
 """Smoke test of the PyInstaller one-folder bundle that `python tools/build_bundle.py` writes to build/bundle/embodic.
 
 On Linux this is a smoke of the spec only; PK-05 counts only from the Windows folder (test_plan.md section 5.7).
-Every test skips when the folder is absent, so the commit gate does not depend on a bundle build.
+Every test skips when the folder is absent, so the commit gate does not depend on a bundle build. The release profile
+builds the folder first and sets EMBODIC_REQUIRE_BUNDLE=1, which turns each skip into a failure (bundle_gate.py).
 """
 
 import os
@@ -11,6 +12,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from tests.bundle import bundle_gate
 
 from embodic.cli import main as cli_main
 from embodic.results.registry import package_source_sha256
@@ -24,9 +26,11 @@ FROZEN_GUI = FOLDER / f"embodic{SUFFIX}"
 FROZEN_PACKAGE = FOLDER / "_internal" / "embodic"
 EXAMPLE = Path("examples") / "spiral_12c16p_default.embodic.json"
 
-pytestmark = pytest.mark.skipif(
-    not FROZEN_CLI.is_file(), reason=f"no bundle at {FOLDER}; build it with `python tools/build_bundle.py`"
-)
+
+@pytest.fixture(autouse=True)
+def bundle_is_built() -> None:
+    """Skip the test without a bundle, or fail it when the run requires one."""
+    bundle_gate.require_bundle(FROZEN_CLI)
 
 
 def run_frozen(executable: Path, *args: str | Path, timeout_s: float = 120.0) -> subprocess.CompletedProcess[str]:

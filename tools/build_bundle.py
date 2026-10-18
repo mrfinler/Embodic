@@ -4,11 +4,11 @@ Usage, with the Python 3.11+ whose lock file the bundle should use::
 
     python tools/build_bundle.py
 
-The steps: create the scratch venv `.venv-bundle` when it lacks the build tools (the hashed lock file, embodic in
-editable mode, PyInstaller and hatchling), run PyInstaller on `packaging/pyinstaller/embodic.spec`, add the licence
-files and embodic's source distribution, then check the real folder. The check prints the licence checklist and the
-Qt library listing of dependency_licences.md R10 and exits 1 when a shipped row is missing or a Qt library is not a
-separate file. `build/bundle-work` is removed afterwards; `build/bundle` stays.
+The steps: create the scratch venv `.venv-bundle` unless it was built from the current lock file (the hashed lock
+file, embodic in editable mode, PyInstaller and hatchling), run PyInstaller on `packaging/pyinstaller/embodic.spec`,
+add the licence files and embodic's source distribution, then check the real folder. The check prints the licence
+checklist and the Qt library listing of dependency_licences.md R10 and exits 1 when a shipped row is missing or a Qt
+library is not a separate file. `build/bundle-work` is removed afterwards; `build/bundle` stays.
 """
 
 import hashlib
@@ -23,6 +23,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 VENV = ROOT / ".venv-bundle"
 VENV_PYTHON = VENV / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
+LOCK_RECORD = "lock.sha256"  # in the venv: the SHA-256 of the lock file it was installed from
 LOCK_FILE = ROOT / "requirements" / f"py3{sys.version_info.minor}.txt"
 PYINSTALLER_VERSION = "6.22.3"
 BUILD_TOOLS = (f"pyinstaller=={PYINSTALLER_VERSION}", "hatchling==1.32.4")
@@ -130,8 +131,9 @@ def run(command: list[str | Path]) -> None:
 
 
 def build_venv_ready() -> bool:
-    """Return True when the scratch venv imports the build tools at the pinned PyInstaller version."""
-    if not VENV_PYTHON.is_file():
+    """Return True when the scratch venv was built from the current lock file and imports the build tools."""
+    record = VENV / LOCK_RECORD
+    if not VENV_PYTHON.is_file() or not record.is_file() or record.read_text().strip() != sha256_of(LOCK_FILE):
         return False
     probe = "import PyInstaller, hatchling, PySide6, embodic; print(PyInstaller.__version__)"
     result = subprocess.run([VENV_PYTHON, "-c", probe], capture_output=True, text=True)
@@ -139,15 +141,20 @@ def build_venv_ready() -> bool:
 
 
 def ensure_build_venv() -> None:
-    """Create or complete .venv-bundle; the project venv is never touched."""
+    """Rebuild .venv-bundle from nothing unless it is ready; the project venv is never touched.
+
+    The lock file's hash is written last, so a failed install leaves a venv that the next call rebuilds.
+    """
     if build_venv_ready():
         return
-    if not VENV_PYTHON.is_file():
-        run([sys.executable, "-m", "venv", VENV])
+    lock_sha256 = sha256_of(LOCK_FILE)
+    shutil.rmtree(VENV, ignore_errors=True)
+    run([sys.executable, "-m", "venv", VENV])
     pip: list[str | Path] = [VENV_PYTHON, "-m", "pip", "install", "--disable-pip-version-check", "-q"]
     run([*pip, "--require-hashes", "-r", LOCK_FILE])
     run([*pip, "--no-deps", "-e", ROOT])
     run([*pip, *BUILD_TOOLS])
+    (VENV / LOCK_RECORD).write_text(lock_sha256 + "\n")
 
 
 def probe_build_venv() -> BuildVenv:

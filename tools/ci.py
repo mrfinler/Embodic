@@ -4,11 +4,14 @@ Usage, from anywhere, inside the project's virtual environment::
 
     python tools/ci.py --profile commit     # every commit: lint, types, contracts, fast tests, trace matrix
     python tools/ci.py --profile nightly    # adds slow tests and the long Hypothesis profile
-    python tools/ci.py --profile release    # adds performance and packaging tests, TR-01, then the evidence and wheel
+    python tools/ci.py --profile release    # adds the bundle build, performance and packaging tests, TR-01, then the
+                                            # evidence and wheel
 
 Every gate runs even after an earlier one fails, so one run shows every problem. Exit code 0 only when all pass.
-The release profile deletes the evidence of passing tests before its first gate. Only when every gate passed does it
-record the evidence (interfaces.md section 3.1), build the wheel and check the evidence inside it (PK-10).
+The release profile deletes the evidence of passing tests and the previous bundle folder before its first gate. It
+builds the PyInstaller one-folder bundle before pytest, and tests/bundle fails instead of skipping when the folder is
+missing (REQ-N-06, D-068). Only when every gate passed does it record the evidence (interfaces.md section 3.1), build
+the wheel and check the evidence inside it (PK-10).
 """
 
 import argparse
@@ -23,6 +26,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 BUILD = REPO / "build"
 DIST = BUILD / "dist"
+BUNDLE = BUILD / "bundle"  # tools/build_bundle.py writes the one-folder bundle to BUNDLE / "embodic"
 REQ_REPORT = BUILD / "req_report.json"
 EVIDENCE = REPO / "resources" / "evidence" / "passed_tests.v1.json"
 MANUAL_RECORDS = REPO / "docs" / "phase3" / "verification" / "manual_records.json"
@@ -40,6 +44,7 @@ class Profile:
     records_evidence: bool = False
     untested_through: str | None = None  # TR-01: the last milestone whose live must rows need a test or a manual record
     require_personal_tokens: bool = False  # LG-06 fails, not skips, when no personal-data token can be found
+    builds_bundle: bool = False  # build the PyInstaller folder before pytest; tests/bundle fails, not skips, without it
 
 
 PROFILES = {
@@ -52,6 +57,7 @@ PROFILES = {
         records_evidence=True,
         untested_through="M5",
         require_personal_tokens=True,
+        builds_bundle=True,
     ),
 }
 
@@ -76,6 +82,8 @@ def gates_for(profile: Profile, *, record_baseline: bool = False) -> list[Gate]:
         pytest_env["EMBODIC_RECORD_BASELINE"] = "1"
     if profile.require_personal_tokens:
         pytest_env["EMBODIC_REQUIRE_PERSONAL_TOKENS"] = "1"  # name read by tests/static/lg_scan.py
+    if profile.builds_bundle:
+        pytest_env["EMBODIC_REQUIRE_BUNDLE"] = "1"  # name read by tests/bundle/bundle_gate.py
     lint_imports = "import sys; from importlinter.cli import lint_imports_command; sys.exit(lint_imports_command())"
     trace_argv = [
         python,
@@ -87,14 +95,16 @@ def gates_for(profile: Profile, *, record_baseline: bool = False) -> list[Gate]:
     if profile.untested_through:
         trace_argv += [f"--fail-untested-through={profile.untested_through}", f"--manual-records={MANUAL_RECORDS}"]
         trace_name = "trace matrix (TR-01, TR-02)"
-    return [
+    gates = [
         Gate("ruff check (MT-03)", (python, "-m", "ruff", "check", ".")),
         Gate("ruff format (MT-03)", (python, "-m", "ruff", "format", "--check", ".")),
         Gate("import contracts C1-C4 (MT-01)", (python, "-c", lint_imports)),
         Gate("mypy strict (MT-02)", (python, "-m", "mypy")),
-        Gate("pytest", tuple(pytest_argv), pytest_env),
-        Gate(trace_name, tuple(trace_argv)),
     ]
+    if profile.builds_bundle:
+        gates.append(Gate("bundle build (REQ-N-06)", (python, str(REPO / "tools" / "build_bundle.py"))))
+    gates += [Gate("pytest", tuple(pytest_argv), pytest_env), Gate(trace_name, tuple(trace_argv))]
+    return gates
 
 
 def evidence_gates() -> list[Gate]:
@@ -130,6 +140,9 @@ def main(argv: list[str] | None = None) -> int:
     if profile.records_evidence:
         EVIDENCE.unlink(missing_ok=True)
         shutil.rmtree(DIST, ignore_errors=True)
+    if profile.builds_bundle:
+        # A failed build must not leave an old folder for the bundle tests to pass on.
+        shutil.rmtree(BUNDLE, ignore_errors=True)
 
     results = [(gate.name, *run_gate(gate)) for gate in gates_for(profile, record_baseline=args.record_baseline)]
     if profile.records_evidence and all(passed for _, passed, _ in results):
