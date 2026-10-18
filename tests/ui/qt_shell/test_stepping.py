@@ -177,6 +177,33 @@ def test_s7_a_step_stops_at_the_range_and_a_value_outside_moves_only_toward_it(o
     assert air_gap.text() == "50"
 
 
+def test_s13_a_step_from_below_the_range_that_lands_in_range_shows_the_stepped_number(open_example, qtbot):
+    """S-13, fix_wave_f3.md (c). Catches a jump to the bound: 0.01 mm and Up must give 0.06, not 0.05 (the bound)."""
+    _, window = open_example()
+    hold_preview_timer(window)
+    air_gap = show_field(qtbot, window, "param-air-gap")
+    type_over(qtbot, air_gap, "0.01")
+    qtbot.keyClick(air_gap, Qt.Key.Key_Up)
+    assert air_gap.text() == "0.06"
+    type_over(qtbot, air_gap, "0.01")
+    qtbot.keyClick(air_gap, Qt.Key.Key_Up, SHIFT)
+    assert air_gap.text() == "0.51"
+
+
+def test_s14_a_step_from_below_a_positive_field_without_a_low_bound_changes_it_only_when_it_lands_in_range(
+    open_example, qtbot
+):
+    """S-14, fix_wave_f3.md (c). Catches a step that moves -1 to 0 or 0.5 (no valid bound exists on that side)."""
+    _, window = open_example()
+    hold_preview_timer(window)
+    radius = show_field(qtbot, window, "param-r-inner")
+    type_over(qtbot, radius, "-1")
+    qtbot.keyClick(radius, Qt.Key.Key_Up)
+    assert radius.text() == "-1"
+    qtbot.keyClick(radius, Qt.Key.Key_Up, SHIFT)
+    assert radius.text() == "4"
+
+
 def test_s8_text_that_is_no_number_stays_and_computes_nothing(open_example, qtbot):
     """S-8. Catches a step that turns "abc" into a number, or fills an empty optional field."""
     timed = TimedCompute()

@@ -7,7 +7,7 @@ import pytest
 
 from embodic.model.fields import FIELD_BY_KEY, FIELDS, Sign
 from embodic.model.schema import ValueType
-from embodic.ui.viewmodels.stepping import StepRule, rule_of, stepped_text
+from embodic.ui.viewmodels.stepping import STACKUP_INPUT_RULES, StepRule, rule_of, stepped_text
 
 pytestmark = pytest.mark.req("REQ-N-12")
 
@@ -124,9 +124,37 @@ def test_text_that_is_no_finite_number_does_not_change(text):
     assert stepped_text(R_INNER, text, -1) is None
 
 
-def test_a_field_without_limits_steps_without_bounds():
-    """Catches an invented bound on a field that has none: the two stack-up inputs have no FieldSpec and no Limits."""
+def test_a_rule_without_limits_steps_without_bounds():
+    """Catches an invented bound on a rule that has none: a rule with no sign and no range steps below zero."""
     assert stepped_text(StepRule(step=0.5), "0.2", -1) == "-0.3"
+
+
+COPPER_WEIGHT = STACKUP_INPUT_RULES["param-copper-weight"]
+BOARD_THICKNESS = STACKUP_INPUT_RULES["param-board-thickness"]
+
+
+@pytest.mark.parametrize(
+    ("rule", "text", "steps", "expected"),
+    [
+        pytest.param(COPPER_WEIGHT, "0.5", -1, "0.25", id="B-1"),
+        pytest.param(COPPER_WEIGHT, "0.25", -1, None, id="B-2"),
+        pytest.param(COPPER_WEIGHT, "9.8", 1, "10", id="B-3"),
+        pytest.param(COPPER_WEIGHT, "0.1", 1, "0.6", id="B-4"),
+        pytest.param(COPPER_WEIGHT, "12", 1, None, id="B-5-up"),
+        pytest.param(COPPER_WEIGHT, "12", -1, "10", id="B-5-down"),
+        pytest.param(BOARD_THICKNESS, "0.25", -1, "0.2", id="B-6"),
+        pytest.param(BOARD_THICKNESS, "0.1", -1, None, id="B-7-down"),
+        pytest.param(BOARD_THICKNESS, "0.1", 1, "0.2", id="B-7-up"),
+        pytest.param(BOARD_THICKNESS, "9.95", 10, "10", id="B-8"),
+        pytest.param(BOARD_THICKNESS, "12", -1, "10", id="B-9"),
+    ],
+)
+def test_a_stack_up_helper_input_stops_at_its_range_and_never_goes_below_zero(rule, text, steps, expected):
+    """DEF-US13-01. Catches Down from 0.2 oz to -0.3 oz or from 0.05 mm to -0.05 mm, and a step past 10 oz or 10 mm.
+
+    Expected texts are fix_wave_f3.md (b) rows B-1 to B-9. None means the field text stays as it is.
+    """
+    assert stepped_text(rule, text, steps) == expected
 
 
 @pytest.mark.parametrize("key", ["/name", "/phases", "/winding/coil/side_style", "/outline/board/shape"])

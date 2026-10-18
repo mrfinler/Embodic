@@ -8,9 +8,10 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 
-from embodic.model.fields import FieldSpec, Sign
+from embodic.model.fields import FIELD_BY_KEY, FieldSpec, Sign
 from embodic.model.schema import ValueType
-from embodic.units import Unit, rad_to_deg
+from embodic.model.stackup import BOARD_THICKNESS_MAX_MM, BOARD_THICKNESS_MIN_MM
+from embodic.units import MM_PER_COPPER_OZ, Unit, rad_to_deg
 
 SHIFT_STEPS = 10  # Shift+Up and Shift+Down move ten steps (design_spec.md section 10)
 
@@ -79,8 +80,22 @@ def _move(rule: StepRule, current: float, target: float) -> float | None:
     return max(reachable, default=None)
 
 
-# The two stack-up generator inputs have no FieldSpec, so their steps live here (fix_wave_f2.md (b), an assumption:
-# no source in the repository gives a step). Neither has limits.
+def _in_oz(thickness_mm: float | None) -> float | None:
+    return None if thickness_mm is None else thickness_mm / MM_PER_COPPER_OZ
+
+
+_COPPER_LIMITS = FIELD_BY_KEY["/stackup/layers/*/thickness_mm#copper"].limits
+
+# The two stack-up generator inputs have no FieldSpec, so their rules live here (fix_wave_f3.md (b)). The copper weight
+# takes the range of the field it derives, so that a step never leaves the range a commit accepts. The steps are
+# Xcoil's (ui.js l.102 to l.104).
 STACKUP_INPUT_RULES: Mapping[str, StepRule] = MappingProxyType(
-    {"param-copper-weight": StepRule(step=0.5), "param-board-thickness": StepRule(step=0.1)}
+    {
+        "param-copper-weight": StepRule(
+            step=0.5, sign=Sign.POSITIVE, low=_in_oz(_COPPER_LIMITS.low), high=_in_oz(_COPPER_LIMITS.high)
+        ),
+        "param-board-thickness": StepRule(
+            step=0.1, sign=Sign.POSITIVE, low=BOARD_THICKNESS_MIN_MM, high=BOARD_THICKNESS_MAX_MM
+        ),
+    }
 )
