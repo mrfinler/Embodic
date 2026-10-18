@@ -72,14 +72,14 @@ Linux:
 
 ```
 python -m pip install --require-hashes -r requirements/py311.txt
-python -m pip install --no-deps embodic-0.0.1-py3-none-any.whl
+python -m pip install --no-deps embodic-0.0.2-py3-none-any.whl
 ```
 
 Windows (ยังไม่ได้ทดสอบบน Windows ใน build นี้):
 
 ```
 python -m pip install --require-hashes -r requirements\py311.txt
-python -m pip install --no-deps embodic-0.0.1-py3-none-any.whl
+python -m pip install --no-deps embodic-0.0.2-py3-none-any.whl
 ```
 
 หลังคำสั่งติดตั้ง pip อาจพิมพ์ประกาศให้อัปเกรด pip ซึ่งไม่มีผลต่อการติดตั้ง ในการทดสอบ PK-06 ข้อความคือ
@@ -91,7 +91,7 @@ python -m pip install --no-deps embodic-0.0.1-py3-none-any.whl
 python -m pip list
 ```
 
-ผลที่ควรเห็น: รายการมี `embodic 0.0.1`, `numpy 2.4.6`, `PySide6_Essentials 6.11.2` และ `shiboken6 6.11.2`
+ผลที่ควรเห็น: รายการมี `embodic 0.0.2`, `numpy 2.4.6`, `PySide6_Essentials 6.11.2` และ `shiboken6 6.11.2`
 นอกเหนือจาก `pip` (และ `setuptools` บน Python 3.11) การทดสอบ PK-02 (`tests/packaging/test_pk02_clean_install.py`)
 ตรวจรายการนี้แบบตรงทุกตัวบน Linux
 
@@ -289,9 +289,12 @@ python -m pytest tests/bundle
 
 ## การแก้ปัญหาบน Windows
 
-ข้อเหล่านี้เขียนจากเอกสารของ Python และ PowerShell **ยังไม่ได้ทดสอบบน Windows** ใน build นี้
+ข้อเหล่านี้เขียนจากเอกสารของ Python และ PowerShell **ยังไม่ได้ทดสอบบน Windows** ใน build นี้ ยกเว้นข้อแรก
 
-- `Activate.ps1 cannot be loaded because running scripts is disabled`: อนุญาต script ในเครื่องสำหรับผู้ใช้ของคุณด้วย
-  `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` แล้ว activate อีกครั้ง
+- `Activate.ps1 cannot be loaded because running scripts is disabled`: อนุญาต script ในเครื่องเฉพาะหน้าต่าง PowerShell นี้
+  ด้วย `Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned` แล้ว activate อีกครั้ง ค่านี้หมดไปเมื่อปิดหน้าต่าง
+  และไม่เปลี่ยน policy ของบัญชีผู้ใช้ ได้รันจริงเมื่อ 2026-10-18 บน Windows 11 Home กับ PowerShell 5.1 ที่ policy เป็น
+  `Restricted`: activate ไม่ได้ก่อนรันคำสั่งนี้ และ activate ได้หลังรัน ส่วน policy ระดับ `CurrentUser` ยังเป็น `Undefined`
+  (D-051g, DEF-W-04)
 - ไม่พบ `py`: ตัวติดตั้งของ python.org เป็นผู้เพิ่ม launcher `py` ให้รันตัวติดตั้งอีกครั้งแล้วเลือกตัวเลือกนั้น
 - path ที่มีช่องว่าง: ใส่ path ในเครื่องหมายคำพูดคู่ เช่น `embodic-cli compute "$env:USERPROFILE\My designs\a.embodic.json"`

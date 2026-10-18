@@ -288,9 +288,13 @@ of the spec only. The Windows folder, which the bundle test PK-05 needs, is not 
 
 ## Troubleshooting on Windows
 
-These points are written from the Python and PowerShell documentation. They are not tested on Windows in this build.
+These points are written from the Python and PowerShell documentation. They are not tested on Windows in this build,
+except the first one.
 
-- `Activate.ps1 cannot be loaded because running scripts is disabled`: allow local scripts for your user with
-  `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, then activate again.
+- `Activate.ps1 cannot be loaded because running scripts is disabled`: allow local scripts for this PowerShell window
+  only with `Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned`, then activate again. The setting ends
+  when the window closes and leaves the policy of your user account unchanged. Run on 2026-10-18 on Windows 11 Home
+  with PowerShell 5.1 and a `Restricted` policy: activation failed before the command and worked after it, and the
+  `CurrentUser` policy stayed `Undefined` (D-051g, DEF-W-04).
 - `py` is not found: the python.org installer adds the `py` launcher. Run the installer again and select it.
 - Paths with spaces: put the path in double quotes, for example `embodic-cli compute "$env:USERPROFILE\My designs\a.embodic.json"`.
