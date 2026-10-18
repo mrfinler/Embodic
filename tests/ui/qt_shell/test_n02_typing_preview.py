@@ -8,7 +8,7 @@ import time
 
 import pytest
 from PySide6.QtCore import QElapsedTimer, Qt, QTimer
-from PySide6.QtWidgets import QApplication, QCheckBox, QComboBox, QFileDialog, QLabel, QLineEdit, QToolButton
+from PySide6.QtWidgets import QApplication, QCheckBox, QComboBox, QFileDialog, QLabel, QToolButton
 from tests.ui.qt_shell.conftest import D08
 
 from embodic.api import compute
@@ -17,91 +17,19 @@ from embodic.io.project import load_project
 from embodic.ui.viewmodels.outcome import OutcomeReady
 from embodic.ui.viewmodels.session import AUTOSAVE_NAME, SessionComputed, SessionEmpty
 
+from .typing_support import (
+    DEBOUNCE_MS,
+    TOLERANCE_MS,
+    WAIT_TIMEOUT_MS,
+    TimedCompute,
+    drawn_r_inner,
+    focus_field,
+    hold_preview_timer,
+    r_inner_of,
+    type_keys,
+)
+
 SERPENTINE = "serpentine_16p_example"  # the packaged example that shows the check box field param-fillet-max
-KEY_DELAY_MS = 50
-DEBOUNCE_MS = 300
-TOLERANCE_MS = 50
-HANG_GUARD_S = 10.0
-
-
-class TimedCompute:
-    """A compute function that records when each call starts, its design and its cancel token."""
-
-    def __init__(self, block=None):
-        self.clock = QElapsedTimer()
-        self.clock.start()
-        self.starts: list[tuple[int, object]] = []
-        self.tokens: list[object] = []
-        self.cancelled_at: list[int] = []
-        self._block = block or (lambda design: False)
-
-    def __call__(self, design, provenance, *, cache, cancel):
-        """Record the call, then block until cancelled or compute."""
-        self.starts.append((self.clock.elapsed(), design))
-        self.tokens.append(cancel)
-        if self._block(design):
-            end = time.monotonic() + HANG_GUARD_S
-            while not cancel.cancelled and time.monotonic() < end:
-                time.sleep(0.001)
-            self.cancelled_at.append(self.clock.elapsed())
-            return None
-        return compute(design, provenance, cache=cache, cancel=cancel)
-
-    def now(self) -> int:
-        """Return milliseconds since the test started."""
-        return self.clock.elapsed()
-
-    def r_inner(self) -> list[float]:
-        """Return r_inner of every call's design, in call order."""
-        return [round(design.winding.coil.r_inner_mm, 6) for _, design in self.starts]
-
-
-def r_inner_of(state) -> float:
-    """Return r_inner of a session state or an outcome."""
-    return state.design.winding.coil.r_inner_mm
-
-
-def drawn_r_inner(window) -> float | None:
-    """Return r_inner of the outcome the window draws and shows results for, once no compute runs."""
-    shown, _ = window.session.drawn(window.outcome.state.value)
-    if shown is None or not isinstance(window.outcome.state.value, OutcomeReady):
-        return None
-    return r_inner_of(shown.outcome)
-
-
-@pytest.fixture
-def open_example(make_shell, wait_ready, qtbot):
-    """Return a function: open_example(example_id, compute_fn) -> (shell, window), computed, with the calls cleared."""
-    shells = []
-
-    def run(example_id=D08, timed=None):
-        shell = make_shell(compute_fn=timed)
-        shells.append(shell)
-        window = shell.window
-        window.session.load_example(example_id)
-        wait_ready(window)
-        if timed is not None:
-            timed.starts.clear()
-            timed.tokens.clear()
-        return shell, window
-
-    yield run
-    for shell in shells:
-        shell.worker.shutdown()
-
-
-def focus_field(qtbot, window, name="param-r-inner") -> QLineEdit:
-    """Focus a field row's line edit, with its text selected, as a click into it and Ctrl+A do."""
-    field = window.findChild(QLineEdit, name)
-    field.setFocus(Qt.FocusReason.MouseFocusReason)
-    qtbot.waitUntil(field.hasFocus)
-    field.selectAll()
-    return field
-
-
-def type_keys(qtbot, field, keys: str) -> None:
-    """Type keys at the pace of fix_wave_f1.md (a), one every 50 ms."""
-    qtbot.keyClicks(field, keys, delay=KEY_DELAY_MS)
 
 
 @pytest.mark.req("REQ-N-02")
@@ -138,17 +66,23 @@ def test_n02_1_and_2_typing_previews_once_after_300_ms_and_return_commits_withou
 
 @pytest.mark.req("REQ-N-02")
 def test_n02_3_return_before_the_timer_computes_at_once_and_only_once(open_example, qtbot):
-    """N02-3. Catches Enter that waits for the timer, or a timer left running that computes a second time."""
+    """N02-3. Catches Enter that waits for the timer, or a timer left running that computes a second time.
+
+    The preview timer is held, so a compute can only come from the commit and no wall-clock margin decides the test
+    (U-M8c: 10 to 25 ms to spare at load 4). The wait that ends after the commit is simulated, not waited for.
+    """
     timed = TimedCompute()
     _, window = open_example(timed=timed)
+    hold = hold_preview_timer(window)
     field = focus_field(qtbot, window)
     type_keys(qtbot, field, "11.49")
-    qtbot.wait(100)
-    pressed = timed.now()
+    assert hold.isActive() and timed.starts == [], "precondition: typed, waiting, nothing computed"
     qtbot.keyClick(field, Qt.Key.Key_Return)
+    qtbot.waitUntil(lambda: bool(timed.starts), timeout=WAIT_TIMEOUT_MS)
+    assert not hold.isActive(), "the commit ends the wait"
+    hold.timeout.emit()
     qtbot.wait(DEBOUNCE_MS + 200)
     assert timed.r_inner() == [11.49]
-    assert timed.starts[0][0] - pressed <= TOLERANCE_MS, timed.starts[0][0] - pressed
 
 
 @pytest.mark.req("REQ-N-02", "REQ-F-37")
@@ -235,19 +169,20 @@ def test_n02_7_a_keystroke_cancels_the_preview_in_flight_at_once(open_example, q
 def test_n02_8_a_choice_control_commits_and_computes_at_once_without_a_timer(
     open_example, qtbot, example_id, tab, name, key
 ):
-    """N02-8. Catches a combo box or check box that waits for the typing timer before it computes."""
+    """N02-8. Catches a combo box or check box that waits for the typing timer before it computes.
+
+    The preview timer is held, so a compute that starts at all did not wait for it, whatever the load.
+    """
     timed = TimedCompute()
     _, window = open_example(example_id, timed=timed)
+    hold = hold_preview_timer(window)
     window.inspector_tabs.setCurrentWidget(window.panels[tab])
     control = window.findChild(QComboBox if key == Qt.Key.Key_Down else QCheckBox, name)
     control.setFocus(Qt.FocusReason.TabFocusReason)
     qtbot.waitUntil(control.hasFocus)
-    pressed = timed.now()
     qtbot.keyClick(control, key)
-    qtbot.waitUntil(lambda: bool(timed.starts), timeout=1000)
-    assert timed.starts[0][0] - pressed <= TOLERANCE_MS, timed.starts[0][0] - pressed
-    timer = window.findChild(QTimer, "preview-timer")
-    assert timer is not None and not timer.isActive()
+    qtbot.waitUntil(lambda: bool(timed.starts), timeout=WAIT_TIMEOUT_MS)
+    assert not hold.isActive(), "a choice never starts the typing wait"
     qtbot.wait(DEBOUNCE_MS + 100)
     assert len(timed.starts) == 1
 

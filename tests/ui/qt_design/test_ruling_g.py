@@ -4,7 +4,7 @@ import re
 
 import pytest
 from PySide6.QtCore import QPoint
-from PySide6.QtWidgets import QApplication, QLabel, QLineEdit, QListWidget, QTableWidget, QToolButton
+from PySide6.QtWidgets import QApplication, QLabel, QLineEdit, QListWidget, QTableWidget, QToolButton, QWidget
 from tests.ui.qt_design.conftest import find
 
 from embodic.model.vocabulary import TopologyKind
@@ -96,14 +96,17 @@ def test_screw_table_fits_the_300_px_inspector_without_sideways_scroll(make_shel
 
 @pytest.mark.req("REQ-N-15")
 def test_ruling_g2_every_label_sits_above_its_control_and_input_edges_align(make_shell, wait_computed):
-    """Catches a label beside its control (F17), unaligned input edges (F16) or chips other than 20 px (F15)."""
+    """Catches a label beside its control (F17), unaligned input edges in one box (F16) or chips off CHIP_PX (F15).
+
+    U-S12 (a) 2 aligns the edges per section, the group box or untitled section that holds the rows, not per tab.
+    """
     window = make_shell().window
     window.session.load_example(D08)
     wait_computed(window)
     for tab, panel in window.panels.items():
         window.inspector_tabs.setCurrentWidget(panel)
         QApplication.processEvents()
-        edges = set()
+        edges: dict[QWidget, set[int]] = {}
         for editor in panel.findChildren(FieldEditor):
             if not editor.isVisibleTo(panel):
                 continue
@@ -111,8 +114,10 @@ def test_ruling_g2_every_label_sits_above_its_control_and_input_edges_align(make
             assert label_bottom <= editor.input.mapTo(panel, QPoint(0, 0)).y(), (tab, editor.widget_id)
             assert editor.chip.height() == CHIP_PX
             if isinstance(editor.input, QLineEdit):
-                edges.add(editor.input.mapTo(panel, QPoint(editor.input.width(), 0)).x())
-        assert len(edges) <= 1, (tab, edges)
+                edge = editor.input.mapTo(panel, QPoint(editor.input.width(), 0)).x()
+                edges.setdefault(editor.parentWidget(), set()).add(edge)
+        for section, section_edges in edges.items():
+            assert len(section_edges) <= 1, (tab, section.objectName(), section_edges)
         for label in panel.findChildren(QLabel):
             buddy = label.buddy()
             if buddy is not None and label.isVisibleTo(panel) and buddy.isVisibleTo(panel):

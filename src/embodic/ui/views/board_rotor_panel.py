@@ -31,7 +31,9 @@ from embodic.ui.viewmodels.session import (
     parse_text,
     screw_patterns,
 )
+from embodic.ui.viewmodels.stepping import STACKUP_INPUT_RULES
 from embodic.ui.views.coil_panel import FieldEditor, FieldPanel, choice_text, fit_rows, fit_width, label_above
+from embodic.ui.views.step_keys import StepKeys
 from embodic.ui.views.widgets import table_widget
 
 BORE_CHOICES = ("none", "circle", "polygon")
@@ -76,6 +78,7 @@ class BoardRotorPanel(FieldPanel):
                 edit.setObjectName(name)
                 edit.setPlaceholderText(text("design.unit.oz") if field == "copper_oz" else text("design.unit.mm"))
                 edit.editingFinished.connect(lambda e=edit, f=field: self._stackup_input(e, f))
+                StepKeys(edit, STACKUP_INPUT_RULES[name])
                 form.addRow(label_above(text(f"{name}.label"), edit))
                 self.helpers[name] = edit
             error = QLabel()
@@ -116,10 +119,12 @@ class BoardRotorPanel(FieldPanel):
         add = QPushButton()
         add.setObjectName("btn-screw-add")
         add.setText(text("btn-screw-add.label"))
+        add.setAccessibleName(text("btn-screw-add.name"))
         add.clicked.connect(self.session.add_screw_pattern)
         remove = QPushButton()
         remove.setObjectName("btn-screw-remove")
         remove.setText(text("btn-screw-remove.label"))
+        remove.setAccessibleName(text("btn-screw-remove.name"))
         remove.clicked.connect(lambda: self.session.remove_screw_pattern(table.currentRow()))
         buttons = QHBoxLayout()
         buttons.addWidget(add)

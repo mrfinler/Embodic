@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMenu,
     QScrollArea,
+    QSizePolicy,
     QTableWidget,
     QToolButton,
     QVBoxLayout,
@@ -46,7 +47,9 @@ from embodic.ui.viewmodels.session import (
     form_rows,
     parse_text,
 )
+from embodic.ui.viewmodels.stepping import rule_of
 from embodic.ui.views.focus_order import chain, reading_order, stop_before
+from embodic.ui.views.step_keys import step_field
 from embodic.ui.views.widgets import check_box, set_style_property
 
 MIN_INPUT_PX = 72
@@ -64,6 +67,9 @@ TITLED_GROUPS = frozenset(
         FieldGroup.COOLING,
     }
 )
+# Segments whose buttons stack one per line: "Single board" and "One board per phase" need 252 px side by side, more
+# than the inspector gives at 960 x 540 (fix_wave_f2.md (a) 4).
+STACKED_SEGMENTS = frozenset({"param-stack-mode"})
 # Choice fields that screens.md sections 2 to 5 draw as an exclusive QToolButton segment; other choices are combo boxes.
 SEGMENT_WIDGETS = frozenset(
     {
@@ -118,7 +124,8 @@ class Segment(QWidget):
         self.setObjectName(widget_id)
         self.group = QButtonGroup(self)
         self.buttons: dict[Choice, QToolButton] = {}
-        line = QHBoxLayout(self)
+        stacked = widget_id in STACKED_SEGMENTS
+        line = QVBoxLayout(self) if stacked else QHBoxLayout(self)
         line.setContentsMargins(0, 0, 0, 0)
         line.setSpacing(2)
         for choice in choices:
@@ -127,11 +134,14 @@ class Segment(QWidget):
             button.setText(choice_text(choice))
             button.setCheckable(True)
             button.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+            if stacked:
+                button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
             button.clicked.connect(lambda _checked=False, value=choice: on_choose(value))
             self.group.addButton(button)
             self.buttons[choice] = button
             line.addWidget(button)
-        line.addStretch(1)
+        if not stacked:
+            line.addStretch(1)
         self.setFocusProxy(self.buttons[choices[0]])
 
     def show_value(self, value: JsonValue) -> None:
@@ -187,12 +197,12 @@ class FieldEditor(QWidget):
         head = QHBoxLayout()
         head.setContentsMargins(0, 0, 0, 0)
         head.addWidget(self.label, 1)
+        # The chip sits on the label line, so the control line keeps its width for input and unit (fix_wave_f2 (a) 1).
+        head.addWidget(self.chip, 0, Qt.AlignmentFlag.AlignVCenter)
         line = QHBoxLayout()
         line.setContentsMargins(0, 0, 0, 0)
         line.addWidget(self.input, 1)
         line.addWidget(self.unit)
-        # A segment needs the row's full width ("Single board", "One board per phase"), so its chip moves up a line.
-        (head if isinstance(self.input, Segment) else line).addWidget(self.chip, 0, Qt.AlignmentFlag.AlignVCenter)
         column = QVBoxLayout(self)
         column.setContentsMargins(0, 0, 0, 0)
         column.setSpacing(2)
@@ -270,19 +280,19 @@ class FieldEditor(QWidget):
         self._commit(parse_text(self.spec, typed))
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802 (Qt override)
-        """Esc in a field with uncommitted text puts the committed text back; focus stays (design_spec.md 10)."""
+        """Esc in a field with uncommitted text puts the committed text back; Up and Down step (design_spec.md 10)."""
+        if watched is not self.input or not isinstance(self.input, QLineEdit):
+            return False
         if (
-            watched is self.input
-            and event.type() == QEvent.Type.KeyPress
+            event.type() == QEvent.Type.KeyPress
             and isinstance(event, QKeyEvent)
             and event.key() == Qt.Key.Key_Escape
-            and isinstance(self.input, QLineEdit)
             and self.input.text() != self._shown
         ):
             self.input.setText(self._shown)
             self.session.revert_typing()
             return True
-        return False
+        return step_field(self.input, event, rule_of(self.spec))
 
     def show_row(self, row: FieldRow, topology: str) -> None:
         """Show what the session says about this field."""
@@ -419,11 +429,18 @@ class FieldPanel(QScrollArea):
         self._align_units()
 
     def _align_units(self) -> None:
-        """Give every unit column of the tab the width of its widest unit, so the input edges align (ruling g 2)."""
-        units = [editor.unit for editor in self.findChildren(FieldEditor)]
-        widest = max((unit.sizeHint().width() for unit in units if unit.text()), default=0)
-        for unit in units:
-            unit.setFixedWidth(widest)
+        """Give every unit column of a section the width of its widest unit, so its input edges align (ruling g 2).
+
+        A section is the group box or untitled widget that holds the rows. One tab-wide column made every row as wide as
+        `W/(m²·K)` and the Board form 327 px (fix_wave_f2.md (a) 2).
+        """
+        sections: dict[QWidget | None, list[QLabel]] = {}
+        for editor in self.findChildren(FieldEditor):
+            sections.setdefault(editor.parentWidget(), []).append(editor.unit)
+        for units in sections.values():
+            widest = max((unit.sizeHint().width() for unit in units if unit.text()), default=0)
+            for unit in units:
+                unit.setFixedWidth(widest)
 
     def _rebuild(self, topology: str | None) -> None:
         """Show the form of ``topology``, building it if the window did not; the other forms stay detached."""
