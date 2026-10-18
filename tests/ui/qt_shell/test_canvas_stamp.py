@@ -6,10 +6,12 @@ from PySide6.QtGui import QColor, QImage
 from PySide6.QtWidgets import QLineEdit
 from tests.ui.qt_shell.conftest import D08
 
+import embodic
 from embodic.ui.viewmodels.outcome import shown_result
 from embodic.ui.views.geometry_view import DATA_KIND
 
-D08_STAMP = "embodic 0.0.1 | design 327919a0eef5"  # fix_wave_f1.md (d), D08 hash sha256:327919a0eef5...
+# fix_wave_f1.md (d), D08 hash sha256:327919a0eef5...
+D08_STAMP = f"embodic {embodic.__version__} | design 327919a0eef5"
 SPIRAL_14P = "spiral_12c14p"
 
 

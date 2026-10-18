@@ -16,6 +16,8 @@ from tests.unit.results.registries import (
     sandbox_sync_tool,
 )
 
+import embodic
+
 
 @pytest.fixture(autouse=True)
 def shipped_files_untouched():
@@ -62,8 +64,9 @@ def test_sync_registry_check_reports_an_edited_example_and_sync_rewrites_only_th
     tool, _, examples = sandbox
     edited = examples / "wave_16p_example.embodic.json"
     original = edited.read_bytes()
-    assert b'"engine_version": "0.0.1"' in original
-    edited.write_bytes(original.replace(b'"engine_version": "0.0.1"', b'"engine_version": "0.0.2"', 1))
+    current = f'"engine_version": "{embodic.__version__}"'.encode()
+    assert current in original
+    edited.write_bytes(original.replace(current, b'"engine_version": "0.0.0"', 1))
 
     assert tool.main(["--check"]) == 1
     assert "wave_16p_example.embodic.json: differs from the generator output" in capsys.readouterr().out

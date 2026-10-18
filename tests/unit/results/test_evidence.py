@@ -20,6 +20,7 @@ from embodic.results.traceable import traced
 from embodic.units import Unit
 
 PACKAGE = Path(embodic.__file__).resolve().parent
+BUILD_ID = f"{embodic.__version__}+g0123456789ab.20261012T120000Z"
 EQ10_TESTS = ["EQT-10-CF04", "EQT-10-GR", "EQT-10-O2"]
 EQ05_TESTS = ["EQT-05-CF01", "EQT-05-CF03", "EQT-05-EC", "EQT-05-GR", "EQT-05-O1", "EQT-05-O2"]
 
@@ -36,7 +37,7 @@ def document(root: Path, passed: list[str]) -> dict:
     """Return an evidence document that applies to this tree, built from its own versions and source hash."""
     registry_version = load_registry(root).version
     return {
-        "build_id": "0.0.1+g0123456789ab.20261012T120000Z",
+        "build_id": BUILD_ID,
         "embodic_version": embodic.__version__,
         "format": "embodic.passed-tests",
         "format_version": 1,
@@ -66,7 +67,7 @@ def test_ut_res_08_a_matching_file_fills_passed_tests_and_the_build_id(root):
     write(root, document(root, EQ10_TESTS))
     registry = load_registry(root)
     assert registry.passed_tests == frozenset({"EQT-10-CF04", "EQT-10-GR", "EQT-10-O2"})
-    assert registry.evidence_build_id == "0.0.1+g0123456789ab.20261012T120000Z"
+    assert registry.evidence_build_id == BUILD_ID
 
 
 def _without(key: str):
@@ -214,6 +215,6 @@ def test_d045f_evidence_a_release_run_left_in_the_tree_never_reaches_the_test_se
             leftover.unlink()
         else:
             leftover.write_bytes(previous)
-    assert read_explicitly.evidence_build_id == "0.0.1+g0123456789ab.20261012T120000Z", "precondition: the file applies"
+    assert read_explicitly.evidence_build_id == BUILD_ID, "precondition: the file applies"
     assert read_by_default.evidence_build_id is None
     assert read_by_default.passed_tests == frozenset()
