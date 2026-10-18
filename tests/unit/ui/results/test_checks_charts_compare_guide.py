@@ -89,7 +89,7 @@ def test_ui30_back_emf_chart_has_three_phases_one_unit_and_the_badge_of_its_data
     assert (len(chart.xs), chart.xs[0], chart.xs[-1]) == (181, 0.0, 360.0)
     analysis = d08.analysis
     assert chart.status is analysis.emf_waveform_v.status
-    assert chart.eq_ids[:2] == ("EQ-18", "EQ-06")
+    assert chart.eq_ids[:2] == ("EQ-18", "EQ-07")
     result_a = fundamental(analysis.emf_waveform_v.value)
     chart_a = fundamental(chart.series[0].ys)
     assert abs(chart_a - result_a) < 1e-9 * abs(result_a)

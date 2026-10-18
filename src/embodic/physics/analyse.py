@@ -44,6 +44,7 @@ from embodic.physics.emf import (
     edge_leakage_fraction,
     field_table,
     integrate_path,
+    pole_arc_ratio_eq_ids,
     pole_arc_ratio_mm,
 )
 from embodic.physics.estimates import inductance_estimate_h, mass_g
@@ -73,29 +74,19 @@ from embodic.results import (
     evaluate_validity,
     traced,
 )
-from embodic.results.traceable import traced_validity_metric
+from embodic.results.traceable import Chained, intermediate, traced_validity_metric
 from embodic.units import Unit, rpm_to_rad_per_s
 
 EDGE_CHECK_ID = "EC-05"
 SKIN_DEPTH_FRACTION = 1.0 / 3.0  # REQ-T-08: w above delta / 3 raises RANGE_SKIN_DEPTH
 IDEAL_INTEGRAL_STEPS = 200  # Xcoil analyzeElements `ideal` integral (EQ-27)
 NON_FINITE_CODE = "RANGE_NON_FINITE_RESULT"
-# EQ-06 is only evaluated on the phase EMF that EQ-07 assembles from path flux linkages in the EQ-05 field, so a result
-# that lists EQ-06 inherits those two equations (DEF-UE18-01). Its badge is the weakest equation of the whole chain.
-EMF_CHAIN = ("EQ-06", "EQ-07", "EQ-05")
 UNCLASSIFIED_INTERCONNECT = ValidityFlag(
     code="INTERNAL_INTERCONNECT_UNCLASSIFIED",
     message="interconnect copper not classified",
     eq_id="EQ-23",
     effect=ValidityEffect.CAP,
 )
-
-
-def _with_emf_chain(eq_ids: Sequence[str]) -> tuple[str, ...]:
-    """Return eq_ids, plus the EMF chain members it lacks when it holds EQ-06; the own equation stays first."""
-    if "EQ-06" not in eq_ids:
-        return tuple(eq_ids)
-    return (*eq_ids, *(eq_id for eq_id in EMF_CHAIN if eq_id not in eq_ids))
 
 
 def _non_finite_flag(value: object, eq_id: str) -> tuple[ValidityFlag, ...]:
@@ -247,21 +238,25 @@ def analyse(
         refs: Sequence[InputRef],
         validity: Sequence[ValidityFlag] = (),
         kind_tag: str = "computed",
+        *,
+        built_from: Sequence[Chained] = (),
     ) -> Traceable:  # type: ignore[type-arg]
         return traced(
             quantity,
             value,
             unit,
-            eq_ids=_with_emf_chain(eq_ids),
+            eq_ids=eq_ids,
             inputs=refs,
             registry=registry,
             validity=(*validity, *_non_finite_flag(value, eq_ids[0])),
             kind_tag=kind_tag,  # type: ignore[arg-type]
+            built_from=built_from,
         )
 
     rho20 = registry.constant("copper_resistivity_20c_ohm_m").value
     alpha = registry.constant("copper_temp_coeff_per_k").value
     rho_op = copper_resistivity_ohm_m(op.winding_temperature_degc, rho20, alpha)
+    rho_t = intermediate("EQ-10")
     thickness = {layer.name: layer.thickness_mm for layer in design.stackup.copper_layers()}
     pole_pairs = rotor.poles // 2
     harmonics = tuple(options.harmonics)
@@ -276,6 +271,13 @@ def analyse(
     edge_amplitude = float(check.parameters["D_e"])
     edge_decay_mm = float(check.parameters["c_e"]) * edge_g
 
+    # The chains of what the board loop produces and no result reports.
+    field = intermediate("EQ-05", *pole_arc_ratio_eq_ids(rotor))
+    flux_linkage = intermediate("EQ-06", built_from=(field,))
+    path_r = intermediate("EQ-10", built_from=(rho_t,))
+    via_r = intermediate("EQ-11", built_from=(rho_t,))
+    phase_emf = intermediate("EQ-07", built_from=(flux_linkage,))
+    phase_r = intermediate("EQ-07", built_from=(path_r, via_r))
     tables = {}
     board_fields: list[_BoardFields] = []
     solutions: list[CircuitSolution] = []
@@ -321,6 +323,7 @@ def analyse(
     constants = phase_constants(ke1, topology, design.phases, rotor.poles)
     i_line = op.line_current_rms_a
     i_ph = i_line / math.sqrt(3.0) if connection is ConnectionTopology.DELTA else i_line
+    phase_current = intermediate("EQ-09")  # star I_ph = I_line, delta I_ph = I_line / sqrt(3) (EQ-09 formula)
     unclassified = any(is_unclassified(b) for b in boards.boards)
     ic_validity: tuple[ValidityFlag, ...] = (UNCLASSIFIED_INTERCONNECT,) if unclassified else ()
     ic = (
@@ -333,6 +336,7 @@ def analyse(
             ]
         )
     )
+    interconnect_r = intermediate("EQ-23", built_from=(path_r, rho_t))
 
     # Inputs per chain, so every tag lists what its result used.
     field_refs = [
@@ -394,6 +398,7 @@ def analyse(
     first = phases[0]
     amplitudes = {n: float(abs(e)) for n, e in zip(harmonics, emf[first], strict=True)}
     line_phasors = _line_phasors([emf[ph] for ph in phases], connection)
+    line_emf = intermediate("EQ-18", built_from=(phase_emf,))
     line_amplitudes = {n: float(abs(e)) for n, e in zip(harmonics, line_phasors, strict=True)}
     waveform = emf_waveform_v(dict(zip(harmonics, emf[first] * omega_m, strict=True)))
     ke_line_peak = float(np.max(np.abs(emf_waveform_v(dict(zip(harmonics, line_phasors, strict=True))))))
@@ -420,6 +425,7 @@ def analyse(
     conductors = sides / parallel
     all_z = sorted(tables)
     ideal = _ideal_integral(rotor, g_plane, all_z, r_a, r_b)
+    ideal_chain = intermediate("EQ-27", built_from=(field,))
     k_u = ke1 / T_MM2_TO_V_S_PER_RAD / (ideal * conductors) if ideal > 0.0 and conductors > 0 else 0.0
     r_min_cu, r_max_cu = boards.boards[0].envelope_mm
     effective_gap = 2.0 * rotor.magnet.thickness_mm + 2.0 * rotor.air_gap_mm + boards.stack_thickness_mm
@@ -441,12 +447,13 @@ def analyse(
         registry.constant("laminate_density_g_per_cm3").value,
     )
     cooling = inputs.field("/operating/convection_h_w_m2k")
-    sum_eq = ("EQ-26", "EQ-10", "EQ-11", "EQ-12", "EQ-07", "EQ-19", "EQ-23", "EQ-09", "EQ-06")
     sum_refs = [*emf_refs, *loss_refs, speed]
     sum_validity = (*emf_validity, *skin_validity, *ic_validity)
     d_t = temperature_rise_k(loss_total, board_area, op.convection_h_w_m2k)  # a stack cools through its outer faces
 
-    ke_t = tr("ke_phase_v_s_per_rad", ke1, Unit.V_S_PER_RAD, ("EQ-06", "EQ-07", "EQ-05"), emf_refs, emf_validity)
+    ke_t = tr(
+        "ke_phase_v_s_per_rad", ke1, Unit.V_S_PER_RAD, ("EQ-06",), emf_refs, emf_validity, built_from=(phase_emf,)
+    )
     edge_t = traced_validity_metric("edge_leakage_fraction", check, "EQ-05", e_edge, inputs=emf_refs, registry=registry)
     layer_results = tuple(
         LayerResult(
@@ -465,41 +472,120 @@ def analyse(
                     )[0][0]
                 ),
                 Unit.T,
-                ("EQ-05", "EQ-04"),
+                ("EQ-05",),
                 field_refs,
+                built_from=(field,),
             ),
         )
         for name, z in boards.boards[0].copper_z_mm.items()
     )
+    circulating_from = (flux_linkage, path_r, via_r)
     phase_results = tuple(
         PhaseResult(
             phase=ph,
             ke_peak_v_s_per_rad=tr(
-                "phase_ke_peak", ke_ph[ph], Unit.V_S_PER_RAD, ("EQ-06", "EQ-07"), emf_refs, emf_validity
+                "phase_ke_peak",
+                ke_ph[ph],
+                Unit.V_S_PER_RAD,
+                ("EQ-06",),
+                emf_refs,
+                emf_validity,
+                built_from=(phase_emf,),
             ),
             emf_phasor_angle_rad=tr(
-                "phase_emf_phasor_angle", emf_angle_ph[ph], Unit.RAD, ("EQ-06", "EQ-07"), emf_refs, emf_validity
+                "phase_emf_phasor_angle",
+                emf_angle_ph[ph],
+                Unit.RAD,
+                ("EQ-06",),
+                emf_refs,
+                emf_validity,
+                built_from=(phase_emf,),
             ),
             resistance_20c_ohm=tr(
-                "phase_resistance_20c", r_20_ph[ph], Unit.OHM, ("EQ-10", "EQ-11"), r_refs, skin_validity
+                "phase_resistance_20c",
+                r_20_ph[ph],
+                Unit.OHM,
+                ("EQ-10", "EQ-11"),
+                r_refs,
+                skin_validity,
+                built_from=(phase_r,),
             ),
             resistance_operating_ohm=tr(
-                "phase_resistance_operating", r_op_ph[ph], Unit.OHM, ("EQ-10", "EQ-11"), r_refs, skin_validity
+                "phase_resistance_operating",
+                r_op_ph[ph],
+                Unit.OHM,
+                ("EQ-10", "EQ-11"),
+                r_refs,
+                skin_validity,
+                built_from=(phase_r,),
             ),
             circulating_loss_w=tr(
-                "phase_circulating_loss", circ_ph[ph], Unit.W, ("EQ-07",), [*emf_refs, *r_refs, speed]
+                "phase_circulating_loss",
+                circ_ph[ph],
+                Unit.W,
+                ("EQ-07",),
+                [*emf_refs, *r_refs, speed],
+                built_from=circulating_from,
             ),
         )
         for ph in phases
     )
+    phase_r_op = tuple(p.resistance_operating_ohm for p in phase_results)
+    ke_line_t = tr(
+        "ke_line",
+        constants.ke_line_v_s_per_rad,
+        Unit.V_S_PER_RAD,
+        ("EQ-09",),
+        emf_refs,
+        emf_validity,
+        built_from=(ke_t,),
+    )
+    torque_t = tr(
+        "torque", torque, Unit.N_M, ("EQ-09",), [*emf_refs, current], emf_validity, built_from=(ke_t, phase_current)
+    )
+    k_u_t = tr(
+        "utilisation_factor_k_u", k_u, Unit.ONE, ("EQ-27",), emf_refs, emf_validity, built_from=(ke_t, ideal_chain)
+    )
+    inductance_t = tr("inductance_estimate", inductance, Unit.H, ("EQ-14",), emf_refs, built_from=(k_u_t,))
+    r_line_t = tr(
+        "resistance_line",
+        r_line,
+        Unit.OHM,
+        ("EQ-23",),
+        r_refs,
+        (*skin_validity, *ic_validity),
+        built_from=(*phase_r_op, interconnect_r),
+    )
+    loss_copper_t = tr(
+        "loss_copper", p_cu, Unit.W, ("EQ-10",), loss_refs, skin_validity, built_from=(*phase_r_op, phase_current)
+    )
+    loss_eddy_t = tr(
+        "loss_eddy", p_eddy, Unit.W, ("EQ-12",), [*emf_refs, *r_refs, speed], skin_validity, built_from=(field, rho_t)
+    )
+    loss_circulating_t = tr(
+        "loss_circulating", p_circ, Unit.W, ("EQ-07",), [*emf_refs, *r_refs, speed], built_from=circulating_from
+    )
+    loss_delta_t = tr(
+        "loss_delta_circulating",
+        p_delta,
+        Unit.W,
+        ("EQ-19",),
+        [*emf_refs, *r_refs, speed],
+        emf_validity,
+        built_from=(phase_emf, *phase_r_op, interconnect_r),
+    )
+    loss_ic_t = tr("loss_interconnect", p_ic, Unit.W, ("EQ-23",), loss_refs, ic_validity, built_from=(interconnect_r,))
+    losses = (loss_copper_t, loss_eddy_t, loss_circulating_t, loss_delta_t, loss_ic_t)
+    loss_total_t = tr("loss_total", loss_total, Unit.W, ("EQ-26",), sum_refs, sum_validity, built_from=losses)
+    output_power_t = tr("output_power", p_out, Unit.W, ("EQ-26",), [*emf_refs, current, speed], built_from=(torque_t,))
     torque_speed = None
     if op.dc_link_v is not None and ke1 > 0.0:
         drive_refs = [*emf_refs, *r_refs, current, inputs.field("/operating/dc_link_v")]
         drive_refs.append(inputs.field("/operating/modulation"))
-        drive_eq = ("EQ-20", "EQ-14", "EQ-09", "EQ-23")
         drive_validity = (*emf_validity, *ic_validity)
         is_open = connection is ConnectionTopology.OPEN
-        ke_equivalent = ke1 if is_open else constants.ke_line_v_s_per_rad / math.sqrt(3.0)
+        ke_line = constants.ke_line_v_s_per_rad  # open: Ke_LL = Ke_ph (EQ-09), so both cases start from the line Ke
+        ke_equivalent = ke_line if is_open else ke_line / math.sqrt(3.0)
         speed_rpm, curve_torque_n_m = torque_speed_envelope(
             r_line if is_open else r_line / 2.0,
             inductance / 3.0 if connection is ConnectionTopology.DELTA else inductance,
@@ -513,42 +599,83 @@ def analyse(
             connection=connection,
         )
         power_w = curve_torque_n_m * speed_rpm * (2.0 * math.pi / 60.0)
+        envelope_from = (inductance_t, ke_line_t, r_line_t)
+        speed_t = tr(
+            "torque_speed_rpm",
+            tuple(speed_rpm.tolist()),
+            Unit.RPM,
+            ("EQ-20",),
+            drive_refs,
+            drive_validity,
+            built_from=envelope_from,
+        )
+        curve_t = tr(
+            "torque_speed_torque",
+            tuple(curve_torque_n_m.tolist()),
+            Unit.N_M,
+            ("EQ-20",),
+            drive_refs,
+            drive_validity,
+            built_from=envelope_from,
+        )
         torque_speed = TorqueSpeedEstimate(
-            speed_rpm=tr("torque_speed_rpm", tuple(speed_rpm.tolist()), Unit.RPM, drive_eq, drive_refs, drive_validity),
-            torque_n_m=tr(
-                "torque_speed_torque", tuple(curve_torque_n_m.tolist()), Unit.N_M, drive_eq, drive_refs, drive_validity
+            speed_rpm=speed_t,
+            torque_n_m=curve_t,
+            power_w=tr(
+                "torque_speed_power",
+                tuple(power_w.tolist()),
+                Unit.W,
+                ("EQ-20",),
+                drive_refs,
+                drive_validity,
+                built_from=(speed_t, curve_t),
             ),
-            power_w=tr("torque_speed_power", tuple(power_w.tolist()), Unit.W, drive_eq, drive_refs, drive_validity),
             no_load_speed_rpm=tr(
                 "no_load_speed",
                 no_load_speed_rpm(ke_equivalent, op.dc_link_v, op.modulation, connection),
                 Unit.RPM,
-                drive_eq,
+                ("EQ-20",),
                 drive_refs,
                 drive_validity,
+                built_from=(ke_line_t,),
             ),
             base_speed_rpm=tr(
                 "base_speed",
                 base_speed_rpm(speed_rpm, curve_torque_n_m),
                 Unit.RPM,
-                drive_eq,
+                ("EQ-20",),
                 drive_refs,
                 drive_validity,
+                built_from=(speed_t, curve_t),
             ),
         )
     return AnalysisResult(
         ke_phase_v_s_per_rad=ke_t,
-        ke_line_v_s_per_rad=tr(
-            "ke_line", constants.ke_line_v_s_per_rad, Unit.V_S_PER_RAD, ("EQ-09", "EQ-06"), emf_refs, emf_validity
-        ),
+        ke_line_v_s_per_rad=ke_line_t,
         ke_line_peak_v_s_per_rad=tr(
-            "ke_line_peak", ke_line_peak, Unit.V_S_PER_RAD, ("EQ-18", "EQ-09", "EQ-06"), emf_refs, emf_validity
+            "ke_line_peak",
+            ke_line_peak,
+            Unit.V_S_PER_RAD,
+            ("EQ-18", "EQ-09"),
+            emf_refs,
+            emf_validity,
+            built_from=(line_emf,),
         ),
-        kt_n_m_per_a=tr("kt", constants.kt_n_m_per_a, Unit.N_M_PER_A, ("EQ-09", "EQ-06"), emf_refs, emf_validity),
-        kv_rpm_per_v=tr("kv", constants.kv_rpm_per_v, Unit.RPM_PER_V, ("EQ-09", "EQ-06"), emf_refs, emf_validity),
-        winding_factor_1=tr("utilisation_factor_k_u", k_u, Unit.ONE, ("EQ-27", "EQ-06"), emf_refs, emf_validity),
+        kt_n_m_per_a=tr(
+            "kt", constants.kt_n_m_per_a, Unit.N_M_PER_A, ("EQ-09",), emf_refs, emf_validity, built_from=(ke_t,)
+        ),
+        kv_rpm_per_v=tr(
+            "kv", constants.kv_rpm_per_v, Unit.RPM_PER_V, ("EQ-09",), emf_refs, emf_validity, built_from=(ke_t,)
+        ),
+        winding_factor_1=k_u_t,
         resistance_phase_20c_ohm=tr(
-            "resistance_phase_20c", math.fsum(r_20_ph.values()) / m, Unit.OHM, ("EQ-10", "EQ-11"), r_refs, skin_validity
+            "resistance_phase_20c",
+            math.fsum(r_20_ph.values()) / m,
+            Unit.OHM,
+            ("EQ-10", "EQ-11"),
+            r_refs,
+            skin_validity,
+            built_from=(phase_r,),
         ),
         resistance_phase_operating_ohm=tr(
             "resistance_phase_operating",
@@ -557,43 +684,61 @@ def analyse(
             ("EQ-10", "EQ-11"),
             r_refs,
             skin_validity,
+            built_from=(phase_r,),
         ),
-        resistance_line_ohm=tr(
-            "resistance_line", r_line, Unit.OHM, ("EQ-23", "EQ-10", "EQ-11"), r_refs, (*skin_validity, *ic_validity)
-        ),
+        resistance_line_ohm=r_line_t,
         emf_phase_rms_v=tr(
             "emf_phase_rms",
             ke1 * omega_m / math.sqrt(2.0),
             Unit.V,
-            ("EQ-06", "EQ-07"),
+            ("EQ-06",),
             [*emf_refs, speed],
             emf_validity,
+            built_from=(ke_t,),
         ),
-        torque_n_m=tr("torque", torque, Unit.N_M, ("EQ-09", "EQ-06"), [*emf_refs, current], emf_validity),
-        loss_copper_w=tr("loss_copper", p_cu, Unit.W, ("EQ-10", "EQ-11"), loss_refs, skin_validity),
-        loss_eddy_w=tr("loss_eddy", p_eddy, Unit.W, ("EQ-12", "EQ-05"), [*emf_refs, *r_refs, speed], skin_validity),
-        loss_circulating_w=tr("loss_circulating", p_circ, Unit.W, ("EQ-07",), [*emf_refs, *r_refs, speed]),
-        loss_delta_circulating_w=tr(
-            "loss_delta_circulating", p_delta, Unit.W, ("EQ-19", "EQ-06"), [*emf_refs, *r_refs, speed], emf_validity
+        torque_n_m=torque_t,
+        loss_copper_w=loss_copper_t,
+        loss_eddy_w=loss_eddy_t,
+        loss_circulating_w=loss_circulating_t,
+        loss_delta_circulating_w=loss_delta_t,
+        loss_interconnect_w=loss_ic_t,
+        loss_total_w=loss_total_t,
+        output_power_w=output_power_t,
+        efficiency=tr(
+            "efficiency",
+            efficiency(p_out, loss_total),
+            Unit.ONE,
+            ("EQ-26",),
+            sum_refs,
+            sum_validity,
+            built_from=(output_power_t, loss_total_t),
         ),
-        loss_interconnect_w=tr("loss_interconnect", p_ic, Unit.W, ("EQ-23", "EQ-10"), loss_refs, ic_validity),
-        loss_total_w=tr("loss_total", loss_total, Unit.W, sum_eq, sum_refs, sum_validity),
-        output_power_w=tr("output_power", p_out, Unit.W, ("EQ-26", "EQ-09", "EQ-06"), [*emf_refs, current, speed]),
-        efficiency=tr("efficiency", efficiency(p_out, loss_total), Unit.ONE, sum_eq, sum_refs, sum_validity),
         motor_constant_n_m_per_sqrt_w=tr(
             "motor_constant",
             motor_constant_n_m_per_sqrt_w(torque, p_cu, i_ph),
             Unit.N_M_PER_SQRT_W,
-            ("EQ-26", "EQ-09", "EQ-06", "EQ-10", "EQ-11"),
+            ("EQ-26",),
             [*emf_refs, *loss_refs],
             (*emf_validity, *skin_validity),
+            built_from=(torque_t, loss_copper_t, phase_current),
         ),
-        thd_phase=tr("thd_phase", thd(amplitudes), Unit.ONE, ("EQ-18", "EQ-06"), emf_refs),
-        thd_line=tr("thd_line", thd(line_amplitudes), Unit.ONE, ("EQ-18", "EQ-06"), emf_refs),
-        current_density_a_per_mm2=tr("current_density", density, Unit.A_PER_MM2, ("EQ-22",), [*copper_t, current]),
-        skin_depth_mm=tr("skin_depth", delta_mm, Unit.MM, ("EQ-13", "EQ-10"), [temperature, speed, *rho_refs]),
-        inductance_estimate_h=tr("inductance_estimate", inductance, Unit.H, ("EQ-14", "EQ-27"), emf_refs),
-        ipc_guideline_current_a=tr("ipc_guideline_current", ipc_line, Unit.A, ("EQ-15",), [*copper_t, temperature]),
+        thd_phase=tr("thd_phase", thd(amplitudes), Unit.ONE, ("EQ-18",), emf_refs, built_from=(phase_emf,)),
+        thd_line=tr("thd_line", thd(line_amplitudes), Unit.ONE, ("EQ-18",), emf_refs, built_from=(line_emf,)),
+        current_density_a_per_mm2=tr(
+            "current_density", density, Unit.A_PER_MM2, ("EQ-22",), [*copper_t, current], built_from=(phase_current,)
+        ),
+        skin_depth_mm=tr(
+            "skin_depth", delta_mm, Unit.MM, ("EQ-13",), [temperature, speed, *rho_refs], built_from=(rho_t,)
+        ),
+        inductance_estimate_h=inductance_t,
+        ipc_guideline_current_a=tr(
+            "ipc_guideline_current",
+            ipc_line,
+            Unit.A,
+            ("EQ-15",),
+            [*copper_t, temperature],
+            built_from=(phase_current,),
+        ),
         mass_copper_g=tr(
             "mass_copper", mass.copper_g, Unit.G, ("EQ-16",), [*copper_t, inputs.constant("copper_density_g_per_cm3")]
         ),
@@ -604,12 +749,26 @@ def analyse(
             ("EQ-16",),
             [*copper_t, inputs.constant("laminate_density_g_per_cm3")],
         ),
-        temperature_rise_k=tr("temperature_rise", d_t, Unit.K, ("EQ-17", *sum_eq), [*sum_refs, cooling], sum_validity),
+        temperature_rise_k=tr(
+            "temperature_rise",
+            d_t,
+            Unit.K,
+            ("EQ-17",),
+            [*sum_refs, cooling],
+            sum_validity,
+            built_from=(loss_total_t,),
+        ),
         edge_leakage_fraction=edge_t,
         layers=layer_results,
         phases=phase_results,
         emf_waveform_v=tr(
-            "emf_waveform", tuple(waveform.tolist()), Unit.V, ("EQ-18", "EQ-06"), [*emf_refs, speed], emf_validity
+            "emf_waveform",
+            tuple(waveform.tolist()),
+            Unit.V,
+            ("EQ-18",),
+            [*emf_refs, speed],
+            emf_validity,
+            built_from=(phase_emf,),
         ),
         torque_speed=torque_speed,
         registry_version=registry.version,
