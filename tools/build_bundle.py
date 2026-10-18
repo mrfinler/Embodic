@@ -154,7 +154,7 @@ def ensure_build_venv() -> None:
     run([*pip, "--require-hashes", "-r", LOCK_FILE])
     run([*pip, "--no-deps", "-e", ROOT])
     run([*pip, *BUILD_TOOLS])
-    (VENV / LOCK_RECORD).write_text(lock_sha256 + "\n")
+    (VENV / LOCK_RECORD).write_text(lock_sha256 + "\n", newline="\n")
 
 
 def probe_build_venv() -> BuildVenv:
