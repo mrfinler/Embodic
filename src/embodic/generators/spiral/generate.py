@@ -92,7 +92,6 @@ def _unsupported(design: DesignParameters, spec: SpiralWindingSpec) -> tuple[str
         "/winding/coil/inner_turn_mode": coil.inner_turn_mode is not InnerTurnMode.MOVING,
         "/winding/parallel_paths": spec.parallel_paths != 1,
         "/vias/vias_per_transition": design.vias.vias_per_transition != 1,
-        "/outline/board/corner_radius_mm": getattr(design.outline.board, "corner_radius_mm", 0.0) != 0.0,
     }
     return tuple(pointer for pointer, unsupported in checks.items() if unsupported)
 
