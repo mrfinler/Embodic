@@ -14,7 +14,7 @@ from pathlib import Path
 
 from embodic.geometry.labels import Viewport, label_anchors, pad_boxes, place_labels
 from embodic.geometry.layout import Layout
-from embodic.geometry.marks import eye_marks, hatch_chords
+from embodic.geometry.marks import CoilMark, coil_marks, hatch_chords, top_layer_of_each_phase
 from embodic.geometry.primitives import Arc, Line, Primitive
 from embodic.io.exporters import (
     ExportKind,
@@ -220,6 +220,12 @@ def _eye(doc: PdfDocument, x: float, y: float, r: float, colour: str, hatch_deg:
     doc.op(f"q {circle_ops(x, y, r)} W n {rgb(colour)} RG {HATCH_STROKE_PT} w 0 J {' '.join(chords)} S Q")
 
 
+def _eye_discs(board: Layout, coils: Sequence[CoilMark]) -> list[CoilMark]:
+    """Return the marks with an eye disc on the top layer of their phase; ``eye_marks`` would build the marks again."""
+    layers = top_layer_of_each_phase(board)
+    return [m for m in coils if m.eye_radius_mm > 0 and layers[m.phase] == m.layer]
+
+
 def _drawing(doc: PdfDocument, index: int, board: Layout, inks: dict[Phase | None, PhaseInk], grey: bool) -> None:
     doc.new_page()
     doc.text(MARGIN, PAGE_H - 30, f"Board {index} drawing (mm, y up, centred on the shaft axis)", size=10, bold=True)
@@ -252,19 +258,20 @@ def _drawing(doc: PdfDocument, index: int, board: Layout, inks: dict[Phase | Non
             doc.stroke_path([*_segments(pad_outline(pad), frame), "h"], width=0.6, colour_hex=LAND)
         if pad.drill_mm > 0:
             doc.circle(frame.x(pad.x_mm), frame.y(pad.y_mm), pad.drill_mm / 2 * frame.scale, fill_hex=DRILL)
-    for mark in eye_marks(board):
+    coils = tuple(coil_marks(board))
+    for mark in _eye_discs(board, coils):
         ink = inks[mark.phase]
         x, y, r = frame.x(mark.cx_mm), frame.y(mark.cy_mm), mark.eye_radius_mm * frame.scale
         _eye(doc, x, y, r, ink.grey_hex if grey else ink.colour_hex, ink.hatch_deg)
-    _labels(doc, board, frame, reach * 1.04)
+    _labels(doc, board, coils, frame, reach * 1.04)
     _legend(doc, inks, grey)
 
 
-def _labels(doc: PdfDocument, board: Layout, frame: _Frame, half_mm: float) -> None:
+def _labels(doc: PdfDocument, board: Layout, coils: Sequence[CoilMark], frame: _Frame, half_mm: float) -> None:
     """Coil labels of ruling b at the page scale (one point per viewport pixel), each over a paper halo."""
     view = Viewport(x_min_mm=-half_mm, y_min_mm=-half_mm, x_max_mm=half_mm, y_max_mm=half_mm, px_per_mm=frame.scale)
     placed = place_labels(
-        label_anchors(board),
+        label_anchors(board, coils),
         view=view,
         text_size=lambda text: (doc.width(text, LABEL_PT), LABEL_PT),
         obstacles=pad_boxes(board),

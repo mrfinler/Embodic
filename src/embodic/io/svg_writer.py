@@ -14,7 +14,7 @@ from xml.sax.saxutils import quoteattr
 
 from embodic.geometry.labels import PlacedLabel, Viewport, label_anchors, pad_boxes, place_labels
 from embodic.geometry.layout import Layout, Pad
-from embodic.geometry.marks import eye_marks, hatch_chords
+from embodic.geometry.marks import CoilMark, coil_marks, hatch_chords, top_layer_of_each_phase
 from embodic.geometry.paths import CopperPath
 from embodic.geometry.primitives import Arc, Line, Primitive
 from embodic.io.exporters import (
@@ -163,7 +163,15 @@ def _pad(svg: _Svg, pad: Pad) -> None:
         svg.circle("pad-drill", pad.x_mm, pad.y_mm, pad.drill_mm / 2, DRILL_FILL)
 
 
-def _board(svg: _Svg, index: int, board: Layout, inks: dict[Phase | None, PhaseInk], grey: bool) -> None:
+def _eye_discs(board: Layout, coils: Sequence[CoilMark]) -> list[CoilMark]:
+    """Return the marks with an eye disc on the top layer of their phase; ``eye_marks`` would build the marks again."""
+    layers = top_layer_of_each_phase(board)
+    return [m for m in coils if m.eye_radius_mm > 0 and layers[m.phase] == m.layer]
+
+
+def _board(
+    svg: _Svg, index: int, board: Layout, coils: Sequence[CoilMark], inks: dict[Phase | None, PhaseInk], grey: bool
+) -> None:
     prefix = f"b{index}"
     svg.out.append(f'<g id="board-{index}" class="board" data-label="Board {index}">')
     svg.out.append(f'<g class="outline" data-label="Board outline" stroke="{INK}" stroke-width="0.1">')
@@ -190,7 +198,7 @@ def _board(svg: _Svg, index: int, board: Layout, inks: dict[Phase | None, PhaseI
         _pad(svg, pad)
     svg.out.append("</g>")
     svg.out.append(f'<g id="{prefix}-eyes" class="eyes" data-label="Coil eyes">')
-    for k, mark in enumerate(eye_marks(board)):
+    for k, mark in enumerate(_eye_discs(board, coils)):
         ink = inks[mark.phase]
         colour = ink.grey_hex if grey else ink.colour_hex
         disc = (mark.cx_mm, mark.cy_mm, mark.eye_radius_mm)
@@ -229,10 +237,10 @@ def _text_size_px(text: str) -> tuple[float, float]:
     return bundled_font(SANS_FILE).width_pt(text, LABEL_MM) * CSS_PX_PER_MM, LABEL_MM * CSS_PX_PER_MM
 
 
-def _board_labels(board: Layout, view: Viewport) -> tuple[PlacedLabel, ...]:
+def _board_labels(board: Layout, coils: Sequence[CoilMark], view: Viewport) -> tuple[PlacedLabel, ...]:
     """Return the labels a drawing of ``board`` shows: ruling b's set, placed at the 1:1 page scale."""
     return place_labels(
-        label_anchors(board),
+        label_anchors(board, coils),
         view=view,
         text_size=_text_size_px,
         obstacles=pad_boxes(board),
@@ -330,11 +338,12 @@ def svg_document(boards: Sequence[Layout], mode: PhaseRenderMode, metadata: Expo
         f"<metadata><embodic:export {stamp_attrs}/></metadata>",
         '<g id="drawing" transform="scale(1,-1)" fill="none" stroke-linecap="round" stroke-linejoin="round">',
     ]
-    for index, board in enumerate(boards, start=1):
-        _board(svg, index, board, inks, grey)
+    marks = [tuple(coil_marks(board)) for board in boards]
+    for index, (board, coils) in enumerate(zip(boards, marks, strict=True), start=1):
+        _board(svg, index, board, coils, inks, grey)
     svg.out.append("</g>")
-    for board in boards:
-        svg.out += _labels(_board_labels(board, view))
+    for board, coils in zip(boards, marks, strict=True):
+        svg.out += _labels(_board_labels(board, coils, view))
     svg.out += _legend(x_min, -(y_min - MARGIN_MM) + LEGEND_ROW_MM, inks, grey, metadata)
     svg.out.append("</svg>")
     return "\n".join(svg.out) + "\n", svg.counts
