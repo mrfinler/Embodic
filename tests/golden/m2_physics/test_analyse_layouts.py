@@ -226,7 +226,7 @@ def test_line_peak_differs_from_the_fundamental_by_at_most_the_harmonic_sum(
     deviation = abs(r.ke_line_peak_v_s_per_rad.value / r.ke_line_v_s_per_rad.value - 1.0)
     assert 0.0 < deviation <= math.sqrt(n_other) * r.thd_line.value, (deviation, r.thd_line.value)
     assert r.ke_line_peak_v_s_per_rad.unit is r.ke_line_v_s_per_rad.unit
-    assert r.ke_line_peak_v_s_per_rad.eq_ids == ("EQ-18", "EQ-09", "EQ-06")
+    assert r.ke_line_peak_v_s_per_rad.eq_ids == ("EQ-18", "EQ-09", "EQ-06", "EQ-07", "EQ-05")
 
 
 @pytest.mark.parametrize("case", CASES)

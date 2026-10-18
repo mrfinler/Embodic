@@ -80,12 +80,22 @@ EDGE_CHECK_ID = "EC-05"
 SKIN_DEPTH_FRACTION = 1.0 / 3.0  # REQ-T-08: w above delta / 3 raises RANGE_SKIN_DEPTH
 IDEAL_INTEGRAL_STEPS = 200  # Xcoil analyzeElements `ideal` integral (EQ-27)
 NON_FINITE_CODE = "RANGE_NON_FINITE_RESULT"
+# EQ-06 is only evaluated on the phase EMF that EQ-07 assembles from path flux linkages in the EQ-05 field, so a result
+# that lists EQ-06 inherits those two equations (DEF-UE18-01). Its badge is the weakest equation of the whole chain.
+EMF_CHAIN = ("EQ-06", "EQ-07", "EQ-05")
 UNCLASSIFIED_INTERCONNECT = ValidityFlag(
     code="INTERNAL_INTERCONNECT_UNCLASSIFIED",
     message="interconnect copper not classified",
     eq_id="EQ-23",
     effect=ValidityEffect.CAP,
 )
+
+
+def _with_emf_chain(eq_ids: Sequence[str]) -> tuple[str, ...]:
+    """Return eq_ids, plus the EMF chain members it lacks when it holds EQ-06; the own equation stays first."""
+    if "EQ-06" not in eq_ids:
+        return tuple(eq_ids)
+    return (*eq_ids, *(eq_id for eq_id in EMF_CHAIN if eq_id not in eq_ids))
 
 
 def _non_finite_flag(value: object, eq_id: str) -> tuple[ValidityFlag, ...]:
@@ -242,7 +252,7 @@ def analyse(
             quantity,
             value,
             unit,
-            eq_ids=eq_ids,
+            eq_ids=_with_emf_chain(eq_ids),
             inputs=refs,
             registry=registry,
             validity=(*validity, *_non_finite_flag(value, eq_ids[0])),
