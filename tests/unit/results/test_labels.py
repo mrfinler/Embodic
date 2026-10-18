@@ -64,10 +64,14 @@ def test_every_symbol_is_written_in_the_equation_specification() -> None:
         ("loss_delta_circulating_w", "Delta circulating-current loss P_δ,circ"),
         ("ke_line_peak_v_s_per_rad", "Line back-EMF constant, peak"),
         ("emf_phase_rms_v", "Phase back-EMF, rms"),
+        ("winding_factor_1", "Utilisation factor k_u"),
     ],
 )
 def test_title_is_the_label_then_the_symbol_the_specification_states(quantity: str, title: str) -> None:
-    """Catches a symbol before the label, and a symbol invented for a quantity the spec leaves unnamed."""
+    """Catches a symbol before the label, and a symbol invented for a quantity the spec leaves unnamed.
+
+    `winding_factor_1` is EQ-27 k_u, not the EQ-08 winding factor k_w1 (DEF-UE22-02).
+    """
     assert quantity_title(quantity) == title
 
 
