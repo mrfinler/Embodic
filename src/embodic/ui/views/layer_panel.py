@@ -36,11 +36,12 @@ from embodic.ui.viewmodels.session import (
     rotation_mode,
     series_groups,
 )
-from embodic.ui.views.coil_panel import FieldEditor, FieldPanel, Segment, fit_rows, fit_width, label_above
+from embodic.ui.views.coil_panel import FieldEditor, FieldPanel, Segment, fit_rows, fit_width, label_above, unit_text
 from embodic.ui.views.widgets import table_widget
 
 COPPER_COUNTS = (2, 4, 6, 8)
 LAYER_COLUMNS = ("layer", "kind", "thickness")
+THICKNESS_COLUMN = LAYER_COLUMNS.index("thickness")
 PAIR_COLUMNS = ("pair", "layers", "rotation")
 ROTATION_COLUMN = PAIR_COLUMNS.index("rotation")
 ROTATION_WIDGET = "param-pair-rotation"
@@ -231,7 +232,8 @@ class LayerPanel(FieldPanel):
             copper += [name] if kind == "copper" else []
             position += 1
         unpaired = copper[-1] if spiral and len(copper) % 2 else None
-        _fill(layers, rows, {r: text("layer-list.unpaired") for r, row in enumerate(rows) if row[0] == unpaired})
+        tips = {r: text("layer-list.unpaired") for r, row in enumerate(rows) if row[0] == unpaired}
+        _fill(layers, rows, tips, {THICKNESS_COLUMN: text("design.unit.um")})
         self._slots = pair_slots(copper, layer_pairs(values)) if spiral else []
         self._show_pairs(pairs)
         for widget in (pairs, self.helpers["pair-list-caption"]):
@@ -275,6 +277,7 @@ class LayerPanel(FieldPanel):
             assert cell is not None
             cell.setText("")
             cell.setData(Qt.ItemDataRole.AccessibleTextRole, f"{rows[r][ROTATION_COLUMN]} {word}")
+            cell.setData(Qt.ItemDataRole.AccessibleDescriptionRole, unit_text(spec))
         fit_rows(table)
         fit_width(table)
         table.horizontalHeader().setStretchLastSection(True)
@@ -305,8 +308,13 @@ class LayerPanel(FieldPanel):
         rotation.setVisible(shown == "custom" and pair is not None)
 
 
-def _fill(table: QTableWidget, rows: list[tuple[str, ...]], tips: dict[int, str]) -> None:
-    """Show ``rows`` in a read-only table, keep its selection and size it to its rows and the inspector width."""
+def _fill(
+    table: QTableWidget, rows: list[tuple[str, ...]], tips: dict[int, str], units: dict[int, str] | None = None
+) -> None:
+    """Show ``rows`` in a read-only table, keep its selection and size it to its rows and the inspector width.
+
+    ``units`` maps a column to the unit its cells announce, because a column header is not a cell's description.
+    """
     selected = table.currentRow()
     table.blockSignals(True)
     table.setRowCount(len(rows))
@@ -314,6 +322,8 @@ def _fill(table: QTableWidget, rows: list[tuple[str, ...]], tips: dict[int, str]
         for c, cell in enumerate(cells):
             item = QTableWidgetItem(cell)
             item.setToolTip(tips.get(r, ""))
+            if units is not None and c in units:
+                item.setData(Qt.ItemDataRole.AccessibleDescriptionRole, units[c])
             table.setItem(r, c, item)
     if 0 <= selected < len(rows):
         table.selectRow(selected)

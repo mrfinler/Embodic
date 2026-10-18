@@ -2,6 +2,7 @@
 
 from collections.abc import Mapping
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -32,7 +33,15 @@ from embodic.ui.viewmodels.session import (
     screw_patterns,
 )
 from embodic.ui.viewmodels.stepping import STACKUP_INPUT_RULES
-from embodic.ui.views.coil_panel import FieldEditor, FieldPanel, choice_text, fit_rows, fit_width, label_above
+from embodic.ui.views.coil_panel import (
+    FieldEditor,
+    FieldPanel,
+    choice_text,
+    fit_rows,
+    fit_width,
+    label_above,
+    unit_text,
+)
 from embodic.ui.views.step_keys import StepKeys
 from embodic.ui.views.widgets import table_widget
 
@@ -214,7 +223,10 @@ class BoardRotorPanel(FieldPanel):
         for r, pattern in enumerate(patterns):
             for c, (leaf, _) in enumerate(SCREW_COLUMNS):
                 spec = FIELD_BY_KEY[f"{SCREWS_POINTER}/*/{leaf}"]
-                table.setItem(r, c, QTableWidgetItem(display_text(spec, pattern.get(leaf, spec.neutral_value))))
+                item = QTableWidgetItem(display_text(spec, pattern.get(leaf, spec.neutral_value)))
+                if spec.unit is not None:
+                    item.setData(Qt.ItemDataRole.AccessibleDescriptionRole, unit_text(spec))
+                table.setItem(r, c, item)
         if patterns and not 0 <= selected < len(patterns):
             selected = len(patterns) - 1
         if patterns:
