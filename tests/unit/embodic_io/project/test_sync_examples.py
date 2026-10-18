@@ -5,11 +5,10 @@ Each example file carries `registry_version` (REQ-T-07), so a registry change ch
 
 import hashlib
 import json
-import shutil
 from pathlib import Path
 
 import pytest
-from tests.unit.results.registries import REPO, load_sync_tool
+from tests.unit.results.registries import REPO, SHIPPED_FOLDERS, folders_unchanged, load_sync_tool, sandbox_sync_tool
 
 EXAMPLE_FILES = sorted(path.name for path in (REPO / "resources" / "examples").glob("*.embodic.json"))
 
@@ -18,17 +17,17 @@ def _sha12(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()[:12]
 
 
+@pytest.fixture(autouse=True)
+def shipped_files_untouched():
+    """Fail the test that writes a file of resources/evidence or resources/examples, even with equal bytes (D-062d)."""
+    with folders_unchanged(*SHIPPED_FOLDERS):
+        yield
+
+
 @pytest.fixture
 def sandbox(tmp_path, monkeypatch):
     """Return the tool with its evidence copy, manifest and example folder redirected to copies in tmp_path."""
-    tool = load_sync_tool()
-    evidence, examples = tmp_path / "resources" / "evidence", tmp_path / "resources" / "examples"
-    shutil.copytree(REPO / "resources" / "evidence", evidence)
-    shutil.copytree(REPO / "resources" / "examples", examples)
-    monkeypatch.setattr(tool, "DESTINATION", evidence)
-    monkeypatch.setattr(tool, "MANIFEST", evidence / "manifest.v1.json")
-    monkeypatch.setattr(tool, "EXAMPLES_DIR", examples)
-    return tool, evidence, examples
+    return sandbox_sync_tool(tmp_path, monkeypatch)
 
 
 @pytest.mark.req("REQ-T-07", "REQ-T-04")

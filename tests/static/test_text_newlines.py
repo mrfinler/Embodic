@@ -1,14 +1,26 @@
-r"""DEF-W-09: every text-mode file write in src/embodic names newline="\n" (REQ-N-04 same-platform byte identity).
+r"""DEF-W-09: every text-mode file write in src/embodic and tools/ names newline="\n" (REQ-N-04 byte identity).
 
 With ``newline=None`` Python writes ``os.linesep``, which is "\r\n" on Windows
 (https://docs.python.org/3/library/functions.html#open), so the same input gives other bytes on Windows than on Linux.
 """
 
 import ast
+from collections import Counter
 
 import pytest
+from tests.static.conftest import REPO
 
 TEMP_FILES = ("NamedTemporaryFile", "TemporaryFile", "SpooledTemporaryFile")
+
+# Scripts that still write a text file with the platform newline, found when D-062d extended this lint to tools/:
+# repository path -> number of writes. The tools test compares the counts exactly, so a new violation fails it and a
+# fixed script has to leave this table. Each entry is a defect to close, not an exemption.
+TOOLS_NOT_YET_PINNED = {
+    "tools/design/build_icons.py": 2,
+    "tools/design/build_themes.py": 1,
+    "tools/record_passed_tests.py": 1,
+    "tools/trace_matrix.py": 1,
+}
 
 
 def _keyword(call: ast.Call, name: str) -> ast.expr | None:
@@ -24,6 +36,8 @@ def _open_mode(call: ast.Call) -> tuple[bool, ast.expr | None]:
         return False, None
     if func.attr == "fdopen" or (func.attr == "open" and isinstance(func.value, ast.Name) and func.value.id == "io"):
         return True, _keyword(call, "mode") or (args[1] if len(args) > 1 else None)
+    if func.attr == "open" and isinstance(func.value, ast.Name) and func.value.id == "tarfile":
+        return False, None  # its first parameter is the archive name, and a tar archive is always bytes
     if func.attr == "open" or func.attr in TEMP_FILES:
         return True, _keyword(call, "mode") or (args[0] if args else None)
     return False, None
@@ -64,6 +78,14 @@ def test_every_text_write_in_src_pins_lf(src_modules):
 
 
 @pytest.mark.req("REQ-N-04")
+def test_every_text_write_in_tools_pins_lf(tools_modules):
+    """Catches a script whose file holds CRLF on Windows: sync_registry.py rewrote the shipped manifest so (D-062d)."""
+    found = {m.path.relative_to(REPO).as_posix(): check_text_newlines([m]) for m in tools_modules}
+    counts = Counter({path: len(lines) for path, lines in found.items() if lines})
+    assert counts == Counter(TOOLS_NOT_YET_PINNED), [line for lines in found.values() for line in lines]
+
+
+@pytest.mark.req("REQ-N-04")
 def test_flags_each_planted_text_write_without_lf(planted):
     """Catches a lint that misses write_text, open, io.open, os.fdopen, Path.open or a temporary file in text mode."""
     module = planted(
@@ -88,3 +110,11 @@ def test_flags_each_planted_text_write_without_lf(planted):
         ),
     )
     assert [int(line.split(":")[1]) for line in check_text_newlines([module])] == [1, 3, 6, 7, 8, 10, 13, 14]
+
+
+@pytest.mark.req("REQ-N-04")
+def test_tarfile_open_is_not_a_text_write(planted):
+    """Catches a lint that reads the archive name of tarfile.open as a mode and fails any script that reads a tar."""
+    source = 'tarfile.open(path)\ntarfile.open(path, "w:gz")\ntarfile.open(name=path, mode="r:gz")'
+    module = planted("tools.bundle", source)
+    assert check_text_newlines([module]) == []

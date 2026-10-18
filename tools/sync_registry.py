@@ -8,6 +8,7 @@ Usage, from anywhere (the example step needs embodic importable, for example ``P
 The equation registry is copied byte for byte. The evidence register ships only its `phase2_scope` entries and the
 documents they cite: the out-of-scope entries are the KiCad evidence that D-009 removed, and MT-07 forbids KiCad text
 in shipped files. Nothing is edited by hand: Agent 2 owns the equation registry, Agent 5 the evidence register.
+Every text file is written with LF line ends, so the bytes are the same on Windows (DEF-W-09).
 
 Every packaged example file carries `registry_version` (REQ-T-07, interfaces.md 9.1), which is built from the hashes
 of the two copies. A registry change therefore changes the bytes of all examples, and this tool rewrites them with
@@ -24,8 +25,13 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 DESTINATION = REPO / "resources" / "evidence"
-MANIFEST = DESTINATION / "manifest.v1.json"
+MANIFEST_NAME = "manifest.v1.json"
 EXAMPLES_DIR = REPO / "resources" / "examples"
+
+
+def manifest_path() -> Path:
+    """Return the manifest inside the destination in force now, so redirecting the destination redirects it too."""
+    return DESTINATION / MANIFEST_NAME
 
 
 def verbatim(source: bytes) -> bytes:
@@ -93,7 +99,7 @@ def expected_examples(copies: dict[str, bytes]) -> dict[str, bytes]:
         evidence.mkdir()
         for name, data in copies.items():
             (evidence / name).write_bytes(data)
-        (evidence / MANIFEST.name).write_text(manifest_text(copies), encoding="utf-8")
+        (evidence / MANIFEST_NAME).write_text(manifest_text(copies), encoding="utf-8", newline="\n")
         version = load_registry(root).version
         folder = root / "examples"
         folder.mkdir()
@@ -132,8 +138,9 @@ def drift() -> list[str]:
             problems.append(f"{name}: missing")
         elif copy.read_bytes() != data:
             problems.append(f"{name}: differs from {SOURCES[name][0].relative_to(REPO)}")
-    if not MANIFEST.is_file() or MANIFEST.read_text(encoding="utf-8") != manifest_text(copies):
-        problems.append(f"{MANIFEST.name}: missing or stale")
+    manifest = manifest_path()
+    if not manifest.is_file() or manifest.read_bytes() != manifest_text(copies).encode("utf-8"):
+        problems.append(f"{MANIFEST_NAME}: missing or stale")
     return problems + example_drift(expected_examples(copies))
 
 
@@ -146,7 +153,7 @@ def sync() -> list[str]:
     copies = expected_copies()
     for name, data in copies.items():
         (DESTINATION / name).write_bytes(data)
-    MANIFEST.write_text(manifest_text(copies), encoding="utf-8")
+    manifest_path().write_text(manifest_text(copies), encoding="utf-8", newline="\n")
     rewritten = []
     for name, data in expected_examples(copies).items():
         packaged = EXAMPLES_DIR / name

@@ -1,4 +1,4 @@
-"""Parsed source of src/embodic for the AST lints (MT-04 to MT-07, LG-01, LG-08)."""
+"""Parsed source of src/embodic and of the scripts under tools/ for the AST lints (MT-04 to MT-07, LG-01, LG-08)."""
 
 import ast
 from collections.abc import Callable
@@ -9,6 +9,7 @@ import pytest
 
 REPO = Path(__file__).resolve().parents[2]
 SRC_PACKAGE = REPO / "src" / "embodic"
+TOOLS = REPO / "tools"
 RESOURCES = REPO / "resources"
 
 
@@ -46,10 +47,24 @@ def load_src_modules() -> list[SourceModule]:
     return modules
 
 
+def load_tools_modules() -> list[SourceModule]:
+    """Parse every script under tools/, sorted by path; the dotted name is the path below the repository root."""
+    return [
+        parse_module(".".join(path.relative_to(REPO).with_suffix("").parts), path.read_text(encoding="utf-8"), path)
+        for path in sorted(TOOLS.rglob("*.py"))
+    ]
+
+
 @pytest.fixture(scope="session")
 def src_modules() -> list[SourceModule]:
     """All modules of the real package."""
     return load_src_modules()
+
+
+@pytest.fixture(scope="session")
+def tools_modules() -> list[SourceModule]:
+    """All scripts under tools/."""
+    return load_tools_modules()
 
 
 @pytest.fixture(scope="session")
