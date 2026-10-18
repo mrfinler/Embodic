@@ -3,7 +3,8 @@ r"""DEF-U-M6a-01 lever (U-M8n): the gap distribution of N02-10 over repeated run
 Runs ``test_n02_10_keystroke_echo_while_a_preview_result_arrives`` in a fresh pytest process per run and prints, per
 run, the largest GUI tick gap, the verdict and the results the test saw set; then the median and the max. With
 ``--hog``, a second Python process spins on one core for the whole run, as the release gate's other work does on a
-2-core machine.
+2-core machine. ``--switch-interval S`` replaces the shell's GIL switch interval for the run (CPython's default is
+0.005), the experiment that showed the gap waiting for the GIL (U-M8n).
 
 Not a test. From the repository root, with the project's interpreter:
 
@@ -23,9 +24,13 @@ LINE = re.compile(r"N02-10 largest GUI tick gap (\d+) ms; window .*? results set
 SPIN = "while True: pass"
 
 
-def run_once() -> tuple[int, bool, str]:
+def run_once(switch_interval_s: float | None) -> tuple[int, bool, str]:
     """Run the test once; return (largest gap ms, passed, results set)."""
-    argv = [sys.executable, "-m", "pytest", "-p", "no:cacheprovider", "-q", "-s", TEST]
+    options = ["-p", "no:cacheprovider", "-q", "-s", TEST]
+    argv = [sys.executable, "-m", "pytest", *options]
+    if switch_interval_s is not None:
+        code = f"app.GIL_SWITCH_INTERVAL_S = {switch_interval_s!r}; sys.exit(pytest.main({options!r}))"
+        argv = [sys.executable, "-c", f"import sys, pytest, embodic.ui.app as app; {code}"]
     completed = subprocess.run(argv, cwd=REPO, capture_output=True, text=True, check=False)
     found = LINE.search(completed.stdout)
     if found is None:
@@ -38,12 +43,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--runs", type=int, default=10)
     parser.add_argument("--hog", action="store_true", help="spin a second CPU-bound process during every run")
+    parser.add_argument("--switch-interval", type=float, help="the GIL switch interval of the shell, in seconds")
     args = parser.parse_args()
     hog = subprocess.Popen([sys.executable, "-c", SPIN]) if args.hog else None
     gaps = []
     try:
         for index in range(args.runs):
-            gap, passed, results = run_once()
+            gap, passed, results = run_once(args.switch_interval)
             gaps.append(gap)
             verdict = "pass" if passed else "FAIL"
             print(f"run {index + 1:>2}: gap {gap:>4} ms  {verdict}  results set {results}", flush=True)
