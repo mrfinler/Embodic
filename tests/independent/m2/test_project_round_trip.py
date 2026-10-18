@@ -18,7 +18,8 @@ from embodic.model.provenance import Measurement
 
 pytestmark = pytest.mark.req("REQ-F-15")
 
-SCHEMA = Path(embodic.__file__).parent / "io" / "schema" / "project.v2.schema.json"
+SCHEMA_DIR = Path(embodic.__file__).parent / "io" / "schema"
+FORMAT_VERSION = 2  # interfaces.md section 9.1, revision U-D20: PROJECT_SCHEMA_VERSION becomes 2
 EXAMPLES = [e.example_id for e in list_examples()]
 
 
@@ -48,13 +49,19 @@ def test_saved_project_reloads_to_the_same_design_origin_and_measurements(tmp_pa
 def test_saved_file_validates_against_the_published_schema_and_resaves_identically(
     tmp_path: Path, example_id: str
 ) -> None:
-    """A saved file passes its schema and a re-save differs only in saved_utc."""
+    """A saved file passes the schema its own schema_version names, and a re-save differs only in saved_utc.
+
+    The version is pinned to the contract's, so a format change cannot pass against a stale schema file (U-V13,
+    review of the D-057b scope exception).
+    """
     first, second = tmp_path / "a.json", tmp_path / "b.json"
     save_project(first, project_from_example(load_example(example_id)))
     reloaded, _ = load_project(first)
     save_project(second, reloaded)
     doc_a, doc_b = (json.loads(p.read_text(encoding="utf-8")) for p in (first, second))
-    jsonschema.validate(doc_a, json.loads(SCHEMA.read_text(encoding="utf-8")))
+    assert doc_a["schema_version"] == FORMAT_VERSION
+    schema = SCHEMA_DIR / f"project.v{doc_a['schema_version']}.schema.json"
+    jsonschema.validate(doc_a, json.loads(schema.read_text(encoding="utf-8")))
     doc_a.pop("saved_utc"), doc_b.pop("saved_utc")
     assert doc_a == doc_b
 
