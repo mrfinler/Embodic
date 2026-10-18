@@ -47,7 +47,9 @@ from embodic.ui.viewmodels.session import (
     form_rows,
     parse_text,
 )
+from embodic.ui.viewmodels.stepping import rule_of
 from embodic.ui.views.focus_order import chain, reading_order, stop_before
+from embodic.ui.views.step_keys import step_field
 from embodic.ui.views.widgets import check_box, set_style_property
 
 MIN_INPUT_PX = 72
@@ -278,19 +280,19 @@ class FieldEditor(QWidget):
         self._commit(parse_text(self.spec, typed))
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802 (Qt override)
-        """Esc in a field with uncommitted text puts the committed text back; focus stays (design_spec.md 10)."""
+        """Esc in a field with uncommitted text puts the committed text back; Up and Down step (design_spec.md 10)."""
+        if watched is not self.input or not isinstance(self.input, QLineEdit):
+            return False
         if (
-            watched is self.input
-            and event.type() == QEvent.Type.KeyPress
+            event.type() == QEvent.Type.KeyPress
             and isinstance(event, QKeyEvent)
             and event.key() == Qt.Key.Key_Escape
-            and isinstance(self.input, QLineEdit)
             and self.input.text() != self._shown
         ):
             self.input.setText(self._shown)
             self.session.revert_typing()
             return True
-        return False
+        return step_field(self.input, event, rule_of(self.spec))
 
     def show_row(self, row: FieldRow, topology: str) -> None:
         """Show what the session says about this field."""
