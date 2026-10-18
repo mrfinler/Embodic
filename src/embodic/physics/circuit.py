@@ -29,7 +29,7 @@ def add_phasors(phasors: Iterable[NDArray[np.complex128]], like: NDArray[np.comp
     Returns
     -------
     NDArray[np.complex128]
-        The sum, in the unit of the inputs.
+        The sum, in the unit of the inputs (T*mm^2, T*mm^2/ohm, V*s/rad or V at the call sites).
     """
     total = np.zeros_like(like)
     for x in phasors:

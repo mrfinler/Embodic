@@ -40,6 +40,10 @@ from embodic.results import Registry, load_registry
 
 CASES = [("CF-11", default_design, 0.5), ("D08", d08_design, 1.0)]
 
+# Agent 2's filleted totals (spiral_generator_spec.md G9, l.434-435: 415.4808 - 52.8389 and 160.2750 - 10.1058 mm).
+# `checks/spiral_reference.py` `filleted_path` reproduces them: 362.64193 and 150.16916 mm.
+STATED_TOTALS_MM = [("CF-11", default_design, 0.5, 362.6419), ("CF-10", d08_design, 1.0, 150.1692)]
+
 
 @pytest.fixture(scope="module")
 def registry() -> Registry:
@@ -146,6 +150,25 @@ def test_def_m2d3_02_track_length_changes_only_at_the_corners(
     filleted_mm = _track_mm(_with_rho(design, rho), registry)
     closed_form_mm = sum(expected for *_, expected in _corner_rows(design, rho))
     assert filleted_mm == pytest.approx(sharp_mm + closed_form_mm, abs=1e-9)
+
+
+@pytest.mark.req("REQ-F-06")
+@pytest.mark.parametrize(("case", "make", "rho", "total_mm"), STATED_TOTALS_MM)
+def test_ut_geo_07_filleted_track_length_equals_the_stated_total(
+    case: str, make: Callable[[], DesignParameters], rho: float, total_mm: float, registry: Registry
+) -> None:
+    """REQ-F-06 (b): every coil layer's filleted track length equals Agent 2's total within 1e-6 relative.
+
+    The totals hold for the set radius, so the detail's ``rho_used_mm`` must equal it. Catches fillets that fit only
+    after the 0.7 retry shrink, a lost or doubled corner family, and a sharp length that drifts from the reference.
+    """
+    stack = generate_spiral(_with_rho(make(), rho), registry)
+    assert isinstance(stack, BoardStack)
+    detail = stack.boards[0].detail
+    assert isinstance(detail, SpiralDetail)
+    assert detail.rho_used_mm == rho
+    for layer in ("X", "Y"):
+        assert detail.track_length_per_coil_layer_mm[layer] == pytest.approx(total_mm, rel=1e-6, abs=0.0), (case, layer)
 
 
 @pytest.mark.req("REQ-F-06")

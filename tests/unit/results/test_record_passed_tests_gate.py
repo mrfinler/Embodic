@@ -83,3 +83,38 @@ def test_a_verified_equation_missing_one_of_several_linked_tests_stops_the_relea
     assert code == 1
     assert re.findall(r"\bEQ-\d+\b", output.out + output.err) == [eq_id]
     assert not out.exists()
+
+
+@pytest.mark.req("REQ-T-05")
+def test_stderr_alone_names_the_equation_and_the_registry_tests_of_it_that_passed(tmp_path: Path, capsys) -> None:
+    """Catches a refusal that names the equation but not which of its linked tests passed in the run.
+
+    requirements.md REQ-T-05 (revision 2026-10-17, U-D20): the gate names on stderr the equation with the registry test
+    IDs that passed. The assertions read stderr only, because a CI log keeps the two streams apart.
+    """
+    eq_id, tests = next((k, t) for k, t in verified_equations().items() if len(t) > 1)
+    skipped = tests[-1]
+    report = release_report(tmp_path / "req_report.json", skipping=skipped)
+    code = run_record(report, tmp_path / "passed_tests.v1.json")
+    named = set(re.findall(r"(?<![\w-])(?:EQ|EQT)-[\w-]*\w", capsys.readouterr().err))
+    assert code == 1
+    assert eq_id in named
+    assert named & set(tests) == set(tests) - {skipped}, "the passed tests are named, the test that did not pass is not"
+
+
+@pytest.mark.req("REQ-T-05")
+def test_stderr_names_a_refused_equation_none_of_whose_linked_tests_passed(tmp_path: Path, capsys) -> None:
+    """Catches a refusal that lists every linked ID of an equation when none of them passed, or drops the equation."""
+    eq_id = next(iter(verified_equations()))
+    records = [
+        {"nodeid": f"tests/x.py::{eqt}", "req": ["REQ-T-05"], "eq": [], "outcome": "passed", "eqt": [eqt]}
+        for other, linked in verified_equations().items()
+        if other != eq_id
+        for eqt in linked
+    ]
+    report = tmp_path / "req_report.json"
+    report.write_text(json.dumps(records), encoding="utf-8")
+    code = run_record(report, tmp_path / "passed_tests.v1.json")
+    named = set(re.findall(r"(?<![\w-])(?:EQ|EQT)-[\w-]*\w", capsys.readouterr().err))
+    assert code == 1
+    assert named == {eq_id}
