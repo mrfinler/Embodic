@@ -169,7 +169,7 @@ def evaluate(rulings, pins, report, gates, manual_passed, collected):
     return out
 
 
-def render(results, inputs) -> str:
+def render(results, inputs, note: str) -> str:
     """Return the generated section of V3-01.md."""
     counts = Counter(status for _, _, _, status, _, _ in results)
     rulings = Counter(r.ruling for _, _, r, _, _, _ in results)
@@ -182,6 +182,7 @@ def render(results, inputs) -> str:
         "",
         *[f"- `{name}` `{digest}`" for name, digest in inputs],
         "",
+        *([note, ""] if note else []),
         f"Rulings on the {len(results)} live must rows: "
         + ", ".join(f"{k} {rulings[k]}" for k in ("checks", "partial", "does not check") if rulings[k])
         + ".",
@@ -191,7 +192,7 @@ def render(results, inputs) -> str:
         + ". `checks, not run here` counts as `partial` until the release run passes its cited tests.",
         "",
         "Release profile (0.0.2 gate: trace_matrix --fail-untested-through M5 with the manual records): "
-        + (f"{len(blocking)} rows block: {', '.join(blocking)}." if blocking else "no row blocks on this report.")
+        + (f"{len(blocking)} blocking: {', '.join(blocking)}." if blocking else "no row blocks on this report.")
         + " A row marked `release-only tests` has its marked tests only in tests/performance or tests/packaging,"
         " which this report did not run.",
         "",
@@ -226,7 +227,7 @@ def collected_by_req(report: list[dict]) -> dict[str, list[str]]:
 
 def inputs_of(args) -> list[tuple[str, str]]:
     """Return (name, sha256 prefix) of every input file."""
-    files = [args.report, args.gate_log, *([args.collected] if args.collected else []), MANUAL, PINS]
+    files = [args.report, args.gate_log, *[f for f in (args.collected, args.extra_report) if f], MANUAL, PINS]
     files += [HERE / "v3_01_rulings_v13.py", REQUIREMENTS]
     shown = []
     for f in files:
@@ -262,6 +263,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--report", type=Path)
     parser.add_argument("--gate-log", type=Path)
     parser.add_argument("--collected", type=Path, help="collect-only REQ report of the same tree (all folders)")
+    parser.add_argument("--extra-report", type=Path, help="REQ report of an extra run; its outcomes replace the main's")
+    parser.add_argument("--note", default="", help="one paragraph on where the report and log come from")
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--self-test", action="store_true")
@@ -273,6 +276,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     pins = json.loads(PINS.read_text(encoding="utf-8"))
     report = json.loads(args.report.read_text(encoding="utf-8"))
+    if args.extra_report:
+        extra = {r["nodeid"]: r for r in json.loads(args.extra_report.read_text(encoding="utf-8"))}
+        report = [extra.pop(r["nodeid"], r) for r in report] + list(extra.values())
     log = args.gate_log.read_text(encoding="utf-8")
     gates = {i for line in log.splitlines() if line.startswith("PASS") for i in re.findall(r"\b[A-Z]{2}-\d{2}\b", line)}
     manual = json.loads(MANUAL.read_text(encoding="utf-8"))
@@ -286,7 +292,7 @@ def main(argv: list[str] | None = None) -> int:
     for req, _, _, status, notes, release in results:
         if notes or release != "no (passing test)":
             print(f"  {req}: {status}; release: {release}" + (f"; {'; '.join(notes)}" if notes else ""))
-    section = render(results, inputs_of(args))
+    section = render(results, inputs_of(args), args.note)
     text = RECORD.read_text(encoding="utf-8")
     head = text.split(MARKER)[0].rstrip("\n") + "\n\n"
     if args.check:

@@ -139,7 +139,7 @@ RULINGS: dict[str, Ruling] = {
         "(test_spiral_fillet_length.py l.122, l.137). The stated totals 362.6419 mm (CF-11, rho 0.5) and 150.1692 mm "
         "(CF-10, rho 1.0) are asserted nowhere, and CF-10 is not a case.",
         missing="Assert the filleted track length 362.6419 mm (CF-11, rho 0.5 mm) and 150.1692 mm (CF-10, rho 1.0 "
-        "mm) within 1e-6 relative, with rho_used read from the detail (gap F06-3, V3-01.md).",
+        "mm) within 1e-6 relative, with rho_used read from the detail.",
         kind="test",
         owner="Agent 3",
     ),
@@ -723,13 +723,14 @@ RULINGS: dict[str, Ruling] = {
         ),
     ),
     "REQ-T-08": Ruling(
-        "checks",
+        "partial",
         "Amended acceptance. A 0.4 delta trace flags R and eddy results with RANGE_SKIN_DEPTH and the flag travels to "
         "every result built from the resistances (test_skin_depth_validity_flag.py); UT-PHY-21 gives 5.328140, "
-        "4.208834 "
-        "and 5.788521 % within 0.1 pp at 0.5 mm chords and 0.005 pp at 0.1 mm; a case above 0.10 gets the CAP effect "
-        "(test_ut_phy_21_edge_kernel.py), which the status table maps to `unresolved` (test_status.py l.63, a REQ-T-03 "
-        "test).",
+        "4.208834 and 5.788521 % within 0.1 pp at 0.5 mm chords and 0.005 pp at 0.1 mm; a case above 0.10 gets the "
+        "CAP effect (test_ut_phy_21_edge_kernel.py, test_traceable.py l.73). That the badge then reads `unresolved` is "
+        "asserted by test_traceable_adr_0003_worked_example (e_edge 0.124) and test_status.py l.63, which carry "
+        "REQ-T-03 "
+        "and REQ-T-05, not REQ-T-08 (interfaces.md section 3.2).",
         (
             f"{U}/physics/test_skin_depth_validity_flag.py::test_t08_a_trace_of_0_4_skin_depths_flags_the_resistance_and_the_eddy_results",
             f"{U}/physics/test_skin_depth_validity_flag.py::test_t08_the_skin_depth_flag_travels_to_every_result_built_from_the_resistances",
@@ -737,6 +738,10 @@ RULINGS: dict[str, Ruling] = {
             f"{U}/physics/test_ut_phy_21_edge_kernel.py::test_short_magnets_cap_the_badge_and_a_15_mm_magnet_does_not",
             f"{TRACE}::test_traceable_ec05_below_cap_adds_one_sided_addon_and_limitation",
         ),
+        missing="Add REQ-T-08 to the marker of test_traceable.py::test_traceable_adr_0003_worked_example (no new "
+        "assertion).",
+        kind="test (marker)",
+        owner="Agent 3",
     ),
     "REQ-T-09": Ruling(
         "checks",
@@ -782,9 +787,10 @@ RULINGS: dict[str, Ruling] = {
         ),
     ),
     "REQ-T-14": Ruling(
-        "checks",
-        "A non-engine drawing carries 'Illustrative, not computed'; the stamp is in SVG, DXF, PDF and README "
-        "(test_stamp_fields.py t14); the on-screen drawing shows the stamp with version and design hash at the bottom "
+        "partial",
+        "A non-engine drawing carries 'Illustrative, not computed'; the PDF and README stamps carry REQ-T-14 "
+        "(test_report_readme_bundle.py, test_stamp_fields.py t14); the on-screen drawing shows the stamp with "
+        "version and design hash at the bottom "
         "left, at 4.5:1, and renames it for a new outcome (test_canvas_stamp.py, UI-32 b to d).",
         (
             f"{CHARTS}::test_ui32_a_drawing_not_from_the_engine_carries_the_illustrative_stamp",
@@ -793,6 +799,12 @@ RULINGS: dict[str, Ruling] = {
             f"{UI}/qt_shell/test_canvas_stamp.py::test_ui32c_the_stamp_is_painted_on_its_plate_and_its_text_reaches_4_5_to_1",
             f"{UI}/qt_shell/test_canvas_stamp.py::test_ui32d_a_stale_drawing_keeps_its_stamp_and_a_new_outcome_renames_it",
         ),
+        missing="The SVG and DXF stamp tests (test_svg.py::test_ut_io_06_svg_metadata_holds_the_stamp, "
+        "test_dxf.py::test_ut_io_06_dxf_header_comment_holds_the_stamp) and the project-JSON stamp tests carry "
+        "REQ-T-07 "
+        "only; add REQ-T-14 to their markers ('every export shall carry the version stamp and design hash').",
+        kind="test (marker)",
+        owner="Agent 3",
     ),
     "REQ-T-15": Ruling(
         "checks",
@@ -849,7 +861,8 @@ RULINGS: dict[str, Ruling] = {
     "REQ-L-04": Ruling(
         "checks",
         "Contrast check of both themes; every chrome token has R = G = B and the only saturated tokens are the three "
-        "phases and three statuses (test_theme_chrome_tokens.py, gap L-04 closed); greyscale mode in UI-27.",
+        "phases and three statuses (test_theme_chrome_tokens.py, gap L-04 closed): the greyscale test and the token "
+        "review of the chrome.",
         (
             f"{U}/ui/shell/test_contrast_check.py::test_ax01_ax09_every_pair_of_both_shipped_themes_passes",
             f"{U}/ui/shell/test_theme_chrome_tokens.py::test_every_chrome_token_has_equal_red_green_and_blue",

@@ -176,12 +176,22 @@ spiral examples have 0 screw rows, so its cells are `inferred` the same from the
 REQ-N-24 ("include it in its accessible description"); otherwise each cell gets an accessible description with the
 unit and the test covers both tables.
 
-## DEF-UV13-04 (REQ-F-08, F-10, F-12, F-14, must; low): the only test of a clause carries another row's marker
+## DEF-UV13-04 (REQ-F-08, F-10, F-12, F-14, T-08, T-14, must; low): the only test of a clause carries another row's marker
 
-interfaces.md section 3.2 lets an acceptance ruling cite only tests that carry the row's REQ marker. Four clauses are
-asserted only by a test marked for another row: Ke_LL in star and delta (CF-06, `test_kernels.py`, REQ-F-11), the
-default spiral packing within rule + 0.005 mm (UT-DRC-01, `test_spiral_generate.py::test_default_example_passes_drc`,
-REQ-F-05), the two-member circulating identity (CF-07, `test_closed_forms_m2e2.py`, REQ-F-11) and BV-05
-(`test_spiral_bounds.py`, REQ-F-19). Reproduce: `v3_01_rerule.py` prints "lacks the REQ-F-xx marker" when these are
-cited. Status `verified`. The rows keep other passing marked tests, so the release trace gate does not fail on them.
-Expected: add the four markers (owner Agent 3, no new assertion).
+interfaces.md section 3.2 lets an acceptance ruling cite only tests that carry the row's REQ marker. Six clauses are
+asserted only by tests marked for another row:
+
+- REQ-F-08: Ke_LL in star and delta, CF-06 (`test_kernels.py::test_cf06_star_and_delta_constants`, REQ-F-11).
+- REQ-F-10: the default spiral packs within rule + 0.005 mm, UT-DRC-01
+  (`test_spiral_generate.py::test_default_example_passes_drc`, REQ-F-05).
+- REQ-F-12: the two-member circulating identity, CF-07 (`test_closed_forms_m2e2.py`, REQ-F-11).
+- REQ-F-14: BV-05 (`test_spiral_bounds.py::test_requested_turns_above_the_turns_that_fit_are_refused_as_the_users_request`,
+  REQ-F-19).
+- REQ-T-08: the `unresolved` badge above e_edge 0.10 (`test_traceable.py::test_traceable_adr_0003_worked_example`,
+  REQ-T-03 and REQ-T-05).
+- REQ-T-14: the SVG, DXF and project-file stamps (`test_svg.py`, `test_dxf.py`, the t07 tests of `test_stamp_fields.py`,
+  `test_project_v2.py`; REQ-T-07 only).
+
+Reproduce: cite one of these tests in a `checks` ruling of its row; `v3_01_rerule.py` prints "lacks the REQ-x marker".
+Status `verified`. The rows keep other passing marked tests, so the release trace gate does not fail on them.
+Expected: add the six markers (owner Agent 3, no new assertion).

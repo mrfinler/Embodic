@@ -259,13 +259,6 @@
   "tests/unit/embodic_io/exporters/test_svg.py::test_ut_io_06_svg_metadata_holds_the_stamp": "fff674ccc51bd38b55a52db28c521b242cf120e0e14455b2aeacdadd0629c6b6",
   "tests/unit/embodic_io/project/test_project_v2.py::test_saved_project_names_the_engine_version_and_the_registry_version": "550c5eeaf10aa68810af0d974166118bf3947f5d850edf3bdab9ed5bd00fe561"
  },
- "REQ-T-08": {
-  "tests/unit/physics/test_skin_depth_validity_flag.py::test_t08_a_trace_of_0_4_skin_depths_flags_the_resistance_and_the_eddy_results": "fcf1ea6b51bade829f5817ff3ed7a2035f841ad6cd951029be26498427bd5f55",
-  "tests/unit/physics/test_skin_depth_validity_flag.py::test_t08_the_skin_depth_flag_travels_to_every_result_built_from_the_resistances": "fd3be003bab311451167f3f8c2180c4f8f211f3bbde145887a975d1d8b0df92d",
-  "tests/unit/physics/test_ut_phy_21_edge_kernel.py::test_edge_leakage_of_the_phase_1_segment_set_matches_the_registry_formula": "c31e76eb7cbc8f586cfcfe3eaa80f75c8df4445e46f585fd461abaf9ce71d137",
-  "tests/unit/physics/test_ut_phy_21_edge_kernel.py::test_short_magnets_cap_the_badge_and_a_15_mm_magnet_does_not": "b77d960e68b97dba2fa0b7880fc5ce538cc977bbff42a20d9bb4d48f8877156d",
-  "tests/unit/results/test_traceable.py::test_traceable_ec05_below_cap_adds_one_sided_addon_and_limitation": "b8b0ea36a7cfb147a300b889bb034121f0d057c179d47a018f02ab1c7c3f2c1c"
- },
  "REQ-T-09": {
   "tests/unit/base/test_tr01_release_gate.py::test_tr01_release_gate_fails_on_an_untested_must_row": "f4b330195a6740f22d4859e3690ff3a193208b46d27ed106d4a110f8f5d7ca8e",
   "tests/unit/base/test_trace_matrix.py::test_trace_matrix_reports_unmarked_tests_and_unknown_ids": "f830aa28e33b50ada37b59906b331aa8fc378f164585780ad4934ac2a94d1d25",
@@ -283,13 +276,6 @@
   "tests/unit/ui/results/test_disclosure_every_row.py::test_t13_every_input_line_names_where_the_value_came_from": "d5db62629634f123d2bb827f4dc0feb2cd5013b3de4502c7f0e238178632d566",
   "tests/unit/ui/results/test_disclosure_every_row.py::test_t13_every_row_has_the_six_sections_and_a_line_in_each": "5d272feaaeeba089fbd87f6def4c31ca8b78f56c73e1578bbfae425df9b82fcc",
   "tests/unit/ui/results/test_disclosure_every_row.py::test_t13_the_assumptions_section_counts_what_the_card_tag_counts": "aa11d2b48766fe9608c7471ab7da6c113218488d2412e5d926e83bbfdf1eb1c3"
- },
- "REQ-T-14": {
-  "tests/ui/qt_results/test_charts_compare_guide_export.py::test_ui32_a_drawing_not_from_the_engine_carries_the_illustrative_stamp": "e1e8a2aed0c02a043f6c15656efb2f70ae3a228e30a9fe508197afdadfdcc15a",
-  "tests/ui/qt_shell/test_canvas_stamp.py::test_ui32b_canvas_stamp_names_the_version_and_the_design_hash_at_the_bottom_left": "75800e76d538f24458fdbf9e0d049aaaa6c688679bb19505863aab52a9d9510c",
-  "tests/ui/qt_shell/test_canvas_stamp.py::test_ui32c_the_stamp_is_painted_on_its_plate_and_its_text_reaches_4_5_to_1": "d7b1bce1e5ad7fa3d84d7e465f57ae180ebad9a17a757f8feaca53562ab2b2b6",
-  "tests/ui/qt_shell/test_canvas_stamp.py::test_ui32d_a_stale_drawing_keeps_its_stamp_and_a_new_outcome_renames_it": "a658f8e82a634f7faa5d7b50567ee5d297bc6d860bb4605b797a64e4c1426047",
-  "tests/unit/embodic_io/exporters/test_stamp_fields.py::test_t14_readme_names_the_embodic_version_of_the_outcome": "a9f7dd2285eb72677a4230e3549411a9e9e23706d04fbe4020ad16ecebe47a4c"
  },
  "REQ-T-15": {
   "tests/unit/embodic_io/project/test_project.py::test_ut_io_07_stored_example_entry_that_disagrees_is_reported": "4176d95babc1924da57fedeba17931558f5521ed4a10c4afb9b7d9d2a0040e7e",
