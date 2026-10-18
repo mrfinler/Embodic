@@ -4,6 +4,7 @@ Rows N02-1 to N02-10 of docs/phase3/design/fix_wave_f1.md section (a). Field `pa
 """
 
 import dataclasses
+import itertools
 import time
 
 import pytest
@@ -315,20 +316,20 @@ def test_n02_10_keystroke_echo_when_a_preview_result_lands_and_typing_goes_on(op
     )
     field = focus_field(qtbot, window)
     type_keys(qtbot, field, "11.6")
-    gaps, last = [], [clock.elapsed()]
+    ticks = [clock.elapsed()]
     ticker = QTimer()
     ticker.setInterval(10)
-    ticker.timeout.connect(lambda: (gaps.append(clock.elapsed() - last[0]), last.__setitem__(0, clock.elapsed())))
+    ticker.timeout.connect(lambda: ticks.append(clock.elapsed()))
     ticker.start()
-    started = clock.elapsed()
     qtbot.waitUntil(lambda: bool(arrived), timeout=WAIT_TIMEOUT_MS)
     typing = clock.elapsed()
     type_keys(qtbot, field, "12345")
     qtbot.wait(100)
     ticker.stop()
+    gap, ended = max((after - before, after) for before, after in itertools.pairwise(ticks))
     print(
-        f"N02-10 largest GUI tick gap {max(gaps)} ms; window {started} to {clock.elapsed()} ms, keys from {typing} "
-        f"ms; results set (ms, r_inner): {arrived}"
+        f"N02-10 largest GUI tick gap {gap} ms; window {ticks[0]} to {ticks[-1]} ms, keys from {typing} ms, largest "
+        f"gap ends at {ended} ms; results set (ms, r_inner): {arrived}"
     )
     assert [r_inner for _, r_inner in arrived] == [11.6], "precondition: the preview result is set, before the keys"
-    assert max(gaps) <= 100
+    assert gap <= 100
