@@ -535,12 +535,13 @@ def analyse(
         "loss_circulating", p_circ, Unit.W, ("EQ-07",), [*emf_refs, *r_refs, speed], built_from=circulating_from
     )
     is_delta = connection is ConnectionTopology.DELTA
+    connection_refs = [inputs.field("/phases"), inputs.field("/connection/topology")]
     loss_delta_t = tr(  # star and open have no closed mesh, so 0 W is exact and built from nothing (A.6)
         "loss_delta_circulating",
         p_delta,
         Unit.W,
         ("EQ-19",),
-        [*emf_refs, *r_refs, speed] if is_delta else [],
+        [*emf_refs, *r_refs, speed] if is_delta else connection_refs,
         built_from=(phase_emf, *phase_r_op, interconnect_r) if is_delta else (),
     )
     is_open = connection is ConnectionTopology.OPEN
@@ -549,7 +550,7 @@ def analyse(
         p_ic,
         Unit.W,
         ("EQ-23",),
-        [] if is_open else loss_refs,
+        connection_refs if is_open else loss_refs,
         built_from=() if is_open else (interconnect_r, phase_current),
     )
     losses = (loss_copper_t, loss_eddy_t, loss_circulating_t, loss_delta_t, loss_ic_t)
