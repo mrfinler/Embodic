@@ -107,6 +107,10 @@ code for a topology with no generator, because no code path returns it (D-056e).
 `tools/sync_registry.py` regenerates the example project files after a registry change (D-056b). `checks/check_contract.py`
 runs `checks/issue_code_coverage.py` (D-056d).
 
+Revision 2026-10-17 (U-D22, claude-sonnet-5-5, D-057d; main eea9757 read for every item). §3 states that the chain of a
+result includes the chains of the intermediate results it uses (DEF-UE18-01). The statement is in the `traced`
+docstring and in a paragraph after it. No type, field or signature changes.
+
 ## 0. Rules for every public boundary
 
 - Lengths are millimetres (`_mm`), angles radians (`_rad`) inside the core, temperature °C (`_degc`), current A (`_a`),
@@ -1394,12 +1398,37 @@ def combine_status(*statuses: Status) -> Status: ...
 def traced(quantity: str, value: T, unit: Unit, *, eq_ids: Sequence[str], inputs: Sequence[InputRef],
            registry: Registry, validity: Sequence[ValidityFlag] = (), kind_tag: Literal["computed", "input", "derived",
            "count"] = "computed") -> Traceable[T]:
-    """Badge = weakest(equation status, test state, validity cap). Inputs build the tag only (D-007)."""
+    """Badge = weakest(equation status, test state, validity cap). Inputs build the tag only (D-007).
+
+    `eq_ids` is the whole chain. It holds the equations the result applies and the chains of the intermediate results it
+    uses (revision 2026-10-17, U-D22, D-057d).
+    """
 
 
 def format_value(t: Traceable[float], *, significant: int = 3) -> str:
     """Locale-independent, SI prefixes, U+2212 minus, U+00A0 before the unit (REQ-L-07, U-S4e ruling e1)."""
 ```
+
+Chain of a result (revision 2026-10-17, U-D22; D-057d, DEF-UE18-01). The chain of a result is the `eq_ids` that its
+`traced` call receives. A result's chain includes the chains of the intermediate results it uses. When `analyse()` forms
+a result from another result, the `eq_ids` of the new result hold the EQ-IDs of that intermediate result as well as the
+equations the new result applies itself. The registry field `result_badge_rule` and ADR-0003 decision 2 take the weakest
+evidence status over "every EQ in the chain" but do not say whether an intermediate result's equations belong to it.
+This paragraph says they do. A badge ignores any equation that a chain leaves out. `traced` also builds the
+equation-level assumptions of the assumed-inputs tag from `eq_ids` (`results/traceable.py` l.118), so a longer chain adds
+the equation-level assumptions of the added equations to the tag. The registry text is Agent 2's file and is not
+edited here.
+
+The code on main eea9757 does not follow the rule yet (`verified` by reading `src/embodic/physics/analyse.py`).
+`ke_phase_v_s_per_rad` lists EQ-06, EQ-07 and EQ-05 (l.439). `ke1` is its value (l.308), and `phase_constants(ke1, ...)`
+gives `ke_line`, `kt` and `kv` (l.311). Those three list only EQ-09 and EQ-06 (l.532 to l.538). `torque` lists the same two
+(l.562) and `output_power` lists EQ-26, EQ-09 and EQ-06 (l.571). ADR-0003 gives phase Ke, line Ke and torque the chain
+EQ-04, EQ-05, EQ-06, EQ-07 and EQ-09 in its worked example
+(`docs/phase1/architecture/decisions/ADR-0003-traceable-result-objects.md` l.72, `verified` by reading).
+`docs/phase3/engineering/fix_wave_f2.md` §A.5 ran the consequence (`verified` there, not re-run in this unit). Once OR-07
+passes, `kt`, `torque`, `kv`, `ke_line` and `output_power` would read `verified` while EQ-05 and EQ-07 are `inferred`.
+U-M8g fixes the chains in `analyse.py` (D-057d). Agent 3 adds the test of that section (Follow-up 1 there). It asserts
+that every Traceable whose `eq_ids` holds EQ-06 also holds EQ-05 and EQ-07.
 
 Result containers. Phase 1 `AnalysisResult` fields are kept; topology-specific geometry values move to the generator's
 detail record (§6).
