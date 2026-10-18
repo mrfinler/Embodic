@@ -7,7 +7,7 @@ and the badge come from the registry. Inputs build the tag and never the badge.
 import dataclasses
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Generic, Literal, TypeAlias, TypeVar
+from typing import Generic, Literal, Protocol, TypeAlias, TypeVar
 
 from embodic.model.fields import FieldKind
 from embodic.model.provenance import Provenance
@@ -30,6 +30,32 @@ KindTag: TypeAlias = Literal["computed", "input", "derived", "count"]
 AssumedReason: TypeAlias = Literal["example", "unmeasured_property", "registry_constant", "equation_assumption"]
 CONSTANT_PREFIX = "constant:"
 RESULT_PREFIX = "result:"
+
+
+class Chained(Protocol):
+    """Anything a result can be built from: a Traceable, or an Intermediate for a value that is not reported."""
+
+    @property
+    def eq_ids(self) -> tuple[str, ...]:
+        """Return the chain: own equations first, then the chains of what it was built from."""
+        ...
+
+
+@dataclass(frozen=True, slots=True)
+class Intermediate:
+    """The chain of a value a result is built from that is not a Traceable, such as a flux-linkage array."""
+
+    eq_ids: tuple[str, ...]
+
+
+def chain(eq_ids: Sequence[str], built_from: Sequence[Chained]) -> tuple[str, ...]:
+    """Return own EQ-IDs first, then each source's chain in order, each EQ-ID once (interfaces.md, result chain)."""
+    return tuple(dict.fromkeys([*eq_ids, *(eq_id for source in built_from for eq_id in source.eq_ids)]))
+
+
+def intermediate(*eq_ids: str, built_from: Sequence[Chained] = ()) -> Intermediate:
+    """Name the equations of an unreported value once, where it is produced, for every result built from it."""
+    return Intermediate(chain(eq_ids, built_from))
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -104,23 +130,26 @@ def traced(
     registry: Registry,
     validity: Sequence[ValidityFlag] = (),
     kind_tag: KindTag = "computed",
+    built_from: Sequence[Chained] = (),
 ) -> Traceable[T]:
     """Badge = weakest(equation status, test state, validity cap). Inputs build the tag only (D-007).
 
-    The first EQ-ID is the result's own equation and gives the tolerance; the rest are its chain. `inputs` lists every
-    input the calculation used, including those reached through intermediate results, because the tag of a result
-    covers its whole chain (ADR-0003 decision 3).
+    `eq_ids` are the result's own equations; the first gives the tolerance. The chain appends the chain of every
+    result or intermediate in `built_from`, so the badge covers what the value was computed from (D-058d). `inputs`
+    lists every input the calculation used, including those reached through intermediate results, because the tag of
+    a result covers its whole chain (ADR-0003 decision 3).
     """
     if kind_tag == "computed" and not eq_ids:
         raise ValueError(f"computed result {quantity!r} needs at least one EQ-ID")
-    entries = [registry.equation(eq_id) for eq_id in eq_ids]
+    full_chain = chain(eq_ids, built_from)
+    entries = [registry.equation(eq_id) for eq_id in full_chain]
     status, reasons = derive_badge([_link(e, registry) for e in entries], validity)
     assumptions = _unique_assumptions(entries, validity)
     return Traceable(
         quantity=quantity,
         value=value,
         unit=unit,
-        eq_ids=tuple(eq_ids),
+        eq_ids=full_chain,
         evidence_ids=tuple(dict.fromkeys(ev for e in entries for ev in e.sources)),
         kind_tag=kind_tag,
         assumptions=assumptions,

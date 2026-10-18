@@ -9,7 +9,7 @@ from embodic.model.fields import FieldKind
 from embodic.model.provenance import Provenance
 from embodic.results.registry import Registry, parse_registry
 from embodic.results.status import MetricBound, Status, ValidityEffect
-from embodic.results.traceable import InputRef, evaluate_validity, traced, traced_validity_metric
+from embodic.results.traceable import InputRef, evaluate_validity, intermediate, traced, traced_validity_metric
 from embodic.units import Unit
 
 THICKNESS = "/stackup/layers/0/thickness_mm"
@@ -193,3 +193,46 @@ def test_traceable_is_frozen(packaged):
     result = traced("q", 1.0, Unit.ONE, eq_ids=["EQ-01"], inputs=[], registry=packaged)
     with pytest.raises(dataclasses.FrozenInstanceError):
         result.status = Status.VERIFIED
+
+
+def _ke(registry: Registry):
+    """Return a phase Ke whose chain is the field model, the flux linkage and the phase assembly."""
+    return traced("ke_phase", 1.0, Unit.V_S_PER_RAD, eq_ids=("EQ-06", "EQ-07", "EQ-05"), inputs=(), registry=registry)
+
+
+@pytest.mark.req("REQ-T-05")
+def test_traced_chain_is_own_equations_then_each_input_chain_once(packaged):
+    """Catches DEF-UE18-01 by construction: a result built from Ke that drops Ke's equations or lists one twice."""
+    resistance = traced("r", 1.0, Unit.OHM, eq_ids=("EQ-10", "EQ-11"), inputs=(), registry=packaged)
+    km = traced(
+        "km",
+        1.0,
+        Unit.ONE,
+        eq_ids=("EQ-26", "EQ-10"),
+        inputs=(),
+        registry=packaged,
+        built_from=(_ke(packaged), resistance),
+    )
+    assert km.eq_ids == ("EQ-26", "EQ-10", "EQ-06", "EQ-07", "EQ-05", "EQ-11")
+
+
+@pytest.mark.req("REQ-T-05")
+def test_traced_badge_takes_the_weakest_equation_of_an_input_chain(packaged):
+    """Catches a `verified` Kt whose Ke rests on the `inferred` field model (fix_wave_f2.md A.5, V3)."""
+    registry = with_all_tests_passed(packaged)
+    alone = traced("kt", 1.0, Unit.N_M_PER_A, eq_ids=("EQ-09",), inputs=(), registry=registry)
+    built = traced(
+        "kt", 1.0, Unit.N_M_PER_A, eq_ids=("EQ-09",), inputs=(), registry=registry, built_from=(_ke(registry),)
+    )
+    assert (alone.status, built.status) == (Status.VERIFIED, Status.INFERRED)
+
+
+@pytest.mark.req("REQ-T-05")
+def test_intermediate_names_its_equations_once_for_every_result_built_from_it(packaged):
+    """Catches an unreported intermediate (a flux-linkage array, a phasor) whose equations a result fails to inherit."""
+    field = intermediate("EQ-05", "EQ-04")
+    flux = intermediate("EQ-06", built_from=(field,))
+    emf = intermediate("EQ-07", built_from=(flux,))
+    ke = traced("ke_phase", 1.0, Unit.V_S_PER_RAD, eq_ids=("EQ-06",), inputs=(), registry=packaged, built_from=(emf,))
+    assert emf.eq_ids == ("EQ-07", "EQ-06", "EQ-05", "EQ-04")
+    assert ke.eq_ids == ("EQ-06", "EQ-07", "EQ-05", "EQ-04")
