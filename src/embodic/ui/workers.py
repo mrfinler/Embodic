@@ -32,7 +32,7 @@ class _Job(QRunnable):
         try:
             worker = self._worker
             outcome = worker.compute_fn(request.design, request.provenance, cache=worker.cache, cancel=self._cancel)
-            ready = None if outcome is None or self._cancel.cancelled else ready_state(outcome)
+            ready = None if outcome is None or self._cancel.cancelled else ready_state(outcome, self._cancel)
         except Exception:
             correlation_id = uuid.uuid4().hex[:12]
             logger.exception("compute request %d failed", request.request_id, extra={"correlation_id": correlation_id})
