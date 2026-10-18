@@ -45,7 +45,8 @@
   "v1.0 rev. U-E12 (2026-10-16, D-049 d): EQ-14 is the one 'cannot verify yet' entry without an Xcoil port. embodic implements form (a) (src/embodic/physics/estimates.py inductance_estimate_h, called from analyse.py l.408); the current-sheet functions move to replaced_functions; EQT-14-GR is withdrawn (nothing to compare) and EQT-14-CF12 (oracle_cases.json CF-12) checks the code against the form (a) formula. The status stays unresolved and the label estimate",
   "v1.0 rev. U-E14 (2026-10-17, DEF-UV8-05, REQ-L-03): the equation guide shows `name` and `formula` (src/embodic/ui/viewmodels/results.py l.736 to l.737, disclosure l.226) but not `source_notes`. The program name moves from the formula of EQ-14, EQ-20 and EQ-27 to their source_notes. The mathematics, status, gate and tests of each entry are unchanged; docs/phase3/engineering/checks/guide_name_scan.py lists displayed texts that name Xcoil",
   "v1.0 rev. U-E15 (2026-10-17, U-S9 T10-6, REQ-T-10, D-051 a): the EQ-30 `name` reads 'DRC clearance computation and acceptance'. embodic computes the clearance from the layout geometry and measures nothing; `measured` is kept for a provenance with a named source (D-007). The formula, status, gate and tests of EQ-30 are unchanged",
-  "v1.0 rev. U-E18 (2026-10-17, D-056 a, fix wave F2): EQ-06 status verified -> inferred. Its tests stay EQT-06-GR, -CF02, -CF03, -O1 and -O2; EQT-06-O2 is carried only by OR-07, a strict xfail while F-OR07 is open, and an equation is not verified by a case that fails. EQ-06 returns to verified when OR-07 passes on a build that matches D09 (eqt_map_review.md section d). EQ-22 is unchanged: EQT-22-GR is carried by tests/golden/m2_physics/test_gr_f11_mass_thermal_current.py, added after 0.0.1. EQ-17 variables P_loss and A_board and the EC-05 consequences_basis text follow fix_wave_f1.md Follow-up 1. Rulings: docs/phase3/engineering/fix_wave_f2.md"
+  "v1.0 rev. U-E18 (2026-10-17, D-056 a, fix wave F2): EQ-06 status verified -> inferred. Its tests stay EQT-06-GR, -CF02, -CF03, -O1 and -O2; EQT-06-O2 is carried only by OR-07, a strict xfail while F-OR07 is open, and an equation is not verified by a case that fails. EQ-06 returns to verified when OR-07 passes on a build that matches D09 (eqt_map_review.md section d). EQ-22 is unchanged: EQT-22-GR is carried by tests/golden/m2_physics/test_gr_f11_mass_thermal_current.py, added after 0.0.1. EQ-17 variables P_loss and A_board and the EC-05 consequences_basis text follow fix_wave_f1.md Follow-up 1. Rulings: docs/phase3/engineering/fix_wave_f2.md",
+  "v1.0 rev. U-E22 (2026-10-18, D-062 b and c, fix wave F8): EQ-08 formula: 'balance =' becomes 'symmetric 3-phase pattern (a property of the coil pattern only) =' (F-UV14-01, D-051 b); the arithmetic is unchanged. EQ-27: the formula states Ke1 as the three-phase mean, the ideal as the three-phase mean of each phase's conductor sum at the conductor's z, and what one series conductor is; variables Ke1, c and z_c added; one change added (serpentine is not Xcoil's phase-A kw1, and what EQT-27-GR compares per topology). The numbers embodic computes are unchanged. Rulings: docs/phase3/engineering/fix_wave_f8.md"
  ],
  "golden_tolerance_default": "relative 1e-9 vs Xcoil engine.js at function level, same inputs, Xcoil-compatible constants injected",
  "fields_added_in_v1": {
@@ -915,7 +916,7 @@
   {
    "id": "EQ-08",
    "name": "Winding factor of concentrated (spiral) coils and phase assignment",
-   "formula": "alpha_k = p*theta_k; 60-degree belts A+, -C, B+, -A, C+, -B; k_d,n = |sum_{k in A} s_k*exp(j*n*alpha_k)|/N_A; k_p,n = |sin(n*p*sigma/2)|; k_w,n = k_d,n*k_p,n; feasibility Q/(m*t) integer, t = gcd(Q,p); spiral average k_p,avg,n = (1/N)*sum_t |sin(n*p*sigma_t/2)|; exact belts: a_k = 12 (k p mod Q) in units of 360/(12 Q) deg; belt = floor((a_k + Q)/(2 Q)) mod 6 (half-open belts); balance = signed angle sets of B and C equal those of A shifted by 4Q and 8Q units",
+   "formula": "alpha_k = p*theta_k; 60-degree belts A+, -C, B+, -A, C+, -B; k_d,n = |sum_{k in A} s_k*exp(j*n*alpha_k)|/N_A; k_p,n = |sin(n*p*sigma/2)|; k_w,n = k_d,n*k_p,n; feasibility Q/(m*t) integer, t = gcd(Q,p); spiral average k_p,avg,n = (1/N)*sum_t |sin(n*p*sigma_t/2)|; exact belts: a_k = 12 (k p mod Q) in units of 360/(12 Q) deg; belt = floor((a_k + Q)/(2 Q)) mod 6 (half-open belts); symmetric 3-phase pattern (a property of the coil pattern only) = signed angle sets of B and C equal those of A shifted by 4Q and 8Q units",
    "variables": [
     {
      "symbol": "theta_k",
@@ -2641,12 +2642,27 @@
   {
    "id": "EQ-27",
    "name": "Numerical utilisation factor and analytic distribution factor",
-   "formula": "k_u = Ke1 / (sum over series conductors of integral B_z1 r dr over the magnet span); serpentine k_d = sin(N gamma/2)/(N sin(gamma/2)), gamma = p d_alpha (radial) or p (w + s)/r_mean (parallel); wave k_d = |sum_i w_i e^{j gamma (i - (q-1)/2)}| / sum_i w_i, w_0 = 2p - 1, w_i = 2p",
+   "formula": "k_u = Ke1 / ((1/m) sum over phases of sum over the series conductors c of the phase of integral B_z1(r, z_c) r dr over the magnet span), Ke1 = (1/m) sum over phases of Ke_1 of the phase; a series conductor is one radial side of the series path, counted once also where it covers part of the span; serpentine k_d = sin(N gamma/2)/(N sin(gamma/2)), gamma = p d_alpha (radial) or p (w + s)/r_mean (parallel); wave k_d = |sum_i w_i e^{j gamma (i - (q-1)/2)}| / sum_i w_i, w_0 = 2p - 1, w_i = 2p",
    "variables": [
     {
      "symbol": "k_u",
      "unit": "1",
      "meaning": "utilisation factor (numeric)"
+    },
+    {
+     "symbol": "Ke1",
+     "unit": "V*s/rad",
+     "meaning": "mean over the m phases of the fundamental phase EMF constant (EQ-06 Ke_n, n = 1; EQ-09 Ke_ph)"
+    },
+    {
+     "symbol": "c",
+     "unit": "1",
+     "meaning": "series conductor: one radial side (PrimitiveRole.SIDE) of the phase's series path; members of a parallel group count once (sides / parallel members)"
+    },
+    {
+     "symbol": "z_c",
+     "unit": "mm",
+     "meaning": "copper z of conductor c; B_z1 is evaluated at z_c + air gap"
     },
     {
      "symbol": "k_d",
@@ -2658,13 +2674,14 @@
     "EV-59",
     "EV-26"
    ],
-   "source_notes": "D15 eq. 6 p.7 (average of per-turn factors); D04 eq. 1 p.5 (distribution factor); engine.js analyze 975-986, analyzeWave 2073-2077; k_u is the quantity Xcoil engine.js names 'kw1' (analyze l.983; moved out of the formula, revision 2026-10-17, U-E14)",
+   "source_notes": "D15 eq. 6 p.7 (average of per-turn factors); D04 eq. 1 p.5 (distribution factor); engine.js analyze 975-986, analyzeWave 2073-2077; k_u is the quantity Xcoil engine.js names 'kw1' (analyze l.983; moved out of the formula, revision 2026-10-17, U-E14); Xcoil's conductor counts: computeSector l.2478 (coilsPerPhase*4*N), analyzeWave l.2083 (nElements), analyze l.1013 (Nt*series layers*poles); rulings per topology: docs/phase3/engineering/fix_wave_f8.md",
    "gate_verdict": "reuse with change",
    "status": "inferred",
    "changes": [
     "rename Xcoil 'kw1' to utilisation factor k_u (it includes radial field variation and end effects)",
     "label the parallel-style serpentine k_d as a mean-radius approximation",
-    "spiral: k_w from EQ-08, not from kdAnalytic"
+    "spiral: k_w from EQ-08, not from kdAnalytic",
+    "serpentine: k_u is the three-phase ratio of the formula; analyze l.983 divides phase A's Ke (phases[0]) by the ideal of phase A's own layers, a per-phase value that depends on which phase is A and is not ported (fix_wave_f8.md, ruling S); EQT-27-GR compares at 1e-9 with Xcoil kw1 on spiral (analyzeElements l.1892) and wave (analyzeWave l.2083), and on serpentine with the formula assembled from Xcoil's Ke1 and analyze's ideal integral (l.977-981) per copper layer"
    ],
    "tolerance": {
     "value": "golden 1e-9",
