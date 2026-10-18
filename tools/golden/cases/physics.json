@@ -514,6 +514,52 @@
       }
     },
     {
+      "id": "utilisation-factor-sector-default",
+      "fn": "utilisationFactor",
+      "note": "EQ-27 k_u of the sector-default layout: ku is Xcoil kw1 (analyzeElements, 64 series conductors); same params as analysis-sector-default",
+      "tags": [
+        "utilisation-factor",
+        "sector",
+        "eq-27"
+      ],
+      "inputs": {
+        "params": {
+          "topology": "sector"
+        }
+      }
+    },
+    {
+      "id": "utilisation-factor-serpentine-default",
+      "fn": "utilisationFactor",
+      "note": "EQ-27 k_u of the serpentine-default layout: ku is the three-phase ratio Ke1 over the all-layer mean ideal integral times conductorsPerPhase, built from Xcoil's parts; kw1 is Xcoil analyze, phase A only (fix_wave_f8.md A.4); same params as analysis-serpentine-default",
+      "tags": [
+        "utilisation-factor",
+        "serpentine",
+        "eq-27"
+      ],
+      "inputs": {
+        "params": {
+          "topology": "serpentine"
+        }
+      }
+    },
+    {
+      "id": "utilisation-factor-wave-turns-2",
+      "fn": "utilisationFactor",
+      "note": "EQ-27 k_u of the wave-turns-2 layout: ku is Xcoil kw1 (analyzeWave); same params as analysis-wave-turns-2",
+      "tags": [
+        "utilisation-factor",
+        "wave",
+        "eq-27"
+      ],
+      "inputs": {
+        "params": {
+          "topology": "wave",
+          "turns": 2
+        }
+      }
+    },
+    {
       "id": "drive-sector-default",
       "fn": "driveAnalysis",
       "note": "Xcoil sector torque-speed curve from compute() (SVPWM, star)",

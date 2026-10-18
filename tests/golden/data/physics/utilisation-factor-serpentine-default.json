@@ -1,0 +1,18 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "params": {"topology": "serpentine"}
+      },
+      "output": {"Ke1": 0.06426723542757902, "conductorsPerPhase": 128, "ku": 0.9839891500273656, "kw1": 0.9839828630939396}
+    }
+  ],
+  "case_id": "utilisation-factor-serpentine-default",
+  "eq_ids": [],
+  "fn": "utilisationFactor",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "EQ-27 k_u of the serpentine-default layout: ku is the three-phase ratio Ke1 over the all-layer mean ideal integral times conductorsPerPhase, built from Xcoil's parts; kw1 is Xcoil analyze, phase A only (fix_wave_f8.md A.4); same params as analysis-serpentine-default",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["utilisation-factor", "serpentine", "eq-27"]
+}

@@ -50,6 +50,38 @@ function analysisOf(E, params) {
   };
 }
 
+// EQ-27 k_u. Xcoil names the ratio `kw1`: analyze (serpentine, l.983), analyzeElements (sector and overlap wave, l.1892)
+// and analyzeWave (wave, l.2083) compute it. Sector and wave give EQ-27 as `kw1`. analyze divides phase A's Ke by phase
+// A's layers, which is not the three-phase ratio of EQ-27 (fix_wave_f8.md A.4), so serpentine `ku` is rebuilt from
+// Xcoil's own parts: the phase-mean Ke1 over the mean 200-point ideal integral of every layer times the series
+// conductor count. `kw1` stays in the output as Xcoil reports it.
+const IDEAL_STEPS = 200;
+
+function idealIntegral(E, p, F, z) {
+  const rA = p.magnetRIn;
+  const rB = p.magnetROut;
+  let sum = 0;
+  for (let i = 0; i < IDEAL_STEPS; i++) {
+    const r = rA + ((rB - rA) * (i + 0.5)) / IDEAL_STEPS;
+    sum += (E.fieldHarmonic(1, r, z + p.airgap, F).Bz * r * (rB - rA)) / IDEAL_STEPS;
+  }
+  return sum;
+}
+
+function utilisationFactorOf(E, params) {
+  const r = E.compute(params);
+  if (!r.ok || !r.analysis) throw new Error(`Xcoil compute failed: ${JSON.stringify(r.errors)}`);
+  const a = r.analysis;
+  let ku = a.kw1;
+  if (r.params.topology === 'serpentine') {
+    const F = E.fieldSetup(E.derive(r.params), r.layout);
+    const ideals = r.layout.layers.map((L) => idealIntegral(E, r.params, F, L.z));
+    const idealMean = ideals.reduce((acc, v) => acc + v, 0) / ideals.length;
+    ku = (a.Ke1 * 1e6) / (idealMean * a.conductorsPerPhase);
+  }
+  return { kw1: a.kw1, ku, conductorsPerPhase: a.conductorsPerPhase, Ke1: a.Ke1 };
+}
+
 // What interconnectResistance (engine.js l.1361-1372) reads to sort one interconnect item into lineStub, link or
 // neutralRing. `first` is the first primitive, so a reader can find the item among the layout's objects of its layer.
 function icItemOf(it) {
@@ -120,6 +152,7 @@ export const FUNCTIONS = {
     },
   },
   computeAnalysis: { required: ['params'], run: (E, x) => analysisOf(E, x.params) },
+  utilisationFactor: { required: ['params'], run: (E, x) => utilisationFactorOf(E, x.params) },
   driveAnalysis: { required: ['params'], run: (E, x) => driveOf(E, x.params) },
   torqueSpeed: {
     required: ['p', 'an', 'ind'],

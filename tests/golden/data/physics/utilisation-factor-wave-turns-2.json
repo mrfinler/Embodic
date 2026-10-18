@@ -1,0 +1,18 @@
+{
+  "calls": [
+    {
+      "inputs": {
+        "params": {"topology": "wave", "turns": 2}
+      },
+      "output": {"Ke1": 0.0308795907787231, "conductorsPerPhase": 62, "ku": 0.9659535052408438, "kw1": 0.9659535052408438}
+    }
+  ],
+  "case_id": "utilisation-factor-wave-turns-2",
+  "eq_ids": [],
+  "fn": "utilisationFactor",
+  "format": "embodic.golden-case",
+  "format_version": 1,
+  "note": "EQ-27 k_u of the wave-turns-2 layout: ku is Xcoil kw1 (analyzeWave); same params as analysis-wave-turns-2",
+  "producer": {"engine_sha256": "3e06593664f3611ab4629803f307a2f336f1b2ac9e1d20d02e2c235d2b30c7f8", "name": "xcoil-v3", "runtime": "node v22.22.2"},
+  "tags": ["utilisation-factor", "wave", "eq-27"]
+}
