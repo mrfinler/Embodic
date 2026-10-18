@@ -42,7 +42,7 @@ from embodic.model.provenance import (
 from embodic.model.provenance import mark_measured as mark_design_measured
 from embodic.model.schema import JsonValue, ValueType, flatten, pattern_of, to_json
 from embodic.model.stackup import generate_even_stackup
-from embodic.model.validate import even_stackup_issues, issue, validate_design
+from embodic.model.validate import board_thickness_range_issues, even_stackup_issues, issue, validate_design
 from embodic.model.vocabulary import TopologyKind
 from embodic.model.winding_specs import SpiralWindingSpec
 from embodic.outcome import ComputeOutcome
@@ -1025,14 +1025,20 @@ class DesignSession:
     def set_stackup_input(self, name: StackupInput, value: float | None) -> None:
         """Enter one generator input; once all three hold a value, write `/stackup/layers` as one undoable edit.
 
-        A board not thicker than its copper writes nothing and sets `stackup_issues` instead (D-053a).
+        A board outside the supported range (D-059d) or not thicker than its copper (D-053a) writes nothing and sets
+        `stackup_issues` instead.
         """
         self._stackup_pending[name] = value
         inputs = self.stackup_inputs()
         if inputs.copper_count is None or inputs.copper_oz is None or inputs.board_thickness_mm is None:
             return
         copper_mm = copper_oz_to_mm(inputs.copper_oz)
-        self.stackup_issues.set(even_stackup_issues(inputs.copper_count, copper_mm, inputs.board_thickness_mm))
+        self.stackup_issues.set(
+            (
+                *board_thickness_range_issues(inputs.board_thickness_mm),
+                *even_stackup_issues(inputs.copper_count, copper_mm, inputs.board_thickness_mm),
+            )
+        )
         if self.stackup_issues.value:
             return
         stackup = generate_even_stackup(inputs.copper_count, copper_mm, inputs.board_thickness_mm)
