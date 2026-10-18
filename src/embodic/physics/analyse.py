@@ -543,13 +543,14 @@ def analyse(
         [*emf_refs, *r_refs, speed] if is_delta else [],
         built_from=(phase_emf, *phase_r_op, interconnect_r) if is_delta else (),
     )
+    is_open = connection is ConnectionTopology.OPEN
     loss_ic_t = tr(  # open: 0 W, a constant of the connection (A.6)
         "loss_interconnect",
         p_ic,
         Unit.W,
         ("EQ-23",),
-        loss_refs,
-        built_from=() if connection is ConnectionTopology.OPEN else (interconnect_r, phase_current),
+        [] if is_open else loss_refs,
+        built_from=() if is_open else (interconnect_r, phase_current),
     )
     losses = (loss_copper_t, loss_eddy_t, loss_circulating_t, loss_delta_t, loss_ic_t)
     loss_total_t = tr("loss_total", loss_total, Unit.W, ("EQ-26",), sum_refs, built_from=losses)
@@ -558,7 +559,6 @@ def analyse(
     if op.dc_link_v is not None and ke1 > 0.0:
         drive_refs = [*emf_refs, *r_refs, current, inputs.field("/operating/dc_link_v")]
         drive_refs.append(inputs.field("/operating/modulation"))
-        is_open = connection is ConnectionTopology.OPEN
         ke_line = constants.ke_line_v_s_per_rad  # open: Ke_LL = Ke_ph (EQ-09), so both cases start from the line Ke
         ke_equivalent = ke_line if is_open else ke_line / math.sqrt(3.0)
         speed_rpm, curve_torque_n_m = torque_speed_envelope(

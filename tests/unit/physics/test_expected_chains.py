@@ -14,6 +14,8 @@ import pytest
 from embodic.api import compute
 from embodic.io.examples import load_example
 from embodic.io.project import project_from_example, project_provenance
+from embodic.model.provenance import derive_provenance
+from embodic.model.vocabulary import ConnectionTopology
 from embodic.results import AnalysisResult, Registry, Status, Traceable, load_registry
 
 pytestmark = pytest.mark.req("REQ-T-05")
@@ -207,3 +209,25 @@ def test_a_layer_z_is_derived_with_no_equation_and_not_tested() -> None:
         for layer in _analysis(D08, registry).layers:
             t = layer.z_mm
             assert (t.kind_tag, t.eq_ids, t.validity, t.status) == ("derived", (), (), Status.NOT_TESTED)
+
+
+@pytest.mark.parametrize(
+    ("topology", "delta_chain", "interconnect_chain"),
+    [
+        (ConnectionTopology.DELTA, ("19", "07", "06", "05", "10", "11", "23"), ("23", "10", "09")),
+        (ConnectionTopology.OPEN, ("19",), ("23",)),
+    ],
+)
+def test_the_d08_winding_in_delta_and_open_takes_the_a6_chains(topology, delta_chain, interconnect_chain) -> None:
+    """Defect caught: DEF-UE20-03 and -05 beyond star, e.g. an open 0 W interconnect loss with the resistance chain.
+
+    fix_wave_f4.md A.6: a value that is a constant of the connection takes its own EQ-ID and nothing else.
+    """
+    ref, design = load_example(D08)
+    design = dataclasses.replace(design, connection=dataclasses.replace(design.connection, topology=topology))
+    outcome = compute(design, derive_provenance(design, (ref, design), []))
+    assert outcome is not None and outcome.analysis is not None
+    p_delta, p_ic = outcome.analysis.loss_delta_circulating_w, outcome.analysis.loss_interconnect_w
+    assert (_short(p_delta.eq_ids), _short(p_ic.eq_ids)) == (delta_chain, interconnect_chain)
+    assert [f.code for f in p_delta.validity] == (["EC-05"] if topology is ConnectionTopology.DELTA else [])
+    assert p_delta.label == "upper bound"
