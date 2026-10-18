@@ -1,8 +1,8 @@
-Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5; section 14a row `ts-section-board` and rulings i, j: claude-sonnet-5-5 (U-S4f); section 5 Messages cells of the three stack-up helper rows: claude-sonnet-5-5 (U-S14)
+Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5; section 14a row `ts-section-board` and rulings i, j: claude-sonnet-5-5 (U-S4f); section 5 Messages cells of the three stack-up helper rows: claude-sonnet-5-5 (U-S14); section 14a row `results-computing-veil`: claude-sonnet-5-5 (U-S15)
 
 # embodic screens v2.3 (Phase 2, PySide6)
 
-Date 2026-10-08, revised 2026-10-18 (U-S13): `preview-timer` declared in 14a, which now admits non-visual objects; the
+Date 2026-10-08, revised 2026-10-19 (U-S15, D-066b): `results-computing-veil` declared in 14a. Revised 2026-10-18 (U-S13): `preview-timer` declared in 14a, which now admits non-visual objects; the
 stack-up helper rows give their step bounds; the stepping convention takes the rule 4 correction. All three follow
 `docs/phase3/design/fix_wave_f3.md` sections (a) to (c). Revised 2026-10-18 (U-S14, D-060b): the Messages cells of
 `param-copper-weight`, `param-board-thickness` and `param-board-thickness-error` name the range issues they show. Revised 2026-10-17 (U-S12): field-row layout, `param-stack-mode`, the screw buttons and numeric
@@ -485,6 +485,7 @@ rename.
 | `btn-results-first-missing` | Its "Go to first missing field" button (section 6) | declared |
 | `results-scroll` | Scroll area of the result card grid (section 6) | declared |
 | `results-stale` | Stamp "Last valid results" (section 6) | declared |
+| `results-computing-veil` | Overlay on the viewport of `results-scroll` while a compute runs (section 6; set by U-M8n). It shows 300 ms after the compute starts and hides when the compute ends. It covers the cards in view with `bg-app` of the active theme at 40 % opacity, so that their values read at 60 %. It replaces the opacity dim of the card grid. It draws no text or icon, sets no accessible name, and lets mouse events through to the cards. (revision 2026-10-19, U-S15; D-066b) | declared |
 | `drc-summary-icon` | `check-*` glyph of `drc-summary` | declared |
 | `drc-truncated` | Hint under `drc-table` when the list is cut | declared |
 | `compare-caption`, `compare-empty` | Caption and empty sentence of `tab-compare` (section 10) | declared |
