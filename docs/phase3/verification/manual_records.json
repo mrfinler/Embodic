@@ -2,43 +2,29 @@
  {
   "req": "REQ-N-07",
   "test_id": "PK-06",
-  "record": "tests/independent/m5/records/PK-06_walkthrough.md",
-  "embodic_version": "0.0.1",
+  "record": "tests/independent/m5/records/PK-06_walkthrough_c0f4894.md",
+  "embodic_version": "0.0.1 (main c0f4894)",
   "result": "passed"
- },
- {
-  "req": "REQ-N-07",
-  "test_id": "PK-06",
-  "record": "docs/phase3/fable/windows_campaign_w1.md",
-  "embodic_version": "0.0.1",
-  "result": "passed"
- },
- {
-  "req": "REQ-N-07",
-  "test_id": "PK-06",
-  "record": "docs/phase3/fable/windows_campaign_w1.md",
-  "embodic_version": "0.0.1",
-  "result": "failed"
  },
  {
   "req": "REQ-N-14",
   "test_id": "AX-05",
-  "record": "tests/independent/m4/records/AX-05.md",
-  "embodic_version": "0.0.1",
+  "record": "tests/independent/m4/records/AX-05_c0f4894.md",
+  "embodic_version": "0.0.1 (main c0f4894)",
   "result": "passed"
  },
  {
   "req": "REQ-F-11",
   "test_id": "OR-11",
-  "record": "tests/independent/m6/records/OR-11_OR-12.md",
-  "embodic_version": "0.0.1",
+  "record": "tests/independent/m6/records/OR-11_OR-12_c0f4894.md",
+  "embodic_version": "0.0.1 (main c0f4894)",
   "result": "passed"
  },
  {
   "req": "REQ-F-11",
   "test_id": "OR-12",
-  "record": "tests/independent/m6/records/OR-11_OR-12.md",
-  "embodic_version": "0.0.1",
+  "record": "tests/independent/m6/records/OR-11_OR-12_c0f4894.md",
+  "embodic_version": "0.0.1 (main c0f4894)",
   "result": "passed"
  },
  {
@@ -46,6 +32,13 @@
   "test_id": "LG-01",
   "record": "tests/independent/m4/records/LG-01_word_review.md",
   "embodic_version": "0.0.1",
+  "result": "passed"
+ },
+ {
+  "req": "REQ-T-11",
+  "test_id": "LG-04",
+  "record": "tests/independent/m4/records/LG-04_T-11_reviewer.md",
+  "embodic_version": "0.0.1 (main c0f4894)",
   "result": "passed"
  }
 ]
