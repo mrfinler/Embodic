@@ -4,6 +4,7 @@ import zipfile
 
 import pytest
 
+import embodic
 from embodic.io.exporters import ExportKind, ExportRefused
 from embodic.ui.viewmodels.export import (
     BUNDLE,
@@ -68,7 +69,7 @@ def test_checklist_states_stamp_drc_staleness_and_assumption_count(d08, wave):
     """Catches a checklist that hides a failed DRC, a stale result or the assumptions."""
     items = {i.key: i for i in vm_for(d08).checklist()}
     assert list(items) == ["stamp", "drc", "stale", "assumptions"]
-    assert items["stamp"].text.startswith("Stamp: embodic 0.0.1, registry v1+")
+    assert items["stamp"].text.startswith(f"Stamp: embodic {embodic.__version__}, registry v1+")
     assert (items["drc"].state, items["stale"].state, items["assumptions"].state) == ("pass", "pass", "warn")
     assert items["assumptions"].text.split()[0].isdigit()
     wave_items = {i.key: i for i in vm_for(wave, stale=True).checklist()}
