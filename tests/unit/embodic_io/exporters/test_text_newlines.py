@@ -1,16 +1,9 @@
 r"""DEF-W-09: every text file embodic writes ends its lines with LF on every platform (REQ-N-04).
 
-The ``windows_text_mode`` fixture makes this process write text files the way CPython writes them on Windows. The
-open() documentation (https://docs.python.org/3/library/functions.html#open, parameter ``newline``) states that on
-output with ``newline=None`` every "\n" written is translated to ``os.linesep``, which is "\r\n" on Windows, and that
-``newline=""`` or ``newline="\n"`` translates nothing. Patching ``os.linesep`` alone would change nothing here: the C
-``io`` module selects the Windows separator when CPython is built, not from ``os.linesep``. The fixture applies the
-documented rule to ``io.open`` and ``builtins.open``, which ``Path.write_text``, ``Path.open``, ``os.fdopen`` and
-``tempfile`` all call.
+The ``windows_text_mode`` fixture of tests/conftest.py makes this process write text files the way CPython writes them
+on Windows.
 """
 
-import builtins
-import io
 import zipfile
 from collections.abc import Callable
 from pathlib import Path
@@ -38,20 +31,6 @@ TEXT_KINDS = (
     ExportKind.DXF_SCREWS,
     ExportKind.PROJECT_JSON,
 )
-
-
-@pytest.fixture
-def windows_text_mode(monkeypatch: pytest.MonkeyPatch) -> None:
-    r"""Translate "\n" to "\r\n" on every text-mode write that leaves ``newline`` at None, as Windows does."""
-    real_open = io.open
-
-    def windows_open(file, mode="r", buffering=-1, encoding=None, errors=None, newline=None, closefd=True, opener=None):
-        if "b" not in mode and newline is None and any(flag in mode for flag in "wax"):
-            newline = "\r\n"
-        return real_open(file, mode, buffering, encoding, errors, newline, closefd, opener)
-
-    monkeypatch.setattr(io, "open", windows_open)
-    monkeypatch.setattr(builtins, "open", windows_open)
 
 
 def _assert_lf_only(name: str, data: bytes) -> None:

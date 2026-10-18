@@ -4,8 +4,6 @@ Every test here leaves resources/evidence and resources/examples as it found the
 real folders writes under tmp_path, so a test cannot rewrite the shipped manifest.
 """
 
-import builtins
-import io
 import json
 import os
 
@@ -30,24 +28,6 @@ def shipped_files_untouched():
 def sandbox(tmp_path, monkeypatch):
     """Return the tool with its evidence copy, manifest and example folder redirected to copies in tmp_path."""
     return sandbox_sync_tool(tmp_path, monkeypatch)
-
-
-@pytest.fixture
-def windows_text_mode(monkeypatch):
-    r"""Translate "\n" to "\r\n" on every text-mode write that leaves newline at None, as open() does on Windows.
-
-    The rule is the one documented at https://docs.python.org/3/library/functions.html#open (parameter ``newline``).
-    The same fixture is in tests/unit/embodic_io/exporters/test_text_newlines.py.
-    """
-    real_open = io.open
-
-    def windows_open(file, mode="r", buffering=-1, encoding=None, errors=None, newline=None, closefd=True, opener=None):
-        if "b" not in mode and newline is None and any(flag in mode for flag in "wax"):
-            newline = "\r\n"
-        return real_open(file, mode, buffering, encoding, errors, newline, closefd, opener)
-
-    monkeypatch.setattr(io, "open", windows_open)
-    monkeypatch.setattr(builtins, "open", windows_open)
 
 
 def _bytes_by_name(folder):
