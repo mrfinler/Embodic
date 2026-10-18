@@ -50,11 +50,10 @@ function analysisOf(E, params) {
   };
 }
 
-// EQ-27 k_u. Xcoil names the ratio `kw1`: analyze (serpentine, l.983), analyzeElements (sector and overlap wave, l.1892)
-// and analyzeWave (wave, l.2083) compute it. Sector and wave give EQ-27 as `kw1`. analyze divides phase A's Ke by phase
-// A's layers, which is not the three-phase ratio of EQ-27 (fix_wave_f8.md A.4), so serpentine `ku` is rebuilt from
-// Xcoil's own parts: the phase-mean Ke1 over the mean 200-point ideal integral of every layer times the series
-// conductor count. `kw1` stays in the output as Xcoil reports it.
+// EQ-27 k_u, which Xcoil names `kw1` (analyzeElements l.1892 for sector, analyzeWave l.2083 for wave, analyze l.983 for
+// serpentine). `ku` is that `kw1` on sector and wave. analyze divides phase A's Ke by phase A's layers, which is not the
+// three-phase ratio EQ-27 defines (fix_wave_f8.md A.4), so serpentine `ku` is rebuilt from Xcoil's own parts: the
+// phase-mean Ke1 over the all-layer mean of the 200-point ideal integral times the series conductor count.
 const IDEAL_STEPS = 200;
 
 function idealIntegral(E, p, F, z) {
