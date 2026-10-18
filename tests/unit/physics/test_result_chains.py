@@ -121,9 +121,16 @@ def test_the_field_chain_holds_eq04_only_where_the_pole_arc_ratio_comes_from_it(
 
     pole_arc_ratio_mm evaluates EQ-04 for a block magnet and returns the input ratio for an arc magnet.
     """
+    analyses = {example: _analysis(example) for example in (D08, BLOCK_MAGNETS)}
     with_eq04 = {
         example: ["EQ-04" in t.eq_ids for t in (a.ke_phase_v_s_per_rad, a.layers[0].b1_peak_mid_radius_t)]
-        for example in (D08, BLOCK_MAGNETS)
-        if (a := _analysis(example))
+        for example, a in analyses.items()
     }
     assert with_eq04 == {D08: [False, False], BLOCK_MAGNETS: [True, True]}
+
+
+def test_every_quantity_the_tables_name_exists() -> None:
+    """Defect caught: a misspelt or renamed quantity in BUILT_FROM or INHERITS that the checks above would skip."""
+    quantities = {t.quantity for t in _traceables(_analysis(WITH_DRIVE))}
+    named = {*BUILT_FROM, *(s for sources in BUILT_FROM.values() for s in sources), *INHERITS}
+    assert named - quantities == set()
