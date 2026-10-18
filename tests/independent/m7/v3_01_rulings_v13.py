@@ -463,7 +463,12 @@ RULINGS: dict[str, Ruling] = {
             "record:docs/phase3/fable/windows_campaign_w1.md",
         ),
     ),
-    "REQ-N-08": Ruling("checks", None, ("gate:MT-01", "gate:MT-02", "gate:MT-03")),
+    "REQ-N-08": Ruling(
+        "checks",
+        "The gate of the audited run passes lint-imports (C1 to C4), mypy strict and ruff check and format; each PASS "
+        "line names MT-01, MT-02 or MT-03, and exit 0 of each tool is 0 findings.",
+        ("gate:MT-01", "gate:MT-02", "gate:MT-03"),
+    ),
     "REQ-N-09": Ruling(
         "partial",
         "The checker needs an EQ-ID per physics function (MT-04) and now a unit or `dimensionless` in every numeric "
