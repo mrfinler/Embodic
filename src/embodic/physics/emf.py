@@ -49,6 +49,11 @@ def pole_arc_ratio_eq_ids(rotor: RotorSpec) -> tuple[str, ...]:
     return () if isinstance(rotor.magnet, ArcMagnet) else ("EQ-04",)
 
 
+def pole_arc_ratio_pointer(rotor: RotorSpec) -> str:
+    """Return the input pole_arc_ratio_mm reads besides the poles: an arc magnet's ratio or a block magnet's width."""
+    return "/rotor/magnet/pole_arc_ratio" if isinstance(rotor.magnet, ArcMagnet) else "/rotor/magnet/width_mm"
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class FieldTable:
     """Peak B_z and B_t of every harmonic on FIELD_TABLE_STEPS + 1 radii of the magnet span, at one copper z."""

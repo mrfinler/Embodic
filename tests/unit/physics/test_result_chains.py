@@ -36,7 +36,7 @@ BUILT_FROM = {
     "loss_total": LOSSES,
     "efficiency": ("output_power", "loss_total"),
     "temperature_rise": ("loss_total",),
-    "torque_speed_rpm": DRIVE_INPUTS,
+    "torque_speed_rpm": ("ke_line",),  # the axis is linspace(0, 1.15 n_0) (fix_wave_f4.md A.7)
     "torque_speed_torque": DRIVE_INPUTS,
     "torque_speed_power": DRIVE_INPUTS,
     "base_speed": DRIVE_INPUTS,
