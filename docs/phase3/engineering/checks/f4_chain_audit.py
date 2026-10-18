@@ -65,7 +65,7 @@ EXPECTED_D08: dict[str, tuple[str, ...]] = {
     "mass_laminate_g": ("16",),
     "temperature_rise_k": ("17", "26", "10", "11", "07", "09", "12", "05", "06", "19", "23"),
     "edge_leakage_fraction": ("05",),
-    **{f"layers[{k}].z_mm": ("05",) for k in range(2)},
+    **{f"layers[{k}].z_mm": () for k in range(2)},
     **{f"layers[{k}].b1_peak_mid_radius_t": ("05",) for k in range(2)},
     **{f"phases[{k}].ke_peak_v_s_per_rad": ("06", "07", "05") for k in range(3)},
     **{f"phases[{k}].emf_phasor_angle_rad": ("06", "07", "05") for k in range(3)},

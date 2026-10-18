@@ -247,6 +247,12 @@ k = 0 to 2 (phases) share one line.
 | phases[k].circulating_loss_w | 07, 06, 05, 10, 11 | same | |
 | emf_waveform_v | 18, 07, 06, 05 | same | |
 
+(revision 2026-10-18, U-E21; D-060d) The `layers[k].z_mm` row above no longer holds. Its expected chain is empty. The
+stack-up gives the copper z from the inputs alone, so the value takes no field equation and its kind tag is `derived`.
+D-060d in `docs/decision_log.md` answers open question E.1 this way. `EXPECTED_D08` in
+`docs/phase3/engineering/checks/f4_chain_audit.py` and in `tests/unit/physics/test_expected_chains.py` carries `()` for
+both rows. The other 48 rows of this table stand.
+
 Rows of the other examples that the rulings change (Part 2, `EXPECTED_OTHER`). All four examples are star.
 
 | example | path | expected chain | U-M8h after | ruling |
