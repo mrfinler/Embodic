@@ -14,7 +14,7 @@ from embodic.errors import IssueCategory, Severity, Suggestion, ValidationIssue,
 from embodic.model.design import DesignParameters
 from embodic.model.fields import FieldSpec, Limits, Sign, field_for
 from embodic.model.schema import JsonValue, ValueType, design_values, pattern_of
-from embodic.model.stackup import CopperLayer, copper_total_mm
+from embodic.model.stackup import BOARD_THICKNESS_MAX_MM, BOARD_THICKNESS_MIN_MM, CopperLayer, copper_total_mm
 from embodic.model.winding_specs import (
     PairConnection,
     SerpentineWindingSpec,
@@ -372,6 +372,20 @@ CROSS_FIELD_RULES: tuple[Callable[[DesignParameters], Iterator[ValidationIssue]]
     _supported_ranges,
     _winding_above_ambient,
 )
+
+
+def board_thickness_range_issues(board_thickness_mm: float) -> tuple[ValidationIssue, ...]:
+    """Check the supported board thickness of the even stack-up generator (D-059d, Xcoil engine.js l.116 and l.127).
+
+    The issue has no clamp suggestion: `/stackup/layers` is a list, so no field moves to the limit.
+    """
+    if board_thickness_mm < BOARD_THICKNESS_MIN_MM:
+        code, limit = "RANGE_BELOW_SUPPORTED", BOARD_THICKNESS_MIN_MM
+    elif board_thickness_mm > BOARD_THICKNESS_MAX_MM:
+        code, limit = "RANGE_ABOVE_SUPPORTED", BOARD_THICKNESS_MAX_MM
+    else:
+        return ()
+    return (issue(code, ["/stackup/layers"], value=board_thickness_mm, limit=limit, unit=Unit.MM),)
 
 
 def even_stackup_issues(

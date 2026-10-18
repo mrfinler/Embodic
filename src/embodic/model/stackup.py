@@ -7,7 +7,7 @@ from typing import Literal, TypeAlias
 # Supported board thickness of the stack-up generator, ends included: Xcoil `num('boardThickness', 0.2, 10)`
 # (engine.js l.127). Status: verified by reading.
 BOARD_THICKNESS_MIN_MM = 0.2
-BOARD_THICKNESS_MAX_MM = 10.0
+BOARD_THICKNESS_MAX_MM = 10
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
