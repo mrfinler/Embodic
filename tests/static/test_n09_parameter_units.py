@@ -32,10 +32,19 @@ RETURN_ENTRY = re.compile(r"^(?:(?P<name>\w+)\s*:\s*)?(?P<type>\S.*)$")
 SECTION_RULE = re.compile(r"^-{3,}$")
 
 
+# A one-letter unit (A, H, K, T, V, W, g, m) is also a word or a symbol (`A value`, `area A`, `m phases`). The physics
+# docstrings write one after "in", after a number, inside a bracket or as the divisor of a compound unit (`N*m/A`).
+# `Ω` is no word, so it keeps the plain rule.
+UNIT_POSITION = r"(?:(?<=\bin )|(?<=\d )|(?<=[\d(\[/*·]))"
+
+
+def _unit_pattern(token: str) -> str:
+    position = UNIT_POSITION if len(token) == 1 and token.isascii() else r"(?<!\w)"
+    return rf"{position}{re.escape(token)}(?!\w)"
+
+
 def _has_unit_token(description: str) -> bool:
-    return bool(DIMENSIONLESS.search(description)) or any(
-        re.search(rf"(?<!\w){re.escape(token)}(?!\w)", description) for token in UNIT_TOKENS
-    )
+    return bool(DIMENSIONLESS.search(description)) or any(re.search(_unit_pattern(t), description) for t in UNIT_TOKENS)
 
 
 def _numeric_entries_without_unit(doc: str, section: str, entry: re.Pattern[str]) -> list[str]:
@@ -280,3 +289,40 @@ def test_n09_a_numeric_entry_of_the_section_after_returns_is_not_a_return(plante
     returns = "float\n    Resistance in ohm.\n\nOther Parameters\n----------------\nscale : float\n    Scale factor."
     module = planted("embodic.physics.trace", trace_function("Trace width in mm.", returns))
     assert check_return_units([module]) == []
+
+
+@pytest.mark.req("REQ-N-09")
+@pytest.mark.parametrize(
+    "description",
+    [
+        "A value of the trace width.",
+        "Trace width. A value from the user.",
+        "Face area A of the board.",
+        "Number of phases m.",
+    ],
+)
+def test_n09_a_one_letter_word_or_symbol_is_not_a_unit(planted, description):
+    """Catches `A` read as the ampere in `A value of ...` or `area A`, and `m` as the metre in `phases m`."""
+    assert len(check_parameter_units([planted("embodic.physics.trace", trace_function(description))])) == 1
+    returns = f"float\n    {description}"
+    assert len(check_return_units([planted("embodic.physics.trace", trace_function("Width in mm.", returns))])) == 1
+
+
+@pytest.mark.req("REQ-N-09")
+@pytest.mark.parametrize(
+    "description",
+    [
+        "Current in A.",
+        "Phase current in A rms.",
+        "Current (A rms).",
+        "Current [A].",
+        "Limit of 10 A.",
+        "Gain in N*m/A.",
+        "Resistance, Ω.",
+    ],
+)
+def test_n09_a_one_letter_unit_counts_where_a_unit_is_written(planted, description):
+    """Catches a checker that rejects the ways the physics docstrings write an ampere or ohm (MT-04 never green)."""
+    assert check_parameter_units([planted("embodic.physics.trace", trace_function(description))]) == []
+    returns = f"float\n    {description}"
+    assert check_return_units([planted("embodic.physics.trace", trace_function("Width in mm.", returns))]) == []
