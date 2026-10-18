@@ -1,14 +1,24 @@
-"""Requirement audit of release 0.0.1: one status per row of requirements.md, from the release run's own records.
+"""Requirement audit of one build: one status per row of requirements.md, from that build's own test records.
 
-    python3 docs/phase3/verification/checks/req_audit.py            # prints the counts, writes req_audit.md
-    python3 docs/phase3/verification/checks/req_audit.py --check    # exit 1 when req_audit.md is stale
-    python3 docs/phase3/verification/checks/req_audit.py --self-test
+    python3 docs/phase3/verification/checks/req_audit.py                    # main: writes req_audit.md
+    python3 docs/phase3/verification/checks/req_audit.py --target 0.0.1     # the release: req_audit_0.0.1.md
+    python3 docs/phase3/verification/checks/req_audit.py [--target T] --check    # exit 1 when the file is stale
+    python3 docs/phase3/verification/checks/req_audit.py --target 0.0.1 --self-test
+    python3 docs/phase3/verification/checks/req_audit.py --self-test                # the D-061d control on main
 
-Inputs (read only): requirements.md and the two test plans of this checkout; the REQ report and the gate log of
-Fable's release run on 5e74acc (/home/claude/release_0.0.1); the test sources of that run (`git archive 5e74acc tests`,
-or the folder given with --tree); Agent 4's V3-01 rulings and source pins (tests/independent/m7/v3_01_rulings.py),
-and the union rulings of the REQ-F rows (v3_01_rulings_f.py) and of the REQ-N, REQ-T and REQ-L rows
-(v3_01_rulings_ntl.py), each of which replaces the sample ruling of its row.
+Inputs (read only) of every target: requirements.md and the two test plans of this checkout, and the test sources of
+the audited commit (`git archive <commit> tests`, or the folder given with --tree).
+
+- Target 0.0.1: the REQ report and the gate log of Fable's release run on 5e74acc (/home/claude/release_0.0.1); Agent
+  4's V3-01 rulings and source pins (tests/independent/m7/v3_01_rulings.py), and the union rulings of the REQ-F rows
+  (v3_01_rulings_f.py) and of the REQ-N, REQ-T and REQ-L rows (v3_01_rulings_ntl.py), each of which replaces the sample
+  ruling of its row; records from the RECORDS table below.
+- Target main (U-V14): the REQ report of main that tests/independent/m7/v14_main_report.py builds, kept gzipped in
+  docs/phase3/verification/inputs/, and the commit-gate log it names; Agent 4's re-ruling of main
+  (tests/independent/m7/v3_01_rulings_v13.py) with its function-level pins (records/V3-01_pins_260191f.json,
+  interfaces.md section 3.2), and on top the rows that U-V14 re-ruled on c0f4894 (v3_01_rulings_v14.py); records
+  from docs/phase3/verification/manual_records.json (passed entries only). D-061d: a ruling that cites a record the
+  index no longer holds counts only through the record that redid it (REDONE).
 
 For each planned test ID of a row, the evidence is the first that holds:
   gate   a PASS line of the release gate log names the ID
@@ -27,10 +37,14 @@ Row status: `verified` when every planned ID has gate, name, file, eqt or record
 evidence and every ID is in NEEDS; `not tested` otherwise. Withdrawn rows keep `withdrawn`. The script matches IDs to
 tests by text, so this is the text status. D-051e: a row whose text status is `verified` stays `verified` only with
 Agent 4's V3-01 `checks` ruling for that row, while the SHA-256 of every source the ruling cites equals its pin;
-otherwise it drops to `partial` until Agent 4 re-rules it. The Ruling column says which case applies.
+otherwise it drops to `partial` until Agent 4 re-rules it. The Ruling column says which case applies. On main a pin
+covers the cited function's source segment only, so a change to a fixture or a helper does not make a ruling stale
+(interfaces.md section 3.2, `inferred`).
 """
 
 import argparse
+import ast
+import gzip
 import hashlib
 import importlib.util
 import io
@@ -52,11 +66,51 @@ RELEASE_COMMIT = "5e74acc"
 RULINGS = REPO / "tests/independent/m7/v3_01_rulings.py"
 RULINGS_F = REPO / "tests/independent/m7/v3_01_rulings_f.py"
 RULINGS_NTL = REPO / "tests/independent/m7/v3_01_rulings_ntl.py"
+RULINGS_V13 = REPO / "tests/independent/m7/v3_01_rulings_v13.py"
+RULINGS_V14 = REPO / "tests/independent/m7/v3_01_rulings_v14.py"
+PINS_V13 = REPO / "tests/independent/m7/records/V3-01_pins_260191f.json"
 REQUIREMENTS = REPO / "docs/phase2/architecture/requirements.md"
 PLANS = (REPO / "docs/phase1/architecture/test_plan_draft.md", REPO / "docs/phase2/architecture/test_plan.md")
-REPORT = RELEASE / "req_report.json"
-GATE_LOG = RELEASE / "gate_release_5e74acc.log"
-OUT = HERE.parents[1] / "req_audit.md"
+VERIFICATION = HERE.parents[1]
+INDEX = VERIFICATION / "manual_records.json"
+# D-061d (U-V14): a superseded record -> the record of the same check redone on main.
+REDONE = {
+    "tests/independent/m5/records/PK-06_walkthrough.md": "tests/independent/m5/records/PK-06_walkthrough_c0f4894.md",
+    "tests/independent/m4/records/AX-05.md": "tests/independent/m4/records/AX-05_c0f4894.md",
+    "tests/independent/m6/records/OR-11_OR-12.md": "tests/independent/m6/records/OR-11_OR-12_c0f4894.md",
+}
+
+
+@dataclass(frozen=True)
+class Target:
+    """One audited build: its REQ report and gate log, the commit of its test sources and the file written."""
+
+    name: str
+    title: str
+    commit: str
+    report: Path
+    gate_log: Path
+    out: Path
+
+
+TARGETS = {
+    "0.0.1": Target(
+        "0.0.1",
+        "release 0.0.1",
+        RELEASE_COMMIT,
+        RELEASE / "req_report.json",
+        RELEASE / "gate_release_5e74acc.log",
+        VERIFICATION / "req_audit_0.0.1.md",
+    ),
+    "main": Target(
+        "main",
+        "main c0f4894",
+        "c0f4894",
+        VERIFICATION / "inputs/req_report_c0f4894.json.gz",
+        VERIFICATION / "inputs/gate_commit_5099401.log",
+        VERIFICATION / "req_audit.md",
+    ),
+}
 
 TEST_ID = re.compile(r"\b(?:UT-[A-Z]{2,3}-\d{2}|(?:PR|GR|OR|BV|UI|AX|LG|MT|TR|PK|PF)-\d{2})\b")
 EQ_ID = re.compile(r"EQ-(\d{2})")
@@ -127,7 +181,7 @@ def gate_ids(log: str) -> set[str]:
     return {i for line in log.splitlines() if line.startswith("PASS") for i in TEST_ID.findall(line)}
 
 
-def evidence_kind(tid, carriers, gates, eqs, sources) -> str:
+def evidence_kind(tid, carriers, gates, eqs, sources, records_by_id) -> str:
     """Return the evidence kind of one planned test ID, given the records that carry the row's REQ marker."""
     passing = [r for r in carriers if r["outcome"] == "passed"]
     name_pat = id_pattern(tid)
@@ -143,20 +197,20 @@ def evidence_kind(tid, carriers, gates, eqs, sources) -> str:
         return "file"
     if eq_nums and any(e.split("-")[1] in eq_nums for r in passing for e in r["eqt"]):
         return "eqt"
-    if tid in RECORDS and (REPO / RECORDS[tid]).exists():
+    if tid in records_by_id and (REPO / records_by_id[tid]).exists():
         return "record"
     if any(r["nodeid"].split("::")[0] in cited for r in carriers):
         return "skip"
     return "none"
 
 
-def audit(rows, records, gates, eqs, sources):
+def audit(rows, records, gates, eqs, sources, records_by_id):
     """Return one (row, status, carriers, passed, Agent 4 passed, evidence, blocked IDs) tuple per row."""
     results = []
     for row in rows:
         carriers = [r for r in records if row.req_id in r["req"]]
         passing = [r for r in carriers if r["outcome"] == "passed"]
-        evidence = {tid: evidence_kind(tid, carriers, gates, eqs, sources) for tid in row.tests}
+        evidence = {tid: evidence_kind(tid, carriers, gates, eqs, sources, records_by_id) for tid in row.tests}
         found = [t for t, k in evidence.items() if k in PASSING_KINDS]
         blocked = [t for t in row.tests if t in NEEDS]
         if row.disposition == "withdrawn":
@@ -174,16 +228,17 @@ def audit(rows, records, gates, eqs, sources):
     return results
 
 
-def render(results, notes, inputs) -> str:
-    """Return req_audit.md."""
+def render(results, notes, inputs, target: Target) -> str:
+    """Return the audit file of one target."""
     counts = Counter(status for _, status, *_ in results)
     must = Counter(status for row, status, *_ in results if row.priority == "must")
     lines = [
         "Prepared by: Agent 4 - Independent Verificator - model: claude-opus-5-5",
         "",
-        "# Requirement audit of release 0.0.1 (generated)",
+        f"# Requirement audit of {target.title} (generated)",
         "",
-        "Generated by `python3 docs/phase3/verification/checks/req_audit.py`. Do not edit by hand.",
+        f"Generated by `python3 docs/phase3/verification/checks/req_audit.py --target {target.name}`. Do not edit by "
+        "hand.",
         "The status rule and the evidence kinds are in the script's docstring. Inputs and their SHA-256:",
         "",
         *[f"- `{p}` `{h}`" for p, h in inputs],
@@ -231,44 +286,112 @@ def ruling_gate(req_id: str, sample_rulings, pins, tree: Path) -> str | None:
     return "source changed since the ruling: " + ", ".join(f"`{c}`" for c in changed) if changed else None
 
 
-def apply_rulings(results, sample_rulings, pins, tree: Path):
-    """D-051e: return the results with each text-verified row gated by its ruling, and one Ruling note per row."""
+def cite_hash(cite: str, tree: Path) -> str:
+    """Return the SHA-256 of a cited record file, or of a cited test function's source segment under tree."""
+    if cite.startswith("record:"):
+        file = REPO / cite.removeprefix("record:")
+        return hashlib.sha256(file.read_bytes()).hexdigest() if file.is_file() else "missing"
+    path, _, name = cite.partition("::")
+    file = tree / path
+    if not file.is_file():
+        return "missing"
+    text = file.read_text(encoding="utf-8")
+    for node in ast.walk(ast.parse(text)):
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.name == name:
+            return hashlib.sha256(ast.get_source_segment(text, node).encode("utf-8")).hexdigest()
+    return "missing"
+
+
+def main_ruling_gate(
+    req_id: str, rulings, pins, tree: Path, gates: set[str], counted: set[str]
+) -> tuple[str | None, str]:
+    """Return (why the main re-ruling does not back the row or None, the D-061d note on redone records)."""
+    ruling = rulings.get(req_id)
+    if ruling is None:
+        return "no V3-01 ruling", ""
+    if ruling.ruling != "checks":
+        return f"ruled `{ruling.ruling}`", ""
+    problems, redone = [], []
+    for cite in ruling.cites:
+        if cite.startswith("gate:"):
+            if cite.removeprefix("gate:") not in gates:
+                problems.append(f"no PASS line for `{cite}`")
+            continue
+        if pins.get(req_id, {}).get(cite) != cite_hash(cite, tree):
+            problems.append(f"source changed since the ruling: `{cite}`")
+        record = cite.removeprefix("record:")
+        if cite.startswith("record:") and record not in counted:
+            if REDONE.get(record) in counted:
+                redone.append(f"`{record}` redone as `{REDONE[record]}`")
+            else:
+                problems.append(f"record superseded (D-061d): `{record}`")
+    return ("; ".join(problems) or None), "; ".join(redone)
+
+
+def apply_rulings(results, reason_of):
+    """D-051e: return the results with each text-verified row gated by its ruling, and one Ruling note per row.
+
+    `reason_of(req_id)` returns (why no ruling backs the row or None, an extra note).
+    """
     out, notes = [], []
     for row, status, *rest in results:
-        reason = ruling_gate(row.req_id, sample_rulings, pins, tree) if status == "verified" else None
+        reason, extra = reason_of(row.req_id) if status == "verified" else (None, "")
         if status == "verified" and reason:
             status = "partial"
         if reason:
-            notes.append(f"text-verified; {reason}")
+            note = f"text-verified; {reason}"
         else:
-            notes.append("`checks`, sources match" if status == "verified" else "-")
+            note = "`checks`, sources match" if status == "verified" else "-"
+        notes.append(f"{note}; {extra}" if extra else note)
         out.append((row, status, *rest))
     return out, notes
 
 
-def release_tests(dest: Path) -> Path:
-    """Extract the test tree of the release commit into dest and return dest."""
-    tar = subprocess.run(["git", "-C", str(REPO), "archive", RELEASE_COMMIT, "tests"], capture_output=True, check=True)
+def test_tree(commit: str, dest: Path) -> Path:
+    """Extract the test tree of a commit into dest and return dest."""
+    tar = subprocess.run(["git", "-C", str(REPO), "archive", commit, "tests"], capture_output=True, check=True)
     with tarfile.open(fileobj=io.BytesIO(tar.stdout)) as archive:
         archive.extractall(dest, filter="data")
     return dest
 
 
-def run_audit(tree: Path):
+def read_report(path: Path) -> list[dict]:
+    """Return the records of a REQ report, plain or gzipped JSON."""
+    data = path.read_bytes()
+    return json.loads(gzip.decompress(data) if path.suffix == ".gz" else data)
+
+
+def counted_records(index: Path = INDEX) -> dict[str, str]:
+    """Return {record path: test ID} of the passed entries of the manual-record index."""
+    return {e["record"]: e["test_id"] for e in json.loads(index.read_text(encoding="utf-8")) if e["result"] == "passed"}
+
+
+def run_audit(tree: Path, target: Target = TARGETS["0.0.1"], index: Path = INDEX):
     """Return the text results, the gated results and the Ruling notes for the test sources under tree."""
     rows = parse_requirements(REQUIREMENTS.read_text(encoding="utf-8"))
-    records = json.loads(REPORT.read_text(encoding="utf-8"))
-    gates = gate_ids(GATE_LOG.read_text(encoding="utf-8"))
+    records = read_report(target.report)
+    gates = gate_ids(target.gate_log.read_text(encoding="utf-8"))
     eqs = eq_map([p.read_text(encoding="utf-8") for p in PLANS])
     files = {r["nodeid"].split("::")[0] for r in records}
     sources = {f: (tree / f).read_text(encoding="utf-8", errors="replace") for f in files}
-    text_results = audit(rows, records, gates, eqs, sources)
+    if target.name == "main":
+        counted = counted_records(index)
+        by_id = {test_id: record for record, test_id in counted.items()}
+        text_results = audit(rows, records, gates, eqs, sources, by_id)
+        overlay = load_rulings(RULINGS_V14)
+        rulings = {**load_rulings(RULINGS_V13).RULINGS, **overlay.RULINGS}
+        pins = {**json.loads(PINS_V13.read_text(encoding="utf-8")), **overlay.PINS}
+        gated, notes = apply_rulings(
+            text_results, lambda req: main_ruling_gate(req, rulings, pins, tree, gates, set(counted))
+        )
+        return text_results, gated, notes
+    text_results = audit(rows, records, gates, eqs, sources, RECORDS)
     rulings = load_rulings()
     row_rulings, pins = dict(rulings.SAMPLE_RULINGS), dict(rulings.CHECKS_PINS)
     for union in (load_rulings(RULINGS_F), load_rulings(RULINGS_NTL)):
         row_rulings.update(union.UNION_RULINGS)
         pins.update({req: union.UNION_PINS.get(req, {}) for req in union.UNION_RULINGS})
-    gated, notes = apply_rulings(text_results, row_rulings, pins, tree)
+    gated, notes = apply_rulings(text_results, lambda req: (ruling_gate(req, row_rulings, pins, tree), ""))
     return text_results, gated, notes
 
 
@@ -310,40 +433,77 @@ def self_test(tree: Path) -> int:
     return 0 if ok else 1
 
 
+def self_test_main(tree: Path) -> int:
+    """Control for D-061d: REQ-N-14 cites the superseded AX-05 record; it stays verified only through the redone one."""
+    req, redone = "REQ-N-14", REDONE["tests/independent/m4/records/AX-05.md"]
+    other = "tests/independent/m4/records/AX-06.md"
+
+    def row_of(index: Path) -> tuple[str, str]:
+        _, gated, notes = run_audit(tree, TARGETS["main"], index)
+        return next((status, note) for (row, status, *_), note in zip(gated, notes, strict=True) if row.req_id == req)
+
+    ok = True
+    entries = json.loads(INDEX.read_text(encoding="utf-8"))
+    with tempfile.TemporaryDirectory() as tmp:
+        cases = (
+            ("with the redone record", entries, "verified", "redone as"),
+            (
+                "with another AX-05 record",
+                [{**e, "record": other} if e["record"] == redone else e for e in entries],
+                "partial",
+                "record superseded (D-061d)",
+            ),
+            ("with no AX-05 record", [e for e in entries if e["record"] != redone], "partial", ""),
+        )
+        for n, (label, index_entries, want_status, want_note) in enumerate(cases):
+            index = Path(tmp) / f"index{n}.json"
+            index.write_text(json.dumps(index_entries), encoding="utf-8")
+            status, note = row_of(index)
+            good = status == want_status and want_note in note
+            ok &= good
+            print(f"self-test {'ok' if good else 'WRONG'}: {req} {label}: {status}; {note}")
+    print("self-test " + ("passed" if ok else "FAILED"))
+    return 0 if ok else 1
+
+
 def sha(path: Path) -> str:
     """Return the first 16 hex digits of a file's SHA-256."""
     return hashlib.sha256(path.read_bytes()).hexdigest()[:16]
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Write req_audit.md and print the counts, or with --check report whether it is stale."""
+    """Write the audit file of a target and print the counts, or with --check report whether it is stale."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--check", action="store_true", help="exit 1 when req_audit.md differs from a fresh run")
-    parser.add_argument("--self-test", action="store_true", help="run the D-051e control")
-    parser.add_argument("--tree", type=Path, help="test sources to audit (default: git archive of the release commit)")
+    parser.add_argument("--target", choices=sorted(TARGETS), default="main", help="the build to audit")
+    parser.add_argument("--check", action="store_true", help="exit 1 when the audit file differs from a fresh run")
+    parser.add_argument("--self-test", action="store_true", help="run the D-051e (0.0.1) or D-061d (main) control")
+    parser.add_argument("--tree", type=Path, help="test sources to audit (default: git archive of the target commit)")
     args = parser.parse_args(argv)
+    target = TARGETS[args.target]
 
     with tempfile.TemporaryDirectory() as tmp:
-        tree = args.tree.resolve() if args.tree else release_tests(Path(tmp))
+        tree = args.tree.resolve() if args.tree else test_tree(target.commit, Path(tmp))
         if args.self_test:
-            return self_test(tree)
-        _, results, notes = run_audit(tree)
-    inputs = [(p, sha(p)) for p in (REQUIREMENTS, *PLANS, REPORT, GATE_LOG, RULINGS, RULINGS_F, RULINGS_NTL)]
+            return self_test(tree) if target.name == "0.0.1" else self_test_main(tree)
+        _, results, notes = run_audit(tree, target)
+    main_inputs = (RULINGS_V13, PINS_V13, RULINGS_V14, INDEX)
+    rulings = main_inputs if target.name == "main" else (RULINGS, RULINGS_F, RULINGS_NTL)
+    inputs = [(p, sha(p)) for p in (REQUIREMENTS, *PLANS, target.report, target.gate_log, *rulings)]
     shown = [(str(p.relative_to(REPO)) if p.is_relative_to(REPO) else str(p), h) for p, h in inputs]
-    text = render(results, notes, shown)
+    text = render(results, notes, shown, target)
 
     if args.check:
-        stale = not OUT.exists() or OUT.read_text(encoding="utf-8") != text
-        print("req_audit.md is " + ("stale" if stale else "current"))
+        stale = not target.out.exists() or target.out.read_text(encoding="utf-8") != text
+        print(f"{target.out.name} is " + ("stale" if stale else "current"))
         return 1 if stale else 0
-    OUT.write_text(text, encoding="utf-8")
+    target.out.write_text(text, encoding="utf-8")
     counts = Counter(status for _, status, *_ in results)
     print(f"{len(results)} requirements: " + ", ".join(f"{k} {v}" for k, v in sorted(counts.items())))
     must = Counter(status for row, status, *_ in results if row.priority == "must")
     print("must rows: " + ", ".join(f"{k} {v}" for k, v in sorted(must.items())))
     kinds = Counter(k for *_, evidence, _ in results for k in evidence.values())
     print("planned-test evidence: " + ", ".join(f"{k} {v}" for k, v in sorted(kinds.items())))
-    print(f"wrote {OUT.relative_to(REPO)}")
+    print(f"wrote {target.out.relative_to(REPO)}")
     return 0
 
 
