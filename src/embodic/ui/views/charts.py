@@ -401,8 +401,7 @@ class ChartPanel(QWidget):
         self, model: ChartModel | None, tokens: ThemeTokens, mode: PhaseRenderMode = PhaseRenderMode.COLOUR
     ) -> None:
         """Show a chart model, its metadata and the same samples in the table."""
-        shown = self.chart
-        if model == shown.model and tokens is shown.tokens and mode is shown.mode:
+        if model == self.chart.model and tokens is self.chart.tokens and mode is self.chart.mode:
             return
         self.chart.show_chart(model, tokens, mode)
         if model is None:

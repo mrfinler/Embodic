@@ -18,7 +18,7 @@ from PySide6.QtCore import (
     QTimer,
     Signal,
 )
-from PySide6.QtGui import QColor, QGuiApplication, QPainter, QPixmap, QResizeEvent
+from PySide6.QtGui import QColor, QGuiApplication, QPainter, QPaintEvent, QPixmap, QResizeEvent
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -275,14 +275,14 @@ class ComputingVeil(QWidget):
         super().__init__(viewport)
         self.setObjectName("results-computing-veil")
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        self.colour = QColor()
+        self._colour = QColor()
         self.hide()
         viewport.installEventFilter(self)
 
     def show_tokens(self, tokens: ThemeTokens) -> None:
         """Take the theme's ``bg-app``."""
-        self.colour = QColor(tokens.colours["bg-app"])
-        self.colour.setAlphaF(1.0 - COMPUTING_OPACITY)
+        self._colour = QColor(tokens.colours["bg-app"])
+        self._colour.setAlphaF(1.0 - COMPUTING_OPACITY)
         self.update()
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802 (Qt override)
@@ -291,9 +291,9 @@ class ComputingVeil(QWidget):
             self.setGeometry(watched.rect())
         return False
 
-    def paintEvent(self, event) -> None:  # noqa: N802 (Qt override)
+    def paintEvent(self, event: QPaintEvent) -> None:  # noqa: N802 (Qt override)
         """Fill the veil."""
-        QPainter(self).fillRect(self.rect(), self.colour)
+        QPainter(self).fillRect(self.rect(), self._colour)
 
 
 class ResultsTab(QWidget):
