@@ -86,6 +86,14 @@ Revision 2026-10-13, continuation (U-D14, claude-sonnet-5-5; D-046g, D-046h; mai
 - §5.2. The wheel table is read again on main 76f054b. The sdist paragraph and the folder tree describe what U-M5c
   built. `resource_root()` in a frozen build is no longer `unresolved`, with the limit stated there.
 
+Revision 2026-10-19 (U-D24, claude-sonnet-5-5, D-068; main 4fa3198, `tools/ci.py`, `tests/bundle/bundle_gate.py` and
+`tests/bundle/test_bundle_smoke.py` read for every item).
+
+- §5.1 and §5.2. Since U-M8q the release profile builds the PyInstaller folder with `tools/build_bundle.py` and runs
+  `tests/bundle` with `EMBODIC_REQUIRE_BUNDLE=1`, so a missing folder fails the run instead of skipping. The sentence in
+  §5.2 that the 6 tests skip now names the profiles for which that holds. Open item 3 at the end of §5.1 keeps only the
+  Windows gap. This unit ran no test suite and did not build the folder.
+
 ## 1. Repository tree
 
 ```
@@ -448,9 +456,13 @@ Open items from the folder build (D-046h, `verified` for the facts; the decision
    does not carry that library, so a Linux desktop needs the system package that provides it (`inferred`). The smoke tests
    run with `QT_QPA_PLATFORM=offscreen` (`tests/bundle/test_bundle_smoke.py`), which does not load the xcb plugin, so a
    start of the frozen GUI on an xcb desktop is `not tested`.
-3. PK-05 on Windows is `not tested`. The Linux folder is a smoke of the spec only (D-046h), and `tests/bundle/test_bundle_smoke.py`
-   skips every test when the folder is absent. Its 6 tests were skipped when this unit ran them in a tree without the
-   folder; D-046h records `6 passed` for U-M5c's folder.
+3. PK-05 on Windows is `not tested`. The Linux folder is a smoke of the spec only (D-046h), and D-046h records
+   `6 passed` for U-M5c's folder. The skip half of this item is closed (revision 2026-10-19, U-D24; D-068, U-M8q).
+   `python tools/ci.py --profile release` builds the folder with `tools/build_bundle.py` before pytest and sets
+   `EMBODIC_REQUIRE_BUNDLE=1`, so `tests/bundle` fails instead of skipping when the folder is missing (`tools/ci.py`
+   l.85-86 and l.104-105, `tests/bundle/bundle_gate.py`, `verified` by reading). The commit and nightly profiles still
+   skip, because they do not build the folder. The gap that remains is the Windows folder: this unit read no result of a
+   release run on Windows.
 
 The folder does not carry fontTools or any other dev tool. The PyInstaller bootloader adds no obligation
 (dependency_licences.md, §Distribution obligations, item 7).
@@ -558,7 +570,11 @@ The folder has 444 files and 232,412,913 bytes, and no `.py` file (`verified`: t
 `test_frozen_package_holds_no_python_source`). There is no `SOURCE.md` and no Qt third-party notices file, because the
 written offer is a user decision and the notices are `unresolved` (§5.1). D-046h records the results of U-M5c's run: build
 exit 0, the smoke tests of `tests/bundle/test_bundle_smoke.py` `6 passed`, and the frozen `embodic-cli selftest` 45 of 45.
-This unit read those results and did not repeat them. In a tree without the folder the same 6 tests skip (`verified`).
+This unit read those results and did not repeat them. In a tree without the folder the same 6 tests skip under the
+commit and nightly profiles. Under the release profile they fail instead (revision 2026-10-19, U-D24; D-068, U-M8q):
+`tools/ci.py` builds the folder first and sets `EMBODIC_REQUIRE_BUNDLE=1`, and `require_bundle` in
+`tests/bundle/bundle_gate.py` calls `pytest.fail` when the variable is set and `embodic-cli` is missing (`verified` by
+reading).
 
 `resource_root()` in a frozen build. It was `unresolved` whether `paths.py` finds `_internal/embodic/_resources`, because
 it raises when `importlib.resources.files("embodic")` is not a `pathlib.Path`. The frozen selftest reads the registry
