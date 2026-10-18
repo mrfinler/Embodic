@@ -171,7 +171,7 @@ This note adds no input and leaves the registry status of EQ-05 unchanged.
   (Xcoil field midpoint rule 5.0e-12, Python 0.5 mm kernel 1.25e-6).
 - Tolerance: 1e-9 vs CF-02; 1e-5 vs CF-03 (field table and segment discretisation); oracle bands of O1 and O2 with the
   EC-05 add-on.
-- Gate: `reuse` (`analyze`, `analyzeWave`, `analyzeElements`). Status: verified.
+- Gate: `reuse` (`analyze`, `analyzeWave`, `analyzeElements`). Status: inferred (revision 2026-10-17, U-E19; D-057c).
 - Dominant assumptions: as EQ-05 plus copper-layer z. Applies to: spiral, serpentine, wave.
   Tests: EQT-06-GR, EQT-06-CF02, EQT-06-CF03, EQT-06-O1, EQT-06-O2.
 
@@ -666,9 +666,9 @@ Counts over EQ-01 to EQ-30 (`checks/check_consistency.py` recomputes them from t
 | EQ | Status | Why |
 |---|---|---|
 | 01, 04, 09, 13, 21, 22, 23, 24, 26 | verified | identities, definitions or reproduced published numbers |
-| 06, 10 | verified | kernel reproduced to 1e-9 (CF-02); constants EV-53 |
+| 10 | verified | constants EV-53 |
 | 02, 03, 25 | inferred | rules derived from D08 geometry and the Xcoil sector code; reference model CF-10, CF-11 |
-| 05, 07, 08, 11, 12, 18, 19, 27, 30 | inferred | derivations checked; no 3-D FEA or measurement oracle yet |
+| 05, 06, 07, 08, 11, 12, 18, 19, 27, 30 | inferred | derivations checked; no 3-D FEA or measurement oracle yet; EQ-06: D09 oracle OR-07 fails (F-OR07) |
 | 16, 17, 28, 29 | assumption | densities, h, ε_r unsourced |
 | 14, 15, 20 | unresolved | gate `cannot verify yet` |
 
