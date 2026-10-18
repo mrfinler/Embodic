@@ -24,6 +24,8 @@ CF11 = "spiral_12c16p_default"
 V1_FIXTURE = Path(__file__).parent / "fixtures" / "spiral_12c16p_default.v1.embodic.json"
 REGISTRY_VERSION = re.compile(r"v1\+[0-9a-f]{12}\.[0-9a-f]{12}")
 NEW_KEYS = ("engine_version", "registry_version")
+STAMP_KEYS = ("app_version", "saved_utc", *NEW_KEYS)  # every version stamp; both schemas type each one `string`
+V1_STAMP_KEYS = ("app_version", "saved_utc")
 
 
 @pytest.fixture(autouse=True)
@@ -132,7 +134,7 @@ def test_a_file_from_a_newer_format_is_refused_as_newer_even_when_it_holds_keys_
 
 
 @pytest.mark.req("REQ-T-07")
-@pytest.mark.parametrize("key", NEW_KEYS)
+@pytest.mark.parametrize("key", STAMP_KEYS)
 @pytest.mark.parametrize("stamp", [5, None, ["0.0.1"], {"v": "0.0.1"}], ids=["int", "null", "list", "object"])
 def test_a_v2_file_whose_version_stamp_is_not_a_string_is_refused_with_the_key_pointer(
     tmp_path: Path, key: str, stamp: object
@@ -146,7 +148,7 @@ def test_a_v2_file_whose_version_stamp_is_not_a_string_is_refused_with_the_key_p
 
 
 @pytest.mark.req("REQ-T-07")
-@pytest.mark.parametrize("key", NEW_KEYS)
+@pytest.mark.parametrize("key", STAMP_KEYS)
 def test_a_v2_file_with_string_version_stamps_loads_without_notice(tmp_path: Path, key: str) -> None:
     """Catches a type check that refuses the strings embodic writes, such as the registry text `v1+<hex>.<hex>`."""
     document = _saved(tmp_path)
@@ -168,11 +170,23 @@ def test_a_v1_file_with_a_mistyped_v2_key_reports_the_key_once(key: str) -> None
 
 
 @pytest.mark.req("REQ-F-15")
-def test_a_newer_format_file_with_a_stamp_of_another_type_is_refused_as_newer(tmp_path: Path) -> None:
+@pytest.mark.parametrize("key", V1_STAMP_KEYS)
+def test_a_v1_file_whose_app_version_or_saved_utc_is_not_a_string_is_refused_with_the_key_pointer(key: str) -> None:
+    """Catches a loader that types the stamps only from v2 on: project.v1.schema.json types these two `string` too."""
+    document = _v1_document()
+    document[key] = 20261008
+    loaded, issues = parse_project(json.dumps(document))
+    assert loaded is None
+    assert [(i.code, i.pointers) for i in issues] == [("INVALID_PROJECT_FILE", (f"/{key}",))]
+
+
+@pytest.mark.req("REQ-F-15")
+@pytest.mark.parametrize("key", STAMP_KEYS)
+def test_a_newer_format_file_with_a_stamp_of_another_type_is_refused_as_newer(tmp_path: Path, key: str) -> None:
     """Catches a type check that runs before the version check: a later format may type the stamp differently."""
     document = _saved(tmp_path)
     document["schema_version"] = PROJECT_SCHEMA_VERSION + 1
-    document["engine_version"] = {"name": "embodic", "version": "9.0.0"}
+    document[key] = {"name": "embodic", "version": "9.0.0"}
     loaded, issues = parse_project(json.dumps(document))
     assert loaded is None
     assert [i.code for i in issues] == ["INVALID_SCHEMA_VERSION_NEWER"]

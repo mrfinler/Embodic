@@ -60,6 +60,7 @@ TOP_LEVEL_KEYS_V1 = frozenset(
 )
 VERSION_STAMP_KEYS = ("engine_version", "registry_version")
 TOP_LEVEL_KEYS = TOP_LEVEL_KEYS_V1 | set(VERSION_STAMP_KEYS)
+_STRING_STAMP_KEYS = ("app_version", "saved_utc", *VERSION_STAMP_KEYS)  # each typed `string` where its schema has it
 _TOP_LEVEL_KEYS_BY_VERSION = {1: TOP_LEVEL_KEYS_V1, 2: TOP_LEVEL_KEYS}
 _ORIGIN_KEYS = frozenset({"example_id", "example_sha256"})
 _EXAMPLE_KEY = "example"  # optional: the gallery metadata of a packaged example file, never written by save_project
@@ -304,13 +305,14 @@ def _unknown_keys(document: Mapping[str, Any]) -> list[str]:
 def _mistyped_stamps(document: Mapping[str, Any]) -> list[str]:
     """Return the pointer of each version stamp this file's schema allows whose value is not a string.
 
-    project.v2.schema.json types both stamps `string`. A v1 file cannot hold them, and `_unknown_keys` already names
-    them, so only the keys of the file's own version are checked.
+    Both schemas type app_version and saved_utc `string`, and v2 types engine_version and registry_version the same
+    way. A v1 file cannot hold the v2 stamps, and `_unknown_keys` already names them, so only the keys of the file's
+    own version are checked.
     """
     allowed = _TOP_LEVEL_KEYS_BY_VERSION[document["schema_version"]]
     return [
         f"/{key}"
-        for key in VERSION_STAMP_KEYS
+        for key in _STRING_STAMP_KEYS
         if key in allowed and key in document and not isinstance(document[key], str)
     ]
 
