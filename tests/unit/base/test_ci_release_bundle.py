@@ -8,6 +8,7 @@ import importlib.util
 from pathlib import Path
 
 import pytest
+from _pytest.outcomes import Failed, Skipped
 from tests.bundle import bundle_gate
 
 TOOL = Path(__file__).resolve().parents[3] / "tools" / "ci.py"
@@ -61,3 +62,42 @@ def test_the_release_profile_requires_the_bundle_for_pytest():
 def test_the_commit_and_nightly_profiles_leave_a_missing_bundle_a_skip(profile_name):
     """Catches the requirement leaking into profiles that build no bundle: every commit gate would then fail."""
     assert bundle_gate.REQUIRE_BUNDLE not in pytest_gate_env(profile_name)
+
+
+@pytest.mark.parametrize(
+    ("required", "outcome"),
+    [("1", Failed), (None, Skipped), ("0", Skipped)],
+    ids=["required-fails", "not-required-skips", "switched-off-skips"],
+)
+def test_a_missing_bundle_fails_only_when_the_run_requires_one(monkeypatch, tmp_path, required, outcome):
+    """Catches a bundle test that skips under the release environment, which hides a build that produced nothing."""
+    if required is None:
+        monkeypatch.delenv(bundle_gate.REQUIRE_BUNDLE, raising=False)
+    else:
+        monkeypatch.setenv(bundle_gate.REQUIRE_BUNDLE, required)
+    with pytest.raises(outcome):
+        bundle_gate.require_bundle(tmp_path / "embodic-cli")
+
+
+@pytest.mark.parametrize("required", ["1", None], ids=["required", "not-required"])
+def test_a_built_bundle_is_tested_whether_or_not_the_run_requires_it(monkeypatch, tmp_path, required):
+    """Catches a guard that fails or skips although the CLI is there, so that the bundle tests never run."""
+    if required is None:
+        monkeypatch.delenv(bundle_gate.REQUIRE_BUNDLE, raising=False)
+    else:
+        monkeypatch.setenv(bundle_gate.REQUIRE_BUNDLE, required)
+    frozen_cli = tmp_path / "embodic-cli"
+    frozen_cli.write_bytes(b"")
+
+    assert bundle_gate.require_bundle(frozen_cli) is None
+
+
+def test_the_failure_names_the_missing_cli_and_the_switch(monkeypatch, tmp_path):
+    """Catches a failure message that leaves the reader without the path or the variable that caused the failure."""
+    monkeypatch.setenv(bundle_gate.REQUIRE_BUNDLE, "1")
+    frozen_cli = tmp_path / "embodic-cli"
+    with pytest.raises(Failed) as failure:
+        bundle_gate.require_bundle(frozen_cli)
+
+    assert str(frozen_cli) in str(failure.value)
+    assert bundle_gate.REQUIRE_BUNDLE in str(failure.value)
