@@ -138,7 +138,8 @@ TR-01 release-gate tests (owner Agent 3, a marker change).
 
 test_plan.md l.488 (revision U-D20) says LG-01 "adds one function that returns the sorted distinct words of the string
 catalogues and the report templates, and one command that prints them", with a test that the list holds a planted
-word. On main 260191f neither exists: `grep -rln "distinct" tests/static tools src` finds no such function, and
+word. On main 260191f neither exists: `grep -rln "distinct" tests/static tools src --include=*.py` finds only a
+docstring in `src/embodic/ui/viewmodels/results.py` l.495 (assumed inputs, not words), and
 `tests/static/test_lg_language.py` has only the character rule (l.62-114). Status `verified` (reading and search). The
 REQ-L-01 manual record (`tests/independent/m4/records/LG-01_word_review.md`) therefore reads Agent 4's own list
 (`tests/independent/m7/l01_words.py`, 804 words), not the list the acceptance names. Expected: the function, the
