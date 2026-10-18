@@ -5,6 +5,8 @@ bundle, so tests/bundle skips there; the release profile builds it and sets EMBO
 """
 
 import importlib.util
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -101,3 +103,64 @@ def test_the_failure_names_the_missing_cli_and_the_switch(monkeypatch, tmp_path)
 
     assert str(frozen_cli) in str(failure.value)
     assert bundle_gate.REQUIRE_BUNDLE in str(failure.value)
+
+
+def run_release(monkeypatch, tmp_path, passes) -> list[tuple[str, bool]]:
+    """Fake every gate of a release run and return (name, old bundle folder still there) for each gate that starts.
+
+    `passes(gate)` decides the result of a gate. The faked paths keep the real evidence file and the real build folder
+    out of reach of the deletions that `ci.main` makes.
+    """
+    old_bundle = tmp_path / "bundle"
+    (old_bundle / "embodic").mkdir(parents=True)
+    (old_bundle / "embodic" / "embodic-cli").write_bytes(b"")
+    monkeypatch.setattr(ci, "BUNDLE", old_bundle)
+    monkeypatch.setattr(ci, "DIST", tmp_path / "dist")
+    monkeypatch.setattr(ci, "EVIDENCE", tmp_path / "passed_tests.v1.json")
+    started: list[tuple[str, bool]] = []
+
+    def fake_run_gate(gate):
+        started.append((gate.name, old_bundle.exists()))
+        return passes(gate), 0.0
+
+    monkeypatch.setattr(ci, "run_gate", fake_run_gate)
+    return started
+
+
+def test_a_failed_bundle_build_fails_the_release_and_leaves_no_old_bundle_for_the_tests(monkeypatch, tmp_path, capsys):
+    """Catches a release that passes on a stale folder from an earlier build, or stops before it shows the rest."""
+    started = run_release(monkeypatch, tmp_path, lambda gate: not is_bundle_build(gate))
+
+    assert ci.main(["--profile", "release"]) == 1
+    names = [name for name, _ in started]
+    assert "pytest" in names, "later gates run so that one release shows every problem"
+    assert "passed-test evidence (TR-05)" not in names, "evidence is recorded only when every gate passed"
+    assert [name for name, old_bundle_exists in started if old_bundle_exists] == []
+    assert any(line.startswith("FAIL") and "bundle build" in line for line in capsys.readouterr().out.splitlines())
+
+
+def test_the_release_run_that_builds_the_bundle_still_records_the_evidence(monkeypatch, tmp_path):
+    """Catches a bundle gate that breaks the chain into the evidence, wheel and PK-10 steps when it passes."""
+    started = run_release(monkeypatch, tmp_path, lambda gate: True)
+
+    assert ci.main(["--profile", "release"]) == 0
+    assert [name for name, _ in started][-3:] == [
+        "passed-test evidence (TR-05)",
+        "wheel build",
+        "evidence in the wheel (PK-10)",
+    ]
+
+
+def test_the_release_pytest_gate_selects_every_bundle_test():
+    """Catches a release marker expression or ignore list that drops a bundle test, so that it could never run."""
+    gate = next(g for g in ci.gates_for(ci.PROFILES["release"]) if g.name == "pytest")
+    marker_option = gate.argv.index("-m", gate.argv.index("pytest"))  # the first "-m" is `python -m pytest`
+    selection = ["-m", gate.argv[marker_option + 1], *(a for a in gate.argv if a.startswith("--ignore="))]
+
+    def collected(*options: str) -> list[str]:
+        command = [sys.executable, "-m", "pytest", "-p", "no:cacheprovider", "--collect-only", "-q", *options]
+        output = subprocess.run([*command, "tests/bundle"], cwd=ci.REPO, capture_output=True, text=True, check=True)
+        return [line for line in output.stdout.splitlines() if "::" in line]
+
+    assert collected(*selection) == collected()
+    assert len(collected()) > 0

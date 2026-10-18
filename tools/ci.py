@@ -140,6 +140,9 @@ def main(argv: list[str] | None = None) -> int:
     if profile.records_evidence:
         EVIDENCE.unlink(missing_ok=True)
         shutil.rmtree(DIST, ignore_errors=True)
+    if profile.builds_bundle:
+        # A failed build must not leave an old folder for the bundle tests to pass on.
+        shutil.rmtree(BUNDLE, ignore_errors=True)
 
     results = [(gate.name, *run_gate(gate)) for gate in gates_for(profile, record_baseline=args.record_baseline)]
     if profile.records_evidence and all(passed for _, passed, _ in results):
