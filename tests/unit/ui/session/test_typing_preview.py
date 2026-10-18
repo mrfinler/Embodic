@@ -82,6 +82,7 @@ def r_inner(design) -> float:
     return design.winding.coil.r_inner_mm
 
 
+@pytest.mark.req("REQ-N-02")
 def test_a_keystroke_computes_nothing_until_the_wait_ends(rig):
     """Catches a compute per keystroke: only the end of the wait submits, with the typed value."""
     session, _, submitter, debounce, _ = rig
@@ -93,6 +94,7 @@ def test_a_keystroke_computes_nothing_until_the_wait_ends(rig):
     assert [r_inner(r.design) for r in submitter.requests[before:]] == [11.48]
 
 
+@pytest.mark.req("REQ-N-02")
 def test_a_preview_changes_the_drawing_but_not_the_committed_state_undo_or_autosave(rig):
     """Catches a preview that commits: it must leave the state, the chips, undo and the autosave file alone."""
     session, outcome, submitter, debounce, autosave = rig
@@ -108,6 +110,7 @@ def test_a_preview_changes_the_drawing_but_not_the_committed_state_undo_or_autos
     assert isinstance(session.state.value, SessionEmpty), "the preview wrote no undo entry"
 
 
+@pytest.mark.req("REQ-N-02")
 @pytest.mark.parametrize("arrived", [True, False], ids=["result shown", "request in flight"])
 def test_commit_after_a_preview_reuses_its_request(rig, arrived):
     """Catches a commit that computes the previewed design a second time."""
@@ -127,6 +130,7 @@ def test_commit_after_a_preview_reuses_its_request(rig, arrived):
     assert session.drawn(outcome.state.value)[0].outcome is state.outcome
 
 
+@pytest.mark.req("REQ-N-02")
 def test_revert_brings_the_committed_outcome_back_without_an_undo_entry(rig):
     """Catches Esc that leaves the preview on screen or records an edit."""
     session, outcome, submitter, debounce, _ = rig
@@ -144,6 +148,7 @@ def test_revert_brings_the_committed_outcome_back_without_an_undo_entry(rig):
     assert isinstance(session.state.value, SessionEmpty)
 
 
+@pytest.mark.req("REQ-N-02")
 def test_a_keystroke_cancels_the_preview_in_flight_and_the_shown_result_stays(rig):
     """Catches a preview compute left running after a newer keystroke, or a drawing stuck in the computing state."""
     session, outcome, submitter, debounce, _ = rig
@@ -159,6 +164,7 @@ def test_a_keystroke_cancels_the_preview_in_flight_and_the_shown_result_stays(ri
     assert r_inner(outcome.state.value.outcome.design) == 11.47, "the cancelled request's late result is dropped"
 
 
+@pytest.mark.req("REQ-N-02")
 @pytest.mark.parametrize("typed", [11.47, "abc", None], ids=["committed value", "not a number", "empty"])
 def test_text_without_a_new_design_computes_no_preview(rig, typed):
     """Catches a preview of the committed value, of text that is no number, or of an empty field."""
@@ -169,6 +175,7 @@ def test_text_without_a_new_design_computes_no_preview(rig, typed):
     assert len(submitter.requests) == before
 
 
+@pytest.mark.req("REQ-N-02")
 def test_commit_typing_commits_the_typed_text(rig):
     """DEF-US11-03: catches a command that reads the design while the typed text is still uncommitted."""
     session, _, _, _, _ = rig
@@ -179,6 +186,7 @@ def test_commit_typing_commits_the_typed_text(rig):
     assert r_inner(session.state.value.design) == 11.47
 
 
+@pytest.mark.req("REQ-T-15")
 def test_session_provenance_equals_project_provenance(rig):
     """Catches the session's cached-origin provenance drifting from `project_provenance` after an edit."""
     session, _, submitter, _, _ = rig
@@ -189,6 +197,7 @@ def test_session_provenance_equals_project_provenance(rig):
     assert submitter.requests[-1].provenance == state.provenance
 
 
+@pytest.mark.req("REQ-T-15", "REQ-F-15")
 def test_session_provenance_of_an_origin_no_longer_packaged_is_user_not_default(tmp_path):
     """Catches the rule of `project_provenance` that an unknown origin gives `user` instead of `default`."""
     submitter = RecordingSubmitter()
