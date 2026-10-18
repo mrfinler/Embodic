@@ -184,7 +184,7 @@ def test_a_coil_whose_loop_rule_admits_more_than_the_cap_is_refused_before_artwo
     assert geometry_spy.loops_returned == [MAX_TURNS_PER_LAYER]
 
 
-@pytest.mark.req("REQ-F-19")
+@pytest.mark.req("REQ-F-19", "REQ-F-14")
 def test_requested_turns_above_the_turns_that_fit_are_refused_as_the_users_request(registry: Registry) -> None:
     """The default coil fits N turns (loop rule below the cap); N + 1 is refused with limit N and the cause user_cap.
 

@@ -6,6 +6,7 @@ import shutil
 import socket
 import sys
 import tempfile
+import types
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -47,15 +48,31 @@ def _refuse_connection(*args: object, **kwargs: object) -> None:
     raise AssertionError(f"network connection attempted during a test: {args!r} (REQ-N-17)")
 
 
-def _admit_socketpair_connect(real_connect: _Connect) -> _Connect:
-    """Return a `socket.connect` that refuses every call except the one inside CPython's socketpair fallback.
+def _socketpair_fallback_codes() -> frozenset[types.CodeType]:
+    """Return the code of the socket module's pure-Python socketpair, whichever name this Python gives it.
 
-    On Windows `socket.socketpair` is `_fallback_socketpair`, which listens on a loopback port and connects to it
-    (Lib/socket.py). Only a connect called directly from that function passes; any other, loopback included, fails.
+    The fallback listens on a loopback port and connects to it. CPython 3.11.15 defines it as `_fallback_socketpair`
+    and uses it for `socketpair` where the C call is missing (Windows). CPython 3.11.9 has no such name on Windows:
+    `socketpair` itself is the fallback. A `socketpair` that wraps the C call never calls connect, so the `connect`
+    test leaves it out. Read at each connect, so the answer follows the module as it is then.
+    """
+    return frozenset(
+        value.__code__
+        for value in vars(socket).values()
+        if isinstance(value, types.FunctionType)
+        and value.__code__.co_name.endswith("socketpair")
+        and "connect" in value.__code__.co_names
+    )
+
+
+def _admit_socketpair_connect(real_connect: _Connect) -> _Connect:
+    """Return a `socket.connect` that refuses every call except the one inside the socketpair fallback.
+
+    Only a connect called directly from the fallback's code passes; any other, loopback included, fails.
     """
 
     def connect(sock: socket.socket, address: Any) -> None:
-        if sys._getframe(1).f_code is socket._fallback_socketpair.__code__:
+        if sys._getframe(1).f_code in _socketpair_fallback_codes():
             real_connect(sock, address)
         else:
             _refuse_connection(sock, address)

@@ -131,6 +131,7 @@ def test_cf04_and_ut_phy_11_via_barrel_resistance() -> None:
     assert via_resistance_ohm(0.3, 25.0, 1.6, rho, 2) == pytest.approx(0.001277202792190775 / 2, rel=1e-12, abs=0.0)
 
 
+@pytest.mark.req("REQ-F-08")
 @pytest.mark.eqt("EQT-09-CF06")
 def test_cf06_star_and_delta_constants() -> None:
     """CF-06 (EQ-09): Ke_ph 0.01 V*s/rad, rel 1e-12.

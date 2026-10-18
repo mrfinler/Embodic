@@ -101,6 +101,7 @@ def test_ut_exp_02_screws_dxf_is_circles_only(
     ) == (sorted((round(h.x_mm, 6), round(h.y_mm, 6), round(h.diameter_mm, 6)) for h in holes))
 
 
+@pytest.mark.req("REQ-T-14")
 @pytest.mark.parametrize("part", ["complete", "outline", "screws"])
 def test_ut_io_06_dxf_header_comment_holds_the_stamp(
     part: str, outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path

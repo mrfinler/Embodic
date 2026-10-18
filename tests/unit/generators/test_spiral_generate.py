@@ -419,7 +419,7 @@ def _drc_summary(board: Layout, rules: DrcRules) -> dict[str, float | None]:
     return {s.kind.value: s.least_clearance_mm for s in report.summaries}
 
 
-@pytest.mark.req("REQ-F-05")
+@pytest.mark.req("REQ-F-05", "REQ-F-10")
 def test_default_example_passes_drc(board: Layout) -> None:
     """Acceptance (DEF-M2d-01 closed): the default 12/16 spiral passes run_drc; its tightest gaps are exactly s."""
     least = _drc_summary(board, default_design().drc_rules)

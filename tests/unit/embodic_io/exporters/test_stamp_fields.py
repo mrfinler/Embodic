@@ -31,7 +31,7 @@ def readme_lines(outcome: ComputeOutcome, folder: Path) -> list[str]:
     return summary.path.read_text(encoding="utf-8").splitlines()
 
 
-@pytest.mark.req("REQ-T-07")
+@pytest.mark.req("REQ-T-07", "REQ-T-14")
 def test_t07_project_json_holds_the_embodic_version_the_design_hash_and_a_utc_date(
     example_id: str, outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path
 ) -> None:
@@ -43,7 +43,7 @@ def test_t07_project_json_holds_the_embodic_version_the_design_hash_and_a_utc_da
     assert re.fullmatch(UTC_STAMP, str(document["saved_utc"]))
 
 
-@pytest.mark.req("REQ-T-07")
+@pytest.mark.req("REQ-T-07", "REQ-T-14")
 def test_t07_project_json_holds_the_engine_version_and_the_registry_version(
     outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path
 ) -> None:

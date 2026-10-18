@@ -9,6 +9,7 @@ import ast
 import io
 import json
 import re
+import sys
 import tomllib
 import zipfile
 from collections.abc import Iterable, Iterator, Sequence
@@ -17,6 +18,7 @@ from enum import StrEnum
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
+PACKAGE = REPO / "src" / "embodic"
 ALLOWLIST = Path(__file__).with_name("lg_allowlist.toml")
 
 # A word starts after a non-letter (space, digit, `_`) or at a lower-to-upper change, so the scan finds MEASURED inside
@@ -30,6 +32,12 @@ HOME_PLACEHOLDERS = frozenset({"user", "username", "you", "name", "runner", "me"
 LOWER_NO_SPACE = re.compile(r"^[a-z0-9_.\-/#$\[\]]+$")
 REGISTRY_FILES = frozenset({"equations.v1.json", "evidence.v1.json"})
 TEXT_SUFFIXES = frozenset({".md", ".txt", ".qss", ".toml", ".svg", ".html", ".csv", ".css", ".dxf"})
+# The sources of the LG-01 word list (test_plan.md LG-01, revision U-D20), as folders and files of the package.
+WORD_CATALOGUES = ("ui/strings", "errors/catalogue")
+WORD_TEMPLATES = ("io/report.py", "io/readme_writer.py")
+FORMAT_FIELD = re.compile(r"\{[^{}]*\}")
+LETTERS = re.compile(r"[^\W\d_]+")
+CAMEL_CHANGE = re.compile(r"(?<=[a-z])(?=[A-Z])")
 
 
 class Kind(StrEnum):
@@ -198,6 +206,30 @@ def resource_texts(resources: Path) -> Iterator[Text]:
             yield from _json_texts(Corpus.RESOURCES, place, json.loads(path.read_text(encoding="utf-8")))
         elif path.suffix in TEXT_SUFFIXES:
             yield from _lines(Corpus.RESOURCES, Kind.TEXT_LINE, place, path.read_text(encoding="utf-8"))
+
+
+def distinct_words(package: Path = PACKAGE) -> list[str]:
+    """Return the sorted distinct words of the string catalogues and the report templates (LG-01, REQ-L-01).
+
+    The sources are the modules of `WORD_CATALOGUES` and the files of `WORD_TEMPLATES`. The words come from every string
+    constant except a docstring and the key of a catalogue mapping. A format field such as `{value:.3g}` is dropped, a
+    word is a run of letters, and a run splits where lower case turns to upper (isUnbalanced). Words are lower case.
+    A missing source raises FileNotFoundError, so a rename cannot shorten the list without notice.
+    """
+    texts: list[Text] = []
+    for folder in WORD_CATALOGUES:
+        modules = sorted((package / folder).glob("*.py"))
+        if not modules:
+            raise FileNotFoundError(f"no string catalogue module under {package / folder}")
+        texts += [text for path in modules for text in _word_source(package, path, catalogue=True)]
+    for template in WORD_TEMPLATES:
+        texts += _word_source(package, package / template, catalogue=False)
+    runs = (run for text in texts for run in LETTERS.findall(FORMAT_FIELD.sub(" ", text.text)))
+    return sorted({word.lower() for run in runs for word in CAMEL_CHANGE.split(run)})
+
+
+def _word_source(package: Path, path: Path, *, catalogue: bool) -> list[Text]:
+    return list(python_texts(path, path.relative_to(package.parent).as_posix(), catalogue=catalogue))
 
 
 def pdf_text(data: bytes) -> str:
@@ -388,3 +420,17 @@ def brand_check(files: Iterable[Path], table: dict[str, str]) -> tuple[list[tupl
         elif path.stem.lower() in stems or BRAND_NAME_WORDS.search(path.stem.lower()):
             changed.append(path)
     return exact, changed
+
+
+def main() -> None:
+    """Print the LG-01 word list, one word per line, for the reviewer's manual record (REQ-L-01).
+
+    Run `python tests/static/lg_scan.py` from the repository root. The output is UTF-8 on every platform.
+    """
+    out = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", newline="\n")
+    out.write("".join(f"{word}\n" for word in distinct_words()))
+    out.flush()
+
+
+if __name__ == "__main__":
+    main()
