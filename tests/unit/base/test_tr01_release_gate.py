@@ -82,7 +82,7 @@ def run_trace_matrix(project: dict[str, Path], *extra: str, capsys: pytest.Captu
     return code, capsys.readouterr().out
 
 
-@pytest.mark.req("REQ-T-09")
+@pytest.mark.req("REQ-T-09", "REQ-N-10")
 def test_tr01_flag_lists_a_live_must_row_that_has_neither_a_passing_test_nor_a_manual_record(
     manual_only_project, capsys
 ):
@@ -131,7 +131,7 @@ def test_tr01_a_manual_record_for_another_row_leaves_this_row_listed(manual_only
     assert MANUAL_ONLY_ROW in out
 
 
-@pytest.mark.req("REQ-T-09")
+@pytest.mark.req("REQ-T-09", "REQ-N-10")
 def test_tr01_lists_only_live_must_rows(tmp_path, capsys):
     """Catches a flag that lists should, could and withdrawn rows, which TR-01 does not require a test for."""
     project = {
@@ -216,7 +216,7 @@ def run_gate(argv: list[str]) -> subprocess.CompletedProcess[str]:
     return subprocess.run(argv, capture_output=True, text=True, encoding="utf-8", check=False)
 
 
-@pytest.mark.req("REQ-T-09")
+@pytest.mark.req("REQ-T-09", "REQ-N-10")
 def test_tr01_release_gate_fails_on_an_untested_must_row(manual_only_project):
     """Catches a release profile that does not pass the flag: this gate must exit 1 and list the row."""
     name, argv = release_trace_gate_argv("release", manual_only_project)
@@ -226,7 +226,7 @@ def test_tr01_release_gate_fails_on_an_untested_must_row(manual_only_project):
     assert MANUAL_ONLY_ROW in result.stdout
 
 
-@pytest.mark.req("REQ-T-09")
+@pytest.mark.req("REQ-T-09", "REQ-N-10")
 def test_tr01_release_gate_passes_when_a_manual_record_covers_the_row(manual_only_project, tmp_path):
     """Catches a release gate that cannot take the manual input, which would leave REQ-N-07 failing for good."""
     records = write_records(tmp_path / "records.json", [manual_record()])
