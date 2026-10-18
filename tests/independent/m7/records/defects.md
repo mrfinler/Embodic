@@ -112,3 +112,75 @@ planted violation) rather than the product. With the rulings applied, `verified`
 (lenient) or 10 (strict), and 11 of the 20 cause-B IDs exist under another REQ marker. Status `verified` (reading;
 `python3 tests/independent/m7/v3_01_sample.py`). The audit rule lives in Agent 4's U-V6 script, which this unit may not
 edit. A follow-up decides whether req_audit.py reads the V3-01 rulings.
+
+# U-V13 defects (V3-01 re-ruling, V3-15, REQ-L-01 review; main 260191f, 2026-10-18)
+
+Reproduced in the worktree `unit/U-V13` with `/home/claude/embodic/.venv/bin/python` and
+`PYTHONPATH=<worktree>/src`. `$S` is any empty scratch folder. Statuses follow standing order 2.
+
+## DEF-UV13-03 (REQ-N-10, must, M2; high: blocks the 0.0.2 release gate): no test carries REQ-N-10
+
+The amended REQ-N-10 reads "Matrix generator lists 0 untested live must REQs (TR-01)". The tests of that gate
+(`tests/unit/base/test_tr01_release_gate.py`) carry other markers, and no collected test carries REQ-N-10, so the
+release profile's `--fail-untested-through M5` lists REQ-N-10 itself as untested and exits 1. Reproduce:
+
+```
+pytest -p no:cacheprovider --collect-only -q --req-report $S/c.json tests      # 4071 tests collected
+python3 -c "import json; print(sum('REQ-N-10' in r['req'] for r in json.load(open('$S/c.json'))))"   # 0
+python3 tests/independent/m7/v3_01_rerule.py --report <gate report of main> --gate-log <its log> --collected $S/c.json
+#   REQ-N-10: not tested; release: yes
+```
+
+Status `verified` (collection and the lever). Expected: at least one passing test with REQ-N-10, for example the
+TR-01 release-gate tests (owner Agent 3, a marker change).
+
+## DEF-UV13-01 (REQ-L-01, must; medium): LG-01 has no word printer
+
+test_plan.md l.488 (revision U-D20) says LG-01 "adds one function that returns the sorted distinct words of the string
+catalogues and the report templates, and one command that prints them", with a test that the list holds a planted
+word. On main 260191f neither exists: `grep -rln "distinct" tests/static tools src` finds no such function, and
+`tests/static/test_lg_language.py` has only the character rule (l.62-114). Status `verified` (reading and search). The
+REQ-L-01 manual record (`tests/independent/m4/records/LG-01_word_review.md`) therefore reads Agent 4's own list
+(`tests/independent/m7/l01_words.py`, 804 words), not the list the acceptance names. Expected: the function, the
+command and the planted-word test (owner Agent 3); then a reviewer compares that list with the record.
+
+## DEF-UV13-05 (REQ-F-11 (i), must; medium): EQT-27-GR is carried by no test
+
+The registry links EQ-27 (k_u, status `inferred`) to EQT-27-GR, and no collected test carries that ID; EQ-27 feeds
+`winding_factor_1` and `inductance_estimate_h` of every example. EQT-28-GR and EQT-29-GR are carried by no test either,
+but EQ-28 and EQ-29 have no port in src (`docs/phase2/engineering/eqt_map_review.md` l.240-241). Reproduce:
+
+```
+python3 - <<'PY'
+import json
+eqs = json.load(open("resources/evidence/equations.v1.json"))["equations"]
+carried = {e for r in json.load(open("$S/c.json")) for e in r["eqt"]}
+print([(e["id"], t) for e in eqs for t in e["tests"] if t not in carried])
+PY
+# [('EQ-14', 'EQT-14-O2'), ('EQ-27', 'EQT-27-GR'), ('EQ-28', 'EQT-28-GR'), ('EQ-29', 'EQT-29-GR')]
+```
+
+Status `verified`. This corrects my U-V12a ruling of REQ-F-11, whose gap F11-1 named only EQT-16, 17, 19 and 22.
+Expected: a dump of Xcoil's utilisation factor and a golden comparison (eqt_map_review.md l.239; owner Agent 3,
+tolerance Agent 2).
+
+## DEF-UV13-02 (REQ-N-24, must; low): table cells carry their unit only in the column header
+
+`python3 tests/independent/m7/n24_table_cells.py` (offscreen) prints for the D08 and 12c16p `layer-list` the headers
+`['Layer', 'Kind', 'Thickness\n(µm)']` and for cell (0,2) `display='34.8' text=None description=None widget=None`.
+So the thickness input announces no unit of its own. `screw-table` has the unit in its 'Pitch radius (mm)' header; both
+spiral examples have 0 screw rows, so its cells are `inferred` the same from the product test's docstring
+(`tests/ui/qt_design/test_n24_unit_announcement.py` l.4-5). Whether Narrator reads the column header with a cell is
+`not tested`. Status `verified` for the layer-list cell. Expected: Agent 1 rules whether the header satisfies
+REQ-N-24 ("include it in its accessible description"); otherwise each cell gets an accessible description with the
+unit and the test covers both tables.
+
+## DEF-UV13-04 (REQ-F-08, F-10, F-12, F-14, must; low): the only test of a clause carries another row's marker
+
+interfaces.md section 3.2 lets an acceptance ruling cite only tests that carry the row's REQ marker. Four clauses are
+asserted only by a test marked for another row: Ke_LL in star and delta (CF-06, `test_kernels.py`, REQ-F-11), the
+default spiral packing within rule + 0.005 mm (UT-DRC-01, `test_spiral_generate.py::test_default_example_passes_drc`,
+REQ-F-05), the two-member circulating identity (CF-07, `test_closed_forms_m2e2.py`, REQ-F-11) and BV-05
+(`test_spiral_bounds.py`, REQ-F-19). Reproduce: `v3_01_rerule.py` prints "lacks the REQ-F-xx marker" when these are
+cited. Status `verified`. The rows keep other passing marked tests, so the release trace gate does not fail on them.
+Expected: add the four markers (owner Agent 3, no new assertion).
