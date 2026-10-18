@@ -2,7 +2,9 @@ Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5; section 1
 
 # embodic screens v2.3 (Phase 2, PySide6)
 
-Date 2026-10-08, revised 2026-10-17 (U-S12): field-row layout, `param-stack-mode`, the screw buttons and numeric
+Date 2026-10-08, revised 2026-10-18 (U-S13): `preview-timer` declared in 14a, which now admits non-visual objects; the
+stack-up helper rows give their step bounds; the stepping convention takes the rule 4 correction. All three follow
+`docs/phase3/design/fix_wave_f3.md` sections (a) to (c). Revised 2026-10-17 (U-S12): field-row layout, `param-stack-mode`, the screw buttons and numeric
 stepping follow `docs/phase3/design/fix_wave_f2.md` sections (a) and (b). Revised 2026-10-12 (U-S4h): `compare-scroll`
 declared in section 10. Revised 2026-10-09 (U-S4f): `ts-section-board` declared in 14a; rulings i and j of
 `m4_review_2.md` section 5 applied to sections 4 and 5 (screw buttons, last table column). Revised 2026-10-09 (U-S4e): rulings a, c, d and g of `m4_review_2.md` applied to sections 4, 5, 6,
@@ -31,7 +33,8 @@ Conventions for every table:
 - Each objectName is defined in exactly one table row. Other mentions are references.
 - Numeric fields are `QLineEdit` with a parser in the view model, or `QDoubleSpinBox` with `NoButtons`. Up and Down
   step by `FieldSpec.step` in the shown unit, Shift steps ten times, Enter and Tab commit, Esc reverts, the wheel does
-  nothing without focus. Bounds, text that is not a number and the preview timer: `fix_wave_f2.md` (b). Segments and combo boxes move with the arrow keys; Space selects. Units sit in a `QLabel[class="unit"]` named
+  nothing without focus. Bounds, text that is not a number and the preview timer: `fix_wave_f2.md` (b), with its rule 4 as `fix_wave_f3.md` (c)
+  corrects it. Segments and combo boxes move with the arrow keys; Space selects. Units sit in a `QLabel[class="unit"]` named
   `<id>-unit` and are part of the accessible description. Angles show in degrees; the model stores radians (`*_rad`).
 - Start values (D-014, D-019). "required" fields start empty with a placeholder that shows only the unit, never a
   number, and a "Required" hint. "default" fields start at `FieldSpec.neutral_value` with a `default` chip. screens.md
@@ -275,8 +278,8 @@ One `QGroupBox` per group, in this order. Every row applies to all three topolog
 | `param-screw-angle-offset` | Fasteners | "Angle offset of the selected pattern", degrees | `/outline/screws/*/angle_offset_rad` | default | none |
 | `btn-screw-add` | Fasteners | QPushButton "Add", accessible name "Add screw pattern", secondary boundary like `btn-drc-locate` (U-S4f ruling i, U-S12 a) | command | none | none |
 | `btn-screw-remove` | Fasteners | QPushButton "Remove", accessible name "Remove screw pattern", secondary boundary (U-S4f ruling i, U-S12 a) | command | none | none |
-| `param-copper-weight` | Stack-up and manufacturing | "Copper weight", oz | view model: stack-up generator writes `/stackup/layers` | empty | none |
-| `param-board-thickness` | Stack-up and manufacturing | "Board thickness", mm | view model: stack-up generator writes `/stackup/layers` | empty | none |
+| `param-copper-weight` | Stack-up and manufacturing | "Copper weight", oz; Up and Down step 0.5 oz within 0.25 to 10 oz, positive (U-S13 b) | view model: stack-up generator writes `/stackup/layers` | empty | none |
+| `param-board-thickness` | Stack-up and manufacturing | "Board thickness", mm; Up and Down step 0.1 mm within 0.2 to 10 mm, positive (U-S13 b) | view model: stack-up generator writes `/stackup/layers` | empty | none |
 | `param-board-thickness-error` | Stack-up and manufacturing | QLabel[class="field-error"] under the two stack-up inputs, hidden while empty (U-S12) | view model: `DesignSession.stackup_issues` (D-053a) | none | the message of each stack-up issue, one per line |
 | `param-min-trace` | Stack-up and manufacturing | "Minimum trace width", mm | `/drc_rules/min_trace_width_mm` | required | DRC `DRC_MIN_WIDTH` |
 | `param-min-space` | Stack-up and manufacturing | "Trace clearance (trace to trace, pad to trace)", mm | `/drc_rules/trace_clearance_mm` | required | DRC `DRC_TRACE_TRACE`, `DRC_PAD_TRACE` |
@@ -499,6 +502,13 @@ Name that U-M4c-4 set (U-S4f; principle model-the-domain, one row per name). It 
 | objectName | Part | Status |
 |---|---|---|
 | `ts-section-board` | Frame in the toolstrip View tab that holds `board-picker` and its "Board" caption (section 4.1). Built by hand, not from a `TOOLSTRIP` group, because a combo box is not an action. Hidden while the design has one board | declared |
+
+Name that U-M8c set (U-S13, `fix_wave_f3.md` (a)). A non-visual object that the code names takes a row here like a
+widget, because tests find it by that name.
+
+| objectName | Part | Status |
+|---|---|---|
+| `preview-timer` | Single-shot `QTimer` of `QtDebounce` (`views/debounce.py`), owned by `main-window`; the 300 ms preview wait. It is not a widget, so it has no accessible name, no style and no tab stop. Tests find it with `findChild(QTimer, "preview-timer")` | declared |
 
 ## 15. Requests to other owners
 
