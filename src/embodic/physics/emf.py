@@ -44,6 +44,11 @@ def pole_arc_ratio_mm(rotor: RotorSpec, radius_mm: FloatArray) -> FloatArray:
     return pole_arc_ratio_block(magnet.width_mm, radius_mm, rotor.poles)
 
 
+def pole_arc_ratio_eq_ids(rotor: RotorSpec) -> tuple[str, ...]:
+    """Return the EQ-IDs pole_arc_ratio_mm evaluates: EQ-04 for a block magnet, none for an arc magnet's given ratio."""
+    return () if isinstance(rotor.magnet, ArcMagnet) else ("EQ-04",)
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class FieldTable:
     """Peak B_z and B_t of every harmonic on FIELD_TABLE_STEPS + 1 radii of the magnet span, at one copper z."""
