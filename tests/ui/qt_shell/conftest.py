@@ -109,3 +109,24 @@ def d08_shell(make_shell, wait_ready):
     shell.window.outcome.open_example(D08)
     wait_ready(shell.window)
     return shell
+
+
+@pytest.fixture
+def open_example(make_shell, wait_ready):
+    """Return a function: open_example(example_id, timed) -> (shell, window), computed, with the calls cleared."""
+    shells = []
+
+    def run(example_id=D08, timed=None):
+        shell = make_shell(compute_fn=timed)
+        shells.append(shell)
+        window = shell.window
+        window.session.load_example(example_id)
+        wait_ready(window)
+        if timed is not None:
+            timed.starts.clear()
+            timed.tokens.clear()
+        return shell, window
+
+    yield run
+    for shell in shells:
+        shell.worker.shutdown()
