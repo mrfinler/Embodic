@@ -86,13 +86,6 @@ def test_a_verified_equation_missing_one_of_several_linked_tests_stops_the_relea
 
 
 @pytest.mark.req("REQ-T-05")
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "DEF-U-M8p-01: record_main names the unproven equation only, not the registry test IDs of it that passed; "
-        "tools/record_passed_tests.py is outside U-M8p's scope. Remove this marker when the tool lists them."
-    ),
-)
 def test_stderr_alone_names_the_equation_and_the_registry_tests_of_it_that_passed(tmp_path: Path, capsys) -> None:
     """Catches a refusal that names the equation but not which of its linked tests passed in the run.
 
@@ -106,4 +99,22 @@ def test_stderr_alone_names_the_equation_and_the_registry_tests_of_it_that_passe
     named = set(re.findall(r"(?<![\w-])(?:EQ|EQT)-[\w-]*\w", capsys.readouterr().err))
     assert code == 1
     assert eq_id in named
-    assert set(tests) - {skipped} <= named
+    assert named & set(tests) == set(tests) - {skipped}, "the passed tests are named, the test that did not pass is not"
+
+
+@pytest.mark.req("REQ-T-05")
+def test_stderr_names_a_refused_equation_none_of_whose_linked_tests_passed(tmp_path: Path, capsys) -> None:
+    """Catches a refusal that lists every linked ID of an equation when none of them passed, or drops the equation."""
+    eq_id = next(iter(verified_equations()))
+    records = [
+        {"nodeid": f"tests/x.py::{eqt}", "req": ["REQ-T-05"], "eq": [], "outcome": "passed", "eqt": [eqt]}
+        for other, linked in verified_equations().items()
+        if other != eq_id
+        for eqt in linked
+    ]
+    report = tmp_path / "req_report.json"
+    report.write_text(json.dumps(records), encoding="utf-8")
+    code = run_record(report, tmp_path / "passed_tests.v1.json")
+    named = set(re.findall(r"(?<![\w-])(?:EQ|EQT)-[\w-]*\w", capsys.readouterr().err))
+    assert code == 1
+    assert named == {eq_id}

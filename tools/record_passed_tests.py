@@ -7,7 +7,8 @@ Usage, from the repository root after the release gate's pytest run::
 
 Exit code 1, and nothing written, when the profile is not release, the report is missing or malformed, any test
 failed, a test carries an eqt ID that the registry does not hold, or a `verified` equation has a linked test that did
-not pass (REQ-T-05: the badge would read `not tested`). The message names each such equation.
+not pass (REQ-T-05: the badge would read `not tested`). The message names each such equation with the registry test
+IDs of it that passed in the run.
 """
 
 import argparse
@@ -144,7 +145,7 @@ def record_main(argv: Sequence[str] | None = None) -> int:
         return _refuse(str(error))
     with_evidence = dataclasses.replace(registry, passed_tests=passed)
     unproven = [
-        eq_id
+        f"{eq_id} (passed: {', '.join(t for t in entry.tests if t in passed) or 'none'})"
         for eq_id, entry in registry.equations.items()
         if entry.status is Status.VERIFIED and not with_evidence.tests_passed(eq_id)
     ]
