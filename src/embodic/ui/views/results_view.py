@@ -18,12 +18,11 @@ from PySide6.QtCore import (
     QTimer,
     Signal,
 )
-from PySide6.QtGui import QColor, QGuiApplication, QPainter, QPixmap, QResizeEvent
+from PySide6.QtGui import QColor, QGuiApplication, QPainter, QPaintEvent, QPixmap, QResizeEvent
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
     QFrame,
-    QGraphicsOpacityEffect,
     QGridLayout,
     QHBoxLayout,
     QHeaderView,
@@ -265,6 +264,38 @@ class ResultCard(QFrame):
             QGuiApplication.clipboard().setText(self._copy_trace(self.row.quantity))
 
 
+class ComputingVeil(QWidget):
+    """``bg-app`` at 40 % over the cards in view, so that their values read at 60 % while a compute runs.
+
+    An opacity effect on the card grid rendered all of its 4302 px each time it turned on, 17 to 45 ms of GUI CPU
+    inside N02-10's keystroke window (U-M8n); the effect on the viewport composed the cards over black instead.
+    """
+
+    def __init__(self, viewport: QWidget) -> None:
+        super().__init__(viewport)
+        self.setObjectName("results-computing-veil")
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self._colour = QColor()
+        self.hide()
+        viewport.installEventFilter(self)
+
+    def show_tokens(self, tokens: ThemeTokens) -> None:
+        """Take the theme's ``bg-app``."""
+        self._colour = QColor(tokens.colours["bg-app"])
+        self._colour.setAlphaF(1.0 - COMPUTING_OPACITY)
+        self.update()
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802 (Qt override)
+        """Cover the whole viewport."""
+        if event.type() == QEvent.Type.Resize and isinstance(watched, QWidget):
+            self.setGeometry(watched.rect())
+        return False
+
+    def paintEvent(self, event: QPaintEvent) -> None:  # noqa: N802 (Qt override)
+        """Fill the veil."""
+        QPainter(self).fillRect(self.rect(), self._colour)
+
+
 class ResultsTab(QWidget):
     """``tab-results``: status filter, stale stamp and the card grid; the empty state before a valid design."""
 
@@ -335,10 +366,7 @@ class ResultsTab(QWidget):
         outer.setContentsMargins(0, 0, 0, 0)
         outer.addWidget(self.pages)
 
-        self._dim_effect = QGraphicsOpacityEffect(self.grid_host)
-        self._dim_effect.setOpacity(COMPUTING_OPACITY)
-        self._dim_effect.setEnabled(False)
-        self.grid_host.setGraphicsEffect(self._dim_effect)
+        self._veil = ComputingVeil(self.card_scroll.viewport())
         self._dim = QTimer(self)
         self._dim.setSingleShot(True)
         self._dim.setInterval(COMPUTING_DIM_AFTER_MS)
@@ -359,19 +387,21 @@ class ResultsTab(QWidget):
         if tokens is self.tokens:
             return
         self.tokens = tokens
+        self._veil.show_tokens(tokens)
         self.refresh()
 
     def set_computing(self, computing: bool) -> None:
         """Dim the shown values to 60 % once a compute has run for 300 ms; restore them when it ends."""
         if computing:
-            if not self._dim.isActive() and not self._dim_effect.isEnabled():
+            if not self._dim.isActive() and self._veil.isHidden():
                 self._dim.start()
             return
         self._dim.stop()
-        self._dim_effect.setEnabled(False)
+        self._veil.hide()
 
     def _apply_dim(self) -> None:
-        self._dim_effect.setEnabled(True)
+        self._veil.raise_()
+        self._veil.show()
 
     def _filter_changed(self) -> None:
         self.vm.set_status_filter(frozenset(s for s, box in self.filter_boxes.items() if box.isChecked()))
