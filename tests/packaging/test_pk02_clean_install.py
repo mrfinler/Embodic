@@ -76,6 +76,6 @@ def test_pk02_installed_wheel_applies_evidence_written_for_the_source_tree(clean
     finally:
         target.unlink()
     assert len(passed) == 63
-    assert result["eq_ids"] == ["EQ-10", "EQ-11"]
+    assert result["eq_ids"] == ["EQ-10", "EQ-11", "EQ-07"]  # D-058d: a phase R holds the EQ-07 phase assembly
     assert result["status"] == "inferred"
-    assert result["status_reasons"] == ["EQ-10 verified", "EQ-11 inferred"]
+    assert result["status_reasons"] == ["EQ-10 verified", "EQ-11 inferred", "EQ-07 inferred"]

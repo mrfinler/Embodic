@@ -30,6 +30,9 @@ KindTag: TypeAlias = Literal["computed", "input", "derived", "count"]
 AssumedReason: TypeAlias = Literal["example", "unmeasured_property", "registry_constant", "equation_assumption"]
 CONSTANT_PREFIX = "constant:"
 RESULT_PREFIX = "result:"
+NON_FINITE_CODE = "RANGE_NON_FINITE_RESULT"
+LOWER_BOUND_LABEL = "lower bound"
+BOUND_LABELS = frozenset({"upper bound", LOWER_BOUND_LABEL})
 
 
 class Chained(Protocol):
@@ -40,12 +43,18 @@ class Chained(Protocol):
         """Return the chain: own equations first, then the chains of what it was built from."""
         ...
 
+    @property
+    def validity(self) -> tuple[ValidityFlag, ...]:
+        """Return the validity flags that hold for this value and so for every value computed from it."""
+        ...
+
 
 @dataclass(frozen=True, slots=True)
 class Intermediate:
-    """The chain of a value a result is built from that is not a Traceable, such as a flux-linkage array."""
+    """The chain and validity flags of a value a result is built from that is not a Traceable, such as a field."""
 
     eq_ids: tuple[str, ...]
+    validity: tuple[ValidityFlag, ...] = ()
 
 
 def chain(eq_ids: Sequence[str], built_from: Sequence[Chained]) -> tuple[str, ...]:
@@ -53,9 +62,24 @@ def chain(eq_ids: Sequence[str], built_from: Sequence[Chained]) -> tuple[str, ..
     return tuple(dict.fromkeys([*eq_ids, *(eq_id for source in built_from for eq_id in source.eq_ids)]))
 
 
-def intermediate(*eq_ids: str, built_from: Sequence[Chained] = ()) -> Intermediate:
-    """Name the equations of an unreported value once, where it is produced, for every result built from it."""
-    return Intermediate(chain(eq_ids, built_from))
+def chain_validity(validity: Sequence[ValidityFlag], built_from: Sequence[Chained]) -> tuple[ValidityFlag, ...]:
+    """Return own flags first, then each source's flags, one flag per code (fix_wave_f4.md A.4, ADR-0003 decision 2).
+
+    A value computed from a value outside a validity limit is outside it too. The non-finite flag stays behind: it
+    states that one value is not a number, and a finite value computed from it is reported by its own check.
+    """
+    by_code: dict[str, ValidityFlag] = {}
+    inherited = (f for source in built_from for f in source.validity if f.code != NON_FINITE_CODE)
+    for flag in (*validity, *inherited):
+        by_code.setdefault(flag.code, flag)
+    return tuple(by_code.values())
+
+
+def intermediate(
+    *eq_ids: str, built_from: Sequence[Chained] = (), validity: Sequence[ValidityFlag] = ()
+) -> Intermediate:
+    """Name the equations and flags of an unreported value once, where it is produced, for every result using it."""
+    return Intermediate(chain(eq_ids, built_from), chain_validity(validity, built_from))
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -135,16 +159,17 @@ def traced(
     """Badge = weakest(equation status, test state, validity cap). Inputs build the tag only (D-007).
 
     `eq_ids` are the result's own equations; the first gives the tolerance. The chain appends the chain of every
-    result or intermediate in `built_from`, so the badge covers what the value was computed from (D-058d). `inputs`
-    lists every input the calculation used, including those reached through intermediate results, because the tag of
-    a result covers its whole chain (ADR-0003 decision 3).
+    result or intermediate in `built_from`, and the flags append theirs, so the badge covers what the value was
+    computed from (D-058d, fix_wave_f4.md A.4). `inputs` lists every input the calculation used, including those
+    reached through intermediate results, because the tag of a result covers its whole chain (ADR-0003 decision 3).
     """
     if kind_tag == "computed" and not eq_ids:
         raise ValueError(f"computed result {quantity!r} needs at least one EQ-ID")
     full_chain = chain(eq_ids, built_from)
+    flags = chain_validity(validity, built_from)
     entries = [registry.equation(eq_id) for eq_id in full_chain]
-    status, reasons = derive_badge([_link(e, registry) for e in entries], validity)
-    assumptions = _unique_assumptions(entries, validity)
+    status, reasons = derive_badge([_link(e, registry) for e in entries], flags)
+    assumptions = _unique_assumptions(entries, flags)
     return Traceable(
         quantity=quantity,
         value=value,
@@ -154,12 +179,12 @@ def traced(
         kind_tag=kind_tag,
         assumptions=assumptions,
         inputs=tuple(inputs),
-        assumed_inputs=assumed_inputs_tag(inputs, assumptions, validity),
-        validity=tuple(validity),
+        assumed_inputs=assumed_inputs_tag(inputs, assumptions, flags),
+        validity=flags,
         tolerance=entries[0].tolerance if entries else None,
         status=status,
         status_reasons=reasons,
-        label=next((e.label for e in entries if e.label is not None), None),
+        label=_label(entries, own=frozenset(eq_ids)),
     )
 
 
@@ -189,21 +214,33 @@ def traced_validity_metric(
     *,
     inputs: Sequence[InputRef],
     registry: Registry,
+    built_from: Sequence[Chained] = (),
 ) -> Traceable[float]:
     """Trace a validity metric such as EC-05's e_edge (REQ-T-16).
 
-    Its badge is the weakest of its equation's badge, the calibration status and the transfer status. The threshold
-    decides the cap on other results, not the trust in the metric, so a metric above its limit keeps its own badge.
+    Its badge is the weakest of its chain's badge, the calibration status and the transfer status. The threshold
+    decides the cap on other results, not the trust in the metric, so a metric above its own limit keeps its badge.
     """
     flag = evaluate_validity(check, eq_id, metric)
-    base = traced(quantity, metric, Unit.ONE, eq_ids=(eq_id,), inputs=inputs, registry=registry, validity=(flag,))
-    status = combine_status(_uncapped_badge(eq_id, registry), check.calibration_status, check.transfer_status)
+    base = traced(
+        quantity,
+        metric,
+        Unit.ONE,
+        eq_ids=(eq_id,),
+        inputs=inputs,
+        registry=registry,
+        validity=(flag,),
+        built_from=built_from,
+    )
+    links = [_link(registry.equation(e), registry) for e in base.eq_ids]
+    chain_badge, chain_reasons = derive_badge(links, [f for f in base.validity if f.code != check.id])
+    status = combine_status(chain_badge, check.calibration_status, check.transfer_status)
     reasons = (
-        *(r for r in base.status_reasons if not r.endswith("validity limit exceeded")),
+        *chain_reasons,
         f"{check.id} calibration {check.calibration_status}",
         f"{check.id} transfer to this design {check.transfer_status}",
     )
-    label = "lower bound" if check.metric_bound is MetricBound.LOWER_BOUND else base.label
+    label = LOWER_BOUND_LABEL if check.metric_bound is MetricBound.LOWER_BOUND else base.label
     return dataclasses.replace(base, status=status, status_reasons=reasons, label=label)
 
 
@@ -263,8 +300,15 @@ def _link(entry: EquationEntry, registry: Registry) -> ChainLink:
     )
 
 
-def _uncapped_badge(eq_id: str, registry: Registry) -> Status:
-    return derive_badge([_link(registry.equation(eq_id), registry)], ())[0]
+def _label(entries: Sequence[EquationEntry], *, own: frozenset[str]) -> str | None:
+    """Return the first label of the chain; a bound label counts only on the result its own equation computes.
+
+    A bound states the error direction of one quantity, and a sum or a ratio of it can lose or invert that direction.
+    A trust label such as "estimate" travels: a value computed from an estimate is an estimate (fix_wave_f4.md A.4).
+    """
+    return next(
+        (e.label for e in entries if e.label is not None and (e.id in own or e.label not in BOUND_LABELS)), None
+    )
 
 
 def _unique_assumptions(entries: Sequence[EquationEntry], validity: Sequence[ValidityFlag]) -> tuple[Assumption, ...]:

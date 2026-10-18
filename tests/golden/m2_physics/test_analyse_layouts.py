@@ -147,10 +147,14 @@ def results() -> Mapping[str, AnalysisResult]:
 
 @pytest.mark.parametrize("case", CASES)
 def test_every_result_field_is_a_traceable_with_an_eq_id(results: Mapping[str, AnalysisResult], case: str) -> None:
-    """Defect caught: a bare float, or a Traceable without an equation, reaching the AnalysisResult."""
+    """Defect caught: a bare float, or a computed Traceable without an equation, reaching the AnalysisResult.
+
+    A layer z comes from the stack-up alone, so it is `derived` and holds no equation (D-060d).
+    """
     for where, value in _traceables(results[case]):
         assert isinstance(value, Traceable), f"{where} is {type(value).__name__}, not a Traceable"
-        assert value.eq_ids, f"{where} has no EQ id"
+        derived = where.endswith(".z_mm")
+        assert (value.kind_tag, bool(value.eq_ids)) == (("derived", False) if derived else ("computed", True)), where
         assert all(e.startswith("EQ-") for e in value.eq_ids), where
 
 
@@ -226,7 +230,7 @@ def test_line_peak_differs_from_the_fundamental_by_at_most_the_harmonic_sum(
     deviation = abs(r.ke_line_peak_v_s_per_rad.value / r.ke_line_v_s_per_rad.value - 1.0)
     assert 0.0 < deviation <= math.sqrt(n_other) * r.thd_line.value, (deviation, r.thd_line.value)
     assert r.ke_line_peak_v_s_per_rad.unit is r.ke_line_v_s_per_rad.unit
-    assert r.ke_line_peak_v_s_per_rad.eq_ids == ("EQ-18", "EQ-09", "EQ-07", "EQ-06", "EQ-05")
+    assert r.ke_line_peak_v_s_per_rad.eq_ids == ("EQ-18", "EQ-07", "EQ-06", "EQ-05")  # fix_wave_f4.md A.3
 
 
 @pytest.mark.parametrize("case", CASES)

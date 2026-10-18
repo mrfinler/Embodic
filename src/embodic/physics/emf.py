@@ -45,8 +45,37 @@ def pole_arc_ratio_mm(rotor: RotorSpec, radius_mm: FloatArray) -> FloatArray:
 
 
 def pole_arc_ratio_eq_ids(rotor: RotorSpec) -> tuple[str, ...]:
-    """Return the EQ-IDs pole_arc_ratio_mm evaluates: EQ-04 for a block magnet, none for an arc magnet's given ratio."""
+    """Return the EQ-IDs pole_arc_ratio_mm evaluates: EQ-04 for a block magnet, none for an arc magnet's given ratio.
+
+    Parameters
+    ----------
+    rotor : RotorSpec
+        Magnet geometry in mm and the pole count; only the magnet kind is read.
+
+    Returns
+    -------
+    tuple[str, ...]
+        EQ-IDs, text with no unit.
+    """
     return () if isinstance(rotor.magnet, ArcMagnet) else ("EQ-04",)
+
+
+def pole_arc_ratio_pointer(rotor: RotorSpec) -> str:
+    """Return the input pole_arc_ratio_mm reads besides the poles: an arc magnet's ratio or a block magnet's width.
+
+    References: EQ-04 (the block width), EQ-05 (the arc ratio enters the field directly).
+
+    Parameters
+    ----------
+    rotor : RotorSpec
+        Magnet geometry in mm and the pole count; only the magnet kind is read.
+
+    Returns
+    -------
+    str
+        JSON pointer of a dimensionless ratio (arc) or a width in mm (block), text with no unit.
+    """
+    return "/rotor/magnet/pole_arc_ratio" if isinstance(rotor.magnet, ArcMagnet) else "/rotor/magnet/width_mm"
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

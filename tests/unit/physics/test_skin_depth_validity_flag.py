@@ -50,3 +50,22 @@ def test_t08_the_packaged_trace_width_raises_no_skin_depth_flag():
     analysis = analysed(None)
     for quantity in R_AND_EDDY:
         assert [f.code for f in getattr(analysis, quantity).validity if f.code == "RANGE_SKIN_DEPTH"] == []
+
+
+@pytest.mark.req("REQ-T-08")
+def test_t08_the_skin_depth_flag_travels_to_every_result_built_from_the_resistances():
+    """Catches DEF-UE20-01 (fix_wave_f4.md A.4): a circulating or interconnect loss without the flag of its R."""
+    analysis = analysed(WIDTH_MM)
+    built_from_r = [
+        analysis.loss_circulating_w,
+        analysis.loss_interconnect_w,
+        analysis.loss_total_w,
+        analysis.efficiency,
+        analysis.motor_constant_n_m_per_sqrt_w,
+        analysis.temperature_rise_k,
+        *(phase.circulating_loss_w for phase in analysis.phases),
+    ]
+    missing = [t.quantity for t in built_from_r if "RANGE_SKIN_DEPTH" not in [f.code for f in t.validity]]
+    assert missing == []
+    not_from_r = (analysis.skin_depth_mm, analysis.loss_delta_circulating_w, analysis.torque_n_m)
+    assert [t.quantity for t in not_from_r if "RANGE_SKIN_DEPTH" in [f.code for f in t.validity]] == []
