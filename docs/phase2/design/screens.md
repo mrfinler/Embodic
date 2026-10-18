@@ -1,10 +1,11 @@
-Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5; section 14a row `ts-section-board` and rulings i, j: claude-sonnet-5-5 (U-S4f)
+Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5; section 14a row `ts-section-board` and rulings i, j: claude-sonnet-5-5 (U-S4f); section 5 Messages cells of the three stack-up helper rows: claude-sonnet-5-5 (U-S14)
 
 # embodic screens v2.3 (Phase 2, PySide6)
 
 Date 2026-10-08, revised 2026-10-18 (U-S13): `preview-timer` declared in 14a, which now admits non-visual objects; the
 stack-up helper rows give their step bounds; the stepping convention takes the rule 4 correction. All three follow
-`docs/phase3/design/fix_wave_f3.md` sections (a) to (c). Revised 2026-10-17 (U-S12): field-row layout, `param-stack-mode`, the screw buttons and numeric
+`docs/phase3/design/fix_wave_f3.md` sections (a) to (c). Revised 2026-10-18 (U-S14, D-060b): the Messages cells of
+`param-copper-weight`, `param-board-thickness` and `param-board-thickness-error` name the range issues they show. Revised 2026-10-17 (U-S12): field-row layout, `param-stack-mode`, the screw buttons and numeric
 stepping follow `docs/phase3/design/fix_wave_f2.md` sections (a) and (b). Revised 2026-10-12 (U-S4h): `compare-scroll`
 declared in section 10. Revised 2026-10-09 (U-S4f): `ts-section-board` declared in 14a; rulings i and j of
 `m4_review_2.md` section 5 applied to sections 4 and 5 (screw buttons, last table column). Revised 2026-10-09 (U-S4e): rulings a, c, d and g of `m4_review_2.md` applied to sections 4, 5, 6,
@@ -278,9 +279,9 @@ One `QGroupBox` per group, in this order. Every row applies to all three topolog
 | `param-screw-angle-offset` | Fasteners | "Angle offset of the selected pattern", degrees | `/outline/screws/*/angle_offset_rad` | default | none |
 | `btn-screw-add` | Fasteners | QPushButton "Add", accessible name "Add screw pattern", secondary boundary like `btn-drc-locate` (U-S4f ruling i, U-S12 a) | command | none | none |
 | `btn-screw-remove` | Fasteners | QPushButton "Remove", accessible name "Remove screw pattern", secondary boundary (U-S4f ruling i, U-S12 a) | command | none | none |
-| `param-copper-weight` | Stack-up and manufacturing | "Copper weight", oz; Up and Down step 0.5 oz within 0.25 to 10 oz, positive (U-S13 b) | view model: stack-up generator writes `/stackup/layers` | empty | none |
-| `param-board-thickness` | Stack-up and manufacturing | "Board thickness", mm; Up and Down step 0.1 mm within 0.2 to 10 mm, positive (U-S13 b) | view model: stack-up generator writes `/stackup/layers` | empty | none |
-| `param-board-thickness-error` | Stack-up and manufacturing | QLabel[class="field-error"] under the two stack-up inputs, hidden while empty (U-S12) | view model: `DesignSession.stackup_issues` (D-053a) | none | the message of each stack-up issue, one per line |
+| `param-copper-weight` | Stack-up and manufacturing | "Copper weight", oz; Up and Down step 0.5 oz within 0.25 to 10 oz, positive (U-S13 b) | view model: stack-up generator writes `/stackup/layers` | empty | The copper weight is not checked before the generator writes. A weight below 0.25 oz or above 10 oz reaches the copper layers, which raise `RANGE_BELOW_SUPPORTED` or `RANGE_ABOVE_SUPPORTED`, one issue per copper layer at `/stackup/layers/*/thickness_mm`, and `issues-list` shows them. Each message gives its limit in mm, and each issue carries a clamp suggestion that `btn-apply-suggestion` applies. `param-board-thickness-error` does not show them (revision 2026-10-18, U-S14; D-060b) |
+| `param-board-thickness` | Stack-up and manufacturing | "Board thickness", mm; Up and Down step 0.1 mm within 0.2 to 10 mm, positive (U-S13 b) | view model: stack-up generator writes `/stackup/layers` | empty | A board below 0.2 mm raises `RANGE_BELOW_SUPPORTED` and a board above 10 mm raises `RANGE_ABOVE_SUPPORTED`, both at `/stackup/layers` and both shown in `param-board-thickness-error`. The generator writes nothing while one shows. Neither issue has a suggestion, and `issues-list` does not hold them (revision 2026-10-18, U-S14; D-060b) |
+| `param-board-thickness-error` | Stack-up and manufacturing | QLabel[class="field-error"] under the two stack-up inputs, hidden while empty (U-S12) | view model: `DesignSession.stackup_issues` (D-053a) | none | the message of each stack-up issue, one per line. The range issue of the board thickness (`RANGE_BELOW_SUPPORTED` or `RANGE_ABOVE_SUPPORTED`) comes first, then `INVALID_STACKUP_COPPER_EXCEEDS_BOARD`. The checks run once the layer count, the copper weight and the board thickness all hold a value (revision 2026-10-18, U-S14; D-060b) |
 | `param-min-trace` | Stack-up and manufacturing | "Minimum trace width", mm | `/drc_rules/min_trace_width_mm` | required | DRC `DRC_MIN_WIDTH` |
 | `param-min-space` | Stack-up and manufacturing | "Trace clearance (trace to trace, pad to trace)", mm | `/drc_rules/trace_clearance_mm` | required | DRC `DRC_TRACE_TRACE`, `DRC_PAD_TRACE` |
 | `param-min-via-space` | Stack-up and manufacturing | "Via clearance (to traces, vias and pads; pad to pad)", mm | `/drc_rules/via_clearance_mm` | required | DRC `DRC_TRACE_VIA`, `DRC_VIA_VIA`, `DRC_PAD_PAD` |
