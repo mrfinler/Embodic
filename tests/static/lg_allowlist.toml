@@ -112,14 +112,6 @@ status = "inferred"
 
 [[allow]]
 class = "claim"
-place = '^guide:EQ-08/Formula:\d+$'
-kind = "text-line"
-text = '^alpha_k = p\*theta_k; 60-degree belts '
-reason = "The formula of EQ-08 defines the pattern property 'balance' as signed angle sets. The wording is an open point (plan 5.8.9)."
-status = "inferred"
-
-[[allow]]
-class = "claim"
 place = '^resources/icons/ICONS\.md:'
 kind = "text-line"
 text = 'Toolstrip Verify > Torque-speed; results tab Torque-speed'
