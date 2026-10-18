@@ -466,9 +466,9 @@ def analyse(
     layer_results = tuple(
         LayerResult(
             layer=name,
-            z_mm=traced(
+            z_mm=traced(  # the stack-up gives z with no equation (D-060d)
                 "layer_z_mm", z, Unit.MM, eq_ids=(), inputs=copper_t, registry=registry, kind_tag="derived"
-            ),  # the stack-up gives z with no equation (D-060d)
+            ),
             b1_peak_mid_radius_t=tr(
                 "b1_peak_mid_radius_t",
                 float(

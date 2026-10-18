@@ -8,8 +8,15 @@ from tests.unit.results.registries import raw_documents, with_all_tests_passed
 from embodic.model.fields import FieldKind
 from embodic.model.provenance import Provenance
 from embodic.results.registry import Registry, parse_registry
-from embodic.results.status import MetricBound, Status, ValidityEffect
-from embodic.results.traceable import InputRef, evaluate_validity, intermediate, traced, traced_validity_metric
+from embodic.results.status import MetricBound, Status, ValidityEffect, ValidityFlag
+from embodic.results.traceable import (
+    NON_FINITE_CODE,
+    InputRef,
+    evaluate_validity,
+    intermediate,
+    traced,
+    traced_validity_metric,
+)
 from embodic.units import Unit
 
 THICKNESS = "/stackup/layers/0/thickness_mm"
@@ -236,3 +243,61 @@ def test_intermediate_names_its_equations_once_for_every_result_built_from_it(pa
     ke = traced("ke_phase", 1.0, Unit.V_S_PER_RAD, eq_ids=("EQ-06",), inputs=(), registry=packaged, built_from=(emf,))
     assert emf.eq_ids == ("EQ-07", "EQ-06", "EQ-05", "EQ-04")
     assert ke.eq_ids == ("EQ-06", "EQ-07", "EQ-05", "EQ-04")
+
+
+SKIN = ValidityFlag(code="RANGE_SKIN_DEPTH", message="wide trace", eq_id="EQ-13", effect=ValidityEffect.LIMITATION)
+NON_FINITE = ValidityFlag(code=NON_FINITE_CODE, message="value is not finite", eq_id="EQ-13", effect=ValidityEffect.CAP)
+
+
+@pytest.mark.req("REQ-T-05")
+def test_traced_takes_the_flags_of_what_it_is_built_from_once_per_code(contract_registry):
+    """Catches DEF-UE20-01: a loss built from the capped EQ-05 field that keeps its badge, or a flag listed twice."""
+    registry = with_all_tests_passed(contract_registry)
+    capped = evaluate_validity(ec05(registry), "EQ-05", 0.124)
+    field = intermediate("EQ-05", validity=(capped,))
+    resistance = intermediate("EQ-10", validity=(SKIN,))
+    loss = traced(
+        "loss_eddy", 1.0, Unit.W, eq_ids=("EQ-12",), inputs=(), registry=registry, built_from=(field, resistance)
+    )
+    again = traced("loss_total", 1.0, Unit.W, eq_ids=("EQ-26",), inputs=(), registry=registry, built_from=(loss, field))
+    assert [f.code for f in loss.validity] == ["EC-05", "RANGE_SKIN_DEPTH"]
+    assert [f.code for f in again.validity] == ["EC-05", "RANGE_SKIN_DEPTH"]
+    assert (loss.status, again.status) == (Status.UNRESOLVED, Status.UNRESOLVED)
+
+
+@pytest.mark.req("REQ-T-05", "REQ-F-14")
+def test_the_non_finite_flag_stays_on_the_value_it_describes(packaged):
+    """Catches a finite result named by RANGE_NON_FINITE_RESULT because a value it is built from is not finite."""
+    skin_depth = traced("skin_depth", float("inf"), Unit.MM, eq_ids=("EQ-13",), inputs=(), registry=packaged)
+    skin_depth = dataclasses.replace(skin_depth, validity=(NON_FINITE, SKIN))
+    built = traced("q", 1.0, Unit.ONE, eq_ids=("EQ-10",), inputs=(), registry=packaged, built_from=(skin_depth,))
+    assert [f.code for f in built.validity] == ["RANGE_SKIN_DEPTH"]
+
+
+@pytest.mark.req("REQ-T-05")
+def test_a_bound_label_stays_on_its_own_result_and_a_trust_label_travels(packaged):
+    """Catches DEF-UE20-02: 'upper bound' of EQ-19 on a total or a ratio, or 'estimate' of EQ-14 lost downstream."""
+    p_delta = traced("loss_delta", 0.0, Unit.W, eq_ids=("EQ-19",), inputs=(), registry=packaged)
+    inductance = traced("inductance", 1e-6, Unit.H, eq_ids=("EQ-14",), inputs=(), registry=packaged)
+    total = traced("loss_total", 1.0, Unit.W, eq_ids=("EQ-26",), inputs=(), registry=packaged, built_from=(p_delta,))
+    curve = traced(
+        "curve", 1.0, Unit.N_M, eq_ids=("EQ-26",), inputs=(), registry=packaged, built_from=(p_delta, inductance)
+    )
+    assert (p_delta.label, total.label, curve.label) == ("upper bound", None, "estimate")
+
+
+@pytest.mark.req("REQ-T-16")
+def test_a_validity_metric_takes_its_source_chain_and_ignores_only_its_own_cap(contract_registry):
+    """Catches DEF-UE20-06: a block magnet's e_edge without EQ-04, or e_edge capped by its own threshold."""
+    registry = with_all_tests_passed(contract_registry)
+    check = ec05(registry)
+    field = intermediate("EQ-05", "EQ-04", validity=(evaluate_validity(check, "EQ-05", 0.124),))
+    e_edge = traced_validity_metric(
+        "edge_leakage_fraction", check, "EQ-05", 0.124, inputs=(), registry=registry, built_from=(field,)
+    )
+    assert (e_edge.eq_ids, e_edge.status) == (("EQ-05", "EQ-04"), Status.ASSUMPTION)
+    capping_source = intermediate("EQ-05", validity=(dataclasses.replace(SKIN, effect=ValidityEffect.CAP),))
+    capped = traced_validity_metric(
+        "edge_leakage_fraction", check, "EQ-05", 0.053, inputs=(), registry=registry, built_from=(capping_source,)
+    )
+    assert capped.status is Status.UNRESOLVED
