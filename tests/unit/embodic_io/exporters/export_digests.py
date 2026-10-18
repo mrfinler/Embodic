@@ -16,13 +16,13 @@ from pathlib import Path
 from embodic.api import ComputeOutcome, compute_project
 from embodic.io import report
 from embodic.io.examples import examples_dir
-from embodic.io.exporters import ExportRefused, PhaseRenderMode, export_metadata, exportable_boards
+from embodic.io.exporters import ExportMetadata, ExportRefused, PhaseRenderMode, export_metadata, exportable_boards
 from embodic.io.svg_writer import svg_document
 
 GENERATED_UTC = "2026-01-01T00:00:00Z"
 
 
-def _stamp(outcome: ComputeOutcome):
+def _stamp(outcome: ComputeOutcome) -> ExportMetadata:
     return dataclasses.replace(export_metadata(outcome), generated_utc=GENERATED_UTC)
 
 
@@ -36,7 +36,7 @@ def digests(path: Path) -> list[tuple[str, str]]:
     for mode in PhaseRenderMode:
         text, _ = svg_document(boards, mode, _stamp(outcome))
         rows.append((f"svg {mode.value}", hashlib.sha256(text.encode("utf-8")).hexdigest()))
-    report.export_metadata = lambda out: _stamp(out)  # type: ignore[assignment]
+    report.export_metadata = _stamp  # type: ignore[assignment]
     with tempfile.TemporaryDirectory() as folder:
         target = Path(folder) / "report.pdf"
         assert not isinstance(report.write_report_pdf(outcome, target), ExportRefused)
