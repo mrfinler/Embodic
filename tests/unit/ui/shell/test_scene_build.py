@@ -22,6 +22,7 @@ def outcome(request):
     return compute(project.design, project_provenance(project))
 
 
+@pytest.mark.req("REQ-N-02")
 def test_def_u_m8n_02_the_scene_computes_the_coil_marks_of_each_board_once(outcome, monkeypatch):
     """Catches label_anchors searching the spiral eyes again after the scene did (D08: 300 + 307 of 627 ms).
 
@@ -41,6 +42,7 @@ def test_def_u_m8n_02_the_scene_computes_the_coil_marks_of_each_board_once(outco
     assert calls == [id(board) for board in scene.boards]
 
 
+@pytest.mark.req("REQ-N-23")
 def test_def_u_m8n_02_the_scene_keeps_the_labels_and_marks_the_exports_draw(outcome):
     """Catches a scene whose labels or eyes drift from the ones label_anchors and coil_marks give the exporters."""
     scene = ready_state(outcome).scene
