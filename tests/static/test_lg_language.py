@@ -1,9 +1,13 @@
 """LG-01 and LG-08: software text is English (REQ-L-01)."""
 
 import ast
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
+from tests.static import lg_scan
+from tests.static.lg_scan import distinct_words
 
 THAI_FIRST, THAI_LAST = 0x0E00, 0x0E7F
 ALLOWED_SYMBOLS = frozenset("°µΩ²³·−×±≤≥√")
@@ -117,3 +121,72 @@ def test_lg08_flags_planted_thai(tmp_path):
     (tmp_path / "ok.svg").write_text("<svg/>\n", encoding="utf-8")
     (violation,) = check_no_thai([tmp_path])
     assert "light.json:1" in violation
+
+
+WORD_FILES = ("ui/strings/shell.py", "errors/catalogue/base.py", "io/report.py", "io/readme_writer.py")
+
+
+def word_package(tmp_path: Path, **sources: str) -> Path:
+    """Write a package folder with one module per word-list source and return it; `sources` maps a file to its text."""
+    package = tmp_path / "embodic"
+    for relative in WORD_FILES:
+        path = package / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(sources.get(relative, 'EMPTY = "."\n'), encoding="utf-8")
+    return package
+
+
+@pytest.mark.req("REQ-L-01")
+@pytest.mark.parametrize("relative", WORD_FILES)
+def test_lg01_word_list_holds_a_word_planted_in_every_catalogue_and_template(tmp_path, relative):
+    """Catches a list that scans nothing, or that leaves out one catalogue folder or one report template."""
+    package = word_package(tmp_path, **{relative: 'TEXTS = {"menu.quuxkey": "Zorgle frobnicate"}\n'})
+    assert {"zorgle", "frobnicate"} <= set(distinct_words(package))
+
+
+@pytest.mark.req("REQ-L-01")
+def test_lg01_word_list_leaves_out_docstrings_and_catalogue_keys(tmp_path):
+    """Catches a list that reads text no user sees: a docstring, or the key of a catalogue mapping."""
+    source = '"""Wibblish docstring."""\nTEXTS = {"menu.quuxkey": "Zorgle"}\n'
+    words = distinct_words(word_package(tmp_path, **{"ui/strings/shell.py": source}))
+    assert "zorgle" in words
+    assert not {"wibblish", "quuxkey"} & set(words)
+
+
+@pytest.mark.req("REQ-L-01")
+def test_lg01_word_list_is_sorted_distinct_lower_case_with_format_fields_dropped_and_camel_case_split(tmp_path):
+    """Catches a list that repeats a word, keeps case, spells out `{value:.3g}` or reads isUnbalanced as one word."""
+    source = 'TEXT = "Total {value:.3g} is Unbalanced, isUnbalanced and unbalanced twice"\n'
+    words = distinct_words(word_package(tmp_path, **{"io/report.py": source}))
+    assert words == ["and", "is", "total", "twice", "unbalanced"]
+
+
+@pytest.mark.req("REQ-L-01")
+@pytest.mark.parametrize("missing", ["io/readme_writer.py", "errors/catalogue"])
+def test_lg01_word_list_fails_when_a_named_source_is_missing(tmp_path, missing):
+    """Catches a rename that leaves the list shorter with no error, which the reviewer would read as complete."""
+    package = word_package(tmp_path)
+    target = package / missing
+    for path in sorted(target.rglob("*"), reverse=True) if target.is_dir() else [target]:
+        path.unlink() if path.is_file() else path.rmdir()
+    with pytest.raises(FileNotFoundError):
+        distinct_words(package)
+
+
+@pytest.mark.req("REQ-L-01")
+def test_lg01_word_list_of_the_real_package_is_sorted_distinct_and_free_of_format_debris():
+    """Catches a list of the real package that is empty, unsorted, repeats a word or keeps a field, digit or `_`."""
+    words = distinct_words()
+    assert words
+    assert words == sorted(set(words))
+    assert all(word == word.lower() and not any(c.isspace() or c in "{}_0123456789" for c in word) for word in words)
+
+
+@pytest.mark.req("REQ-L-01")
+def test_lg01_word_command_prints_the_list_one_word_per_line():
+    """Catches a command that prints nothing, prints the list in another shape or fails for a non-ASCII letter."""
+    done = subprocess.run(
+        [sys.executable, str(Path(lg_scan.__file__))], capture_output=True, check=False, cwd=lg_scan.REPO
+    )
+    assert done.returncode == 0, done.stderr.decode("utf-8", errors="replace")
+    assert done.stdout.decode("utf-8").splitlines() == distinct_words()
