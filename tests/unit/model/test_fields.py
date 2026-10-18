@@ -145,7 +145,7 @@ def test_screw_hole_diameter_is_a_required_positive_mm_input_with_its_own_widget
     spec = FIELD_BY_KEY["/outline/screws/*/hole_diameter_mm"]
     assert (spec.kind, spec.unit, spec.required, spec.neutral_value) == (FieldKind.DESIGN, Unit.MM, True, None)
     assert (spec.group, spec.widget_id) == (FieldGroup.FASTENERS, "param-screw-hole-diameter")
-    assert (spec.limits, spec.step, spec.topologies) == (Limits(sign=Sign.POSITIVE), None, frozenset(TopologyKind))
+    assert (spec.limits, spec.step, spec.topologies) == (Limits(sign=Sign.POSITIVE), 0.1, frozenset(TopologyKind))
 
 
 @pytest.mark.req("REQ-T-06")
