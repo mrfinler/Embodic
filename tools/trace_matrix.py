@@ -163,7 +163,7 @@ def main(argv: list[str] | None = None) -> int:
     matrix = render_matrix(requirements, tests)
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
-        args.out.write_text(matrix, encoding="utf-8")
+        args.out.write_text(matrix, encoding="utf-8", newline="\n")
     else:
         sys.stdout.write(matrix)
 

@@ -2,9 +2,16 @@
 
 Xcoil's ``kind`` names (engine.js) map to ``PrimitiveRole`` as below. Serpentine's three end-turn variants ``far``,
 ``near`` and ``closing`` (engine.js l.471) are end turns, so they share ``END_TURN``.
+
+One exception reads the layout, not the kind. The last turn of a sector spiral has no left side of its own: Xcoil
+continues the radial line from the inner end-turn corner up to the centre-via radius as a ``lead`` Line (engine.js
+l.2297 for arc ends, l.2301 for chord ends). That line is a radial conductor, so it maps to ``SIDE`` and
+``analyse()`` counts it as the 2N-th series conductor of EQ-27 (fix_wave_f8.md A.3, DEF-UE22-01). The ``lead`` arc and
+the chord Line that follow it end at the centre via and stay ``LEAD``.
 """
 
-from collections.abc import Mapping
+import math
+from collections.abc import Mapping, Sequence
 from itertools import pairwise
 from typing import Any
 
@@ -33,9 +40,25 @@ ROLE_BY_XCOIL_KIND: Mapping[str, PrimitiveRole] = {
 }
 
 
-def prim_from_record(record: Mapping[str, Any]) -> Primitive:
-    """Board-dump primitive record (Xcoil ``a1``/``a2``) to a Line or Arc; the sweep is Xcoil's ``a2 - a1``."""
+def _ends_at_a_via(record: Mapping[str, Any], vias_xy_mm: Sequence[tuple[float, float]]) -> bool:
+    ends = ((record["x1"], record["y1"]), (record["x2"], record["y2"]))
+    return any(math.hypot(x - vx, y - vy) <= COINCIDENCE_MM for x, y in ends for vx, vy in vias_xy_mm)
+
+
+def prim_from_record(record: Mapping[str, Any], *, centre_vias_xy_mm: Sequence[tuple[float, float]] = ()) -> Primitive:
+    """Board-dump primitive record (Xcoil ``a1``/``a2``) to a Line or Arc; the sweep is Xcoil's ``a2 - a1``.
+
+    ``centre_vias_xy_mm`` are the centre vias of a sector layout. A ``lead`` Line with no end on one is the partial last
+    side of a spiral and maps to ``SIDE``; with no centre vias given, the kind decides alone.
+    """
     role = ROLE_BY_XCOIL_KIND[record["kind"]]
+    if (
+        role is PrimitiveRole.LEAD
+        and record["type"] == "line"
+        and centre_vias_xy_mm
+        and not _ends_at_a_via(record, centre_vias_xy_mm)
+    ):
+        role = PrimitiveRole.SIDE
     if record["type"] == "line":
         return Line(
             x1_mm=record["x1"],
@@ -94,8 +117,15 @@ def _chains(obj: Mapping[str, Any]) -> list[Mapping[str, Any]]:
     return [{**obj, "prims": records[start:stop]} for start, stop in pairwise(bounds)]
 
 
+def _centre_vias_xy_mm(raw: Mapping[str, Any]) -> tuple[tuple[float, float], ...]:
+    if raw["params"]["topology"] != "sector":
+        return ()
+    return tuple((v["x"], v["y"]) for v in raw["vias"] if v["ring"] == "centre")
+
+
 def _paths(raw: Mapping[str, Any]) -> tuple[tuple[CopperPath, ...], tuple[int, ...]]:
     """(paths, interconnect path ids): one path per Xcoil object."""
+    centre_vias = _centre_vias_xy_mm(raw)
     paths: list[CopperPath] = []
     interconnect: list[int] = []
     for layer in raw["layers"]:
@@ -110,7 +140,7 @@ def _paths(raw: Mapping[str, Any]) -> tuple[tuple[CopperPath, ...], tuple[int, .
                     id=len(paths),
                     layer=layer["name"],
                     net=obj["net"] if is_ic else _phase_net(phase),
-                    primitives=tuple(prim_from_record(r) for r in obj["prims"]),
+                    primitives=tuple(prim_from_record(r, centre_vias_xy_mm=centre_vias) for r in obj["prims"]),
                     phase=phase,
                     element=element,
                     polarity=0,

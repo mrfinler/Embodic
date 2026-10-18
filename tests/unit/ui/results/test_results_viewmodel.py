@@ -160,9 +160,7 @@ def test_def_uv4_07_a_row_names_label_value_unit_and_status_in_one_accessible_te
     assert rows["resistance_phase_operating_ohm"].accessible_name == (
         "Phase resistance at operating temperature R_ph, 502 milliohm, not tested"
     )
-    assert rows["winding_factor_1"].accessible_name == (
-        "Fundamental winding factor k_w1, 0.483 dimensionless, not tested"
-    )
+    assert rows["winding_factor_1"].accessible_name == ("Utilisation factor k_u, 0.483 dimensionless, not tested")
     assert rows["inductance_estimate_h"].accessible_name == (
         "Inductance, estimate L_m, 1.34 microhenry, unresolved, estimate"
     )

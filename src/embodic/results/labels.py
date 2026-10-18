@@ -16,7 +16,7 @@ QUANTITY_LABELS: Mapping[str, str] = MappingProxyType(
         "ke_line_peak_v_s_per_rad": "Line back-EMF constant, peak",  # EQ-18
         "kt_n_m_per_a": "Torque constant per line current, rms",  # EQ-09 Kt
         "kv_rpm_per_v": "Speed constant",  # EQ-09 K_v
-        "winding_factor_1": "Fundamental winding factor",  # EQ-08 k_w1
+        "winding_factor_1": "Utilisation factor",  # EQ-27 k_u
         "resistance_phase_20c_ohm": f"Phase resistance at 20{UNIT_SPACE}°C",  # EQ-10
         "resistance_phase_operating_ohm": "Phase resistance at operating temperature",  # EQ-10
         "resistance_line_ohm": "Line-to-line resistance",  # EQ-23
@@ -58,7 +58,7 @@ QUANTITY_SYMBOLS: Mapping[str, str] = MappingProxyType(
         "ke_line_v_s_per_rad": "Ke_LL",  # l.219
         "kt_n_m_per_a": "Kt",  # l.220
         "kv_rpm_per_v": "K_v",  # l.220
-        "winding_factor_1": "k_w1",  # l.337, EQ-14 (N k_w1)
+        "winding_factor_1": "k_u",  # l.540, EQ-27 (EQ-14 reads N k_w1 = N k_u)
         "resistance_phase_20c_ohm": "R_ph",  # l.422
         "resistance_phase_operating_ohm": "R_ph",  # l.422
         "resistance_line_ohm": "R_LL",  # l.441

@@ -31,7 +31,7 @@ XCOIL_ALPHA_PER_K = 0.00393
 pytestmark = pytest.mark.req("REQ-F-11")
 CASES = load_area("physics")
 LAYOUT_FNS = frozenset(
-    {"computeAnalysis", "driveAnalysis", "torqueSpeed"}
+    {"computeAnalysis", "utilisationFactor", "driveAnalysis", "torqueSpeed"}
 )  # test_analysis_golden, test_torque_speed_golden
 ALLOWED = load_allow_list(Path(__file__).parents[1] / "expected_diffs" / "physics.toml")
 

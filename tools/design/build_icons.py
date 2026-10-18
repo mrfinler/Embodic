@@ -364,7 +364,7 @@ def main() -> int:
     """Write every icon and ICONS.md."""
     OUT.mkdir(parents=True, exist_ok=True)
     for name, (_, _, _, body) in ICONS.items():
-        (OUT / f"{name}.svg").write_text(HEAD + body + "</svg>\n", encoding="utf-8")
+        (OUT / f"{name}.svg").write_text(HEAD + body + "</svg>\n", encoding="utf-8", newline="\n")
     lines = [
         f"Prepared by: Agent 1 (UX/UI Expert Designer) - model: {MODEL}",
         "",
@@ -395,7 +395,7 @@ def main() -> int:
         "(`topology-spiral`, `topology-serpentine` or `topology-wave`).",
         "",
     ]
-    (OUT / "ICONS.md").write_text("\n".join(lines), encoding="utf-8")
+    (OUT / "ICONS.md").write_text("\n".join(lines), encoding="utf-8", newline="\n")
     print(len(ICONS), "icons written")
     return 0
 

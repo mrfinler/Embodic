@@ -1,9 +1,9 @@
 """GR-22 (U-M2e-3): analyse() on the three mapped Xcoil layouts against compute().analysis fixtures.
 
 Covers EQ-06 (Ke per phase), EQ-12 (eddy loss), EQ-18 (phase THD, phase and line waveform), EQ-23 (line resistance with
-interconnect copper) and EQ-26 (efficiency). Xcoil's copper constants are injected into the registry, so a diff means
-the port differs, not the resistivity constant (embodic's registry holds 1.7241e-8, Xcoil 1.724e-8). Every Xcoil number
-comes from a fixture of tests/golden/data/physics.
+interconnect copper), EQ-26 (efficiency) and EQ-27 (utilisation factor k_u). Xcoil's copper constants are injected into
+the registry, so a diff means the port differs, not the resistivity constant (embodic's registry holds 1.7241e-8, Xcoil
+1.724e-8). Every Xcoil number comes from a fixture of tests/golden/data/physics.
 
 Resistance and copper loss are not compared at result level on sector and wave: the mapper returns no element list, so
 `_series_circuit` sums every phase-tagged path in series. For those layouts EQ-10 is checked per object kind in
@@ -21,7 +21,8 @@ from harness.allow_list import apply_allow_list, load_allow_list
 from harness.codec import load_area
 from harness.compare import INTEGRATED, KERNEL, Tolerance, compare_scalar, compare_sequence
 
-from embodic.model.vocabulary import ConnectionTopology
+from embodic.geometry.primitives import PrimitiveRole
+from embodic.model.vocabulary import ConnectionTopology, Phase
 from embodic.physics import analyse, efficiency, line_resistance_ohm
 from embodic.results import AnalysisResult, Registry, load_registry
 from m2_physics.test_analyse_layouts import CASES, _design, _raw, _stack
@@ -33,6 +34,11 @@ FIXTURE = {
     "layout-sector-default": "analysis-sector-default",
     "layout-serpentine-default": "analysis-serpentine-default",
     "layout-wave-turns-2": "analysis-wave-turns-2",
+}
+UTILISATION_FIXTURE = {
+    "layout-sector-default": "utilisation-factor-sector-default",
+    "layout-serpentine-default": "utilisation-factor-serpentine-default",
+    "layout-wave-turns-2": "utilisation-factor-wave-turns-2",
 }
 WAVEFORM_ABS_FRACTION = 1e-9  # of the waveform peak: a zero crossing has no meaningful relative error
 
@@ -149,3 +155,41 @@ def test_efficiency_matches_xcoil(case: str) -> None:
     x = _xcoil(case)
     verdict = compare_scalar(x["efficiency"], efficiency(x["pOut"], x["lossTotal"]), KERNEL)
     assert verdict.ok, f"{case}: {verdict}"
+
+
+@pytest.mark.eqt("EQT-27-GR")
+@pytest.mark.parametrize("case", CASES)
+def test_utilisation_factor_matches_eq27(results: Mapping[str, AnalysisResult], case: str) -> None:
+    """Defect caught: a k_u that departs from EQ-27 in the series count, the Ke, the ideal's z or the 1e-6 scale.
+
+    Named departures: a count that drops the partial last side of a spiral (sector 0.896 against 0.784), phase A's Ke in
+    place of the three-phase ratio (serpentine, 6.4e-6), an ideal evaluated at phase A's z only (4.2e-3), and a lost
+    1e-6 scale. The fixture's `ku` is Xcoil's `kw1` on sector and wave and the three-phase ratio on serpentine
+    (fix_wave_f8.md A.4).
+    """
+    golden = AREA[UTILISATION_FIXTURE[case]].calls[0].output
+    assert golden["ku"] > 0.0
+    verdict = compare_scalar(golden["ku"], results[case].winding_factor_1.value, INTEGRATED)
+    assert verdict.ok, f"{case}: {verdict}"
+
+
+@pytest.mark.parametrize("case", CASES)
+def test_mapped_side_count_is_the_series_conductor_count(case: str) -> None:
+    """Defect caught: a mapping that loses or adds a radial conductor (sector: 56 against 64).
+
+    The case is the sector's partial last side. analyse() divides phase A's SIDE primitives by the largest parallel
+    group to get the series conductors per phase.
+    """
+    board = _stack(_raw(case)).boards[0]
+    phase_a = next(pc for pc in board.circuit.phases if pc.phase is Phase.A)
+    sides = sum(
+        1
+        for group in phase_a.groups
+        for member in group.members
+        for i in member.path_ids
+        for prim in board.paths[i].primitives
+        if prim.role is PrimitiveRole.SIDE
+    )
+    parallel = max(len(g.members) for pc in board.circuit.phases for g in pc.groups)
+    expected = AREA[UTILISATION_FIXTURE[case]].calls[0].output["conductorsPerPhase"]
+    assert sides / parallel == expected
