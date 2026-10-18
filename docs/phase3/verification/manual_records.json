@@ -40,5 +40,12 @@
   "record": "tests/independent/m6/records/OR-11_OR-12.md",
   "embodic_version": "0.0.1",
   "result": "passed"
+ },
+ {
+  "req": "REQ-L-01",
+  "test_id": "LG-01",
+  "record": "tests/independent/m4/records/LG-01_word_review.md",
+  "embodic_version": "0.0.1",
+  "result": "passed"
  }
 ]

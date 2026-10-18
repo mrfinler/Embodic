@@ -29,6 +29,7 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[2]
 RELEASE_COMMIT = "5e74acc"
 RECORD = HERE / "records" / "V3-01.md"
+MAIN_SECTION = "## Re-ruling on main 260191f (U-V13, generated)"  # v3_01_rerule.py owns the text from this line on
 RULINGS = ("checks", "partial", "does not check")
 CAUSE_B = {
     "REQ-F-03": ("UT-GEO-24", "UT-GEO-26", "UT-PHY-07"),
@@ -314,7 +315,8 @@ def main(argv=None) -> int:
         return 1
     text, printed = render(samples, sources, accept, rulings_mod, results)
     RECORD.parent.mkdir(parents=True, exist_ok=True)
-    RECORD.write_text(text, encoding="utf-8")
+    kept = RECORD.read_text(encoding="utf-8").partition(MAIN_SECTION) if RECORD.exists() else ("", "", "")
+    RECORD.write_text(text + (f"\n{MAIN_SECTION}{kept[2]}" if kept[1] else ""), encoding="utf-8")
     print("\n".join(printed))
     print(f"wrote {RECORD.relative_to(REPO)}")
     return 0
