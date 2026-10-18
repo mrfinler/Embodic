@@ -2,6 +2,7 @@
 
 import dataclasses
 import importlib.util
+import threading
 from collections import Counter
 from pathlib import Path
 
@@ -420,3 +421,48 @@ def test_ux_ac_15_stale_cards_dim_value_unit_and_badge_by_token_and_keep_4_5_to_
             printed,
         )
         assert ink["border-control"] in colours_painted(card, card.badge.label), key
+
+
+def strongest_window_ink(window: QWidget, part: QWidget, fill: str) -> QColor:
+    """Return the colour the window paints inside a part that contrasts most with the fill, with what lies over it."""
+    image = window.grab(QRect(part.mapTo(window, part.rect().topLeft()), part.size())).toImage()
+    painted = {QColor(image.pixel(x, y)).name() for x in range(image.width()) for y in range(image.height())}
+    return QColor(max(painted, key=lambda found: contrast_ratio(found, fill)))
+
+
+@pytest.mark.req("REQ-N-02")
+@pytest.mark.parametrize("theme", [ThemeName.LIGHT, ThemeName.DARK])
+def test_screens_6_a_compute_running_300_ms_dims_the_values_on_screen_to_60_percent_until_it_ends(
+    make_window, load, qtbot, theme
+):
+    """screens.md section 6 state rules. Catches a dim that no longer reaches the values in view, or one left on.
+
+    The dim covers the cards in view only: on the whole 546 x 4302 px card grid it cost 17 to 45 ms of GUI CPU each
+    time it turned on, one slice inside N02-10's keystroke window (U-M8n).
+    """
+    release = threading.Event()
+    release.set()
+
+    def held(design, provenance, **kwargs):
+        release.wait(10.0)
+        return compute(design, provenance, **kwargs)
+
+    window = load(make_window(held), D08)
+    window.appearance.set_theme(theme)
+    window.show_results_tab("tab-results")
+    value = window.results_tab.cards["ke"].value  # the first card, in view at 1280 x 800
+    ink = STALE_INK[theme]
+    QApplication.processEvents()
+    assert strongest_window_ink(window, value, ink["bg-app"]).name() == ink["text-1"], "precondition: text-1"
+    release.clear()
+    window.compute_now()
+    qtbot.wait(results_view.COMPUTING_DIM_AFTER_MS + 200)
+    dimmed = strongest_window_ink(window, value, ink["bg-app"])
+    rgb = (QColor(ink["text-1"]).getRgb()[:3], QColor(ink["bg-app"]).getRgb()[:3])
+    sixty = [0.6 * text + 0.4 * fill for text, fill in zip(*rgb, strict=True)]
+    gap = max(abs(got - want) for got, want in zip(dimmed.getRgb()[:3], sixty, strict=True))
+    assert gap <= 2, (dimmed.name(), sixty)
+    release.set()
+    qtbot.waitUntil(lambda: not window.session.state.value.computing, timeout=10_000)
+    QApplication.processEvents()
+    assert strongest_window_ink(window, value, ink["bg-app"]).name() == ink["text-1"], "the dim ends with the compute"
