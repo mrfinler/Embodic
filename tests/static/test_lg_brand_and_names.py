@@ -57,6 +57,18 @@ def test_lg06_brand_table_lists_a_sha256_and_a_name_per_original(table):
 
 
 @pytest.mark.req("REQ-L-05")
+def test_lg06_brand_table_records_all_five_originals(table):
+    """Catches a table that omits an original, so a modified copy of that file would pass the brand check."""
+    assert sorted(table.values()) == [
+        "embodic-logo-white.png",
+        "embodic-rounded-triangle-icon.png",
+        "embodic-symbol-white.png",
+        "embodic-wordmark-white.png",
+        "embodic_logo.png",
+    ]
+
+
+@pytest.mark.req("REQ-L-05")
 def test_lg06_every_tracked_brand_named_image_has_a_recorded_hash(table):
     """LG-06, brand half. Catches an edited logo, wordmark or symbol, or a brand-named file that is not the original."""
     exact, changed = brand_check(tracked_files(), table)
