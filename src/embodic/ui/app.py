@@ -40,6 +40,9 @@ CANVAS_SHARE_KEY = "layout/canvas_share"
 SMOKE_EXAMPLE = "spiral_12c10p_d08"
 SCREEN_SIZES_PX = ((1280, 800), (960, 540))
 SMOKE_TIMEOUT_S = 60.0
+# While a worker runs Python, the GUI thread waits up to one switch interval for the GIL after each Qt call that
+# released it. At CPython's 5 ms default a redraw of 12 to 19 ms CPU took 75 to 150 ms; at 1 ms, 26 to 52 ms (U-M8n).
+GIL_SWITCH_INTERVAL_S = 0.001
 
 
 class QSettingsStore:
@@ -134,6 +137,7 @@ def create_shell(
     ``prefers_high_contrast`` and ``system_palette`` are the seams of fix_wave_f1.md (b): the contrast property has
     no setter, so a test injects both. The default palette, an empty QPalette(), gives the platform palette back.
     """
+    sys.setswitchinterval(GIL_SWITCH_INTERVAL_S)
     worker = ComputeWorker(compute_fn)
     selftests = SelfTestWorker()
     outcome = OutcomeViewModel(worker)

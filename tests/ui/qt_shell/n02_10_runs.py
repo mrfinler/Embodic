@@ -45,7 +45,8 @@ def main() -> None:
         for index in range(args.runs):
             gap, passed, results = run_once()
             gaps.append(gap)
-            print(f"run {index + 1:>2}: gap {gap:>4} ms  {'pass' if passed else 'FAIL'}  results set {results}", flush=True)
+            verdict = "pass" if passed else "FAIL"
+            print(f"run {index + 1:>2}: gap {gap:>4} ms  {verdict}  results set {results}", flush=True)
     finally:
         if hog is not None:
             hog.kill()
