@@ -61,6 +61,7 @@ def test_eq07_two_member_identity() -> None:
     assert s.phase_resistance_ohm[Phase.A] == pytest.approx(0.5, rel=1e-12, abs=0.0)
 
 
+@pytest.mark.req("REQ-F-12")
 @pytest.mark.eqt("EQT-07-CF07")
 def test_eq07_cf07_two_member_group_with_half_ohm_members() -> None:
     """CF-07 (EQ-07): E 1.00 and 0.98 V, R 0.5 ohm each -> E_grp 0.99 V, R_grp 0.25 ohm, P_c 2.0e-4 W, rel 1e-12.

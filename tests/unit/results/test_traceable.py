@@ -43,7 +43,7 @@ def ec05(registry: Registry):
     return registry.equation("EQ-05").validity_checks[0]
 
 
-@pytest.mark.req("REQ-T-03", "REQ-T-05")
+@pytest.mark.req("REQ-T-03", "REQ-T-05", "REQ-T-08")
 @pytest.mark.parametrize(
     ("quantity", "eq_ids", "e_edge", "passed", "badge"),
     [

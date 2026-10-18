@@ -64,6 +64,7 @@ def test_ut_exp_01_svg_counts_equal_the_layout(
     )
 
 
+@pytest.mark.req("REQ-T-14")
 @pytest.mark.parametrize("mode", list(PhaseRenderMode))
 def test_ut_io_06_svg_metadata_holds_the_stamp(
     example_id: str, mode: PhaseRenderMode, outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path

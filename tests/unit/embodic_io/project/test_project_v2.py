@@ -46,7 +46,7 @@ def _saved(tmp_path: Path, **kwargs: str) -> dict[str, Any]:
     return document
 
 
-@pytest.mark.req("REQ-T-07")
+@pytest.mark.req("REQ-T-07", "REQ-T-14")
 def test_saved_project_names_the_engine_version_and_the_registry_version(tmp_path: Path) -> None:
     """Catches a project file that omits the versions REQ-T-07 lists, or fills in a value other than the build's."""
     document = _saved(tmp_path)
