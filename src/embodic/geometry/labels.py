@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from itertools import groupby
 
 from embodic.geometry.layout import Layout
-from embodic.geometry.marks import coil_marks, top_layer_of_each_phase
+from embodic.geometry.marks import CoilMark, coil_marks, top_layer_of_each_phase
 from embodic.geometry.paths import CopperPath
 from embodic.geometry.primitives import Arc, Line, Primitive, PrimitiveRole, primitive_length_mm
 from embodic.model.vocabulary import Phase, TopologyKind
@@ -101,9 +101,9 @@ def _sign(polarity: int) -> str:
     return MINUS if polarity < 0 else "+"
 
 
-def _spiral(layout: Layout, layers: dict[Phase, str]) -> Iterator[LabelAnchor]:
+def _spiral(coils: Iterable[CoilMark], layers: dict[Phase, str]) -> Iterator[LabelAnchor]:
     seen: set[tuple[Phase, int]] = set()
-    for mark in sorted(coil_marks(layout), key=lambda m: m.number):
+    for mark in sorted(coils, key=lambda m: m.number):
         if layers.get(mark.phase) == mark.layer:
             group = (mark.phase, mark.polarity)
             yield LabelAnchor(
@@ -183,15 +183,20 @@ def _serpentine(layout: Layout, layers: dict[Phase, str]) -> Iterator[LabelAncho
             yield LabelAnchor(phase=phase, text=phase.value, x_mm=x, y_mm=y, forced=quadrant == 0)
 
 
-_BY_TOPOLOGY = {TopologyKind.SPIRAL: _spiral, TopologyKind.WAVE: _wave, TopologyKind.SERPENTINE: _serpentine}
+_BY_TOPOLOGY = {TopologyKind.WAVE: _wave, TopologyKind.SERPENTINE: _serpentine}
 
 
-def label_anchors(layout: Layout) -> tuple[LabelAnchor, ...]:
+def label_anchors(layout: Layout, coils: Iterable[CoilMark] | None = None) -> tuple[LabelAnchor, ...]:
     """Return the labels of one board in priority order: the first of each phase and sign, then the rest in order.
 
-    Each phase is labelled on the top layer that carries it (``top_layer_of_each_phase``).
+    Each phase is labelled on the top layer that carries it (``top_layer_of_each_phase``). A spiral coil's label sits
+    in its eye: pass the board's ``coil_marks`` as ``coils`` when you have them, since the eye search is slow.
     """
-    anchors = list(_BY_TOPOLOGY[layout.topology](layout, top_layer_of_each_phase(layout)))
+    layers = top_layer_of_each_phase(layout)
+    if layout.topology is TopologyKind.SPIRAL:
+        anchors = list(_spiral(coil_marks(layout) if coils is None else coils, layers))
+    else:
+        anchors = list(_BY_TOPOLOGY[layout.topology](layout, layers))
     return tuple(a for a in anchors if a.forced) + tuple(a for a in anchors if not a.forced)
 
 

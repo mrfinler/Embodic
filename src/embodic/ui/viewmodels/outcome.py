@@ -233,10 +233,11 @@ def _label_of_path(board: Layout, anchors: tuple[LabelAnchor, ...]) -> dict[int,
 
 def board_marks(board: Layout) -> BoardMarks:
     """Return the labels, eye fills and pad boxes of one board; the worker calls this (the eye search is slow)."""
-    anchors = label_anchors(board)
+    coils = tuple(coil_marks(board))
+    anchors = label_anchors(board, coils)
     return BoardMarks(
         anchors=anchors,
-        coils=tuple(coil_marks(board)),
+        coils=coils,
         pads=pad_boxes(board),
         label_of_path=_label_of_path(board, anchors),
         copper=copper_spots(board),
