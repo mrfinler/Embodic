@@ -3,9 +3,10 @@ r"""DEF-U-M6a-01 lever (U-M8a, U-M8n): cProfile of the one-off GUI-thread update
 Opens an example as the gallery does, with the real compute, and profiles the GUI thread inside
 ``DesignSession.load_example`` (the open) and inside ``OutcomeViewModel.on_finished`` (the result). Then it types
 over the inner radius as N02-10 does: "11.6", a wait while that preview computes (held for 2 s), and "1", the
-keystroke that cancels the preview in flight; each keystroke is profiled inside ``DesignSession.type_text``. Prints,
-per update, its wall and GUI-thread CPU time and, for the slowest of each kind, the functions with the most own
-time; Qt's C++ work shows under the PySide6 method that started it. Run it several times and alternate with the
+keystroke that cancels the preview in flight; each keystroke is profiled inside ``DesignSession.type_text``, and the
+results that arrive while typing (the cancelled one is dropped, then the preview of 11.61) apart from the open's.
+Prints, per update, its wall and GUI-thread CPU time and, for the slowest of each kind, the functions with the most
+own time; Qt's C++ work shows under the PySide6 method that started it. Run it several times and alternate with the
 version you compare against:
 
     QT_QPA_PLATFORM=offscreen PYTHONPATH=src python tests/ui/qt_shell/stall_profile.py spiral_12c10p_d08 [rows]
@@ -33,7 +34,7 @@ from embodic.ui.viewmodels.outcome import OutcomeReady, OutcomeViewModel
 from embodic.ui.viewmodels.session import DesignSession
 from embodic.ui.views.main_window import ShellPaths
 
-PROFILES: dict[str, list[tuple[cProfile.Profile, float, float]]] = {"open": [], "result": [], "keystroke": []}
+PROFILES: dict[str, list[tuple[cProfile.Profile, float, float]]] = {}
 PREVIEW_R_INNER_MM = 11.6
 PREVIEW_HOLD_S = 2.0
 
@@ -59,7 +60,7 @@ def profiled(owner: type, name: str, label: str, *, enabled: bool) -> None:
             return original(*args, **kwargs)
         finally:
             profile.disable()
-            PROFILES[label].append((profile, time.perf_counter() - wall, time.thread_time() - cpu))
+            PROFILES.setdefault(label, []).append((profile, time.perf_counter() - wall, time.thread_time() - cpu))
 
     setattr(owner, name, wrapper)
 
@@ -99,14 +100,19 @@ def main(stem: str, rows: int) -> None:
         while not isinstance(window.outcome.state.value, OutcomeReady) and time.perf_counter() - opened < 90:
             pump(5)
         pump(500)
+        PROFILES["result of the open"] = PROFILES.pop("result")
         field = window.findChild(QLineEdit, "param-r-inner")
         field.setFocus(Qt.FocusReason.MouseFocusReason)
         field.selectAll()
         type_keys(field, f"{PREVIEW_R_INNER_MM}")
         pump(450)
         type_keys(field, "1")
-        pump(int(PREVIEW_HOLD_S * 1000))
+        typed = time.perf_counter()
+        while len(PROFILES.get("result", ())) < 2 and time.perf_counter() - typed < 90:
+            pump(5)
+        pump(500)
         window.close()
+    PROFILES["result while typing"] = PROFILES.pop("result", [])
     how = "profiled" if rows > 0 else "not profiled"
     for label, runs in PROFILES.items():
         for _, wall, cpu in runs:
