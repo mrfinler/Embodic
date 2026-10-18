@@ -56,7 +56,7 @@ def pytest_gate_env(profile_name: str) -> dict[str, str]:
 
 
 def test_the_release_profile_requires_the_bundle_for_pytest():
-    """Catches a release run whose bundle tests skip: a failed or missing build would pass as five skips."""
+    """Catches a release run whose bundle tests skip: a failed or missing build would pass as six skips."""
     assert pytest_gate_env("release").get(bundle_gate.REQUIRE_BUNDLE) == "1"
 
 
