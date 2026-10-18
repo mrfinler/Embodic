@@ -5,22 +5,10 @@ With ``newline=None`` Python writes ``os.linesep``, which is "\r\n" on Windows
 """
 
 import ast
-from collections import Counter
 
 import pytest
-from tests.static.conftest import REPO
 
 TEMP_FILES = ("NamedTemporaryFile", "TemporaryFile", "SpooledTemporaryFile")
-
-# Scripts that still write a text file with the platform newline, found when D-062d extended this lint to tools/:
-# repository path -> number of writes. The tools test compares the counts exactly, so a new violation fails it and a
-# fixed script has to leave this table. Each entry is a defect to close, not an exemption.
-TOOLS_NOT_YET_PINNED = {
-    "tools/design/build_icons.py": 2,
-    "tools/design/build_themes.py": 1,
-    "tools/record_passed_tests.py": 1,
-    "tools/trace_matrix.py": 1,
-}
 
 
 def _keyword(call: ast.Call, name: str) -> ast.expr | None:
@@ -80,9 +68,7 @@ def test_every_text_write_in_src_pins_lf(src_modules):
 @pytest.mark.req("REQ-N-04")
 def test_every_text_write_in_tools_pins_lf(tools_modules):
     """Catches a script whose file holds CRLF on Windows: sync_registry.py rewrote the shipped manifest so (D-062d)."""
-    found = {m.path.relative_to(REPO).as_posix(): check_text_newlines([m]) for m in tools_modules}
-    counts = Counter({path: len(lines) for path, lines in found.items() if lines})
-    assert counts == Counter(TOOLS_NOT_YET_PINNED), [line for lines in found.values() for line in lines]
+    assert check_text_newlines(tools_modules) == []
 
 
 @pytest.mark.req("REQ-N-04")

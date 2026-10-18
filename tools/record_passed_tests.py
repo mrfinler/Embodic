@@ -110,7 +110,7 @@ def _write_atomically(path: Path, text: str) -> None:
     """Replace the file in one step, so a crash never leaves half a file for load_registry to read."""
     path.parent.mkdir(parents=True, exist_ok=True)
     partial = path.with_name(path.name + ".partial")
-    partial.write_text(text, encoding="utf-8")
+    partial.write_text(text, encoding="utf-8", newline="\n")
     os.replace(partial, path)
 
 

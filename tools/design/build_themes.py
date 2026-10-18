@@ -103,7 +103,7 @@ def glyph_svg(body: str, colour: str, size: int) -> str:
 def write_if_changed(path: Path, text: str) -> None:
     """Write ``text`` only when it differs, so a second run leaves file times alone too."""
     if not path.exists() or path.read_text(encoding="utf-8") != text:
-        path.write_text(text, encoding="utf-8")
+        path.write_text(text, encoding="utf-8", newline="\n")
 
 
 def main() -> int:
