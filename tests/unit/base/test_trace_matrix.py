@@ -65,3 +65,60 @@ def test_trace_matrix_row_counts_automated_and_passed_tests():
     matrix = trace_matrix.render_matrix(REQS, tests)
     assert "| REQ-N-21 | amended | must | M1 | embodic.geometry | UT-UNI-01 | 2 | 1 |" in matrix
     assert "| REQ-F-10 | carried | must | M1 | embodic.drc | UT-DRC-01 | 1 | 0 |" in matrix
+
+
+def collected(nodeid: str, outcome: str, *req_ids: str):
+    """Return one test of a REQ report."""
+    return CollectedTest(nodeid, req_ids, outcome)
+
+
+@pytest.mark.req("REQ-T-09", "REQ-N-02")
+def test_merged_reports_give_each_test_the_outcome_of_the_report_that_ran_it():
+    """Catches a merge that keeps the main report's `not run` for a latency test that the second process ran (D-074).
+
+    Both processes collect the whole suite, so each report lists every test; the one that did not run it says `not run`.
+    """
+    main = [
+        collected("t.py::test_steady", "passed", "REQ-N-21"),
+        collected("t.py::test_latency", "not run", "REQ-N-02"),
+    ]
+    latency = [
+        collected("t.py::test_steady", "not run", "REQ-N-21"),
+        collected("t.py::test_latency", "passed", "REQ-N-02"),
+    ]
+
+    merged = trace_matrix.merge_reports([main, latency])
+
+    assert [(t.nodeid, t.req_ids, t.outcome) for t in merged] == [
+        ("t.py::test_steady", ("REQ-N-21",), "passed"),
+        ("t.py::test_latency", ("REQ-N-02",), "passed"),
+    ]
+
+
+@pytest.mark.req("REQ-T-09", "REQ-N-02")
+@pytest.mark.parametrize(
+    ("first", "second", "outcome"),
+    [
+        ("passed", "failed", "failed"),
+        ("failed", "passed", "failed"),
+        ("passed", "skipped", "skipped"),
+        ("not run", "not run", "not run"),
+    ],
+)
+def test_a_test_that_two_reports_both_ran_takes_the_worse_outcome(first, second, outcome):
+    """Catches a merge in which a pass in one process hides a failure or a skip in the other."""
+    merged = trace_matrix.merge_reports(
+        [[collected("t.py::test_a", first, "REQ-N-02")], [collected("t.py::test_a", second, "REQ-N-02")]]
+    )
+
+    assert [(t.nodeid, t.req_ids, t.outcome) for t in merged] == [("t.py::test_a", ("REQ-N-02",), outcome)]
+
+
+@pytest.mark.req("REQ-T-09")
+def test_merged_reports_keep_a_test_that_only_one_report_lists():
+    """Catches a merge that drops a test missing from the first report, which TR-02 would then never see."""
+    merged = trace_matrix.merge_reports(
+        [[collected("t.py::test_a", "passed", "REQ-N-21")], [collected("t.py::test_b", "passed")]]
+    )
+
+    assert [(t.nodeid, t.req_ids) for t in merged] == [("t.py::test_a", ("REQ-N-21",)), ("t.py::test_b", ())]
