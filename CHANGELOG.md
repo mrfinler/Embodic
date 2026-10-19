@@ -24,6 +24,9 @@ identifier names a defect row of the U-V15 records.
 - An angle in radians whose degree value is not finite made `compute` raise `ValueError` from the design hash instead of
   returning an issue (REQ-F-14, PR-05). Validation now refuses such an angle on every angle field before any
   conversion. (DEF-UV15-04, D-071c)
+- Two designs that compare equal gave different design hashes when one held a negative zero (for example
+  `first_coil_angle_rad = -0.0`), because the file form wrote "-0.0" (REQ-F-15, PR-08; found by the Windows release run
+  of 0.0.2). The file form and the hash bytes now write every negative zero as 0.0. (D-073)
 
 ## 0.0.2 - 2026-10-18
 
