@@ -33,6 +33,7 @@ from .typing_support import (
 SERPENTINE = "serpentine_16p_example"  # the packaged example that shows the check box field param-fillet-max
 
 
+@pytest.mark.latency
 @pytest.mark.req("REQ-N-02")
 def test_n02_1_and_2_typing_previews_once_after_300_ms_and_return_commits_without_a_second_compute(open_example, qtbot):
     """N02-1, N02-2. Catches a compute per keystroke, or a commit after a preview that computes it again.
@@ -146,6 +147,7 @@ def test_n02_6_esc_after_a_preview_brings_the_committed_results_back(open_exampl
     assert isinstance(session.state.value, SessionEmpty), "Esc wrote no undo entry"
 
 
+@pytest.mark.latency
 @pytest.mark.req("REQ-N-02")
 def test_n02_7_a_keystroke_cancels_the_preview_in_flight_at_once(open_example, qtbot):
     """N02-7. Catches a preview compute that runs on after a newer keystroke until the next timer expiry."""
@@ -230,6 +232,7 @@ def test_n02_9_compute_and_undo_from_the_toolstrip_commit_the_typed_text_first(o
 
 
 @pytest.mark.slow
+@pytest.mark.latency
 @pytest.mark.req("REQ-N-02")
 def test_n02_10_keystroke_echo_while_a_preview_result_arrives(open_example, qtbot):
     """N02-10. Measures the largest gap between 10 ms GUI ticks while typing over a preview result (nightly only).
@@ -284,6 +287,7 @@ def test_n02_10_keystroke_echo_while_a_preview_result_arrives(open_example, qtbo
 
 
 @pytest.mark.slow
+@pytest.mark.latency
 @pytest.mark.req("REQ-N-02")
 def test_n02_10_keystroke_echo_when_a_preview_result_lands_and_typing_goes_on(open_example, qtbot):
     """N02-10, DEF-U-M8n-03. The largest gap between 10 ms GUI ticks while a preview result is set (nightly only).
