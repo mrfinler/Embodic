@@ -1,0 +1,50 @@
+six_seed1: 37 passed, 75 deselected in 176.47s (0:02:56)
+    test_pr_13_drc_never_under_reports_on_serpentine_boards: 3 passing, 0 failing; settings.max_examples=3
+    test_pr_14_rotating_the_start_angle_shifts_the_phasor_and_keeps_ke_r_and_drc: 3 passing, 0 failing; settings.max_examples=3
+    test_pr_05_arbitrary_values_never_raise_and_invalid_values_return_issues: 400 passing, 0 failing; settings.max_examples=400
+    test_pr_08_hash_changes_iff_the_design_changes: 2000 passing, 0 failing; settings.max_examples=2000
+six_seed2: 37 passed, 75 deselected in 174.78s (0:02:54)
+    test_pr_13_drc_never_under_reports_on_serpentine_boards: 3 passing, 0 failing; settings.max_examples=3
+    test_pr_14_rotating_the_start_angle_shifts_the_phasor_and_keeps_ke_r_and_drc: 3 passing, 0 failing; settings.max_examples=3
+    test_pr_05_arbitrary_values_never_raise_and_invalid_values_return_issues: 400 passing, 0 failing; settings.max_examples=400
+    test_pr_08_hash_changes_iff_the_design_changes: 2000 passing, 0 failing; settings.max_examples=2000
+six_seed3: 37 passed, 75 deselected in 215.37s (0:03:35)
+    test_pr_13_drc_never_under_reports_on_serpentine_boards: 3 passing, 0 failing; settings.max_examples=3
+    test_pr_14_rotating_the_start_angle_shifts_the_phasor_and_keeps_ke_r_and_drc: 3 passing, 0 failing; settings.max_examples=3
+    test_pr_05_arbitrary_values_never_raise_and_invalid_values_return_issues: 400 passing, 0 failing; settings.max_examples=400
+    test_pr_08_hash_changes_iff_the_design_changes: 2000 passing, 0 failing; settings.max_examples=2000
+six_seed4: 37 passed, 75 deselected in 177.26s (0:02:57)
+    test_pr_13_drc_never_under_reports_on_serpentine_boards: 3 passing, 0 failing; settings.max_examples=3
+    test_pr_14_rotating_the_start_angle_shifts_the_phasor_and_keeps_ke_r_and_drc: 3 passing, 0 failing; settings.max_examples=3
+    test_pr_05_arbitrary_values_never_raise_and_invalid_values_return_issues: 400 passing, 0 failing; settings.max_examples=400
+    test_pr_08_hash_changes_iff_the_design_changes: 2000 passing, 0 failing; settings.max_examples=2000
+six_seed5: 1 failed, 36 passed, 75 deselected in 224.70s (0:03:44)
+    test_pr_13_drc_never_under_reports_on_serpentine_boards: 3 passing, 0 failing; settings.max_examples=3
+    test_pr_14_rotating_the_start_angle_shifts_the_phasor_and_keeps_ke_r_and_drc: 3 passing, 0 failing; settings.max_examples=3
+    test_pr_05_arbitrary_values_never_raise_and_invalid_values_return_issues: 400 passing, 1 failing; nothing left to do
+    test_pr_08_hash_changes_iff_the_design_changes: 2000 passing, 0 failing; settings.max_examples=2000
+six_seed6: 37 passed, 75 deselected in 233.64s (0:03:53)
+    test_pr_13_drc_never_under_reports_on_serpentine_boards: 3 passing, 0 failing; settings.max_examples=3
+    test_pr_14_rotating_the_start_angle_shifts_the_phasor_and_keeps_ke_r_and_drc: 3 passing, 0 failing; settings.max_examples=3
+    test_pr_05_arbitrary_values_never_raise_and_invalid_values_return_issues: 400 passing, 0 failing; settings.max_examples=400
+    test_pr_08_hash_changes_iff_the_design_changes: 2000 passing, 0 failing; settings.max_examples=2000
+six_seed7: 37 passed, 75 deselected in 172.97s (0:02:52)
+    test_pr_13_drc_never_under_reports_on_serpentine_boards: 3 passing, 0 failing; settings.max_examples=3
+    test_pr_14_rotating_the_start_angle_shifts_the_phasor_and_keeps_ke_r_and_drc: 3 passing, 0 failing; settings.max_examples=3
+    test_pr_05_arbitrary_values_never_raise_and_invalid_values_return_issues: 400 passing, 0 failing; settings.max_examples=400
+    test_pr_08_hash_changes_iff_the_design_changes: 2000 passing, 0 failing; settings.max_examples=2000
+six_seed8: 37 passed, 75 deselected in 157.48s (0:02:37)
+    test_pr_13_drc_never_under_reports_on_serpentine_boards: 3 passing, 0 failing; settings.max_examples=3
+    test_pr_14_rotating_the_start_angle_shifts_the_phasor_and_keeps_ke_r_and_drc: 3 passing, 0 failing; settings.max_examples=3
+    test_pr_05_arbitrary_values_never_raise_and_invalid_values_return_issues: 400 passing, 0 failing; settings.max_examples=400
+    test_pr_08_hash_changes_iff_the_design_changes: 2000 passing, 0 failing; settings.max_examples=2000
+six_seed9: 37 passed, 75 deselected in 166.31s (0:02:46)
+    test_pr_13_drc_never_under_reports_on_serpentine_boards: 3 passing, 0 failing; settings.max_examples=3
+    test_pr_14_rotating_the_start_angle_shifts_the_phasor_and_keeps_ke_r_and_drc: 3 passing, 0 failing; settings.max_examples=3
+    test_pr_05_arbitrary_values_never_raise_and_invalid_values_return_issues: 400 passing, 0 failing; settings.max_examples=400
+    test_pr_08_hash_changes_iff_the_design_changes: 2000 passing, 0 failing; settings.max_examples=2000
+six_seed10: 37 passed, 75 deselected in 205.01s (0:03:25)
+    test_pr_13_drc_never_under_reports_on_serpentine_boards: 3 passing, 0 failing; settings.max_examples=3
+    test_pr_14_rotating_the_start_angle_shifts_the_phasor_and_keeps_ke_r_and_drc: 3 passing, 0 failing; settings.max_examples=3
+    test_pr_05_arbitrary_values_never_raise_and_invalid_values_return_issues: 400 passing, 0 failing; settings.max_examples=400
+    test_pr_08_hash_changes_iff_the_design_changes: 2000 passing, 0 failing; settings.max_examples=2000

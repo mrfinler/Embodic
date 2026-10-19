@@ -411,3 +411,36 @@ Defects: DEF-UV8-01 (Xcoil in two engine messages), DEF-UV8-02 (the gate never e
 (computed DRC clearance called "measured"), DEF-UV8-04 ("Balanced." from phase angles, needs a ruling), DEF-UV8-05 (Xcoil in
 three registry formulas the guide shows), DEF-UV8-06 (UT-PHY-07 and GR-07 missing), DEF-UV8-07 (a name match does not mean
 the test checks the criterion). Reproduce steps are in `m7/records/defects.md`.
+
+## Phase 3 campaigns V3-02 to V3-07 and V3-10 (U-V15, release 0.0.2 sources on main 6555588)
+
+Prepared by: Agent 4 - Independent Verificator - model: claude-opus-5-5
+
+Run from the repository root with the dev venv. The Xcoil engine must sit at `/home/claude/serpentine/src/engine.js`
+(SHA-256 `3e065936…c7f8`, the value the golden fixtures record), or the M1 and M3 Xcoil tests skip.
+
+| Script | Run in | What it does |
+|---|---|---|
+| `m7/product_mutants.py V3-0x [--only ID ...] [--json FILE]` | dev venv | copies the checkout without `.git` to a temporary folder, checks the copy imports its own `src/`, runs the named tests on the clean copy, then seeds one mutant at a time into the copy's `src/embodic` and runs that mutant's named tests; a mutant they miss runs against the campaign's pass-criterion suite; never edits the worktree |
+| `m7/product_mutant_tables.py` | - | the V3-02 to V3-05 mutants, each with its named killing tests and the predicted disagreement written before the run, and the suites |
+| `m7/render_mutants.py FILE` | any Python 3.11 | the Markdown table of a `--json` file |
+| `m7/def_uv15_boundaries.py` | dev venv, `PYTHONPATH=src` | DEF-UV15-01 and -02 probes: the product at the exact D-006 and rule 2b boundaries |
+| `m7/v3_07_seeds.sh OUT SEED ...` and `m7/v3_07_summary.py OUT` | dev venv as `python` | V3-07: the six named PR properties under the nightly profile, one seed at a time with a fresh example database per seed; the summary prints the result line and the Hypothesis example counts of each seed |
+| `m7/def_uv15_04_rotation.py` | dev venv, `PYTHONPATH=src` | DEF-UV15-04 probe: compute at the board rotation V3-07 seed 5 found |
+| `m7/v3_10_own_models.py [--json FILE] [--explain ID ...]` | dev venv, `PYTHONPATH=src` | V3-10: own star and k_w, own EQ-05/EQ-06 Ke_LL (181-point and continuous peak), M1 brute DRC under section 7, against `compute_project` on the five examples; `--explain` runs the Ke_LL limiter experiment |
+
+Verdicts on 2026-10-19 (records in `m7/records/`, each `verified` by running the script named):
+
+| Campaign | Verdict |
+|---|---|
+| V3-02 DRC | 9 of 11 killed (1 only by the suite); the D-006 comparison and the rule 2b band flipped at their exact boundary survive (DEF-UV15-01, -02, low) |
+| V3-03 spiral generator and geometry | 4 of 4 judged mutants killed; a first joint-gap spelling (V3-03-04) opened only 8.7e-8 mm and was not judged |
+| V3-04 physics kernels | 5 of 5 killed (2 only by the suite) |
+| V3-05 exporters | 3 of 4 killed; the SVG joint from the next primitive's own coordinate survives, equivalent on the shipped examples (same six-decimal point), for Fable to rule |
+| V3-06 instrument mutants | `27/27 mutants killed` (547 s) |
+| V3-07 longer Hypothesis | six named properties, seeds 1 to 10: 1 counterexample, PR-05 seed 5, a finite board rotation whose degrees overflow makes compute raise (DEF-UV15-04, medium); the nightly profile lengthens only PR-08 (2000) and PR-05 (400), the serpentine PR-13/14 stay at 3 (DEF-UV15-03) |
+| V3-10 own models | phases equal and k_w within 8.9e-16 on the spiral examples; Ke_LL within 2.46e-5 of the 181-point peak on all five (1e-4 holds); DRC pair sets equal, wave 186; serpentine and wave star and k_w `not tested` |
+
+Defects: DEF-UV15-01 (D-006 comparison untested at its exact boundary), DEF-UV15-02 (rule 2b tap band untested at its
+edge), DEF-UV15-03 (serpentine PR-13 and PR-14 fixed at 3 examples in every profile), DEF-UV15-04 (a finite board
+rotation makes compute raise). Reproduce steps are in `m7/records/defects.md`.

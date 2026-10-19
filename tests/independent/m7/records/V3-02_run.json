@@ -1,0 +1,312 @@
+{
+ "campaign": "V3-02",
+ "baseline": {
+  "imports": "/tmp/embodic-mut-yg1jb5te/checkout/src/embodic/__init__.py",
+  "killers": [
+   "tests/unit/drc/test_run_drc.py::test_ut_drc_03_one_micron_intrusion_is_exactly_one_new_violation_at_its_place",
+   "tests/unit/drc/test_run_drc.py::test_ut_drc_03_inside_epsilon_passes",
+   "tests/independent/m1/test_drc_agreement.py::test_run_drc_violation_sets_equal_brute_sweep_on_random_boards",
+   "tests/unit/drc/test_properties.py::test_pr_01_drc_never_under_reports_and_reports_no_false_positive_on_200_random_sets",
+   "tests/unit/drc/test_run_drc.py::test_ut_drc_04_same_net_via_tap_band_is_half_the_via_pad",
+   "tests/unit/drc/test_run_drc.py::test_ut_drc_04_same_net_via_tap_leaves_a_far_primitive_of_the_same_path_checked",
+   "tests/unit/drc/test_run_drc.py::test_ut_drc_04_path_end_on_a_path_of_another_net_is_reported",
+   "tests/unit/drc/test_run_drc.py::test_ut_drc_04_path_end_beyond_the_coincidence_tolerance_is_reported",
+   "tests/independent/m1/test_drc_agreement.py::test_intrusion_is_decided_by_d006",
+   "tests/unit/drc/test_run_drc.py::test_ut_drc_04_path_end_on_the_middle_of_a_line_of_a_same_net_path_is_a_junction"
+  ],
+  "seconds": 37.8,
+  "summary": "42 passed in 36.42s",
+  "suite": {
+   "tests": [
+    "tests/unit/drc",
+    "tests/unit/property/wave/test_wave_properties.py::test_pr_13_run_drc_never_under_reports_on_a_wave_board",
+    "tests/unit/property/serpentine/test_serpentine_properties.py::test_pr_13_drc_never_under_reports_on_serpentine_boards",
+    "tests/independent/m1",
+    "tests/independent/m3"
+   ],
+   "seconds": 681.6,
+   "passed": true,
+   "summary": "318 passed, 1 skipped in 679.49s (0:11:19)"
+  }
+ },
+ "mutants": [
+  {
+   "id": "V3-02-01",
+   "defect": "Xcoil slack 0.004 mm in D-006",
+   "file": "drc/report.py",
+   "old": "DRC_EPSILON_MM: float = 1e-6",
+   "new": "DRC_EPSILON_MM: float = 0.004",
+   "killers": [
+    "tests/unit/drc/test_run_drc.py::test_ut_drc_03_one_micron_intrusion_is_exactly_one_new_violation_at_its_place"
+   ],
+   "predicts": "assert \\[\\] == \\[|Right contains"
+  },
+  {
+   "id": "V3-02-02",
+   "defect": "epsilon 0 in D-006",
+   "file": "drc/report.py",
+   "old": "DRC_EPSILON_MM: float = 1e-6",
+   "new": "DRC_EPSILON_MM: float = 0.0",
+   "killers": [
+    "tests/unit/drc/test_run_drc.py::test_ut_drc_03_inside_epsilon_passes"
+   ],
+   "predicts": "passed"
+  },
+  {
+   "id": "V3-02-03",
+   "defect": "arc-arc pairs skipped by the narrow phase",
+   "file": "drc/engine.py",
+   "old": "            if not sel.any():\n                continue\n            pair = closest_pairs(",
+   "new": "            if not sel.any() or (arc_a and arc_b):\n                clearance_mm[sel] = np.inf\n                at_mm[sel] = 0.0\n                continue\n            pair = closest_pairs(",
+   "killers": [
+    "tests/unit/drc/test_run_drc.py::test_ut_drc_03_one_micron_intrusion_is_exactly_one_new_violation_at_its_place"
+   ],
+   "predicts": "assert \\[\\] == \\[|Right contains"
+  },
+  {
+   "id": "V3-02-04",
+   "defect": "rule 2 widened: a path end within the full pad of a via is on it",
+   "file": "drc/items.py",
+   "old": "and math.dist(e.point, (via.x_mm, via.y_mm)) <= via.pad_mm / 2",
+   "new": "and math.dist(e.point, (via.x_mm, via.y_mm)) <= via.pad_mm",
+   "killers": [
+    "tests/independent/m1/test_drc_agreement.py::test_run_drc_violation_sets_equal_brute_sweep_on_random_boards",
+    "tests/unit/drc/test_properties.py::test_pr_01_drc_never_under_reports_and_reports_no_false_positive_on_200_random_sets"
+   ],
+   "predicts": "Left contains|Right contains|missing|== |!="
+  },
+  {
+   "id": "V3-02-05",
+   "defect": "rule 2b widened: the tap band is the full pad",
+   "file": "drc/items.py",
+   "old": "within = _centreline_distance_mm(items, candidates, via.x_mm, via.y_mm) <= via.pad_mm / 2",
+   "new": "within = _centreline_distance_mm(items, candidates, via.x_mm, via.y_mm) <= via.pad_mm",
+   "killers": [
+    "tests/unit/drc/test_run_drc.py::test_ut_drc_04_same_net_via_tap_band_is_half_the_via_pad"
+   ],
+   "predicts": "assert \\[\\] == \\[|Right contains"
+  },
+  {
+   "id": "V3-02-06",
+   "defect": "rule 2b widened: a tap exempts the whole path (D-037a reverted)",
+   "file": "drc/items.py",
+   "old": "exempt = within | (ring & np.isin(items.path[candidates], tapped_rings))",
+   "new": "exempt = np.isin(items.path[candidates], items.path[candidates[within]])",
+   "killers": [
+    "tests/unit/drc/test_run_drc.py::test_ut_drc_04_same_net_via_tap_leaves_a_far_primitive_of_the_same_path_checked"
+   ],
+   "predicts": "assert \\[\\] == \\[|Right contains"
+  },
+  {
+   "id": "V3-02-07",
+   "defect": "rule 5 widened: T-junctions across nets",
+   "file": "drc/items.py",
+   "old": "for e in (e for e in ends if e.path.layer == layer and e.path.net == net):",
+   "new": "for e in (e for e in ends if e.path.layer == layer):",
+   "killers": [
+    "tests/unit/drc/test_run_drc.py::test_ut_drc_04_path_end_on_a_path_of_another_net_is_reported"
+   ],
+   "predicts": "set\\(\\) == |Right contains|Extra items in the right set"
+  },
+  {
+   "id": "V3-02-08",
+   "defect": "rule 5 widened: the T-junction reach is 1000 x COINCIDENCE_MM",
+   "file": "drc/items.py",
+   "old": "trunks = np.unique(owner[(distance_mm <= COINCIDENCE_MM) & (owner != e.path.id)])",
+   "new": "trunks = np.unique(owner[(distance_mm <= 1000 * COINCIDENCE_MM) & (owner != e.path.id)])",
+   "killers": [
+    "tests/unit/drc/test_run_drc.py::test_ut_drc_04_path_end_beyond_the_coincidence_tolerance_is_reported"
+   ],
+   "predicts": "set\\(\\) == |Right contains|Extra items in the right set"
+  },
+  {
+   "id": "V3-02-09",
+   "defect": "D-006 band flipped: clearance equal to rule - epsilon is a violation",
+   "file": "drc/engine.py",
+   "old": "bad = np.flatnonzero(m.clearance_mm < required_mm[m.kind] - DRC_EPSILON_MM)",
+   "new": "bad = np.flatnonzero(m.clearance_mm <= required_mm[m.kind] - DRC_EPSILON_MM)",
+   "killers": [
+    "tests/independent/m1/test_drc_agreement.py::test_intrusion_is_decided_by_d006"
+   ],
+   "predicts": "== |!=|Left contains|Right contains"
+  },
+  {
+   "id": "V3-02-11",
+   "defect": "rule 5 dropped (the first, wrong spelling of V3-02-07 groups every path under net '')",
+   "file": "drc/items.py",
+   "old": "groups.setdefault((path.layer, path.net), []).append(path)",
+   "new": "groups.setdefault((path.layer, \"\"), []).append(path)",
+   "killers": [
+    "tests/unit/drc/test_run_drc.py::test_ut_drc_04_path_end_on_the_middle_of_a_line_of_a_same_net_path_is_a_junction"
+   ],
+   "predicts": "set\\(\\) == |Left contains|Extra items in the left set"
+  },
+  {
+   "id": "V3-02-10",
+   "defect": "rule 2b band flipped: a via exactly pad/2 off the centreline is reported",
+   "file": "drc/items.py",
+   "old": "within = _centreline_distance_mm(items, candidates, via.x_mm, via.y_mm) <= via.pad_mm / 2",
+   "new": "within = _centreline_distance_mm(items, candidates, via.x_mm, via.y_mm) < via.pad_mm / 2",
+   "killers": [
+    "tests/unit/drc/test_run_drc.py::test_ut_drc_04_same_net_via_tap_band_is_half_the_via_pad"
+   ],
+   "predicts": "== \\[\\]|Left contains"
+  }
+ ],
+ "outcomes": [
+  {
+   "id": "V3-02-01",
+   "verdict": "killed",
+   "seconds": 1.8,
+   "exit_code": 1,
+   "failed": [
+    "FAILED tests/unit/drc/test_run_drc.py::test_ut_drc_03_one_micron_intrusion_is_exactly_one_new_violation_at_its_place"
+   ],
+   "evidence": [
+    "E   AssertionError: assert [] == [('path:1/pri...th:2/prim:0')]",
+    "E",
+    "E     Right contains one more item: ('path:1/prim:0', 'path:2/prim:0')",
+    "E     Use -v to get more diff"
+   ]
+  },
+  {
+   "id": "V3-02-02",
+   "verdict": "killed",
+   "seconds": 2.0,
+   "exit_code": 1,
+   "failed": [
+    "FAILED tests/unit/drc/test_run_drc.py::test_ut_drc_03_inside_epsilon_passes"
+   ],
+   "evidence": [
+    "E   AssertionError: assert (DrcReport(passed=False, summaries=(DrcCheckSummary(kind=<DrcCheckKind.TRACE_TRACE: 'trace_trace'>, least_clearance_mm=....19999955, 0.0), objects=('path:0/prim:0', 'path:1/prim:0')),), violation_count=1, method='grid+exact', epsilon_mm=0.0) is not None and False)",
+    "E    +  where False = DrcReport(passed=False, summaries=(DrcCheckSummary(kind=<DrcCheckKind.TRACE_TRACE: 'trace_trace'>, least_clearance_mm=....19999955, 0.0), objects=('path:0/prim:0', 'path:1/prim:0')),), violation_count=1, method='grid+exact', epsilon_mm=0.0).passed"
+   ]
+  },
+  {
+   "id": "V3-02-03",
+   "verdict": "killed",
+   "seconds": 1.9,
+   "exit_code": 1,
+   "failed": [
+    "FAILED tests/unit/drc/test_run_drc.py::test_ut_drc_03_one_micron_intrusion_is_exactly_one_new_violation_at_its_place"
+   ],
+   "evidence": [
+    "E   AssertionError: assert [] == [('path:1/pri...th:2/prim:0')]",
+    "E",
+    "E     Right contains one more item: ('path:1/prim:0', 'path:2/prim:0')",
+    "E     Use -v to get more diff"
+   ]
+  },
+  {
+   "id": "V3-02-04",
+   "verdict": "killed",
+   "seconds": 2.1,
+   "exit_code": 1,
+   "failed": [
+    "FAILED tests/independent/m1/test_drc_agreement.py::test_run_drc_violation_sets_equal_brute_sweep_on_random_boards"
+   ],
+   "evidence": [
+    "E   AssertionError: seed 1",
+    "E   assert {frozenset({'...rim:0'}), ...} == {frozenset({'...via:2'}), ...}",
+    "E",
+    "E     Extra items in the right set:",
+    "E     frozenset({'path:2/prim:0', 'via:1'})",
+    "E     Use -v to get more diff"
+   ]
+  },
+  {
+   "id": "V3-02-05",
+   "verdict": "killed",
+   "seconds": 1.5,
+   "exit_code": 1,
+   "failed": [
+    "FAILED tests/unit/drc/test_run_drc.py::test_ut_drc_04_same_net_via_tap_band_is_half_the_via_pad[0.01 mm outside the band]"
+   ],
+   "evidence": [
+    "E   AssertionError: assert [] == [(<DrcCheckKi...0', 'via:0'))]",
+    "E",
+    "E     Right contains one more item: (<DrcCheckKind.TRACE_VIA: 'trace_via'>, ('path:0/prim:0', 'via:0'))",
+    "E     Use -v to get more diff"
+   ]
+  },
+  {
+   "id": "V3-02-06",
+   "verdict": "killed",
+   "seconds": 2.0,
+   "exit_code": 1,
+   "failed": [
+    "FAILED tests/unit/drc/test_run_drc.py::test_ut_drc_04_same_net_via_tap_leaves_a_far_primitive_of_the_same_path_checked"
+   ],
+   "evidence": [
+    "E   AssertionError: assert [] == [(<DrcCheckKi...2', 'via:0'))]",
+    "E",
+    "E     Right contains one more item: (<DrcCheckKind.TRACE_VIA: 'trace_via'>, ('path:0/prim:2', 'via:0'))",
+    "E     Use -v to get more diff"
+   ]
+  },
+  {
+   "id": "V3-02-07",
+   "verdict": "suite-killed",
+   "seconds": 71.6,
+   "exit_code": 1,
+   "failed": [
+    "FAILED tests/unit/property/wave/test_wave_properties.py::test_pr_13_run_drc_never_under_reports_on_a_wave_board[overlap-8-3]"
+   ],
+   "evidence": [
+    "E   AssertionError: 1 pairs below the threshold are not reported, e.g. [frozenset({'path:52/prim:0', 'path:31/prim:1'})]",
+    "E   assert {frozenset({'...rim:2'}), ...} <= {frozenset({'...rim:2'}), ...}",
+    "E",
+    "E     Extra items in the left set:",
+    "E     frozenset({'path:31/prim:1', 'path:52/prim:0'})"
+   ]
+  },
+  {
+   "id": "V3-02-08",
+   "verdict": "killed",
+   "seconds": 1.8,
+   "exit_code": 1,
+   "failed": [
+    "FAILED tests/unit/drc/test_run_drc.py::test_ut_drc_04_path_end_beyond_the_coincidence_tolerance_is_reported[2e-06]"
+   ],
+   "evidence": [
+    "E   AssertionError: assert set() == {(<DrcCheckKi...h:1/prim:0'))}",
+    "E",
+    "E     Extra items in the right set:",
+    "E     (<DrcCheckKind.TRACE_TRACE: 'trace_trace'>, ('path:0/prim:0', 'path:1/prim:0'))",
+    "E     Use -v to get more diff"
+   ]
+  },
+  {
+   "id": "V3-02-09",
+   "verdict": "survived",
+   "seconds": 659.2,
+   "exit_code": 0,
+   "failed": [],
+   "evidence": []
+  },
+  {
+   "id": "V3-02-11",
+   "verdict": "killed",
+   "seconds": 1.7,
+   "exit_code": 1,
+   "failed": [
+    "FAILED tests/unit/drc/test_run_drc.py::test_ut_drc_04_path_end_on_the_middle_of_a_line_of_a_same_net_path_is_a_junction[0.0]"
+   ],
+   "evidence": [
+    "E   AssertionError: assert {(<DrcCheckKi...h:1/prim:0'))} == set()",
+    "E",
+    "E     Extra items in the left set:",
+    "E     (<DrcCheckKind.TRACE_TRACE: 'trace_trace'>, ('path:0/prim:0', 'path:1/prim:0'))",
+    "E     Use -v to get more diff"
+   ]
+  },
+  {
+   "id": "V3-02-10",
+   "verdict": "survived",
+   "seconds": 690.2,
+   "exit_code": 0,
+   "failed": [],
+   "evidence": []
+  }
+ ]
+}

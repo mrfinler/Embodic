@@ -195,3 +195,82 @@ asserted only by tests marked for another row:
 Reproduce: cite one of these tests in a `checks` ruling of its row; `v3_01_rerule.py` prints "lacks the REQ-x marker".
 Status `verified`. The rows keep other passing marked tests, so the release trace gate does not fail on them.
 Expected: add the six markers (owner Agent 3, no new assertion).
+
+# U-V15 defects (V3-02 to V3-07 and V3-10; main 6555588 = release 0.0.2 sources, 2026-10-19)
+
+Each row was reproduced in the dev venv (`py311-dev.txt`, CPython 3.11.17) with `PYTHONPATH=src`. The mutation runs
+use `tests/independent/m7/product_mutants.py`, which edits only a temporary copy of the checkout.
+
+## DEF-UV15-01 (REQ-F-10, must, D-006; low): no test sits on the D-006 boundary, so a flipped comparison survives
+
+Mutant V3-02-09 turns `clearance < required - DRC_EPSILON_MM` into `<=` in `src/embodic/drc/engine.py` l.340. It
+survives its named test (`tests/independent/m1/test_drc_agreement.py::test_intrusion_is_decided_by_d006`) and the whole
+V3-02 suite with the mutant applied: `tests/unit/drc`, both PR-13 tests, `tests/independent/m1` and
+`tests/independent/m3` (the clean copy: 318 passed, 1 skipped; the mutant run took 659 s). It is not equivalent. `python tests/independent/m7/def_uv15_boundaries.py` builds two traces whose clearance is
+`0.199999 == 0.2 - 1e-6` exactly. The product reports 0 violations there and 1 violation 8.9e-17 mm closer. The mutant
+would report the exact case.
+
+```
+python tests/independent/m7/product_mutants.py V3-02 --only V3-02-09   # prints "survived V3-02-09 ..."
+PYTHONPATH=src python tests/independent/m7/def_uv15_boundaries.py      # "D-006 k=+0: ... violations 0"
+```
+
+Status `verified`. Expected: a UT-DRC-03 case at the exact float boundary (the probe's geometry), asserting 0
+violations, plus the 8.9e-17 mm closer case asserting 1. Owner Agent 3.
+
+## DEF-UV15-02 (REQ-F-10, must, rule 2b of D-036a and D-037a; low): the rule 2b tap band is tested off its edge only
+
+Mutant V3-02-10 turns the tap test `<= via.pad_mm / 2` into `<` in `src/embodic/drc/items.py` (`_taps`). It survives
+`test_ut_drc_04_same_net_via_tap_band_is_half_the_via_pad` (offsets 0.29 and 0.31 mm) and the whole V3-02 suite (690 s).
+The probe shows that a via exactly 0.3 mm (`pad_mm / 2`) off the centreline is exempt in the product (0 violations), as
+interfaces.md section 7 rule 2b says ("within `pad_mm / 2`"). The mutant reports it.
+
+```
+python tests/independent/m7/product_mutants.py V3-02 --only V3-02-10   # prints "survived V3-02-10 ..."
+PYTHONPATH=src python tests/independent/m7/def_uv15_boundaries.py      # "rule 2b offset 0.3: []"
+```
+
+Status `verified`. Expected: add the 0.3 mm offset to the UT-DRC-04 parametrisation with `reported=False`. Owner
+Agent 3.
+
+## DEF-UV15-03 (REQ-T-04 property runs, should; low): the serpentine PR-13 and PR-14 properties run 3 examples in every profile
+
+`tests/unit/property/serpentine/test_serpentine_properties.py` l.35 sets `EXAMPLES = 3`, and both
+`test_pr_13_drc_never_under_reports_on_serpentine_boards` and
+`test_pr_14_rotating_the_start_angle_shifts_the_phasor_and_keeps_ke_r_and_drc` take `@settings(max_examples=EXAMPLES)`.
+The nightly and release profiles (2000 examples, `tests/conftest.py` l.32) therefore do not lengthen them. V3-07's
+statistics show `Stopped because settings.max_examples=3` on every seed. PR-05 scales with the profile (400) and PR-08
+takes the profile's 2000.
+
+```
+EMBODIC_HYPOTHESIS_PROFILE=nightly PYTHONPATH=src python -m pytest -p no:cacheprovider -q --hypothesis-show-statistics \
+  tests/unit/property/serpentine/test_serpentine_properties.py -k "test_pr_13_drc_never or test_pr_14_rotating"
+# both properties: "3 passing, 0 failing" and "Stopped because settings.max_examples=3"
+```
+
+Status `verified`. The REQ id in the heading is `inferred`: I did not check which row these two tests carry. Expected:
+scale `EXAMPLES` with the profile, as `COMPUTE_EXAMPLES` does, or write down in the test plan why 3 is enough. Each
+example builds a serpentine board and a brute DRC sweep, so the cost per example is high (40 s of generate phase for 3
+examples of PR-13 in seed 1). Owner Agent 3, ruling Fable.
+
+## DEF-UV15-04 (REQ-F-14, PR-05; medium): a finite board rotation makes compute raise instead of returning an issue
+
+V3-07 seed 5 found it: `test_pr_05_arbitrary_values_never_raise_and_invalid_values_return_issues` with
+`--hypothesis-seed=5` under the nightly profile. It failed again with a fresh example database, so it is the seed's own
+find, not a replay. The shrunk input is the CF-11 draft with a 12-sided polygon board (across flats 93 mm, corner
+radius 0) and `/outline/board/rotation_rad = 3.137566414384587e+306`. `compute` raises `ValueError: Out of range float
+values are not JSON compliant` from `design_hash` -> `canonical_json` -> `json.dumps(..., allow_nan=False)`
+(`src/embodic/io/canonical.py` l.71). PR-05 says arbitrary values never raise. The value is finite, and its degrees are
+`inf`. Below about 3.1376e306 rad, validation gives `RANGE_ABOVE_SUPPORTED` and compute returns normally.
+
+```
+PYTHONPATH=src python tests/independent/m7/def_uv15_04_rotation.py
+# rotation_rad 3.13e+306: no exception; issues ['RANGE_ABOVE_SUPPORTED']
+# rotation_rad 3.137566414384587e+306: ValueError: Out of range float values are not JSON compliant
+```
+
+Status `verified` (reproduced on main 6555588 sources). That the overflow happens in the rad-to-degrees step of the
+design document is `inferred` (`math.degrees` of the value is `inf`; the document code was not traced). Other angle
+fields in radians may share it (`not tested`). Expected: refuse an angle whose degree value is not finite at
+validation, or keep the canonical document in radians, and pin the input with an `@example` on PR-05 as the
+test already does for earlier finds. Owner Agent 3.

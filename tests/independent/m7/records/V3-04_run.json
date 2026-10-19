@@ -1,0 +1,168 @@
+{
+ "campaign": "V3-04",
+ "baseline": {
+  "imports": "/tmp/embodic-mut-z1rwnt27/checkout/src/embodic/__init__.py",
+  "killers": [
+   "tests/unit/physics/test_closed_forms_m2e2.py::test_cf03_coil_in_the_eq05_field_of_a_double_rotor",
+   "tests/unit/physics/test_kernels.py::test_field_is_mirrored_about_the_symmetry_plane",
+   "tests/unit/physics/test_closed_forms_m2e2.py::test_eq06_reversed_path_reverses_the_phasor",
+   "tests/independent/m2/test_physics_closed_forms.py::test_eq06_sector_loop_in_a_uniform_field_matches_the_closed_form",
+   "tests/unit/physics/test_kernels.py::test_cf04_track_resistance_at_20_and_60_degc",
+   "tests/golden/m2_physics/test_physics_golden.py",
+   "tests/unit/physics/test_closed_forms_m2e2.py::test_eq12_cf05_single_trace_at_full_precision",
+   "tests/unit/physics/test_ut_phy_07_series_chain.py::test_ut_phy_07_series_chain_of_two_members_adds_as_a_phasor_sum"
+  ],
+  "seconds": 2.0,
+  "summary": "25 passed in 0.56s",
+  "suite": {
+   "tests": [
+    "tests/unit/physics",
+    "tests/golden/m2_physics",
+    "tests/independent/m2"
+   ],
+   "seconds": 98.6,
+   "passed": true,
+   "summary": "322 passed, 2 skipped, 2 xfailed in 96.86s (0:01:36)"
+  }
+ },
+ "mutants": [
+  {
+   "id": "V3-04-01",
+   "defect": "EQ-05 cosh and sinh swapped (B_z and B_t terms)",
+   "file": "physics/field.py",
+   "old": "return base * (1.0 + e2b), base * (1.0 - e2b)",
+   "new": "return base * (1.0 - e2b), base * (1.0 + e2b)",
+   "killers": [
+    "tests/unit/physics/test_closed_forms_m2e2.py::test_cf03_coil_in_the_eq05_field_of_a_double_rotor",
+    "tests/unit/physics/test_kernels.py::test_field_is_mirrored_about_the_symmetry_plane"
+   ],
+   "predicts": "\u00b1|approx|assert .* == |!="
+  },
+  {
+   "id": "V3-04-02",
+   "defect": "EQ-06 integrates abs(dr)",
+   "file": "physics/emf.py",
+   "old": "lam += bz * rm * (c2 - c1) * np.exp(-1j * harmonics * pole_pairs * am)",
+   "new": "lam += bz * rm * abs(c2 - c1) * np.exp(-1j * harmonics * pole_pairs * am)",
+   "killers": [
+    "tests/unit/physics/test_closed_forms_m2e2.py::test_eq06_reversed_path_reverses_the_phasor",
+    "tests/independent/m2/test_physics_closed_forms.py::test_eq06_sector_loop_in_a_uniform_field_matches_the_closed_form"
+   ],
+   "predicts": "\u00b1|approx|assert .* == |!="
+  },
+  {
+   "id": "V3-04-03",
+   "defect": "EQ-10 alpha 0.00393 read as 0.0039",
+   "file": "physics/analyse.py",
+   "old": "alpha = registry.constant(\"copper_temp_coeff_per_k\").value",
+   "new": "alpha = 0.0039",
+   "killers": [
+    "tests/unit/physics/test_kernels.py::test_cf04_track_resistance_at_20_and_60_degc",
+    "tests/golden/m2_physics/test_physics_golden.py"
+   ],
+   "predicts": "\u00b1|approx|assert .* == |!="
+  },
+  {
+   "id": "V3-04-04",
+   "defect": "EQ-12 divides by 12 instead of 24",
+   "file": "physics/emf.py",
+   "old": "return float(math.fsum(terms) / (24.0 * resistivity_ohm_m))",
+   "new": "return float(math.fsum(terms) / (12.0 * resistivity_ohm_m))",
+   "killers": [
+    "tests/unit/physics/test_closed_forms_m2e2.py::test_eq12_cf05_single_trace_at_full_precision"
+   ],
+   "predicts": "\u00b1|approx|assert .* == |!="
+  },
+  {
+   "id": "V3-04-05",
+   "defect": "series sum drops its last member",
+   "file": "physics/circuit.py",
+   "old": "    for x in phasors:\n        total = total + x",
+   "new": "    for x in list(phasors)[:-1]:\n        total = total + x",
+   "killers": [
+    "tests/unit/physics/test_ut_phy_07_series_chain.py::test_ut_phy_07_series_chain_of_two_members_adds_as_a_phasor_sum"
+   ],
+   "predicts": "\u00b1|approx|assert .* == |!="
+  }
+ ],
+ "outcomes": [
+  {
+   "id": "V3-04-01",
+   "verdict": "killed",
+   "seconds": 1.2,
+   "exit_code": 1,
+   "failed": [
+    "FAILED tests/unit/physics/test_closed_forms_m2e2.py::test_cf03_coil_in_the_eq05_field_of_a_double_rotor"
+   ],
+   "evidence": [
+    "E   assert np.float64(8....415161198e-05) == 0.00102013382...1754 \u00b1 1.0e-08",
+    "E",
+    "E     comparison failed",
+    "E     Obtained: 8.64461415161198e-05",
+    "E     Expected: 0.0010201338249421754 \u00b1 1.0e-08"
+   ]
+  },
+  {
+   "id": "V3-04-02",
+   "verdict": "killed",
+   "seconds": 1.3,
+   "exit_code": 1,
+   "failed": [
+    "FAILED tests/unit/physics/test_closed_forms_m2e2.py::test_eq06_reversed_path_reverses_the_phasor"
+   ],
+   "evidence": [
+    "E   assert np.complex128...4772401774+0j) == (-450.3920477...-0j) \u00b1 4.5e-10",
+    "E",
+    "E     comparison failed",
+    "E     Obtained: (450.39204772401774+0j)",
+    "E     Expected: (-450.3920477240177-0j) \u00b1 4.5e-10"
+   ]
+  },
+  {
+   "id": "V3-04-03",
+   "verdict": "suite-killed",
+   "seconds": 55.7,
+   "exit_code": 1,
+   "failed": [
+    "FAILED tests/golden/m2_physics/test_analysis_golden.py::test_result_quantities_match_xcoil[layout-sector-default]"
+   ],
+   "evidence": [
+    "E   AssertionError: layout-sector-default: Comparison(diffs=(Diff(path='$[0].loss_eddy', kind=<DiffKind.VALUE: 'value'>, golden=0.08361872644671961, actual=0.08370552789285808, detail='|diff| 8.68e-05 outside integrated', allow_id=None),), indeterminate=())",
+    "E   assert False",
+    "E    +  where False = Comparison(diffs=(Diff(path='$[0].loss_eddy', kind=<DiffKind.VALUE: 'value'>, golden=0.08361872644671961, actual=0.08370552789285808, detail='|diff| 8.68e-05 outside integrated', allow_id=None),), indeterminate=()).ok"
+   ]
+  },
+  {
+   "id": "V3-04-04",
+   "verdict": "killed",
+   "seconds": 1.8,
+   "exit_code": 1,
+   "failed": [
+    "FAILED tests/unit/physics/test_closed_forms_m2e2.py::test_eq12_cf05_single_trace_at_full_precision"
+   ],
+   "evidence": [
+    "E   assert 0.00014461350247998485 == 7.23067512399...e-05 \u00b1 7.2e-14",
+    "E",
+    "E     comparison failed",
+    "E     Obtained: 0.00014461350247998485",
+    "E     Expected: 7.230675123999244e-05 \u00b1 7.2e-14"
+   ]
+  },
+  {
+   "id": "V3-04-05",
+   "verdict": "suite-killed",
+   "seconds": 3.4,
+   "exit_code": 1,
+   "failed": [
+    "FAILED tests/unit/physics/test_closed_forms_m2e2.py::test_eq07_two_member_identity"
+   ],
+   "evidence": [
+    "E   assert np.complex128(0j) == 0.99 \u00b1 9.9e-13",
+    "E",
+    "E     comparison failed",
+    "E     Obtained: 0j",
+    "E     Expected: 0.99 \u00b1 9.9e-13"
+   ]
+  }
+ ]
+}

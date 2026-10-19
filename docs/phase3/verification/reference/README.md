@@ -1,12 +1,47 @@
 Prepared by: Agent 4 - Independent Verificator - model: claude-opus-5-5
 
-# PK-04 Linux reference (U-V10)
+# PK-04 Linux reference
 
-`linux/` is the output of `pk04_reference.py` run with the Python of `/home/claude/wheelvenv`, which has the 0.0.1
-release wheel installed (embodic 0.0.1, NumPy 2.4.6, Python 3.11.15, source SHA-256 `cfefe405…baae`). All six files
-are byte-identical to Fable's run in `/home/claude/pk04_linux_wheel` (`cmp`, `verified`).
+## Release 0.0.2 (U-V15, 2026-10-19)
 
-## Why the earlier reference differed
+`linux/` is the output of `pk04_reference.py` for release 0.0.2. Each line below was `verified` by running it.
+
+- The wheel is `embodic-0.0.2-py3-none-any.whl`, SHA-256 `60d3cd112479632ef0e95f6845bfc5abf66cbdd59b014c0a4bfeda47833d0f07`
+  (`sha256sum`), the value D-070 records.
+- It went into a fresh venv `/home/claude/wheelvenv-0.0.2` (CPython 3.11.17) by the two commands of
+  `requirements/README.md`: `pip install --require-hashes -r requirements/py311.txt`, then `pip install --no-deps <wheel>`.
+  `pip freeze` lists embodic 0.0.2, numpy 2.4.6, PySide6_Essentials 6.11.2 and shiboken6 6.11.2, nothing else.
+- The installed sources hash to `ccad3d7f7e68816d5dde3ecdb30f8739f697963d952a8d65f5b54dfa0d6ea44a`
+  (`package_source_sha256`). The wheel's evidence file `_resources/evidence/passed_tests.v1.json` names the same
+  `source_sha256`, git commit 0a74974 (tag v0.0.2), `git_dirty` false, profile `release` and 58 passed test IDs.
+  `src/embodic` of main 6555588 hashes to the same value, and `git diff 0a74974 6555588 -- src` is empty.
+- Command: `QT_QPA_PLATFORM=offscreen /home/claude/wheelvenv-0.0.2/bin/python -I
+  docs/phase3/verification/checks/pk04_reference.py --out <folder>`. `-I` keeps the worktree's `src/` off the path.
+  Four examples exit 0. The wave example exits 2 with 186 DRC violations, as D-034 expects.
+- Two runs into two scratch folders gave six byte-identical files each (`cmp`). The committed files are byte-identical
+  to both runs.
+- `pk04_compare.py --self-test` passes all 8 cases on these files. Comparing this folder with a second run prints
+  `PK-04 passed at rel 1e-09`. Comparing the 0.0.1 reference with this one is refused (exit 2) on the source hash,
+  as designed.
+
+What changed against the 0.0.1 reference. The design hashes and the CLI lines are unchanged. The status fields
+changed. In 0.0.2 every EQ-05 and EQ-06 result carries "EQ-05 tests not passed in this build" or the EQ-06 one,
+because the registry now links EQT-05-O2 and EQT-06-O2 to those equations and the release evidence holds neither.
+EQ-14 (EQT-14-O2), EQ-28 (EQT-28-GR) and EQ-29 (EQT-29-GR) also miss a linked test. This list comes from
+`load_registry()` in the wheel venv, comparing each equation's `tests` with `passed_tests`. That is the build's
+behaviour, not a reference defect. Whether EQ-05 and EQ-06 should show `not tested` in the release is a ruling for
+Agent 2 and Fable, outside this reference.
+
+Windows comparison for 0.0.2 has not run here. It is Fable's W5 step.
+
+## Release 0.0.1 (U-V10, history)
+
+The 0.0.1 reference was the output of `pk04_reference.py` run with the Python of `/home/claude/wheelvenv`, which had
+the 0.0.1 release wheel installed (embodic 0.0.1, NumPy 2.4.6, Python 3.11.15, source SHA-256 `cfefe405…baae`). All six
+files were byte-identical to Fable's run in `/home/claude/pk04_linux_wheel` (`cmp`, `verified`). It is in git at
+1939b13.
+
+### Why the earlier reference differed
 
 The earlier files (commit 0a5a351) differ from these in 294 places over the five examples. Every one of them is a
 `status` or `status_reasons` field (`verified`, counted with pk04_compare.diff). The earlier files list
@@ -16,7 +51,7 @@ byte-identical to the earlier reference (`verified`). The earlier reference ther
 without the build's evidence file. The file is a build product (`tools/record_passed_tests.py`) and is not in git, so a
 source checkout lacks it (`inferred` from `git ls-files`).
 
-## Comparison with the Windows output (W1)
+### Comparison with the Windows output (W1)
 
 `python3 -I docs/phase3/verification/checks/pk04_compare.py docs/phase3/verification/reference/linux <pk04_windows>`
 exits 1 (`verified`):
