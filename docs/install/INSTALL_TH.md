@@ -72,14 +72,14 @@ Linux:
 
 ```
 python -m pip install --require-hashes -r requirements/py311.txt
-python -m pip install --no-deps embodic-0.0.2-py3-none-any.whl
+python -m pip install --no-deps embodic-0.0.3-py3-none-any.whl
 ```
 
 Windows (ยังไม่ได้ทดสอบบน Windows ใน build นี้):
 
 ```
 python -m pip install --require-hashes -r requirements\py311.txt
-python -m pip install --no-deps embodic-0.0.2-py3-none-any.whl
+python -m pip install --no-deps embodic-0.0.3-py3-none-any.whl
 ```
 
 หลังคำสั่งติดตั้ง pip อาจพิมพ์ประกาศให้อัปเกรด pip ซึ่งไม่มีผลต่อการติดตั้ง ในการทดสอบ PK-06 ข้อความคือ
@@ -91,7 +91,7 @@ python -m pip install --no-deps embodic-0.0.2-py3-none-any.whl
 python -m pip list
 ```
 
-ผลที่ควรเห็น: รายการมี `embodic 0.0.2`, `numpy 2.4.6`, `PySide6_Essentials 6.11.2` และ `shiboken6 6.11.2`
+ผลที่ควรเห็น: รายการมี `embodic 0.0.3`, `numpy 2.4.6`, `PySide6_Essentials 6.11.2` และ `shiboken6 6.11.2`
 นอกเหนือจาก `pip` (และ `setuptools` บน Python 3.11) การทดสอบ PK-02 (`tests/packaging/test_pk02_clean_install.py`)
 ตรวจรายการนี้แบบตรงทุกตัวบน Linux
 
