@@ -195,3 +195,40 @@ asserted only by tests marked for another row:
 Reproduce: cite one of these tests in a `checks` ruling of its row; `v3_01_rerule.py` prints "lacks the REQ-x marker".
 Status `verified`. The rows keep other passing marked tests, so the release trace gate does not fail on them.
 Expected: add the six markers (owner Agent 3, no new assertion).
+
+# U-V15 defects (V3-02 to V3-07 and V3-10; main 6555588 = release 0.0.2 sources, 2026-10-19)
+
+Each row was reproduced in the dev venv (`py311-dev.txt`, CPython 3.11.17) with `PYTHONPATH=src`. The mutation runs
+use `tests/independent/m7/product_mutants.py`, which edits only a temporary copy of the checkout.
+
+## DEF-UV15-01 (REQ-F-10, must, D-006; low): no test sits on the D-006 boundary, so a flipped comparison survives
+
+Mutant V3-02-09 turns `clearance < required - DRC_EPSILON_MM` into `<=` in `src/embodic/drc/engine.py` l.340. It
+survives its named test (`tests/independent/m1/test_drc_agreement.py::test_intrusion_is_decided_by_d006`) and the whole
+V3-02 suite with the mutant applied: `tests/unit/drc`, both PR-13 tests, `tests/independent/m1` and
+`tests/independent/m3` (the clean copy: 318 passed, 1 skipped; the mutant run took 659 s). It is not equivalent. `python tests/independent/m7/def_uv15_boundaries.py` builds two traces whose clearance is
+`0.199999 == 0.2 - 1e-6` exactly. The product reports 0 violations there and 1 violation 8.9e-17 mm closer. The mutant
+would report the exact case.
+
+```
+python tests/independent/m7/product_mutants.py V3-02 --only V3-02-09   # prints "survived V3-02-09 ..."
+PYTHONPATH=src python tests/independent/m7/def_uv15_boundaries.py      # "D-006 k=+0: ... violations 0"
+```
+
+Status `verified`. Expected: a UT-DRC-03 case at the exact float boundary (the probe's geometry), asserting 0
+violations, plus the 8.9e-17 mm closer case asserting 1. Owner Agent 3.
+
+## DEF-UV15-02 (REQ-F-10, must, rule 2b of D-036a and D-037a; low): the rule 2b tap band is tested off its edge only
+
+Mutant V3-02-10 turns the tap test `<= via.pad_mm / 2` into `<` in `src/embodic/drc/items.py` (`_taps`). It survives
+`test_ut_drc_04_same_net_via_tap_band_is_half_the_via_pad` (offsets 0.29 and 0.31 mm) and the whole V3-02 suite (690 s).
+The probe shows that a via exactly 0.3 mm (`pad_mm / 2`) off the centreline is exempt in the product (0 violations), as
+interfaces.md section 7 rule 2b says ("within `pad_mm / 2`"). The mutant reports it.
+
+```
+python tests/independent/m7/product_mutants.py V3-02 --only V3-02-10   # prints "survived V3-02-10 ..."
+PYTHONPATH=src python tests/independent/m7/def_uv15_boundaries.py      # "rule 2b offset 0.3: []"
+```
+
+Status `verified`. Expected: add the 0.3 mm offset to the UT-DRC-04 parametrisation with `reported=False`. Owner
+Agent 3.
