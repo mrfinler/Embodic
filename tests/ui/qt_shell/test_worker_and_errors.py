@@ -47,6 +47,7 @@ def test_ui02_a_new_request_cancels_the_running_one_and_only_the_latest_is_shown
     assert window.outcome.state.value is finished[-1][1]
 
 
+@pytest.mark.latency
 @pytest.mark.req("REQ-N-02")
 def test_def_u_m8n_01_a_cancel_during_the_scene_build_ends_it_early_and_no_result_reaches_the_shell(d08_shell, qtbot):
     """Catches a cancelled request whose scene build runs to its end, holding the GIL, and whose result then shows.
@@ -102,6 +103,7 @@ def test_ui05_compute_runs_off_the_gui_thread(make_shell, wait_ready):
 
 
 @pytest.mark.slow
+@pytest.mark.latency
 @pytest.mark.req("REQ-N-02")
 def test_ui05_event_loop_answers_within_100ms_during_a_3s_compute(make_shell, qtbot):
     """Measures the largest gap between 10 ms GUI timer ticks during a 3 s synthetic compute (nightly only).

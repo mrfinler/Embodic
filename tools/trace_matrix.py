@@ -4,6 +4,10 @@ Usage, from the repository root after a pytest run with ``--req-report build/req
 
     python tools/trace_matrix.py --report build/req_report.json --out build/trace_matrix.md
 
+``--report`` takes the report of every pytest process of the run, as the nightly and release profiles of tools/ci.py
+write two: ``--report build/req_report.json build/req_report_latency.json``. A later ``--report`` replaces an
+earlier one.
+
 Exit code 1 when a test has no REQ marker, a marker names an unknown REQ ID, a manual record is invalid, or (with
 ``--fail-untested-through``) a live must-requirement of that milestone or earlier has neither a passing test nor a
 manual record that passed. ``--manual-records`` reads the checks that only a person can run (interfaces.md section 3.2).
@@ -23,6 +27,8 @@ REQ_ID = re.compile(r"REQ-[FNKTL]-\d{2}")
 MILESTONES = ("M1", "M2", "M3", "M4", "M5")
 MANUAL_KEYS = ("req", "test_id", "record", "embodic_version", "result")
 MANUAL_RESULTS = ("passed", "failed")
+# What a report says about a test, mildest first: a process that did not run the test says "not run".
+OUTCOME_SEVERITY = {"not run": 0, "passed": 1, "skipped": 2, "failed": 3}
 
 
 @dataclass(frozen=True)
@@ -71,6 +77,25 @@ def parse_requirements(text: str) -> list[Requirement]:
 def parse_report(text: str) -> list[CollectedTest]:
     """Return the test records written by tests/conftest.py."""
     return [CollectedTest(r["nodeid"], tuple(r["req"]), r["outcome"]) for r in json.loads(text)]
+
+
+def merge_reports(reports: Sequence[Sequence[CollectedTest]]) -> list[CollectedTest]:
+    """Return one record for each test of the reports, in the order the tests first appear.
+
+    The nightly and release profiles run pytest twice (D-074). Each process collects the whole suite and says
+    "not run" for the tests that the other one ran, so a test takes the worst outcome of its records: a failure or a
+    skip in either process stays visible, and a pass in one never hides it. A test has the REQ IDs of all its records.
+    """
+    merged: dict[str, CollectedTest] = {}
+    for report in reports:
+        for test in report:
+            seen = merged.get(test.nodeid)
+            if seen is not None:
+                req_ids = tuple(dict.fromkeys((*seen.req_ids, *test.req_ids)))
+                outcome = max(seen.outcome, test.outcome, key=OUTCOME_SEVERITY.__getitem__)
+                test = CollectedTest(test.nodeid, req_ids, outcome)
+            merged[test.nodeid] = test
+    return list(merged.values())
 
 
 def parse_manual_records(text: str, known_reqs: set[str], repo: Path = REPO) -> tuple[list[ManualRecord], list[str]]:
@@ -149,7 +174,13 @@ def find_untested(
 def main(argv: list[str] | None = None) -> int:
     """Write the matrix, print a one-line summary and return the exit code."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--report", type=Path, required=True, help="JSON written by pytest --req-report")
+    parser.add_argument(
+        "--report",
+        type=Path,
+        nargs="+",
+        required=True,
+        help="JSON written by pytest --req-report; one file for each pytest process of the run, merged",
+    )
     parser.add_argument("--requirements", type=Path, default=REQUIREMENTS)
     parser.add_argument("--out", type=Path, help="Markdown output; omitted means stdout")
     parser.add_argument("--fail-untested-through", choices=MILESTONES, help="enforce TR-01 up to this milestone")
@@ -159,7 +190,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     requirements = parse_requirements(args.requirements.read_text(encoding="utf-8"))
-    tests = parse_report(args.report.read_text(encoding="utf-8"))
+    tests = merge_reports([parse_report(path.read_text(encoding="utf-8")) for path in args.report])
     matrix = render_matrix(requirements, tests)
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)

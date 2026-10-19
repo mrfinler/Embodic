@@ -96,6 +96,9 @@ warn_return_any = false
 minversion = "9.0"
 testpaths = ["tests"]
 addopts = ["--import-mode=importlib", "--strict-markers", "--strict-config"]
+markers = [
+    "latency: asserts a GUI tick gap or a wall-clock latency bound of REQ-N-02; the nightly and release profiles run it in a pytest process of its own (D-074)",
+]
 # A hang fails with its stack instead of stalling the gate; 900 s leaves room for the nightly Hypothesis profile.
 timeout = 900
 

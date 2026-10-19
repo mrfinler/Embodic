@@ -8,6 +8,10 @@ Usage, from anywhere, inside the project's virtual environment::
                                             # evidence and wheel
 
 Every gate runs even after an earlier one fails, so one run shows every problem. Exit code 0 only when all pass.
+The nightly and release profiles run the tests marked `latency` (REQ-N-02: a GUI tick gap or a wall-clock latency
+bound) in a gate of their own, one fresh pytest process after the main gate. They measure the app's GUI thread, and
+after thousands of other tests in one process the suite's heap and timers had made two of them fail where each passed
+alone (D-074). Each process writes its own REQ report and the trace-matrix gate merges them.
 The release profile deletes the evidence of passing tests and the previous bundle folder before its first gate. It
 builds the PyInstaller one-folder bundle before pytest, and tests/bundle fails instead of skipping when the folder is
 missing (REQ-N-06, D-068). Only when every gate passed does it record the evidence (interfaces.md section 3.1), build
@@ -28,6 +32,8 @@ BUILD = REPO / "build"
 DIST = BUILD / "dist"
 BUNDLE = BUILD / "bundle"  # tools/build_bundle.py writes the one-folder bundle to BUNDLE / "embodic"
 REQ_REPORT = BUILD / "req_report.json"
+LATENCY_REQ_REPORT = BUILD / "req_report_latency.json"  # written by the latency gate's own pytest process (D-074)
+LATENCY_GATE = "latency tests (REQ-N-02)"
 EVIDENCE = REPO / "resources" / "evidence" / "passed_tests.v1.json"
 MANUAL_RECORDS = REPO / "docs" / "phase3" / "verification" / "manual_records.json"
 RELEASE_ONLY_TEST_DIRS = ("tests/performance", "tests/packaging")
@@ -38,26 +44,33 @@ EVIDENCE_TEST_DIR = "tests/packaging/evidence"  # PK-10 needs the evidence file,
 class Profile:
     """What separates the profiles: which tests run and how hard Hypothesis searches."""
 
-    marker_expression: str
+    marker_expression: str  # what the main pytest gate runs
     hypothesis_profile: str
     ignored_test_dirs: tuple[str, ...]
     records_evidence: bool = False
     untested_through: str | None = None  # TR-01: the last milestone whose live must rows need a test or a manual record
     require_personal_tokens: bool = False  # LG-06 fails, not skips, when no personal-data token can be found
     builds_bundle: bool = False  # build the PyInstaller folder before pytest; tests/bundle fails, not skips, without it
+    latency_marker_expression: str | None = None  # the `latency` tests, run in a pytest process of their own (D-074)
 
 
 PROFILES = {
     "commit": Profile("not slow and not manual", "commit", RELEASE_ONLY_TEST_DIRS),
-    "nightly": Profile("not manual", "nightly", RELEASE_ONLY_TEST_DIRS),
+    "nightly": Profile(
+        "not manual and not latency",
+        "nightly",
+        RELEASE_ONLY_TEST_DIRS,
+        latency_marker_expression="latency and not manual",
+    ),
     "release": Profile(
-        "not manual",
+        "not manual and not latency",
         "nightly",
         (EVIDENCE_TEST_DIR,),
         records_evidence=True,
         untested_through="M5",
         require_personal_tokens=True,
         builds_bundle=True,
+        latency_marker_expression="latency and not manual",
     ),
 }
 
@@ -74,9 +87,13 @@ class Gate:
 def gates_for(profile: Profile, *, record_baseline: bool = False) -> list[Gate]:
     """Return the gates of a profile in run order."""
     python = sys.executable
-    pytest_argv = [python, "-m", "pytest", "-p", "no:cacheprovider", "-m", profile.marker_expression]
-    pytest_argv += [f"--ignore={d}" for d in profile.ignored_test_dirs]
-    pytest_argv += [f"--req-report={REQ_REPORT}"]
+
+    def pytest_argv(marker_expression: str, report: Path) -> tuple[str, ...]:
+        """Return a pytest command over the same test paths as the other pytest gates, for these markers."""
+        argv = [python, "-m", "pytest", "-p", "no:cacheprovider", "-m", marker_expression]
+        argv += [f"--ignore={d}" for d in profile.ignored_test_dirs]
+        return (*argv, f"--req-report={report}")
+
     pytest_env = {"EMBODIC_HYPOTHESIS_PROFILE": profile.hypothesis_profile}
     if record_baseline:
         pytest_env["EMBODIC_RECORD_BASELINE"] = "1"
@@ -85,10 +102,12 @@ def gates_for(profile: Profile, *, record_baseline: bool = False) -> list[Gate]:
     if profile.builds_bundle:
         pytest_env["EMBODIC_REQUIRE_BUNDLE"] = "1"  # name read by tests/bundle/bundle_gate.py
     lint_imports = "import sys; from importlinter.cli import lint_imports_command; sys.exit(lint_imports_command())"
+    reports = [REQ_REPORT] if profile.latency_marker_expression is None else [REQ_REPORT, LATENCY_REQ_REPORT]
     trace_argv = [
         python,
         str(REPO / "tools" / "trace_matrix.py"),
-        f"--report={REQ_REPORT}",
+        "--report",
+        *map(str, reports),
         f"--out={BUILD / 'trace_matrix.md'}",
     ]
     trace_name = "trace matrix (TR-02)"
@@ -103,7 +122,11 @@ def gates_for(profile: Profile, *, record_baseline: bool = False) -> list[Gate]:
     ]
     if profile.builds_bundle:
         gates.append(Gate("bundle build (REQ-N-06)", (python, str(REPO / "tools" / "build_bundle.py"))))
-    gates += [Gate("pytest", tuple(pytest_argv), pytest_env), Gate(trace_name, tuple(trace_argv))]
+    gates.append(Gate("pytest", pytest_argv(profile.marker_expression, REQ_REPORT), pytest_env))
+    if profile.latency_marker_expression is not None:
+        # Same test paths and environment as the main gate: a test it leaves out must run here, not nowhere.
+        gates.append(Gate(LATENCY_GATE, pytest_argv(profile.latency_marker_expression, LATENCY_REQ_REPORT), pytest_env))
+    gates.append(Gate(trace_name, tuple(trace_argv)))
     return gates
 
 
