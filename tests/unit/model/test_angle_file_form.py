@@ -12,7 +12,7 @@ import pytest
 
 from embodic.api import compute
 from embodic.errors import IssueCategory, Severity
-from embodic.io.canonical import RAD_PATTERNS, design_hash
+from embodic.io.canonical import RAD_PATTERNS, design_hash, has_file_form
 from embodic.io.examples import load_example
 from embodic.model.design import DesignParameters
 from embodic.model.draft import DesignDraft, DraftIncomplete, draft_from_design, parse_draft
@@ -91,6 +91,7 @@ def test_every_angle_field_has_a_setup() -> None:
 def test_an_angle_with_no_finite_degrees_is_refused_by_validation(pattern: str, sign: int, magnitude: float) -> None:
     """Catches an angle field that lets a radian value with infinite degrees pass validation."""
     design, pointer = _design_with(pattern, sign * magnitude)
+    assert not has_file_form(design)
     found = [i for i in validate_design(design) if i.pointers == (pointer,)]
     code = "RANGE_ABOVE_SUPPORTED" if sign > 0 else "RANGE_BELOW_SUPPORTED"
     assert [(i.code, i.severity, i.category) for i in found] == [
@@ -121,4 +122,5 @@ def test_the_largest_angle_with_finite_degrees_passes_validation_and_hashes(patt
     """Catches a bound tighter than the file form needs: the boundary angle is valid and has a design hash."""
     design, pointer = _design_with(pattern, sign * LARGEST_RAD)
     assert [i for i in validate_design(design) if pointer in i.pointers] == []
+    assert has_file_form(design)
     assert design_hash(design).startswith("sha256:")
