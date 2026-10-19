@@ -43,9 +43,27 @@ def _convert(value: JsonValue, convert: Any) -> JsonValue:
     return convert(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else value
 
 
+def _without_negative_zero(data: JsonValue) -> JsonValue:
+    """Return ``data`` with every -0.0 replaced by 0.0, in dicts and lists too.
+
+    ``0.0 == -0.0`` in Python, but JSON writes "-0.0", so two designs that compare equal would give different bytes
+    and different hashes (REQ-F-15). The file form has one zero.
+    """
+    if isinstance(data, float):
+        return 0.0 if data == 0.0 else data
+    if isinstance(data, dict):
+        return {key: _without_negative_zero(value) for key, value in data.items()}
+    if isinstance(data, list):
+        return [_without_negative_zero(value) for value in data]
+    return data
+
+
 def to_file_values(values: Mapping[str, JsonValue]) -> dict[str, JsonValue]:
-    """Map model pointers and radians to file pointers and degrees."""
-    return {file_pointer(p): _convert(v, rad_to_deg) if _is_angle(p) else v for p, v in values.items()}
+    """Map model pointers and radians to file pointers and degrees; a negative zero becomes 0.0."""
+    return {
+        file_pointer(p): _without_negative_zero(_convert(v, rad_to_deg) if _is_angle(p) else v)
+        for p, v in values.items()
+    }
 
 
 def to_model_values(values: Mapping[str, JsonValue]) -> dict[str, JsonValue]:
@@ -67,8 +85,10 @@ def design_document(design: DesignParameters) -> dict[str, JsonValue]:
 
 
 def dumps_canonical(data: JsonValue) -> bytes:
-    """Sorted keys, no whitespace, shortest round-trip float repr, UTF-8; NaN and infinity refused."""
-    return json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False).encode()
+    """Sorted keys, no whitespace, shortest round-trip floats, -0.0 as 0.0, UTF-8; NaN and infinity refused."""
+    return json.dumps(
+        _without_negative_zero(data), sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False
+    ).encode()
 
 
 def canonical_json(design: DesignParameters) -> bytes:

@@ -1,20 +1,19 @@
-"""REQ-F-15: a negative zero in any float field leaves the design hash and the saved bytes as the positive zero has them.
+"""REQ-F-15: a negative zero in any float field leaves the design hash and the saved bytes as a positive zero has them.
 
-Catches a canonical form that writes "-0.0" for a design that compares equal to one with "0.0" (0.0 == -0.0 in Python).
+Catches a canonical form that writes "-0.0" for a design equal to one with "0.0" (0.0 == -0.0 in Python).
 """
 
-import dataclasses
 import re
 from pathlib import Path
 
 import pytest
+from tests.unit.property.strategies import cf11
 
 from embodic.io.canonical import design_hash, dumps_canonical
 from embodic.io.examples import list_examples, load_example
 from embodic.io.project import ProjectFile, load_project, save_project
 from embodic.model.design import DesignParameters
 from embodic.model.schema import ValueType, design_from_json, design_values, leaves, pattern_of, unflatten
-from tests.unit.property.strategies import cf11
 
 STAMP = "2026-10-08T12:00:00Z"
 EXAMPLE_IDS = [info.example_id for info in list_examples()]
@@ -98,7 +97,9 @@ def test_f15_a_file_saved_with_a_negative_zero_is_saved_again_as_the_zero_file(t
     save_project(zero_file, ProjectFile(design=_with_first_coil_angle(0.0), origin=None), saved_utc=STAMP)
     text = zero_file.read_text(encoding="utf-8")
     assert text.count('"first_coil_angle_deg": 0.0') == 1
-    legacy_file.write_text(text.replace('"first_coil_angle_deg": 0.0', '"first_coil_angle_deg": -0.0'), encoding="utf-8")
+    legacy_file.write_text(
+        text.replace('"first_coil_angle_deg": 0.0', '"first_coil_angle_deg": -0.0'), encoding="utf-8"
+    )
     loaded, issues = load_project(legacy_file)
     assert loaded is not None, issues
     save_project(resaved, loaded, saved_utc=STAMP)
