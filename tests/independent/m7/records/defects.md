@@ -232,3 +232,45 @@ PYTHONPATH=src python tests/independent/m7/def_uv15_boundaries.py      # "rule 2
 
 Status `verified`. Expected: add the 0.3 mm offset to the UT-DRC-04 parametrisation with `reported=False`. Owner
 Agent 3.
+
+## DEF-UV15-03 (REQ-T-04 property runs, should; low): the serpentine PR-13 and PR-14 properties run 3 examples in every profile
+
+`tests/unit/property/serpentine/test_serpentine_properties.py` l.35 sets `EXAMPLES = 3`, and both
+`test_pr_13_drc_never_under_reports_on_serpentine_boards` and
+`test_pr_14_rotating_the_start_angle_shifts_the_phasor_and_keeps_ke_r_and_drc` take `@settings(max_examples=EXAMPLES)`.
+The nightly and release profiles (2000 examples, `tests/conftest.py` l.32) therefore do not lengthen them. V3-07's
+statistics show `Stopped because settings.max_examples=3` on every seed. PR-05 scales with the profile (400) and PR-08
+takes the profile's 2000.
+
+```
+EMBODIC_HYPOTHESIS_PROFILE=nightly PYTHONPATH=src python -m pytest -p no:cacheprovider -q --hypothesis-show-statistics \
+  tests/unit/property/serpentine/test_serpentine_properties.py -k "test_pr_13_drc_never or test_pr_14_rotating"
+# both properties: "3 passing, 0 failing" and "Stopped because settings.max_examples=3"
+```
+
+Status `verified`. The REQ id in the heading is `inferred`: I did not check which row these two tests carry. Expected:
+scale `EXAMPLES` with the profile, as `COMPUTE_EXAMPLES` does, or write down in the test plan why 3 is enough. Each
+example builds a serpentine board and a brute DRC sweep, so the cost per example is high (40 s of generate phase for 3
+examples of PR-13 in seed 1). Owner Agent 3, ruling Fable.
+
+## DEF-UV15-04 (REQ-F-14, PR-05; medium): a finite board rotation makes compute raise instead of returning an issue
+
+V3-07 seed 5 found it: `test_pr_05_arbitrary_values_never_raise_and_invalid_values_return_issues` with
+`--hypothesis-seed=5` under the nightly profile. It failed again with a fresh example database, so it is the seed's own
+find, not a replay. The shrunk input is the CF-11 draft with a 12-sided polygon board (across flats 93 mm, corner
+radius 0) and `/outline/board/rotation_rad = 3.137566414384587e+306`. `compute` raises `ValueError: Out of range float
+values are not JSON compliant` from `design_hash` -> `canonical_json` -> `json.dumps(..., allow_nan=False)`
+(`src/embodic/io/canonical.py` l.71). PR-05 says arbitrary values never raise. The value is finite, and its degrees are
+`inf`. Below about 3.1376e306 rad, validation gives `RANGE_ABOVE_SUPPORTED` and compute returns normally.
+
+```
+PYTHONPATH=src python tests/independent/m7/def_uv15_04_rotation.py
+# rotation_rad 3.13e+306: no exception; issues ['RANGE_ABOVE_SUPPORTED']
+# rotation_rad 3.137566414384587e+306: ValueError: Out of range float values are not JSON compliant
+```
+
+Status `verified` (reproduced on main 6555588 sources). That the overflow happens in the rad-to-degrees step of the
+design document is `inferred` (`math.degrees` of the value is `inf`; the document code was not traced). Other angle
+fields in radians may share it (`not tested`). Expected: refuse an angle whose degree value is not finite at
+validation, or keep the canonical document in radians, and pin the input with an `@example` on PR-05 as the
+test already does for earlier finds. Owner Agent 3.
