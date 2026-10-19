@@ -236,10 +236,15 @@ def test_ut_drc_04_same_net_via_tap_leaves_a_far_primitive_of_the_same_path_chec
 
 
 @pytest.mark.parametrize(
-    ("offset_mm", "reported"), [(0.29, False), (0.31, True)], ids=["inside the band", "0.01 mm outside the band"]
+    ("offset_mm", "reported"),
+    [(0.29, False), (0.3, False), (0.31, True)],
+    ids=["inside the band", "on the band edge, pad_mm / 2", "0.01 mm outside the band"],
 )
 def test_ut_drc_04_same_net_via_tap_band_is_half_the_via_pad(offset_mm: float, reported: bool) -> None:
-    """Catches a tap band that grows into slack: with pad_mm = 0.6 a via 0.31 mm off the centreline overlaps."""
+    """Catches a tap band that grows into slack: with pad_mm = 0.6 a via 0.31 mm off the centreline overlaps.
+
+    A via exactly pad_mm / 2 = 0.3 mm off is exempt (DEF-UV15-02, V3-02-10; interfaces.md section 7 rule 2b: within).
+    """
     trunk = path(0, [line(-5, 0, 5, 0)], net="A")
     report = run_drc(layout(paths=[trunk], vias=[via(0, 0, offset_mm, net="A")]), RULES)
     assert report is not None
