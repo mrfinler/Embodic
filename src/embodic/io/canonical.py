@@ -12,9 +12,9 @@ from typing import Any
 from embodic.model.design import DesignParameters
 from embodic.model.draft import DesignDraft
 from embodic.model.fields import FIELDS
-from embodic.model.schema import JsonValue, flatten, pattern_of, to_json, unflatten
+from embodic.model.schema import JsonValue, design_values, flatten, pattern_of, to_json, unflatten
 from embodic.model.vocabulary import TopologyKind
-from embodic.units import Unit, deg_to_rad, rad_to_deg
+from embodic.units import ANGLE_RAD_MAX, Unit, deg_to_rad, rad_to_deg
 
 _RAD_SUFFIX, _DEG_SUFFIX = "_rad", "_deg"
 TOPOLOGY_POINTER = "/winding/kind"
@@ -76,8 +76,20 @@ def canonical_json(design: DesignParameters) -> bytes:
     return dumps_canonical(design_document(design))
 
 
+def has_file_form(design: DesignParameters) -> bool:
+    """Return False when an angle is beyond `ANGLE_RAD_MAX`: its degrees are infinite, which canonical JSON refuses.
+
+    Validation refuses such an angle on every field (`SUPPORTED_RANGES`), so a validated design always has a file form.
+    """
+    return all(
+        abs(value) <= ANGLE_RAD_MAX
+        for pointer, value in design_values(design).items()
+        if _is_angle(pointer) and isinstance(value, float | int)
+    )
+
+
 def design_hash(design: DesignParameters) -> str:
-    """SHA-256 over canonical_json(design), as "sha256:<hex>"."""
+    """SHA-256 over canonical_json(design), as "sha256:<hex>"; the design must have a file form."""
     return "sha256:" + hashlib.sha256(canonical_json(design)).hexdigest()
 
 

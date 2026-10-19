@@ -1,5 +1,5 @@
 {
- "app_version": "0.0.2",
+ "app_version": "0.0.3",
  "design": {
   "analysis": {
    "edge_correction": "off",
@@ -178,7 +178,7 @@
   }
  },
  "design_hash": "sha256:8ec4c23449a0be2bf4ee6ba337b72b2e93e5906e6b53ba8ba7c441d4872dd1ca",
- "engine_version": "0.0.2",
+ "engine_version": "0.0.3",
  "example": {
   "source_note": "Xcoil default serpentine preset (engine.js l.19-97), example values (assumption)",
   "title": "Serpentine, 16 poles"

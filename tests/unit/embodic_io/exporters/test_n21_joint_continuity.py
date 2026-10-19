@@ -8,6 +8,7 @@ so its end points are derived, and on D08 and the wave example they differ from 
 within `COINCIDENCE_MM` of each other.
 """
 
+import dataclasses
 import math
 import re
 import xml.etree.ElementTree as ET
@@ -20,8 +21,8 @@ import pytest
 
 from embodic.api import ComputeOutcome
 from embodic.geometry.layout import Layout
-from embodic.geometry.paths import COINCIDENCE_MM
-from embodic.geometry.primitives import Line
+from embodic.geometry.paths import COINCIDENCE_MM, CopperPath
+from embodic.geometry.primitives import Line, PrimitiveRole
 from embodic.io.dxf_writer import write_dxf
 from embodic.io.exporters import ExportSummary, PhaseRenderMode
 from embodic.io.svg_writer import write_svg
@@ -157,6 +158,39 @@ def test_n21_svg_writes_one_point_for_every_copper_joint(
     outcome = outcome_of(example)
     checked, bad = disagreeing_joints(outcome, written_svg(outcome, tmp_path), lines_only=False)
     assert checked > 0
+    assert bad == []
+
+
+def with_one_path(outcome: ComputeOutcome, primitives: tuple[Line, ...]) -> ComputeOutcome:
+    """Return ``outcome`` with board 1 reduced to a single path of ``primitives`` on its first copper layer."""
+    assert outcome.boards is not None
+    board = outcome.boards.boards[0]
+    chain = CopperPath(
+        id=0, layer=board.copper_layers[0], net="A", primitives=primitives, phase=None, element=None, polarity=0
+    )
+    stub = dataclasses.replace(board, paths=(chain,), vias=(), pads=())
+    return dataclasses.replace(outcome, boards=dataclasses.replace(outcome.boards, boards=(stub,)))
+
+
+@pytest.mark.parametrize(
+    ("end_mm", "start_mm"),
+    [(1.0000004, 1.0000006), (1.0000006, 1.0000004), (-2.0000006, -2.0000004)],
+    ids=["end rounds down", "end rounds up", "negative side"],
+)
+def test_n21_svg_joint_ends_that_round_apart_are_written_once_from_the_shared_coordinate(
+    end_mm: float, start_mm: float, outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path
+) -> None:
+    """V3-05-01 (D-071c). Catches a writer that takes the joint from the next primitive's own start coordinate.
+
+    The two lines meet 2e-7 mm apart, inside the 1e-6 mm joint bound, and the six-decimal SVG numbers of the two ends
+    differ because 1e-6 mm rounding falls between them. The joint must still be one written point.
+    """
+    first = Line(x1_mm=0.0, y1_mm=0.0, x2_mm=end_mm, y2_mm=0.0, width_mm=0.2, role=PrimitiveRole.SIDE)
+    second = Line(x1_mm=start_mm, y1_mm=0.0, x2_mm=2 * start_mm, y2_mm=0.0, width_mm=0.2, role=PrimitiveRole.SIDE)
+    assert abs(start_mm - end_mm) < COINCIDENCE_MM
+    outcome = with_one_path(outcome_of("spiral_12c10p_d08"), (first, second))
+    checked, bad = disagreeing_joints(outcome, written_svg(outcome, tmp_path), lines_only=False)
+    assert checked == 1
     assert bad == []
 
 

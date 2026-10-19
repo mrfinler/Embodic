@@ -23,7 +23,7 @@ from embodic.drc import CancelToken, DrcReport, run_drc
 from embodic.errors import IssueCategory, Severity, Unbuildable, ValidationIssue, message_for
 from embodic.generators import build_layout
 from embodic.geometry.layout import BoardStack, Layout
-from embodic.io.canonical import design_document, design_hash, dumps_canonical, file_pointer
+from embodic.io.canonical import design_document, design_hash, dumps_canonical, file_pointer, has_file_form
 from embodic.io.migrations import PROJECT_SCHEMA_VERSION
 from embodic.io.project import LoadedDraft, load_project, project_provenance, provenance_document
 from embodic.model.design import DesignParameters
@@ -53,6 +53,7 @@ __all__ = [
 
 CachedStage = Literal["geometry", "drc", "physics"]
 STAGE_CACHE_ENTRIES = 8
+NO_DESIGN_HASH = ""  # validation refuses a design with no file form (an angle with infinite degrees); it has no hash
 DEFAULT_OPTIONS = ComputeOptions()
 T = TypeVar("T")
 
@@ -245,7 +246,7 @@ def compute(
     registry = registry if registry is not None else load_registry()
     cache = cache if cache is not None else StageCache()
     run = _Run()
-    hash_ = design_hash(design)
+    hash_ = design_hash(design) if has_file_form(design) else NO_DESIGN_HASH
 
     def outcome(
         boards: BoardStack | None = None,

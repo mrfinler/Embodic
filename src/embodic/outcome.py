@@ -45,7 +45,7 @@ class ComputeOutcome:
     """Every product of one compute run; a stage that did not run leaves its field None."""
 
     design: DesignParameters
-    design_hash: str
+    design_hash: str  # "" when the design has no file form: validation refused an angle with infinite degrees
     provenance: ProvenanceMap
     issues: tuple[ValidationIssue, ...]
     boards: BoardStack | None

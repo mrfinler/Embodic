@@ -2,6 +2,29 @@
 
 All notable changes to embodic are listed here. Versions follow semantic versioning; dates are ISO 8601.
 
+## 0.0.3 - 2026-10-19
+
+This release carries wave F12 (D-071). A reference such as D-071c is a clause of `docs/decision_log.md`. A DEF
+identifier names a defect row of the U-V15 records.
+
+### Changed
+
+- The five packaged examples are regenerated with `tools/sync_registry.py`. `app_version` and `engine_version` read
+  `0.0.3`. (D-071d)
+- The serpentine properties PR-13 and PR-14 run 3 examples in the commit profile and up to 25 in the nightly and
+  release profiles, scaled with the profile. Each example builds a board and a brute DRC sweep, about 13 s. (DEF-UV15-03,
+  D-071c)
+- Boundary tests join the suite: a clearance of exactly rule minus epsilon passes and one 8.9e-17 mm closer fails
+  (UT-DRC-03, D-006), a same-net via exactly pad_mm / 2 off the centreline is exempt (UT-DRC-04, rule 2b), and an SVG
+  joint whose ends differ by less than 1e-6 mm across a rounding step is written once from the shared coordinate
+  (REQ-N-21). (DEF-UV15-01, DEF-UV15-02, V3-05-01, D-071c)
+
+### Fixed
+
+- An angle in radians whose degree value is not finite made `compute` raise `ValueError` from the design hash instead of
+  returning an issue (REQ-F-14, PR-05). Validation now refuses such an angle on every angle field before any
+  conversion. (DEF-UV15-04, D-071c)
+
 ## 0.0.2 - 2026-10-18
 
 This release carries the fixes of Phase 3 (D-048 to D-063). A reference such as D-056b is a row of

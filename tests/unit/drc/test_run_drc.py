@@ -236,10 +236,15 @@ def test_ut_drc_04_same_net_via_tap_leaves_a_far_primitive_of_the_same_path_chec
 
 
 @pytest.mark.parametrize(
-    ("offset_mm", "reported"), [(0.29, False), (0.31, True)], ids=["inside the band", "0.01 mm outside the band"]
+    ("offset_mm", "reported"),
+    [(0.29, False), (0.3, False), (0.31, True)],
+    ids=["inside the band", "on the band edge, pad_mm / 2", "0.01 mm outside the band"],
 )
 def test_ut_drc_04_same_net_via_tap_band_is_half_the_via_pad(offset_mm: float, reported: bool) -> None:
-    """Catches a tap band that grows into slack: with pad_mm = 0.6 a via 0.31 mm off the centreline overlaps."""
+    """Catches a tap band that grows into slack: with pad_mm = 0.6 a via 0.31 mm off the centreline overlaps.
+
+    A via exactly pad_mm / 2 = 0.3 mm off is exempt (DEF-UV15-02, V3-02-10; interfaces.md section 7 rule 2b: within).
+    """
     trunk = path(0, [line(-5, 0, 5, 0)], net="A")
     report = run_drc(layout(paths=[trunk], vias=[via(0, 0, offset_mm, net="A")]), RULES)
     assert report is not None
@@ -368,6 +373,29 @@ def test_ut_drc_03_inside_epsilon_passes() -> None:
     """Catches an epsilon above 1e-6 mm turned into a hidden slack: 0.9 um below the rule still passes."""
     report = run_drc(layout(paths=_turns(0.2 - 0.9e-6, count=2)), RULES)
     assert report is not None and report.passed
+
+
+@pytest.mark.eqt("EQT-30-UT1")
+@pytest.mark.parametrize(
+    ("side", "violations"), [(-1, 1), (0, 0), (1, 0)], ids=["8.9e-17 mm closer", "exactly rule - epsilon", "further"]
+)
+def test_ut_drc_03_the_float_boundary_of_d006_is_rule_minus_epsilon_and_equal_passes(
+    side: int, violations: int
+) -> None:
+    """Catches DEF-UV15-01 (V3-02-09): a clearance of exactly 0.2 - 1e-6 mm passes and one 8.9e-17 mm closer fails.
+
+    Two 0.2 mm traces on nets A and B; the second sits so that the least clearance is the float 0.2 - 1e-6 for side 0
+    and one step either side of it for side -1 and 1 (D-006: a violation is clearance < rule - epsilon, strictly).
+    """
+    boundary_mm = RULES.trace_clearance_mm - 1e-6
+    y = boundary_mm + 0.2 + side * 2**-52 * 0.4
+    traces = [path(0, [line(-5, 0, 5, 0)], net="A"), path(1, [line(-5, y, 5, y)], net="B")]
+    report = run_drc(layout(paths=traces), RULES)
+    assert report is not None
+    least = report.summaries[0].least_clearance_mm
+    assert least is not None
+    assert (least > boundary_mm) - (least < boundary_mm) == side, "the layout sits on the boundary it names"
+    assert len(report.violations) == violations
 
 
 def test_ut_drc_05_through_via_is_checked_against_copper_on_every_layer() -> None:

@@ -32,7 +32,10 @@ from .strategies import serpentine_designs
 
 pytestmark = pytest.mark.req("REQ-F-34")
 REGISTRY = load_registry()
-EXAMPLES = 3
+# D-071c (DEF-UV15-03): each example builds a serpentine board and runs a brute DRC sweep, about 13 s. The count is
+# 3 % of the profile's examples: 3 in the commit profile, and 25 in the nightly and release profiles, where the cap
+# holds each property near 25 x 13 s, about 5 minutes.
+EXAMPLES = min(25, max(3, settings().max_examples * 3 // 100))
 # Fractions of an electrical period: whole periods, one pole pitch (half a period) and others.
 PERIOD_FRACTIONS = [1.0, 0.5, 0.25, -0.75, 0.37]
 PAIR_KINDS = {"trace_trace", "trace_via", "via_via", "pad_trace", "pad_pad"}

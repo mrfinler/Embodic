@@ -12,7 +12,7 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 
 from embodic.errors import IssueCategory, Severity, Suggestion, ValidationIssue, message_for
 from embodic.model.design import DesignParameters
-from embodic.model.fields import FieldSpec, Limits, Sign, field_for
+from embodic.model.fields import FIELDS, FieldSpec, Limits, Sign, field_for
 from embodic.model.schema import JsonValue, ValueType, design_values, pattern_of
 from embodic.model.stackup import BOARD_THICKNESS_MAX_MM, BOARD_THICKNESS_MIN_MM, CopperLayer, copper_total_mm
 from embodic.model.winding_specs import (
@@ -22,7 +22,7 @@ from embodic.model.winding_specs import (
     StackMode,
     WaveWindingSpec,
 )
-from embodic.units import Unit
+from embodic.units import ANGLE_RAD_MAX, Unit
 
 RADIAL_SPAN_MIN_MM = 0.5  # Xcoil R_ORDER: rOut > rIn + 0.5
 VIA_RING_MIN_MM = 0.1  # Xcoil VIA_RING: viaPad >= viaDrill + 0.1
@@ -301,6 +301,9 @@ def _stackup(design: DesignParameters) -> Iterator[ValidationIssue]:
 # Supported ranges the field table does not hold yet (assumption unless a source is named). Each one bounds the work
 # of a stage or keeps a formula finite; the values come from timing CF-11 (U-M2-fix3 report).
 OUTLINE_MAX_MM = 2000.0  # the arc-magnet radius maximum of the field table
+# An angle is written in degrees, and beyond ANGLE_RAD_MAX its degrees are infinite: the design has no file form and no
+# hash (DEF-UV15-04). An angle field whose table row sets a limit already stops far below it.
+_ANGLE_FILE_FORM = Limits(low=-ANGLE_RAD_MAX, high=ANGLE_RAD_MAX)
 SUPPORTED_RANGES: Mapping[str, Limits] = types.MappingProxyType(
     {
         # Physics cuts each path into length / max_segment chords; 0.1 mm keeps a CF-11 compute near 2 s.
@@ -324,6 +327,11 @@ SUPPORTED_RANGES: Mapping[str, Limits] = types.MappingProxyType(
         # A pitch circle or hole larger than the largest board cannot lie on it (DEF-M7a-01: 1e30 mm overflowed DRC).
         "/outline/screws/*/pitch_radius_mm": Limits(high=OUTLINE_MAX_MM),
         "/outline/screws/*/hole_diameter_mm": Limits(high=2 * OUTLINE_MAX_MM),
+        **{
+            spec.pointer: _ANGLE_FILE_FORM
+            for spec in FIELDS
+            if spec.unit is Unit.RAD and spec.limits.low is None and spec.limits.high is None
+        },
     }
 )
 
