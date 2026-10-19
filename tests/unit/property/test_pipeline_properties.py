@@ -246,8 +246,17 @@ def test_pr_07_balanced_designs_have_phase_emf_phasors_120_degrees_apart(design:
     assert abs(steps[0]) == pytest.approx(2.0 * math.pi / 3.0, abs=1e-9)
 
 
+def _cf11_with_first_coil_angle(angle_rad: float) -> DesignParameters:
+    design = cf11()
+    assert isinstance(design.winding, SpiralWindingSpec)
+    coil = dataclasses.replace(design.winding.coil, first_coil_angle_rad=angle_rad)
+    return dataclasses.replace(design, winding=dataclasses.replace(design.winding, coil=coil))
+
+
 @pytest.mark.req("REQ-F-15")
 @given(a=spiral_designs(), b=spiral_designs())
+# Release run of 0.0.2 on Windows: 0.0 == -0.0 in Python, but the canonical JSON wrote "-0.0" and the hashes differed.
+@example(a=_cf11_with_first_coil_angle(0.0), b=_cf11_with_first_coil_angle(-0.0))
 def test_pr_08_hash_changes_iff_the_design_changes(a: DesignParameters, b: DesignParameters) -> None:
     """PR-08. Catches a hash that ignores a field or depends on something other than the design."""
     assert (design_hash(a) == design_hash(b)) == (a == b)
