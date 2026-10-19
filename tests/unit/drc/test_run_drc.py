@@ -370,6 +370,29 @@ def test_ut_drc_03_inside_epsilon_passes() -> None:
     assert report is not None and report.passed
 
 
+@pytest.mark.eqt("EQT-30-UT1")
+@pytest.mark.parametrize(
+    ("side", "violations"), [(-1, 1), (0, 0), (1, 0)], ids=["8.9e-17 mm closer", "exactly rule - epsilon", "further"]
+)
+def test_ut_drc_03_the_float_boundary_of_d006_is_rule_minus_epsilon_and_equal_passes(
+    side: int, violations: int
+) -> None:
+    """Catches DEF-UV15-01 (V3-02-09): a clearance of exactly 0.2 - 1e-6 mm passes and one 8.9e-17 mm closer fails.
+
+    Two 0.2 mm traces on nets A and B; the second sits so that the least clearance is the float 0.2 - 1e-6 for side 0
+    and one step either side of it for side -1 and 1 (D-006: a violation is clearance < rule - epsilon, strictly).
+    """
+    boundary_mm = RULES.trace_clearance_mm - 1e-6
+    y = boundary_mm + 0.2 + side * 2**-52 * 0.4
+    traces = [path(0, [line(-5, 0, 5, 0)], net="A"), path(1, [line(-5, y, 5, y)], net="B")]
+    report = run_drc(layout(paths=traces), RULES)
+    assert report is not None
+    least = report.summaries[0].least_clearance_mm
+    assert least is not None
+    assert (least > boundary_mm) - (least < boundary_mm) == side, "the layout sits on the boundary it names"
+    assert len(report.violations) == violations
+
+
 def test_ut_drc_05_through_via_is_checked_against_copper_on_every_layer() -> None:
     """Catches a via checked on its own layer pair only: copper on B.Cu near a through via must fail."""
     bottom = path(0, [line(-2, 0.5, 2, 0.5)], layer="B.Cu", net="B")
