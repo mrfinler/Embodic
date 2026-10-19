@@ -5,6 +5,7 @@ and angles radians; degrees, ounces of copper and square mils exist only at inpu
 """
 
 import math
+import sys
 from enum import StrEnum
 from types import MappingProxyType
 from typing import TypeAlias
@@ -20,6 +21,8 @@ MM_PER_MIL = 0.0254
 MM2_PER_MIL2 = MM_PER_MIL * MM_PER_MIL
 MM_PER_COPPER_OZ = 0.0348
 """Finished thickness of 1 oz/ft² copper. Status: assumption (Xcoil engine.js l.14 and D08 p.54 use 34.8 µm)."""
+ANGLE_RAD_MAX = math.radians(sys.float_info.max)
+"""Largest angle in radians whose degree value is finite; above it `rad_to_deg` gives infinity (no file form)."""
 
 
 class Unit(StrEnum):
