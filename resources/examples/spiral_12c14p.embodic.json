@@ -1,5 +1,5 @@
 {
- "app_version": "0.0.2",
+ "app_version": "0.0.3",
  "design": {
   "analysis": {
    "edge_correction": "off",
@@ -148,7 +148,7 @@
   }
  },
  "design_hash": "sha256:4a1997029f7063676bdb9eab703c462f4240d84916a5ddf3deec044fa4391bc1",
- "engine_version": "0.0.2",
+ "engine_version": "0.0.3",
  "example": {
   "source_note": "CF-11 copper with 14 poles on a 104 mm board, example values (assumption)",
   "title": "Spiral, 12 coils, 14 poles"
