@@ -37,7 +37,7 @@ Linux (bash):
 python3.11 -m venv .venv
 . .venv/bin/activate
 python -m pip install --require-hashes -r requirements/py311.txt
-python -m pip install --no-deps embodic-0.0.4-py3-none-any.whl
+python -m pip install --no-deps embodic-0.0.5-py3-none-any.whl
 ```
 
 Windows (PowerShell), not tested on Windows in this build:
@@ -46,7 +46,7 @@ Windows (PowerShell), not tested on Windows in this build:
 py -3.11 -m venv .venv
 .venv\Scripts\Activate.ps1
 python -m pip install --require-hashes -r requirements\py311.txt
-python -m pip install --no-deps embodic-0.0.4-py3-none-any.whl
+python -m pip install --no-deps embodic-0.0.5-py3-none-any.whl
 ```
 
 ## Run the app

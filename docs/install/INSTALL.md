@@ -69,14 +69,14 @@ Linux:
 
 ```
 python -m pip install --require-hashes -r requirements/py311.txt
-python -m pip install --no-deps embodic-0.0.4-py3-none-any.whl
+python -m pip install --no-deps embodic-0.0.5-py3-none-any.whl
 ```
 
 Windows, not tested on Windows in this build:
 
 ```
 python -m pip install --require-hashes -r requirements\py311.txt
-python -m pip install --no-deps embodic-0.0.4-py3-none-any.whl
+python -m pip install --no-deps embodic-0.0.5-py3-none-any.whl
 ```
 
 After an install command, pip may print an upgrade notice, and the notice does not affect the install. In the PK-06 runs
@@ -88,7 +88,7 @@ Check what is installed:
 python -m pip list
 ```
 
-Expected output: the list holds `embodic 0.0.4`, `numpy 2.4.6`, `PySide6_Essentials 6.11.2` and `shiboken6 6.11.2`,
+Expected output: the list holds `embodic 0.0.5`, `numpy 2.4.6`, `PySide6_Essentials 6.11.2` and `shiboken6 6.11.2`,
 besides `pip` (and `setuptools` on Python 3.11). The test PK-02 (`tests/packaging/test_pk02_clean_install.py`) checks
 exactly this list on Linux.
 
