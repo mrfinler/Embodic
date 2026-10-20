@@ -274,3 +274,84 @@ design document is `inferred` (`math.degrees` of the value is `inf`; the documen
 fields in radians may share it (`not tested`). Expected: refuse an angle whose degree value is not finite at
 validation, or keep the canonical document in radians, and pin the input with an `@example` on PR-05 as the
 test already does for earlier finds. Owner Agent 3.
+
+# U-V16 defects (user report "D08 spiral coils short"; main 0ad66be, src equal to 0.0.3 = 2fb2ec6, 2026-10-20)
+
+Reproduced in the dev venv (CPython 3.11.17) with `PYTHONPATH=src` and `QT_QPA_PLATFORM=offscreen`, Linux container
+only. The record is `m7/records/U-V16/U-V16.md`. Verdict (b): the copper of all five examples is clear on every layer.
+None of these rows is a short on a shipped example.
+
+## DEF-UV16-01 (REQ-F-10, must, section 7 rule 5 end-point clause, D-037a; low, latent): rule 5 exempts a path end from the whole path it starts on
+
+A leg that starts on a coil's end point is exempt from every primitive of that coil path, not only from the stub it
+joins. The end-point clause of rule 5 does this: "The centreline includes its two end points ... also exempts its end
+group from every primitive of that path" (`docs/phase2/architecture/interfaces.md` l.2840-2844). The code does what the
+contract says: `src/embodic/drc/items.py` `_junctions` l.284-287 measures from each path end to every primitive of the
+other same-net paths, end points included, and exempts the end group from every primitive of each path within
+`COINCIDENCE_MM`. The joint itself is already exempt by rules 2 and 3 (both ends on one via).
+
+Measured (`u_v16_copper.py`): same-layer pairs that rule 5 exempts and that are not joints are 120 on D08, 492 on each
+of spiral_12c14p and spiral_12c16p_default, and 1512 on the serpentine example. The least clearance among them equals
+the rule on every board (D08 0.8 mm - 4.2e-10; the others 0.2 mm - 3e-10 to 6e-10), so no violation is hidden on the
+shipped examples. On the wave example rule 5 exempts one pair, a designed T. Through a design input the gap stays at
+the rule: D08 with `vias.pad_mm` 0.6, 0.7, 0.8 or 1.0 mm widens the legs to match, and the generator keeps them at the
+rule (`u_v16_pad_probe.py`, 0 violations, no rule 5 close pair).
+
+The DRC is blind there. D08 with leg 25 widened to 0.8 mm is 0.700 mm from coil turn path:1/prim:9 (rule 0.8), and
+`run_drc` passes with 0 violations. The control is the same leg with its start moved 0.001 mm along itself, off the
+coil end but still on via 2. There `run_drc` reports `path:1/prim:9`/`path:25/prim:0` at 0.701 mm.
+
+```
+PYTHONPATH=src python tests/independent/m7/u_v16_spots.py   # "rule 5 mutant, joint kept ... run_drc_passed: true"
+PYTHONPATH=src python tests/independent/m7/u_v16_copper.py  # "... not designed joints, by rule {"5": {"pairs": 120 ..."
+```
+
+Agent 4's own section 7 model reads rule 5 the same way (`tests/independent/m1/drc_universe.py` `_tees`, l.236), so
+V3-10 and PR-13 share the gap. D-022c's whole-path interconnect tap has the same shape: on the wave board it exempts the
+W lead's second primitive (path:95/prim:1, L1) from the PHASE_C terminal via 18 it lands on, 3 pairs at 0.2 mm. D-037a
+kept that clause whole-path on purpose, so this row reports it and does not reopen it.
+
+Status `verified` (mutant, control and counts by running). Expected (standing order 11, a spec fix): an end point that
+lies on another path's end point is a node under rule 3 and is exempt from that path's end group only; rule 5 keeps
+mid-path T-junctions. Then `_junctions` and M1 `_tees` follow, with a UT-DRC-04 near miss: a leg on a coil end, 0.01 mm
+inside the rule from the coil's next turn, reported. Owner: Agent 6 (contract), Agent 3 (code), Agent 4 (M1), Fable
+rules. Not fixed here.
+
+## DEF-UV16-02 (REQ-F-13 geometry view, design_spec.md section 3.3; medium): every visible copper layer is drawn opaque in one colour per phase, so copper on different layers looks joined
+
+The user, who designed Xcoil, read D08 as shorted: A2− into A1+, A2− into B1−, and the phase rings into the coil tails.
+Measured, the same-layer gaps are 0.800 mm (the rule), and the rings cross the legs only in plan view: ring A on L1 over
+leg 24 on L2, overlapping 0.8 mm in plan at (-11.01, 47.19). The grabbed view (`U-V16_view_items.json`) draws L2, then
+L1 over it, both at z 0, with the same opaque pen per phase: A `#c43b10`, B `#005bfc`, C `#0eb16a`, interconnect
+`#c8c8c8`. The widths are true (2.06, 1.0, 0.6 mm, non-cosmetic, round caps). The L2 spiral is the mirror of L1
+(REQ-F-01), so the overlay draws each coil as closed loops, and a ring over a leg looks like one piece of copper. With
+one layer solo (`U-V16_view_D08_region_L1.png`, `..._L2.png`) the coils are open spirals with clear gaps.
+
+Root cause: `src/embodic/ui/views/geometry_view.py` l.250-253 (`_rebuild` draws each visible layer in turn) and
+l.282-285 (`_draw_copper` takes the colour from `path.phase` alone and paints it opaque). The spec asks for nothing
+else: design_spec.md section 3.3 and screens.md l.242 give copper one colour per phase and name no layer cue. Xcoil
+drew each copper layer group with its own opacity, 0.95 for even-index layers and 0.62 for odd-index layers (Xcoil v3
+`source/src/ui.js` l.318, read in the session attachment). That cue did not reach the spec or the port. Every packaged
+example has at least two copper layers (serpentine 6), so every drawing is affected.
+
+```
+PYTHONPATH=src QT_QPA_PLATFORM=offscreen python tests/independent/m7/u_v16_view_grab.py OUT   # region_all vs region_L1
+PYTHONPATH=src QT_QPA_PLATFORM=offscreen python tests/independent/m7/u_v16_render.py OUT      # own per-layer renders
+```
+
+Status `verified` (grab, item table, own renders). Whether the user reads the drawing better with a layer cue is
+`not tested`. Expected: a spec ruling on a layer cue while more than one copper layer is visible (Xcoil's per-layer
+opacity is one precedent), then the view and its acceptance check. Owner: Agent 1 or Agent 6 (spec), Agent 3 (view),
+Fable rules. Not fixed here.
+
+## DEF-UV16-03 (REQ-F-13 geometry view; low): round pads are drawn as squares
+
+`src/embodic/ui/views/geometry_view.py` l.295-297 adds every pad as a `QGraphicsRectItem` of `width_mm` by
+`height_mm` and ignores `pad.shape`. The D08 pads U, V and W are round, 2.4 mm (`Pad.shape == "round"`). The grab's
+item table shows them as `QGraphicsRectItem`. Each corner therefore shows copper 1.2 x (sqrt(2) - 1) = 0.497 mm beyond
+the land, which is not on the board, so the view overstates the copper next to a pad. The DXF export writes the same
+pads as circles (`src/embodic/io/dxf_writer.py` l.139-140), and Xcoil drew round pads as circles (`ui.js` l.334). The
+pads lie outside the user's screenshot.
+
+Status `verified` (item table and reading). Expected: draw a round pad as an ellipse and an oblong or rectangular pad
+from `pad_outline`, as the exporters do. Owner Agent 3. Not fixed here.

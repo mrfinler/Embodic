@@ -1,0 +1,4 @@
+{"pad_mm": 0.6, "leg_widths_mm": [0.6], "product_drc": [{"passed": true, "violations": 0}], "own_close_pairs_by_product_rule": {"2 tap / 2b": 1}, "least_rule5_clearance_mm": null, "agreement": true}
+{"pad_mm": 0.7, "leg_widths_mm": [0.7], "product_drc": [{"passed": true, "violations": 0}], "own_close_pairs_by_product_rule": {"2 tap / 2b": 1}, "least_rule5_clearance_mm": null, "agreement": true}
+{"pad_mm": 0.8, "leg_widths_mm": [0.8], "product_drc": [{"passed": true, "violations": 0}], "own_close_pairs_by_product_rule": {"2 tap / 2b": 1}, "least_rule5_clearance_mm": null, "agreement": true}
+{"pad_mm": 1.0, "leg_widths_mm": [1.0], "product_drc": [{"passed": true, "violations": 0}], "own_close_pairs_by_product_rule": {"2 tap / 2b": 1}, "least_rule5_clearance_mm": null, "agreement": true}
