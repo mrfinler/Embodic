@@ -111,6 +111,10 @@ Revision 2026-10-17 (U-D22, claude-sonnet-5-5, D-057d; main eea9757 read for eve
 result includes the chains of the intermediate results it uses (DEF-UE18-01). The statement is in the `traced`
 docstring and in a paragraph after it. No type, field or signature changes.
 
+Revision 2026-10-20 (U-D24, claude-opus-5-5, D-078; main 14c8b7a read for every item). §7 narrows rule 5 to the
+landing group of the primitive an end point lies on and withdraws its end-point reading (DEF-UV16-01). The rule 2 tap
+becomes per primitive, as rule 2b is. No type, field or signature changes.
+
 ## 0. Rules for every public boundary
 
 - Lengths are millimetres (`_mm`), angles radians (`_rad`) inside the core, temperature °C (`_degc`), current A (`_a`),
@@ -2812,6 +2816,9 @@ path's centreline includes its end points. See the note after the rule list.
 Revision 2026-10-13 (U-D14, claude-sonnet-5-5, D-045g): no GR-19 pair depends on that end-point clause any more, because
 both GR-19 DRC readings now cut each Xcoil `ic` object into continuous chains (D-046f keeps the physics mapping whole).
 The rule text stays. See the note after the rule list.
+Revision 2026-10-20 (U-D24, claude-opus-5-5, D-078; DEF-UV16-01): rule 5 exempts an end group only from the landing
+group of the primitive its end point lies on, and the end-point reading of U-D8 is withdrawn. The rule 2 tap is per
+primitive, as rule 2b is. See the note after the rule list.
 
 1. Neighbours in one path. Each primitive that is not a fillet or a taper is a main primitive and starts a new main
    index (Xcoil `mi`, `engine.js` `drcObjects` l.1697). A fillet or taper belongs to the main primitive it follows and
@@ -2828,20 +2835,24 @@ The rule text stays. See the note after the rule list.
 2. A path end on a land. A via and the end group of a path whose end point lies within `pad_mm / 2` of the via
    centre. A pad and the end group of a path whose end point lies inside the pad outline, when the pad is on the
    path's layer or on all layers. The end group is the terminating main primitive with its fillets and tapers.
-   Tap (D-022c): a via and every primitive of an interconnect path when the via centre lies within `pad_mm / 2` of
-   that path's centreline, at an end or mid-path.
+   Tap (D-022c; per primitive since revision 2026-10-20 (U-D24), D-078): a via and each primitive of an interconnect
+   path whose centreline passes within `pad_mm / 2` of the via centre, at an end or mid-path, whatever the nets and the
+   via role. Every other primitive of that path stays checked against the via.
    Same-net tap, rule 2b (revision 2026-10-09 (U-D8), D-036a as D-037a rules it): a via and each primitive of a path
    of the via's net whose centreline passes within `pad_mm / 2` of the via centre. The exemption is per primitive, not
    per path: every other primitive of that path stays checked against the via. Rule 2b names vias, not pads. The tap
-   clause above stays whole-path for interconnect paths (D-022c).
+   is rule 2b with the net test waived for an interconnect path.
 3. Path ends meeting at a node. The end groups of two different paths on one layer whose end points lie on one via,
    on one pad, or within `COINCIDENCE_MM` of each other.
 4. A pad and a via whose centre lies inside the pad.
-5. A T-junction (revision 2026-10-08 (U-D7), D-035b). The end group of a path whose end point lies within
-   `COINCIDENCE_MM` of the centreline of another path of the same net is exempt from every primitive of that other
-   path. The centreline includes its two end points (revision 2026-10-09 (U-D8), D-037a). An end point that lies on
-   the other path's end point therefore also exempts its end group from every primitive of that path, not only from
-   that path's end group under rule 3.
+5. A T-junction (revision 2026-10-08 (U-D7), D-035b; narrowed by revision 2026-10-20 (U-D24), D-078). When the end
+   point of a path lies within `COINCIDENCE_MM` of the centreline of a primitive of another path of the same net on
+   its layer, the end group of the first path is exempt from the landing group of that primitive. The landing group of
+   a main primitive is the primitive with the fillets and tapers that belong to it. The landing group of a fillet or
+   taper is the fillet or taper, the main primitives it belongs to, and the other fillets and tapers between those
+   main primitives. Every other primitive of the other path stays checked against the end group. An end point on the
+   other path's end point is a node under rule 3. There the landing group lies inside that path's end group, so rule 5
+   exempts nothing there that rule 3 does not.
 
 Revision 2026-10-08 (U-D7, D-035b; U-M3a report Q2, U-M3b report Q3). Xcoil joins copper mid-path in three places:
 the serpentine strand bus (`engine.js` l.485), the serpentine star-ring taps (l.1289) and the wave star item, which
@@ -2909,12 +2920,57 @@ clause of rule 5 any more.
   l.99-125). The two M3 wave boards that need rule 5 (README l.287) were not re-measured. U-M5f adds cases 5e and 5f for
   the end-point reading (Fable's ruling of 2026-10-13). Until that merge the reading is `not tested` by a dedicated case.
 
+Revision 2026-10-20 (U-D24, claude-opus-5-5, D-078; DEF-UV16-01 and the U-V16 report; `src/embodic/drc/items.py`
+`exempt_pairs`, `_taps` l.253-269 and `_junctions` l.272-287, and `tests/independent/m1/drc_universe.py` `_tees` l.236
+and `_interconnect_taps` l.280, on main 14c8b7a, `verified` by reading; the counts below `verified` by running the probe
+of `docs/phase3/architecture/u_d24_rule5.md`). Rule 5 and the rule 2 tap are per primitive. This note replaces the
+end-point reading of rule 5 (revision U-D8) and the whole-path tap (revision U-D4). The older notes record what the
+rules said on their dates.
+
+- The defect. The DRC is the guard against generator mistakes (D-078 c). Rule 5 exempted an end group from every
+  primitive of the other path, and the end-point reading extended that to a path end on another path's end. A leg that
+  starts on a coil's end point was therefore exempt from the whole coil. In U-V16's D08 mutant, leg 25 is 0.700 mm from
+  coil turn `path:1/prim:9` at the 0.8 mm rule, and `run_drc` passes (DEF-UV16-01). The tap clause had the same shape.
+  A via that an interconnect path ends on or passes over was exempt from every primitive of that path.
+- The joint is local. An end group meets the other path where its end point lies, so the exemption covers the copper
+  there and nothing else of the path. The landing group has the extent that an end group has at a path end: one main
+  primitive with its fillets and tapers. An end point on another path's end point is a node under rule 3, end group
+  against end group (Agent 4's reading in the DEF-UV16-01 row). A mid-path T keeps rule 5 (D-035b) with the landing
+  group. A via tap keeps the `pad_mm / 2` band of rule 2b (D-037a), with the net test waived for an interconnect path
+  as D-022c waives it.
+- Readings measured and rejected. The landing primitive with its rule 1 neighbours, the main primitives one index
+  away, leaves the D08 mutant pair exempt, because `path:1/prim:9` is the main primitive before the stub
+  `path:1/prim:10` that leg 25 starts on. The landing primitive alone reports a branch whose copper overlaps the
+  fillet next to its landing point (UT-DRC-04 case 5k).
+- What it costs. A T that lands near a sharp corner of the other path, with no fillet, is reported against the next
+  main primitive (case 5f, which inverts). Rules 2 and 3 already report a sharp corner behind an end group in the same
+  way. A via of an interconnect tap near a sharp corner is reported against the primitive past the corner when that
+  primitive's centreline is more than `pad_mm / 2` from the via centre, as rule 2b already does.
+- The engine reading. A fillet or taper takes slot 2 x main index + 1 of the main before it (`items.py` l.48), so the
+  landing group is every primitive of the other path whose slot lies within 1 of the slot of a primitive the end point
+  lies on. `_path_ends` uses the same test for an end group (`items.py` l.181). A fillet or taper at the start of a
+  path takes slot 1 there (`main_indices` l.108-115), so a slot test would also reach main primitive 1. Rule 1 has the
+  same gap today (finding F-1 in the ruling file). No path of the packaged examples or the GR-19 layouts starts with a
+  fillet or taper (`verified` by running).
+- Effect on the boards (`verified` by running on Linux, main 14c8b7a with `_junctions` and `_taps` replaced by the two
+  readings, with and without the symmetry shortcut). No pair surfaces. The packaged examples keep 0, 0, 0, 0 and 186
+  violations (serpentine_16p_example, spiral_12c10p_d08, spiral_12c14p, spiral_12c16p_default, wave_16p_example).
+  The GR-19 layouts in the DRC reading keep sector 0, serpentine 0 and wave 186. Rule 5 stops exempting 1506, 120,
+  492, 492 and 0 pairs on the five examples. The least clearance among them equals the rule to within 1.1e-14 mm.
+  The tap stops exempting 0, 0, 0, 0 and 3 pairs. The three are the leads `path:93/prim:1`, `path:94/prim:1` and
+  `path:95/prim:1` against vias 2, 34 and 18 of the wave board, each 0.200 mm at the 0.2 mm rule. The GR-19 sector
+  layout loses one tap pair at 1.600 mm. With the new rule 5, the D08 mutant reports `path:1/prim:9` and
+  `path:25/prim:0` at 0.700 mm.
+- Who changes what. Agent 3 changes `_junctions` and `_taps` and the UT-DRC-04 cases of test_plan.md §5.1 (revision
+  U-D24). Agent 4 changes `_tees` and `_interconnect_taps`. This contract does not claim that those changes pass.
+
 Net test. Rules 2 to 5 (rule 5 added 2026-10-08, U-D7) apply only when both objects carry the same net, with one waiver (D-022 a, as revised by
 D-022c). Rules 2 and 3 also apply, whatever the net names and the via role, when one object is an interconnect path
 (its id is in `Circuit.interconnect_path_ids`; nets `N`, `U`, `V`, `W`, `D...`):
 
 - rule 2: an interconnect path's end group and any via or pad its end point lies on;
-- rule 2, tap: an interconnect path and any via whose centre lies within `pad_mm / 2` of its centreline;
+- rule 2, tap: a via and each primitive of an interconnect path whose centreline passes within `pad_mm / 2` of the via
+  centre (per primitive, revision 2026-10-20, U-D24);
 - rule 3: an interconnect path's end group and the end group of another path, when both end points lie on one via or
   one pad.
 
@@ -2935,12 +2991,12 @@ is the independent check of rule 1.
 | 1, fillets and tapers | UT-DRC-04 cases 1c (corner fillet exempt from both mains) and 1d (fillet against the main two steps back reported, the DEF-M1V-01 hairpin) |
 | 2 | UT-DRC-04 cases 2a (end on its via or pad exempt) and 2b (foreign via reported) |
 | 2, waiver | UT-DRC-04 case 2c (interconnect end on a terminal, centre or transfer via of another net, and on a pad of another net, exempt), near miss 2b |
-| 2, tap | UT-DRC-04 case 2d (vias of any net and role tapping an interconnect ring mid-path and at its ends exempt from every primitive of the ring; the same ring as a phase path of another net reported) |
+| 2, tap (per primitive, revision 2026-10-20, U-D24) | UT-DRC-04 cases 2d (vias of any net and role tapping an interconnect ring mid-path and at its end exempt from the primitives whose centreline passes within `pad_mm / 2` of them; the same ring as a phase path of another net reported), 2e (a via of another net 0.2 mm before a sharp corner of an interconnect path exempt from both primitives of the corner) and 2f (a far primitive of the tapped interconnect path 0.01 mm inside the via rule reported) |
 | 2b, same-net tap (revision 2026-10-09, U-D8) | the four rule 2b tests of UT-DRC-04 in test_plan.md §5.1 (via on a line and on an arc exempt; the same via on another net reported; 0.01 mm outside the band reported; a far primitive of the tapped path still checked). D-036a's "rule 2b" is not UT-DRC-04 case 2b, which is the foreign-via near miss of rule 2 |
 | 3 | UT-DRC-04 cases 3a (same-net ends at one via, pad or coincident point exempt) and 3b (different-net ends at a coincident point without a land reported) |
 | 3, waiver | UT-DRC-04 case 3c (interconnect end and phase path end on one via of any role, or one pad, exempt), near miss 3b |
 | 4 | UT-DRC-04 cases 4a (same-net via inside a pad exempt) and 4b (other-net via inside a pad reported) |
-| 5 (revision 2026-10-08, U-D7) | UT-DRC-04 cases 5a (end point on the middle of a same-net line exempt from that path), 5b (end point on the middle of a same-net arc exempt), 5c (the same T with the two paths on different nets reported) and 5d (the same-net end point 0.01 mm short of the centreline reported). The end-point reading (revision 2026-10-09, U-D8) has no UT-DRC-04 case on main 76f054b. GR-19 in `tests/independent/m1/test_gr19_drc.py` covered it only while an Xcoil `ic` object was one path. Since the split (revision 2026-10-13, U-D14; U-V1c, D-045g, D-046f) no GR-19 pair depends on it. U-M5f adds cases 5e (a same-net path's end point on the other path's end point region, exempt) and 5f (the same geometry on different nets, reported) next to 5a to 5d. Until they merge the reading is `not tested`; this contract does not claim that they pass (see the note after the rule list) |
+| 5 (revision 2026-10-08, U-D7; narrowed 2026-10-20, U-D24) | UT-DRC-04 cases 5a (end point on the middle of a same-net line exempt from that line), 5b (the same on a same-net arc), 5c (the 5a T on different nets reported), 5d (the same-net end point 0.01 mm short of the centreline reported), 5e (only the branch's end group is exempt: its far main primitive 0.15 mm from the trunk reported), 5f (an end point 0.05 mm before a sharp corner of the trunk: the trunk's next main primitive reported), 5g (an end point on the trunk's end point: the trunk's middle main primitive, outside its end group, reported), 5h (the 5g geometry on different nets reported), 5i (a leg that starts on a coil's end at a via, with the coil's next turn 0.01 mm inside the rule, reported), 5j (the 5i joint with the turn 0.01 mm outside the rule exempt), 5k (a T on a main primitive 0.1 mm before its fillet exempt from the fillet) and 5l (a T on the middle of a line, with the trunk's return main primitive 0.01 mm inside the rule, reported). Cases 5f and 5g invert: on main 14c8b7a they assert the exemption that this revision withdraws. Case letters follow `tests/unit/drc/test_run_drc.py` on main 14c8b7a, where 5e to 5h already exist. This contract does not claim that the cases pass (see the note after the rule list) |
 
 ```python
 DRC_EPSILON_MM: float = 1e-6
