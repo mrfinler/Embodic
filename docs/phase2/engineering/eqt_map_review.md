@@ -285,7 +285,7 @@ Each value was reproduced through the product's public function (`probe_phase2.p
 7. EQT-25-UT1. Input: CF-11 frame (12/16, pad 0.6). Expected (EQ-25 eye rule: r_hi − r_lo = 30.7 − 28.5914 = 2.1086 mm ≥
    (k − 1)(max(pad, w)/2 + pad/2 + s) = (k − 1) × 0.8 mm): `eye(frame, turns, 10, vias=k).fits` is True for k 1 to 3 and
    False for k 4. Probe: [True, True, True, False]. Also put EQT-25-UT1 on
-   `test_ut_geo_19_series_groups_get_their_own_centre_via_one_pitch_apart` (test_spiral_pairs.py), which asserts r_v
+   `test_ut_geo_26_series_groups_get_their_own_centre_via_one_pitch_apart` (test_spiral_pairs.py), which asserts r_v
    30.7, 29.9, 29.1 mm at abs 1e-9. Defect caught: the v1.0 pitch pad + s, or k in place of k − 1.
 8. EQT-05-EC, e_edge value (D-046 c; the existing threshold test keeps checking the 10 % rule). Inputs: a hand-built
    `FieldTable(r_inner_mm=18, r_outer_mm=38, harmonics=(1,), bz_t=0.8 T at all 49 radii, bt_t=0)`; two radial lines of
