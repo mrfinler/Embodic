@@ -208,7 +208,7 @@ def test_ut_geo_11_pairs_rotated_against_each_other_are_refused(
 
 @pytest.mark.req("REQ-F-03")
 @pytest.mark.parametrize(("coils", "poles"), [(16, 16), (12, 16)], ids=["16-16", "12-16"])
-def test_m4_one_phase_per_pair_is_refused_until_phase_5(registry: Registry, coils: int, poles: int) -> None:
+def test_ut_geo_19_m4_one_phase_per_pair_is_refused_until_phase_5(registry: Registry, coils: int, poles: int) -> None:
     """REQ-F-03 (d), D-054c: option M4 (one phase per pair) is refused with NOT_IMPLEMENTED at the pair list, alone.
 
     Catches a generator that accepts `phases` and then fails with another code or builds a board. The 16/16 case is
