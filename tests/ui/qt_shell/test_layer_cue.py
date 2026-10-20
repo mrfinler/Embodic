@@ -22,6 +22,7 @@ from embodic.io.exporters import pad_outline
 from embodic.ui.theme import load_theme
 from embodic.ui.viewmodels.appearance import PhaseRenderMode
 from embodic.ui.viewmodels.outcome import eyes_shown, geometry_scene
+from embodic.ui.views import layer_cue
 from embodic.ui.views.geometry_view import DATA_KIND, GeometryView, primitive_path
 
 EXAMPLES = Path(__file__).resolve().parents[3] / "resources" / "examples"
@@ -422,5 +423,47 @@ def test_ui61_lands_are_drawn_after_all_copper_its_outline_and_its_casing(d08, h
         copper = [order[id(i)] for i in _items(view, *COPPER_KINDS)]
         assert lands and copper
         assert min(lands) > max(copper)
+    finally:
+        view.close()
+
+
+@pytest.mark.req("REQ-F-13", "REQ-N-02")
+def test_ui58_dimmed_outline_stays_empty_inside(d08):
+    """Catches an outline whose inside shows a ghost of the ink once the DRC locate dims the copper to 35 %."""
+    view, _ = _render(d08, "dark colour", CROSSING_MM, 24.0, (420, 300))
+    try:
+        for item in _items(view, "copper", "copper-outline"):
+            item.setOpacity(0.35)
+        dimmed = view.viewport().grab().toImage().convertToFormat(QImage.Format.Format_RGB32)
+        assert _crossing_measures(view, dimmed, d08, "dark colour")["centre"] == _board_fill("dark colour")
+    finally:
+        view.close()
+
+
+@pytest.mark.req("REQ-F-13", "REQ-N-02")
+@pytest.mark.parametrize("which", ["d08", "serpentine"])
+def test_ui58_a_repaint_without_a_view_change_never_rebuilds_the_cue(d08, serpentine, which, monkeypatch):
+    """Catches a zoom, pan, fit or resize step that rebuilds the cue geometry: it runs on the GUI thread (DEF-W-12)."""
+    scene = d08 if which == "d08" else serpentine
+    built = []
+    real = layer_cue.Strokes.of
+    monkeypatch.setattr(layer_cue.Strokes, "of", classmethod(lambda cls, parts: built.append(1) or real(parts)))
+    view = _show(scene, "dark colour", (900, 700))
+    try:
+        assert built, "the first draw builds the cue"
+        cue = _items(view, *COPPER_KINDS)
+        built.clear()
+        view.zoom_by(1.25)
+        view.zoom_by(0.8)
+        view.zoom_by(4)
+        bar = view.horizontalScrollBar()
+        bar.setValue(bar.value() + 100)
+        view.fit_view()
+        view.resize(700, 600)
+        QApplication.processEvents()
+        view.viewport().grab()
+        assert built == [] and set(cue) <= set(view.scene().items())
+        _draw(view, scene, "dark greyscale")
+        assert built, "a change of render mode does rebuild it"
     finally:
         view.close()

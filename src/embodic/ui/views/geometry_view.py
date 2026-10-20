@@ -56,7 +56,7 @@ from embodic.ui.viewmodels.outcome import (
     phases_drawn,
     place_in_view,
 )
-from embodic.ui.views.layer_cue import CasingItem, OutlineItem, Strokes
+from embodic.ui.views.layer_cue import CasingItem, OutlineItem, Part, Strokes
 
 ZOOM_MIN, ZOOM_MAX = 0.1, 200.0  # relative to the fitted view (UI-03)
 ZOOM_STEP = 1.25
@@ -310,31 +310,29 @@ class GeometryView(QGraphicsView):
         to carry the hover text and the tags, and they paint nothing; the outline items draw (`layer_cue`).
         """
         assert self._tokens is not None
+        board_fill = QColor(self._tokens.colours["board-fill"])
         entries = [
-            (path, prim, primitive_path(prim))
+            (path, prim, Part(prim.width_mm, centre, centre.boundingRect()))
             for path in board.paths
             if path.layer == layer
             for prim in path.primitives
+            for centre in (primitive_path(prim),)
         ]
         if cased:
-            casing = CasingItem(
-                Strokes.of((prim.width_mm, centre) for _, prim, centre in entries),
-                QColor(self._tokens.colours["board-fill"]),
-            )
+            casing = CasingItem(Strokes.of(part for _, _, part in entries), board_fill)
             self._add_cue_item(casing, "copper-casing", layer)
-        inks: dict[str, tuple[Phase | None, QColor, list[tuple[float, QPainterPath]]]] = {}
-        for path, prim, centre in entries:
-            colour = self._copper_colour(path.phase)
-            item = self.scene().addPath(
-                centre, QPen(colour, prim.width_mm, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
-            )
+        inks: dict[Phase | None, list[Part]] = {}
+        for path, prim, part in entries:
+            pen = QPen(self._copper_colour(path.phase), prim.width_mm, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
+            item = self.scene().addPath(part.centre, pen)
             item.setToolTip(marks.label_of_path.get(path.id, ""))
             self._tag(item, "copper", layer, path.phase)
             if outlined:
                 item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemHasNoContents)
-                inks.setdefault(colour.name(), (path.phase, colour, []))[2].append((prim.width_mm, centre))
-        for phase, colour, parts in inks.values():
-            self._add_cue_item(OutlineItem(Strokes.of(parts), colour), "copper-outline", layer, phase)
+                inks.setdefault(path.phase, []).append(part)
+        for phase, parts in inks.items():
+            outline = OutlineItem(Strokes.of(parts), self._copper_colour(phase), board_fill)
+            self._add_cue_item(outline, "copper-outline", layer, phase)
 
     def _add_cue_item(self, item: QGraphicsItem, kind: str, layer: str, phase: Phase | None = None) -> None:
         self.scene().addItem(item)

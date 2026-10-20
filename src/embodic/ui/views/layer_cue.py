@@ -6,13 +6,12 @@ does (design_spec.md 3.3). A pen stroke of each centre line at its trace width i
 strokes of one item fill as one union, so copper that joins shows one edge and no seam.
 """
 
-import math
 from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import NamedTuple
 
-from PySide6.QtCore import QRect, QRectF, Qt
-from PySide6.QtGui import QColor, QImage, QPainter, QPainterPath, QPen, QTransform
+from PySide6.QtCore import QRectF, Qt
+from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QGraphicsItem, QStyleOptionGraphicsItem, QWidget
 
 CASING_PX = 2.0  # board-fill band around the copper of every visible layer except the bottom one
@@ -40,9 +39,9 @@ class Strokes:
     bounds: QRectF
 
     @classmethod
-    def of(cls, parts: Iterable[tuple[float, QPainterPath]]) -> "Strokes":
-        """Collect ``(width_mm, centre line)`` pairs with their rectangles and their extent."""
-        kept = tuple(Part(width_mm, centre, centre.boundingRect()) for width_mm, centre in parts)
+    def of(cls, parts: Iterable[Part]) -> "Strokes":
+        """Collect ``parts`` and their extent."""
+        kept = tuple(parts)
         bounds = QRectF()
         for part in kept:
             half = part.width_mm / 2
@@ -108,51 +107,23 @@ class CasingItem(_StrokedItem):
 class OutlineItem(_StrokedItem):
     """Copper of one ink drawn as its edge only: OUTLINE_PX wide, inside the true edge, the inside left empty.
 
-    The copper is stroked into a transparent layer of the exposed pixels and the inside is cut out of it by a stroke
-    OUTLINE_PX narrower on each side, so the board and the layers below show through. A trace narrower than
-    SOLID_BELOW_PX has no inside to cut and stays solid.
+    The copper is stroked in its ink, then the inside of every trace wide enough to have one is stroked OUTLINE_PX
+    narrower on each side in ``inside``, the board colour, at full opacity. The casing under the layer already hides
+    the layers below, so the inside reads as empty; full opacity keeps it empty while the layer is dimmed. A trace
+    narrower than SOLID_BELOW_PX has no inside and stays solid.
     """
 
-    def __init__(self, strokes: Strokes, colour: QColor) -> None:
+    def __init__(self, strokes: Strokes, ink: QColor, inside: QColor) -> None:
         super().__init__(strokes)
-        self._colour = colour
+        self._ink, self._inside = ink, inside
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: QWidget | None = None) -> None:
-        """Paint the copper, with the inside cut out of every trace wide enough to have one."""
+        """Paint the copper, then the inside of the traces wide enough to have one."""
         scale = painter.worldTransform().m11()
-        hollow_above_mm = SOLID_BELOW_PX / scale
+        hollow_from_mm = SOLID_BELOW_PX / scale
         painter.save()
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        if not any(part.width_mm >= hollow_above_mm for part in self._strokes.parts):
-            self._stroke(painter, self._colour, 0.0, option.exposedRect)
-            painter.restore()
-            return
-        world = painter.worldTransform()
-        device: QRect = world.mapRect(option.exposedRect).toAlignedRect()
-        if device.isEmpty():
-            painter.restore()
-            return
-        ratio = painter.device().devicePixelRatioF()
-        layer = QImage(
-            math.ceil(device.width() * ratio),
-            math.ceil(device.height() * ratio),
-            QImage.Format.Format_ARGB32_Premultiplied,
-        )
-        layer.setDevicePixelRatio(ratio)
-        layer.fill(Qt.GlobalColor.transparent)
-        cut = QPainter(layer)
-        cut.setRenderHint(QPainter.RenderHint.Antialiasing)
-        cut.setTransform(world * QTransform.fromTranslate(-device.x(), -device.y()))
-        self._stroke(cut, self._colour, 0.0, option.exposedRect)
-        cut.setCompositionMode(QPainter.CompositionMode.CompositionMode_DestinationOut)
-        self._stroke(
-            cut,
-            QColor(Qt.GlobalColor.black),
-            -2 * OUTLINE_PX / scale,
-            option.exposedRect,
-            from_width_mm=hollow_above_mm,
-        )
-        cut.end()
-        painter.resetTransform()
-        painter.drawImage(device.topLeft(), layer)
+        self._stroke(painter, self._ink, 0.0, option.exposedRect)
+        painter.setOpacity(1.0)
+        self._stroke(painter, self._inside, -2 * OUTLINE_PX / scale, option.exposedRect, from_width_mm=hollow_from_mm)
         painter.restore()

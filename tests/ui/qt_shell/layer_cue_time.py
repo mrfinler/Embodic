@@ -7,6 +7,8 @@ none:
 - redraw: a view that already shows the serpentine example (6 copper layers, all visible) changes render mode, which
   rebuilds the scene, and the viewport is grabbed. ``rebuild`` is the ``show_geometry`` call alone, ``paint`` the grab.
 - relayer: the same view hides L6 and shows it again, the grab included.
+- zoom step, pan step: the serpentine view zooms by 1.25 and back, or pans by 100 px at 4x zoom, and the events the
+  step posts run, its repaint and the label placement included. No view change, so a step rebuilds nothing.
 
 Not a test. From the root of the tree under test, with the project's interpreter:
 
@@ -86,12 +88,30 @@ def main() -> None:
         view.show_geometry(serpentine, tokens, modes[k % 2], none)
         _grab(view)
         relayers.append(time.perf_counter() - started)
+    zooms, pans = [], []
+    view.show_geometry(serpentine, tokens, PhaseRenderMode.COLOUR, none)
+    _grab(view)
+    for k in range(runs):
+        started = time.perf_counter()
+        view.zoom_by(1.25 if k % 2 == 0 else 0.8)
+        app.processEvents()
+        zooms.append(time.perf_counter() - started)
+    view.zoom_by(4)
+    app.processEvents()
+    bar = view.horizontalScrollBar()
+    for k in range(runs):
+        started = time.perf_counter()
+        bar.setValue(bar.value() + (100 if k % 2 == 0 else -100))
+        app.processEvents()
+        pans.append(time.perf_counter() - started)
     redraws = [a + b for a, b in zip(rebuilds, paints, strict=True)]
     print(f"== D08 open ({runs} runs): {_median(opens)}")
     print(f"== serpentine redraw ({runs} runs): {_median(redraws)}")
     print(f"   rebuild alone: {_median(rebuilds)}")
     print(f"   paint alone: {_median(paints)}")
     print(f"== serpentine hide L6 and show it again ({runs} runs, two redraws): {_median(relayers)}")
+    print(f"== serpentine zoom step ({runs} runs): {_median(zooms)}")
+    print(f"== serpentine pan step at 4x ({runs} runs): {_median(pans)}")
 
 
 if __name__ == "__main__":
