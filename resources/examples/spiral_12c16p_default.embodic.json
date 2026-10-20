@@ -1,5 +1,5 @@
 {
- "app_version": "0.0.3",
+ "app_version": "0.0.4",
  "design": {
   "analysis": {
    "edge_correction": "off",
@@ -148,7 +148,7 @@
   }
  },
  "design_hash": "sha256:ac4fab5db06f9e8f733dc495080deeddfe0bcf58faa31ebb7ec841c1b27d9c09",
- "engine_version": "0.0.3",
+ "engine_version": "0.0.4",
  "example": {
   "source_note": "CF-11 default 12/16 spiral, example values (assumption), docs/phase2/engineering/oracle_cases.json CF-11",
   "title": "Spiral, 12 coils, 16 poles"

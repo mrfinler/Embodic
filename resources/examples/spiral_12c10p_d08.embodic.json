@@ -1,5 +1,5 @@
 {
- "app_version": "0.0.3",
+ "app_version": "0.0.4",
  "design": {
   "analysis": {
    "edge_correction": "off",
@@ -145,7 +145,7 @@
   }
  },
  "design_hash": "sha256:327919a0eef55ce2c458635f6160047af7654ebd0a04e818ee225fd5f69615d8",
- "engine_version": "0.0.3",
+ "engine_version": "0.0.4",
  "example": {
   "source_note": "D08 thesis configuration (oracle O1-D08, OR-01); the 66 mm circle board and 10 mm bore are an assumption",
   "title": "Spiral, 12 coils, 10 poles (D08)"
