@@ -1,5 +1,5 @@
 {
- "app_version": "0.0.3",
+ "app_version": "0.0.4",
  "design": {
   "analysis": {
    "edge_correction": "off",
@@ -126,7 +126,7 @@
   }
  },
  "design_hash": "sha256:3131a61975766c38984df5065b01f255875b79ebcfa831624c10c5db5d5c82e8",
- "engine_version": "0.0.3",
+ "engine_version": "0.0.4",
  "example": {
   "source_note": "Xcoil v3 default wave preset with turns 2 (D-016), example values (assumption); board, bore and screw circle follow Xcoil's outline rules at this copper envelope",
   "title": "Wave, 16 poles, involute"
