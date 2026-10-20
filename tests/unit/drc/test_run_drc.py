@@ -327,6 +327,22 @@ def test_ut_drc_04_path_end_on_a_path_of_another_net_is_reported() -> None:
     assert _junction_violations(branch, trunk) == {(DrcCheckKind.TRACE_TRACE, ("path:0/prim:0", "path:1/prim:0"))}
 
 
+def test_ut_drc_04_path_end_on_a_path_of_another_net_is_reported_when_the_trunk_net_has_two_paths() -> None:
+    """Catches DEF-UV18-01: a junction search that ignores the net survives when each net has one path (5c variant).
+
+    `_junctions` visits only the (layer, net) groups with two or more paths, so net A gets a second path. The net B
+    path ends on the middle of net A's first line and the cross-net pair is reported.
+    """
+    trunk = path(0, [line(-5, 0, 5, 0)], net="A")
+    second = path(1, [line(-5, 3, 5, 3)], net="A")
+    branch = path(2, [line(0, -4, 0, 0)], net="B")
+    report = run_drc(layout(paths=[trunk, second, branch]), RULES)
+    assert report is not None
+    assert [(v.kind, v.objects) for v in report.violations] == [
+        (DrcCheckKind.TRACE_TRACE, ("path:0/prim:0", "path:2/prim:0"))
+    ]
+
+
 @pytest.mark.parametrize("offset_mm", [2e-6, 0.01])
 def test_ut_drc_04_path_end_beyond_the_coincidence_tolerance_is_reported(offset_mm: float) -> None:
     """Catches a T-junction tolerance that grows into slack: an end 0.01 mm off the trunk is a real overlap (5d)."""
@@ -768,8 +784,9 @@ def test_cancel_from_another_thread_stops_a_long_run() -> None:
 _TOUCHING = [path(1, [line(0, 0, 0, 1)], net="A"), path(2, [line(0.3, 0, 0.3, 1)], net="B")]
 
 
+@pytest.mark.req("REQ-F-14")
 @pytest.mark.parametrize("far_mm", [1e30, 1e20])
-def test_a_coordinate_whose_grid_cell_index_is_not_representable_is_refused_by_name(far_mm: float) -> None:
+def test_ut_drc_09_a_coordinate_whose_grid_cell_index_is_not_representable_is_refused_by_name(far_mm: float) -> None:
     """Catches DEF-M7a-01: floor(x / cell) of a 1e30 mm item was cast to int64 as garbage and the cell key overflowed.
 
     The run must stop with the broad phase's own error, before numpy warns about the cast.

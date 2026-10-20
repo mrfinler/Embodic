@@ -39,6 +39,7 @@ def _layout(style: str, poles: int, phases: int) -> Layout:
     return stack.boards[0]  # type: ignore[union-attr]
 
 
+@pytest.mark.req("REQ-F-10")
 @pytest.mark.parametrize(
     ("style", "poles", "phases"),
     [("involute", 8, 3), ("jog", 8, 3), ("chord", 8, 3), ("overlap", 8, 3), ("involute", 8, 2), ("overlap", 8, 1)],

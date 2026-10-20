@@ -20,7 +20,7 @@ def contrast_check():
     return module
 
 
-@pytest.mark.req("REQ-N-11")
+@pytest.mark.req("REQ-N-11", "REQ-N-27")
 def test_ax01_ratio_matches_known_wcag_values(contrast_check):
     """Catches a wrong luminance formula: black on white is 21:1 and #767676 on white is 4.54:1 (WebAIM, WCAG)."""
     assert contrast_check.contrast_ratio("#000000", "#ffffff") == pytest.approx(21.0)
@@ -28,7 +28,7 @@ def test_ax01_ratio_matches_known_wcag_values(contrast_check):
     assert contrast_check.contrast_ratio("#ffffff", "#767676") == contrast_check.contrast_ratio("#767676", "#ffffff")
 
 
-@pytest.mark.req("REQ-N-11", "REQ-L-04", "REQ-N-28", "REQ-F-39")
+@pytest.mark.req("REQ-N-11", "REQ-L-04", "REQ-N-28", "REQ-F-39", "REQ-N-27")
 def test_ax01_ax09_every_pair_of_both_shipped_themes_passes(contrast_check, capsys):
     """Catches a theme file whose text, border, focus ring, phase stroke or icon falls below its WCAG minimum."""
     assert contrast_check.main() == 0
@@ -37,7 +37,7 @@ def test_ax01_ax09_every_pair_of_both_shipped_themes_passes(contrast_check, caps
     assert sum(" icon;" in line for line in lines) == 6
 
 
-@pytest.mark.req("REQ-N-11")
+@pytest.mark.req("REQ-N-11", "REQ-N-27")
 def test_ax01_a_too_light_hint_text_fails_the_check(contrast_check, monkeypatch, capsys):
     """Catches a check that passes whatever the colours are."""
     light = load_theme("light")

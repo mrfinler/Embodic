@@ -2,8 +2,11 @@
 
 import dataclasses
 import itertools
+import json
 import math
 from collections import Counter
+from collections.abc import Callable
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -30,8 +33,11 @@ from embodic.geometry.layout import BoardStack, Layout, ViaRole
 from embodic.geometry.paths import CopperPath, is_continuous
 from embodic.geometry.primitives import PrimitiveRole, primitive_length_mm
 from embodic.geometry.transforms import mirror, reverse_path, rotate
+from embodic.io.project import ProjectFile, load_project, save_project
 from embodic.model.design import DesignParameters
 from embodic.model.drc_rules import DrcRules
+from embodic.model.fields import FIELDS
+from embodic.model.validate import validate_design
 from embodic.model.vocabulary import TopologyKind
 from embodic.model.winding_specs import SpiralWindingSpec
 from embodic.results import Registry, load_registry
@@ -453,6 +459,30 @@ def test_turn_limit_reports_the_closing(board: Layout, registry: Registry) -> No
     assert d08.boards[0].detail.turn_limit.closing is TurnClosing.HALF
 
 
+@pytest.mark.req("REQ-F-06")
+@pytest.mark.parametrize(
+    ("design_of", "closing"),
+    [pytest.param(default_design, TurnClosing.FULL, id="cf11"), pytest.param(d08_design, TurnClosing.HALF, id="d08")],
+)
+def test_ut_geo_25_the_closing_is_reported_and_not_stored(
+    design_of: Callable[[], DesignParameters], closing: TurnClosing, registry: Registry, tmp_path: Path
+) -> None:
+    """UT-GEO-25 (D-030, D-031b). Catches a closing that is a design input: a field, or a key of the project file.
+
+    CF-11 closes with the lead arc (full) and D08 with the half turn, whichever way the generator reports it.
+    """
+    design = design_of()
+    stack = generate_spiral(design, registry)
+    assert isinstance(stack, BoardStack) and isinstance(stack.boards[0].detail, SpiralDetail)
+    assert stack.boards[0].detail.turn_limit.closing is closing
+    assert [f.pointer for f in FIELDS if "closing" in f.pointer or "turn_limit" in f.pointer] == []
+    saved = tmp_path / "p.embodic.json"
+    save_project(saved, ProjectFile(design=design, origin=None))
+    text = saved.read_text(encoding="utf-8")
+    assert "closing" not in text
+    assert "turn_limit" not in text
+
+
 @pytest.mark.req("REQ-F-01")
 @pytest.mark.parametrize("turns_offset", [-1, 3])
 def test_first_coil_angle_any_finite_value_is_normalised(turns_offset: int, board: Layout, registry: Registry) -> None:
@@ -462,6 +492,48 @@ def test_first_coil_angle_any_finite_value_is_normalised(turns_offset: int, boar
     assert isinstance(stack, BoardStack)
     for a, b in zip(stack.boards[0].vias, board.vias, strict=True):
         assert math.dist((a.x_mm, a.y_mm), (b.x_mm, b.y_mm)) <= 1e-9
+
+
+def _stack_at_first_coil_angle(angle: float, registry: Registry) -> BoardStack:
+    stack = generate_spiral(_with_coil(default_design(), first_coil_angle_rad=angle), registry)
+    assert isinstance(stack, BoardStack)
+    return stack
+
+
+@pytest.mark.req("REQ-F-03")
+@pytest.mark.parametrize("angle", [1.0, 1.0 + 2 * math.pi, 1.0 - 2 * math.pi])
+def test_ut_geo_24_first_coil_angle_any_finite_value_builds_one_board_and_is_stored_as_typed(
+    angle: float, registry: Registry, tmp_path: Path
+) -> None:
+    """UT-GEO-24 (D-031c). Catches an angle that is wrapped on entry: the copper is that of 1.0 rad, the file is not.
+
+    Coil 0 sits at the typed angle modulo 2 pi on every board, and the project file keeps the typed value in degrees,
+    not wrapped into [0, 360).
+    """
+    design = _with_coil(default_design(), first_coil_angle_rad=angle)
+    assert isinstance(design.winding, SpiralWindingSpec)
+    assert design.winding.coil.first_coil_angle_rad == angle
+    assert validate_design(design) == ()
+    reference = {p.id: p for p in _stack_at_first_coil_angle(1.0, registry).boards[0].paths}
+    board = generate_spiral(design, registry)
+    assert isinstance(board, BoardStack)
+    paths = {p.id: p for p in board.boards[0].paths}
+    assert paths.keys() == reference.keys()
+    for path_id, path in paths.items():
+        assert [type(q) for q in path.primitives] == [type(q) for q in reference[path_id].primitives]
+        for got, want in zip(path.primitives, reference[path_id].primitives, strict=True):
+            assert math.dist(got.start_point(), want.start_point()) <= 1e-9, path_id
+            assert math.dist(got.end_point(), want.end_point()) <= 1e-9, path_id
+    centres = [v for v in board.boards[0].vias if v.role is ViaRole.CENTRE]
+    axis = min((math.atan2(v.y_mm, v.x_mm) for v in centres), key=lambda t: abs(math.remainder(t - 1.0, math.tau)))
+    assert abs(math.remainder(axis - 1.0, math.tau)) <= 1e-9
+    saved = tmp_path / "p.embodic.json"
+    save_project(saved, ProjectFile(design=design, origin=None))
+    stored = json.loads(saved.read_text(encoding="utf-8"))["design"]["winding"]["coil"]["first_coil_angle_deg"]
+    assert stored == pytest.approx(math.degrees(angle), abs=1e-9)
+    loaded, _ = load_project(saved)
+    assert isinstance(loaded, ProjectFile) and isinstance(loaded.design.winding, SpiralWindingSpec)
+    assert loaded.design.winding.coil.first_coil_angle_rad == pytest.approx(angle, abs=1e-12)
 
 
 @pytest.mark.req("REQ-F-19")

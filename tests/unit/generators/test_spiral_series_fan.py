@@ -89,7 +89,7 @@ def test_ut_geo_13_series_coil_has_2k_plus_1_winding_vias(case: tuple[str, int, 
 
 
 @pytest.mark.req("REQ-F-03")
-def test_series_board_passes_drc_with_smallest_gap_s(case: tuple[str, int, DesignParameters, Layout]) -> None:
+def test_ut_geo_26_series_board_passes_drc_with_smallest_gap_s(case: tuple[str, int, DesignParameters, Layout]) -> None:
     """Spec G6 DRC table: 0 violations on the whole board; the smallest trace and via gap is s (0.2 or 0.8 mm).
 
     Catches a fan that passes only because a check kind found no pair, or a gap below the rule (D-006, no slack).

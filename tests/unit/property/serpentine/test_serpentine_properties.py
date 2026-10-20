@@ -113,6 +113,7 @@ def _check_against_the_brute_sweep(design: DesignParameters, stack: BoardStack) 
     return total
 
 
+@pytest.mark.req("REQ-F-10")
 @pytest.mark.slow
 @settings(max_examples=EXAMPLES, deadline=None)
 @given(design=serpentine_designs())
@@ -125,6 +126,7 @@ def test_pr_13_drc_never_under_reports_on_serpentine_boards(design: DesignParame
     _check_against_the_brute_sweep(design, _stack(design))
 
 
+@pytest.mark.req("REQ-F-10")
 def test_pr_13_the_sweep_finds_the_violations_of_a_two_strand_board() -> None:
     """PR-13 power check. Catches a vacuous property: two strands put the bus against the strand ends (XD-SER-002)."""
     design = with_winding(example_design(), strands=2, turns=2)

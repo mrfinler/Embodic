@@ -185,7 +185,7 @@ def test_a_coil_whose_loop_rule_admits_more_than_the_cap_is_refused_before_artwo
 
 
 @pytest.mark.req("REQ-F-19", "REQ-F-14")
-def test_requested_turns_above_the_turns_that_fit_are_refused_as_the_users_request(registry: Registry) -> None:
+def test_bv05_requested_turns_above_the_turns_that_fit_are_refused_as_the_users_request(registry: Registry) -> None:
     """The default coil fits N turns (loop rule below the cap); N + 1 is refused with limit N and the cause user_cap.
 
     Catches a cause that follows the limit's size instead of who exceeded it: the loop rule is not what the user fixes.

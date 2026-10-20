@@ -9,6 +9,8 @@ from types import ModuleType
 
 import pytest
 
+import embodic
+
 TOOLS = Path(__file__).resolve().parents[3] / "tools"
 
 
@@ -26,6 +28,8 @@ ci = _load_tool("ci")
 EXISTING_RECORD = "pyproject.toml"  # a repository-relative path that exists; the content of a record is not read
 MISSING_RECORD = "docs/phase3/fable/no_such_record.md"
 MANUAL_ONLY_ROW = "REQ-N-07"
+CURRENT_VERSION = f"{embodic.__version__} (release c25d8a9)"  # a record stamp begins with the version under test
+STALE_VERSION = "older build c0f4894"  # begins with no release version
 
 
 def write_requirements(path: Path, rows: Sequence[tuple[str, str, str, str]]) -> Path:
@@ -49,10 +53,14 @@ def write_report(path: Path, tests: Sequence[tuple[str, str]]) -> Path:
 
 
 def manual_record(
-    req: str = MANUAL_ONLY_ROW, *, result: str = "passed", record: str = EXISTING_RECORD
+    req: str = MANUAL_ONLY_ROW,
+    *,
+    result: str = "passed",
+    record: str = EXISTING_RECORD,
+    version: str = CURRENT_VERSION,
 ) -> dict[str, str]:
     """Return one manual record with the five keys of interfaces.md section 3.2."""
-    return {"req": req, "test_id": "PK-06", "record": record, "embodic_version": "0.0.2", "result": result}
+    return {"req": req, "test_id": "PK-06", "record": record, "embodic_version": version, "result": result}
 
 
 def write_records(path: Path, records: object) -> Path:
@@ -106,6 +114,50 @@ def test_tr01_a_passed_manual_record_covers_the_row_and_the_summary_counts_it_ap
     assert "manual: 1" in out
     assert "1 requirements with a passing test" in out  # the record does not turn into an automated test
     assert "untested due: 0" in out
+
+
+@pytest.mark.req("REQ-T-09", "REQ-N-10")
+def test_tr01_a_record_of_the_version_under_test_counts_and_is_not_listed_as_stale(
+    manual_only_project, tmp_path, capsys
+):
+    """D-083c. Catches a currency check that compares the whole stamp: it must only begin with the version."""
+    assert CURRENT_VERSION != embodic.__version__
+    records = write_records(tmp_path / "records.json", [manual_record(version=CURRENT_VERSION)])
+    code, out = run_trace_matrix(
+        manual_only_project, "--fail-untested-through=M5", f"--manual-records={records}", capsys=capsys
+    )
+    assert code == 0, out
+    assert "manual: 1" in out
+    assert "untested due: 0" in out
+    assert "stale" not in out
+
+
+@pytest.mark.req("REQ-T-09", "REQ-N-10")
+def test_tr01_a_stale_record_is_listed_with_its_path_and_d061d_and_is_not_counted(
+    manual_only_project, tmp_path, capsys
+):
+    """D-083c. Catches a release gate that counts a record of an older build, or lists it without its path or rule."""
+    stale = manual_record(version=STALE_VERSION, record="README.md")
+    records = write_records(tmp_path / "records.json", [stale, manual_record("REQ-F-01")])
+    _, out = run_trace_matrix(
+        manual_only_project, "--fail-untested-through=M5", f"--manual-records={records}", capsys=capsys
+    )
+    listed = [line for line in out.splitlines() if "stale" in line]
+    assert len(listed) == 1
+    assert "README.md" in listed[0] and "D-061d" in listed[0]
+    assert "manual: 1" in out
+
+
+@pytest.mark.req("REQ-T-09", "REQ-N-10")
+def test_tr01_a_due_row_whose_only_record_is_stale_fails(manual_only_project, tmp_path, capsys):
+    """D-083c. Catches a stale record that still covers its row: the gate would pass on an old build's walkthrough."""
+    records = write_records(tmp_path / "records.json", [manual_record(version=STALE_VERSION)])
+    code, out = run_trace_matrix(
+        manual_only_project, "--fail-untested-through=M5", f"--manual-records={records}", capsys=capsys
+    )
+    assert code == 1
+    assert "untested due: 1" in out
+    assert MANUAL_ONLY_ROW in out.split("untested due: 1", 1)[1]
 
 
 @pytest.mark.req("REQ-T-09")

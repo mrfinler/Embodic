@@ -33,6 +33,7 @@ def _ends(entity: ezdxf.entities.DXFGraphic) -> list[tuple[float, float]]:
     return [tuple(p)[:2] for p in (entity.start_point, entity.end_point)]
 
 
+@pytest.mark.req("REQ-N-21")
 def test_ut_exp_02_complete_dxf_counts_equal_the_layout(
     example_id: str, outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path
 ) -> None:
@@ -66,6 +67,7 @@ def test_ut_exp_02_complete_dxf_counts_equal_the_layout(
     assert by_layer[("CIRCLE", "PAD")] == round_pads + drilled
 
 
+@pytest.mark.req("REQ-N-21")
 def test_ut_exp_02_outline_dxf_is_closed_outline_and_bore_only(
     example_id: str, outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path
 ) -> None:
@@ -82,6 +84,7 @@ def test_ut_exp_02_outline_dxf_is_closed_outline_and_bore_only(
         assert sum(math.dist(p, q) <= SHARED_MM for q in points) == 2, p
 
 
+@pytest.mark.req("REQ-N-21")
 def test_ut_exp_02_screws_dxf_is_circles_only(
     example_id: str, outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path
 ) -> None:

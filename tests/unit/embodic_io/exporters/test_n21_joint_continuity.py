@@ -195,7 +195,7 @@ def test_n21_svg_joint_ends_that_round_apart_are_written_once_from_the_shared_co
 
 
 @pytest.mark.parametrize("example", EXAMPLES)
-def test_n21_dxf_writes_one_point_for_every_line_to_line_joint(
+def test_ut_exp_02_n21_dxf_writes_one_point_for_every_line_to_line_joint(
     example: str, outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path
 ) -> None:
     """Catches a DXF writer that rounds the two LINE ends of a joint apart; arc joints are not covered (module note)."""
@@ -233,7 +233,7 @@ def shift_one_arc_end(dxf: Path, shifted: Path, layer: re.Pattern[str], joint_mm
 
 
 @pytest.mark.parametrize("example", EXAMPLES)
-def test_n21_dxf_arc_joints_are_continuous_within_the_coincidence_bound(
+def test_ut_exp_02_n21_dxf_arc_joints_are_continuous_within_the_coincidence_bound(
     example: str, outcome_of: Callable[[str], ComputeOutcome], tmp_path: Path
 ) -> None:
     """D-055c. Catches a DXF writer that moves an ARC end off the LINE or ARC end it joins by more than COINCIDENCE_MM.
@@ -250,7 +250,7 @@ def test_n21_dxf_arc_joints_are_continuous_within_the_coincidence_bound(
 @pytest.mark.parametrize(
     ("shift_mm", "reported"), [(0.0, False), (0.5 * COINCIDENCE_MM, False), (2 * COINCIDENCE_MM, True)]
 )
-def test_n21_the_arc_joint_check_reports_an_arc_end_moved_past_the_bound(
+def test_ut_exp_02_n21_the_arc_joint_check_reports_an_arc_end_moved_past_the_bound(
     shift_mm: float,
     reported: bool,
     outcome_of: Callable[[str], ComputeOutcome],
