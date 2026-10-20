@@ -2,9 +2,45 @@
 
 All notable changes to embodic are listed here. Versions follow semantic versioning; dates are ISO 8601.
 
-## 0.0.3 - 2026-10-19
+## 0.0.4 - 2026-10-20
 
-This release carries wave F12 (D-071). A reference such as D-071c is a clause of `docs/decision_log.md`. A DEF
+This release carries wave F13 (D-078, D-079). Version 0.0.3 was built and tested but not released (D-078f). Its
+changes, listed under 0.0.3 below, ship in this release. A DEF identifier names a defect row of
+`tests/independent/m7/records/defects.md`.
+
+### Fixed
+
+- The DRC could pass copper that is too close to a coil turn. Rule 5 exempted a path end from every primitive of the
+  same-net path it lands on. A leg that starts on a coil's end point was therefore never checked against the coil's
+  other turns: a leg 0.700 mm from the next turn passed at a 0.8 mm rule. A path end is now exempt only from the
+  primitive it lands on, with that primitive's fillets and tapers, and an end on an end is a rule 3 node. The
+  interconnect tap of rule 2 is exempt per primitive as well. On the five packaged examples, the violation counts stay
+  0, 0, 0, 0 and 186. (DEF-UV16-01, U-D25, D-078c, D-079b)
+- A path that starts with a fillet or a taper was exempt from its second main primitive (DRC rule 1). The leading corner
+  piece now belongs to the first main primitive only. (DEF-UD25-01, D-079b)
+- The geometry view drew every copper layer opaque in one colour per phase, so copper on different layers looked joined.
+  A user read the D08 spiral as shorted, but on each layer every gap was at the 0.8 mm rule. While two or more copper
+  layers are visible, the top visible layer is now drawn solid. Each lower layer is drawn as an outline inside its true
+  edge, and each upper layer has a casing in the board colour. The legend names the top layer. The cue works in the
+  greyscale drawing of Windows high contrast. (DEF-UV16-02, U-S16, D-079c)
+- Round pads were drawn as squares. Each pad is now drawn from its shape, as the exporters write it. (DEF-UV16-03)
+
+### Changed
+
+- Version 0.0.4. The five packaged examples change only in `app_version` and `engine_version`.
+
+### Known limits
+
+- The layer cue adds drawing work. Offscreen on the Linux container, against the 0.0.3 view (median ratios over 11
+  rounds), the serpentine redraw takes 1.25 times as long and the D08 open 1.13 times. A zoom step takes 1.70 times as
+  long and a pan step at 4x zoom 1.50 times (26 to 28 ms). An idle repaint takes 0.25 times as long, because the cue is
+  cached. Windows is not measured. (D-080)
+- Via drills are not drawn in the geometry view. This belongs to Phase 5. (D-079c)
+- The Windows GUI latency of 0.0.3 (DEF-W-12) stays open.
+
+## 0.0.3 - not released (built and tested on 2026-10-19 and 2026-10-20)
+
+This version carries wave F12 (D-071). A reference such as D-071c is a clause of `docs/decision_log.md`. A DEF
 identifier names a defect row of the U-V15 records.
 
 ### Changed

@@ -160,6 +160,9 @@ The two UT-DRC-04 items that invert are `test_ut_drc_04_junction_end_group_is_ex
 and `test_ut_drc_04_path_end_on_an_end_point_of_a_same_net_path_is_exempt_from_every_primitive_of_it` (5g). With the
 U-D25 reading in place, `pytest tests/unit/drc/test_run_drc.py -k ut_drc_04` gives 3 failed (those two, one of them
 twice by parametrisation) and 27 passed (`verified` by running, with the plugin `u_d25_reading.py` of section 7).
+Note (Fable, 2026-10-20): U-M8w renamed the two tests when it inverted them; they are now
+`test_ut_drc_04_junction_end_group_is_exempt_only_from_the_primitive_the_end_lies_on` (5f) and
+`test_ut_drc_04_path_end_on_an_end_point_of_a_same_net_path_is_exempt_only_from_its_end_group` (5g).
 
 ## 5. What changes in code and models (for the implementing units)
 
