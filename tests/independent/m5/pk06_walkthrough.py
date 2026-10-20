@@ -4,8 +4,9 @@ Usage: python3.11 pk06_walkthrough.py --wheel W --lock L --workdir NEW_EMPTY_DIR
 
 Each step runs the guide's command verbatim in bash with the step-2 venv activated. The guide's expected text is
 copied from INSTALL.md (base 1eb110d, identical to the release commit 5e74acc) and compared literally, so a
-difference prints as the exact pair. PIP_CACHE_DIR points at a new empty folder so step 3 downloads like a first
-install on a clean machine.
+difference prints as the exact pair. The guide names the release's wheel file and version (`embodic-0.0.4-...` from
+0.0.4 on), so the steps take the version from the wheel's file name, which must be the name the guide gives.
+PIP_CACHE_DIR points at a new empty folder so step 3 downloads like a first install on a clean machine.
 """
 
 from __future__ import annotations
@@ -98,73 +99,76 @@ def run_step(step: Step, workdir: Path, env: dict[str, str], examples: str | Non
 
 EXAMPLE = "<examples>/spiral_12c16p_default.embodic.json"
 
-STEPS = [
-    Step("1", "INSTALL.md §1", "python3.11 --version", ["Python 3.11."]),
-    Step(
-        "2",
-        "INSTALL.md §2",
-        "python3.11 -m venv .venv && . .venv/bin/activate && echo VIRTUAL_ENV=$VIRTUAL_ENV && command -v python",
-        [],
-    ),
-    Step("3a", "INSTALL.md §3", "python -m pip install --require-hashes -r requirements/py311.txt", []),
-    Step("3b", "INSTALL.md §3", "python -m pip install --no-deps embodic-0.0.1-py3-none-any.whl", []),
-    Step(
-        "3c",
-        "INSTALL.md §3",
-        "python -m pip list",
-        ["embodic", "0.0.1", "numpy", "2.4.6", "PySide6_Essentials", "6.11.2", "shiboken6"],
-    ),
-    Step("4", "INSTALL.md §4", "embodic", [], timeout_s=30.0),
-    Step(
-        "4-offscreen",
-        "INSTALL.md Troubleshooting on Linux (QT_QPA_PLATFORM=offscreen) + ui/app.py --smoke",
-        "embodic --smoke",
-        [],
-        timeout_s=120.0,
-        env_extra={"QT_QPA_PLATFORM": "offscreen"},
-        in_criterion=False,
-    ),
-    Step(
-        "5a",
-        "INSTALL.md §5",
-        "python -c \"from embodic.paths import resource_root; print(resource_root() / 'examples')\"",
-        ["embodic/_resources/examples"],
-    ),
-    Step(
-        "5b",
-        "INSTALL.md §5",
-        f"embodic-cli compute {EXAMPLE} --json outcome.json --timings",
-        [
-            "Design: Spiral, 12 coils, 16 poles",
-            "Design hash: sha256:ac4fab5db06f9e8f733dc495080deeddfe0bcf58faa31ebb7ec841c1b27d9c09",
-            "Topology: spiral, boards: 1",
-            "Design rule check: passed",
-            "Timings (s): validate",
-        ],
-    ),
-    Step(
-        "5c",
-        "INSTALL.md §5",
-        f"embodic-cli validate {EXAMPLE}",
-        ["Valid: Spiral, 12 coils, 16 poles"],
-        in_criterion=False,
-    ),
-    Step(
-        "5d",
-        "INSTALL.md §5",
-        f"embodic-cli export {EXAMPLE} --format svg -o board.svg",
-        ["Wrote board.svg"],
-        in_criterion=False,
-    ),
-    Step(
-        "6",
-        "INSTALL.md §6 (guide: selftest not in this build); brief item 2 expects the summary",
-        "embodic-cli selftest",
-        ["45 tests: 45 passed, 0 failed"],
-        timeout_s=600.0,
-        in_criterion=False,
-    ),
-]
+
+def steps(version: str) -> list[Step]:
+    """Return the guide's steps for the wheel of ``version``."""
+    return [
+        Step("1", "INSTALL.md §1", "python3.11 --version", ["Python 3.11."]),
+        Step(
+            "2",
+            "INSTALL.md §2",
+            "python3.11 -m venv .venv && . .venv/bin/activate && echo VIRTUAL_ENV=$VIRTUAL_ENV && command -v python",
+            [],
+        ),
+        Step("3a", "INSTALL.md §3", "python -m pip install --require-hashes -r requirements/py311.txt", []),
+        Step("3b", "INSTALL.md §3", f"python -m pip install --no-deps embodic-{version}-py3-none-any.whl", []),
+        Step(
+            "3c",
+            "INSTALL.md §3",
+            "python -m pip list",
+            ["embodic", version, "numpy", "2.4.6", "PySide6_Essentials", "6.11.2", "shiboken6"],
+        ),
+        Step("4", "INSTALL.md §4", "embodic", [], timeout_s=30.0),
+        Step(
+            "4-offscreen",
+            "INSTALL.md Troubleshooting on Linux (QT_QPA_PLATFORM=offscreen) + ui/app.py --smoke",
+            "embodic --smoke",
+            [],
+            timeout_s=120.0,
+            env_extra={"QT_QPA_PLATFORM": "offscreen"},
+            in_criterion=False,
+        ),
+        Step(
+            "5a",
+            "INSTALL.md §5",
+            "python -c \"from embodic.paths import resource_root; print(resource_root() / 'examples')\"",
+            ["embodic/_resources/examples"],
+        ),
+        Step(
+            "5b",
+            "INSTALL.md §5",
+            f"embodic-cli compute {EXAMPLE} --json outcome.json --timings",
+            [
+                "Design: Spiral, 12 coils, 16 poles",
+                "Design hash: sha256:ac4fab5db06f9e8f733dc495080deeddfe0bcf58faa31ebb7ec841c1b27d9c09",
+                "Topology: spiral, boards: 1",
+                "Design rule check: passed",
+                "Timings (s): validate",
+            ],
+        ),
+        Step(
+            "5c",
+            "INSTALL.md §5",
+            f"embodic-cli validate {EXAMPLE}",
+            ["Valid: Spiral, 12 coils, 16 poles"],
+            in_criterion=False,
+        ),
+        Step(
+            "5d",
+            "INSTALL.md §5",
+            f"embodic-cli export {EXAMPLE} --format svg -o board.svg",
+            ["Wrote board.svg"],
+            in_criterion=False,
+        ),
+        Step(
+            "6",
+            "INSTALL.md §6 (guide: selftest not in this build); brief item 2 expects the summary",
+            "embodic-cli selftest",
+            ["45 tests: 45 passed, 0 failed"],
+            timeout_s=600.0,
+            in_criterion=False,
+        ),
+    ]
 
 
 def main() -> int:
@@ -192,7 +196,8 @@ def main() -> int:
 
     results: list[StepResult] = []
     examples: str | None = None
-    for step in STEPS:
+    version = args.wheel.name.split("-")[1]
+    for step in steps(version):
         result = run_step(step, workdir, env, examples)
         if step.step_id == "5a" and result.exit_code == 0:
             examples = result.stdout.strip().splitlines()[-1]

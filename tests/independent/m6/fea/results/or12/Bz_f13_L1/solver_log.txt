@@ -1,6 +1,6 @@
 $ gmsh -2 -nt 1 -format msh2 or12.geo -o or12.msh
 Info    : Running 'gmsh -2 -nt 1 -format msh2 or12.geo -o or12.msh' [Gmsh 4.12.1, 1 node, max. 1 thread]
-Info    : Started on Sun Oct 18 19:57:24 2026
+Info    : Started on Tue Oct 20 20:41:48 2026
 Info    : Reading 'or12.geo'...
 Info    : Done reading 'or12.geo'
 Info    : Meshing 1D...
@@ -12,19 +12,19 @@ Info    : [ 50%] Meshing curve 5 (Line)
 Info    : [ 70%] Meshing curve 6 (Line)
 Info    : [ 80%] Meshing curve 7 (Line)
 Info    : [ 90%] Meshing curve 8 (Line)
-Info    : Done meshing 1D (Wall 0.000598533s, CPU 0.000451s)
+Info    : Done meshing 1D (Wall 0.00107596s, CPU 0.000842s)
 Info    : Meshing 2D...
 Info    : [  0%] Meshing surface 1 (Plane, Frontal-Delaunay)
 Info    : [ 50%] Meshing surface 2 (Plane, Frontal-Delaunay)
-Info    : Done meshing 2D (Wall 0.213911s, CPU 0.203005s)
+Info    : Done meshing 2D (Wall 0.239771s, CPU 0.230689s)
 Info    : 7996 nodes 16198 elements
 Info    : Writing 'or12.msh'...
 Info    : Done writing 'or12.msh'
-Info    : Stopped on Sun Oct 18 19:57:24 2026 (From start: Wall 0.232868s, CPU 0.252923s)
-exit 0, 0.28 s
+Info    : Stopped on Tue Oct 20 20:41:48 2026 (From start: Wall 0.26564s, CPU 0.293863s)
+exit 0, 0.33 s
 
 $ getdp or12.pro -msh or12.msh -solve MagDyn_a -pos Out -v 3
-Info    : Started (Sun Oct 18 19:57:25 2026, Wall = 0.411094s, CPU = 0.034322s, Mem = 41.418Mb)
+Info    : Started (Tue Oct 20 20:41:49 2026, Wall = 0.406915s, CPU = 0.036544s, Mem = 43.0039Mb)
 P r e - P r o c e s s i n g . . .
 Info    : System 1/1: 15672 Dofs
 E n d   P r e - P r o c e s s i n g
@@ -32,6 +32,6 @@ P r o c e s s i n g . . .
 E n d   P r o c e s s i n g
 P o s t - P r o c e s s i n g . . .
 E n d   P o s t - P r o c e s s i n g
-Info    : Stopped (Sun Oct 18 19:57:25 2026, Wall = 0.729196s, CPU = 0.334751s, Mem = 86.5039Mb)
-exit 0, 0.76 s
+Info    : Stopped (Tue Oct 20 20:41:49 2026, Wall = 0.758204s, CPU = 0.362915s, Mem = 88.7305Mb)
+exit 0, 0.80 s
 
