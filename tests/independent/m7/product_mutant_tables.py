@@ -49,9 +49,11 @@ V3_02 = [
     ),
     Mutant(
         "V3-02-06", "rule 2b widened: a tap exempts the whole path (D-037a reverted)", "drc/items.py",
-        "exempt = within | (ring & np.isin(items.path[candidates], tapped_rings))",
-        "exempt = np.isin(items.path[candidates], items.path[candidates[within]])",
-        (D + "test_ut_drc_04_same_net_via_tap_leaves_a_far_primitive_of_the_same_path_checked",),
+        "yield from ((via_base + v, int(i)) for i in candidates[within])",
+        "yield from ((via_base + v, int(i)) for i in candidates[np.isin(items.path[candidates], "
+        "items.path[candidates[within]])])",
+        (D + "test_ut_drc_04_same_net_via_tap_leaves_a_far_primitive_of_the_same_path_checked",
+         D + "test_ut_drc_04_interconnect_tap_leaves_a_far_primitive_of_the_ring_checked"),
         r"assert \[\] == \[|Right contains",
     ),
     Mutant(
@@ -63,8 +65,8 @@ V3_02 = [
     ),
     Mutant(
         "V3-02-08", "rule 5 widened: the T-junction reach is 1000 x COINCIDENCE_MM", "drc/items.py",
-        "trunks = np.unique(owner[(distance_mm <= COINCIDENCE_MM) & (owner != e.path.id)])",
-        "trunks = np.unique(owner[(distance_mm <= 1000 * COINCIDENCE_MM) & (owner != e.path.id)])",
+        "for hit in np.flatnonzero((distance_mm <= COINCIDENCE_MM) & (owner != e.path.id)):",
+        "for hit in np.flatnonzero((distance_mm <= 1000 * COINCIDENCE_MM) & (owner != e.path.id)):",
         (D + "test_ut_drc_04_path_end_beyond_the_coincidence_tolerance_is_reported",),
         r"set\(\) == |Right contains|Extra items in the right set",
     ),
@@ -72,7 +74,8 @@ V3_02 = [
         "V3-02-09", "D-006 band flipped: clearance equal to rule - epsilon is a violation", "drc/engine.py",
         "bad = np.flatnonzero(m.clearance_mm < required_mm[m.kind] - DRC_EPSILON_MM)",
         "bad = np.flatnonzero(m.clearance_mm <= required_mm[m.kind] - DRC_EPSILON_MM)",
-        ("tests/independent/m1/test_drc_agreement.py::test_intrusion_is_decided_by_d006",),
+        (D + "test_ut_drc_03_the_float_boundary_of_d006_is_rule_minus_epsilon_and_equal_passes",
+         "tests/independent/m1/test_drc_agreement.py::test_intrusion_is_decided_by_d006"),
         r"== |!=|Left contains|Right contains",
     ),
     Mutant(
@@ -89,6 +92,30 @@ V3_02 = [
         "within = _centreline_distance_mm(items, candidates, via.x_mm, via.y_mm) < via.pad_mm / 2",
         (D + "test_ut_drc_04_same_net_via_tap_band_is_half_the_via_pad",),
         r"== \[\]|Left contains",
+    ),
+    Mutant(
+        "V3-02-12", "rule 5 widened: the landing group is the whole trunk path (DEF-UV16-01 reverted)", "drc/items.py",
+        "landing |= (owner == owner[hit]) & (np.abs(slot - slot[hit]) <= 1)",
+        "landing |= owner == owner[hit]",
+        (D + "test_ut_drc_04_junction_end_group_is_exempt_only_from_the_primitive_the_end_lies_on",
+         D + "test_ut_drc_04_branch_in_the_middle_of_a_line_leaves_the_return_main_primitive_checked",
+         D + "test_ut_drc_04_wide_leg_on_a_coil_end_is_reported_against_the_coil_turn"),
+        r"assert \[\] == \[|Right contains",
+    ),
+    Mutant(
+        "V3-02-13", "interconnect tap widened: a tap exempts the whole ring (D-022c as before U-D25)", "drc/items.py",
+        "yield from ((via_base + v, int(i)) for i in candidates[within])",
+        "yield from ((via_base + v, int(i)) for i in candidates[within | (np.isin(items.path[candidates], "
+        "items.path[candidates[within]]) & np.isin(items.path[candidates], list(interconnects)))])",
+        (D + "test_ut_drc_04_interconnect_tap_leaves_a_far_primitive_of_the_ring_checked",),
+        r"assert \[\] == \[|Right contains",
+    ),
+    Mutant(
+        "V3-02-14", "rule 1 widened: a leading corner piece takes slot 0 again (DEF-UD25-01 reverted)", "drc/items.py",
+        "        out.append(index)\n",
+        "        out.append(max(0, index))\n",
+        (D + "test_ut_drc_04_a_taper_at_a_path_end_belongs_to_one_main_primitive_only",),
+        r"assert \[\] == \[|Right contains",
     ),
 ]  # fmt: skip
 
