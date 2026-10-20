@@ -444,3 +444,20 @@ Verdicts on 2026-10-19 (records in `m7/records/`, each `verified` by running the
 Defects: DEF-UV15-01 (D-006 comparison untested at its exact boundary), DEF-UV15-02 (rule 2b tap band untested at its
 edge), DEF-UV15-03 (serpentine PR-13 and PR-14 fixed at 3 examples in every profile), DEF-UV15-04 (a finite board
 rotation makes compute raise). Reproduce steps are in `m7/records/defects.md`.
+
+## U-V16: do the D08 spiral coils short? (user report; main 0ad66be, src equal to 0.0.3)
+
+Prepared by: Agent 4 - Independent Verificator - model: claude-opus-5-5
+
+| Script | Run in | What it does |
+|---|---|---|
+| `m7/u_v16_copper.py [--example STEM ...] [--out DIR]` | dev venv, `PYTHONPATH=src` | copper of each example from its DXF export through an own reader; designed joints from the DXF topology only; every other same-layer pair through the M1 certified kernels with no section 7 rule; then names pairs, says which the product exempts by which rule, and compares with the product's reported pairs |
+| `m7/u_v16_spots.py [--json FILE]` | dev venv, `PYTHONPATH=src` | the three screenshot spots per layer and in plan view; red-capable check at rules + 0.01 mm against `run_drc`; the rule 5 leg mutant and its control |
+| `m7/u_v16_pad_probe.py [PAD_MM ...]` | dev venv, `PYTHONPATH=src` | D08 with only `vias.pad_mm` changed: product DRC against the own sweep |
+| `m7/u_v16_render.py OUT` | dev venv, `PYTHONPATH=src`, offscreen Qt | PNGs of the screenshot region per layer at true width from the DXF shapes |
+| `m7/u_v16_view_grab.py OUT` | dev venv, `PYTHONPATH=src`, offscreen Qt | the product's geometry view of D08 (all layers, each layer alone) and a table of its scene items |
+
+Verdict (b) on 2026-10-20 (`m7/records/U-V16/U-V16.md`, `verified` by running): no same-layer copper closer than the
+rule outside designed joints on the five examples; the view overlays L1 and L2 opaque in one colour per phase.
+Defects DEF-UV16-01 (rule 5 end-point clause exempts a leg from its whole coil path; latent), DEF-UV16-02 (no layer
+cue in the geometry view), DEF-UV16-03 (round pads drawn as squares).
