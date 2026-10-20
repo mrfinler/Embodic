@@ -426,7 +426,7 @@ def _drc_summary(board: Layout, rules: DrcRules) -> dict[str, float | None]:
 
 
 @pytest.mark.req("REQ-F-05", "REQ-F-10")
-def test_default_example_passes_drc(board: Layout) -> None:
+def test_ut_drc_01_default_example_passes_drc(board: Layout) -> None:
     """Acceptance (DEF-M2d-01 closed): the default 12/16 spiral passes run_drc; its tightest gaps are exactly s."""
     least = _drc_summary(board, default_design().drc_rules)
     assert least["trace_trace"] == pytest.approx(0.2, abs=1e-6)
