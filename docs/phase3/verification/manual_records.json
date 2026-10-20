@@ -40,5 +40,12 @@
   "record": "tests/independent/m4/records/LG-04_T-11_reviewer.md",
   "embodic_version": "0.0.1 (main c0f4894)",
   "result": "passed"
+ },
+ {
+  "req": "REQ-N-16",
+  "test_id": "AX-06",
+  "record": "docs/phase3/fable/AX-06_narrator_0.0.3.md",
+  "embodic_version": "0.0.3 source (main 2fb2ec6; the laptop checkout's src equals it)",
+  "result": "passed"
  }
 ]
