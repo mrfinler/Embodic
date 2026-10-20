@@ -159,9 +159,9 @@ def example_checks(scratch: Path) -> list[tuple[str, str, object, object, float,
                  d08.boards.boards[0].detail.track_length_per_coil_layer_mm["X"], 160.2750, 0.0, 5e-5))
     (report,) = default.drc
     least = {s.kind.value: s.measured_min_mm for s in report.summaries}
-    rows.append(("ST-DRC-DEFAULT-CLEAN", "tests/unit/generators/test_spiral_generate.py::test_default_example_passes_drc",
+    rows.append(("ST-DRC-DEFAULT-CLEAN", "tests/unit/generators/test_spiral_generate.py::test_ut_drc_01_default_example_passes_drc",
                  report.violation_count, 0, 0.0, 0.0))
-    rows.append(("ST-DRC-DEFAULT-TRACE", "tests/unit/generators/test_spiral_generate.py::test_default_example_passes_drc",
+    rows.append(("ST-DRC-DEFAULT-TRACE", "tests/unit/generators/test_spiral_generate.py::test_ut_drc_01_default_example_passes_drc",
                  least["trace_trace"], 0.2, 0.0, 1e-6))
     ref, design, _ = outcomes["spiral_12c16p_default"]
     first, second = scratch / "a.embodic.json", scratch / "b.embodic.json"
