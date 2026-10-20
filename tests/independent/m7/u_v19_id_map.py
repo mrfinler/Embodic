@@ -140,13 +140,21 @@ ENTRIES: tuple[Entry, ...] = (
         "UT-GEO-19",
         "c",
         tests=(f"{PAIRS}::test_m4_one_phase_per_pair_is_refused_until_phase_5",),
+        rename=(
+            (
+                f"{PAIRS}::test_m4_one_phase_per_pair_is_refused_until_phase_5",
+                "test_ut_geo_19_m4_one_phase_per_pair_is_refused_until_phase_5",
+            ),
+        ),
         spec="Agent 6: UT-GEO-19's only criterion is the Phase 1 M4 build ('each pair contains coils of exactly one "
         "phase; pairs rotated by 2 pi/(3p)', test_plan_draft.md l.56), which REQ-F-03 (d) moves to Phase 5. Its "
         "`name` evidence on 0.0.4 comes from three tests that check UT-GEO-26 (D-046c); U-M8y renames them, so the ID "
         "loses that evidence. Restate UT-GEO-19 as REQ-F-03 (d) (12/16 and 16/16 with one phase per pair are refused "
         "with UNBUILDABLE_SPIRAL_OPTION_NOT_IMPLEMENTED), which test_m4_one_phase_per_pair_is_refused_until_phase_5 "
         "checks, or move the ID out of the row to Phase 5. After a restatement Agent 3 renames that test to "
-        "test_ut_geo_19_m4_one_phase_per_pair_is_refused_until_phase_5 and Agent 4 re-pins REQ-F-03 (U-V13 cites it).",
+        "test_ut_geo_19_m4_one_phase_per_pair_is_refused_until_phase_5 and Agent 4 re-pins REQ-F-03 (U-V13 cites it). "
+        "Done: U-D26 restated it as REQ-F-03 (d) (D-084a), e457a33 renamed the test with the body unchanged, and U-V20 "
+        "re-pinned REQ-F-03 on 99d355d (v20_repin.py, v3_01_rulings_v20.py).",
     ),
     Entry(
         "REQ-F-05",
