@@ -1,0 +1,107 @@
+{
+ "REQ-F-03": {
+  "tests/unit/generators/test_spiral_pairs.py::test_m3_a_rotation_every_pair_shares_turns_the_whole_winding": "55771157be26e0dbd3ebc0dcc1011e0593ad72224b944b2bd6784af40f907a34",
+  "tests/unit/generators/test_spiral_pairs.py::test_m4_one_phase_per_pair_is_refused_until_phase_5": "fb817f0c77757986f4cd6187ba05f654295e550fd84f073d325e488dfa7544bb",
+  "tests/unit/generators/test_spiral_pairs.py::test_ut_geo_10_parallel_pairs_put_one_route_per_pair_in_each_coil_group": "261a6ea77bd99f294f8d52c7455e4c319aeea6b7ed0de3b46882661d9530f3a5",
+  "tests/unit/generators/test_spiral_pairs.py::test_ut_geo_11_pairs_rotated_against_each_other_are_refused": "42c837541f32f1b3ae9322293d34c157e746abdad78e52cc8ea7f0328f35354e",
+  "tests/unit/generators/test_spiral_pairs.py::test_ut_geo_26_series_groups_get_their_own_centre_via_one_pitch_apart": "bffa229c8b505a1bbfc52cb3f98d6331891e15847d78ebba837cb7da53158084",
+  "tests/unit/physics/test_ut_phy_07_series_chain.py::test_ut_phy_07_generated_series_board_phase_emf_is_the_sum_of_its_member_emfs_each_at_its_own_z": "a3469958e176a7f160f38cd88b47e9e4040e12b29f8c79695f02c9cc0c87d1ce"
+ },
+ "REQ-F-06": {
+  "tests/unit/generators/test_spiral_fillet_length.py::test_def_m2d3_02_each_fillet_removes_the_closed_form_length": "e63ef655de8abebb96f30433a8f5a2f3df7335d467031155194774bf30a7a53f",
+  "tests/unit/generators/test_spiral_fillet_length.py::test_def_m2d3_02_track_length_changes_only_at_the_corners": "5df3c0711627b62502ef3996804c6e9f718aa3ae8475f0ce8944a5ef670c3707",
+  "tests/unit/generators/test_spiral_fillet_length.py::test_ut_geo_07_filleted_track_length_equals_the_stated_total": "28a2a5d3d43e032b64ba8a2c43abb18076c964e9fcc1cee28cea8d5582050fdd",
+  "tests/unit/generators/test_spiral_generate.py::test_d08_builds_three_turns_with_the_half_closing": "6c0f3ca4b2f19670e7a001a1eb42387ab76b368a1066b6ab7cff02d1580a3e58",
+  "tests/unit/generators/test_spiral_length.py::test_ut_geo_07_sharp_track_length_equals_the_reference_construction": "f11ef0700b4967d20de2aee0d65acfd59b020c062c5fd6c598147b5e9832e132",
+  "tests/unit/generators/test_spiral_turns.py::test_or_04_d08_builds_three_turns_with_the_half_closing": "2b18fb3a5f1ab9173deabb1d733582aaa0ae23dc908be23ba68ceec469f1e63d"
+ },
+ "REQ-F-08": {
+  "tests/unit/physics/test_kernels.py::test_cf06_star_and_delta_constants": "e131cc100017e986c2243531ee16688a2029643f15e9ac74aace29c28be33aa1",
+  "tests/unit/winding/test_plan.py::test_ut_wnd_07_delta_with_triplen_winding_factor_warns": "d88daf1620936245cbd9f7529404f6c6e3e66040ded5dda9801968f91687b75f",
+  "tests/unit/winding/test_plan.py::test_ut_wnd_07_no_triplen_warning": "17f691790ec0c6bea6cde3ada147ea757badd13bb7c07eb18e6b07eae7e30140"
+ },
+ "REQ-F-10": {
+  "tests/golden/m1_drc/test_gr18_band_rule.py::test_gr18_run_drc_agrees_with_xcoil_outside_the_slack_band": "72fe4149f237f4bfbfd9507256f0ba37f5fb576b67c0cf3ffa6c263e6a462444",
+  "tests/unit/drc/test_properties.py::test_pr_01_drc_never_under_reports_and_reports_no_false_positive_on_200_random_sets": "6d403e791a1c3ad9be84f854a0fa36251e8316d0796fe9a6ee00a59a1311e66a",
+  "tests/unit/drc/test_run_drc.py::test_ut_drc_03_one_micron_intrusion_is_exactly_one_new_violation_at_its_place": "cc4ab494bf6ec63c74b87880a683ac3fd9b74df35c5f18a556b79b7325c05f15",
+  "tests/unit/drc/test_run_drc.py::test_ut_drc_03_the_float_boundary_of_d006_is_rule_minus_epsilon_and_equal_passes": "1e7289ef8f8c9da5e543b5af31729248ea3fc78b11af508e26695be01640a0f0",
+  "tests/unit/drc/test_run_drc.py::test_ut_drc_04_junction_end_group_is_exempt_only_from_the_primitive_the_end_lies_on": "bdd9d3263872bee6d451a4ae2bfed5e3a9f46de2c3faacada072bdd5818b7c88",
+  "tests/unit/drc/test_run_drc.py::test_ut_drc_04_wide_leg_on_a_coil_end_is_reported_against_the_coil_turn": "a10f63993ef0cdf55165de9eccaaa9e2d30d7eecdb492de6df60133cc412230a",
+  "tests/unit/generators/test_spiral_generate.py::test_ut_drc_01_default_example_passes_drc": "7fb07d801ce7b25311448f939d4593f068c70a98a855cd52700793eb2266bdad"
+ },
+ "REQ-F-12": {
+  "tests/unit/physics/test_closed_forms_m2e2.py::test_eq07_cf07_two_member_group_with_half_ohm_members": "1192ad7e385eeb0e3909c3e49301f844a95c0ebffb5c3c8105f1f5c532568ecf",
+  "tests/unit/physics/test_field_layer_spread.py::test_ut_phy_20_b1_of_each_copper_layer_matches_c1d": "733d88fa012e07b432cb54e163a4ff8c3f62af6740c96d96896139d23a4b7c7a",
+  "tests/unit/physics/test_field_layer_spread.py::test_ut_phy_20_b1_spread_over_the_layers_is_0_336_percent": "8e1fc93be8b3e9e9ddc3939e62a5a36c7e0c2426312bb67c6a2bcac1484fe588"
+ },
+ "REQ-F-14": {
+  "tests/unit/boundary/test_bv_design.py::test_bv01_trace_width": "d59fd7918e1654a88fa1833e6d1f79fb7d34b92a64b12ac4445b64ddfc831f05",
+  "tests/unit/boundary/test_bv_design.py::test_bv02_spiral_radius_order": "89e8d889d63e378fa8431548cab35315318ea3b9d298357287e3efe46535326c",
+  "tests/unit/boundary/test_bv_design.py::test_bv03_odd_pole_count_suggests_the_next_even_count": "db0a7677285f271c009c16ffe78498290863fe9a6ecb9ea93e0f81561f29fb3d",
+  "tests/unit/boundary/test_bv_design.py::test_bv06_pair_references_unknown_copper_layer": "606bbeeb5c2936fa43b05e62fdc2e2e047edd4150b9910d17b591cfedb8efc2c",
+  "tests/unit/generators/test_spiral_bounds.py::test_bv05_requested_turns_above_the_turns_that_fit_are_refused_as_the_users_request": "1613a98dc54e905bb01ea931eb21fde0d80e1e83478925cadb37e3844e29b146",
+  "tests/unit/model/test_angle_file_form.py::test_an_angle_with_no_finite_degrees_is_refused_by_validation": "acac03b710990d0093796b95129fd277aba40e31424eb4df5600f945d4a4f019",
+  "tests/unit/model/test_angle_file_form.py::test_compute_returns_the_issue_for_an_angle_with_no_finite_degrees": "973ed968072b570a14e6ad309691ca184b20d2cd7ac42fbbb902d48fe67abf60",
+  "tests/unit/property/test_seeded_drafts_all_topologies.py::test_f14_1_seeded_drafts_return_an_outcome_without_internal_errors_or_unnamed_non_finite_numbers": "6d19aac8fcb3c205bc31b0077cf6dde50dfda6fdde0a80ffa104443b05b7eb34"
+ },
+ "REQ-L-01": {
+  "record:tests/independent/m4/records/LG-01_word_review_c25d8a9.md": "d41d9ac95d4a20dce732e753dfcefe4e04f5011214a2da40034165dd262bb871",
+  "tests/static/test_lg_language.py::test_lg01_string_literals_are_english": "842a7e4441da6f384df166cc7de3bfd6c526d9c34b1b1d17b90fc3995b2b88c6",
+  "tests/static/test_lg_language.py::test_lg01_word_command_prints_the_list_one_word_per_line": "dd3e73d3babf976427a4fe7d7eed68c8ae5432248732887e7e40f628e962c054",
+  "tests/static/test_lg_language.py::test_lg01_word_list_holds_a_word_planted_in_every_catalogue_and_template": "9919a23beb3669769f687474b151c3ba1faf8d37b9b750c97389b41d44b48bf0",
+  "tests/static/test_lg_language.py::test_lg08_shipped_files_have_no_thai": "ad625244ad422fa0f9bde906857a717429f469ffa963ac250a91dda355b67597"
+ },
+ "REQ-L-05": {
+  "tests/static/test_lg_brand_and_names.py::test_lg06_brand_check_passes_an_exact_copy_and_fails_a_modified_copy": "1fbfd2d5cf0ab48807785acd409e002fad63380e182afdcd90c14afb71cbd074",
+  "tests/static/test_lg_brand_and_names.py::test_lg06_brand_table_records_all_five_originals": "2644745c1309ff4c1fa5c7190b01f4a5072379fcfc159b711d10df09f5dc5b11",
+  "tests/static/test_lg_brand_and_names.py::test_lg06_code_and_resources_carry_no_e_mail_address_home_path_or_personal_name": "c24856d3698ec0eda53f97f33d53eb3c1411d4996b73f075240eaaf3f638b733",
+  "tests/static/test_lg_brand_and_names.py::test_lg06_every_tracked_brand_named_image_has_a_recorded_hash": "26ca583190e09cac9c306160333ae4928fde9d7bccc7452ffba15f0259b6b7cd",
+  "tests/static/test_lg_brand_and_names.py::test_lg06_personal_scan_finds_a_planted_value_in_every_kind_of_text": "7ddde0d684a54adedfe6194884da899ef3377fa49bcbc5ca706fdecb7e2ce4ea",
+  "tests/unit/embodic_io/exporters/test_lg_exports.py::test_lg06_exports_carry_no_e_mail_address_home_path_or_personal_name": "0cdcd48ee6b855608be2a9f52296307f74c76741347214a1844411b6246f9996"
+ },
+ "REQ-N-09": {
+  "tests/static/test_mt04_physics_docstrings.py::test_mt04_flags_missing_eq_id_and_parameter": "5d3c0361ed83562cad3597b7f60a8a555441f90a6af1d7a73970cf4791e80d59",
+  "tests/static/test_mt04_physics_docstrings.py::test_mt04_physics_functions_are_documented": "ae65c682887f1548eb1e181cc2aee8feaf5f016cb973c358c671b913517c72a7",
+  "tests/static/test_n09_parameter_units.py::test_n09_a_numeric_parameter_without_a_unit_is_reported": "9f4bdc938cf732b3e7cd9981bbf5e99ee3f3852cc9aee48b486603bb8b4207e5",
+  "tests/static/test_n09_parameter_units.py::test_n09_a_numeric_return_without_a_unit_is_reported": "81bd712c739fbde493f5e297c5691bfd61adcd8b890d490ff5b61a67115b096c",
+  "tests/static/test_n09_parameter_units.py::test_n09_a_unit_in_the_parameters_does_not_excuse_the_return": "df6a1d421b713a06dd36a6f206c6d4e6ae27f3f6ef69ed53284285e8398e0174",
+  "tests/static/test_n09_parameter_units.py::test_n09_every_numeric_parameter_of_a_public_physics_function_names_a_unit": "52c1e7244eb86e986981481414ad803cc47999b9f6ed33d7799b1dcd3433f0dd",
+  "tests/static/test_n09_parameter_units.py::test_n09_every_numeric_return_of_a_public_physics_function_names_a_unit": "df4034e942a5d78fa6052b423b4e0d9e094cfadd827961f160dbc63c80475cf2"
+ },
+ "REQ-N-10": {
+  "tests/unit/base/test_tr01_release_gate.py::test_tr01_flag_lists_a_live_must_row_that_has_neither_a_passing_test_nor_a_manual_record": "48a3418a5418ff3d5fd702fcd59f2b8e85f10785061153ee377dc8091f443255",
+  "tests/unit/base/test_tr01_release_gate.py::test_tr01_release_gate_fails_on_an_untested_must_row": "f4b330195a6740f22d4859e3690ff3a193208b46d27ed106d4a110f8f5d7ca8e",
+  "tests/unit/base/test_tr01_release_gate.py::test_tr01_release_gate_passes_when_a_manual_record_covers_the_row": "9bffccd06da5524d824f7a6066cef0052fbef3f1e996a4911e69c390cb9cad05"
+ },
+ "REQ-N-21": {
+  "tests/unit/base/test_units.py::test_units_js_round_matches_javascript_math_round": "755a7782d9d923d18c2a3f2a3874a343de72a7654a1f018d8e69fc3d704dfc83",
+  "tests/unit/base/test_units.py::test_units_quantise_matches_xcoil_fmt": "5ab0e526076c4bc515f15fc4dfadacf8bc8b5fab53100577be73eee679851710",
+  "tests/unit/base/test_units.py::test_units_round_trips_stay_within_two_ulps": "2af8da61919f29f51b1ede315ebf5ed8f6020a27d9a7303ee28dc8baa692408c",
+  "tests/unit/embodic_io/exporters/test_n21_joint_continuity.py::test_n21_svg_joint_ends_that_round_apart_are_written_once_from_the_shared_coordinate": "7b8998897f2848ed304450d31873d6a95b0d796c42b658c9b0d8de153e4cad8b",
+  "tests/unit/embodic_io/exporters/test_n21_joint_continuity.py::test_n21_svg_writes_one_point_for_every_copper_joint": "2aaa3a09a9780d6c714c0a1b242d6ffb39f36498458400465fc771e474f107b2",
+  "tests/unit/embodic_io/exporters/test_n21_joint_continuity.py::test_ut_exp_02_n21_dxf_arc_joints_are_continuous_within_the_coincidence_bound": "ae5624eebe45a3ee0176b0b36e0e93f2f4df6a3f3d4c49659badcbc30ce0444b",
+  "tests/unit/embodic_io/exporters/test_n21_joint_continuity.py::test_ut_exp_02_n21_dxf_writes_one_point_for_every_line_to_line_joint": "6df862cef38cb8c02b8c6990dbfc970a0ccba21d75c95d14c933ddb27fcbf888",
+  "tests/unit/geometry/test_discretise.py::test_ut_geo_23_chords_respect_every_bound": "1ebd08d496d2007ee8026f7c9380fcfb9ed84006d57548f53ce524049ec89eea",
+  "tests/unit/geometry/test_transforms.py::test_ut_geo_22_rotation_by_60_degrees_matches_closed_form": "6991b7de34125eed4217ba0fee0d5029bfc0ab145942f5f32c0f6f95eae7489f"
+ },
+ "REQ-T-08": {
+  "tests/unit/physics/test_skin_depth_validity_flag.py::test_t08_a_trace_of_0_4_skin_depths_flags_the_resistance_and_the_eddy_results": "fcf1ea6b51bade829f5817ff3ed7a2035f841ad6cd951029be26498427bd5f55",
+  "tests/unit/physics/test_skin_depth_validity_flag.py::test_t08_the_skin_depth_flag_travels_to_every_result_built_from_the_resistances": "fd3be003bab311451167f3f8c2180c4f8f211f3bbde145887a975d1d8b0df92d",
+  "tests/unit/physics/test_ut_phy_21_edge_kernel.py::test_edge_leakage_of_the_phase_1_segment_set_matches_the_registry_formula": "c31e76eb7cbc8f586cfcfe3eaa80f75c8df4445e46f585fd461abaf9ce71d137",
+  "tests/unit/physics/test_ut_phy_21_edge_kernel.py::test_short_magnets_cap_the_badge_and_a_15_mm_magnet_does_not": "b77d960e68b97dba2fa0b7880fc5ce538cc977bbff42a20d9bb4d48f8877156d",
+  "tests/unit/results/test_traceable.py::test_traceable_adr_0003_worked_example": "bf569a97dcdf03f18ddf690ad6cf286770a159355216f439101137616a7c1f53",
+  "tests/unit/results/test_traceable.py::test_traceable_ec05_below_cap_adds_one_sided_addon_and_limitation": "b8b0ea36a7cfb147a300b889bb034121f0d057c179d47a018f02ab1c7c3f2c1c"
+ },
+ "REQ-T-14": {
+  "tests/ui/qt_results/test_charts_compare_guide_export.py::test_ui32_a_drawing_not_from_the_engine_carries_the_illustrative_stamp": "e1e8a2aed0c02a043f6c15656efb2f70ae3a228e30a9fe508197afdadfdcc15a",
+  "tests/ui/qt_shell/test_canvas_stamp.py::test_ui32b_canvas_stamp_names_the_version_and_the_design_hash_at_the_bottom_left": "75800e76d538f24458fdbf9e0d049aaaa6c688679bb19505863aab52a9d9510c",
+  "tests/ui/qt_shell/test_canvas_stamp.py::test_ui32c_the_stamp_is_painted_on_its_plate_and_its_text_reaches_4_5_to_1": "d7b1bce1e5ad7fa3d84d7e465f57ae180ebad9a17a757f8feaca53562ab2b2b6",
+  "tests/ui/qt_shell/test_canvas_stamp.py::test_ui32d_a_stale_drawing_keeps_its_stamp_and_a_new_outcome_renames_it": "a658f8e82a634f7faa5d7b50567ee5d297bc6d860bb4605b797a64e4c1426047",
+  "tests/unit/embodic_io/exporters/test_dxf.py::test_ut_io_06_dxf_header_comment_holds_the_stamp": "39ee894c54088686bed25ba107ff721a985f998c4ec4113317fbc140c5db1996",
+  "tests/unit/embodic_io/exporters/test_report_readme_bundle.py::test_ut_exp_04_readme_names_every_file_units_frame_and_caveat": "13b220aec8cbdd6933ce16916202f7e1fcbb9ebd2951b078cb7aa6f2e9124399",
+  "tests/unit/embodic_io/exporters/test_report_readme_bundle.py::test_ut_io_06_report_carries_the_stamp": "97060a935f4cbfc6394df357a3edc4553eb1187bc3e4af6cde8923febf327cfe",
+  "tests/unit/embodic_io/exporters/test_stamp_fields.py::test_t07_project_json_holds_the_embodic_version_the_design_hash_and_a_utc_date": "5ee37429f0991fa50ce52e5c6659b75e248d9fdb4f14a9997c733959775f64c3",
+  "tests/unit/embodic_io/exporters/test_stamp_fields.py::test_t14_readme_names_the_embodic_version_of_the_outcome": "a9f7dd2285eb72677a4230e3549411a9e9e23706d04fbe4020ad16ecebe47a4c",
+  "tests/unit/embodic_io/exporters/test_svg.py::test_ut_io_06_svg_metadata_holds_the_stamp": "fff674ccc51bd38b55a52db28c521b242cf120e0e14455b2aeacdadd0629c6b6"
+ }
+}

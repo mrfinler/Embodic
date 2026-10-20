@@ -1,0 +1,534 @@
+"""U-V19 item 2: one decision per planned test ID of the nine text-only must rows of release 0.0.4 (D-046c).
+
+The IDs are the planned tests with evidence `none` in docs/phase3/verification/req_audit.md (V3-15 on 0.0.4), plus
+UT-GEO-19, whose `name` evidence U-V19 found to come from tests that check UT-GEO-26. Decisions:
+
+- `a`: the tests in `tests` (c25d8a9 names) together check the ID's criterion as written in test_plan.md. U-M8y
+  applies `rename` (cite -> new function name, the body unchanged) and `add_req` (cite -> REQ marker to add), so that
+  a test that carries the row's marker names the ID (req_audit.py `name` evidence).
+- `b`: no test checks it. `new` names the test U-M8y adds and its REQ markers; `spec` gives input, expected value and
+  its source, and tolerance.
+- `c`: the planned ID is a spec defect; `spec` says what Agent 6 decides. U-M8y does nothing for it.
+
+`v19_rerule.py --write` renders this table to records/U-V19_id_map.md, and `--predict` applies it to the 0.0.4
+evidence to give the audit after U-M8y.
+"""
+
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class Entry:
+    """The decision on one planned test ID of one requirement row."""
+
+    req: str
+    test_id: str
+    decision: str
+    tests: tuple[str, ...] = ()
+    rename: tuple[tuple[str, str], ...] = ()
+    add_req: tuple[tuple[str, str], ...] = ()
+    new: tuple[tuple[str, tuple[str, ...]], ...] = ()
+    spec: str = ""
+
+
+U, UI = "tests/unit", "tests/ui"
+GEN = f"{U}/generators"
+SPIRAL = f"{GEN}/test_spiral_generate.py"
+PAIRS = f"{GEN}/test_spiral_pairs.py"
+FAN = f"{GEN}/test_spiral_series_fan.py"
+BOUNDS = f"{GEN}/test_spiral_bounds.py"
+EVERY = f"{GEN}/test_every_topology_refuses.py"
+DRC = f"{U}/drc/test_run_drc.py"
+WAVE13 = f"{U}/property/wave/test_wave_properties.py"
+SERP13 = f"{U}/property/serpentine/test_serpentine_properties.py"
+SWEEP = f"{U}/property/test_spiral_brute_sweep.py"
+RANGES = f"{U}/model/test_supported_ranges.py"
+STEP = f"{UI}/qt_shell/test_stepping.py"
+STEP_TIMED = f"{UI}/qt_shell/test_stepping_timing.py"
+DXF = f"{U}/embodic_io/exporters/test_dxf.py"
+N21 = f"{U}/embodic_io/exporters/test_n21_joint_continuity.py"
+CONTRAST = f"{U}/ui/shell/test_contrast_check.py"
+PIPE = f"{U}/property/test_pipeline_properties.py"
+
+SPIRAL_SWEEP = (
+    f"{SWEEP}::test_pr_01_pr_13_spiral_boards_agree_with_the_brute_sweep_including_every_through_via",
+    ("REQ-F-05", "REQ-F-10"),
+)
+SPIRAL_SWEEP_SPEC = (
+    "Parametrised over the boards of spiral_12c16p_default, spiral_12c10p_d08 and spiral_12c14p (load_example, "
+    "generate_spiral) and the CF-11 board with k = 3 series groups that test_spiral_series_fan.py builds. Method as "
+    "PR-13 on the wave (test_wave_properties.py l.42-65): run_drc with the design's rules; dump_layout -> "
+    "parse_board_dump -> universe() of tests/independent/m1/drc_universe.py with every via; exemptions "
+    "contract_exemptions | t_junction_pairs | same_net_via_tap_pairs; sweep() at the design's rules. Expected: the "
+    "brute violations are a subset of run_drc's pair violations; when report.passed they are empty; every pair "
+    "run_drc reports is a brute violation, except pad-to-pad and pad-to-via pairs with a non-round pad (PR-01 last "
+    "clause, interfaces.md section 7); and the swept pairs include at least one via against copper of another net. "
+    "Source: test_plan.md PR-01 and PR-13, REQ-F-05 'every through via clears foreign copper'. Tolerance: the D-006 "
+    "threshold rule - 1e-6 mm, no slack band."
+)
+
+# Text edits U-M8y makes with the renames: (file, old, new). The two UT-GEO-26 tests open their docstrings with
+# "UT-GEO-19"; left as it is, that text alone would give UT-GEO-19 `file` evidence (req_audit.py) after the renames.
+TEXT_EDITS: tuple[tuple[str, str, str], ...] = (
+    (PAIRS, '"""UT-GEO-19 (M2, G5 k centre vias)', '"""UT-GEO-26 (M2, G5 k centre vias)'),
+    (PAIRS, '"""UT-GEO-19 (M2, G6)', '"""UT-GEO-26 (M2, G6)'),
+)
+
+ENTRIES: tuple[Entry, ...] = (
+    Entry(
+        "REQ-F-03",
+        "UT-GEO-24",
+        "b",
+        new=(
+            (
+                f"{SPIRAL}::test_ut_geo_24_first_coil_angle_any_finite_value_builds_one_board_and_is_stored_as_typed",
+                ("REQ-F-03",),
+            ),
+        ),
+        spec="Input: default_design() (tests/unit/generators/default_example.py, CF-11) with "
+        "/winding/coil/first_coil_angle_rad = 1.0, 1.0 + 2 pi (7.283185307179586) and 1.0 - 2 pi "
+        "(-5.283185307179586). Expected: each builds a BoardStack; against the 1.0 board every path (paired by id) has "
+        "the same primitives and every primitive start and end point lies within 1e-9 mm; coil 0's axis, the polar "
+        "angle of the ViaRole.CENTRE via nearest the angle 1.0, equals 1.0 within 1e-9 rad modulo 2 pi; "
+        "validate_design gives no issue and the design keeps the typed value exactly; save_project writes "
+        "design.winding.coil.first_coil_angle_deg equal to math.degrees(a) within 1e-9 deg (57.29577951308232, "
+        "417.2957795130823, -302.7042204869177: not wrapped into [0, 360)), and load_project gives back a within "
+        "1e-12 rad. Source: test_plan.md UT-GEO-24 (D-031c); the file form stores degrees "
+        "(src/embodic/io/canonical.py). "
+        "U-V19 measured 0 mm, 0 rad and the three degree values exactly (u_v19_probes.py). The REQ-F-01 test "
+        "test_first_coil_angle_any_finite_value_is_normalised compares via positions only.",
+    ),
+    Entry(
+        "REQ-F-03",
+        "UT-GEO-26",
+        "a",
+        tests=(
+            f"{PAIRS}::test_ut_geo_19_series_groups_get_their_own_centre_via_one_pitch_apart",
+            f"{PAIRS}::test_ut_geo_19_each_group_runs_from_its_ring_via_to_its_centre_and_out_to_the_next",
+            f"{PAIRS}::test_ut_geo_19_series_pairs_whose_fan_sides_meet_are_refused",
+            f"{FAN}::test_series_board_passes_drc_with_smallest_gap_s",
+        ),
+        rename=(
+            (
+                f"{PAIRS}::test_ut_geo_19_series_groups_get_their_own_centre_via_one_pitch_apart",
+                "test_ut_geo_26_series_groups_get_their_own_centre_via_one_pitch_apart",
+            ),
+            (
+                f"{PAIRS}::test_ut_geo_19_each_group_runs_from_its_ring_via_to_its_centre_and_out_to_the_next",
+                "test_ut_geo_26_each_group_runs_from_its_ring_via_to_its_centre_and_out_to_the_next",
+            ),
+            (
+                f"{PAIRS}::test_ut_geo_19_series_pairs_whose_fan_sides_meet_are_refused",
+                "test_ut_geo_26_series_pairs_whose_fan_sides_meet_are_refused",
+            ),
+            (
+                f"{FAN}::test_series_board_passes_drc_with_smallest_gap_s",
+                "test_ut_geo_26_series_board_passes_drc_with_smallest_gap_s",
+            ),
+        ),
+        spec="U-M8y also makes the two TEXT_EDITS: the docstrings of the first two tests open with 'UT-GEO-26' "
+        "instead of 'UT-GEO-19'. CF-11 with k = 3 keeps 10 turns and centre vias at 30.7, 29.9, 29.1 mm (abs 1e-9); "
+        "group g's X runs "
+        "from ring via g to its centre via and its Y from there to ring via g + 1 (1e-9 mm); a 6 mm bus ring is "
+        "refused "
+        "with exactly UNBUILDABLE_SERIES_VIA_FAN_DRC at /winding/layers/series_groups; CF-11 and D08 with k = 2 and 3 "
+        "have 0 violations and a least trace-trace and trace-via clearance of 0.2 and 0.8 mm (abs 1e-6). The tests are "
+        "named UT-GEO-19, whose Phase 1 criterion is the M4 phase-per-pair build (see the UT-GEO-19 row).",
+    ),
+    Entry(
+        "REQ-F-03",
+        "UT-GEO-19",
+        "c",
+        tests=(f"{PAIRS}::test_m4_one_phase_per_pair_is_refused_until_phase_5",),
+        spec="Agent 6: UT-GEO-19's only criterion is the Phase 1 M4 build ('each pair contains coils of exactly one "
+        "phase; pairs rotated by 2 pi/(3p)', test_plan_draft.md l.56), which REQ-F-03 (d) moves to Phase 5. Its "
+        "`name` evidence on 0.0.4 comes from three tests that check UT-GEO-26 (D-046c); U-M8y renames them, so the ID "
+        "loses that evidence. Restate UT-GEO-19 as REQ-F-03 (d) (12/16 and 16/16 with one phase per pair are refused "
+        "with UNBUILDABLE_SPIRAL_OPTION_NOT_IMPLEMENTED), which test_m4_one_phase_per_pair_is_refused_until_phase_5 "
+        "checks, or move the ID out of the row to Phase 5. After a restatement Agent 3 renames that test to "
+        "test_ut_geo_19_m4_one_phase_per_pair_is_refused_until_phase_5 and Agent 4 re-pins REQ-F-03 (U-V13 cites it).",
+    ),
+    Entry(
+        "REQ-F-05",
+        "UT-PHY-11",
+        "c",
+        tests=(
+            f"{U}/physics/test_kernels.py::test_cf04_and_ut_phy_11_via_barrel_resistance",
+            f"{EVERY}::test_parallel_vias_per_transition_are_refused_by_every_topology",
+            f"{EVERY}::test_one_via_per_transition_still_builds_every_example",
+        ),
+        spec="Agent 6: the barrel clause (0.160 mOhm, two barrels halve it) is checked by "
+        "test_cf04_and_ut_phy_11_via_barrel_resistance (REQ-F-11), half (2) and the build of half (1) by the UT-GEN-06 "
+        "tests. Half (1)'s 'the analysis gives every via one barrel' states no expected value or tolerance, and while "
+        "every count above 1 is refused it shows only through a phase resistance that includes the barrels; the row "
+        "itself calls it `verified` by reading and `not tested` above the kernel. The wave has such a check against "
+        "Xcoil's one rVia per element (GR-22, test_gr22_phase_resistance_differs_from_xcoil_only_by_the_via_barrel_"
+        "length). State the oracle and tolerance for the spiral and serpentine examples, or move the clause to Phase 5 "
+        "with the count. Then Agent 3 adds REQ-F-05 to test_cf04_and_ut_phy_11_via_barrel_resistance and to the test "
+        "that checks the clause.",
+    ),
+    Entry(
+        "REQ-F-05",
+        "PR-01",
+        "b",
+        tests=(
+            f"{U}/drc/test_properties.py::test_pr_01_drc_never_under_reports_and_reports_no_false_positive_on_200_random_sets",
+        ),
+        new=(SPIRAL_SWEEP,),
+        spec="The existing PR-01 test (REQ-F-10) samples one random primitive per path on one layer and no via, so "
+        "no brute check covers a spiral through via. New test: " + SPIRAL_SWEEP_SPEC,
+    ),
+    Entry(
+        "REQ-F-05",
+        "UT-GEN-06",
+        "a",
+        tests=(
+            f"{EVERY}::test_parallel_vias_per_transition_are_refused_by_every_topology",
+            f"{EVERY}::test_one_via_per_transition_still_builds_every_example",
+        ),
+        rename=(
+            (
+                f"{EVERY}::test_parallel_vias_per_transition_are_refused_by_every_topology",
+                "test_ut_gen_06_parallel_vias_per_transition_are_refused_by_every_topology",
+            ),
+            (
+                f"{EVERY}::test_one_via_per_transition_still_builds_every_example",
+                "test_ut_gen_06_one_via_per_transition_still_builds_every_example",
+            ),
+        ),
+        add_req=(
+            (f"{EVERY}::test_parallel_vias_per_transition_are_refused_by_every_topology", "REQ-F-05"),
+            (f"{EVERY}::test_one_via_per_transition_still_builds_every_example", "REQ-F-05"),
+        ),
+        spec="Values 2 and 3 on spiral_12c16p_default, serpentine_16p_example and wave_16p_example give Unbuildable "
+        "with exactly one issue (its topology's NOT_IMPLEMENTED code, /vias/vias_per_transition); 1 builds a "
+        "BoardStack on each. The row's sentence that each code has its own message naming its topology is read as "
+        "the reason the codes differ (`verified` by reading in the row), not as a separate criterion.",
+    ),
+    Entry(
+        "REQ-F-06",
+        "UT-GEO-25",
+        "b",
+        tests=(f"{SPIRAL}::test_turn_limit_reports_the_closing",),
+        new=((f"{SPIRAL}::test_ut_geo_25_the_closing_is_reported_and_not_stored", ("REQ-F-06",)),),
+        spec="Input: default_design() (CF-11, the G5 eye fits) and d08_design() "
+        "(tests/unit/generators/d08_example.py). "
+        "Expected: SpiralDetail.turn_limit.closing is TurnClosing.FULL for CF-11 and TurnClosing.HALF for D08 (D-030, "
+        "D-031b); no FieldSpec.pointer of embodic.model.fields.FIELDS contains 'closing' or 'turn_limit'; the text of "
+        "the file save_project writes for each design contains neither 'closing' nor 'turn_limit'. Source: "
+        "test_plan.md "
+        "UT-GEO-25. Tolerance: exact. U-V19 measured FULL and HALF, no such pointer and neither word in either file "
+        "(u_v19_probes.py). test_turn_limit_reports_the_closing checks the first clause only.",
+    ),
+    Entry(
+        "REQ-F-10",
+        "UT-DRC-01",
+        "a",
+        tests=(f"{SPIRAL}::test_default_example_passes_drc",),
+        rename=((f"{SPIRAL}::test_default_example_passes_drc", "test_ut_drc_01_default_example_passes_drc"),),
+        spec="The default design passes run_drc with 0 violations and its least trace-trace and trace-via clearance "
+        "is 0.2 mm within 1e-6 mm, inside [rule - 1e-6, rule + 0.005] mm. The rename changes a cite of the U-V18 "
+        "REQ-F-10 ruling; v3_01_rulings_v19.py cites the new name with its expected pin.",
+    ),
+    Entry(
+        "REQ-F-10",
+        "PR-13",
+        "b",
+        tests=(
+            f"{WAVE13}::test_pr_13_run_drc_never_under_reports_on_a_wave_board",
+            f"{SERP13}::test_pr_13_drc_never_under_reports_on_serpentine_boards",
+            f"{SERP13}::test_pr_13_the_sweep_finds_the_violations_of_a_two_strand_board",
+        ),
+        add_req=(
+            (f"{WAVE13}::test_pr_13_run_drc_never_under_reports_on_a_wave_board", "REQ-F-10"),
+            (f"{SERP13}::test_pr_13_drc_never_under_reports_on_serpentine_boards", "REQ-F-10"),
+            (f"{SERP13}::test_pr_13_the_sweep_finds_the_violations_of_a_two_strand_board", "REQ-F-10"),
+        ),
+        new=(SPIRAL_SWEEP,),
+        spec="PR-13 says 'for every generator'; the wave (six boards) and serpentine (Hypothesis) tests check two of "
+        "the three, under REQ-F-35 and REQ-F-34. U-M8y adds REQ-F-10 to the three PR-13 tests and adds the spiral "
+        "sweep: " + SPIRAL_SWEEP_SPEC,
+    ),
+    Entry(
+        "REQ-F-14",
+        "BV-05",
+        "a",
+        tests=(f"{BOUNDS}::test_requested_turns_above_the_turns_that_fit_are_refused_as_the_users_request",),
+        rename=(
+            (
+                f"{BOUNDS}::test_requested_turns_above_the_turns_that_fit_are_refused_as_the_users_request",
+                "test_bv05_requested_turns_above_the_turns_that_fit_are_refused_as_the_users_request",
+            ),
+        ),
+        spec="The turns that fit (max) build and max + 1 is refused with UNBUILDABLE_TURNS_EXCEED_LIMIT, limit max, "
+        "value user_cap. The plan's '..._TURNS_EXCEED_MAX' is the Phase 1 spelling of the code that interfaces.md "
+        "section 6 documents as UNBUILDABLE_TURNS_EXCEED_LIMIT (REQ-F-14 asks for the documented code); Agent 6 may "
+        "update the BV-05 cell. The rename changes a cite of the U-V18 REQ-F-14 ruling (re-pinned in v19).",
+    ),
+    Entry(
+        "REQ-F-14",
+        "BV-21",
+        "b",
+        tests=(f"{RANGES}::test_a_screw_length_beyond_the_largest_board_blocks_compute",),
+        new=(
+            (
+                f"{RANGES}::test_bv21_a_1e30_mm_screw_pitch_radius_is_an_error_and_compute_raises_no_internal_issue",
+                ("REQ-F-14",),
+            ),
+        ),
+        spec="Input: serpentine_16p_example and wave_16p_example with /outline/screws/0/pitch_radius_mm = 1e30; "
+        "spiral_12c16p_default with the serpentine example's screw pattern copied into outline.screws (the spiral "
+        "example has none) and the same 1e30. Expected: validate_design gives exactly one issue at that pointer, "
+        "(RANGE_ABOVE_SUPPORTED, ERROR, UNSUPPORTED_RANGE); compute on the same design returns an outcome with no "
+        "issue code starting INTERNAL_. Source: test_plan.md BV-21 (D-054e). Tolerance: exact. U-V19 measured that "
+        "issue and no INTERNAL_ code on all three (u_v19_probes.py). The existing test covers the serpentine and "
+        "validation only. Note for Agent 6: the row's 'upper limit unresolved' and '1e9 mm passes validation' are out "
+        "of date (the bound is OUTLINE_MAX_MM, 2000 mm).",
+    ),
+    Entry(
+        "REQ-F-14",
+        "UT-DRC-09",
+        "a",
+        tests=(f"{DRC}::test_a_coordinate_whose_grid_cell_index_is_not_representable_is_refused_by_name",),
+        rename=(
+            (
+                f"{DRC}::test_a_coordinate_whose_grid_cell_index_is_not_representable_is_refused_by_name",
+                "test_ut_drc_09_a_coordinate_whose_grid_cell_index_is_not_representable_is_refused_by_name",
+            ),
+        ),
+        add_req=(
+            (f"{DRC}::test_a_coordinate_whose_grid_cell_index_is_not_representable_is_refused_by_name", "REQ-F-14"),
+        ),
+        spec="Items 1e30 mm (and 1e20 mm) from two touching paths: run_drc, the caller of candidate_pairs, raises "
+        "OverflowError 'DRC grid cell index' before numpy warns (warnings as errors), so no pair list comes from a "
+        "wrapped index; the row leaves the form of the refusal to Agent 3, who chose this exception.",
+    ),
+    *(
+        Entry(
+            "REQ-N-12",
+            f"UI-{46 + k}",
+            "a",
+            tests=(f"{STEP}::{old}",),
+            rename=((f"{STEP}::{old}", f"test_ui{46 + k}_{old.removeprefix('test_')}"),),
+            spec=spec,
+        )
+        for k, old, spec in (
+            (1, "test_s2_shift_down_moves_ten_steps", "Shift+Down from 11.47 gives 6.47 (and Shift+Up gives 11.47)."),
+            (
+                3,
+                "test_s4_up_then_return_commits_the_step_as_one_user_edit",
+                "Up then Return: the chip reads user, the committed r_inner is 11.97 mm and one undo returns 11.47.",
+            ),
+            (
+                4,
+                "test_s5_esc_drops_every_uncommitted_step_and_keeps_focus",
+                "Up twice (12.47) then Esc: 11.47, focus stays in the field, no compute, no undo entry.",
+            ),
+            (
+                5,
+                "test_s6_a_step_stops_at_zero_and_does_not_leave_a_positive_field",
+                "param-coil-gap 0.02 then Down gives 0; param-r-inner 0.3 then Down stays 0.3.",
+            ),
+            (
+                6,
+                "test_s7_a_step_stops_at_the_range_and_a_value_outside_moves_only_toward_it",
+                "param-air-gap 0.07, Down twice: 0.05; 60, Up: 60, Down: 50.",
+            ),
+            (
+                8,
+                "test_s9_an_angle_steps_one_degree_and_commits_radians",
+                "param-first-coil-angle t, Up, Return: the text is t + 1 and the committed value radians(t + 1).",
+            ),
+            (9, "test_s10_an_integer_field_steps_by_its_own_step", "param-poles 10, Up: 12."),
+            (
+                10,
+                "test_s11_a_combo_box_and_a_table_keep_their_own_arrow_keys",
+                "Down on param-rotor-kind moves one choice and starts one compute (D08 is `double`, choice 0, so the "
+                "test presses Down: RotorType order, `verified` by reading); two patterns added, Down in the table "
+                "moves "
+                "to row 1 and changes no value.",
+            ),
+        )
+    ),
+    *(
+        Entry("REQ-N-12", test_id, "b", tests=(f"{STEP}::{old}",), new=((f"{STEP_TIMED}::{new}", markers),), spec=spec)
+        for test_id, old, new, markers, spec in (
+            (
+                "UI-46",
+                "test_s1_up_adds_one_step_and_previews_after_the_wait_without_scrolling_or_committing",
+                "test_ui46_s1_a_step_previews_once_300_ms_after_the_key",
+                ("REQ-N-12", "REQ-N-02"),
+                "S-1 holds the preview timer, so it checks the 300 ms interval and the preview on expiry but no wall "
+                "clock. New test, marker `latency` (D-074): D08 with TimedCompute as in S-1 and no hold_preview_timer; "
+                "focus param-r-inner; t0 = TimedCompute.clock.elapsed(); Up; the text is 11.97 and tab-coil's vertical "
+                "scroll value is unchanged; no compute start before t0 + 250 ms; exactly one start, at t0 + 300 ms "
+                "+- 50 ms, with r_inner 11.97, and still one at t0 + 600 ms; the committed r_inner stays 11.47 and one "
+                "undo gives SessionEmpty. Source: test_plan.md UI-46 and UX-AC-22. Tolerance +- 50 ms. Pattern: "
+                "test_n02_1_and_2_typing_previews_once_after_300_ms_and_return_commits_without_a_second_compute.",
+            ),
+            (
+                "UI-48",
+                "test_s3_a_burst_of_steps_makes_one_preview_of_the_last_value",
+                "test_ui48_s3_five_steps_at_50_ms_preview_once_with_the_last_value",
+                ("REQ-N-12", "REQ-N-02"),
+                "S-3 sends the five steps back to back and expires a held timer. New test, marker `latency`: no hold; "
+                "five Up keys with QTest.keyClick and qtbot.wait(50) between; then wait 600 ms. Expected: the text "
+                "13.97 and exactly one compute start, with r_inner 13.97. Source: test_plan.md UI-48. Tolerance: exact "
+                "count.",
+            ),
+            (
+                "UI-53",
+                "test_s8_text_that_is_no_number_stays_and_computes_nothing",
+                "test_ui53_s8_a_step_on_text_that_is_no_number_computes_nothing",
+                ("REQ-N-12", "REQ-N-02"),
+                "S-8 holds the preview timer, so a step that starts the 300 ms preview on 'abc' would pass it. New "
+                "test: "
+                "no hold; type 'abc' into param-r-inner, Up: 'abc'; clear the field, Up: ''; wait 600 ms; no compute "
+                "start. Source: test_plan.md UI-53. Tolerance: exact.",
+            ),
+            (
+                "UI-57",
+                "test_s12_the_stack_up_inputs_step_and_compute_only_after_return",
+                "test_ui57_s12_a_stack_up_step_computes_only_after_return",
+                ("REQ-N-12", "REQ-N-02"),
+                "S-12 holds the preview timer, so a stack-up step that started the preview would pass it. New test: no "
+                "hold; param-board-thickness on its tab, Up, wait 600 ms: no compute start; Return: "
+                "session.stackup_inputs().board_thickness_mm equals the value before plus 0.1 within 1e-9 mm. Source: "
+                "test_plan.md UI-57. Tolerance 1e-9 mm.",
+            ),
+        )
+    ),
+    Entry(
+        "REQ-N-21",
+        "UT-EXP-02",
+        "a",
+        tests=(
+            f"{DXF}::test_ut_exp_02_complete_dxf_counts_equal_the_layout",
+            f"{DXF}::test_ut_exp_02_outline_dxf_is_closed_outline_and_bore_only",
+            f"{DXF}::test_ut_exp_02_screws_dxf_is_circles_only",
+            f"{N21}::test_n21_dxf_writes_one_point_for_every_line_to_line_joint",
+            f"{N21}::test_n21_dxf_arc_joints_are_continuous_within_the_coincidence_bound",
+            f"{N21}::test_n21_the_arc_joint_check_reports_an_arc_end_moved_past_the_bound",
+        ),
+        rename=tuple(
+            (f"{N21}::{old}", f"test_ut_exp_02_{old.removeprefix('test_')}")
+            for old in (
+                "test_n21_dxf_writes_one_point_for_every_line_to_line_joint",
+                "test_n21_dxf_arc_joints_are_continuous_within_the_coincidence_bound",
+                "test_n21_the_arc_joint_check_reports_an_arc_end_moved_past_the_bound",
+            )
+        ),
+        add_req=tuple(
+            (f"{DXF}::{name}", "REQ-N-21")
+            for name in (
+                "test_ut_exp_02_complete_dxf_counts_equal_the_layout",
+                "test_ut_exp_02_outline_dxf_is_closed_outline_and_bore_only",
+                "test_ut_exp_02_screws_dxf_is_circles_only",
+            )
+        ),
+        spec="ezdxf audits each part with 0 errors; the outline file holds only BOARD_OUTLINE and CUTOUT entities and "
+        "every end point is shared by exactly two; the screws file holds only circles, one per hole (test_dxf.py). The "
+        "2026-10-17 revision: every ARC joint of the complete file lies within COINCIDENCE_MM, with at least one ARC "
+        "joint per example; a 2e-6 mm shift of one ARC end is reported and 0.5e-6 mm is not; a LINE-only joint is "
+        "one written point (test_n21_joint_continuity.py). Two of the renamed tests are cites of the U-V18 REQ-N-21 "
+        "ruling (re-pinned in v19).",
+    ),
+    Entry(
+        "REQ-N-27",
+        "AX-01",
+        "a",
+        tests=(
+            f"{CONTRAST}::test_ax01_ratio_matches_known_wcag_values",
+            f"{CONTRAST}::test_ax01_ax09_every_pair_of_both_shipped_themes_passes",
+            f"{CONTRAST}::test_ax01_a_too_light_hint_text_fails_the_check",
+        ),
+        add_req=tuple(
+            (f"{CONTRAST}::{name}", "REQ-N-27")
+            for name in (
+                "test_ax01_ratio_matches_known_wcag_values",
+                "test_ax01_ax09_every_pair_of_both_shipped_themes_passes",
+                "test_ax01_a_too_light_hint_text_fails_the_check",
+            )
+        ),
+        spec="tools/contrast_check.py computes WCAG ratios from the theme tokens: 21:1 and 4.54:1 on known pairs, 0 "
+        "failures over both shipped themes, and a planted text-3 of #aaaaaa fails. That the tool's pair list holds "
+        "every "
+        "pair used for text and components is the tool's claim, `inferred`; U-V19 did not re-derive it.",
+    ),
+    Entry(
+        "REQ-T-15",
+        "PR-12",
+        "b",
+        tests=(f"{PIPE}::test_pr_12_badges_do_not_depend_on_provenance_and_reentry_changes_nothing",),
+        new=(
+            (
+                f"{PIPE}::test_pr_12_reentry_keeps_badges_tag_and_hash_and_setting_back_restores_them",
+                ("REQ-T-15", "REQ-T-03"),
+            ),
+        ),
+        spec="The existing PR-12 test re-enters /rotor/poles only and asserts hash, provenance and badges, not the "
+        "'n assumed inputs' tag, not 'any input', and not the set-back clause. New Hypothesis test over "
+        "spiral_designs() and one numeric FIELDS pointer drawn per example: (1) re-entering the current value leaves "
+        "design_hash, derive_provenance and, for every result of analysis.to_json(), the status and the "
+        "Traceable.assumed_inputs items unchanged; (2) changing that input to another valid value and then back to the "
+        "example's value: the changed design's hash differs from the example's, the restored design's hash equals it, "
+        "the pointer is back in assumed_inputs of a result that lists it in the example, and every status equals the "
+        "example's. Source: test_plan_draft.md PR-12 (D-007, ADR-0003 decisions 3-4, D-023). Tolerance: exact.",
+    ),
+)
+
+LAYER_CUE = f"{UI}/qt_shell/test_layer_cue.py"
+
+# Tests that U-V19 items 1 and 3 specify outside the planned-ID map: name -> (cite, REQ markers, spec).
+EXTRA: dict[str, tuple[str, tuple[str, ...], str]] = {
+    "T05": (
+        f"{U}/results/test_record_passed_tests_gate.py::test_t05_stderr_names_every_refused_equation_with_its_passed_tests",
+        ("REQ-T-05",),
+        "REQ-T-05 'names on stderr every equation of status verified for which Registry.tests_passed is false'. Two "
+        "cases, each through record_main --profile release on a fixture report as the module's release_report "
+        "builds it. (1) A report in which no registry test passed (as test_tr05_a_report_without_eqt_keys...): the "
+        "set of EQ-nn IDs on stderr equals the set of verified equations of load_registry(), 10 on 0.0.4 (EQ-01, "
+        "EQ-04, EQ-09, EQ-10, EQ-13, EQ-21, EQ-22, EQ-23, EQ-24, EQ-26), each followed by '(passed: none)'. (2) A "
+        "report in which every verified equation with two or more linked tests misses its last one (skipped) and "
+        "every other linked test passed: the EQ set on stderr equals exactly those equations, 6 on 0.0.4 (EQ-01, "
+        "EQ-09, EQ-10, EQ-13, EQ-23, EQ-24), and the EQT IDs named with each equal its linked tests minus the "
+        "skipped one. Expected values derive from the packaged registry at run time. Tolerance: exact sets. The "
+        "test must fail on the unproven[:4] mutant of u_v19_t05_mutants.py, which all 13 REQ-T-05 tests of 0.0.4 pass.",
+    ),
+    "F05": (
+        f"{EVERY}::test_f05_one_via_per_transition_is_analysed_on_every_topology",
+        ("REQ-F-05",),
+        "REQ-F-05 'one via per transition is built and analysed'. For spiral_12c16p_default, serpentine_16p_example "
+        "and wave_16p_example (vias_per_transition 1), compute(design, provenance of the example) returns an outcome "
+        "with no ERROR issue whose analysis is not None and whose resistance_phase_20c_ohm.value is finite and above "
+        "0. Tolerance: exact predicates.",
+    ),
+    "F13_VIEW": (
+        f"{LAYER_CUE}::test_ui03_lower_layer_copper_the_cue_paints_keeps_its_trace_width_at_200x",
+        ("REQ-F-13",),
+        "A 1280 x 800 GeometryView of D08 (spiral_12c10p_d08, the dark colour run of RUNS), fit_view(), then "
+        "zoom_by(1.25) forty times: zoom_factor() equals 200 (rel 1e-9). Centre on leg 24 (L2, a 0.6 mm Line under "
+        "ring 32 of L1) at the clear point of UI-58 (from CROSSING_MM outward along the leg to radius "
+        "CROSSING_CLEAR_R_MM 49.36 mm, as _crossing_measures computes it). Grab the viewport and sample the contrast "
+        "to board-fill along the leg's normal at quarter-pixel steps over +-420 px; span = (last - first + 1) / 4 of "
+        "the samples above 1.3:1 (UI-58's rule). Expected: span = 0.6 mm x view.transform().m11() (721.82 px at "
+        "1203.03 px/mm). Source: REQ-F-13 'zoom 0.1x to 200x keeps stroke widths' and design_spec.md 3.3.1 (the "
+        "outline lies inside the true edge). Tolerance +-1.5 px; U-V19 measured 723.0 px (+1.18, u_v19_f13_width.py). "
+        "UI-58 asserts only span <= true + 1.5 px at 24 px/mm.",
+    ),
+    "F13_CUE": (
+        f"{LAYER_CUE}::test_ui03_the_cue_strokes_lower_copper_at_its_trace_width_at_0_1x_and_200x",
+        ("REQ-F-13",),
+        "At 0.1x a lower-layer trace is 0.36 px wide and every D08 trace has copper within a pixel, so the view cannot "
+        "isolate one; this case paints the cue item itself. Scale s = factor x the fit scale of the view of F13_VIEW "
+        "(6.0152 px/mm), factor 0.1 and 200, parametrised. A LayerCueItem([Level(casing=strokes, outlines=((ink, "
+        "strokes),))], board_fill) with strokes = Strokes.of([Part.of(0.6, centre)]), centre a straight line 400 px "
+        "long rising 3 px over its length, ink #c43b10 and the dark board-fill, in a QGraphicsScene rendered "
+        "(QGraphicsScene.render, antialiased) into a board-fill QImage at exactly s px/mm over the middle half of the "
+        "line. Per pixel the ink fraction is (pixel - fill) . (ink - fill) / |ink - fill|^2 in 8-bit RGB. Expected at "
+        "0.1x (below SOLID_BELOW_PX, so solid): the mean over columns of the column sums = 0.6 x s = 0.361 px, "
+        "tolerance +-0.04 px (U-V19 measured 0.355 to 0.378 over five sub-pixel offsets). Expected at 200x: the "
+        "middle column's span of fractions above 0.1 = 0.6 x s = 721.8 px, tolerance +-1.5 px (measured 722 and "
+        "723). Source as F13_VIEW.",
+    ),
+}
