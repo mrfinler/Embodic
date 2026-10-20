@@ -10,6 +10,7 @@ labels are placed again after every zoom, pan or resize step, so they never over
 import math
 from collections.abc import Iterator
 from contextlib import contextmanager
+from typing import NamedTuple
 
 from PySide6.QtCore import QPointF, QRect, QRectF, Qt, Signal
 from PySide6.QtGui import (
@@ -42,6 +43,7 @@ from PySide6.QtWidgets import (
 from embodic.geometry.labels import Box, PlacedLabel, Viewport
 from embodic.geometry.layout import Layout, Pad
 from embodic.geometry.marks import CoilMark
+from embodic.geometry.paths import CopperPath
 from embodic.geometry.primitives import Line, Primitive
 from embodic.io.exporters import pad_outline
 from embodic.model.vocabulary import Phase
@@ -56,7 +58,7 @@ from embodic.ui.viewmodels.outcome import (
     phases_drawn,
     place_in_view,
 )
-from embodic.ui.views.layer_cue import CasingItem, OutlineItem, Part, Strokes
+from embodic.ui.views.layer_cue import LayerCueItem, Level, Part, Strokes
 
 ZOOM_MIN, ZOOM_MAX = 0.1, 200.0  # relative to the fitted view (UI-03)
 ZOOM_STEP = 1.25
@@ -77,7 +79,7 @@ STAMP_PAD_PX = 4
 STAMP_PX = 12
 DATA_LAYER = 0  # QGraphicsItem.data key: copper layer name ("" for board items)
 DATA_PHASE = 1  # QGraphicsItem.data key: phase letter or ""
-DATA_KIND = 2  # QGraphicsItem.data key: "copper", "copper-outline", "copper-casing", "eye", "hatch", "label",
+DATA_KIND = 2  # QGraphicsItem.data key: "copper", "copper-cue", "eye", "hatch", "label",
 # "label-halo", "leader", "via", "pad", "drill", "outline", "hole"
 LABEL_KINDS = frozenset({"label", "label-halo", "leader"})
 
@@ -94,6 +96,15 @@ def primitive_path(p: Primitive) -> QPainterPath:
     rect = QRectF(p.cx_mm - p.r_mm, -p.cy_mm - p.r_mm, 2 * p.r_mm, 2 * p.r_mm)
     path.arcTo(rect, math.degrees(p.start_rad), math.degrees(p.sweep_rad))
     return path
+
+
+class CopperEntry(NamedTuple):
+    """One primitive of a copper path with its centre line and the marks of its board (hover text)."""
+
+    path: CopperPath
+    prim: Primitive
+    part: Part
+    marks: BoardMarks
 
 
 def _disc(x_mm: float, y_mm: float, r_mm: float) -> QRectF:
@@ -264,13 +275,14 @@ class GeometryView(QGraphicsView):
         shown = self._shown()
         for board, _ in shown:
             self._draw_board(board)
-        visible = self._visible_layers()
-        cue = len(visible) >= 2
-        for layer in reversed(visible):
-            for board, marks in shown:
-                self._draw_copper(
-                    board, marks, layer, cased=cue and layer != visible[-1], outlined=cue and layer != visible[0]
-                )
+        layers = [(layer, self._copper_entries(shown, layer)) for layer in reversed(self._visible_layers())]
+        if len(layers) >= 2:
+            for layer, entries in layers[:-1]:
+                self._add_copper(layer, entries, painted=False)
+            self._add_cue(layers)
+        for layer, entries in layers[-1:]:
+            self._add_copper(layer, entries, painted=True)
+        visible = [layer for layer, _ in reversed(layers)]
         for board, _ in shown:
             self._draw_lands(board, visible)
         for board, marks in shown:
@@ -303,40 +315,52 @@ class GeometryView(QGraphicsView):
             return []
         return [layer for layer in self._geometry.layers if layer not in self._hidden]
 
-    def _draw_copper(self, board: Layout, marks: BoardMarks, layer: str, *, cased: bool, outlined: bool) -> None:
-        """Draw one layer of one board: its casing, then its copper as solid strokes or, below the top layer, outlines.
-
-        The centre lines are built here, once per view change. The outlined layer keeps its per-primitive items only
-        to carry the hover text and the tags, and they paint nothing; the outline items draw (`layer_cue`).
-        """
-        assert self._tokens is not None
-        board_fill = QColor(self._tokens.colours["board-fill"])
-        entries = [
-            (path, prim, Part(prim.width_mm, centre, centre.boundingRect()))
+    def _copper_entries(self, shown: list[tuple[Layout, BoardMarks]], layer: str) -> list[CopperEntry]:
+        """Return the primitives of ``layer`` on every board, each with its centre line, built once per view change."""
+        return [
+            CopperEntry(path, prim, Part.of(prim.width_mm, primitive_path(prim)), marks)
+            for board, marks in shown
             for path in board.paths
             if path.layer == layer
             for prim in path.primitives
-            for centre in (primitive_path(prim),)
         ]
-        if cased:
-            casing = CasingItem(Strokes.of(part for _, _, part in entries), board_fill)
-            self._add_cue_item(casing, "copper-casing", layer)
-        inks: dict[Phase | None, list[Part]] = {}
-        for path, prim, part in entries:
-            pen = QPen(self._copper_colour(path.phase), prim.width_mm, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
-            item = self.scene().addPath(part.centre, pen)
-            item.setToolTip(marks.label_of_path.get(path.id, ""))
-            self._tag(item, "copper", layer, path.phase)
-            if outlined:
-                item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemHasNoContents)
-                inks.setdefault(path.phase, []).append(part)
-        for phase, parts in inks.items():
-            outline = OutlineItem(Strokes.of(parts), self._copper_colour(phase), board_fill)
-            self._add_cue_item(outline, "copper-outline", layer, phase)
 
-    def _add_cue_item(self, item: QGraphicsItem, kind: str, layer: str, phase: Phase | None = None) -> None:
-        self.scene().addItem(item)
-        self._tag(item, kind, layer, phase)
+    def _add_copper(self, layer: str, entries: list[CopperEntry], *, painted: bool) -> None:
+        """Add one item per primitive of ``layer``: its solid stroke, or only its hover text and tags if not painted.
+
+        A layer below the top one is drawn by the cue item (`layer_cue`), so its items paint nothing.
+        """
+        for entry in entries:
+            colour, width = self._copper_colour(entry.path.phase), entry.prim.width_mm
+            pen = QPen(colour, width, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
+            item = self.scene().addPath(entry.part.centre, pen)
+            item.setToolTip(entry.marks.label_of_path.get(entry.path.id, ""))
+            self._tag(item, "copper", layer, entry.path.phase)
+            if not painted:
+                item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemHasNoContents)
+
+    def _add_cue(self, layers: list[tuple[str, list[CopperEntry]]]) -> None:
+        """Add the casings and outlines of ``layers``, bottom layer first, as one item (design_spec.md 3.3.1).
+
+        Every layer but the bottom one has a casing; every layer but the top one is drawn as an outline per phase.
+        """
+        assert self._tokens is not None
+        board_fill = QColor(self._tokens.colours["board-fill"])
+        levels = []
+        for rank, (_, entries) in enumerate(layers):
+            if not entries:
+                continue
+            casing = Strokes.of(entry.part for entry in entries) if rank > 0 else None
+            inks: dict[Phase | None, list[Part]] = {}
+            if rank < len(layers) - 1:
+                for entry in entries:
+                    inks.setdefault(entry.path.phase, []).append(entry.part)
+            outlines = tuple((self._copper_colour(phase), Strokes.of(parts)) for phase, parts in inks.items())
+            levels.append(Level(casing, outlines))
+        if levels:
+            cue = LayerCueItem(levels, board_fill)
+            self.scene().addItem(cue)
+            self._tag(cue, "copper-cue")
 
     def _draw_lands(self, board: Layout, visible: list[str]) -> None:
         """Draw the vias and pads that land on a visible layer, once each and after all copper (design_spec.md 3.3.1).

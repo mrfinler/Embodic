@@ -13,7 +13,7 @@ import numpy as np
 import pytest
 from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import QColor, QImage, QPainter, QPainterPath, QPainterPathStroker, QTransform
-from PySide6.QtWidgets import QApplication, QGraphicsEllipseItem, QGraphicsPathItem
+from PySide6.QtWidgets import QApplication, QGraphicsEllipseItem, QGraphicsPathItem, QGraphicsView
 
 from embodic.api import compute_project
 from embodic.geometry.layout import Pad
@@ -22,7 +22,9 @@ from embodic.io.exporters import pad_outline
 from embodic.ui.theme import load_theme
 from embodic.ui.viewmodels.appearance import PhaseRenderMode
 from embodic.ui.viewmodels.outcome import eyes_shown, geometry_scene
+from embodic.ui.viewmodels.results import DrcRow
 from embodic.ui.views import layer_cue
+from embodic.ui.views.checks_view import locate_on_canvas
 from embodic.ui.views.geometry_view import DATA_KIND, GeometryView, primitive_path
 
 EXAMPLES = Path(__file__).resolve().parents[3] / "resources" / "examples"
@@ -31,7 +33,7 @@ RUNS = {
     "dark greyscale": ("dark", PhaseRenderMode.GREYSCALE_HATCH, "#e0e0e0"),
     "light greyscale": ("light", PhaseRenderMode.GREYSCALE_HATCH, "#262626"),
 }
-COPPER_KINDS = ("copper", "copper-outline", "copper-casing")
+COPPER_KINDS = ("copper", "copper-cue")
 LAND_KINDS = ("via", "pad", "drill")
 CROSSING_MM, CROSSING_CLEAR_R_MM = (-11.01, 47.19), 49.36
 
@@ -72,11 +74,16 @@ def _show(scene, run, size_px, hidden=frozenset()):
 def _render(scene, run, centre_mm, px_per_mm, size_px, hidden=frozenset()):
     """Return (view, image) at a fixed scale around ``centre_mm``, labels placed. The caller closes the view."""
     view = _show(scene, run, size_px, hidden)
+    return view, _place(view, centre_mm, px_per_mm)
+
+
+def _place(view, centre_mm, px_per_mm) -> QImage:
+    """Set the view to a fixed scale around ``centre_mm``, place the labels and return what it draws."""
     view.setTransform(QTransform.fromScale(px_per_mm, px_per_mm))
     view.centerOn(QPointF(centre_mm[0], -centre_mm[1]))
     view.place_labels()
     QApplication.processEvents()
-    return view, view.viewport().grab().toImage().convertToFormat(QImage.Format.Format_RGB32)
+    return view.viewport().grab().toImage().convertToFormat(QImage.Format.Format_RGB32)
 
 
 def _board_fill(run) -> str:
@@ -430,11 +437,24 @@ def test_ui61_lands_are_drawn_after_all_copper_its_outline_and_its_casing(d08, h
 @pytest.mark.req("REQ-F-13", "REQ-N-02")
 def test_ui58_dimmed_outline_stays_empty_inside(d08):
     """Catches an outline whose inside shows a ghost of the ink once the DRC locate dims the copper to 35 %."""
-    view, _ = _render(d08, "dark colour", CROSSING_MM, 24.0, (420, 300))
+    view, image = _render(d08, "dark colour", CROSSING_MM, 24.0, (420, 300))
     try:
-        for item in _items(view, "copper", "copper-outline"):
-            item.setOpacity(0.35)
-        dimmed = view.viewport().grab().toImage().convertToFormat(QImage.Format.Format_RGB32)
+        row = DrcRow(
+            number=1,
+            board=0,
+            severity="error",
+            rule_code="X",
+            message="",
+            clearance_text="",
+            required_text="",
+            layer_text="",
+            at_mm=(1000.0, 1000.0),
+        )
+        locate_on_canvas(view, row, load_theme("dark"))
+        for marker in _items(view, "drc-marker"):
+            view.scene().removeItem(marker)
+        dimmed = _place(view, CROSSING_MM, 24.0)
+        assert dimmed != image, "the locate dims the ink"
         assert _crossing_measures(view, dimmed, d08, "dark colour")["centre"] == _board_fill("dark colour")
     finally:
         view.close()
@@ -446,8 +466,9 @@ def test_ui58_a_repaint_without_a_view_change_never_rebuilds_the_cue(d08, serpen
     """Catches a zoom, pan, fit or resize step that rebuilds the cue geometry: it runs on the GUI thread (DEF-W-12)."""
     scene = d08 if which == "d08" else serpentine
     built = []
-    real = layer_cue.Strokes.of
-    monkeypatch.setattr(layer_cue.Strokes, "of", classmethod(lambda cls, parts: built.append(1) or real(parts)))
+    real_strokes, real_part = layer_cue.Strokes.of, layer_cue.Part.of
+    monkeypatch.setattr(layer_cue.Strokes, "of", classmethod(lambda cls, parts: built.append(1) or real_strokes(parts)))
+    monkeypatch.setattr(layer_cue.Part, "of", classmethod(lambda cls, *args: built.append(1) or real_part(*args)))
     view = _show(scene, "dark colour", (900, 700))
     try:
         assert built, "the first draw builds the cue"
@@ -465,5 +486,70 @@ def test_ui58_a_repaint_without_a_view_change_never_rebuilds_the_cue(d08, serpen
         assert built == [] and set(cue) <= set(view.scene().items())
         _draw(view, scene, "dark greyscale")
         assert built, "a change of render mode does rebuild it"
+    finally:
+        view.close()
+
+
+def _rgb(image: QImage) -> np.ndarray:
+    image = image.convertToFormat(QImage.Format.Format_RGB32)
+    raw = np.frombuffer(image.constBits(), dtype=np.uint8).reshape(image.height(), image.bytesPerLine() // 4, 4)
+    return raw[:, : image.width(), :3].astype(int)
+
+
+def _move(view) -> None:
+    """Zoom in twice and pan right three times and down once, as a user drags, about the view centre."""
+    view.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorViewCenter)
+    view.zoom_by(1.7)
+    view.zoom_by(1.25)
+    QApplication.processEvents()
+    for _ in range(3):
+        view.horizontalScrollBar().setValue(view.horizontalScrollBar().value() + 70)
+        QApplication.processEvents()
+    view.verticalScrollBar().setValue(view.verticalScrollBar().value() - 55)
+    QApplication.processEvents()
+
+
+@pytest.mark.req("REQ-F-13", "REQ-N-02")
+@pytest.mark.parametrize("which", ["d08", "serpentine"])
+def test_ui58_the_cached_cue_draws_what_a_direct_paint_draws_after_zoom_and_pan(d08, serpentine, which):
+    """Catches a cache that leaves a seam, a stale strip or a shifted layer after a pan or zoom step (DEF-W-12)."""
+    scene = d08 if which == "d08" else serpentine
+    cached, direct = _show(scene, "dark colour", (900, 700)), _show(scene, "dark colour", (900, 700))
+    try:
+        for item in _items(direct, "copper-cue"):
+            item.setCacheMode(item.CacheMode.NoCache)
+        assert all(i.cacheMode() == i.CacheMode.DeviceCoordinateCache for i in _items(cached, "copper-cue"))
+        _move(cached)
+        _move(direct)
+        gap = np.abs(_rgb(cached.viewport().grab().toImage()) - _rgb(direct.viewport().grab().toImage()))
+        assert gap.max() <= 4, f"{int((gap.max(axis=2) > 4).sum())} pixels differ by more than rounding"
+    finally:
+        cached.close()
+        direct.close()
+
+
+@pytest.mark.req("REQ-F-13", "REQ-N-02")
+def test_ui58_a_repaint_without_a_view_change_paints_no_cue_and_a_pan_only_its_strip(serpentine, monkeypatch):
+    """Catches a cue that is painted again on an idle repaint, or over the whole view on a pan step (DEF-W-12)."""
+    painted = []
+    real = layer_cue.LayerCueItem.paint
+
+    def paint(self, painter, option, widget=None):
+        painted.append(option.exposedRect.width() * painter.worldTransform().m11())
+        real(self, painter, option, widget)
+
+    monkeypatch.setattr(layer_cue.LayerCueItem, "paint", paint)
+    view = _show(serpentine, "dark colour", (2400, 1500))  # a cache above Qt's default 10 MB must still be kept
+    try:
+        view.zoom_by(4)
+        QApplication.processEvents()
+        view.viewport().repaint()
+        assert painted, "the first paint draws the cue"
+        painted.clear()
+        view.viewport().repaint()
+        assert painted == []
+        view.horizontalScrollBar().setValue(view.horizontalScrollBar().value() + 100)
+        QApplication.processEvents()
+        assert painted and max(painted) < 0.5 * view.viewport().width()
     finally:
         view.close()

@@ -36,6 +36,7 @@ from embodic.ui.strings import text
 from embodic.ui.theme import ThemeTokens
 from embodic.ui.viewmodels.results import DrcRow, DrcTable
 from embodic.ui.views.geometry_view import DATA_KIND, GeometryView
+from embodic.ui.views.layer_cue import LayerCueItem
 from embodic.ui.views.results_view import FocusRoomDelegate
 from embodic.ui.views.style import themed_icon
 from embodic.ui.views.widgets import set_style_property
@@ -230,8 +231,10 @@ def locate_on_canvas(canvas: GeometryView, row: DrcRow, tokens: ThemeTokens) -> 
         kind = item.data(DATA_KIND)
         if kind == "drc-marker":
             scene.removeItem(item)
-        elif kind in ("copper", "copper-outline"):
+        elif kind == "copper":
             item.setOpacity(LOCATED_COPPER_OPACITY)
+        elif isinstance(item, LayerCueItem):
+            item.set_ink_opacity(LOCATED_COPPER_OPACITY)
     x, y = row.at_mm[0], -row.at_mm[1]
     ring = QPainterPath()
     ring.addEllipse(QRectF(-MARKER_RADIUS_PX, -MARKER_RADIUS_PX, 2 * MARKER_RADIUS_PX, 2 * MARKER_RADIUS_PX))

@@ -9,10 +9,12 @@ none:
 - relayer: the same view hides L6 and shows it again, the grab included.
 - zoom step, pan step: the serpentine view zooms by 1.25 and back, or pans by 100 px at 4x zoom, and the events the
   step posts run, its repaint and the label placement included. No view change, so a step rebuilds nothing.
+- idle repaint: the same view, at fit zoom and at 4x, repaints its whole viewport with nothing changed, after one
+  repaint that is not timed.
 
 Not a test. From the root of the tree under test, with the project's interpreter:
 
-    PYTHONPATH=src QT_QPA_PLATFORM=offscreen python tests/ui/qt_shell/layer_cue_time.py [--runs 5]
+    PYTHONPATH=src QT_QPA_PLATFORM=offscreen python tests/ui/qt_shell/layer_cue_time.py [--runs 5] [--cpu]
 """
 
 import argparse
@@ -32,12 +34,25 @@ from embodic.ui.viewmodels.outcome import geometry_scene
 from embodic.ui.views.geometry_view import GeometryView
 
 EXAMPLES = Path("resources/examples")
+_now = time.perf_counter  # wall time; ``--cpu`` swaps in the process's CPU time, which a busy host does not stretch
 SIZE = (1280, 800)
 
 
 def _grab(view: GeometryView) -> None:
     QApplication.processEvents()
     view.viewport().grab()
+
+
+def _idle(view: GeometryView, runs: int) -> list[float]:
+    """Time ``runs`` repaints of the whole viewport with nothing changed, after one that is not timed."""
+    QApplication.processEvents()
+    view.viewport().repaint()
+    times = []
+    for _ in range(runs):
+        started = _now()
+        view.viewport().repaint()
+        times.append(_now() - started)
+    return times
 
 
 def _median(values: list[float]) -> str:
@@ -49,7 +64,12 @@ def main() -> None:
     """Time the open of D08 and the redraws of the serpentine example, and print the summary."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--runs", type=int, default=5)
-    runs = parser.parse_args().runs
+    parser.add_argument("--cpu", action="store_true", help="time the process's CPU time, not the wall clock")
+    args = parser.parse_args()
+    runs = args.runs
+    if args.cpu:
+        global _now
+        _now = time.process_time
     app = QApplication.instance() or QApplication([])
     tokens = load_theme("dark")
     d08 = geometry_scene(compute_project(EXAMPLES / "spiral_12c10p_d08.embodic.json"))
@@ -60,10 +80,10 @@ def main() -> None:
         view = GeometryView()
         view.resize(*SIZE)
         view.show()
-        started = time.perf_counter()
+        started = _now()
         view.show_geometry(d08, tokens, PhaseRenderMode.COLOUR, none)
         _grab(view)
-        opens.append(time.perf_counter() - started)
+        opens.append(_now() - started)
         view.close()
         view.deleteLater()
         app.processEvents()
@@ -75,35 +95,37 @@ def main() -> None:
     modes = (PhaseRenderMode.GREYSCALE_HATCH, PhaseRenderMode.COLOUR)
     rebuilds, paints, relayers = [], [], []
     for k in range(runs):
-        started = time.perf_counter()
+        started = _now()
         view.show_geometry(serpentine, tokens, modes[k % 2], none)
-        middle = time.perf_counter()
+        middle = _now()
         _grab(view)
         rebuilds.append(middle - started)
-        paints.append(time.perf_counter() - middle)
+        paints.append(_now() - middle)
         top = serpentine.layers[-1]
-        started = time.perf_counter()
+        started = _now()
         view.show_geometry(serpentine, tokens, modes[k % 2], frozenset({top}))
         _grab(view)
         view.show_geometry(serpentine, tokens, modes[k % 2], none)
         _grab(view)
-        relayers.append(time.perf_counter() - started)
+        relayers.append(_now() - started)
     zooms, pans = [], []
     view.show_geometry(serpentine, tokens, PhaseRenderMode.COLOUR, none)
     _grab(view)
+    idle_fit = _idle(view, runs)
     for k in range(runs):
-        started = time.perf_counter()
+        started = _now()
         view.zoom_by(1.25 if k % 2 == 0 else 0.8)
         app.processEvents()
-        zooms.append(time.perf_counter() - started)
+        zooms.append(_now() - started)
     view.zoom_by(4)
     app.processEvents()
     bar = view.horizontalScrollBar()
     for k in range(runs):
-        started = time.perf_counter()
+        started = _now()
         bar.setValue(bar.value() + (100 if k % 2 == 0 else -100))
         app.processEvents()
-        pans.append(time.perf_counter() - started)
+        pans.append(_now() - started)
+    idle_zoomed = _idle(view, runs)
     redraws = [a + b for a, b in zip(rebuilds, paints, strict=True)]
     print(f"== D08 open ({runs} runs): {_median(opens)}")
     print(f"== serpentine redraw ({runs} runs): {_median(redraws)}")
@@ -112,6 +134,8 @@ def main() -> None:
     print(f"== serpentine hide L6 and show it again ({runs} runs, two redraws): {_median(relayers)}")
     print(f"== serpentine zoom step ({runs} runs): {_median(zooms)}")
     print(f"== serpentine pan step at 4x ({runs} runs): {_median(pans)}")
+    print(f"== serpentine idle repaint at fit ({runs} runs): {_median(idle_fit)}")
+    print(f"== serpentine idle repaint at 4x ({runs} runs): {_median(idle_zoomed)}")
 
 
 if __name__ == "__main__":
