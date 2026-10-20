@@ -117,6 +117,7 @@ def test_cf04_track_resistance_at_20_and_60_degc() -> None:
     assert r60[0] == pytest.approx(1.1466255862068966, rel=1e-12, abs=0.0)
 
 
+@pytest.mark.req("REQ-F-05")
 @pytest.mark.eqt("EQT-11-CF04")
 def test_cf04_and_ut_phy_11_via_barrel_resistance() -> None:
     """CF-04 / UT-PHY-11 (EQ-11): drill 0.3 mm, plating 25 um.
