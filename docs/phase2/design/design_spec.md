@@ -4,7 +4,8 @@ Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5
 
 Date 2026-10-04, revised 2026-10-09 (U-S4d: sections 3.3, 3.4, 5 and 8 follow the rulings of `m4_review.md`),
 revised 2026-10-09 (U-S4e: sections 3.3, 4 and 5 follow rulings b, e, f and h of `m4_review_2.md`),
-revised 2026-10-12 (U-S4h: sections 3.1, 5 and 8 follow rulings m and n of `m4_review_2.md` section 8).
+revised 2026-10-12 (U-S4h: sections 3.1, 5 and 8 follow rulings m and n of `m4_review_2.md` section 8),
+revised 2026-10-20 (U-S16: section 3.3.1 adds the layer cue and the land shapes, DEF-UV16-02 and DEF-UV16-03).
 Supersedes `docs/phase1/design/design_spec_draft.md` for everything Phase 2 builds. Companion files:
 
 - `screens.md` gives every screen with its widget table and state rules.
@@ -128,7 +129,7 @@ mode, not only in greyscale mode.
 | Coil-eye fill (inside the innermost turn only) | solid tint 10 % | 45 degree hatch | 135 degree hatch | Geometry view, SVG and PDF, both modes, clipped to the eye disc. Hatch never crosses copper, so it cannot be read as a trace (Phase 1 finding). On screen the hatch is a pattern in screen space (about 4 px pitch) so it shows at fit zoom; in files the pitch is 0.4 mm. |
 | Chart line style | solid 2 px | dashed 6/3 | dotted 1.5/3 | Back-EMF, torque-speed, compare charts |
 | Legend | drawing: solid copper bar in the phase ink, eye swatch, "Phase A"; chart: line sample, "Phase A" | same | same | Always present for two or more phases, on the canvas and in every drawing file. A drawing legend never shows a dashed line, because copper is never dashed. |
-| Copper | solid | solid | solid | Copper is never dashed: a dashed trace reads as an open circuit (assumption). |
+| Copper | solid | solid | solid | Copper is never dashed: a dashed trace reads as an open circuit (assumption). While two or more copper layers are visible, the layers below the top visible layer are drawn as outlines (section 3.3.1). An outline is a continuous line, never a dash. |
 
 Machine-readable form: `tokens.json` > `phase_style`.
 
@@ -153,6 +154,41 @@ Label placement additions (U-S4e ruling h, `assumption` until U-M4c-4 tests them
 - The canvas keeps fit zoom through a resize, a splitter drag and a tab switch until the user zooms or pans; Fit (F)
   returns to it. On main fd190c1 a resize after load left the D08 ring 40 px wide in a 598 x 124 px canvas
   (`verified`, `tools/design/layout_probe.py --fonts --shots`).
+
+### 3.3.1 Copper layers and lands in the geometry view (U-S16, DEF-UV16-02, DEF-UV16-03)
+
+The user read D08 as shorted because the view drew L2 and then L1, both opaque, in one ink per phase. Copper on
+different layers looked like one piece, although every same-layer gap is at the 0.8 mm rule (U-V16, `verified` there).
+The rule below makes the layer of each piece of copper visible. The comparison of four candidates, the renders and the
+measurements are in `docs/phase3/design/u_s16_layer_cue.md`.
+
+Layer cue. It applies while two or more copper layers are visible, on every board the view draws. With one visible
+layer the view draws that layer solid, as before.
+
+| Rule | What the view draws |
+|---|---|
+| Order | The visible copper layers in reverse stack order, so the top visible layer is drawn last. The top visible layer is the first visible layer in stack order (L1 unless it is hidden). |
+| Top visible layer | Solid, at true width, in the phase ink (section 3.2, or the grey of section 3.4). No alpha. |
+| Every visible layer below it | An outline of the copper shape in the phase ink, 1.5 px wide, drawn inside the true edge, so the drawn copper is never wider than the true copper. The inside of the shape is empty: the board and the layers below show through. A shape narrower than 4 px on screen therefore looks solid. The outline follows the union of the layer's copper of one ink, so copper that joins on that layer shows one edge and no seam. |
+| Casing | Before each visible layer except the bottom one, a band in `board-fill` 2 px wide on screen around that layer's copper, over the layers already drawn. Copper of a lower layer therefore stops 2 px short of the copper of every layer above it, at any zoom. |
+| Widths | The outline, the casing and the 4 px limit are screen pixels at every zoom, like the eye hatch (section 3.3). Copper widths stay model millimetres (UI-03). |
+| Colour | The cue adds no colour and changes no lightness. It uses only the phase ink and `board-fill`, so the phase colours, the greyscale ladder of section 3.4 and the deutan lightness gap of section 3.2 are unchanged. Windows high contrast uses the greyscale ladder (`fix_wave_f1.md` (b)), and the cue works there unchanged. |
+| Lands | Vias and pads join layers, so the view draws them after all copper, once per land that spans a visible layer, solid, in the colours they have now (`text-3` via, `text-2` pad). The cue never outlines or cases a land. |
+| Legend | While the cue applies, the canvas legend adds two rows under the phase rows. Row 1 is a solid bar 20 x 6 px in `text-1` and the text "{layer} on top", where {layer} is the name of the top visible layer. Row 2 is the same bar as a 1.5 px `text-1` outline with an empty inside and the text "Layers below". The rows use `text-1` because they describe layers, not phases. The legend panel grows to fit them. |
+| Exports | Unchanged. SVG, DXF and PDF draw each layer separately. |
+
+Why this rule (`verified` by the U-S16 renders, `docs/phase3/design/checks/u_s16/`). Copper on two layers then differs in
+form, solid against empty, and a gap separates them. Neither cue depends on hue or lightness, so it reads the same in
+colour, in greyscale and for colour-blind readers. The top layer keeps its true width and its own gaps stay clear: the
+casing removes the lower copper that filled the 0.8 mm channels of L1 in the user's view. To check a lower layer at
+true width, the user solos it with `[` and `]` (section 10) or hides the layers above it. Whether the user reads the
+drawing correctly with the cue is `not tested` with users.
+
+Lands (DEF-UV16-03). A pad is drawn as the exporters draw it (`dxf_writer.py` l.139 to 142, `svg_writer.py` l.156 to
+159, `report.py` l.255 to 258, `verified` by reading). A pad with `shape` "round" is a circle of diameter `width_mm`.
+A pad with `shape` "square", "rect" or "oblong" is the closed shape that `pad_outline(pad)` returns
+(`io/exporters.py` l.215), filled as the SVG writer fills it. `pad_outline` already applies `rotation_rad`. A pad with `drill_mm` greater than 0 shows its drill as
+a `canvas` disc of diameter `drill_mm` on top, as all three exporters do. Vias keep their pad disc.
 
 ### 3.4 Accessibility mode (greyscale and hatching)
 
