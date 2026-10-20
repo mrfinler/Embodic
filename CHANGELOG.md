@@ -6,7 +6,8 @@ All notable changes to embodic are listed here. Versions follow semantic version
 
 This release carries wave F13 (D-078, D-079). Version 0.0.3 was built and tested but not released (D-078f). Its
 changes, listed under 0.0.3 below, ship in this release. A DEF identifier names a defect row of
-`tests/independent/m7/records/defects.md`.
+`tests/independent/m7/records/defects.md`. Two entries below were corrected on main after the tag (D-083); the tag
+`v0.0.4` keeps the first text.
 
 ### Fixed
 
@@ -15,14 +16,17 @@ changes, listed under 0.0.3 below, ship in this release. A DEF identifier names 
   other turns: a leg 0.700 mm from the next turn passed at a 0.8 mm rule. A path end is now exempt only from the
   primitive it lands on, with that primitive's fillets and tapers, and an end on an end is a rule 3 node. The
   interconnect tap of rule 2 is exempt per primitive as well. On the five packaged examples, the violation counts stay
-  0, 0, 0, 0 and 186. (DEF-UV16-01, U-D25, D-078c, D-079b)
+  0, 0, 0, 0 and 186. A behaviour change follows: a T joint or a tap via that lands near a sharp corner is now reported
+  against the primitive past the corner, and a fillet at the corner removes the report. (DEF-UV16-01, U-D25, D-078c,
+  D-079b)
 - A path that starts with a fillet or a taper was exempt from its second main primitive (DRC rule 1). The leading corner
   piece now belongs to the first main primitive only. (DEF-UD25-01, D-079b)
 - The geometry view drew every copper layer opaque in one colour per phase, so copper on different layers looked joined.
   A user read the D08 spiral as shorted, but on each layer every gap was at the 0.8 mm rule. While two or more copper
   layers are visible, the top visible layer is now drawn solid. Each lower layer is drawn as an outline inside its true
-  edge, and each upper layer has a casing in the board colour. The legend names the top layer. The cue works in the
-  greyscale drawing of Windows high contrast. (DEF-UV16-02, U-S16, D-079c)
+  edge, and each upper layer has a casing in the board colour. The legend names the top layer. The cue is also drawn
+  in the greyscale drawing that the app uses under Windows high contrast. That drawing was tested offscreen on Linux;
+  Windows high contrast itself was not run. (DEF-UV16-02, U-S16, D-079c)
 - Round pads were drawn as squares. Each pad is now drawn from its shape, as the exporters write it. (DEF-UV16-03)
 
 ### Changed
