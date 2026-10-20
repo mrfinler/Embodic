@@ -72,9 +72,11 @@ def test_def_u_m8n_01_a_cancel_during_the_scene_build_ends_it_early_and_no_resul
     worker.finished.connect(lambda request_id, ready: jobs[-1].extend((time.perf_counter(), ready)))
 
     def build():
+        # The worker thread appends its job after compute_now returns, so jobs[-1] may still be the job before it.
+        first_new = len(jobs)
         window.outcome.compute_now()
-        qtbot.waitUntil(lambda: len(jobs[-1]) == 3, timeout=10_000)
-        returned, ended, ready = jobs[-1]
+        qtbot.waitUntil(lambda: len(jobs) > first_new and len(jobs[first_new]) == 3, timeout=10_000)
+        returned, ended, ready = jobs[first_new]
         return (ended - returned) * 1000, ready
 
     full_ms, full = build()
