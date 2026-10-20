@@ -1,15 +1,111 @@
 {
  "cases": {
-  "Q3 pad of net N centred mid-path on an N interconnect": {
+  "UT-DRC-04 5i": {
    "model": [
     [
      "path:0/prim:0",
+     "path:1/prim:0",
+     "trace_trace",
+     0.19
+    ]
+   ],
+   "run_drc_this_checkout": [],
+   "pair_sets_equal": false
+  },
+  "UT-DRC-04 5j": {
+   "model": [],
+   "run_drc_this_checkout": [],
+   "pair_sets_equal": true
+  },
+  "UT-DRC-04 5k": {
+   "model": [],
+   "run_drc_this_checkout": [],
+   "pair_sets_equal": true
+  },
+  "UT-DRC-04 5l": {
+   "model": [
+    [
+     "path:0/prim:2",
+     "path:1/prim:0",
+     "trace_trace",
+     0.19
+    ]
+   ],
+   "run_drc_this_checkout": [],
+   "pair_sets_equal": false
+  },
+  "UT-DRC-04 5l control": {
+   "model": [],
+   "run_drc_this_checkout": [],
+   "pair_sets_equal": true
+  },
+  "UT-DRC-04 2e": {
+   "model": [],
+   "run_drc_this_checkout": [],
+   "pair_sets_equal": true
+  },
+  "UT-DRC-04 2f": {
+   "model": [
+    [
+     "path:0/prim:2",
+     "via:0",
+     "trace_via",
+     0.19
+    ]
+   ],
+   "run_drc_this_checkout": [],
+   "pair_sets_equal": false
+  },
+  "UT-DRC-04 2f control": {
+   "model": [],
+   "run_drc_this_checkout": [],
+   "pair_sets_equal": true
+  },
+  "UT-DRC-04 5f inverted": {
+   "model": [
+    [
+     "path:0/prim:1",
+     "path:1/prim:0",
+     "trace_trace",
+     -0.15
+    ]
+   ],
+   "run_drc_this_checkout": [],
+   "pair_sets_equal": false
+  },
+  "UT-DRC-04 5g inverted, trunk start": {
+   "model": [
+    [
+     "path:0/prim:1",
+     "path:1/prim:0",
+     "trace_trace",
+     -0.0
+    ]
+   ],
+   "run_drc_this_checkout": [],
+   "pair_sets_equal": false
+  },
+  "UT-DRC-04 5g inverted, trunk end": {
+   "model": [
+    [
+     "path:0/prim:1",
+     "path:1/prim:0",
+     "trace_trace",
+     -0.0
+    ]
+   ],
+   "run_drc_this_checkout": [],
+   "pair_sets_equal": false
+  },
+  "Q3 pad of net N centred mid-path on an N interconnect": {
+   "model": [
+    [
      "pad:0",
+     "path:0/prim:0",
      "pad_trace",
      -0.4
     ]
    ],
-   "model_rules": {},
    "run_drc_this_checkout": [
     [
      "pad:0",
@@ -17,18 +113,18 @@
      "pad_trace",
      -0.4
     ]
-   ]
+   ],
+   "pair_sets_equal": true
   },
   "Q3 pad of net PHASE_A centred mid-path on an N interconnect": {
    "model": [
     [
-     "path:0/prim:0",
      "pad:0",
+     "path:0/prim:0",
      "pad_trace",
      -0.4
     ]
    ],
-   "model_rules": {},
    "run_drc_this_checkout": [
     [
      "pad:0",
@@ -36,7 +132,8 @@
      "pad_trace",
      -0.4
     ]
-   ]
+   ],
+   "pair_sets_equal": true
   },
   "DEF-UD25-01 leading taper": {
    "model": [
@@ -47,10 +144,8 @@
      0.1
     ]
    ],
-   "model_rules": {
-    "path:0/prim:0 / path:0/prim:1": "NEIGHBOURS"
-   },
-   "run_drc_this_checkout": []
+   "run_drc_this_checkout": [],
+   "pair_sets_equal": false
   },
   "DEF-UD25-01 control, side in place": {
    "model": [
@@ -61,9 +156,6 @@
      0.1
     ]
    ],
-   "model_rules": {
-    "path:0/prim:0 / path:0/prim:1": "NEIGHBOURS"
-   },
    "run_drc_this_checkout": [
     [
      "path:0/prim:0",
@@ -71,7 +163,8 @@
      "trace_trace",
      0.1
     ]
-   ]
+   ],
+   "pair_sets_equal": true
   }
  },
  "d08_mutant": {
@@ -122,8 +215,8 @@
     "INTERCONNECT_END": 18
    },
    "dropped_by_old_rule": {
-    "TEE, cross layer": 4542,
-    "TEE, same layer": 1506
+    "TEE, same layer": 1506,
+    "TEE, cross layer": 4542
    },
    "added_by_new_rule": {},
    "brute_violations": 0,
@@ -133,7 +226,7 @@
    "brute_only": [],
    "engine_only": [],
    "sets_equal": true,
-   "sweep_s": 26.4
+   "sweep_s": 27.2
   },
   {
    "example": "spiral_12c10p_d08",
@@ -158,7 +251,7 @@
    "brute_only": [],
    "engine_only": [],
    "sets_equal": true,
-   "sweep_s": 3.7
+   "sweep_s": 3.4
   },
   {
    "example": "spiral_12c14p",
@@ -172,8 +265,8 @@
     "VIA_TAP": 1
    },
    "dropped_by_old_rule": {
-    "TEE, same layer": 492,
-    "TEE, cross layer": 1477
+    "TEE, cross layer": 1477,
+    "TEE, same layer": 492
    },
    "added_by_new_rule": {},
    "brute_violations": 0,
@@ -183,7 +276,7 @@
    "brute_only": [],
    "engine_only": [],
    "sets_equal": true,
-   "sweep_s": 13.3
+   "sweep_s": 16.8
   },
   {
    "example": "spiral_12c16p_default",
@@ -197,8 +290,8 @@
     "VIA_TAP": 1
    },
    "dropped_by_old_rule": {
-    "TEE, same layer": 492,
-    "TEE, cross layer": 1477
+    "TEE, cross layer": 1477,
+    "TEE, same layer": 492
    },
    "added_by_new_rule": {},
    "brute_violations": 0,
@@ -208,7 +301,7 @@
    "brute_only": [],
    "engine_only": [],
    "sets_equal": true,
-   "sweep_s": 11.4
+   "sweep_s": 14.2
   },
   {
    "example": "wave_16p_example",
@@ -233,7 +326,7 @@
    "brute_only": [],
    "engine_only": [],
    "sets_equal": true,
-   "sweep_s": 3.7
+   "sweep_s": 3.4
   }
  ]
 }

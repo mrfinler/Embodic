@@ -9,13 +9,16 @@ Three measurements, own side only (``m1/drc_universe.py``, ``m1/brute_clearance.
   model of that revision runs on the same items, and the exemptions it has and the new model lacks are counted by the
   old rule label.
 - mutant: U-V16's DEF-UV16-01 mutant (D08, leg 25 widened to 0.8 mm; control start moved 0.001 mm) through the model.
-- cases: the Q3 pad case and the DEF-UD25-01 leading taper, through the model and through ``run_drc`` of this checkout.
+- cases: the U-D25 UT-DRC-04 cases, the Q3 pad case and the DEF-UD25-01 leading taper, through the model and through
+  ``run_drc`` of this checkout.
 """
 
 import argparse
 import dataclasses
 import importlib.util
+import itertools
 import json
+import math
 import subprocess
 import sys
 import tempfile
@@ -34,7 +37,7 @@ from brute_clearance import Verdict, clearance_bracket  # noqa: E402
 from drc_m3 import universe  # noqa: E402
 from drc_universe import Cls, Item, contract_exemptions, sweep  # noqa: E402
 from embodic_adapter import pair_violations, to_layout, uniform_rules  # noqa: E402
-from records import Line, disc  # noqa: E402
+from records import Arc, Line, disc  # noqa: E402
 from u_v16_spots import _leg_mutant  # noqa: E402
 from v3_10_own_models import RULE_FIELD  # noqa: E402
 
@@ -148,7 +151,7 @@ def d08_mutant() -> dict:
     return out
 
 
-def _trace(path: int, seq: int, prim: Line, net: str, corner: bool = False) -> Item:
+def _trace(path: int, seq: int, prim: Line | Arc, net: str, corner: bool = False) -> Item:
     return Item(f"path:{path}/prim:{seq}", Cls.TRACE, prim, 0, net, path, seq, corner=corner)
 
 
@@ -161,17 +164,54 @@ def _both(items: list[Item], interconnect: tuple[int, ...]) -> dict:
         layout, circuit=dataclasses.replace(layout.circuit, interconnect_path_ids=tuple(interconnect))
     )
     report = run_drc(layout, uniform_rules(0.2), use_symmetry=False)
+    model = {frozenset((r.a, r.b)): r for r in mine if r.verdict is Verdict.VIOLATION}
+    product = pair_violations(report)
     return {
-        "model": sorted([r.a, r.b, r.kind, round(r.clearance.lo, 6)] for r in mine if r.verdict is Verdict.VIOLATION),
-        "model_rules": {" / ".join(sorted(p)): r.name for p, r in exempt.items() if "path:0/prim:0" in p},
-        "run_drc_this_checkout": sorted([*sorted(k), v[0], round(v[1], 6)] for k, v in pair_violations(report).items()),
+        "model": sorted([*sorted(k), r.kind, round(r.clearance.lo, 6)] for k, r in model.items()),
+        "run_drc_this_checkout": sorted([*sorted(k), v[0], round(v[1], 6)] for k, v in product.items()),
+        "pair_sets_equal": model.keys() == product.keys(),
     }
 
 
+def _ut_drc_04(w: float) -> dict[str, tuple[list[Item], tuple[int, ...]]]:
+    """Build the U-D25 UT-DRC-04 boards (u_d25_rule5.md section 4); test_exemption_model.py holds the expectations."""
+    via = Item("via:0", Cls.VIA, disc(0, 0, 0.6), None, "PHASE_A")
+    hook = [(0.0, 0.0), (0.0, 2.0), (4.0, 2.0), (4.0, 5.0)]
+    out: dict[str, tuple[list[Item], tuple[int, ...]]] = {}
+    for y, name in ((0.39, "5i"), (0.41, "5j")):
+        coil = [_trace(0, 0, Line(-5, 0, 0, 0, w), "A"), _trace(0, 1, Line(0, 0, 0, 2, w), "A")]
+        terminal = Item("via:0", Cls.VIA, disc(0, 2, 0.6), None, "A")
+        out[name] = ([*coil, _trace(1, 0, Line(0, 2, -5, y, w), "A"), terminal], ())
+    fillet = Arc(4.5, 0.5, 0.5, -math.pi / 2, math.pi / 2, w)
+    trunk = [
+        _trace(0, 0, Line(-5, 0, 4.5, 0, w), "A"),
+        _trace(0, 1, fillet, "A", True),
+        _trace(0, 2, Line(5, 0.5, 5, 5, w), "A"),
+    ]
+    out["5k"] = ([*trunk, _trace(1, 0, Line(4.4, -4, 4.4, 0, w), "A")], ())
+    for x, name in ((0.39, "5l"), (0.41, "5l control")):
+        prims = [Line(-5, 0, 5, 0, w), Line(5, 0, 5, -2, w), Line(5, -2, x, -2, w)]
+        out[name] = (
+            [*(_trace(0, k, q, "A") for k, q in enumerate(prims)), _trace(1, 0, Line(0, 0, 0, -4, w), "A")],
+            (),
+        )
+    out["2e"] = ([_trace(0, 0, Line(-5, 0, 0, 0, w), "N"), _trace(0, 1, Line(0, 0, 0, 5, w), "N"),
+                  dataclasses.replace(via, prim=disc(-0.2, 0, 0.6))], (0,))  # fmt: skip
+    for h, name in ((0.59, "2f"), (0.61, "2f control")):
+        prims = [Line(-5, 0, 5, 0, w), Line(5, 0, 5, h, w), Line(5, h, -5, h, w)]
+        out[name] = ([*(_trace(0, k, q, "N") for k, q in enumerate(prims)), via], (0,))
+    out["5f inverted"] = ([_trace(0, 0, Line(-5, 0, 0, 0, w), "A"), _trace(0, 1, Line(0, 0, 0, -5, w), "A"),
+                           _trace(1, 0, Line(-0.05, 4, -0.05, 0, w), "A")], ())  # fmt: skip
+    for points, name in ((hook, "5g inverted, trunk start"), (hook[::-1], "5g inverted, trunk end")):
+        legs = [_trace(0, k, Line(*a, *b, w), "A") for k, (a, b) in enumerate(itertools.pairwise(points))]
+        out[name] = ([*legs, _trace(1, 0, Line(0.5, 1.8, 0.0, 0.0, w), "A")], ())
+    return out
+
+
 def cases() -> dict:
-    """Q3 (a pad on an interconnect centreline) and DEF-UD25-01 (a path that starts with a taper)."""
+    """Run the U-D25 UT-DRC-04 cases, Q3 (a pad on an interconnect centreline) and DEF-UD25-01 (a leading taper)."""
     w = 0.2
-    out = {}
+    out = {f"UT-DRC-04 {name}": _both(items, ic) for name, (items, ic) in _ut_drc_04(w).items()}
     for net in ("N", "PHASE_A"):
         items = [_trace(0, 0, Line(-5, 0, 5, 0, w), "N"), Item("pad:0", Cls.PAD, disc(0, 0, 0.6), 0, net)]
         out[f"Q3 pad of net {net} centred mid-path on an N interconnect"] = _both(items, (0,))

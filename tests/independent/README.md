@@ -469,7 +469,9 @@ Prepared by: Agent 4 - Independent Verificator - model: claude-opus-5-5
 
 | Script | Run in | What it does |
 |---|---|---|
-| `m7/u_v17_model.py [--old-rev REV] [--json FILE] [--skip-sweep]` | dev venv, `PYTHONPATH=src` | the Q3 pad case and the DEF-UD25-01 leading taper through the model and `run_drc`; U-V16's D08 leg mutant through the model; the five examples through the brute sweep against `run_drc`, with the exemptions the model of `REV` has and this one lacks |
+| `m7/u_v17_model.py [--old-rev REV] [--json FILE] [--skip-sweep]` | dev venv, `PYTHONPATH=src` | the U-D25 UT-DRC-04 cases, the Q3 pad case and the DEF-UD25-01 leading taper through the model and `run_drc`; U-V16's D08 leg mutant through the model; the five examples through the brute sweep against `run_drc`, with the exemptions the model of `REV` has and this one lacks |
 | `m1/mutants.py --tests=test_exemption_model.py rule leading "arc sweep"` | dev venv, `PYTHONPATH=src` | the exemption-model mutants against the exemption-model tests only |
 
-Results are in `m7/records/U-V17/U-V17.md`.
+Results are in `m7/records/U-V17/U-V17.md` (`verified` by running): the brute sweep gives 0, 0, 0, 0 and 186 on the
+five examples; the model reports the D08 mutant pair at 0.700 mm; the model has no DEF-UD25-01 gap; against
+unit/U-M8w ad26575 the m1 agreement tests, PR-13 and the 15 hand cases agree.
