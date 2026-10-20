@@ -87,10 +87,11 @@ step 2 that box contains the arc, so box distance is a lower bound of `D`.
   return `Infinity`.
 - `contract_exemptions` codes interfaces.md section 7 with D-022, D-022c, D-035b (rule 5) and D-036a with D-037a
   (rule 2b) from the text, not from `embodic.drc.items`. `test_exemption_model.py` checks it on hand-worked cases.
-  D-022c says a land on an interconnect centreline is "exempt from that path"; the model reads that as every primitive
-  of the path. Rule 2b names vias, not pads, and is per primitive. Rule 5 reads "the centreline of another path" as the
-  whole centreline, its end points included. With each `ic` chain its own path (U-V1c), one pair each on GR-19
-  serpentine and wave needs rule 5: neutral stub path 16 (wave 193) ends on ring path 18 (wave 195) between its ends, both
+  Since U-V17 it follows the revision of 2026-10-20 (U-D25, D-078). The rule 2 tap is rule 2b with the net test waived
+  for an interconnect path: per primitive, vias only. Rule 5 exempts an end group from the landing group of each
+  primitive its end point lies on, end points of that primitive included. The rest of this note records the readings
+  before U-V17 (tap over the whole path and over pads, rule 5 over the whole path). With each `ic` chain its own path
+  (U-V1c), one pair each on GR-19 serpentine and wave needs rule 5: neutral stub path 16 (wave 193) ends on ring path 18 (wave 195) between its ends, both
   net `N`; `run_drc` exempts it too (`verified`). No GR-19 pair depends on the end-point clause now: every star path is
   one primitive, so two paths meeting end to end fall under rule 3. Before the split, the start of path 16 (193) was
   the end of path 15 (192) and lay on its primitive 2, so only that clause exempted it. `verified` by running a scratch
@@ -461,3 +462,14 @@ Verdict (b) on 2026-10-20 (`m7/records/U-V16/U-V16.md`, `verified` by running): 
 rule outside designed joints on the five examples; the view overlays L1 and L2 opaque in one colour per phase.
 Defects DEF-UV16-01 (rule 5 end-point clause exempts a leg from its whole coil path; latent), DEF-UV16-02 (no layer
 cue in the geometry view), DEF-UV16-03 (round pads drawn as squares).
+
+## U-V17: the M1 model follows the revised section 7 (U-D25, D-078; main bbcaeff)
+
+Prepared by: Agent 4 - Independent Verificator - model: claude-opus-5-5
+
+| Script | Run in | What it does |
+|---|---|---|
+| `m7/u_v17_model.py [--old-rev REV] [--json FILE] [--skip-sweep]` | dev venv, `PYTHONPATH=src` | the Q3 pad case and the DEF-UD25-01 leading taper through the model and `run_drc`; U-V16's D08 leg mutant through the model; the five examples through the brute sweep against `run_drc`, with the exemptions the model of `REV` has and this one lacks |
+| `m1/mutants.py --tests=test_exemption_model.py rule leading "arc sweep"` | dev venv, `PYTHONPATH=src` | the exemption-model mutants against the exemption-model tests only |
+
+Results are in `m7/records/U-V17/U-V17.md`.
