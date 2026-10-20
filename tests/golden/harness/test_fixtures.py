@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from harness import DATA_DIR, EXACT, Verdict, compare_sequence, decode_nonfinite, load_area
+from harness import DATA_DIR, EXACT, Verdict, compare_sequence, decode_nonfinite, fixture_drift, load_area
 
 pytestmark = pytest.mark.req("REQ-F-10")
 
@@ -70,7 +70,4 @@ def test_m1_fixtures_carry_engine_provenance() -> None:
 def test_m1_fixtures_equal_a_fresh_dump(tmp_path: Path) -> None:
     """Catch fixtures that are stale against the case list or engine, or a dumper that is not deterministic."""
     subprocess.run(["node", str(DUMPER), str(M1_CASES), "--out", str(tmp_path)], check=True, capture_output=True)
-    committed = sorted(p.name for p in (DATA_DIR / "m1").glob("*.json"))
-    assert sorted(p.name for p in tmp_path.glob("*.json")) == committed
-    stale = [name for name in committed if (tmp_path / name).read_bytes() != (DATA_DIR / "m1" / name).read_bytes()]
-    assert stale == []
+    assert fixture_drift(tmp_path, DATA_DIR / "m1") == []

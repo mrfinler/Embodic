@@ -38,6 +38,7 @@ from .compare import (
     d006_pass,
     near_threshold,
 )
+from .freshness import fixture_drift
 
 __all__ = [
     "D006_EPSILON_MM",
@@ -73,6 +74,7 @@ __all__ = [
     "decode_nonfinite",
     "dumps",
     "encode_nonfinite",
+    "fixture_drift",
     "load_allow_list",
     "load_area",
     "load_case",
