@@ -1,4 +1,4 @@
-cb4e51c28889d6ee0916d95cf0a3622655eb6fea9b8b8acca2c745354e7879ba  /tmp/claude-0/-home-claude/f28a4cfe-cf25-5512-9052-c4c291ea667b/scratchpad/v14/dist/embodic-0.0.1-py3-none-any.whl
+9bca49d895aee779be71cda8b939b67f86414ef8f711d7090b9c01215a6de579  /home/claude/release_0.0.4/embodic-0.0.4-py3-none-any.whl
 4.12.1
 3.2.0
 scikit-fem 12.0.2

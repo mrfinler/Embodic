@@ -1,10 +1,10 @@
 """Requirement audit of one build: one status per row of requirements.md, from that build's own test records.
 
-    python3 docs/phase3/verification/checks/req_audit.py                    # main: writes req_audit.md
-    python3 docs/phase3/verification/checks/req_audit.py --target 0.0.1     # the release: req_audit_0.0.1.md
+    python3 docs/phase3/verification/checks/req_audit.py                    # release 0.0.4: writes req_audit.md
+    python3 docs/phase3/verification/checks/req_audit.py --target 0.0.1     # release 0.0.1: req_audit_0.0.1.md
     python3 docs/phase3/verification/checks/req_audit.py [--target T] --check    # exit 1 when the file is stale
     python3 docs/phase3/verification/checks/req_audit.py --target 0.0.1 --self-test
-    python3 docs/phase3/verification/checks/req_audit.py --self-test                # the D-061d control on main
+    python3 docs/phase3/verification/checks/req_audit.py --self-test                # the D-061d control on 0.0.4
 
 Inputs (read only) of every target: requirements.md and the two test plans of this checkout, and the test sources of
 the audited commit (`git archive <commit> tests`, or the folder given with --tree).
@@ -13,12 +13,16 @@ the audited commit (`git archive <commit> tests`, or the folder given with --tre
   4's V3-01 rulings and source pins (tests/independent/m7/v3_01_rulings.py), and the union rulings of the REQ-F rows
   (v3_01_rulings_f.py) and of the REQ-N, REQ-T and REQ-L rows (v3_01_rulings_ntl.py), each of which replaces the sample
   ruling of its row; records from the RECORDS table below.
-- Target main (U-V14): the REQ report of main that tests/independent/m7/v14_main_report.py builds, kept gzipped in
-  docs/phase3/verification/inputs/, and the commit-gate log it names; Agent 4's re-ruling of main
+- Target 0.0.4 (U-V18): the two REQ reports of Fable's release gate on c25d8a9, the main pytest process and the
+  latency process (D-074), whose outcomes replace the main report's `not run` records, and that gate's log, all three
+  copied gzipped into docs/phase3/verification/inputs/; Agent 4's re-ruling of main
   (tests/independent/m7/v3_01_rulings_v13.py) with its function-level pins (records/V3-01_pins_260191f.json,
-  interfaces.md section 3.2), and on top the rows that U-V14 re-ruled on c0f4894 (v3_01_rulings_v14.py); records
-  from docs/phase3/verification/manual_records.json (passed entries only). D-061d: a ruling that cites a record the
-  index no longer holds counts only through the record that redid it (REDONE).
+  interfaces.md section 3.2), on top the rows that U-V14 re-ruled on c0f4894 (v3_01_rulings_v14.py), and on top the
+  rows that U-V18 re-ruled on c25d8a9 (v3_01_rulings_v18.py); records from
+  docs/phase3/verification/manual_records.json (passed entries only). D-061d: a ruling that cites a record the index
+  no longer holds counts only through the record that redid it (REDONE, followed to its last redo).
+- The earlier target main (U-V14, c0f4894) is gone: its gate log `inputs/gate_commit_5099401.log` was never in git
+  (`*.log` is ignored) and was lost with the container on 2026-10-19 (D-071a). Its output is in git at 72ba81c.
 
 For each planned test ID of a row, the evidence is the first that holds:
   gate   a PASS line of the release gate log names the ID
@@ -68,27 +72,54 @@ RULINGS_F = REPO / "tests/independent/m7/v3_01_rulings_f.py"
 RULINGS_NTL = REPO / "tests/independent/m7/v3_01_rulings_ntl.py"
 RULINGS_V13 = REPO / "tests/independent/m7/v3_01_rulings_v13.py"
 RULINGS_V14 = REPO / "tests/independent/m7/v3_01_rulings_v14.py"
+RULINGS_V18 = REPO / "tests/independent/m7/v3_01_rulings_v18.py"
 PINS_V13 = REPO / "tests/independent/m7/records/V3-01_pins_260191f.json"
 REQUIREMENTS = REPO / "docs/phase2/architecture/requirements.md"
 PLANS = (REPO / "docs/phase1/architecture/test_plan_draft.md", REPO / "docs/phase2/architecture/test_plan.md")
 VERIFICATION = HERE.parents[1]
 INDEX = VERIFICATION / "manual_records.json"
-# D-061d (U-V14): a superseded record -> the record of the same check redone on main.
+# D-061d: a superseded record -> the record of the same check redone on a later build (U-V14 on c0f4894, U-V18 on
+# c25d8a9).
+_M4, _M5, _M6 = (f"tests/independent/m{n}/records/" for n in (4, 5, 6))
 REDONE = {
-    "tests/independent/m5/records/PK-06_walkthrough.md": "tests/independent/m5/records/PK-06_walkthrough_c0f4894.md",
-    "tests/independent/m4/records/AX-05.md": "tests/independent/m4/records/AX-05_c0f4894.md",
-    "tests/independent/m6/records/OR-11_OR-12.md": "tests/independent/m6/records/OR-11_OR-12_c0f4894.md",
+    f"{_M5}PK-06_walkthrough.md": f"{_M5}PK-06_walkthrough_c0f4894.md",
+    f"{_M4}AX-05.md": f"{_M4}AX-05_c0f4894.md",
+    f"{_M6}OR-11_OR-12.md": f"{_M6}OR-11_OR-12_c0f4894.md",
+    f"{_M5}PK-06_walkthrough_c0f4894.md": f"{_M5}PK-06_walkthrough_c25d8a9.md",
+    f"{_M4}AX-05_c0f4894.md": f"{_M4}AX-05_c25d8a9.md",
+    f"{_M6}OR-11_OR-12_c0f4894.md": f"{_M6}OR-11_OR-12_c25d8a9.md",
+    f"{_M4}LG-01_word_review.md": f"{_M4}LG-01_word_review_c25d8a9.md",
+    f"{_M4}LG-04_T-11_reviewer.md": f"{_M4}LG-04_T-11_reviewer_c25d8a9.md",
 }
+
+
+def last_redo(record: str) -> str:
+    """Return the record that redid ``record`` last, following REDONE, or ``record`` itself."""
+    while record in REDONE:
+        record = REDONE[record]
+    return record
+
+
+def counted_redo(record: str, counted: set[str]) -> str | None:
+    """Return the first redo of ``record`` along REDONE that the index counts, or None."""
+    while record in REDONE:
+        record = REDONE[record]
+        if record in counted:
+            return record
+    return None
 
 
 @dataclass(frozen=True)
 class Target:
-    """One audited build: its REQ report and gate log, the commit of its test sources and the file written."""
+    """One audited build: its REQ reports and gate log, the commit of its test sources and the file written.
+
+    The first report is the build's main pytest run; a later report's outcome replaces a `not run` record of it.
+    """
 
     name: str
     title: str
     commit: str
-    report: Path
+    reports: tuple[Path, ...]
     gate_log: Path
     out: Path
 
@@ -98,16 +129,19 @@ TARGETS = {
         "0.0.1",
         "release 0.0.1",
         RELEASE_COMMIT,
-        RELEASE / "req_report.json",
+        (RELEASE / "req_report.json",),
         RELEASE / "gate_release_5e74acc.log",
         VERIFICATION / "req_audit_0.0.1.md",
     ),
-    "main": Target(
-        "main",
-        "main c0f4894",
-        "c0f4894",
-        VERIFICATION / "inputs/req_report_c0f4894.json.gz",
-        VERIFICATION / "inputs/gate_commit_5099401.log",
+    "0.0.4": Target(
+        "0.0.4",
+        "release 0.0.4 (c25d8a9)",
+        "c25d8a9",
+        (
+            VERIFICATION / "inputs/req_report_c25d8a9.json.gz",
+            VERIFICATION / "inputs/req_report_latency_c25d8a9.json.gz",
+        ),
+        VERIFICATION / "inputs/gate_release_c25d8a9.log.gz",
         VERIFICATION / "req_audit.md",
     ),
 }
@@ -321,8 +355,8 @@ def main_ruling_gate(
             problems.append(f"source changed since the ruling: `{cite}`")
         record = cite.removeprefix("record:")
         if cite.startswith("record:") and record not in counted:
-            if REDONE.get(record) in counted:
-                redone.append(f"`{record}` redone as `{REDONE[record]}`")
+            if redo := counted_redo(record, counted):
+                redone.append(f"`{record}` redone as `{redo}`")
             else:
                 problems.append(f"record superseded (D-061d): `{record}`")
     return ("; ".join(problems) or None), "; ".join(redone)
@@ -355,34 +389,44 @@ def test_tree(commit: str, dest: Path) -> Path:
     return dest
 
 
-def read_report(path: Path) -> list[dict]:
-    """Return the records of a REQ report, plain or gzipped JSON."""
+def read_bytes(path: Path) -> bytes:
+    """Return the content of a file, gunzipped when its name ends in .gz."""
     data = path.read_bytes()
-    return json.loads(gzip.decompress(data) if path.suffix == ".gz" else data)
+    return gzip.decompress(data) if path.suffix == ".gz" else data
+
+
+def read_reports(paths: tuple[Path, ...]) -> list[dict]:
+    """Return the records of the first REQ report, each `not run` record replaced by a later report's run of it."""
+    base, *later = (json.loads(read_bytes(p)) for p in paths)
+    runs = {r["nodeid"]: r for report in later for r in report if r["outcome"] != "not run"}
+    return [runs.get(r["nodeid"], r) if r["outcome"] == "not run" else r for r in base]
 
 
 def counted_records(index: Path = INDEX) -> dict[str, str]:
-    """Return {record path: test ID} of the passed entries of the manual-record index."""
-    return {e["record"]: e["test_id"] for e in json.loads(index.read_text(encoding="utf-8")) if e["result"] == "passed"}
+    """Return {test ID: record path} of the passed entries of the manual-record index (one record may hold two IDs)."""
+    return {e["test_id"]: e["record"] for e in json.loads(index.read_text(encoding="utf-8")) if e["result"] == "passed"}
 
 
 def run_audit(tree: Path, target: Target = TARGETS["0.0.1"], index: Path = INDEX):
     """Return the text results, the gated results and the Ruling notes for the test sources under tree."""
     rows = parse_requirements(REQUIREMENTS.read_text(encoding="utf-8"))
-    records = read_report(target.report)
-    gates = gate_ids(target.gate_log.read_text(encoding="utf-8"))
+    records = read_reports(target.reports)
+    gates = gate_ids(read_bytes(target.gate_log).decode("utf-8"))
     eqs = eq_map([p.read_text(encoding="utf-8") for p in PLANS])
     files = {r["nodeid"].split("::")[0] for r in records}
     sources = {f: (tree / f).read_text(encoding="utf-8", errors="replace") for f in files}
-    if target.name == "main":
-        counted = counted_records(index)
-        by_id = {test_id: record for record, test_id in counted.items()}
+    if target.name != "0.0.1":
+        by_id = counted_records(index)
+        counted = set(by_id.values())
         text_results = audit(rows, records, gates, eqs, sources, by_id)
-        overlay = load_rulings(RULINGS_V14)
-        rulings = {**load_rulings(RULINGS_V13).RULINGS, **overlay.RULINGS}
-        pins = {**json.loads(PINS_V13.read_text(encoding="utf-8")), **overlay.PINS}
+        overlays = (load_rulings(RULINGS_V14), load_rulings(RULINGS_V18))
+        rulings = {**load_rulings(RULINGS_V13).RULINGS, **{k: v for o in overlays for k, v in o.RULINGS.items()}}
+        pins = {
+            **json.loads(PINS_V13.read_text(encoding="utf-8")),
+            **{k: v for o in overlays for k, v in o.PINS.items()},
+        }
         gated, notes = apply_rulings(
-            text_results, lambda req: main_ruling_gate(req, rulings, pins, tree, gates, set(counted))
+            text_results, lambda req: main_ruling_gate(req, rulings, pins, tree, gates, counted)
         )
         return text_results, gated, notes
     text_results = audit(rows, records, gates, eqs, sources, RECORDS)
@@ -435,11 +479,11 @@ def self_test(tree: Path) -> int:
 
 def self_test_main(tree: Path) -> int:
     """Control for D-061d: REQ-N-14 cites the superseded AX-05 record; it stays verified only through the redone one."""
-    req, redone = "REQ-N-14", REDONE["tests/independent/m4/records/AX-05.md"]
+    req, redone = "REQ-N-14", last_redo("tests/independent/m4/records/AX-05.md")
     other = "tests/independent/m4/records/AX-06.md"
 
     def row_of(index: Path) -> tuple[str, str]:
-        _, gated, notes = run_audit(tree, TARGETS["main"], index)
+        _, gated, notes = run_audit(tree, TARGETS["0.0.4"], index)
         return next((status, note) for (row, status, *_), note in zip(gated, notes, strict=True) if row.req_id == req)
 
     ok = True
@@ -474,7 +518,7 @@ def sha(path: Path) -> str:
 def main(argv: list[str] | None = None) -> int:
     """Write the audit file of a target and print the counts, or with --check report whether it is stale."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--target", choices=sorted(TARGETS), default="main", help="the build to audit")
+    parser.add_argument("--target", choices=sorted(TARGETS), default="0.0.4", help="the build to audit")
     parser.add_argument("--check", action="store_true", help="exit 1 when the audit file differs from a fresh run")
     parser.add_argument("--self-test", action="store_true", help="run the D-051e (0.0.1) or D-061d (main) control")
     parser.add_argument("--tree", type=Path, help="test sources to audit (default: git archive of the target commit)")
@@ -486,9 +530,9 @@ def main(argv: list[str] | None = None) -> int:
         if args.self_test:
             return self_test(tree) if target.name == "0.0.1" else self_test_main(tree)
         _, results, notes = run_audit(tree, target)
-    main_inputs = (RULINGS_V13, PINS_V13, RULINGS_V14, INDEX)
-    rulings = main_inputs if target.name == "main" else (RULINGS, RULINGS_F, RULINGS_NTL)
-    inputs = [(p, sha(p)) for p in (REQUIREMENTS, *PLANS, target.report, target.gate_log, *rulings)]
+    main_inputs = (RULINGS_V13, PINS_V13, RULINGS_V14, RULINGS_V18, INDEX)
+    rulings = main_inputs if target.name != "0.0.1" else (RULINGS, RULINGS_F, RULINGS_NTL)
+    inputs = [(p, sha(p)) for p in (REQUIREMENTS, *PLANS, *target.reports, target.gate_log, *rulings)]
     shown = [(str(p.relative_to(REPO)) if p.is_relative_to(REPO) else str(p), h) for p, h in inputs]
     text = render(results, notes, shown, target)
 

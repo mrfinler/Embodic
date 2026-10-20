@@ -134,6 +134,15 @@ SUBJECTS = (
         ("embodic.api", "embodic.io.report", "embodic.results.registry", "embodic.ui.viewmodels.results"),
         "Agent 4 (reviewer check)",
     ),
+    Subject(
+        "docs/phase3/fable/AX-06_narrator_0.0.3.md",
+        "passed",
+        "2fb2ec6",
+        "the 0.0.3 source, editable install of the laptop checkout at 5f814d4 and 2fb2ec6 (record, Build)",
+        ("pyproject.toml", "resources/examples", "resources/themes", "src/embodic/ui"),
+        ("embodic.ui.app",),
+        "the user (Windows Narrator walkthrough on the laptop)",
+    ),
 )
 
 

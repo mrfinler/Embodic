@@ -1,6 +1,6 @@
 $ gmsh -2 -nt 1 -format msh2 or11.geo -o or11.msh
 Info    : Running 'gmsh -2 -nt 1 -format msh2 or11.geo -o or11.msh' [Gmsh 4.12.1, 1 node, max. 1 thread]
-Info    : Started on Sun Oct 18 19:56:05 2026
+Info    : Started on Tue Oct 20 20:40:29 2026
 Info    : Reading 'or11.geo'...
 Info    : Done reading 'or11.geo'
 Info    : Reconstructing periodicity for curve connection 10005 - 10000
@@ -141,7 +141,7 @@ Info    : [100%] Meshing curve 10062 (Line)
 Info    : [100%] Meshing curve 10063 (Line)
 Info    : [100%] Meshing curve 10064 (Line)
 Info    : [100%] Meshing curve 10065 (Line) as a copy of curve 10060
-Info    : Done meshing 1D (Wall 0.0465895s, CPU 0.034058s)
+Info    : Done meshing 1D (Wall 0.0433545s, CPU 0.042567s)
 Info    : Meshing 2D...
 Info    : [  0%] Meshing surface 1 (Plane, Frontal-Delaunay)
 Info    : [ 10%] Meshing surface 2 (Plane, Frontal-Delaunay)
@@ -198,7 +198,7 @@ Info    : [100%] Meshing surface 52 (Plane, Frontal-Delaunay)
 Info    : [100%] Meshing surface 53 (Plane, Frontal-Delaunay)
 Info    : [100%] Meshing surface 54 (Plane, Frontal-Delaunay)
 Info    : [100%] Meshing surface 55 (Plane, Frontal-Delaunay)
-Info    : Done meshing 2D (Wall 3.38982s, CPU 3.3164s)
+Info    : Done meshing 2D (Wall 3.95581s, CPU 3.88594s)
 Info    : Reconstructing periodicity for curve connection 10005 - 10000
 Info    : Reconstructing periodicity for curve connection 10011 - 10006
 Info    : Reconstructing periodicity for curve connection 10017 - 10012
@@ -213,7 +213,7 @@ Info    : Reconstructing periodicity for curve connection 10065 - 10060
 Info    : 127063 nodes 259482 elements
 Info    : Writing 'or11.msh'...
 Info    : Done writing 'or11.msh'
-Info    : Stopped on Sun Oct 18 19:56:09 2026 (From start: Wall 3.79429s, CPU 3.73565s)
+Info    : Stopped on Tue Oct 20 20:40:34 2026 (From start: Wall 4.51198s, CPU 4.45615s)
 Warning : Gmsh must be compiled with ANN support for finding closest nodes
 Warning : Gmsh must be compiled with ANN support for finding closest nodes
 Warning : Gmsh must be compiled with ANN support for finding closest nodes
@@ -247,10 +247,10 @@ Warning : Gmsh must be compiled with ANN support for finding closest nodes
 Warning : Gmsh must be compiled with ANN support for finding closest nodes
 Warning : Gmsh must be compiled with ANN support for finding closest nodes
 Warning : Gmsh must be compiled with ANN support for finding closest nodes
-exit 0, 3.92 s
+exit 0, 4.66 s
 
 $ getdp or11.pro -msh or11.msh -solve MagSta_a -pos Lines -v 3
-Info    : Started (Sun Oct 18 19:56:10 2026, Wall = 0.431999s, CPU = 0.05612s, Mem = 105.293Mb)
+Info    : Started (Tue Oct 20 20:40:34 2026, Wall = 0.451384s, CPU = 0.056064s, Mem = 109.875Mb)
 P r e - P r o c e s s i n g . . .
 Info    : System 1/1: 126524 Dofs
 E n d   P r e - P r o c e s s i n g
@@ -258,6 +258,6 @@ P r o c e s s i n g . . .
 E n d   P r o c e s s i n g
 P o s t - P r o c e s s i n g . . .
 E n d   P o s t - P r o c e s s i n g
-Info    : Stopped (Sun Oct 18 19:56:15 2026, Wall = 5.69535s, CPU = 4.93509s, Mem = 400.91Mb)
-exit 0, 5.77 s
+Info    : Stopped (Tue Oct 20 20:40:39 2026, Wall = 5.52598s, CPU = 4.82922s, Mem = 403.238Mb)
+exit 0, 5.60 s
 

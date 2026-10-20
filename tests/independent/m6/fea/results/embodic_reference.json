@@ -1,6 +1,6 @@
 {
- "embodic_version": "VersionInfo(embodic='0.0.1', schema=2, registry='v1+75a1fa2f8018.c01a66176ad6', python='3.11.15', numpy='2.4.6')",
- "embodic_file": "/tmp/claude-0/-home-claude/f28a4cfe-cf25-5512-9052-c4c291ea667b/scratchpad/v14/fea_wheel_venv/lib/python3.11/site-packages/embodic/api.py",
+ "embodic_version": "VersionInfo(embodic='0.0.4', schema=2, registry='v1+17193c112982.c01a66176ad6', python='3.11.17', numpy='2.4.6')",
+ "embodic_file": "/home/claude/wheelvenv-0.0.4/lib/python3.11/site-packages/embodic/api.py",
  "or11": {
   "b1_peak_mid_radius_t_layer0": 0.8461217643113917,
   "layer0_z_mm_from_board_surface": 0.035,

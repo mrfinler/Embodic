@@ -18736,7 +18736,7 @@
         {
           "kind": "trace_via",
           "least_clearance_mm": 0.19996529918357453,
-          "pairs_checked": 597,
+          "pairs_checked": 600,
           "required_mm": 0.2
         },
         {
@@ -21704,7 +21704,7 @@
     }
   },
   "versions": {
-    "embodic": "0.0.2",
+    "embodic": "0.0.4",
     "numpy": "2.4.6",
     "python": "3.11.17",
     "registry": "v1+17193c112982.c01a66176ad6",

@@ -355,3 +355,27 @@ pads lie outside the user's screenshot.
 
 Status `verified` (item table and reading). Expected: draw a round pad as an ellipse and an oblong or rectangular pad
 from `pad_outline`, as the exporters do. Owner Agent 3. Not fixed here.
+
+## DEF-UV18-01 (REQ-F-10, must, section 7 rule 5 net test; low): no test puts a cross-net path end on a net that has two paths on the layer
+
+Release 0.0.4 (c25d8a9), V3-02 (`records/V3-02_0.0.4.md`). Mutant V3-02-07 drops the net test from the end filter of
+`_junctions` (`src/embodic/drc/items.py` l.294: `for e in (e for e in ends if e.path.layer == layer and e.path.net ==
+net)` without `and e.path.net == net`). It survives its named test
+(`test_ut_drc_04_path_end_on_a_path_of_another_net_is_reported`) and the whole V3-02 suite with the mutant applied:
+`tests/unit/drc`, both PR-13 tests, `tests/independent/m1` and `tests/independent/m3` (the clean copy: 352 passed, 1
+skipped; the mutant run took 471.8 s). In 0.0.2 PR-13 caught it on a wave board; after U-D25 it does not.
+
+It is not equivalent. `_junctions` visits only the (layer, net) groups with two or more paths, and the named test gives
+each net one path, so the mutated loop never runs there. `PYTHONPATH=src python
+tests/independent/m7/def_uv18_cross_net_junction.py` gives net A two paths and ends a net B path on the middle of net
+A's first line: the product reports `('trace_trace', ('path:0/prim:0', 'path:2/prim:0'), -0.2)`, the probe on a copy of
+`src` with the V3-02-07 text reports `[]`.
+
+```
+python tests/independent/m7/product_mutants.py V3-02 --only V3-02-07          # prints "survived V3-02-07 ..."
+PYTHONPATH=src python tests/independent/m7/def_uv18_cross_net_junction.py     # the product reports the overlap
+```
+
+Status `verified`. The product behaves as interfaces.md section 7 says; the gap is that no test would see the net
+test go. Expected: a UT-DRC-04 case 5c variant with a second net-A path on the layer (the probe's geometry) that
+asserts the cross-net pair is reported. Owner Agent 3. Not fixed here.

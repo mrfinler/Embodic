@@ -1,0 +1,119 @@
+{
+ "REQ-F-01": {
+  "tests/independent/m2/test_spiral.py::test_every_path_is_continuous_within_1e_6": "51128d62b08da55373db01f6f0ec0a87a93e26c68a1c129b3c550fc3dbcc5216",
+  "tests/unit/generators/test_spiral_generate.py::test_every_path_is_continuous": "344558f9730d6018f29905e5f3a9dd08f28bf424ae7caeaef3c3a79de0ef993a",
+  "tests/unit/generators/test_spiral_generate.py::test_ut_geo_03_layer_y_is_the_mirror_of_x": "dc39c08d565bd1e9b865a8e3cb62daab36a138cc7df7235c02983ba5f81f3046",
+  "tests/unit/generators/test_spiral_generate.py::test_ut_geo_04_centre_via_terminates_x_and_y": "44cb778d13d0ebbd9e9c2719205a94388e2b6936011ba5f7b096e07ed7a016df",
+  "tests/unit/generators/test_spiral_generate.py::test_ut_geo_05_x_and_y_circulate_the_same_way": "43df9d7481fcec640ab591b075c97f5a0ed5d38101a82b8c2a28a9fa136655d2",
+  "tests/unit/property/test_pipeline_properties.py::test_pr_03_every_built_path_is_continuous": "368edd184dd2ca5e66d303e0bb9c6bfae8afa823981914f05b0ee4f7137f0e71",
+  "tests/unit/property/test_pipeline_properties.py::test_pr_10_layer_y_mirrors_layer_x_about_every_coil_axis": "9ef45ecf92333487f688a7ae52c2635b57c67c4abc7ff7d3542890ef998715a5"
+ },
+ "REQ-F-02": {
+  "tests/unit/winding/test_plan.py::test_ut_wnd_04_16_16_with_all_phases_on_every_pair_is_unbuildable": "5ee1a4dd08f09ebf31a3cb84afd3d573fb557a7a322c4ce6e6cb99bd2c85cc2d",
+  "tests/unit/winding/test_plan.py::test_ut_wnd_04_16_16_with_one_phase_per_pair_is_accepted": "be4e59f04d9afb19ef4d84519c79166e49d4fb4f85640379c1f8847338ae831a",
+  "tests/unit/winding/test_star_of_slots.py::test_ut_wnd_01_12_10_pattern_equals_d08_fig_3_7": "65b43d31ab0d9a8b7172732d27115a35766c92d9fcffc4d34560416808605edc",
+  "tests/unit/winding/test_star_of_slots.py::test_ut_wnd_02_belt_edge_combinations_are_balanced": "5b0b23ca2ad029209abcd694c74c79de6eb362bf0d6745438ae30818665ea29c",
+  "tests/unit/winding/test_star_of_slots.py::test_ut_wnd_03_12_16_pattern_all_positive": "93f14815d1de070e50a140c76e6b806ba96590cfdc229bbce0b3e704ae5f10db",
+  "tests/unit/winding/test_winding_factors_exact.py::test_f02_1_kw1_of_every_a2_top_row_matches_the_exact_instrument_to_1e_9": "c13c87bf34f2af28a2dcfb3a52eca294426668cd4140bbb482c707b8422ed985"
+ },
+ "REQ-F-04": {
+  "tests/golden/m2_stackup/test_gr07_even_stackup.py::test_gr_07_auto_mode_helper_equals_xcoil_stackupfor": "40ae63b79cea80b35fbd825584079543655a646dc5f4ff79db97df11a5953ffa",
+  "tests/golden/m2_stackup/test_gr07_even_stackup.py::test_gr_07_custom_list_gives_the_copper_z_of_xcoil": "0315c0cbb4dd06061f7f323b5f900f8dfb1191552182959f1c2b41f829ad4f56",
+  "tests/golden/m2_stackup/test_gr07_even_stackup.py::test_gr_07_fixtures_hold_the_cases_of_the_specification": "2b2e8310cb2b78787918a501a35f02a8e4e340f387629b05a37200ea0f1413b6",
+  "tests/unit/model/test_stackup.py::test_board_thickness_is_the_exact_sum_of_all_layers": "eb34c765bf6d27ea8c1ce856abf814ddb1ca32c0abdba8c331e7a9d2fb6aaa9b",
+  "tests/unit/model/test_stackup.py::test_copper_z_is_the_exact_sum_of_the_layers_above_plus_half_its_own": "8391365e74ef657a9d43235ec37b10a6a04652a49c5bfa0ffb7573beed7f7347"
+ },
+ "REQ-F-10": {
+  "tests/golden/m1_drc/test_gr18_band_rule.py::test_gr18_run_drc_agrees_with_xcoil_outside_the_slack_band": "72fe4149f237f4bfbfd9507256f0ba37f5fb576b67c0cf3ffa6c263e6a462444",
+  "tests/unit/drc/test_properties.py::test_pr_01_drc_never_under_reports_and_reports_no_false_positive_on_200_random_sets": "6d403e791a1c3ad9be84f854a0fa36251e8316d0796fe9a6ee00a59a1311e66a",
+  "tests/unit/drc/test_run_drc.py::test_ut_drc_03_one_micron_intrusion_is_exactly_one_new_violation_at_its_place": "cc4ab494bf6ec63c74b87880a683ac3fd9b74df35c5f18a556b79b7325c05f15",
+  "tests/unit/drc/test_run_drc.py::test_ut_drc_03_the_float_boundary_of_d006_is_rule_minus_epsilon_and_equal_passes": "1e7289ef8f8c9da5e543b5af31729248ea3fc78b11af508e26695be01640a0f0",
+  "tests/unit/drc/test_run_drc.py::test_ut_drc_04_junction_end_group_is_exempt_only_from_the_primitive_the_end_lies_on": "bdd9d3263872bee6d451a4ae2bfed5e3a9f46de2c3faacada072bdd5818b7c88",
+  "tests/unit/drc/test_run_drc.py::test_ut_drc_04_wide_leg_on_a_coil_end_is_reported_against_the_coil_turn": "a10f63993ef0cdf55165de9eccaaa9e2d30d7eecdb492de6df60133cc412230a",
+  "tests/unit/generators/test_spiral_generate.py::test_default_example_passes_drc": "6bba1811404ee6b93a5fea34bf3b9d014719ff8e31f0c21bc81c00b2416a366c"
+ },
+ "REQ-F-11": {
+  "tests/golden/m2_physics/test_analysis_golden.py::test_utilisation_factor_matches_eq27": "8994ba1ebc945ce3056a88c4fd62be3255fdbadc73d04529bd4036d52db2a79f"
+ },
+ "REQ-F-14": {
+  "tests/unit/boundary/test_bv_design.py::test_bv01_trace_width": "d59fd7918e1654a88fa1833e6d1f79fb7d34b92a64b12ac4445b64ddfc831f05",
+  "tests/unit/boundary/test_bv_design.py::test_bv02_spiral_radius_order": "89e8d889d63e378fa8431548cab35315318ea3b9d298357287e3efe46535326c",
+  "tests/unit/boundary/test_bv_design.py::test_bv03_odd_pole_count_suggests_the_next_even_count": "db0a7677285f271c009c16ffe78498290863fe9a6ecb9ea93e0f81561f29fb3d",
+  "tests/unit/boundary/test_bv_design.py::test_bv06_pair_references_unknown_copper_layer": "606bbeeb5c2936fa43b05e62fdc2e2e047edd4150b9910d17b591cfedb8efc2c",
+  "tests/unit/generators/test_spiral_bounds.py::test_requested_turns_above_the_turns_that_fit_are_refused_as_the_users_request": "a17014dbe2e72899297a0b712f90bbf1fee00221fa63bfaeb122bc630ad7e2b9",
+  "tests/unit/model/test_angle_file_form.py::test_an_angle_with_no_finite_degrees_is_refused_by_validation": "acac03b710990d0093796b95129fd277aba40e31424eb4df5600f945d4a4f019",
+  "tests/unit/model/test_angle_file_form.py::test_compute_returns_the_issue_for_an_angle_with_no_finite_degrees": "973ed968072b570a14e6ad309691ca184b20d2cd7ac42fbbb902d48fe67abf60",
+  "tests/unit/property/test_seeded_drafts_all_topologies.py::test_f14_1_seeded_drafts_return_an_outcome_without_internal_errors_or_unnamed_non_finite_numbers": "6d19aac8fcb3c205bc31b0077cf6dde50dfda6fdde0a80ffa104443b05b7eb34"
+ },
+ "REQ-F-15": {
+  "tests/unit/embodic_io/project/test_hash_all_topologies.py::test_f15_1_changing_any_winding_field_changes_the_hash": "229e7d72d23c93802c13e248659728fbd43e8c3402ee48c38573153be5b08509",
+  "tests/unit/embodic_io/project/test_hash_all_topologies.py::test_f15_1_save_load_save_is_byte_identical_for_every_packaged_example": "952d69c569ab5ad3ee0e4fbdd23d82361ac517e7aabe5e0a1dbbe6d28dfa2b9d",
+  "tests/unit/embodic_io/project/test_hash_all_topologies.py::test_f15_1_serpentine_hashes_agree_exactly_when_designs_are_equal": "8fae63644e786a3eabd640ce33feed15a1e97ea66598b962d1c88bd3f198f46e",
+  "tests/unit/embodic_io/project/test_hash_all_topologies.py::test_f15_1_wave_hashes_agree_exactly_when_designs_are_equal": "001693fb02a995b904ca0ace3a141e73f523a2a158a22c0d4f8a66af0e532918",
+  "tests/unit/embodic_io/project/test_hash_negative_zero.py::test_f15_negative_zero_in_any_float_field_leaves_the_design_hash_unchanged": "80a4fcdb4b6658d83ccabc6aea3b918c8111b9ddf6c2741e013bea7663ea822b",
+  "tests/unit/embodic_io/project/test_hash_negative_zero.py::test_f15_save_load_save_is_byte_identical_with_a_negative_zero_in_the_design": "79e617ff72ce6452a805e602ea6fe97e94aaa6852a7b262c9931192f4e627e52",
+  "tests/unit/embodic_io/project/test_project.py::test_ut_io_01_save_load_save_is_byte_identical": "2b7a69e5bdcb887d0b8c2158cb57b21d56418a2a5599ba3203b6a2a944c1f42e",
+  "tests/unit/embodic_io/project/test_project.py::test_ut_io_07_incomplete_draft_loads_with_the_same_missing_list": "9006b6637efd906f98fd946dff3f14a2e3eab83a63a5230d1f5afa14667aa56e",
+  "tests/unit/property/test_pipeline_properties.py::test_pr_08_hash_changes_iff_the_design_changes": "8c229b2053dfb46f61f31627bd6876505a0c58b6c78404bfe6654b009dc068ed"
+ },
+ "REQ-F-21": {
+  "tests/ui/qt_design/test_new_design_and_examples.py::test_ui22_example_load_marks_every_field_example_and_set_back_restores_it": "d5cd40bee8987de92d80514c5235e725550d9b9a12b6ba9278ade9e593d617f9",
+  "tests/ui/qt_shell/test_toolstrip_and_start.py::test_ui23_window_opens_empty_with_new_design_and_examples_and_runs_no_compute": "1d21e61eb660ea43e5e252022f4ecfb4b59d6b18afc08cdd551c4c0cf2aab51f",
+  "tests/unit/property/test_pipeline_properties.py::test_pr_12_badges_do_not_depend_on_provenance_and_reentry_changes_nothing": "4174c734df58d4d73b6b2d5f1e81ef08c0a3e45d0ff02646619275c936dc5448",
+  "tests/unit/ui/session/test_session_state_machine.py::test_ui22_example_chips_turn_user_on_edit_and_return_when_set_back": "f8e772aff57a0873cbf59339ac6ccc04ff9504337d4fea251f1ff75b36a5f8cb"
+ },
+ "REQ-F-34": {
+  "tests/golden/m3_serpentine/test_gr20_layouts.py::test_gr20_copper_matches_xcoil_layer_by_layer": "240032bc6c8a5ddaa2c80089c5680c8e4c2e91afeb5f865bf1d299ca89c1f52f",
+  "tests/golden/m3_serpentine/test_gr20_layouts.py::test_gr20_vias_match_xcoil": "10554450b269c83b44ea1b7ce470c3abf1eaa7f2ebe9483530b41acc632c928f",
+  "tests/golden/m3_serpentine/test_gr23_helpers.py::test_gr23_every_helper_has_200_inputs_and_exercises_each_branch": "4ee265bb66cab081a4b55e85d4dc2d29f43f2eec2f5ba3a7a0746946acfe54b5",
+  "tests/golden/test_f34_drc_least_clearance.py::test_f34_1_serpentine_least_clearances_equal_the_arc_exact_sweep": "a60d7192a9c241349aa06b9a87adf1f329ecbdb72460f2563b90bd7d0bf7e39b",
+  "tests/unit/generators/serpentine/test_serpentine_generator.py::test_ut_gen_05_a_via_of_one_board_never_meets_the_copper_of_another": "a034ce1eaa67a503bb543fb1ce79430fc3464004ee223fd0084b979c31b1c544",
+  "tests/unit/generators/serpentine/test_serpentine_generator.py::test_ut_gen_05_one_board_per_phase": "425144cd6108d9a58ae11a9bfd8a2d7c0209a93082be467a661551222d6dd568"
+ },
+ "REQ-F-37": {
+  "tests/unit/model/test_draft.py::test_blank_spiral_draft_lists_every_required_pointer_in_form_order": "36f4bb02244b2ad704f8c9d308780f658c6125ac50278dd3abe60e7a9cb9856e",
+  "tests/unit/model/test_draft.py::test_draft_round_trip_is_exact": "c3f233843f84fa6765a53b610180cd587e42d267a440cf16ea736117ef039b04",
+  "tests/unit/model/test_draft.py::test_filling_the_last_required_field_gives_the_design": "4de1ce861dc65d8d82fc29d6633d6662e538e5407f36f806e8a87635207d214c",
+  "tests/unit/model/test_draft.py::test_invalid_present_value_is_an_issue_alongside_missing_fields": "d8b0b7e440d2e3edbae09c9efb501f7f04a4e32498801e8950315b0698f7ae4b",
+  "tests/unit/model/test_draft_blank_lists.py::test_f37_1_blank_serpentine_and_wave_drafts_list_every_required_pointer_in_form_order": "c6a7362ff46a4ca6753a58429cfd6dc2a4992a90e6e94de33c83b05e78f638ae"
+ },
+ "REQ-F-40": {
+  "tests/golden/m1_layout/test_gr19_layouts.py::test_gr19_write_read_write_is_byte_identical": "2ac186c5aae3ef8f8efcd6d37eedf915fe40a3eba9cc163d3c04a33ca09c27f9",
+  "tests/unit/embodic_io/board_dump/test_board_dump.py::test_board_dump_tags_non_finite_numbers_and_rejects_bare_tokens": "3bfc3ff29462014d3f1dbfb1d926fa17f70d6c0008cda7dc96987a55761b5435",
+  "tests/unit/embodic_io/board_dump/test_board_dump.py::test_board_dump_write_read_write_is_byte_identical": "56188badc4cd6cf0ba8d6508c485131d73dc8650ff1978c765d4e19d1f19e11c"
+ },
+ "REQ-N-18": {
+  "tests/ui/qt_shell/test_worker_and_errors.py::test_ui12_an_exception_in_a_gui_slot_also_saves_and_explains": "3902a56efe72fca4eb13170390c1384770fb3e12bf3b7245b85009394eefedee"
+ },
+ "REQ-N-21": {
+  "tests/unit/base/test_units.py::test_units_js_round_matches_javascript_math_round": "755a7782d9d923d18c2a3f2a3874a343de72a7654a1f018d8e69fc3d704dfc83",
+  "tests/unit/base/test_units.py::test_units_quantise_matches_xcoil_fmt": "5ab0e526076c4bc515f15fc4dfadacf8bc8b5fab53100577be73eee679851710",
+  "tests/unit/base/test_units.py::test_units_round_trips_stay_within_two_ulps": "2af8da61919f29f51b1ede315ebf5ed8f6020a27d9a7303ee28dc8baa692408c",
+  "tests/unit/embodic_io/exporters/test_n21_joint_continuity.py::test_n21_dxf_arc_joints_are_continuous_within_the_coincidence_bound": "6ed5cdf5530941b3d009da1b1ac66d7f71a6e3e32c75b1cf60f03b3c8e189427",
+  "tests/unit/embodic_io/exporters/test_n21_joint_continuity.py::test_n21_dxf_writes_one_point_for_every_line_to_line_joint": "5ff24eebb330d27fd265a55ee4dfdfd5bf9f5093318fc9309e420a1e1df52b04",
+  "tests/unit/embodic_io/exporters/test_n21_joint_continuity.py::test_n21_svg_joint_ends_that_round_apart_are_written_once_from_the_shared_coordinate": "7b8998897f2848ed304450d31873d6a95b0d796c42b658c9b0d8de153e4cad8b",
+  "tests/unit/embodic_io/exporters/test_n21_joint_continuity.py::test_n21_svg_writes_one_point_for_every_copper_joint": "2aaa3a09a9780d6c714c0a1b242d6ffb39f36498458400465fc771e474f107b2",
+  "tests/unit/geometry/test_discretise.py::test_ut_geo_23_chords_respect_every_bound": "1ebd08d496d2007ee8026f7c9380fcfb9ed84006d57548f53ce524049ec89eea",
+  "tests/unit/geometry/test_transforms.py::test_ut_geo_22_rotation_by_60_degrees_matches_closed_form": "6991b7de34125eed4217ba0fee0d5029bfc0ab145942f5f32c0f6f95eae7489f"
+ },
+ "REQ-N-23": {
+  "tests/ui/qt_shell/test_n23_high_contrast.py::test_n23_1_high_contrast_forces_greyscale_and_disables_the_toggle": "aa23b5448077316879bc1fb3d0c59f2dcfdb652f94084ae679aecf4ced5f56a2",
+  "tests/ui/qt_shell/test_n23_high_contrast.py::test_n23_2_the_sheet_is_the_dark_sheet_in_system_colours": "0152228ae355a6bcaa2df6be5edda3e0d7c7a076d31fc9df227a88591a117318",
+  "tests/ui/qt_shell/test_n23_high_contrast.py::test_n23_4_the_drawing_is_dark_greyscale_with_every_label_and_eye": "0229fa31d1d93832dc477f4fbaaf0893d1f35b5a4fa494d1b4724dd90e784aee",
+  "tests/ui/qt_shell/test_n23_high_contrast.py::test_n23_5_turning_high_contrast_off_restores_the_theme_and_the_chosen_mode": "ba3f95c27d60f7ab0e886333f3f06f0a8d749968c4a8f0c5b97d35dcbaac5331",
+  "tests/ui/qt_shell/test_theme_and_geometry.py::test_ui27_both_render_modes_draw_phase_colour_or_grey_and_keep_every_label": "e1cd461aef36b4316f3c32dcd51b1890e065ee782b295f71ccff5b885414f92b",
+  "tests/unit/ui/shell/test_outcome_viewmodel.py::test_ui27_every_top_layer_coil_has_a_label_and_an_eye_that_never_reaches_copper": "c0ee8fdfd4998356a2b3df5a52478766389dfdd4e9becee64da758ccabb08528"
+ },
+ "REQ-T-03": {
+  "tests/unit/results/test_status.py::test_status_badge_truth_table": "95a0d223fbd9c9739cb0775838542a10e590c7f54c78e65a52fac5678b1d4198",
+  "tests/unit/results/test_traceable.py::test_traceable_tag_lists_exactly_the_assumed_inputs_dominant_first": "54cd751f0ebeaf3f70e24f58e0b85a63905205f0631d83d12d17a023ab10e8c0"
+ },
+ "REQ-T-09": {
+  "tests/unit/base/test_tr01_release_gate.py::test_tr01_release_gate_fails_on_an_untested_must_row": "f4b330195a6740f22d4859e3690ff3a193208b46d27ed106d4a110f8f5d7ca8e",
+  "tests/unit/base/test_trace_matrix.py::test_merged_reports_give_each_test_the_outcome_of_the_report_that_ran_it": "0a3c262f5fa01ba184245d9cfa5fe72407c87eb6c74581d4b9bd21fb7047e39a",
+  "tests/unit/base/test_trace_matrix.py::test_trace_matrix_reports_unmarked_tests_and_unknown_ids": "f830aa28e33b50ada37b59906b331aa8fc378f164585780ad4934ac2a94d1d25",
+  "tests/unit/base/test_trace_matrix_gate.py::test_gate_exits_0_when_every_test_is_marked": "90bb2be6fc7eea8374688d9385edfc14f10590034c379e2eed97170f479db6ec",
+  "tests/unit/base/test_trace_matrix_gate.py::test_gate_exits_1_and_names_a_test_without_a_req_marker": "d01af4d3dda883de4240a043071fe32ced422d97910a794b021b9303f4d4d661",
+  "tests/unit/base/test_trace_matrix_gate.py::test_gate_still_names_an_unmarked_test_that_only_the_second_report_holds": "4230cad2eb1451fe06a52d694724ff9ffefdfab0fdf9e9a1ee70ea21bde90f73"
+ }
+}
