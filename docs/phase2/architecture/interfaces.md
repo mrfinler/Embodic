@@ -1870,8 +1870,9 @@ PATH`. The file is one JSON list with one object per record.
 | `embodic_version` | string | the version of the build that the person tested |
 | `result` | string | `"passed"` or `"failed"` |
 
-- TR-01 counts a record with `result` equal to `"passed"` as a test for its `req`. The Phase 1 text of TR-01 already
-  allows "a manual test record" (`docs/phase1/architecture/test_plan_draft.md` l.393).
+- TR-01 counts a record with `result` equal to `"passed"` as a test for its `req`, when the record is current (currency,
+  below). The Phase 1 text of TR-01 already allows "a manual test record"
+  (`docs/phase1/architecture/test_plan_draft.md` l.393).
 - The script exits 1 and prints the record when its `result` is neither value, its `req` is unknown or its `record`
   path does not exist. A typo then cannot hide a gap, as `record_passed_tests.py` refuses an unknown eqt ID (§3.1).
 - The summary line prints the number of counted records after the test counts, as "manual: 1". Nobody then reads a
@@ -1884,8 +1885,35 @@ PATH`. The file is one JSON list with one object per record.
   `docs/phase3/fable/`. A record names the build (the version, and the wheel's SHA-256 when a wheel exists), each step
   with the output the person saw, and the verdict. It holds no account name (standing order 7).
 
-`embodic_version` does not decide whether a record counts. Whether a record of an earlier build satisfies TR-01 for the
-0.0.2 gate is open (§13 point 14). D-051e puts a coverage step in Phase 5, so this contract adds no coverage gate.
+Currency of a manual record (revision 2026-10-20, U-D26; D-083c, D-061d). U-D17 wrote here that `embodic_version` does
+not decide whether a record counts, and left a record of an earlier build open (§13 point 14, row "A manual record of an
+earlier build"). D-083c replaces that sentence and settles the row. TR-01 never checked currency, so at c25d8a9 it
+counted seven records of older builds (D-083c). Agent 3 builds the rule in `tools/trace_matrix.py` (U-M8y).
+
+- The version under test is `embodic.__version__`, the value that `tools/record_passed_tests.py` writes into the
+  evidence (l.88-89).
+- Under the release profile, a manual record counts only when its `embodic_version` begins with the version under test.
+  The comparison is `str.startswith` on the two strings as written. A counted record is also valid (the checks above)
+  and has `result` equal to `"passed"`.
+- A valid record whose `embodic_version` does not begin with the version under test is stale. TR-01 does not count it,
+  whatever its `result`, and lists it with its `record` path and D-061d.
+- A stale record does not fail the run by itself. It covers no row, so a live must row that only a stale record covered
+  is listed as untested and fails the run, as any untested row does. An invalid record still fails the run.
+- "manual: N" in the summary line counts only the counted records.
+- The release profile is the only profile that passes `--manual-records` (`gates_for`, `tools/ci.py` l.114-116). The
+  commit and nightly profiles read no record, so the rule changes nothing there.
+- A record that stands under D-061d for a new version, because the files its subject depends on are unchanged since the
+  build it names, is restamped by Agent 4. Agent 4 sets its `embodic_version` to the new version followed by a reference
+  to the ruling that it stands, for example `"0.0.5 (record of 0.0.4 c25d8a9; stands under D-061d, <ruling path>)"`.
+  The record file keeps its text, because it holds what the person saw (standing order 7). `tools/trace_matrix.py` does
+  not decide D-061d. It reads only the version text.
+
+On main fcd050b all six entries of `docs/phase3/verification/manual_records.json` have `embodic_version` `"0.0.4
+(release c25d8a9)"`, and `embodic.__version__` is `"0.0.4"` (`src/embodic/__init__.py` l.3). Under this rule the six
+count for 0.0.4 (`verified` by reading). When the version changes, each is stale until Agent 4 restamps it under D-061d
+or a person repeats the check.
+
+D-051e puts a coverage step in Phase 5, so this contract adds no coverage gate.
 
 ## 4. `embodic.winding`: spiral phase plan
 
