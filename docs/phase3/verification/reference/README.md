@@ -2,6 +2,59 @@ Prepared by: Agent 4 - Independent Verificator - model: claude-opus-5-5
 
 # PK-04 Linux reference
 
+## DEF-UV10-01 tested (U-V20, 2026-10-21)
+
+D-085 records the Windows run of the 0.0.4 wheel: four examples pass, and the wave fails on one value,
+`/drc/0/summaries/0/pairs_checked` 3461 (Linux) against 3462 (Windows). The release 0.0.1 section below gave the cause
+as a guess: a candidate pair at the broad-phase limit that float noise moves in or out. U-V20 tested that premise on
+Linux with the 0.0.4 wheel venv. Each line below is `verified` by running it, unless it carries another label.
+
+The probe. `checks/drc_pairs_probe.py` computes the wave example and replays the pair loop of `run_drc` with the
+engine's own functions. Its Linux output is `drc_pairs_linux_0.0.4.json.gz` (gzip, one JSON object). The replay gives
+the same counts as `run_drc` for every pair kind (trace_trace 3461) and the same pair set per layer group. Two runs
+gave the same JSON.
+
+The premise is false as stated. The near test of `candidate_pairs` (`src/embodic/drc/engine.py` l.149) keeps a piece
+pair when `|mid_p - mid_q| <= span_p + span_q + rule_mm + 1e-9`. Over every trace_trace pair within 0.05 mm of that
+cutoff, the kept pair nearest it lies 2.502e-3 mm inside it, and the left-out pair nearest it lies 3.658e-3 mm outside
+it. Float noise between two platforms is about 1e-13 mm, which is 10 orders of magnitude smaller. Disabling NumPy's
+AVX-512 and AVX2 kernels (`NPY_DISABLE_CPU_FEATURES`) changed no slack value at all, so the dispatch did not change
+these floats on this machine.
+
+What does move the count is the piece split. `_pieces` (l.87) cuts an item into `ceil(length / 0.5 mm)` pieces. Twelve
+trace primitives of the wave board are 1.0 mm long, so the ratio is 2 within 1e-14. On Linux, six round down to 2
+pieces and six up to 3 (for example `path:93/prim:0`, ratio 2.000000000000004, 3 pieces). The probe moves each one
+across the integer by 1e-13 relative inside `_pieces` only and reruns `run_drc`. Six of the twelve flips change the
+trace_trace count by one (four to 3462, two to 3460). Each flip adds or removes one pair at clearance 0.4488 mm against the 0.2 mm
+rule. All twelve flips keep 186 violations. Flipping all twelve gives 3463. Which item rounds the other way on Windows
+is `not tested`. The probe below names it.
+
+The margin. The count is a diagnostic, because no pair the broad phase leaves out can violate a rule. For every piece
+of an item, every point of the item's copper lies within `span = reach + half width` of the piece midpoint (l.81 and
+l.102-106, read). So a pair's clearance is at least `|mid_p - mid_q| - span_p - span_q` for the closest pieces. That
+bound held for all 4072 pairs near the cutoff: clearance minus bound is at least 4.4e-16 mm. A left-out pair therefore
+has a clearance above `rule_mm + 1e-9`, where `rule_mm` is the largest pair rule plus `DRC_EPSILON_MM` (l.239). A
+violation needs a clearance below `required_k - DRC_EPSILON_MM` (`report.py` l.56). The margin is
+`(max rule - required_k) + 2 x 1e-6 + 1e-9` mm. That is at least 2.001e-6 mm for the pair kind with the largest rule,
+and 0.100002001 mm for trace_trace on the wave rules (0.2 mm, largest 0.3 mm). The grid cell of l.121 is
+`2 x max span + rule_mm + 1e-9`, no smaller than the near threshold of any piece pair, so a violating pair sits in the
+same or an adjacent cell with the same margin to spare (read; the replay found the grid's pairs). Any piece count keeps the bound, so the margin is the same for every split. The
+exhaustive pass of the probe measured all 1,511,143 left-out pairs of the wave board (trace_trace 1,060,944): no
+violation, and the least left-out trace_trace clearance is 0.448812 mm.
+
+The rule in the tool. D-052b stands: `pairs_checked` of a pair kind is a same-platform diagnostic. `pk04_compare.py`
+now leaves out `/drc/*/summaries/*/pairs_checked` for the seven pair kinds and lists it under "not compared". It still
+compares `pairs_checked` of `min_width`, `min_drill` and `annular_ring`, which count objects. The self-test has two new
+cases. A trace_trace count changed by 1 passes. A min_width count changed by 1 fails and names the pointer. All 10
+cases pass. Two seeded faults each fail one case: a tool without the rule fails the first case, and a tool that leaves
+out every `pairs_checked` fails the second. A fresh Linux run of the 0.0.4 wheel against `linux/` passes, and all six
+files are byte-identical. With the wave's trace_trace count set to 3462 in a copy, the 2cedac6 tool prints the D-085
+line and fails, and this tool passes. Whether the Windows folder now passes is Fable's run on the laptop (`not tested`
+here).
+
+Spec text. test_plan.md "PK-04 rule" part 5 still says that integers compare exactly and that `/versions/python` is the
+one pointer allowed to differ. The text does not carry D-052b or the hash parts. That part is Agent 6's to amend.
+
 ## Release 0.0.4 (U-V18, 2026-10-20)
 
 `linux/` is the output of `pk04_reference.py` for release 0.0.4 (tag v0.0.4, commit c25d8a9). Release 0.0.3 was not

@@ -7,7 +7,7 @@ The status rule and the evidence kinds are in the script's docstring. Inputs and
 
 - `docs/phase2/architecture/requirements.md` `c4f6c1ad17b2712d`
 - `docs/phase1/architecture/test_plan_draft.md` `c1e8592d0294396b`
-- `docs/phase2/architecture/test_plan.md` `189767c39c1700fd`
+- `docs/phase2/architecture/test_plan.md` `53eeb1c10ffd742d`
 - `docs/phase3/verification/inputs/req_report_c25d8a9.json.gz` `a7c52fc47e73d72b`
 - `docs/phase3/verification/inputs/req_report_latency_c25d8a9.json.gz` `3944d9283bbf14a9`
 - `docs/phase3/verification/inputs/gate_release_c25d8a9.log.gz` `eb28e47386cebace`
@@ -15,11 +15,12 @@ The status rule and the evidence kinds are in the script's docstring. Inputs and
 - `tests/independent/m7/records/V3-01_pins_260191f.json` `187a6b3d409019a6`
 - `tests/independent/m7/v3_01_rulings_v14.py` `6e4f4dc4d7cfeb70`
 - `tests/independent/m7/v3_01_rulings_v18.py` `c1276b0bb7a51d57`
-- `docs/phase3/verification/manual_records.json` `2d74406d55df8e4d`
+- `tests/independent/m7/v3_01_rulings_v19.py` `f06e81683e547cc7`
+- `docs/phase3/verification/manual_records.json` `3b77f6e28b756d8a`
 
-Counts by status (all rows): not tested 7, partial 42, verified 45, withdrawn 16.
+Counts by status (all rows): not tested 7, partial 34, verified 53, withdrawn 16.
 
-Counts by status (must rows): partial 28, verified 45.
+Counts by status (must rows): partial 20, verified 53.
 
 | REQ | Prio | M | Status | Ruling | Marked records (passed, of them Agent 4) | Planned tests and evidence | Needs |
 |---|---|---|---|---|---|---|---|
@@ -30,11 +31,11 @@ Counts by status (must rows): partial 28, verified 45.
 | REQ-F-05 | must | M2 | partial | - | 21 (21, 0) | UT-GEO-13 name, UT-PHY-11 none, PR-01 none, UT-GEN-06 none | - |
 | REQ-F-06 | must | M2 | partial | - | 50 (50, 0) | UT-GEO-07 name, UT-GEO-08 name, UT-GEO-09 name, UT-GEO-17 name, UT-GEO-18 name, UT-GEO-25 none, OR-04 name | - |
 | REQ-F-07 | must | M2 | verified | `checks`, sources match | 4 (4, 0) | UT-PHY-01 eqt, UT-PHY-02 name, UT-PHY-04 name, UT-PHY-14 eqt | - |
-| REQ-F-08 | must | M2 | partial | text-verified; ruled `partial` | 4 (4, 0) | UT-PHY-09 eqt, UT-WND-07 name | - |
+| REQ-F-08 | must | M2 | verified | `checks`, sources match | 4 (4, 0) | UT-PHY-09 eqt, UT-WND-07 name | - |
 | REQ-F-09 | should | M2 | partial | text-verified; no V3-01 ruling | 120 (120, 28) | UT-GEO-14 name, UT-DRC-06 name, UT-EXP-02 name | - |
 | REQ-F-10 | must | M1 | partial | - | 340 (340, 37) | UT-DRC-01 none, UT-DRC-02 name, UT-DRC-03 name, UT-DRC-04 name, UT-DRC-05 name, UT-DRC-08 name, PR-01 name, PR-02 name, PR-13 none, GR-18 name | - |
 | REQ-F-11 | must | M2 | partial | - | 273 (268, 26) | UT-PHY-05 eqt, UT-PHY-06 file, UT-PHY-10 eqt, UT-PHY-12 eqt, UT-PHY-15 name, UT-PHY-16 name, UT-PHY-17 name, UT-PHY-18 eqt, UT-PHY-19 name, GR-02 eqt, GR-03 eqt, GR-04 eqt, GR-09 eqt, GR-11 eqt, GR-13 eqt, OR-01 name, OR-11 record, OR-12 record, UT-PHY-22 eqt, UI-07 name | OR-11: FEA (test_plan.md §5.6 and §7 M2 (D-045b): a Phase 3 FEA case); OR-12: FEA (test_plan.md §5.6 and §7 M2 (D-045b): a Phase 3 FEA case) |
-| REQ-F-12 | must | M2 | partial | text-verified; ruled `partial` | 4 (4, 0) | UT-PHY-08 eqt, UT-PHY-20 name, GR-05 eqt | - |
+| REQ-F-12 | must | M2 | verified | `checks`, sources match | 4 (4, 0) | UT-PHY-08 eqt, UT-PHY-20 name, GR-05 eqt | - |
 | REQ-F-13 | must | M4 | partial | text-verified; ruled `partial` | 79 (79, 22) | UI-02 file, UI-03 name, UI-04 name, UI-06 name, UI-58 name, UI-59 name, UI-60 name, UI-61 name | - |
 | REQ-F-14 | must | M2 | partial | - | 191 (191, 0) | PR-05 name, BV-01 name, BV-02 name, BV-03 name, BV-05 none, BV-06 name, BV-21 none, UT-DRC-09 none, UI-14 name | - |
 | REQ-F-15 | must | M2 | verified | `checks`, sources match | 145 (145, 11) | UT-IO-01 name, UT-IO-02 name, UT-IO-03 name, UT-IO-04 name, UT-IO-07 name, PR-08 name | - |
@@ -71,12 +72,12 @@ Counts by status (must rows): partial 28, verified 45.
 | REQ-N-06 | must | M5 | partial | - | 37 (37, 0) | PK-03 name, PK-05 file, PK-10 gate, PK-11 name | PK-05: Windows (test_plan.md §5.7 PK-05 row: needs the Windows folder) |
 | REQ-N-07 | must | M5 | partial | - | 0 (0, 0) | PK-06 record | PK-06: Windows (test_plan.md §5.7 PK-06 row: the timed walkthrough on a clean Windows machine) |
 | REQ-N-08 | must | M1 | verified | `checks`, sources match | 10 (10, 0) | MT-01 gate, MT-02 gate, MT-03 gate | - |
-| REQ-N-09 | must | M2 | partial | text-verified; ruled `partial` | 67 (67, 0) | MT-04 name | - |
-| REQ-N-10 | must | M2 | partial | text-verified; ruled `partial` | 4 (4, 0) | TR-01 gate | - |
+| REQ-N-09 | must | M2 | verified | `checks`, sources match | 67 (67, 0) | MT-04 name | - |
+| REQ-N-10 | must | M2 | verified | `checks`, sources match | 4 (4, 0) | TR-01 gate | - |
 | REQ-N-11 | must | M4 | verified | `checks`, sources match | 3 (3, 0) | AX-01 name | - |
 | REQ-N-12 | must | M4 | partial | - | 105 (105, 0) | AX-02 name, AX-03 name, UI-46 none, UI-47 none, UI-48 none, UI-49 none, UI-50 none, UI-51 none, UI-52 none, UI-53 none, UI-54 none, UI-55 none, UI-56 none, UI-57 none | - |
 | REQ-N-13 | must | M4 | verified | `checks`, sources match | 4 (4, 0) | AX-04 name | - |
-| REQ-N-14 | must | M4 | verified | `checks`, sources match; `tests/independent/m4/records/AX-05.md` redone as `tests/independent/m4/records/AX-05_c25d8a9.md` | 58 (58, 32) | AX-05 record | - |
+| REQ-N-14 | must | M4 | verified | `checks`, sources match; `tests/independent/m4/records/AX-05.md` redone as `tests/independent/m4/records/AX-05_99d355d.md` | 58 (58, 32) | AX-05 record | - |
 | REQ-N-15 | must | M4 | verified | `checks`, sources match | 115 (115, 22) | UI-09 name | - |
 | REQ-N-16 | must | M4 | partial | - | 12 (12, 0) | AX-06 file | AX-06: Windows display (requirements.md REQ-N-16 acceptance: Narrator check) |
 | REQ-N-17 | must | M5 | verified | `checks`, sources match | 11 (11, 0) | PK-07 name | - |
@@ -115,20 +116,20 @@ Counts by status (must rows): partial 28, verified 45.
 | REQ-T-05 | must | M2 | partial | text-verified; ruled `partial` | 96 (96, 0) | TR-03 name, UT-RES-02 file, UT-RES-08 name, UT-RES-09 name, TR-05 gate | - |
 | REQ-T-06 | must | M2 | verified | `checks`, sources match | 11 (11, 0) | UT-RES-06 file, UT-MOD-05 file | - |
 | REQ-T-07 | must | M4 | verified | `checks`, sources match | 132 (132, 0) | UT-IO-06 name | - |
-| REQ-T-08 | must | M2 | partial | text-verified; ruled `partial` | 28 (28, 0) | UT-PHY-13 file, UT-PHY-21 file | - |
+| REQ-T-08 | must | M2 | verified | `checks`, sources match | 28 (28, 0) | UT-PHY-13 file, UT-PHY-21 file | - |
 | REQ-T-09 | must | M1 | verified | `checks`, sources match | 37 (37, 0) | TR-01 gate, TR-02 gate | - |
 | REQ-T-10 | must | M4 | verified | `checks`, sources match | 35 (35, 0) | LG-03 name | - |
-| REQ-T-11 | must | M4 | verified | `checks`, sources match; `tests/independent/m4/records/LG-04_T-11_reviewer.md` redone as `tests/independent/m4/records/LG-04_T-11_reviewer_c25d8a9.md` | 32 (32, 0) | LG-04 name | - |
+| REQ-T-11 | must | M4 | verified | `checks`, sources match; `tests/independent/m4/records/LG-04_T-11_reviewer.md` redone as `tests/independent/m4/records/LG-04_T-11_reviewer_99d355d.md` | 32 (32, 0) | LG-04 name | - |
 | REQ-T-12 | should | M4 | not tested | - | 0 (0, 0) | UI-13 none | - |
 | REQ-T-13 | must | M4 | verified | `checks`, sources match | 19 (19, 0) | UI-06 name | - |
-| REQ-T-14 | must | M4 | partial | text-verified; ruled `partial` | 67 (67, 0) | UT-IO-06 name, UI-32 name | - |
+| REQ-T-14 | must | M4 | verified | `checks`, sources match | 67 (67, 0) | UT-IO-06 name, UI-32 name | - |
 | REQ-T-15 | must | M2 | partial | - | 24 (24, 0) | UT-MOD-04 file, UT-IO-07 name, PR-12 none | - |
 | REQ-T-16 | must | M2 | verified | `checks`, sources match | 15 (15, 0) | UT-RES-07 file, UI-33 name | - |
-| REQ-L-01 | must | M4 | partial | text-verified; ruled `partial` | 23 (23, 0) | LG-01 name, LG-08 name | - |
+| REQ-L-01 | must | M4 | verified | `checks`, sources match | 23 (23, 0) | LG-01 name, LG-08 name | - |
 | REQ-L-02 | should | M4 | not tested | - | 0 (0, 0) | LG-02 none | - |
 | REQ-L-03 | must | M4 | verified | `checks`, sources match | 46 (46, 0) | LG-05 name | - |
 | REQ-L-04 | must | M4 | verified | `checks`, sources match | 6 (6, 0) | AX-01 name, AX-05 record, AX-08 file | - |
-| REQ-L-05 | must | M4 | partial | text-verified; ruled `partial` | 55 (55, 0) | LG-06 name | - |
+| REQ-L-05 | must | M4 | verified | `checks`, sources match | 55 (55, 0) | LG-06 name | - |
 | REQ-L-06 | should | M4 | not tested | - | 0 (0, 0) | LG-07 none | - |
 | REQ-L-07 | must | M2 | verified | `checks`, sources match | 74 (74, 0) | UT-UNI-03 file | - |
 | REQ-L-08 | must | M4 | verified | `checks`, sources match | 3 (3, 0) | UI-34 name | - |

@@ -1,6 +1,7 @@
 """Requirement audit of one build: one status per row of requirements.md, from that build's own test records.
 
     python3 docs/phase3/verification/checks/req_audit.py                    # release 0.0.4: writes req_audit.md
+    python3 docs/phase3/verification/checks/req_audit.py --target 0.0.5-pre # main 99d355d: req_audit_0.0.5_pre.md
     python3 docs/phase3/verification/checks/req_audit.py --target 0.0.1     # release 0.0.1: req_audit_0.0.1.md
     python3 docs/phase3/verification/checks/req_audit.py [--target T] --check    # exit 1 when the file is stale
     python3 docs/phase3/verification/checks/req_audit.py --target 0.0.1 --self-test
@@ -18,9 +19,14 @@ the audited commit (`git archive <commit> tests`, or the folder given with --tre
   copied gzipped into docs/phase3/verification/inputs/; Agent 4's re-ruling of main
   (tests/independent/m7/v3_01_rulings_v13.py) with its function-level pins (records/V3-01_pins_260191f.json,
   interfaces.md section 3.2), on top the rows that U-V14 re-ruled on c0f4894 (v3_01_rulings_v14.py), and on top the
-  rows that U-V18 re-ruled on c25d8a9 (v3_01_rulings_v18.py); records from
-  docs/phase3/verification/manual_records.json (passed entries only). D-061d: a ruling that cites a record the index
-  no longer holds counts only through the record that redid it (REDONE, followed to its last redo).
+  rows that U-V18 re-ruled on c25d8a9 (v3_01_rulings_v18.py), and on top U-V19's re-rulings (v3_01_rulings_v19.py,
+  wired by U-V20 as U-V19 proposed); records from docs/phase3/verification/manual_records.json (passed entries
+  only). D-061d: a ruling that cites a record the index no longer holds counts only through the record that redid it
+  (REDONE, followed to its last redo).
+- Target 0.0.5-pre (U-V20): main 99d355d before Fable's release gate. The REQ reports of U-V20's two pytest processes
+  with the release marker expressions (main and latency) and the log of the static gates and the trace matrix that
+  U-V20 ran one by one (tools/ci.py did not run, so TR-05 and PK-10 have no PASS line); the 0.0.4 overlays plus
+  U-V20's re-pin of the renamed tests (v3_01_rulings_v20.py).
 - The earlier target main (U-V14, c0f4894) is gone: its gate log `inputs/gate_commit_5099401.log` was never in git
   (`*.log` is ignored) and was lost with the container on 2026-10-19 (D-071a). Its output is in git at 72ba81c.
 
@@ -73,13 +79,15 @@ RULINGS_NTL = REPO / "tests/independent/m7/v3_01_rulings_ntl.py"
 RULINGS_V13 = REPO / "tests/independent/m7/v3_01_rulings_v13.py"
 RULINGS_V14 = REPO / "tests/independent/m7/v3_01_rulings_v14.py"
 RULINGS_V18 = REPO / "tests/independent/m7/v3_01_rulings_v18.py"
+RULINGS_V19 = REPO / "tests/independent/m7/v3_01_rulings_v19.py"
+RULINGS_V20 = REPO / "tests/independent/m7/v3_01_rulings_v20.py"
 PINS_V13 = REPO / "tests/independent/m7/records/V3-01_pins_260191f.json"
 REQUIREMENTS = REPO / "docs/phase2/architecture/requirements.md"
 PLANS = (REPO / "docs/phase1/architecture/test_plan_draft.md", REPO / "docs/phase2/architecture/test_plan.md")
 VERIFICATION = HERE.parents[1]
 INDEX = VERIFICATION / "manual_records.json"
 # D-061d: a superseded record -> the record of the same check redone on a later build (U-V14 on c0f4894, U-V18 on
-# c25d8a9).
+# c25d8a9, U-V20 on 99d355d).
 _M4, _M5, _M6 = (f"tests/independent/m{n}/records/" for n in (4, 5, 6))
 REDONE = {
     f"{_M5}PK-06_walkthrough.md": f"{_M5}PK-06_walkthrough_c0f4894.md",
@@ -90,6 +98,10 @@ REDONE = {
     f"{_M6}OR-11_OR-12_c0f4894.md": f"{_M6}OR-11_OR-12_c25d8a9.md",
     f"{_M4}LG-01_word_review.md": f"{_M4}LG-01_word_review_c25d8a9.md",
     f"{_M4}LG-04_T-11_reviewer.md": f"{_M4}LG-04_T-11_reviewer_c25d8a9.md",
+    f"{_M5}PK-06_walkthrough_c25d8a9.md": f"{_M5}PK-06_walkthrough_99d355d.md",
+    f"{_M4}AX-05_c25d8a9.md": f"{_M4}AX-05_99d355d.md",
+    f"{_M6}OR-11_OR-12_c25d8a9.md": f"{_M6}OR-11_OR-12_99d355d.md",
+    f"{_M4}LG-04_T-11_reviewer_c25d8a9.md": f"{_M4}LG-04_T-11_reviewer_99d355d.md",
 }
 
 
@@ -122,6 +134,7 @@ class Target:
     reports: tuple[Path, ...]
     gate_log: Path
     out: Path
+    overlays: tuple[Path, ...] = ()  # rulings applied on top of v13, in order; each one's PINS replace a row's pins
 
 
 TARGETS = {
@@ -143,6 +156,19 @@ TARGETS = {
         ),
         VERIFICATION / "inputs/gate_release_c25d8a9.log.gz",
         VERIFICATION / "req_audit.md",
+        (RULINGS_V14, RULINGS_V18, RULINGS_V19),
+    ),
+    "0.0.5-pre": Target(
+        "0.0.5-pre",
+        "main 99d355d before the 0.0.5 release gate (U-V20; pytest and the static gates without tools/ci.py)",
+        "99d355d",
+        (
+            VERIFICATION / "inputs/req_report_99d355d.json.gz",
+            VERIFICATION / "inputs/req_report_latency_99d355d.json.gz",
+        ),
+        VERIFICATION / "inputs/gates_u_v20_99d355d.log.gz",
+        VERIFICATION / "req_audit_0.0.5_pre.md",
+        (RULINGS_V14, RULINGS_V18, RULINGS_V19, RULINGS_V20),
     ),
 }
 
@@ -419,7 +445,7 @@ def run_audit(tree: Path, target: Target = TARGETS["0.0.1"], index: Path = INDEX
         by_id = counted_records(index)
         counted = set(by_id.values())
         text_results = audit(rows, records, gates, eqs, sources, by_id)
-        overlays = (load_rulings(RULINGS_V14), load_rulings(RULINGS_V18))
+        overlays = tuple(load_rulings(path) for path in target.overlays)
         rulings = {**load_rulings(RULINGS_V13).RULINGS, **{k: v for o in overlays for k, v in o.RULINGS.items()}}
         pins = {
             **json.loads(PINS_V13.read_text(encoding="utf-8")),
@@ -530,7 +556,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.self_test:
             return self_test(tree) if target.name == "0.0.1" else self_test_main(tree)
         _, results, notes = run_audit(tree, target)
-    main_inputs = (RULINGS_V13, PINS_V13, RULINGS_V14, RULINGS_V18, INDEX)
+    main_inputs = (RULINGS_V13, PINS_V13, *target.overlays, INDEX)
     rulings = main_inputs if target.name != "0.0.1" else (RULINGS, RULINGS_F, RULINGS_NTL)
     inputs = [(p, sha(p)) for p in (REQUIREMENTS, *PLANS, *target.reports, target.gate_log, *rulings)]
     shown = [(str(p.relative_to(REPO)) if p.is_relative_to(REPO) else str(p), h) for p, h in inputs]
