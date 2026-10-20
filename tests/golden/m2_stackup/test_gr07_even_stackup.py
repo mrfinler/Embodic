@@ -14,7 +14,16 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from harness import DATA_DIR, KERNEL_MM, GoldenCase, GoldenReport, compare_scalar, compare_sequence, load_area
+from harness import (
+    DATA_DIR,
+    KERNEL_MM,
+    GoldenCase,
+    GoldenReport,
+    compare_scalar,
+    compare_sequence,
+    fixture_drift,
+    load_area,
+)
 
 from embodic.errors import Severity
 from embodic.model.stackup import CopperLayer, DielectricLayer, StackLayer, Stackup, generate_even_stackup
@@ -158,7 +167,4 @@ def test_gr_07_case_3_a_board_thinner_than_its_copper_is_refused(case: GoldenCas
 def test_gr_07_fixtures_equal_a_fresh_dump(tmp_path: Path) -> None:
     """Catches fixtures that are stale against the case list or the engine, or edited by hand."""
     subprocess.run(["node", str(DUMPER), str(CASE_LIST), "--out", str(tmp_path)], check=True, capture_output=True)
-    committed = sorted(p.name for p in (DATA_DIR / "stackup").glob("*.json"))
-    assert sorted(p.name for p in tmp_path.glob("*.json")) == committed
-    stale = [n for n in committed if (tmp_path / n).read_bytes() != (DATA_DIR / "stackup" / n).read_bytes()]
-    assert stale == []
+    assert fixture_drift(tmp_path, DATA_DIR / "stackup") == []

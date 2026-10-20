@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from harness import DATA_DIR, XCOIL_DRC_SLACK_MM, GoldenCase, Verdict, compare_drc, d006_pass, load_area
+from harness import DATA_DIR, XCOIL_DRC_SLACK_MM, GoldenCase, Verdict, compare_drc, d006_pass, fixture_drift, load_area
 from m1_layout.xcoil_map import prim_from_record
 
 from embodic.drc import DrcCheckKind, run_drc
@@ -127,7 +127,4 @@ def test_gr18_run_drc_agrees_with_xcoil_outside_the_slack_band(case: GoldenCase,
 def test_m1_drc_fixtures_equal_a_fresh_dump(tmp_path: Path) -> None:
     """Catches fixtures that are stale against m1_drc.json or the engine, or a non-deterministic area module."""
     subprocess.run(["node", str(DUMPER), str(CASE_FILE), "--out", str(tmp_path)], check=True, capture_output=True)
-    committed = sorted(p.name for p in (DATA_DIR / "m1_drc").glob("*.json"))
-    assert sorted(p.name for p in tmp_path.glob("*.json")) == committed
-    stale = [n for n in committed if (tmp_path / n).read_bytes() != (DATA_DIR / "m1_drc" / n).read_bytes()]
-    assert stale == []
+    assert fixture_drift(tmp_path, DATA_DIR / "m1_drc") == []
