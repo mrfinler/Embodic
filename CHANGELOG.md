@@ -2,6 +2,42 @@
 
 All notable changes to embodic are listed here. Versions follow semantic versioning; dates are ISO 8601.
 
+## 0.0.5 - 2026-10-21
+
+This release closes the Phase 3 gaps that the 0.0.4 audit and the Windows run of 0.0.4 found (D-082 to D-086). It
+changes no computed value: the outcome of each packaged example equals that of 0.0.4 except the version fields.
+
+### Fixed
+
+- Two physics methods lacked the documentation REQ-N-09 asks for, an equation identifier and every parameter with its
+  unit: `FieldTable.at` (EQ-05) and `InterconnectResistance.total_ohm` (EQ-23). The MT-04 check now covers methods; it
+  does not cover Protocol members. (U-D26, D-084a)
+- On Windows, Git's default `core.autocrlf=true` checked the repository's text files out with CRLF, because the
+  repository had no `.gitattributes`. The byte checks of the packaged examples then failed in a Windows checkout. Every
+  text file is now checked out with LF on every platform, and a static test keeps the rule. A checkout made before this
+  release keeps its CRLF files until they are checked out again. (DEF-W-13, D-086b)
+
+### Changed
+
+- The release trace gate (TR-01) counts a manual record only when the record names the version under test, matched as
+  a whole version and read from the source tree. A record of an older build is listed as stale. (D-083c, D-084a)
+- Sixteen tests now carry the identifier of the planned criterion they check, and sixteen tests are added for criteria
+  that no test checked, as the Phase 3 audit specified (U-V19, U-D26, D-046c). The self-test catalogue follows the
+  renamed DRC test.
+- Version 0.0.5. The five packaged examples change only in `app_version` and `engine_version`.
+
+### Known limits
+
+- Windows GUI latency (DEF-W-12) stays open and belongs to Phase 5. The failures come and go and cluster after long
+  runs. In a same-session comparison on the test laptop, the layer cue of 0.0.4 showed no measurable latency cost: ten
+  runs passed, with the N02-10 arrival gap at a median of 40 ms without the cue and 41 ms with it. (D-086d)
+- Windows Application Control on the test laptop blocked the unsigned PyInstaller bundle that was built there
+  (`WinError 4551`). Where such a policy is on, the bundle cannot start until it is code-signed, and signing is not set
+  up. (DEF-W-14, D-086c)
+- Three licence items are open: the written offer for the Qt and PySide6 source, the Qt third-party notices, and the
+  licence of embodic itself. (D-069, D-081)
+- The known limits of 0.0.4 that this release does not fix still apply.
+
 ## 0.0.4 - 2026-10-20
 
 This release carries wave F13 (D-078, D-079). Version 0.0.3 was built and tested but not released (D-078f). Its
