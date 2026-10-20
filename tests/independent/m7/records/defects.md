@@ -379,3 +379,30 @@ PYTHONPATH=src python tests/independent/m7/def_uv18_cross_net_junction.py     # 
 Status `verified`. The product behaves as interfaces.md section 7 says; the gap is that no test would see the net
 test go. Expected: a UT-DRC-04 case 5c variant with a second net-A path on the layer (the probe's geometry) that
 asserts the cross-net pair is reported. Owner Agent 3. Not fixed here.
+
+## DEF-UV19-01 (REQ-T-05, must; test gap): no REQ-T-05 test sees a refusal that names only some refused equations
+
+Release 0.0.4 (c25d8a9), V3-01 re-ruling (`records/V3-01_U-V19.md`). The acceptance says `record_main` names on stderr
+every `verified` equation whose linked tests did not all pass. The 13 REQ-T-05 tests of
+`tests/unit/results/test_record_passed_tests_gate.py` and `test_record_passed_tests.py` assert the named set exactly
+only when one equation is refused; with all ten refused, two tests each check one equation (EQ-04, EQ-10). A
+refusal that keeps the first four equations (`unproven = unproven[:4]` before the `_refuse` call of
+`tools/record_passed_tests.py`) passes all 13; keeping one or two fails 2 and 1 tests.
+
+```
+python3 -I tests/independent/m7/u_v19_t05_mutants.py    # original 13 passed; [:1] 2 failed; [:2] 1 failed; [:4] 13 passed
+```
+
+Status `verified`. The product names every refused equation (it joins the whole list); the gap is that no test would
+see it stop. Expected: `test_t05_stderr_names_every_refused_equation_with_its_passed_tests` as `U-V19_id_map.md`
+(EXTRA T05) specifies. Owner Agent 3 (U-M8y). Not fixed here.
+
+## DEF-UV19-02 (REQ-F-03, must; D-046c): three tests named UT-GEO-19 check UT-GEO-26
+
+Release 0.0.4 (c25d8a9). `tests/unit/generators/test_spiral_pairs.py` l.104, l.117 and l.142 name UT-GEO-19 and their
+docstrings say "UT-GEO-19 (M2, ...)", but they check the series layer pairs of UT-GEO-26 (k centre vias, the via fan,
+the fan refusal). UT-GEO-19's own criterion is the Phase 1 M4 build (test_plan_draft.md l.56), which REQ-F-03 (d) moves
+to Phase 5. So the 0.0.4 audit gives UT-GEO-19 `name` evidence from tests that do not check it, and UT-GEO-26 none.
+Status `verified` by reading. Expected: U-M8y renames the three tests and the series DRC test to UT-GEO-26 and edits
+the two docstrings (`U-V19_id_map.md`); Agent 6 restates UT-GEO-19 as the M4 refusal of REQ-F-03 (d) or moves it to
+Phase 5. Owner Agent 3 and Agent 6. Not fixed here.
