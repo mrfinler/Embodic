@@ -45,7 +45,7 @@ class Items:
     item_class: IntArray
     layer: IntArray  # index into Layout.copper_layers, EVERY_LAYER for through vias, through pads, edges, holes
     path: IntArray  # CopperPath.id
-    slot: IntArray  # 2 * main index; a fillet or taper takes 2 * main index + 1 of the main before it
+    slot: IntArray  # 2 * main index; a fillet or taper takes 2 * main index + 1 of the main before it, -1 at the start
     pad: IntArray  # index into Layout.pads
     centre_mm: FloatArray  # (n, 2) land centre for pad-to-pad and pad-to-via checks
     land_radius_mm: FloatArray  # circumscribed land radius for those checks
@@ -106,12 +106,16 @@ def _point(x_mm: float, y_mm: float) -> Line:
 
 
 def main_indices(prims: Sequence[Primitive]) -> list[int]:
-    """Xcoil ``mi`` (engine.js drcObjects l.1697): fillets and tapers belong to the corner they shape."""
+    """Xcoil ``mi`` (engine.js drcObjects l.1697): fillets and tapers belong to the corner they shape.
+
+    A fillet or taper takes the index of the main primitive before it, so one at the start of a path takes -1. It then
+    belongs to the first main primitive only, as one at the end of a path belongs to the last (rule 1, U-D25).
+    """
     out, index = [], -1
     for p in prims:
         if p.role not in _CORNER_ROLES:
             index += 1
-        out.append(max(0, index))
+        out.append(index)
     return out
 
 
@@ -178,7 +182,8 @@ def _path_ends(layout: Layout, items: Items, first_item: dict[int, int]) -> Iter
         base = first_item[path.id]
         slots = items.slot[base : base + len(path.primitives)]
         for k, point in ((0, path.primitives[0].start_point()), (-1, path.primitives[-1].end_point())):
-            near_main = np.abs(slots - 2 * mains[k]) <= 1
+            terminating_main = max(mains[k], 0)  # a corner piece at the path start has index -1; its main is main 0
+            near_main = np.abs(slots - 2 * terminating_main) <= 1
             yield _PathEnd(path, point, tuple(base + int(i) for i in np.flatnonzero(near_main)))
 
 
@@ -192,12 +197,13 @@ def exempt_pairs(layout: Layout, items: Items, first_item: dict[int, int]) -> In
     Exempt: a via or pad and the end group of a same-net path whose end point lies on that via or pad (the end group
     is the terminating main primitive and the fillets and tapers either side of it); the end groups of different
     paths that meet at one via, pad or coincident end point (a node); a pad and a same-net via whose centre lies
-    inside it. An interconnect path joins, whatever the nets and the via role, a via or pad its end lies on and every
-    via whose centre lies within ``pad_mm / 2`` of its centreline (D-022 a and c). A via is also exempt from each
-    same-net primitive whose centreline passes within ``pad_mm / 2`` of its centre (D-036 a, D-037a). The end group of
-    a path whose end point lies within COINCIDENCE_MM of another same-net path's centreline on its layer is exempt from
-    that whole path (T-junction, D-035 b). Primitives adjacent in one path are exempted in the engine from ``path``
-    and ``slot``.
+    inside it. An interconnect path joins, whatever the nets and the via role, a via or pad its end lies on. A via is
+    exempt from each primitive whose centreline passes within ``pad_mm / 2`` of its centre when the primitive is
+    same-net or belongs to an interconnect path (the tap, D-022 c, D-036 a, D-037a; per primitive since U-D25). The end
+    group of a path whose end point lies within COINCIDENCE_MM of the centreline of a primitive of another same-net
+    path on its layer is exempt from the landing group of that primitive and from nothing else of that path
+    (T-junction, D-035 b; U-D25). Primitives adjacent in one path are exempted in the engine from ``path`` and
+    ``slot``.
     """
     ends = list(_path_ends(layout, items, first_item))
     via_base = int(np.count_nonzero(items.item_class == ItemClass.TRACE))
@@ -253,26 +259,30 @@ def _centreline_distance_mm(items: Items, trace: IntArray, x_mm: float, y_mm: fl
 def _taps(layout: Layout, items: Items, interconnects: frozenset[int], via_base: int) -> Iterator[tuple[int, int]]:
     """Yield (via item, trace item) for each trace item a via taps.
 
-    An interconnect path is tapped whole, whatever its net, when any of its items passes within pad_mm / 2 of the via
-    centre (D-022c). Any other path is tapped item by item, and only when it carries the via's net (D-036 a, D-037a).
+    A via taps each trace item whose centreline passes within pad_mm / 2 of the via centre when the item carries the
+    via's net (rule 2b, D-036 a, D-037a) or belongs to an interconnect path, whatever its net (D-022c). Every other
+    item of the path stays checked against the via (U-D25, D-078).
     """
     traces = np.flatnonzero(items.item_class == ItemClass.TRACE)
     net_of = {path.id: path.net for path in layout.paths}
     trace_net = np.array([net_of[int(i)] for i in items.path[traces]])
     interconnect = np.isin(items.path[traces], list(interconnects))
     for v, via in enumerate(layout.vias):
-        joinable = interconnect | (trace_net == via.net)
-        candidates, ring = traces[joinable], interconnect[joinable]
+        candidates = traces[interconnect | (trace_net == via.net)]
         within = _centreline_distance_mm(items, candidates, via.x_mm, via.y_mm) <= via.pad_mm / 2
-        tapped_rings = items.path[candidates[within & ring]]
-        exempt = within | (ring & np.isin(items.path[candidates], tapped_rings))
-        yield from ((via_base + v, int(i)) for i in candidates[exempt])
+        yield from ((via_base + v, int(i)) for i in candidates[within])
 
 
 def _junctions(
     layout: Layout, items: Items, first_item: dict[int, int], ends: list[_PathEnd]
 ) -> Iterator[tuple[int, int]]:
-    """Yield (end-group item, trunk item) for each path end on the centreline of another same-net path (D-035 b)."""
+    """Yield (end-group item, landing-group item) for each path end on a primitive of another same-net path.
+
+    The end point lies within COINCIDENCE_MM of the centreline of a hit primitive. The landing group is every primitive
+    of that path whose slot lies within 1 of the hit's: the hit with the fillets and tapers that belong to it, or a
+    hit fillet or taper with the mains it joins. Every other primitive of the path stays checked (D-035 b; U-D25,
+    D-078). A hit on the other path's end point lands in its end group, which rule 3 exempts already.
+    """
     groups: dict[tuple[str, str], list[CopperPath]] = {}
     for path in layout.paths:
         groups.setdefault((path.layer, path.net), []).append(path)
@@ -280,11 +290,13 @@ def _junctions(
         if len(paths) < 2:
             continue
         trace = np.concatenate([np.arange(first_item[p.id], first_item[p.id] + len(p.primitives)) for p in paths])
-        owner = items.path[trace]
+        owner, slot = items.path[trace], items.slot[trace]
         for e in (e for e in ends if e.path.layer == layer and e.path.net == net):
             distance_mm = _centreline_distance_mm(items, trace, *e.point)
-            trunks = np.unique(owner[(distance_mm <= COINCIDENCE_MM) & (owner != e.path.id)])
-            yield from ((i, int(j)) for j in trace[np.isin(owner, trunks)] for i in e.group)
+            landing = np.zeros(len(trace), dtype=np.bool_)
+            for hit in np.flatnonzero((distance_mm <= COINCIDENCE_MM) & (owner != e.path.id)):
+                landing |= (owner == owner[hit]) & (np.abs(slot - slot[hit]) <= 1)
+            yield from ((i, int(j)) for j in trace[landing] for i in e.group)
 
 
 def _coincident_ends(ends: list[_PathEnd]) -> list[list[_PathEnd]]:

@@ -176,11 +176,50 @@ def test_ut_drc_04_interconnect_tapped_mid_path_by_vias_of_any_net_and_role_is_a
     """Catches DEF-M1c3-01 (D-022c): a star-point ring tapped by a via mid-path, or ending on one, is not a short.
 
     A via whose centre is off the centreline is still a short, so an exemption by copper overlap would be too wide.
+    The tap is per primitive (case 2d, interfaces.md section 7 revision 2026-10-20): no other primitive of the ring
+    comes within the rule of a via here, so the vias are exempt from exactly the primitives they lie on.
     """
     ring, taps = _ring_with_taps("N")
     report = run_drc(layout(paths=[ring], vias=taps, interconnects=[0]), RULES)
     assert report is not None
     assert {(v.kind, v.objects) for v in report.violations} == {(DrcCheckKind.TRACE_VIA, ("path:0/prim:0", "via:3"))}
+
+
+def test_ut_drc_04_interconnect_tap_before_a_sharp_corner_is_exempt_from_both_primitives_of_the_corner() -> None:
+    """Catches a tap that exempts only the nearest primitive (case 2e): the tap is rule 2b without the net test.
+
+    The N ring turns at (0, 0). The PHASE_A via at (-0.2, 0) lies on the first line and 0.2 mm from the second line's
+    centreline, inside pad_mm / 2 = 0.3 mm of both, so a reading that keeps only the nearest primitive reports the
+    second line at -0.2 mm.
+    """
+    ring = path(0, [line(-5, 0, 0, 0), line(0, 0, 0, 5)], net="N")
+    report = run_drc(layout(paths=[ring], vias=[via(0, -0.2, 0, net="PHASE_A")], interconnects=[0]), RULES)
+    assert report is not None
+    assert report.passed, report.violations
+
+
+@pytest.mark.parametrize(
+    ("return_gap_mm", "reported"), [(0.59, True), (0.61, False)], ids=["0.01 mm inside the rule", "0.01 mm outside"]
+)
+def test_ut_drc_04_interconnect_tap_leaves_a_far_primitive_of_the_ring_checked(
+    return_gap_mm: float, reported: bool
+) -> None:
+    """Catches DEF-UV16-01 for the tap (case 2f): a tapped primitive is exempt, the rest of the ring is not.
+
+    The tap is per primitive (D-022c as U-D25 revises it). main0 of the N ring runs through the PHASE_A via at
+    (0, 0). main2 returns at y = ``return_gap_mm``, outside pad_mm / 2 = 0.3 mm of the via centre. Its clearance to
+    the via is ``return_gap_mm`` - 0.1 - 0.3, so 0.19 mm against the 0.2 mm rule at 0.59 and 0.21 mm at 0.61.
+    """
+    ring = path(
+        0, [line(-5, 0, 5, 0), line(5, 0, 5, return_gap_mm), line(5, return_gap_mm, -5, return_gap_mm)], net="N"
+    )
+    report = run_drc(layout(paths=[ring], vias=[via(0, 0, 0, net="PHASE_A")], interconnects=[0]), RULES)
+    assert report is not None
+    assert [(v.kind, v.objects) for v in report.violations] == (
+        [(DrcCheckKind.TRACE_VIA, ("path:0/prim:2", "via:0"))] if reported else []
+    )
+    if reported:
+        assert report.violations[0].clearance_mm == pytest.approx(0.19, abs=1e-12)
 
 
 def test_ut_drc_04_via_on_a_non_interconnect_path_of_another_net_is_reported() -> None:
@@ -253,10 +292,14 @@ def test_ut_drc_04_same_net_via_tap_band_is_half_the_via_pad(offset_mm: float, r
     )
 
 
-def _junction_violations(branch: CopperPath, trunk: CopperPath) -> set[tuple[DrcCheckKind, tuple[str, ...]]]:
+def _junction_report(branch: CopperPath, trunk: CopperPath) -> DrcReport:
     report = run_drc(layout(paths=[trunk, branch]), RULES)
     assert report is not None
-    return {(v.kind, v.objects) for v in report.violations}
+    return report
+
+
+def _junction_violations(branch: CopperPath, trunk: CopperPath) -> set[tuple[DrcCheckKind, tuple[str, ...]]]:
+    return {(v.kind, v.objects) for v in _junction_report(branch, trunk).violations}
 
 
 @pytest.mark.parametrize("offset_mm", [0.0, 5e-7])
@@ -299,14 +342,20 @@ def test_ut_drc_04_only_the_end_group_on_the_trunk_is_exempt() -> None:
     assert _junction_violations(branch, trunk) == {(DrcCheckKind.TRACE_TRACE, ("path:0/prim:0", "path:1/prim:2"))}
 
 
-def test_ut_drc_04_junction_end_group_is_exempt_from_the_whole_trunk_path() -> None:
-    """Catches an exemption limited to the primitive the end lies on: the trunk turns 0.05 mm past the end (5f).
+def test_ut_drc_04_junction_end_group_is_exempt_only_from_the_primitive_the_end_lies_on() -> None:
+    """Catches an exemption of the whole trunk path (DEF-UV16-01): the trunk turns 0.05 mm past the end (5f).
 
-    The branch ends at (-0.05, 0) on the first trunk line; the second trunk line starts 0.05 mm further on.
+    The branch ends at (-0.05, 0) on the first trunk line; the second trunk line starts 0.05 mm further on and its
+    copper overlaps the branch by 0.15 mm. The sharp corner has no fillet, so the next main primitive is not in the
+    landing group (interfaces.md section 7 rule 5, revision 2026-10-20: the cost the revision accepts).
     """
     trunk = path(0, [line(-5, 0, 0, 0), line(0, 0, 0, -5)], net="A")
     branch = path(1, [line(-0.05, 4, -0.05, 0)], net="A")
-    assert _junction_violations(branch, trunk) == set()
+    report = _junction_report(branch, trunk)
+    assert [(v.kind, v.objects) for v in report.violations] == [
+        (DrcCheckKind.TRACE_TRACE, ("path:0/prim:1", "path:1/prim:0"))
+    ]
+    assert report.violations[0].clearance_mm == pytest.approx(-0.15, abs=1e-12)
 
 
 _HOOK = [(0.0, 0.0), (0.0, 2.0), (4.0, 2.0), (4.0, 5.0)]
@@ -325,16 +374,21 @@ def _hook_and_branch(net: str, *, junction_at_start: bool) -> tuple[CopperPath, 
 
 
 @pytest.mark.parametrize("junction_at_start", [True, False], ids=["trunk-start", "trunk-end"])
-def test_ut_drc_04_path_end_on_an_end_point_of_a_same_net_path_is_exempt_from_every_primitive_of_it(
+def test_ut_drc_04_path_end_on_an_end_point_of_a_same_net_path_is_exempt_only_from_its_end_group(
     junction_at_start: bool,
 ) -> None:
-    """Catches a T-junction test that skips the other path's end points (end-point reading, case 5g).
+    """Catches the end-point reading of rule 5 (DEF-UV16-01, case 5g): an end on an end is a rule 3 node, nothing more.
 
-    Rule 3 exempts the branch only from the trunk's end group. The trunk's middle line is 0.2 mm from the branch
-    centreline, so only rule 5 (the centreline includes its end points, interfaces.md section 7) exempts that pair.
+    Rule 3 exempts the branch from the trunk's end group. The trunk's middle line is 0.2 mm from the branch
+    centreline, so the edge-to-edge clearance is 0 and that pair is reported (interfaces.md section 7, revision
+    2026-10-20).
     """
     trunk, branch = _hook_and_branch("A", junction_at_start=junction_at_start)
-    assert _junction_violations(branch, trunk) == set()
+    report = _junction_report(branch, trunk)
+    assert [(v.kind, v.objects) for v in report.violations] == [
+        (DrcCheckKind.TRACE_TRACE, ("path:0/prim:1", "path:1/prim:0"))
+    ]
+    assert report.violations[0].clearance_mm == pytest.approx(0.0, abs=1e-12)
 
 
 @pytest.mark.parametrize(
@@ -351,6 +405,140 @@ def test_ut_drc_04_the_same_end_point_geometry_on_different_nets_is_reported(
         (DrcCheckKind.TRACE_TRACE, (touched, "path:1/prim:0")),
         (DrcCheckKind.TRACE_TRACE, (middle, "path:1/prim:0")),
     }
+
+
+@pytest.mark.parametrize(
+    ("leg_end_y_mm", "reported"), [(0.39, True), (0.41, False)], ids=["0.01 mm inside the rule", "0.01 mm outside"]
+)
+def test_ut_drc_04_leg_starting_on_a_coil_end_is_exempt_from_the_coil_end_only(
+    leg_end_y_mm: float, reported: bool
+) -> None:
+    """Catches DEF-UV16-01 (cases 5i and 5j): a leg that starts on a coil's end point is not exempt from the whole coil.
+
+    The coil is a turn along y = 0 and a stub up to the TERMINAL via at (0, 2); the leg starts on that via and runs
+    back to (-5, ``leg_end_y_mm``). Rules 2 and 3 exempt the leg, the stub and the via from one another. The turn is
+    outside the stub's end group, so the leg's far end, 0.39 or 0.41 mm over it, is checked against the 0.2 mm rule.
+    """
+    coil = path(0, [line(-5, 0, 0, 0), line(0, 0, 0, 2)], net="A")
+    leg = path(1, [line(0, 2, -5, leg_end_y_mm)], net="A")
+    report = run_drc(layout(paths=[coil, leg], vias=[via(0, 0, 2, net="A", role=ViaRole.TERMINAL)]), RULES)
+    assert report is not None
+    assert [(v.kind, v.objects) for v in report.violations] == (
+        [(DrcCheckKind.TRACE_TRACE, ("path:0/prim:0", "path:1/prim:0"))] if reported else []
+    )
+    if reported:
+        assert report.violations[0].clearance_mm == pytest.approx(0.19, abs=1e-12)
+
+
+def test_ut_drc_04_branch_landing_before_a_fillet_is_exempt_from_the_fillet() -> None:
+    """Catches a landing group that is the hit primitive alone (case 5k): the branch copper overlaps the fillet.
+
+    The branch ends on the first trunk line at (4.4, 0), 0.1 mm before the line ends and the corner fillet starts, so
+    its copper overlaps the fillet by 0.1 mm. The fillet belongs to the landing primitive, so the pair is no violation.
+    """
+    fillet = replace(arc(4.5, 0.5, 0.5, -math.pi / 2, math.pi / 2), role=PrimitiveRole.FILLET)
+    trunk = path(0, [line(-5, 0, 4.5, 0), fillet, line(5, 0.5, 5, 5)], net="A")
+    branch = path(1, [line(4.4, -4, 4.4, 0)], net="A")
+    assert _junction_violations(branch, trunk) == set()
+
+
+@pytest.mark.parametrize(
+    ("return_end_x_mm", "reported"), [(0.39, True), (0.41, False)], ids=["0.01 mm inside the rule", "0.01 mm outside"]
+)
+def test_ut_drc_04_branch_in_the_middle_of_a_line_leaves_the_return_main_primitive_checked(
+    return_end_x_mm: float, reported: bool
+) -> None:
+    """Catches DEF-UV16-01 for a mid-path T (case 5l): the T exempts the line it lands on, not the trunk's return.
+
+    The branch runs down x = 0 from the middle of main0. The trunk turns back after (5, 0): main2 ends at
+    (``return_end_x_mm``, -2), that far from the branch centreline, so its clearance is 0.19 mm at 0.39 and 0.21 mm
+    at 0.41, against the 0.2 mm rule.
+    """
+    trunk = path(0, [line(-5, 0, 5, 0), line(5, 0, 5, -2), line(5, -2, return_end_x_mm, -2)], net="A")
+    branch = path(1, [line(0, 0, 0, -4)], net="A")
+    report = _junction_report(branch, trunk)
+    assert [(v.kind, v.objects) for v in report.violations] == (
+        [(DrcCheckKind.TRACE_TRACE, ("path:0/prim:2", "path:1/prim:0"))] if reported else []
+    )
+    if reported:
+        assert report.violations[0].clearance_mm == pytest.approx(0.19, abs=1e-12)
+
+
+@pytest.mark.parametrize("piece_first", [True, False], ids=["piece first", "piece last"])
+@pytest.mark.parametrize("role", [PrimitiveRole.TAPER, PrimitiveRole.SIDE])
+def test_ut_drc_04_a_taper_at_a_path_end_belongs_to_one_main_primitive_only(
+    role: PrimitiveRole, piece_first: bool
+) -> None:
+    """Catches DEF-UD25-01 (finding F-1 of U-D25, rule 1): a taper at the start of a path is exempt from main1.
+
+    A taper at a path end belongs to one main primitive, as a side does. At the start of the path it took the slot of
+    a taper that follows main0, so the engine exempted it from main1 as well (`main_indices` clamped its index to 0).
+    Here the piece runs along y = 0 and main1 returns along y = 0.3, 0.1 mm clear of it against the 0.2 mm rule,
+    whether the piece comes first or last and whatever its role.
+    """
+    folded = [line(0, 0, 1, 0, role=role), line(1, 0, 1, 0.3), line(1, 0.3, 0, 0.3)]
+    report = run_drc(layout(paths=[path(0, folded if piece_first else _reversed(folded))]), RULES)
+    assert report is not None
+    assert [(v.kind, v.objects) for v in report.violations] == [
+        (DrcCheckKind.TRACE_TRACE, ("path:0/prim:0", "path:0/prim:2"))
+    ]
+    assert report.violations[0].clearance_mm == pytest.approx(0.1, abs=1e-12)
+
+
+def test_ut_drc_04_end_group_of_a_path_that_starts_with_a_taper_holds_its_first_main_primitive() -> None:
+    """Catches a leading corner piece that pulls the end group off main0: the taper takes slot -1, main0 slot 0.
+
+    The path starts at the centre of a pad with a 0.1 mm taper and runs on in main0, whose copper overlaps the pad.
+    Rule 2 exempts the end group, the taper and main0, from the pad. Main1, past the corner, is 4.7 mm away.
+    """
+    taper = line(0, 0, 0.1, 0, role=PrimitiveRole.TAPER)
+    lead = path(0, [taper, line(0.1, 0, 5, 0), line(5, 0, 5, 5)], net="A")
+    report = run_drc(layout(paths=[lead], pads=[pad(0, 0, 0, w=0.6, h=0.6, net="A")]), RULES)
+    assert report is not None
+    assert report.passed, report.violations
+
+
+def _d08_with_a_wide_leg(outcome, start_shift_mm: float):
+    """Return D08's board with leg 25 widened to 0.8 mm and its start moved ``start_shift_mm`` along the leg.
+
+    Shift 0 keeps the leg's start on the end of coil path 1. `_leg_mutant` of tests/independent/m7/u_v16_spots.py
+    builds the same board.
+    """
+    board = outcome.boards.boards[0]
+    (leg,) = (p for p in board.paths if p.id == 25)
+    (prim,) = leg.primitives
+    length = math.hypot(prim.x2_mm - prim.x1_mm, prim.y2_mm - prim.y1_mm)
+    ux, uy = (prim.x2_mm - prim.x1_mm) / length, (prim.y2_mm - prim.y1_mm) / length
+    wide = replace(prim, width_mm=0.8, x1_mm=prim.x1_mm + ux * start_shift_mm, y1_mm=prim.y1_mm + uy * start_shift_mm)
+    return replace(board, paths=tuple(replace(p, primitives=(wide,)) if p.id == 25 else p for p in board.paths))
+
+
+@pytest.fixture(scope="module")
+def d08_outcome():
+    """Return the computed D08 example, which passes DRC with 0 violations."""
+    project = project_from_example(load_example("spiral_12c10p_d08"))
+    return compute(project.design, project_provenance(project))
+
+
+@pytest.mark.parametrize(
+    ("start_shift_mm", "clearance_mm"),
+    [(0.0, 0.700), (0.001, 0.701)],
+    ids=["joint kept", "start 0.001 mm off the coil"],
+)
+def test_ut_drc_04_wide_leg_on_a_coil_end_is_reported_against_the_coil_turn(
+    d08_outcome, start_shift_mm: float, clearance_mm: float
+) -> None:
+    """Catches DEF-UV16-01 (U-V16's D08 mutant): leg 25 widened to 0.8 mm is exempt from the whole of coil path 1.
+
+    The leg ends on via 2 and starts on the end of path 1. Turn `path:1/prim:9` is 0.700 mm from it at the 0.8 mm
+    rule. Moving the start 0.001 mm off the coil end takes rule 5 away and the pair is reported at 0.701 mm already.
+    """
+    board = _d08_with_a_wide_leg(d08_outcome, start_shift_mm)
+    report = run_drc(board, d08_outcome.design.drc_rules, use_symmetry=False)
+    assert report is not None
+    leg_hits = [(v.objects, v.clearance_mm) for v in report.violations if "path:25/prim:0" in v.objects]
+    assert [objects for objects, _ in leg_hits] == [("path:1/prim:9", "path:25/prim:0")]
+    assert leg_hits[0][1] == pytest.approx(clearance_mm, abs=1e-6)
 
 
 @pytest.mark.eqt("EQT-30-UT1")
