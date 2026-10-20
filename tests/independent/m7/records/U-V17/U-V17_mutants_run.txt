@@ -1,0 +1,16 @@
+killed   rule 1 back to abs(main) <= 1 for fillets: FAILED tests/independent/m1/test_exemption_model.py::test_rule_1_exempts_a_fillet_from_its_own_mains_only
+killed   leading fillet or taper also belongs to main 1 (DEF-UD25-01): FAILED tests/independent/m1/test_exemption_model.py::test_rule_1_a_leading_taper_belongs_to_the_first_main_only[leading-taper]
+killed   rule 2 tap dropped: FAILED tests/independent/m1/test_exemption_model.py::test_via_on_an_interconnect_centreline_is_exempt[tap]
+killed   rule 2 tap whole path (D-022c before D-078): FAILED tests/independent/m1/test_exemption_model.py::test_rule_2_tap_leaves_a_far_primitive_of_the_tapped_interconnect_checked[2f]
+killed   rule 2 tap and rule 2b over pads too (Q3): FAILED tests/independent/m1/test_exemption_model.py::test_rule_2b_names_vias_not_pads
+killed   rule 2b whole path instead of per primitive (D-037a): FAILED tests/independent/m1/test_exemption_model.py::test_rule_2b_exempts_a_via_only_from_the_same_net_primitives_it_taps[mid-prim0]
+killed   rule 2b without the net test: FAILED tests/independent/m1/test_exemption_model.py::test_interconnect_end_on_another_nets_via_is_exempt[interconnect1-False]
+killed   rule 2b reach is the pad diameter: FAILED tests/independent/m1/test_exemption_model.py::test_via_on_an_interconnect_centreline_is_exempt[tap-near-miss]
+killed   rule 5 dropped: FAILED tests/independent/m1/test_exemption_model.py::test_rule_5_t_junction_exempts_the_end_group_from_the_landing_primitive_only[5a-line]
+killed   rule 5 without the net test: FAILED tests/independent/m1/test_exemption_model.py::test_rule_3_ends_at_one_node[other-nets-at-via]
+killed   rule 5 exempts the whole stem path: FAILED tests/independent/m1/test_exemption_model.py::test_rule_5_t_junction_exempts_the_end_group_from_the_landing_primitive_only[5a-line]
+killed   rule 5 exempts the whole other path (DEF-UV16-01): FAILED tests/independent/m1/test_exemption_model.py::test_rule_5_t_junction_exempts_the_end_group_from_the_landing_primitive_only[5a-line]
+killed   rule 5 landing group is the hit primitive alone: FAILED tests/independent/m1/test_exemption_model.py::test_rule_5_a_t_beside_a_fillet_is_exempt_from_the_fillet
+killed   rule 5 landing group of a main reaches its rule 1 neighbours: FAILED tests/independent/m1/test_exemption_model.py::test_rule_5_t_junction_exempts_the_end_group_from_the_landing_primitive_only[5a-line]
+killed   arc sweep read as counter-clockwise always: FAILED tests/independent/m1/test_exemption_model.py::test_point_to_centreline_closed_forms[cw-arc-on]
+15/15 mutants killed

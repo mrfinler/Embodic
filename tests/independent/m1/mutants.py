@@ -1,6 +1,7 @@
 """Seeded-defect lever: apply each named defect to a temporary copy of the instruments and confirm a test fails.
 
-Run from the repository root: ``python tests/independent/m1/mutants.py [word ...]``; words pick mutants by name.
+Run from the repository root: ``python tests/independent/m1/mutants.py [--tests=FILE] [word ...]``; words pick mutants
+by name, and ``--tests`` runs one test file of the copy instead of the whole m1 suite.
 Exit status 1 when a mutant survives, 2 when the unmutated copy already fails.
 """
 
@@ -40,21 +41,41 @@ MUTANTS = [
      "CONTINUITY_TOL_MM = 1e-6", "CONTINUITY_TOL_MM = 1e-5"),
     ("rule 1 back to abs(main) <= 1 for fillets", "drc_universe.py",
      "near = bool(owners[i] & owners[j])", "near = abs(min(owners[i]) - min(owners[j])) <= 1"),
-    ("D-022c tap rule dropped", "drc_universe.py",
-     "if path and _on_centreline(land, path):", "if False:"),
+    ("leading fillet or taper also belongs to main 1 (DEF-UD25-01)", "drc_universe.py",
+     "out.append(frozenset(m for m in (seen - 1, seen) if 0 <= m < total))",
+     "out.append(frozenset(m for m in ((seen - 1, seen) if seen else (0, 1)) if 0 <= m < total))"),
+    ("rule 2 tap dropped", "drc_universe.py", "elif it.path in interconnect:", "elif False:"),
+    ("rule 2 tap whole path (D-022c before D-078)", "drc_universe.py",
+     "yield frozenset((via.label, it.label)), Rule.INTERCONNECT_TAP",
+     "yield from ((frozenset((via.label, o.label)), Rule.INTERCONNECT_TAP) for o in traces.items "
+     "if o.path == it.path)"),
+    ("rule 2 tap and rule 2b over pads too (Q3)", "drc_universe.py",
+     "if via.cls is Cls.VIA:", "if via.cls in (Cls.VIA, Cls.PAD):"),
     ("rule 2b whole path instead of per primitive (D-037a)", "drc_universe.py",
-     "yield from (frozenset((via.label, it.label)) for it in hits if it.net == via.net)",
-     "yield from (frozenset((via.label, o.label)) for it in hits if it.net == via.net "
-     "for o in traces.items if o.path == it.path)"),
-    ("rule 2b without the net test", "drc_universe.py", "for it in hits if it.net == via.net)", "for it in hits)"),
+     "yield frozenset((via.label, it.label)), Rule.VIA_TAP",
+     "yield from ((frozenset((via.label, o.label)), Rule.VIA_TAP) for o in traces.items if o.path == it.path)"),
+    ("rule 2b without the net test", "drc_universe.py", "if it.net == via.net:", "if True:"),
     ("rule 2b reach is the pad diameter", "drc_universe.py",
-     "hits = traces.within(disc_centre(via), via.prim.width / 2)",
-     "hits = traces.within(disc_centre(via), via.prim.width)"),
-    ("rule 5 dropped", "drc_universe.py", "yield from _pairs(e.group, paths[pid])", "yield from ()"),
+     "for it in traces.within(disc_centre(via), via.prim.width / 2):",
+     "for it in traces.within(disc_centre(via), via.prim.width):"),
+    ("rule 5 dropped", "drc_universe.py",
+     "yield from _pairs(e.group, _landing_group(path, owners[it.path], path.index(it)))", "yield from ()"),
     ("rule 5 without the net test", "drc_universe.py",
-     "if it.path != e.path and it.net == e.net}", "if it.path != e.path}"),
+     "if it.path != e.path and it.net == e.net and it.layer == e.layer:",
+     "if it.path != e.path and it.layer == e.layer:"),
     ("rule 5 exempts the whole stem path", "drc_universe.py",
-     "yield from _pairs(e.group, paths[pid])", "yield from _pairs(paths[e.path], paths[pid])"),
+     "yield from _pairs(e.group, _landing_group(path, owners[it.path], path.index(it)))",
+     "yield from _pairs(paths[e.path], _landing_group(path, owners[it.path], path.index(it)))"),
+    ("rule 5 exempts the whole other path (DEF-UV16-01)", "drc_universe.py",
+     "yield from _pairs(e.group, _landing_group(path, owners[it.path], path.index(it)))",
+     "yield from _pairs(e.group, path)"),
+    ("rule 5 landing group is the hit primitive alone", "drc_universe.py",
+     "yield from _pairs(e.group, _landing_group(path, owners[it.path], path.index(it)))",
+     "yield from _pairs(e.group, [it])"),
+    ("rule 5 landing group of a main reaches its rule 1 neighbours", "drc_universe.py",
+     "return [it for j, it in enumerate(path) if j == k or (it.corner and owners[k] <= owners[j])]",
+     "return [it for j, it in enumerate(path) if bool(owners[k] & owners[j]) "
+     "or (not it.corner and abs(min(owners[j]) - min(owners[k])) <= 1)]"),
     ("arc sweep read as counter-clockwise always", "drc_universe.py",
      "turned = math.copysign(1.0, prim.sweep) * (", "turned = ("),
     ("continuity passes NaN", "continuity.py", "if not distance <= tol_mm:", "if distance > tol_mm:"),
@@ -98,8 +119,8 @@ def _mirror(tmp: Path) -> Path:
     return work
 
 
-def _pytest(edit: tuple[str, str, str] | None) -> subprocess.CompletedProcess[str]:
-    """Run the m1 tests on a mirrored copy, with ``(file, original, defective)`` applied when given."""
+def _pytest(edit: tuple[str, str, str] | None, tests: str = "") -> subprocess.CompletedProcess[str]:
+    """Run the m1 tests (or the file ``tests``) on a mirrored copy, with ``(file, original, defective)`` applied."""
     with tempfile.TemporaryDirectory() as tmp:
         work = _mirror(Path(tmp))
         if edit is not None:
@@ -109,27 +130,40 @@ def _pytest(edit: tuple[str, str, str] | None) -> subprocess.CompletedProcess[st
             if source.count(old) != 1:
                 raise SystemExit(f"original text must occur once in {name}: {old!r}")
             target.write_text(source.replace(old, new), encoding="utf-8")
-        argv = [sys.executable, "-m", "pytest", str(work), "-q", "-x", "--rootdir", tmp, "-c", f"{tmp}/pytest.ini"]
+        argv = [
+            sys.executable,
+            "-m",
+            "pytest",
+            str(work / tests),
+            "-q",
+            "-x",
+            "--rootdir",
+            tmp,
+            "-c",
+            f"{tmp}/pytest.ini",
+        ]
         return subprocess.run(argv, capture_output=True, text=True, cwd=tmp)
 
 
-def run_mutant(defect: str, name: str, old: str, new: str) -> tuple[bool, str]:
+def run_mutant(defect: str, name: str, old: str, new: str, tests: str = "") -> tuple[bool, str]:
     """Return (killed, first failing test) for one mutant."""
-    result = _pytest((name, old, new))
+    result = _pytest((name, old, new), tests)
     failed = [line for line in result.stdout.splitlines() if line.startswith("FAILED")]
     return result.returncode == 1 and bool(failed), failed[0] if failed else result.stdout[-300:]
 
 
 def main(only: Sequence[str] = ()) -> int:
     """Check the unmutated copy passes, then run every mutant (or those whose name holds one of ``only``)."""
-    base = _pytest(None)
+    tests = next((w.removeprefix("--tests=") for w in only if w.startswith("--tests=")), "")
+    only = [w for w in only if not w.startswith("--tests=")]
+    base = _pytest(None, tests)
     if base.returncode != 0:
         print(f"unmutated copy fails, no mutant can be judged:\n{base.stdout[-600:]}")
         return 2
     chosen = [m for m in MUTANTS if not only or any(word in m[0] for word in only)]
     survivors = 0
     for defect, name, old, new in chosen:
-        killed, detail = run_mutant(defect, name, old, new)
+        killed, detail = run_mutant(defect, name, old, new, tests)
         survivors += not killed
         print(f"{'killed  ' if killed else 'SURVIVED'} {defect}: {detail}", flush=True)
     print(f"{len(chosen) - survivors}/{len(chosen)} mutants killed")

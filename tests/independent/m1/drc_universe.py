@@ -5,12 +5,13 @@ every copper layer. A via, a round pad or a hole is a disc: a zero-length ``Line
 edge piece has width 0. The sweep checks every pair of items that share a layer, except pairs of two every-layer items
 inside a layer pass (they are checked once, in the every-layer pass).
 
-Exemptions. ``contract_exemptions`` is interfaces.md section 7 as D-022, D-022c, D-035b, D-036a and D-037a amend it,
-coded here from the text and labelled with the rule that exempts each pair: rule 1 neighbours in one path (a fillet or
-taper belongs to the main before and after it), rule 2 a path end on a land, rule 2b a via on a primitive's centreline,
-rule 3 path ends at one node, rule 4 a via inside a pad, rule 5 a path end on another path's centreline, each with the
-same-net test, and the interconnect waiver that drops the net test between an interconnect path and the lands its ends
-or its centreline touch.
+Exemptions. ``contract_exemptions`` is interfaces.md section 7 as revised on 2026-10-20 (U-D25, D-078), coded here
+from the text and labelled with the rule that exempts each pair: rule 1 neighbours in one path (a fillet or taper
+belongs to the main before and after it, at a path end to one main), rule 2 a path end on a land, rule 2b a via and each
+primitive whose centreline passes within pad/2 of it, rule 3 path ends at one node, rule 4 a via inside a pad, rule 5 a
+path end on another path's centreline against the landing group there, each with the same-net test, and the
+interconnect waiver that drops the net test between an interconnect path and the lands its ends touch (rules 2, 3) or
+the vias its primitives tap (rule 2 tap).
 """
 
 import math
@@ -42,7 +43,6 @@ class Cls(StrEnum):
     HOLE = "hole"
 
 
-_LANDS = frozenset({Cls.VIA, Cls.PAD})
 KIND_OF: dict[frozenset[Cls], str] = {
     frozenset({Cls.TRACE}): "trace_trace",
     frozenset({Cls.TRACE, Cls.VIA}): "trace_via",
@@ -112,9 +112,9 @@ class Rule(StrEnum):
     VIA_TAP = "rule 2b: via on a same-net primitive's centreline (D-036a, D-037a)"
     NODE = "rule 3: same-net path ends at one node"
     PAD_VIA = "rule 4: same-net via inside a pad"
-    TEE = "rule 5: same-net path end on another path's centreline (D-035b)"
+    TEE = "rule 5: same-net path end against the landing group on another path (D-035b, D-078)"
     INTERCONNECT_END = "D-022a/c: interconnect end on a land, any net"
-    INTERCONNECT_TAP = "D-022c: land on an interconnect centreline"
+    INTERCONNECT_TAP = "rule 2 tap: via on an interconnect primitive's centreline, any net (D-022c, D-078)"
 
 
 Exemptions = dict[Pair, Rule]
@@ -192,11 +192,20 @@ def point_to_centreline(point: Point, prim: Prim) -> float:
     return min(math.dist(point, start_point(prim)), math.dist(point, end_point(prim)))
 
 
-def _on_centreline(land: Item, path: Sequence[Item]) -> bool:
-    """D-022c: the land centre lies within its own radius of the path centreline, on the path's layer."""
-    if land.layer not in (None, path[0].layer):
-        return False
-    return any(point_to_centreline(disc_centre(land), it.prim) <= land.prim.width / 2 for it in path)
+def _landing_group(path: Sequence[Item], owners: Sequence[frozenset[int]], k: int) -> list[Item]:
+    """Rule 5 (U-D25): the landing group of primitive ``k`` of ``path``.
+
+    A main with the fillets and tapers that belong to it; a fillet or taper with the mains it belongs to and the other
+    fillets and tapers between those mains, read as the run of consecutive fillets and tapers that holds it.
+    """
+    if not path[k].corner:
+        return [it for j, it in enumerate(path) if j == k or (it.corner and owners[k] <= owners[j])]
+    lo, hi = k, k
+    while lo > 0 and path[lo - 1].corner:
+        lo -= 1
+    while hi + 1 < len(path) and path[hi + 1].corner:
+        hi += 1
+    return [*path[lo : hi + 1], *(it for j, it in enumerate(path) if not it.corner and owners[j] <= owners[k])]
 
 
 def _box_gap(p: Prim, q: Prim) -> float:
@@ -225,20 +234,33 @@ class _Traces:
                 yield it
 
 
-def _via_taps(lands: Sequence[Item], traces: _Traces) -> Iterator[Pair]:
-    """Rule 2b (D-036a, D-037a): a via and each same-net primitive whose centreline passes within pad/2 of it."""
+def _via_taps(lands: Sequence[Item], traces: _Traces, interconnect: Collection[int]) -> Iterator[tuple[Pair, Rule]]:
+    """Rule 2b and the rule 2 tap: a via and each primitive whose centreline passes within pad/2 of its centre.
+
+    Same net (D-036a, D-037a), or any net when the primitive's path is an interconnect (D-022c per primitive, D-078).
+    Vias only: §7 names no pad in either clause.
+    """
     for via in lands:
         if via.cls is Cls.VIA:
-            hits = traces.within(disc_centre(via), via.prim.width / 2)
-            yield from (frozenset((via.label, it.label)) for it in hits if it.net == via.net)
+            for it in traces.within(disc_centre(via), via.prim.width / 2):
+                if it.net == via.net:
+                    yield frozenset((via.label, it.label)), Rule.VIA_TAP
+                elif it.path in interconnect:
+                    yield frozenset((via.label, it.label)), Rule.INTERCONNECT_TAP
 
 
-def _tees(ends: Sequence[_End], paths: dict[int, list[Item]], traces: _Traces) -> Iterator[Pair]:
-    """Rule 5 (D-035b): an end group and every primitive of another same-net path whose centreline holds the end."""
+def _tees(
+    ends: Sequence[_End], paths: dict[int, list[Item]], owners: dict[int, list[frozenset[int]]], traces: _Traces
+) -> Iterator[Pair]:
+    """Rule 5 (D-035b, D-078): an end group and the landing group of each primitive the end lies on.
+
+    That primitive belongs to another path of the same net on the end's layer.
+    """
     for e in ends:
-        hit = {it.path for it in traces.within(e.point, COINCIDENT_MM) if it.path != e.path and it.net == e.net}
-        for pid in hit:
-            yield from _pairs(e.group, paths[pid])
+        for it in traces.within(e.point, COINCIDENT_MM):
+            if it.path != e.path and it.net == e.net and it.layer == e.layer:
+                path = paths[it.path]
+                yield from _pairs(e.group, _landing_group(path, owners[it.path], path.index(it)))
 
 
 def _at_lands(
@@ -277,43 +299,31 @@ def _vias_in_pads(lands: Sequence[Item]) -> Iterator[Pair]:
                 yield frozenset((p.label, v.label))
 
 
-def _interconnect_taps(
-    lands: Sequence[Item], paths: dict[int, list[Item]], interconnect: Collection[int]
-) -> Iterator[Pair]:
-    """D-022c: a land and every primitive of an interconnect path whose centreline passes within the land radius."""
-    for pid in interconnect:
-        path = paths.get(pid, [])
-        for land in lands:
-            if path and _on_centreline(land, path):
-                yield from _pairs([land], path)
-
-
 def contract_exemptions(items: Sequence[Item], interconnect: Collection[int] = ()) -> Exemptions:
-    """Return every pair interfaces.md section 7 exempts (D-022, D-022c, D-035b, D-036a, D-037a) with its first rule.
+    """Return every pair interfaces.md section 7 (revision 2026-10-20, U-D25) exempts, with its first rule.
 
     ``interconnect`` holds the ids of interconnect paths (``Circuit.interconnect_path_ids``). The net test applies to
-    rules 2 to 5, except that an interconnect path is exempt from any via or pad its end lies on (rules 2 and 3) or
-    whose centre lies within the land radius of its centreline (D-022c), whatever the nets. D-022c says "exempt from
-    that path"; this model reads it as every primitive of the path. Rule 2b is per primitive (D-037a). Rule 5 reads
-    "the centreline of another path" as the whole centreline, its two end points included.
+    rules 2 to 5, except that an interconnect path is exempt from any via or pad its end lies on (rules 2 and 3), and
+    each of its primitives from any via whose centre lies within pad/2 of that primitive's centreline (the rule 2 tap),
+    whatever the nets. Rule 2b and the tap are per primitive. Rule 5 exempts an end group from the landing group of each
+    primitive its end point lies on, end points of that primitive included, and from nothing else of that path.
     """
-    lands = [it for it in items if it.cls in _LANDS]
+    lands = [it for it in items if it.cls in (Cls.VIA, Cls.PAD)]
     paths = _paths(items)
+    owners = {pid: _owners(path) for pid, path in paths.items()}
     out: Exemptions = {}
     ends: list[_End] = []
-    for path in paths.values():
-        owners = _owners(path)
-        out.update(dict.fromkeys(_rule_1(path, owners), Rule.NEIGHBOURS))
-        ends += _ends(path, owners)
+    for pid, path in paths.items():
+        out.update(dict.fromkeys(_rule_1(path, owners[pid]), Rule.NEIGHBOURS))
+        ends += _ends(path, owners[pid])
     flat = [it for path in paths.values() for it in path]
     traces = _Traces(flat, bounding_boxes([it.prim for it in flat]) if flat else np.empty((0, 4)))
     labelled = [
         _at_lands(lands, ends, interconnect),
         ((pair, Rule.NODE) for pair in _at_points(ends)),
         ((pair, Rule.PAD_VIA) for pair in _vias_in_pads(lands)),
-        ((pair, Rule.INTERCONNECT_TAP) for pair in _interconnect_taps(lands, paths, interconnect)),
-        ((pair, Rule.VIA_TAP) for pair in _via_taps(lands, traces)),
-        ((pair, Rule.TEE) for pair in _tees(ends, paths, traces)),
+        _via_taps(lands, traces, interconnect),
+        ((pair, Rule.TEE) for pair in _tees(ends, paths, owners, traces)),
     ]
     for source in labelled:
         for pair, rule in source:
