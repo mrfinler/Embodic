@@ -87,7 +87,7 @@ PLANS = (REPO / "docs/phase1/architecture/test_plan_draft.md", REPO / "docs/phas
 VERIFICATION = HERE.parents[1]
 INDEX = VERIFICATION / "manual_records.json"
 # D-061d: a superseded record -> the record of the same check redone on a later build (U-V14 on c0f4894, U-V18 on
-# c25d8a9).
+# c25d8a9, U-V20 on 99d355d).
 _M4, _M5, _M6 = (f"tests/independent/m{n}/records/" for n in (4, 5, 6))
 REDONE = {
     f"{_M5}PK-06_walkthrough.md": f"{_M5}PK-06_walkthrough_c0f4894.md",
@@ -98,6 +98,10 @@ REDONE = {
     f"{_M6}OR-11_OR-12_c0f4894.md": f"{_M6}OR-11_OR-12_c25d8a9.md",
     f"{_M4}LG-01_word_review.md": f"{_M4}LG-01_word_review_c25d8a9.md",
     f"{_M4}LG-04_T-11_reviewer.md": f"{_M4}LG-04_T-11_reviewer_c25d8a9.md",
+    f"{_M5}PK-06_walkthrough_c25d8a9.md": f"{_M5}PK-06_walkthrough_99d355d.md",
+    f"{_M4}AX-05_c25d8a9.md": f"{_M4}AX-05_99d355d.md",
+    f"{_M6}OR-11_OR-12_c25d8a9.md": f"{_M6}OR-11_OR-12_99d355d.md",
+    f"{_M4}LG-04_T-11_reviewer_c25d8a9.md": f"{_M4}LG-04_T-11_reviewer_99d355d.md",
 }
 
 

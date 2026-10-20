@@ -36,8 +36,9 @@ bound held for all 4072 pairs near the cutoff: clearance minus bound is at least
 has a clearance above `rule_mm + 1e-9`, where `rule_mm` is the largest pair rule plus `DRC_EPSILON_MM` (l.239). A
 violation needs a clearance below `required_k - DRC_EPSILON_MM` (`report.py` l.56). The margin is
 `(max rule - required_k) + 2 x 1e-6 + 1e-9` mm. That is at least 2.001e-6 mm for the pair kind with the largest rule,
-and 0.100002001 mm for trace_trace on the wave rules (0.2 mm, largest 0.3 mm). The grid cell of l.121 exceeds the same
-bound, so the grid adds no loss. Any piece count keeps the bound, so the margin is the same for every split. The
+and 0.100002001 mm for trace_trace on the wave rules (0.2 mm, largest 0.3 mm). The grid cell of l.121 is
+`2 x max span + rule_mm + 1e-9`, no smaller than the near threshold of any piece pair, so a violating pair sits in the
+same or an adjacent cell with the same margin to spare (read; the replay found the grid's pairs). Any piece count keeps the bound, so the margin is the same for every split. The
 exhaustive pass of the probe measured all 1,511,143 left-out pairs of the wave board (trace_trace 1,060,944): no
 violation, and the least left-out trace_trace clearance is 0.448812 mm.
 

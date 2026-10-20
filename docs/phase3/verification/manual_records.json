@@ -2,43 +2,43 @@
  {
   "req": "REQ-N-07",
   "test_id": "PK-06",
-  "record": "tests/independent/m5/records/PK-06_walkthrough_c25d8a9.md",
-  "embodic_version": "0.0.4 (release c25d8a9)",
+  "record": "tests/independent/m5/records/PK-06_walkthrough_99d355d.md",
+  "embodic_version": "0.0.5 (wheel 0dbac116 of candidate 99d355d, U-V20)",
   "result": "passed"
  },
  {
   "req": "REQ-N-14",
   "test_id": "AX-05",
-  "record": "tests/independent/m4/records/AX-05_c25d8a9.md",
-  "embodic_version": "0.0.4 (release c25d8a9)",
+  "record": "tests/independent/m4/records/AX-05_99d355d.md",
+  "embodic_version": "0.0.5 (candidate 99d355d, U-V20)",
   "result": "passed"
  },
  {
   "req": "REQ-F-11",
   "test_id": "OR-11",
-  "record": "tests/independent/m6/records/OR-11_OR-12_c25d8a9.md",
-  "embodic_version": "0.0.4 (release c25d8a9)",
+  "record": "tests/independent/m6/records/OR-11_OR-12_99d355d.md",
+  "embodic_version": "0.0.5 (wheel 0dbac116 of candidate 99d355d, U-V20)",
   "result": "passed"
  },
  {
   "req": "REQ-F-11",
   "test_id": "OR-12",
-  "record": "tests/independent/m6/records/OR-11_OR-12_c25d8a9.md",
-  "embodic_version": "0.0.4 (release c25d8a9)",
+  "record": "tests/independent/m6/records/OR-11_OR-12_99d355d.md",
+  "embodic_version": "0.0.5 (wheel 0dbac116 of candidate 99d355d, U-V20)",
   "result": "passed"
  },
  {
   "req": "REQ-L-01",
   "test_id": "LG-01",
   "record": "tests/independent/m4/records/LG-01_word_review_c25d8a9.md",
-  "embodic_version": "0.0.4 (release c25d8a9)",
+  "embodic_version": "0.0.5 (LG-01 record of c25d8a9 stands, D-061d: corpus unchanged; U-V20 manual_records_0.0.5.md)",
   "result": "passed"
  },
  {
   "req": "REQ-T-11",
   "test_id": "LG-04",
-  "record": "tests/independent/m4/records/LG-04_T-11_reviewer_c25d8a9.md",
-  "embodic_version": "0.0.4 (release c25d8a9)",
+  "record": "tests/independent/m4/records/LG-04_T-11_reviewer_99d355d.md",
+  "embodic_version": "0.0.5 (candidate 99d355d, U-V20)",
   "result": "passed"
  }
 ]
