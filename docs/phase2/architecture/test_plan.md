@@ -1081,7 +1081,7 @@ the owner packages of `interfaces.md`.
 | REQ-F-10 | carried | must | M1 | embodic.drc | UT-DRC-01, UT-DRC-02, UT-DRC-03, UT-DRC-04, UT-DRC-05, UT-DRC-08, PR-01, PR-02, PR-13, GR-18 |
 | REQ-F-11 | carried | must | M2 | embodic.physics | UT-PHY-05, UT-PHY-06, UT-PHY-10, UT-PHY-12, UT-PHY-15, UT-PHY-16, UT-PHY-17, UT-PHY-18, UT-PHY-19, GR-02, GR-03, GR-04, GR-09, GR-11, GR-13, OR-01, OR-11, OR-12, UT-PHY-22, UI-07 |
 | REQ-F-12 | carried | must | M2 | embodic.physics | UT-PHY-08, UT-PHY-20, GR-05 |
-| REQ-F-13 | carried | must | M4 | embodic.ui.views | UI-02, UI-03, UI-04, UI-06 |
+| REQ-F-13 | carried | must | M4 | embodic.ui.views | UI-02, UI-03, UI-04, UI-06, UI-58, UI-59, UI-60, UI-61 |
 | REQ-F-14 | amended | must | M2 | embodic.model | PR-05, BV-01, BV-02, BV-03, BV-05, BV-06, BV-21, UT-DRC-09, UI-14 |
 | REQ-F-15 | amended | must | M2 | embodic.io | UT-IO-01, UT-IO-02, UT-IO-03, UT-IO-04, UT-IO-07, PR-08 |
 | REQ-F-16 | amended | must | M4 | embodic.io | UT-EXP-01, UT-EXP-02, UT-EXP-03, UT-EXP-04, UT-IO-06 |

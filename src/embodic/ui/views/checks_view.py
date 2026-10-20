@@ -230,7 +230,7 @@ def locate_on_canvas(canvas: GeometryView, row: DrcRow, tokens: ThemeTokens) -> 
         kind = item.data(DATA_KIND)
         if kind == "drc-marker":
             scene.removeItem(item)
-        elif kind == "copper":
+        elif kind in ("copper", "copper-outline"):
             item.setOpacity(LOCATED_COPPER_OPACITY)
     x, y = row.at_mm[0], -row.at_mm[1]
     ring = QPainterPath()
