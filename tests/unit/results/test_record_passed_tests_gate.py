@@ -26,19 +26,25 @@ def verified_equations() -> dict[str, tuple[str, ...]]:
     return {eq_id: e.tests for eq_id, e in registry.equations.items() if e.status is Status.VERIFIED}
 
 
-def release_report(path: Path, *, skipping: str | None = None) -> Path:
-    """Write a report in which every linked test of every verified equation passed, except `skipping` (skipped)."""
+def report_skipping(path: Path, skipped_ids: frozenset[str]) -> Path:
+    """Write a report in which every linked test of every verified equation passed, except `skipped_ids` (skipped)."""
     records = [
         {"nodeid": f"tests/x.py::{eqt_id}", "req": ["REQ-T-05"], "eq": [], "outcome": "passed", "eqt": [eqt_id]}
         for tests in verified_equations().values()
         for eqt_id in tests
-        if eqt_id != skipping
+        if eqt_id not in skipped_ids
     ]
-    if skipping is not None:
-        skipped = {"nodeid": "tests/x.py::skipped", "req": ["REQ-T-05"], "eq": [], "outcome": "skipped"}
-        records.append({**skipped, "eqt": [skipping]})
+    skipped = {"nodeid": "tests/x.py::skipped", "req": ["REQ-T-05"], "eq": [], "outcome": "skipped"}
+    records += [
+        {**skipped, "nodeid": f"tests/x.py::skipped_{eqt_id}", "eqt": [eqt_id]} for eqt_id in sorted(skipped_ids)
+    ]
     path.write_text(json.dumps(records), encoding="utf-8")
     return path
+
+
+def release_report(path: Path, *, skipping: str | None = None) -> Path:
+    """Write a report in which every linked test of every verified equation passed, except `skipping` (skipped)."""
+    return report_skipping(path, frozenset() if skipping is None else frozenset({skipping}))
 
 
 def run_record(report: Path, out: Path) -> int:
@@ -118,3 +124,42 @@ def test_stderr_names_a_refused_equation_none_of_whose_linked_tests_passed(tmp_p
     named = set(re.findall(r"(?<![\w-])(?:EQ|EQT)-[\w-]*\w", capsys.readouterr().err))
     assert code == 1
     assert named == {eq_id}
+
+
+def no_registry_test_passed(path: Path) -> tuple[Path, dict[str, set[str]]]:
+    """Return a report in which no registry test passed, and each verified equation with its passed tests (none)."""
+    unrelated = {"nodeid": "tests/x.py::a", "req": ["REQ-T-05"], "eq": [], "outcome": "passed", "eqt": []}
+    path.write_text(json.dumps([unrelated]), encoding="utf-8")
+    return path, {eq_id: set() for eq_id in verified_equations()}
+
+
+def last_linked_test_of_each_multi_test_equation_skipped(path: Path) -> tuple[Path, dict[str, set[str]]]:
+    """Return a report that skips the last linked test of every verified equation with two or more, and what remains."""
+    multi = {eq_id: tests for eq_id, tests in verified_equations().items() if len(tests) > 1}
+    report = report_skipping(path, frozenset(tests[-1] for tests in multi.values()))
+    return report, {eq_id: set(tests[:-1]) for eq_id, tests in multi.items()}
+
+
+@pytest.mark.req("REQ-T-05")
+@pytest.mark.parametrize(
+    "build_case",
+    [no_registry_test_passed, last_linked_test_of_each_multi_test_equation_skipped],
+    ids=["no-registry-test-passed", "last-linked-test-of-each-multi-test-equation-skipped"],
+)
+def test_t05_stderr_names_every_refused_equation_with_its_passed_tests(tmp_path: Path, capsys, build_case) -> None:
+    """Catches a refusal that names only some of the refused equations (DEF-UV19-01), or the wrong passed tests.
+
+    REQ-T-05: the gate names on stderr every equation of status verified for which Registry.tests_passed is false.
+    The expected sets come from the packaged registry, so they follow it when an equation or a linked test is added.
+    """
+    report, expected = build_case(tmp_path / "req_report.json")
+    assert expected, "the packaged registry gives this case no refused equation"
+    code = run_record(report, tmp_path / "passed_tests.v1.json")
+    err = capsys.readouterr().err
+    named = {
+        eq_id: set(re.findall(r"(?<![\w-])EQT-[\w-]*\w", passed.replace("none", "")))
+        for eq_id, passed in re.findall(r"(?<![\w-])(EQ-\d+) \(passed: ([^)]*)\)", err)
+    }
+    assert code == 1
+    assert named == expected
+    assert all(f"{eq_id} (passed: none)" in err for eq_id, passed in expected.items() if not passed)

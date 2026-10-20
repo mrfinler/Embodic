@@ -5,14 +5,17 @@ Both packaged examples (serpentine, wave) carry one M3 pattern on a board of rad
 """
 
 import dataclasses
+import math
 
 import pytest
 
-from embodic.errors import Unbuildable
+from embodic.api import compute
+from embodic.errors import Severity, Unbuildable
 from embodic.generators import build_layout
 from embodic.geometry.layout import BoardStack
 from embodic.io.examples import load_example
 from embodic.model.design import DesignParameters
+from embodic.model.provenance import derive_provenance
 from embodic.model.validate import validate_design
 from embodic.results import load_registry
 
@@ -44,10 +47,12 @@ def test_a_screw_hole_off_the_board_is_refused_by_every_topology(example_id: str
     ]
 
 
-@pytest.mark.req("REQ-F-14")
+@pytest.mark.req("REQ-F-14", "REQ-F-05")
 @pytest.mark.parametrize("example_id", sorted(OPTION_NOT_IMPLEMENTED))
 @pytest.mark.parametrize("vias_per_transition", [2, 3])
-def test_parallel_vias_per_transition_are_refused_by_every_topology(example_id: str, vias_per_transition: int) -> None:
+def test_ut_gen_06_parallel_vias_per_transition_are_refused_by_every_topology(
+    example_id: str, vias_per_transition: int
+) -> None:
     """Catches DEF-M7a-02: serpentine and wave built one via and gave R_ph unchanged for 2, without a message."""
     design = load_example(example_id)[1]
     parallel = dataclasses.replace(
@@ -60,10 +65,27 @@ def test_parallel_vias_per_transition_are_refused_by_every_topology(example_id: 
     ]
 
 
-@pytest.mark.req("REQ-F-14")
+@pytest.mark.req("REQ-F-14", "REQ-F-05")
 @pytest.mark.parametrize("example_id", sorted(OPTION_NOT_IMPLEMENTED))
-def test_one_via_per_transition_still_builds_every_example(example_id: str) -> None:
+def test_ut_gen_06_one_via_per_transition_still_builds_every_example(example_id: str) -> None:
     """Catches a refusal that also stops the packaged value 1."""
     design = load_example(example_id)[1]
     assert design.vias.vias_per_transition == 1
     assert isinstance(build_layout(design, REGISTRY), BoardStack)
+
+
+@pytest.mark.req("REQ-F-05")
+@pytest.mark.parametrize("example_id", sorted(OPTION_NOT_IMPLEMENTED))
+def test_f05_one_via_per_transition_is_analysed_on_every_topology(example_id: str) -> None:
+    """Catches a topology that builds one via per transition but gives no phase resistance for it (REQ-F-05).
+
+    The example computes with no ERROR issue and its analysis holds a finite, positive phase resistance at 20 degC.
+    """
+    ref, design = load_example(example_id)
+    assert design.vias.vias_per_transition == 1
+    outcome = compute(design, derive_provenance(design, (ref, design), ()), registry=REGISTRY)
+    assert outcome is not None
+    assert [i.code for i in outcome.issues if i.severity is Severity.ERROR] == []
+    assert outcome.analysis is not None
+    resistance_ohm = outcome.analysis.resistance_phase_20c_ohm.value
+    assert math.isfinite(resistance_ohm) and resistance_ohm > 0

@@ -13,7 +13,7 @@ import numpy as np
 import pytest
 from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import QColor, QImage, QPainter, QPainterPath, QPainterPathStroker, QTransform
-from PySide6.QtWidgets import QApplication, QGraphicsEllipseItem, QGraphicsPathItem, QGraphicsView
+from PySide6.QtWidgets import QApplication, QGraphicsEllipseItem, QGraphicsPathItem, QGraphicsScene, QGraphicsView
 
 from embodic.api import compute_project
 from embodic.geometry.layout import Pad
@@ -207,6 +207,123 @@ def test_ui58_ring_over_leg_shows_the_ring_solid_a_board_gap_and_the_leg_as_an_o
         assert _crossing_measures(solo, image, d08, run)["centre"] == ink
     finally:
         solo.close()
+
+
+def _fitted_d08_view(scene):
+    """Return a 1280 x 800 view of D08 in the dark colour run, fitted to the board."""
+    view = _show(scene, "dark colour", (1280, 800))
+    QApplication.processEvents()
+    view.fit_view()
+    QApplication.processEvents()
+    return view
+
+
+def _leg_24_clear_point(scene) -> tuple[tuple[float, float], tuple[float, float], float]:
+    """Return (the clear point of UI-58 on leg 24, the leg's unit normal there, the leg's width in mm)."""
+    leg = next(p for p in scene.boards[0].paths if p.id == 24)
+    (line,) = leg.primitives
+    x0, y0 = CROSSING_MM
+    tx, ty = _tangent(line, x0, y0)
+    if x0 * tx + y0 * ty < 0:
+        tx, ty = -tx, -ty
+    proj = x0 * tx + y0 * ty
+    s_clear = -proj + math.sqrt(proj**2 - (x0**2 + y0**2 - CROSSING_CLEAR_R_MM**2))
+    return (x0 + s_clear * tx, y0 + s_clear * ty), (-ty, tx), line.width_mm
+
+
+@pytest.mark.req("REQ-F-13")
+def test_ui03_lower_layer_copper_the_cue_paints_keeps_its_trace_width_at_200x(d08):
+    """REQ-F-13, design_spec.md 3.3.1. Catches a lower-layer trace drawn thicker or thinner than its true width.
+
+    Leg 24 is a 0.6 mm line on L2 under ring 32 of L1. At 200x the outline lies inside the true edge, so the span of
+    pixels that differ from the board fill is the trace width times the view scale. UI-58 bounds it from above at
+    24 px/mm.
+    """
+    view = _fitted_d08_view(d08)
+    try:
+        for _ in range(40):
+            view.zoom_by(1.25)
+        assert view.zoom_factor() == pytest.approx(200.0, rel=1e-9)
+        (cx, cy), (nx, ny), width_mm = _leg_24_clear_point(d08)
+        view.centerOn(QPointF(cx, -cy))
+        view.place_labels()
+        QApplication.processEvents()
+        image = view.viewport().grab().toImage().convertToFormat(QImage.Format.Format_RGB32)
+        scale, origin = view.transform().m11(), view.mapFromScene(QPointF(0, 0))
+    finally:
+        view.close()
+    board_fill = QColor(_board_fill("dark colour"))
+
+    def contrast_at(k: int) -> float:
+        x, y = cx + nx * k / (4 * scale), cy + ny * k / (4 * scale)
+        return _contrast(
+            image.pixelColor(math.floor(origin.x() + scale * x), math.floor(origin.y() + scale * -y)), board_fill
+        )
+
+    hits = [k for k in range(-4 * 420, 4 * 420 + 1) if contrast_at(k) > 1.3]
+    assert hits, "no pixel of leg 24 differs from the board fill"
+    span_px = (hits[-1] - hits[0] + 1) / 4
+    assert span_px == pytest.approx(width_mm * scale, abs=1.5)
+
+
+@pytest.fixture(scope="module")
+def d08_fit_scale(d08) -> float:
+    """Return the scale in px/mm of the fitted 1280 x 800 view of D08."""
+    view = _fitted_d08_view(d08)
+    try:
+        return view.transform().m11()
+    finally:
+        view.close()
+
+
+CUE_OFFSETS_PX = (0.0, 0.13, 0.25, 0.5, 0.77)  # where the stroke's centre line starts, against the pixel grid
+
+
+def _cue_ink_fractions(scale: float, offset_px: float) -> np.ndarray:
+    """Render one lower-layer cue stroke of 0.6 mm at ``scale`` px/mm; return its ink fraction for each pixel."""
+    fill, ink = QColor(_board_fill("dark colour")), QColor(RUNS["dark colour"][2])
+    length_mm = 400.0 / scale
+    centre = QPainterPath(QPointF(0.0, offset_px / scale))
+    centre.lineTo(length_mm, (offset_px + 3.0) / scale)
+    strokes = layer_cue.Strokes.of([layer_cue.Part.of(0.6, centre)])
+    scene = QGraphicsScene()
+    scene.addItem(layer_cue.LayerCueItem([layer_cue.Level(casing=strokes, outlines=((ink, strokes),))], fill))
+    half_h_mm = max(20.0 / scale, 2 * 0.6)
+    source = QRectF(length_mm * 0.25, -half_h_mm, length_mm * 0.5, 2 * half_h_mm)
+    w_px, h_px = round(source.width() * scale), round(source.height() * scale)
+    image = QImage(w_px, h_px, QImage.Format.Format_RGB32)
+    image.fill(fill)
+    painter = QPainter(image)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    scene.render(painter, QRectF(0, 0, w_px, h_px), source, Qt.AspectRatioMode.IgnoreAspectRatio)
+    painter.end()
+    raw = np.frombuffer(image.constBits(), dtype=np.uint8).reshape(h_px, image.bytesPerLine() // 4, 4)
+    bgr = raw[:, :w_px, :3].astype(float)
+    base = np.array([fill.blue(), fill.green(), fill.red()], float)
+    toward_ink = np.array([ink.blue(), ink.green(), ink.red()], float) - base
+    return ((bgr - base) @ toward_ink) / (toward_ink @ toward_ink)
+
+
+@pytest.mark.req("REQ-F-13")
+@pytest.mark.parametrize(("factor", "tolerance_px"), [(0.1, 0.04), (200.0, 1.5)], ids=["0.1x", "200x"])
+def test_ui03_the_cue_strokes_lower_copper_at_its_trace_width_at_0_1x_and_200x(d08_fit_scale, factor, tolerance_px):
+    """REQ-F-13, design_spec.md 3.3.1. Catches a cue stroke whose width is not the trace width at either zoom limit.
+
+    At 0.1x a lower-layer trace is 0.36 px wide and every D08 trace has copper within a pixel, so the view cannot
+    isolate one; the cue item is painted alone. Below SOLID_BELOW_PX it is solid, so its ink summed across a column
+    is its width in pixels. At 200x the middle column's span of pixels above an ink fraction of 0.1 is its width.
+    """
+    scale = factor * d08_fit_scale
+    expected_px = 0.6 * scale
+    for offset_px in CUE_OFFSETS_PX:
+        fractions = _cue_ink_fractions(scale, offset_px)
+        if factor < 1:
+            measured_px = float(fractions.sum(axis=0).mean())
+        else:
+            rows = np.nonzero(fractions[:, fractions.shape[1] // 2] > 0.1)[0]
+            assert rows.size, f"no ink in the middle column at offset {offset_px}"
+            measured_px = float(rows[-1] - rows[0] + 1)
+        assert measured_px == pytest.approx(expected_px, abs=tolerance_px), offset_px
 
 
 def _screen_boxes(view) -> list[QRectF]:

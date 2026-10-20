@@ -101,8 +101,8 @@ def _series_coil(groups: int) -> tuple[SeriesCoil, FullClosing]:
 
 @pytest.mark.eqt("EQT-25-UT1")
 @pytest.mark.req("REQ-F-03")
-def test_ut_geo_19_series_groups_get_their_own_centre_via_one_pitch_apart() -> None:
-    """UT-GEO-19 (M2, G5 k centre vias): CF-11 with three series groups keeps 10 turns and r_v 30.7, 29.9, 29.1 mm.
+def test_ut_geo_26_series_groups_get_their_own_centre_via_one_pitch_apart() -> None:
+    """UT-GEO-26 (M2, G5 k centre vias): CF-11 with three series groups keeps 10 turns and r_v 30.7, 29.9, 29.1 mm.
 
     Spec worked example: eye 28.5914 to 30.7 mm, via pitch max(pad, w)/2 + pad/2 + s = 0.8 mm. Catches groups sharing
     one centre via (a short across a group) or the half closing's single P.
@@ -114,8 +114,8 @@ def test_ut_geo_19_series_groups_get_their_own_centre_via_one_pitch_apart() -> N
 
 
 @pytest.mark.req("REQ-F-03")
-def test_ut_geo_19_each_group_runs_from_its_ring_via_to_its_centre_and_out_to_the_next() -> None:
-    """UT-GEO-19 (M2, G6): group g's X joins ring via g to its centre via, its Y the centre to ring via g + 1.
+def test_ut_geo_26_each_group_runs_from_its_ring_via_to_its_centre_and_out_to_the_next() -> None:
+    """UT-GEO-26 (M2, G6): group g's X joins ring via g to its centre via, its Y the centre to ring via g + 1.
 
     Ring vias alternate CCW and CW sides of the coil; two on one side sit at least the fan pitch
     c_f = max(pad, w, bw) + s = 1.2 mm apart (G6 U-E6; the spec table gives a pad gap of 0.6001 mm on CF-11).
@@ -139,7 +139,7 @@ def test_ut_geo_19_each_group_runs_from_its_ring_via_to_its_centre_and_out_to_th
 
 
 @pytest.mark.req("REQ-F-03")
-def test_ut_geo_19_series_pairs_whose_fan_sides_meet_are_refused(registry: Registry) -> None:
+def test_ut_geo_26_series_pairs_whose_fan_sides_meet_are_refused(registry: Registry) -> None:
     """G6 step 6: a 6 mm bus ring makes the fan pitch 6.2 mm, so the innermost CCW and CW vias come closer than it.
 
     Catches a fan built with its levels crossed over the coil axis, or a series design silently changed to parallel.

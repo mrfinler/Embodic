@@ -22,9 +22,12 @@ from embodic.geometry.primitives import Arc, Line, Primitive, PrimitiveRole, pri
 from embodic.geometry.transforms import mirror, reverse_path
 from embodic.io.canonical import design_hash
 from embodic.model.design import DesignParameters
-from embodic.model.draft import DraftIncomplete, parse_draft
+from embodic.model.draft import DesignDraft, DraftIncomplete, draft_from_design, parse_draft
+from embodic.model.fields import field_for
 from embodic.model.provenance import ExampleRef, UserValue, derive_provenance
+from embodic.model.schema import ValueType
 from embodic.model.stackup import CopperLayer, DielectricLayer, Stackup
+from embodic.model.validate import validate_design
 from embodic.model.winding_specs import SpiralWindingSpec
 from embodic.outcome import ComputeOutcome
 from embodic.results import load_registry
@@ -381,6 +384,78 @@ def test_pr_12_badges_do_not_depend_on_provenance_and_reentry_changes_nothing(de
     if first.analysis is None or second.analysis is None:
         return
     assert dict(_statuses(first.analysis.to_json())) == dict(_statuses(second.analysis.to_json()))
+
+
+def _assumed_items(data: Any, path: str = "") -> Iterator[tuple[str, tuple[str, ...]]]:
+    if isinstance(data, dict):
+        if "assumed_inputs" in data:
+            yield path, tuple(entry["item"] for entry in data["assumed_inputs"])
+        for key, value in data.items():
+            yield from _assumed_items(value, f"{path}/{key}")
+    elif isinstance(data, list):
+        for index, value in enumerate(data):
+            yield from _assumed_items(value, f"{path}/{index}")
+
+
+def _design_with(design: DesignParameters, pointer: str, value: Any) -> DesignParameters:
+    draft = draft_from_design(design)
+    parsed = parse_draft(DesignDraft(topology=draft.topology, values={**draft.values, pointer: value}))
+    assert not isinstance(parsed, DraftIncomplete), parsed
+    return parsed
+
+
+@pytest.mark.req("REQ-T-15", "REQ-T-03")
+@settings(max_examples=COMPUTE_EXAMPLES, deadline=None)
+@given(design=spiral_designs(), data=st.data())
+def test_pr_12_reentry_keeps_badges_tag_and_hash_and_setting_back_restores_them(
+    design: DesignParameters, data: st.DataObject
+) -> None:
+    """PR-12 (D-007, ADR-0003 decisions 3 and 4, D-023). Catches a re-entry or a set-back that moves hash, badge or tag.
+
+    One numeric input that the example's results list as assumed is drawn. Re-entering its current value changes no
+    hash, provenance, badge or tag item. Changing it moves the hash; setting it back restores the hash, the badges and
+    the tag, which lists the input again in every result that listed it.
+    """
+    ref = ExampleRef(example_id="spiral_12c16p_default", example_sha256=design_hash(cf11()))
+    origin = (ref, cf11())
+    provenance = derive_provenance(design, origin, ())
+    example = compute(design, provenance, options=NO_DRC, registry=REGISTRY)
+    assert example is not None
+    if example.analysis is None:
+        return
+    values = draft_from_design(design).values
+    numeric = {
+        pointer
+        for pointer, value in values.items()
+        if field_for(pointer, values).value_type in (ValueType.INT, ValueType.FLOAT) and not isinstance(value, bool)
+    }
+    listed = dict(_assumed_items(example.analysis.to_json()))
+    tagged = sorted(numeric.intersection(item for items in listed.values() for item in items))
+    assert tagged, "the example's results list no numeric input as assumed"
+    pointer = data.draw(st.sampled_from(tagged))
+    current = values[pointer]
+
+    reentered = _design_with(design, pointer, current)
+    assert design_hash(reentered) == design_hash(design)
+    assert derive_provenance(reentered, origin, ()) == provenance
+    again = compute(reentered, derive_provenance(reentered, origin, ()), options=NO_DRC, registry=REGISTRY)
+    assert again is not None and again.analysis is not None
+    assert dict(_statuses(again.analysis.to_json())) == dict(_statuses(example.analysis.to_json()))
+    assert dict(_assumed_items(again.analysis.to_json())) == listed
+
+    assert isinstance(current, int | float)
+    other = current + 1 if isinstance(current, int) else current * 1.1 if current else 0.5
+    changed = _design_with(design, pointer, other)
+    assume(not [i for i in validate_design(changed) if i.severity is Severity.ERROR and pointer in i.pointers])
+    assert design_hash(changed) != design_hash(design)
+    restored = _design_with(changed, pointer, current)
+    assert design_hash(restored) == design_hash(design)
+    back = compute(restored, derive_provenance(restored, origin, ()), options=NO_DRC, registry=REGISTRY)
+    assert back is not None and back.analysis is not None
+    relisted = dict(_assumed_items(back.analysis.to_json()))
+    assert all(pointer in relisted[path] for path, items in listed.items() if pointer in items)
+    assert relisted == listed
+    assert dict(_statuses(back.analysis.to_json())) == dict(_statuses(example.analysis.to_json()))
 
 
 def _heading(p: Primitive, at_end: bool) -> float:

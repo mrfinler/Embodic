@@ -81,7 +81,7 @@ def test_s1_up_adds_one_step_and_previews_after_the_wait_without_scrolling_or_co
     assert isinstance(session.state.value, SessionEmpty), "a step wrote no undo entry"
 
 
-def test_s2_shift_down_moves_ten_steps(open_example, qtbot):
+def test_ui47_s2_shift_down_moves_ten_steps(open_example, qtbot):
     """S-2. Catches Shift that is ignored (one step) or a factor other than ten."""
     _, window = open_example()
     hold_preview_timer(window)
@@ -108,7 +108,7 @@ def test_s3_a_burst_of_steps_makes_one_preview_of_the_last_value(open_example, q
     assert timed.r_inner() == [13.97]
 
 
-def test_s4_up_then_return_commits_the_step_as_one_user_edit(open_example, qtbot):
+def test_ui49_s4_up_then_return_commits_the_step_as_one_user_edit(open_example, qtbot):
     """S-4. Catches a step that commits without Return (undo entry early), or Return that adds none."""
     timed = TimedCompute()
     _, window = open_example(timed=timed)
@@ -127,7 +127,7 @@ def test_s4_up_then_return_commits_the_step_as_one_user_edit(open_example, qtbot
     assert isinstance(session.state.value, SessionEmpty)
 
 
-def test_s5_esc_drops_every_uncommitted_step_and_keeps_focus(open_example, qtbot):
+def test_ui50_s5_esc_drops_every_uncommitted_step_and_keeps_focus(open_example, qtbot):
     """S-5. Catches an Esc that leaves a stepped text, writes an undo entry, or moves focus."""
     timed = TimedCompute()
     _, window = open_example(timed=timed)
@@ -144,7 +144,7 @@ def test_s5_esc_drops_every_uncommitted_step_and_keeps_focus(open_example, qtbot
     assert isinstance(window.session.state.value, SessionEmpty)
 
 
-def test_s6_a_step_stops_at_zero_and_does_not_leave_a_positive_field(open_example, qtbot):
+def test_ui51_s6_a_step_stops_at_zero_and_does_not_leave_a_positive_field(open_example, qtbot):
     """S-6. Catches Down that writes -0.03 mm into a non-negative gap, or 0.3 - 0.5 into a positive radius."""
     _, window = open_example()
     hold_preview_timer(window)
@@ -160,7 +160,7 @@ def test_s6_a_step_stops_at_zero_and_does_not_leave_a_positive_field(open_exampl
     assert radius.text() == "0.3"
 
 
-def test_s7_a_step_stops_at_the_range_and_a_value_outside_moves_only_toward_it(open_example, qtbot):
+def test_ui52_s7_a_step_stops_at_the_range_and_a_value_outside_moves_only_toward_it(open_example, qtbot):
     """S-7. Catches a step below the supported 0.05 mm, a step further out, or no way back from 60 mm."""
     _, window = open_example()
     hold_preview_timer(window)
@@ -220,7 +220,7 @@ def test_s8_text_that_is_no_number_stays_and_computes_nothing(open_example, qtbo
     assert timed.starts == []
 
 
-def test_s9_an_angle_steps_one_degree_and_commits_radians(open_example, qtbot):
+def test_ui54_s9_an_angle_steps_one_degree_and_commits_radians(open_example, qtbot):
     """S-9. Catches an angle step of one radian (57.3 degrees), or a committed value left in degrees."""
     _, window = open_example()
     hold_preview_timer(window)
@@ -234,7 +234,7 @@ def test_s9_an_angle_steps_one_degree_and_commits_radians(open_example, qtbot):
     assert committed == pytest.approx(math.radians(shown + 1))
 
 
-def test_s10_an_integer_field_steps_by_its_own_step(open_example, qtbot):
+def test_ui55_s10_an_integer_field_steps_by_its_own_step(open_example, qtbot):
     """S-10. Catches a pole count stepped by 1 (odd poles) or shown as 12.0."""
     _, window = open_example()
     hold_preview_timer(window)
@@ -244,7 +244,7 @@ def test_s10_an_integer_field_steps_by_its_own_step(open_example, qtbot):
     assert poles.text() == "12"
 
 
-def test_s11_a_combo_box_and_a_table_keep_their_own_arrow_keys(open_example, qtbot):
+def test_ui56_s11_a_combo_box_and_a_table_keep_their_own_arrow_keys(open_example, qtbot):
     """S-11. Catches a step filter on a combo box or a table: the choice must change once, the table must move rows."""
     timed = TimedCompute()
     _, window = open_example(timed=timed)

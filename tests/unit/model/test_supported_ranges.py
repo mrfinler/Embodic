@@ -1,5 +1,6 @@
 """Supported ranges that bound compute work or keep a formula finite (DEF-M2f-02, DEF-M2f-03)."""
 
+import dataclasses
 import warnings
 
 import pytest
@@ -90,6 +91,27 @@ def test_a_screw_length_beyond_the_largest_board_blocks_compute(pointer: str, va
     assert [(i.code, i.severity, i.category) for i in found] == [
         ("RANGE_ABOVE_SUPPORTED", Severity.ERROR, IssueCategory.UNSUPPORTED_RANGE)
     ]
+
+
+@pytest.mark.req("REQ-F-14")
+@pytest.mark.parametrize("example_id", ["spiral_12c16p_default", "serpentine_16p_example", "wave_16p_example"])
+def test_bv21_a_1e30_mm_screw_pitch_radius_is_an_error_and_compute_raises_no_internal_issue(example_id: str) -> None:
+    """BV-21 (D-054e). Catches DEF-M7a-01 on a topology the serpentine-only test above does not reach.
+
+    The spiral example has no screws, so it takes the serpentine example's screw pattern before the pitch radius is set.
+    """
+    pointer = "/outline/screws/0/pitch_radius_mm"
+    design = load_example(example_id)[1]
+    screws = design.outline.screws or load_example("serpentine_16p_example")[1].outline.screws
+    pattern = dataclasses.replace(screws[0], pitch_radius_mm=1e30)
+    far = dataclasses.replace(design, outline=dataclasses.replace(design.outline, screws=(pattern, *screws[1:])))
+    found = [i for i in validate_design(far) if pointer in i.pointers]
+    assert [(i.code, i.severity, i.category) for i in found] == [
+        ("RANGE_ABOVE_SUPPORTED", Severity.ERROR, IssueCategory.UNSUPPORTED_RANGE)
+    ]
+    outcome = compute(far, derive_provenance(far, None, ()))
+    assert outcome is not None
+    assert [i.code for i in outcome.issues if i.code.startswith("INTERNAL_")] == []
 
 
 @pytest.mark.req("REQ-F-14")
