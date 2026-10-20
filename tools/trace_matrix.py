@@ -11,12 +11,15 @@ earlier one.
 Exit code 1 when a test has no REQ marker, a marker names an unknown REQ ID, a manual record is invalid, or (with
 ``--fail-untested-through``) a live must-requirement of that milestone or earlier has neither a passing test nor a
 manual record that passed. ``--manual-records`` reads the checks that only a person can run (interfaces.md section 3.2).
-With ``--fail-untested-through`` a manual record counts only when its ``embodic_version`` begins with the version under
-test (``embodic.__version__``, D-083c); any other passed record is listed as stale, with its record path and D-061d,
-and is not counted.
+With ``--fail-untested-through`` a manual record counts only when its ``embodic_version`` is the version under test
+alone or that version followed by white space and a note (D-083c, D-084a), so ``0.0.4`` does not match ``0.0.40`` or
+``0.0.4rc1``. The version under test is the ``__version__`` in ``src/embodic/__init__.py`` of the tree that holds this
+script, read as text and not imported. Any other passed record is listed as stale, with its record path and D-061d, and
+is not counted.
 """
 
 import argparse
+import ast
 import json
 import re
 import sys
@@ -26,6 +29,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 REQUIREMENTS = REPO / "docs" / "phase2" / "architecture" / "requirements.md"
+EMBODIC_INIT = REPO / "src" / "embodic" / "__init__.py"
 REQ_ID = re.compile(r"REQ-[FNKTL]-\d{2}")
 MILESTONES = ("M1", "M2", "M3", "M4", "M5")
 MANUAL_KEYS = ("req", "test_id", "record", "embodic_version", "result")
@@ -133,13 +137,15 @@ def parse_manual_records(text: str, known_reqs: set[str], repo: Path = REPO) -> 
 def counted_records(records: Sequence[ManualRecord], version: str | None) -> tuple[list[ManualRecord], list[str]]:
     """Return (records that count, one line for each stale record).
 
-    A passed record counts. When `version` is given (the release profile), it counts only if its embodic_version
-    begins with it (D-083c); any other passed record is listed with its record path and D-061d, and does not count.
+    A passed record counts. When `version` is given (the release profile), it counts only if its embodic_version is
+    that version as a whole token (D-083c, D-084a); any other passed record is listed with its record path and D-061d,
+    and does not count.
     """
     passed = [record for record in records if record.result == "passed"]
     if version is None:
         return passed, []
-    current = [record for record in passed if record.embodic_version.startswith(version)]
+    token = re.compile(rf"{re.escape(version)}(?:\s.*)?", re.DOTALL)
+    current = [record for record in passed if token.fullmatch(record.embodic_version)]
     stale = [
         f"stale manual record {record.record} ({record.req} {record.test_id}, embodic_version "
         f"{record.embodic_version!r}): not counted for {version}, D-061d"
@@ -193,11 +199,19 @@ def find_untested(
     ]
 
 
-def version_under_test() -> str:
-    """Return `embodic.__version__`; imported here because only the release profile needs the package."""
-    import embodic
+def read_version(init_file: Path) -> str:
+    """Return the string assigned to `__version__` in a package `__init__.py`, read as text and never imported.
 
-    return embodic.__version__
+    A venv may import another tree's `embodic` (a worktree under the main checkout's venv), so an import would give the
+    version of the wrong tree (U-D26 weak point 3, D-084a).
+    """
+    for node in ast.parse(init_file.read_text(encoding="utf-8")).body:
+        if not isinstance(node, ast.Assign):
+            continue
+        targets = [target.id for target in node.targets if isinstance(target, ast.Name)]
+        if "__version__" in targets and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+            return node.value.value
+    raise ValueError(f"{init_file} assigns no string literal to __version__")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -232,7 +246,7 @@ def main(argv: list[str] | None = None) -> int:
     index_text = args.manual_records.read_text(encoding="utf-8") if args.manual_records else "[]"
     records, record_problems = parse_manual_records(index_text, known_reqs)
     through = args.fail_untested_through
-    counted, stale = counted_records(records, version_under_test() if through else None)
+    counted, stale = counted_records(records, read_version(EMBODIC_INIT) if through else None)
     untested = find_untested(requirements, tests, through, counted) if through else []
     covered = sum(1 for req in requirements if any(req.req_id in t.req_ids and t.outcome == "passed" for t in tests))
     print(
