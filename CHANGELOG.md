@@ -18,6 +18,11 @@ identifier names a defect row of the U-V15 records.
   (UT-DRC-03, D-006), a same-net via exactly pad_mm / 2 off the centreline is exempt (UT-DRC-04, rule 2b), and an SVG
   joint whose ends differ by less than 1e-6 mm across a rounding step is written once from the shared coordinate
   (REQ-N-21). (DEF-UV15-01, DEF-UV15-02, V3-05-01, D-071c)
+- The nightly and release profiles run the GUI latency tests (marker `latency`) in a pytest process of their own after
+  the main gate, and `tools/trace_matrix.py` merges the REQ reports of both processes. The 100 ms bound and the method
+  are unchanged. (D-074)
+- The golden freshness tests compare every byte of a fixture except `producer.runtime`, whose major line must match
+  (`node v22.`). Values, the engine sha256 and the producer name stay exact. (D-075)
 
 ### Fixed
 
@@ -27,6 +32,17 @@ identifier names a defect row of the U-V15 records.
 - Two designs that compare equal gave different design hashes when one held a negative zero (for example
   `first_coil_angle_rad = -0.0`), because the file form wrote "-0.0" (REQ-F-15, PR-08; found by the Windows release run
   of 0.0.2). The file form and the hash bytes now write every negative zero as 0.0. (D-073)
+- The cancel test of DEF-U-M8n-01 could measure the first job twice when two builds finished close together, and so
+  failed on Windows with two equal timings. Each build in the test now waits for its own job. (D-076b)
+
+### Known limits
+
+- Windows GUI latency (DEF-W-12, major). The Windows release run of `5f814d4` passed the main pytest gate (4198 passed,
+  90 skipped, 3 xfailed) and failed 2 of 6 tests of the separate latency gate. In ten runs of the latency tests alone
+  on the laptop, UI-05 took more than 100 ms in 1 of 10 runs and the N02-10 arrival case in 4 of 10 (up to 218 ms).
+  On Linux all pass. REQ-N-02 on Windows is `partial`. The cause is `inferred`: the compute worker and the GUI thread
+  share the GIL. The fix belongs to Phase 5, and the 100 ms bound stays. (D-076)
+- The known limits of 0.0.2 that this release does not fix still apply.
 
 ## 0.0.2 - 2026-10-18
 
