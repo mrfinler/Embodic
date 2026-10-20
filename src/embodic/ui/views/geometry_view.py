@@ -1,7 +1,8 @@
 """The zoomable, pannable drawing of the boards: copper in model millimetres, coil-eye fills, phase labels, legend.
 
 Scene units are millimetres with y negated (Qt's y points down). Copper pens are as wide as the trace in
-millimetres, so stroke widths follow the zoom (UI-03). Copper is never dashed (design_spec.md section 3.3). Labels
+millimetres, so stroke widths follow the zoom (UI-03). Copper is never dashed (design_spec.md section 3.3). While two or
+more copper layers show, the layers below the top one are outlined and cased (section 3.3.1, `layer_cue`). Labels
 and eyes come from `embodic.geometry.labels` and `embodic.geometry.marks`, the modules the exports draw from; the
 labels are placed again after every zoom, pan or resize step, so they never overlap at any zoom (ruling b).
 """
@@ -9,6 +10,7 @@ labels are placed again after every zoom, pan or resize step, so they never over
 import math
 from collections.abc import Iterator
 from contextlib import contextmanager
+from typing import NamedTuple
 
 from PySide6.QtCore import QPointF, QRect, QRectF, Qt, Signal
 from PySide6.QtGui import (
@@ -39,9 +41,11 @@ from PySide6.QtWidgets import (
 )
 
 from embodic.geometry.labels import Box, PlacedLabel, Viewport
-from embodic.geometry.layout import Layout
+from embodic.geometry.layout import Layout, Pad
 from embodic.geometry.marks import CoilMark
+from embodic.geometry.paths import CopperPath
 from embodic.geometry.primitives import Line, Primitive
+from embodic.io.exporters import pad_outline
 from embodic.model.vocabulary import Phase
 from embodic.ui.fonts import JETBRAINS_MONO
 from embodic.ui.strings import text
@@ -54,6 +58,7 @@ from embodic.ui.viewmodels.outcome import (
     phases_drawn,
     place_in_view,
 )
+from embodic.ui.views.layer_cue import LayerCueItem, Level, Part, Strokes
 
 ZOOM_MIN, ZOOM_MAX = 0.1, 200.0  # relative to the fitted view (UI-03)
 ZOOM_STEP = 1.25
@@ -65,6 +70,8 @@ LEGEND_MARGIN_PX = 8
 LEGEND_PAD_PX = 6
 LEGEND_ROW_PX = 20
 LEGEND_BAR_PX = (20, 3)  # solid copper bar: length, thickness
+LEGEND_LAYER_BAR_PX = (20, 6)  # the bar of a layer row: length, thickness (design_spec.md 3.3.1)
+LEGEND_LAYER_OUTLINE_PX = 1.5  # the outlined bar's edge, inside its rectangle
 LEGEND_SWATCH_PX = 12  # eye swatch diameter
 LEGEND_GAP_PX = 6
 STAMP_MARGIN_PX = 8
@@ -72,8 +79,8 @@ STAMP_PAD_PX = 4
 STAMP_PX = 12
 DATA_LAYER = 0  # QGraphicsItem.data key: copper layer name ("" for board items)
 DATA_PHASE = 1  # QGraphicsItem.data key: phase letter or ""
-DATA_KIND = 2  # QGraphicsItem.data key: "copper", "eye", "hatch", "label", "label-halo", "leader", "via", "pad",
-# "outline", "hole"
+DATA_KIND = 2  # QGraphicsItem.data key: "copper", "copper-cue", "eye", "hatch", "label",
+# "label-halo", "leader", "via", "pad", "drill", "outline", "hole"
 LABEL_KINDS = frozenset({"label", "label-halo", "leader"})
 
 
@@ -91,8 +98,29 @@ def primitive_path(p: Primitive) -> QPainterPath:
     return path
 
 
+class CopperEntry(NamedTuple):
+    """One primitive of a copper path with its centre line and the marks of its board (hover text)."""
+
+    path: CopperPath
+    prim: Primitive
+    part: Part
+    marks: BoardMarks
+
+
 def _disc(x_mm: float, y_mm: float, r_mm: float) -> QRectF:
     return QRectF(x_mm - r_mm, -y_mm - r_mm, 2 * r_mm, 2 * r_mm)
+
+
+def _pad_path(pad: Pad) -> QPainterPath:
+    """Return the closed shape of a square, rect or oblong pad, as the exporters draw it (`pad_outline`)."""
+    path = QPainterPath()
+    for prim in pad_outline(pad):
+        if path.elementCount() == 0:
+            path.addPath(primitive_path(prim))
+        else:
+            path.connectPath(primitive_path(prim))
+    path.closeSubpath()
+    return path
 
 
 def hatch_brush(colour: QColor, hatch_deg: int) -> QBrush:
@@ -247,10 +275,16 @@ class GeometryView(QGraphicsView):
         shown = self._shown()
         for board, _ in shown:
             self._draw_board(board)
-        visible = [layer for layer in self._geometry.layers if layer not in self._hidden]
-        for layer in reversed(visible):
-            for board, marks in shown:
-                self._draw_copper(board, marks, layer)
+        layers = [(layer, self._copper_entries(shown, layer)) for layer in reversed(self._visible_layers())]
+        if len(layers) >= 2:
+            for layer, entries in layers[:-1]:
+                self._add_copper(layer, entries, painted=False)
+            self._add_cue(layers)
+        for layer, entries in layers[-1:]:
+            self._add_copper(layer, entries, painted=True)
+        visible = [layer for layer, _ in reversed(layers)]
+        for board, _ in shown:
+            self._draw_lands(board, visible)
         for board, marks in shown:
             for mark in eyes_shown(board, marks, self._hidden):
                 self._draw_eye(mark)
@@ -275,26 +309,88 @@ class GeometryView(QGraphicsView):
         for hole in board.outline.holes:
             self._tag(self.scene().addEllipse(_disc(hole.x_mm, hole.y_mm, hole.diameter_mm / 2), pen, canvas), "hole")
 
-    def _draw_copper(self, board: Layout, marks: BoardMarks, layer: str) -> None:
+    def _visible_layers(self) -> list[str]:
+        """Return the copper layers shown, top of the stack first."""
+        if self._geometry is None:
+            return []
+        return [layer for layer in self._geometry.layers if layer not in self._hidden]
+
+    def _copper_entries(self, shown: list[tuple[Layout, BoardMarks]], layer: str) -> list[CopperEntry]:
+        """Return the primitives of ``layer`` on every board, each with its centre line, built once per view change."""
+        return [
+            CopperEntry(path, prim, Part.of(prim.width_mm, primitive_path(prim)), marks)
+            for board, marks in shown
+            for path in board.paths
+            if path.layer == layer
+            for prim in path.primitives
+        ]
+
+    def _add_copper(self, layer: str, entries: list[CopperEntry], *, painted: bool) -> None:
+        """Add one item per primitive of ``layer``: its solid stroke, or only its hover text and tags if not painted.
+
+        A layer below the top one is drawn by the cue item (`layer_cue`), so its items paint nothing.
+        """
+        for entry in entries:
+            colour, width = self._copper_colour(entry.path.phase), entry.prim.width_mm
+            pen = QPen(colour, width, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
+            item = self.scene().addPath(entry.part.centre, pen)
+            item.setToolTip(entry.marks.label_of_path.get(entry.path.id, ""))
+            self._tag(item, "copper", layer, entry.path.phase)
+            if not painted:
+                item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemHasNoContents)
+
+    def _add_cue(self, layers: list[tuple[str, list[CopperEntry]]]) -> None:
+        """Add the casings and outlines of ``layers``, bottom layer first, as one item (design_spec.md 3.3.1).
+
+        Every layer but the bottom one has a casing; every layer but the top one is drawn as an outline per phase.
+        """
         assert self._tokens is not None
+        board_fill = QColor(self._tokens.colours["board-fill"])
+        levels = []
+        for rank, (_, entries) in enumerate(layers):
+            if not entries:
+                continue
+            casing = Strokes.of(entry.part for entry in entries) if rank > 0 else None
+            inks: dict[Phase | None, list[Part]] = {}
+            if rank < len(layers) - 1:
+                for entry in entries:
+                    inks.setdefault(entry.path.phase, []).append(entry.part)
+            outlines = tuple((self._copper_colour(phase), Strokes.of(parts)) for phase, parts in inks.items())
+            levels.append(Level(casing, outlines))
+        if levels:
+            cue = LayerCueItem(levels, board_fill)
+            self.scene().addItem(cue)
+            self._tag(cue, "copper-cue")
+
+    def _draw_lands(self, board: Layout, visible: list[str]) -> None:
+        """Draw the vias and pads that land on a visible layer, once each and after all copper (design_spec.md 3.3.1).
+
+        A land joins layers, so it is never outlined or cased. Its layer tag is the top visible layer it lands on.
+        """
+        assert self._tokens is not None and self._geometry is not None
+        colours = self._tokens.colours
         no_pen = QPen(Qt.PenStyle.NoPen)
-        for path in (p for p in board.paths if p.layer == layer):
-            colour = self._copper_colour(path.phase)
-            tip = marks.label_of_path.get(path.id, "")
-            for prim in path.primitives:
-                pen = QPen(colour, prim.width_mm, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
-                item = self.scene().addPath(primitive_path(prim), pen)
-                item.setToolTip(tip)
-                self._tag(item, "copper", layer, path.phase)
-        via_fill = QColor(self._tokens.colours["text-3"])
-        for via in (v for v in board.vias if layer in (v.layer_from, v.layer_to)):
-            self._tag(
-                self.scene().addEllipse(_disc(via.x_mm, via.y_mm, via.pad_mm / 2), no_pen, via_fill), "via", layer
-            )
-        pad_fill = QColor(self._tokens.colours["text-2"])
-        for pad in (p for p in board.pads if p.layer in (None, layer)):
-            rect = QRectF(pad.x_mm - pad.width_mm / 2, -pad.y_mm - pad.height_mm / 2, pad.width_mm, pad.height_mm)
-            self._tag(self.scene().addRect(rect, no_pen, pad_fill), "pad", layer)
+        stack = self._geometry.layers
+        via_fill, pad_fill, drill_fill = (QColor(colours[k]) for k in ("text-3", "text-2", "canvas"))
+        for via in board.vias:
+            first, last = sorted((stack.index(via.layer_from), stack.index(via.layer_to)))
+            if landed := [layer for layer in visible if first <= stack.index(layer) <= last]:
+                disc = self.scene().addEllipse(_disc(via.x_mm, via.y_mm, via.pad_mm / 2), no_pen, via_fill)
+                self._tag(disc, "via", landed[0])
+        for pad in board.pads:
+            if pad.layer is not None and pad.layer not in visible:
+                continue
+            layer = pad.layer or visible[0]
+            if pad.shape == "round":
+                land: QGraphicsEllipseItem | QGraphicsPathItem = self.scene().addEllipse(
+                    _disc(pad.x_mm, pad.y_mm, pad.width_mm / 2), no_pen, pad_fill
+                )
+            else:
+                land = self.scene().addPath(_pad_path(pad), no_pen, pad_fill)
+            self._tag(land, "pad", layer)
+            if pad.drill_mm > 0:
+                drill = self.scene().addEllipse(_disc(pad.x_mm, pad.y_mm, pad.drill_mm / 2), no_pen, drill_fill)
+                self._tag(drill, "drill", layer)
 
     def _draw_eye(self, mark: CoilMark) -> None:
         assert self._tokens is not None
@@ -396,21 +492,39 @@ class GeometryView(QGraphicsView):
         phases = phases_drawn([board for board, _ in self._shown()])
         return phases if len(phases) >= 2 else ()
 
+    def legend_layer_rows(self) -> tuple[str, ...]:
+        """Return the texts of the layer rows under the phase rows: "{layer} on top", "Layers below".
+
+        They show while the layer cue applies: two or more copper layers visible (design_spec.md 3.3.1).
+        """
+        visible = self._visible_layers()
+        if len(visible) < 2:
+            return ()
+        return (text("shell.legend.layer-top", layer=visible[0]), text("shell.legend.layers-below"))
+
+    def _legend_texts(self) -> list[str]:
+        phases = [text("shell.legend.phase", phase=p.value) for p in self.legend_phases()]
+        return phases + list(self.legend_layer_rows())
+
     def legend_rect(self) -> QRectF:
         """Return the legend panel in viewport pixels, top left; empty when there is no legend."""
-        rows = self.legend_phases()
+        rows = self._legend_texts()
         if not rows:
             return QRectF()
-        widest = max(self._metrics.horizontalAdvance(text("shell.legend.phase", phase=p.value)) for p in rows)
+        widest = max(self._metrics.horizontalAdvance(row) for row in rows)
         width = 2 * LEGEND_PAD_PX + LEGEND_BAR_PX[0] + LEGEND_SWATCH_PX + 2 * LEGEND_GAP_PX + widest
         return QRectF(LEGEND_MARGIN_PX, LEGEND_MARGIN_PX, width, 2 * LEGEND_PAD_PX + LEGEND_ROW_PX * len(rows))
 
     def legend_row_geometry(self, row: int) -> tuple[QRectF, QRectF, QPointF]:
-        """Return, for one legend row in viewport pixels, the copper bar, the eye swatch and the text origin."""
+        """Return, for one legend row in viewport pixels, the copper bar, the eye swatch and the text origin.
+
+        Rows after the phase rows are the layer rows: their bar is thicker and they have no eye, so the swatch of such
+        a row is the empty rectangle where it would be.
+        """
         panel = self.legend_rect()
         mid = panel.top() + LEGEND_PAD_PX + (row + 0.5) * LEGEND_ROW_PX
         x = panel.left() + LEGEND_PAD_PX
-        length, thickness = LEGEND_BAR_PX
+        length, thickness = LEGEND_BAR_PX if row < len(self.legend_phases()) else LEGEND_LAYER_BAR_PX
         bar = QRectF(x, mid - thickness / 2, length, thickness)
         x += length + LEGEND_GAP_PX
         swatch = QRectF(x, mid - LEGEND_SWATCH_PX / 2, LEGEND_SWATCH_PX, LEGEND_SWATCH_PX)
@@ -419,15 +533,16 @@ class GeometryView(QGraphicsView):
 
     def _draw_legend(self, painter: QPainter) -> None:
         assert self._tokens is not None
-        rows = self.legend_phases()
-        if not rows:
+        phases = self.legend_phases()
+        layer_rows = self.legend_layer_rows()
+        if not phases and not layer_rows:
             return
         colours = self._tokens.colours
         painter.setPen(QPen(QColor(colours["border-control"]), 1))
         painter.setBrush(QColor(colours["surface"]))
         painter.drawRoundedRect(self.legend_rect(), 6, 6)
         painter.setFont(self._font)
-        for row, phase in enumerate(rows):
+        for row, phase in enumerate(phases):
             style = self._tokens.phase_style(phase)
             colour = self._phase_colour(style)
             bar, swatch, origin = self.legend_row_geometry(row)
@@ -438,6 +553,14 @@ class GeometryView(QGraphicsView):
             painter.drawEllipse(swatch)
             painter.setPen(QColor(colours["text-1"]))
             painter.drawText(origin, text("shell.legend.phase", phase=phase.value))
+        for offset, label in enumerate(layer_rows):
+            bar, _, origin = self.legend_row_geometry(len(phases) + offset)
+            painter.fillRect(bar, QColor(colours["text-1"]))
+            if offset == 1:
+                inset = LEGEND_LAYER_OUTLINE_PX
+                painter.fillRect(bar.adjusted(inset, inset, -inset, -inset), QColor(colours["surface"]))
+            painter.setPen(QColor(colours["text-1"]))
+            painter.drawText(origin, label)
 
     def set_stamp(self, stamp: str | None) -> None:
         """Show ``stamp`` at the bottom left and end the accessible description with it; labels avoid it once placed."""
