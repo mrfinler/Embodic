@@ -11,6 +11,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+import shiboken6
 from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import QColor, QImage, QPainter, QPainterPath, QPainterPathStroker, QTransform
 from PySide6.QtWidgets import QApplication, QGraphicsEllipseItem, QGraphicsPathItem, QGraphicsScene, QGraphicsView
@@ -61,9 +62,25 @@ def _draw(view, scene, run, hidden=frozenset()):
     view.show_geometry(scene, load_theme(theme), mode, hidden)
 
 
+_views: list[GeometryView] = []  # every view _show made, held until _delete_views deletes it
+
+
+@pytest.fixture(autouse=True)
+def _delete_views():
+    """Delete the views of the test on the GUI thread at its teardown, while this module still holds them.
+
+    A view's wrapper sits in a reference cycle (its viewport keeps it as focus proxy). A view the test only dropped
+    would wait for the cyclic GC, which can run on the compute worker's thread and free the widget there (U-M9c).
+    """
+    yield
+    while _views:
+        shiboken6.delete(_views.pop())
+
+
 def _show(scene, run, size_px, hidden=frozenset()):
-    """Return a shown, unfocused view of ``scene`` in one run of RUNS."""
+    """Return a shown, unfocused view of ``scene`` in one run of RUNS; `_delete_views` deletes it at teardown."""
     view = GeometryView()
+    _views.append(view)
     view.setFocusPolicy(Qt.FocusPolicy.NoFocus)
     view.resize(*size_px)
     view.show()
