@@ -7,7 +7,9 @@ Both folders come from pk04_reference.py. A scalar float pair passes when abs(a 
 A numeric array (a list whose leaves are all numbers, such as an EMF waveform) is compared at 1e-9 relative to its own
 largest magnitude: each pair passes when abs(a - b) <= 1e-9 * peak, where peak is the largest abs value in either
 array. A sample whose true value is 0 then passes on rounding noise and still fails on a real change (D-051f).
-Integers, strings, booleans, null, keys and list lengths must be equal. Pointers in EXCLUDED are not compared. Exit 0
+Integers, strings, booleans, null, keys and list lengths must be equal. Pointers in EXCLUDED are not compared, nor is
+`pairs_checked` of a DRC summary whose kind is a pair kind (BROAD_PHASE_KINDS): that count is a broad-phase diagnostic
+(D-052b), and the piece count of a 1.0 mm trace rounds either way under float noise (DEF-UV10-01, U-V20). Exit 0
 when every file agrees, 1 on a difference, 2 when the two manifests name different embodic sources or NumPy versions,
 so the comparison would not test the platform.
 """
@@ -17,6 +19,7 @@ import contextlib
 import io
 import json
 import math
+import re
 import sys
 import tempfile
 from collections.abc import Callable
@@ -28,6 +31,18 @@ EXCLUDED = {
     "/boards/layout_hashes": "a same-platform identity over float bytes (D-051f, DEF-W-02)",
     "/boards/stack_hash": "a same-platform identity over float bytes (D-051f, DEF-W-02)",
 }
+BROAD_PHASE_KINDS = frozenset(
+    {"trace_trace", "trace_via", "via_via", "pad_trace", "pad_pad", "copper_edge", "copper_hole"}
+)
+SUMMARY = re.compile(r"/drc/\d+/summaries/\d+")
+BROAD_PHASE_COUNT = "/drc/*/summaries/*/pairs_checked of the pair kinds"
+
+
+def skipped_keys(pointer: str, a: dict, b: dict) -> set[str]:
+    """Keys of a DRC summary left out: pairs_checked of a pair kind (D-052b); the kind itself is still compared."""
+    if SUMMARY.fullmatch(pointer) and a.get("kind") == b.get("kind") and a.get("kind") in BROAD_PHASE_KINDS:
+        return {"pairs_checked"}
+    return set()
 
 
 def is_number(x: object) -> bool:
@@ -73,7 +88,7 @@ def diff(a: object, b: object, pointer: str = "", peak: float | None = None) -> 
         return number_diff(a, b, pointer, peak)
     if isinstance(a, dict) and isinstance(b, dict):
         out = [f"{pointer}/{k}: missing on one side" for k in sorted(set(a) ^ set(b))]
-        for key in sorted(set(a) & set(b)):
+        for key in sorted((set(a) & set(b)) - skipped_keys(pointer, a, b)):
             out += diff(a[key], b[key], f"{pointer}/{key}", peak)
         return out
     if isinstance(a, list) and isinstance(b, list):
@@ -95,7 +110,7 @@ def compare(reference: Path, candidate: Path) -> int:
             return 2
     print(f"reference {ref_manifest['platform']} Python {ref_manifest['python']}")
     print(f"candidate {cand_manifest['platform']} Python {cand_manifest['python']}")
-    print("not compared: " + ", ".join(sorted(EXCLUDED)))
+    print("not compared: " + ", ".join([*sorted(EXCLUDED), BROAD_PHASE_COUNT]))
     names = sorted(p.name for p in reference.glob("*.json") if p.name != "manifest.json")
     missing = [n for n in names if not (candidate / n).exists()]
     failed = bool(missing)
@@ -142,6 +157,14 @@ def self_test_cases(doc: dict) -> list[tuple[str, Mutation, int]]:
 
         return mutate
 
+    def summary_count(kind: str, delta: int) -> Mutation:
+        def mutate(d: dict) -> str:
+            index = next(i for i, s in enumerate(d["drc"][0]["summaries"]) if s["kind"] == kind)
+            d["drc"][0]["summaries"][index]["pairs_checked"] += delta
+            return f"/drc/0/summaries/{index}/pairs_checked"
+
+        return mutate
+
     def set_hash(path: tuple[str | int, ...]) -> Mutation:
         def mutate(d: dict) -> str:
             node = d
@@ -169,6 +192,8 @@ def self_test_cases(doc: dict) -> list[tuple[str, Mutation, int]]:
         ("layout hash changed", set_hash(("boards", "layout_hashes", 0)), 0),
         ("stack hash changed", set_hash(("boards", "stack_hash")), 0),
         ("design hash changed", set_hash(("design_hash",)), 1),
+        ("trace_trace pairs_checked changed by 1 (D-052b)", summary_count("trace_trace", 1), 0),
+        ("min_width pairs_checked changed by 1", summary_count("min_width", 1), 1),
     ]
 
 
