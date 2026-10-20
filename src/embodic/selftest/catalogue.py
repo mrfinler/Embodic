@@ -235,7 +235,7 @@ CF06_LINE = "tests/unit/physics/test_closed_forms_m2e2.py::test_eq23_cf06_star_a
 CF09_PATTERN = "tests/unit/winding/test_star_of_slots.py::test_cf09_patterns_and_balance"
 CF09_KD1 = "tests/unit/winding/test_winding_factors.py::test_ut_wnd_05_cf09_distribution_factor"
 CF11_SOURCE = f"{SPIRAL_GENERATE}::test_default_track_length_matches_cf11"
-DRC_SOURCE = f"{SPIRAL_GENERATE}::test_default_example_passes_drc"
+DRC_SOURCE = f"{SPIRAL_GENERATE}::test_ut_drc_01_default_example_passes_drc"
 STAR, DELTA = ConnectionTopology.STAR, ConnectionTopology.DELTA
 
 SELFTESTS: tuple[SelfTestCheck, ...] = (

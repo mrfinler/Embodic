@@ -9,8 +9,6 @@ from types import ModuleType
 
 import pytest
 
-import embodic
-
 TOOLS = Path(__file__).resolve().parents[3] / "tools"
 
 
@@ -24,11 +22,12 @@ def _load_tool(name: str) -> ModuleType:
 
 trace_matrix = _load_tool("trace_matrix")
 ci = _load_tool("ci")
+TREE_VERSION = trace_matrix.read_version(trace_matrix.EMBODIC_INIT)
 
 EXISTING_RECORD = "pyproject.toml"  # a repository-relative path that exists; the content of a record is not read
 MISSING_RECORD = "docs/phase3/fable/no_such_record.md"
 MANUAL_ONLY_ROW = "REQ-N-07"
-CURRENT_VERSION = f"{embodic.__version__} (release c25d8a9)"  # a record stamp begins with the version under test
+CURRENT_VERSION = f"{TREE_VERSION} (release c25d8a9)"  # a record stamp begins with the version under test
 STALE_VERSION = "older build c0f4894"  # begins with no release version
 
 
@@ -121,7 +120,7 @@ def test_tr01_a_record_of_the_version_under_test_counts_and_is_not_listed_as_sta
     manual_only_project, tmp_path, capsys
 ):
     """D-083c. Catches a currency check that compares the whole stamp: it must only begin with the version."""
-    assert CURRENT_VERSION != embodic.__version__
+    assert CURRENT_VERSION != TREE_VERSION
     records = write_records(tmp_path / "records.json", [manual_record(version=CURRENT_VERSION)])
     code, out = run_trace_matrix(
         manual_only_project, "--fail-untested-through=M5", f"--manual-records={records}", capsys=capsys

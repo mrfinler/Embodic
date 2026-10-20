@@ -89,7 +89,22 @@ class FieldTable:
     bt_t: FloatArray
 
     def at(self, radius_mm: float) -> tuple[FloatArray, FloatArray]:
-        """Interpolate (B_z, B_t) per harmonic at one radius inside the span, as Xcoil `look` does."""
+        """Interpolate (B_z, B_t) per harmonic at one radius inside the span, as Xcoil `look` does.
+
+        References: EQ-05 (the table holds the peak B_z,n and B_t,n of EQ-05 on equally spaced radii). The result lies
+        on the straight line between the two tabulated radii that enclose `radius_mm`; it is not EQ-05 evaluated at
+        `radius_mm`. Outside the span the line of the nearest end interval is extended.
+
+        Parameters
+        ----------
+        radius_mm : float
+            Radius in mm, between r_inner_mm and r_outer_mm.
+
+        Returns
+        -------
+        tuple[FloatArray, FloatArray]
+            B_z and B_t in T, each with one peak value per harmonic.
+        """
         steps = self.bz_t.shape[1] - 1
         x = (radius_mm - self.r_inner_mm) / (self.r_outer_mm - self.r_inner_mm) * steps
         i = max(0, min(steps - 1, math.floor(x)))

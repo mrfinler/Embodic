@@ -9,11 +9,11 @@ An entry is numeric when its docstring type holds `float`, `FloatArray` or `NDAr
 tuple type written as a single entry, so such an entry needs one unit token, not one per element.
 """
 
-import ast
 import re
 import textwrap
 
 import pytest
+from tests.static.physics_functions import public_physics_functions
 
 from embodic.units import Unit
 
@@ -69,34 +69,23 @@ def _numeric_entries_without_unit(doc: str, section: str, entry: re.Pattern[str]
     return [name for name, kind, text in entries if NUMERIC_TYPE.search(kind) and not _has_unit_token(" ".join(text))]
 
 
-def _public_physics_functions(modules):
-    for module in modules:
-        if not module.in_package("embodic.physics") or module.name.rsplit(".", 1)[-1].startswith("_"):
-            continue
-        for node in module.tree.body:
-            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and not node.name.startswith("_"):
-                yield module, node
-
-
 def check_parameter_units(modules) -> list[str]:
-    """Return one 'path:line: message' per public embodic.physics function with a numeric parameter lacking a unit."""
+    """Return one 'path:line: message' per public physics function or method with a numeric parameter lacking a unit."""
     violations = []
-    for module, node in _public_physics_functions(modules):
-        doc = ast.get_docstring(node) or ""
-        unitless = _numeric_entries_without_unit(doc, "Parameters", PARAMETER_ENTRY)
+    for function in public_physics_functions(modules):
+        unitless = _numeric_entries_without_unit(function.docstring, "Parameters", PARAMETER_ENTRY)
         if unitless:
-            violations.append(f"{module.where(node)}: {node.name}() Parameters name no unit for {', '.join(unitless)}")
+            violations.append(f"{function.where}: {function.name}() Parameters name no unit for {', '.join(unitless)}")
     return violations
 
 
 def check_return_units(modules) -> list[str]:
-    """Return one 'path:line: message' per public embodic.physics function with a numeric return lacking a unit."""
+    """Return one 'path:line: message' per public physics function or method with a numeric return lacking a unit."""
     violations = []
-    for module, node in _public_physics_functions(modules):
-        doc = ast.get_docstring(node) or ""
-        unitless = _numeric_entries_without_unit(doc, "Returns", RETURN_ENTRY)
+    for function in public_physics_functions(modules):
+        unitless = _numeric_entries_without_unit(function.docstring, "Returns", RETURN_ENTRY)
         if unitless:
-            violations.append(f"{module.where(node)}: {node.name}() Returns names no unit for {', '.join(unitless)}")
+            violations.append(f"{function.where}: {function.name}() Returns names no unit for {', '.join(unitless)}")
     return violations
 
 
@@ -326,3 +315,65 @@ def test_n09_a_one_letter_unit_counts_where_a_unit_is_written(planted, descripti
     assert check_parameter_units([planted("embodic.physics.trace", trace_function(description))]) == []
     returns = f"float\n    {description}"
     assert check_return_units([planted("embodic.physics.trace", trace_function("Width in mm.", returns))]) == []
+
+
+METHOD_SOURCE = '''
+from typing import Protocol
+
+
+class Trace:
+    """A trace."""
+
+    def resistance(self, width: float) -> float:
+        """Return the trace resistance.
+
+        Parameters
+        ----------
+        width : float
+            {width}
+
+        Returns
+        -------
+        float
+            {resistance}
+        """
+
+
+class Cancel(Protocol):
+    """Cancellation flag."""
+
+    def budget(self, width: float) -> float:
+        """Return a budget.
+
+        Parameters
+        ----------
+        width : float
+            Width.
+
+        Returns
+        -------
+        float
+            Budget.
+        """
+'''
+
+
+@pytest.mark.req("REQ-N-09")
+def test_n09_a_method_with_a_numeric_parameter_and_return_without_units_is_reported_by_its_class_and_name(planted):
+    """Catches a unit check that reads module-level functions only: a method is a physics function (U-D26 item 2)."""
+    module = planted("embodic.physics.trace", METHOD_SOURCE.format(width="Trace width.", resistance="Resistance."))
+    (parameter_violation,) = check_parameter_units([module])
+    (return_violation,) = check_return_units([module])
+    assert "Trace.resistance()" in parameter_violation
+    assert "width" in parameter_violation
+    assert "Trace.resistance()" in return_violation
+
+
+@pytest.mark.req("REQ-N-09")
+def test_n09_a_method_with_units_is_not_reported_and_a_protocol_member_is_left_out(planted):
+    """Catches a checker that reports every method, or one that reads a Protocol member (its body is `...`)."""
+    module = planted(
+        "embodic.physics.trace", METHOD_SOURCE.format(width="Trace width in mm.", resistance="Resistance in ohm.")
+    )
+    assert check_parameter_units([module]) == []
+    assert check_return_units([module]) == []

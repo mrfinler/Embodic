@@ -25,7 +25,16 @@ class InterconnectResistance:
     neutral_ring_ohm: tuple[float, ...]
 
     def total_ohm(self) -> float:
-        """Return the sum of every stub, link and ring segment."""
+        """Return the sum of every stub, link and ring segment.
+
+        References: EQ-23 (the star P_ic is I_line^2 times this sum: sum s + sum l + sum n). A delta loss weighs the
+        stubs and the links with different currents, so `interconnect_loss_w` does not use this sum for it.
+
+        Returns
+        -------
+        float
+            Sum of the line stub, link and neutral-ring resistances in ohm.
+        """
         return math.fsum([*self.line_stub_ohm, *self.link_ohm, *self.neutral_ring_ohm])
 
 
