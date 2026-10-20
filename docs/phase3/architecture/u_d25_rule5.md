@@ -1,8 +1,8 @@
 Prepared by: Agent 6 - Software Architecture Specialist - model: claude-opus-5-5
 
-# U-D24: rule 5 and the rule 2 tap are per primitive (DEF-UV16-01, D-078)
+# U-D25: rule 5 and the rule 2 tap are per primitive (DEF-UV16-01, D-078)
 
-Unit U-D24, 2026-10-20, on main 14c8b7a (worktree `/home/claude/wt/U-D24`, branch `unit/U-D24`). The contract text is
+Unit U-D25, 2026-10-20, on main 14c8b7a (worktree `/home/claude/wt/U-D25`, branch `unit/U-D25`). The contract text is
 in `docs/phase2/architecture/interfaces.md` §7 (rule 2, rule 5, the revision note of 2026-10-20, the net test and the
 test table) and in `docs/phase2/architecture/test_plan.md` §5.1 UT-DRC-04. This file gives the reasons, the measured
 effect, the case geometry and the questions for Fable. No code or test of the product changed.
@@ -55,8 +55,8 @@ primitive. `_path_ends` already uses that test for an end group (`items.py` l.18
 
 ### Readings measured side by side
 
-`u_d24_probe.py` (section 7) replaced `_junctions` with each reading and ran `run_drc` on the five packaged examples
-and the three GR-19 layouts (`verified` by running, 83 s wall time). `u_d24_cases.py` ran the hand-built cases.
+`u_d25_probe.py` (section 7) replaced `_junctions` with each reading and ran `run_drc` on the five packaged examples
+and the three GR-19 layouts (`verified` by running, 83 s wall time). `u_d25_cases.py` ran the hand-built cases.
 
 | Reading of rule 5 | D08 mutant (leg 25, 0.700 mm from `path:1/prim:9`) | Case 5k (T 0.1 mm before a fillet) | Examples |
 |---|---|---|---|
@@ -108,11 +108,11 @@ Rule 2b has carried that cost since D-037a.
 
 ## 3. Effect on the boards
 
-`verified` by running `u_d24_probe.py --gr19` on main 14c8b7a with `_junctions` and `_taps` replaced. The violation
+`verified` by running `u_d25_probe.py --gr19` on main 14c8b7a with `_junctions` and `_taps` replaced. The violation
 counts are the same with and without the symmetry shortcut. "Dropped" counts the pairs that lose their exemption.
 "Least margin" is the least clearance among them minus the rule.
 
-| Layout | Violations, main | Violations, U-D24 | Rule 5 pairs dropped | Tap pairs dropped | Least margin of a dropped pair |
+| Layout | Violations, main | Violations, U-D25 | Rule 5 pairs dropped | Tap pairs dropped | Least margin of a dropped pair |
 |---|---|---|---|---|---|
 | serpentine_16p_example | 0 | 0 | 1506 | 0 | -1.0e-14 mm (`path:7/prim:188`, `path:8/prim:0`) |
 | spiral_12c10p_d08 | 0 | 0 | 120 | 0 | -4.7e-15 mm (`path:10/prim:1`, `path:48/prim:0`) |
@@ -138,9 +138,9 @@ rule. Its control (start moved 0.001 mm) is reported at 0.701 mm under both (`ve
 
 The helpers are those of `tests/unit/drc/layouts.py`: `RULES` (trace and via rule 0.2 mm), `line` and `arc` 0.2 mm
 wide, `via` with `pad_mm` 0.6 and net `A` unless given. Every expected result below is `verified` by running
-`u_d24_cases.py` under the U-D24 reading, and the "main" column under main 14c8b7a.
+`u_d25_cases.py` under the U-D25 reading, and the "main" column under main 14c8b7a.
 
-| Case | Layout | Expected, U-D24 | Main 14c8b7a |
+| Case | Layout | Expected, U-D25 | Main 14c8b7a |
 |---|---|---|---|
 | 5i | coil `path(0, [line(-5, 0, 0, 0), line(0, 0, 0, 2)])`, via 0 at (0, 2) role TERMINAL, leg `path(1, [line(0, 2, -5, 0.39)])`, all net A | exactly `trace_trace` (`path:0/prim:0`, `path:1/prim:0`) at 0.19 | none: blind |
 | 5j | 5i with the leg ending at (-5, 0.41) | none | none |
@@ -158,8 +158,8 @@ pair at -0.200 mm (`inferred` from the geometry, not run).
 
 The two UT-DRC-04 items that invert are `test_ut_drc_04_junction_end_group_is_exempt_from_the_whole_trunk_path` (5f)
 and `test_ut_drc_04_path_end_on_an_end_point_of_a_same_net_path_is_exempt_from_every_primitive_of_it` (5g). With the
-U-D24 reading in place, `pytest tests/unit/drc/test_run_drc.py -k ut_drc_04` gives 3 failed (those two, one of them
-twice by parametrisation) and 27 passed (`verified` by running, with the plugin `u_d24_reading.py` of section 7).
+U-D25 reading in place, `pytest tests/unit/drc/test_run_drc.py -k ut_drc_04` gives 3 failed (those two, one of them
+twice by parametrisation) and 27 passed (`verified` by running, with the plugin `u_d25_reading.py` of section 7).
 
 ## 5. What changes in code and models (for the implementing units)
 
@@ -170,7 +170,7 @@ twice by parametrisation) and 27 passed (`verified` by running, with the plugin 
 - Agent 4, `tests/independent/m1/drc_universe.py`. `_tees` pairs the end group with the landing group of each hit,
   and `_interconnect_taps` pairs a via with each primitive it taps, as `_via_taps` does without the net test.
   `contract_exemptions`' docstring follows.
-- Not run under the U-D24 reading: `tests/unit/property/t_junctions.py` (PR-13), `tests/independent/m1/test_drc_agreement.py`,
+- Not run under the U-D25 reading: `tests/unit/property/t_junctions.py` (PR-13), `tests/independent/m1/test_drc_agreement.py`,
   `tests/independent/m1/test_gr19_drc.py` and the golden helpers that import the exemption functions. A combined run
   hit its 580 s timeout on this 2-CPU machine beside the release gate and gave no result (`not tested`). PR-13 and
   the agreement tests compare the product with Agent 4's model, so they agree again only when both units land.
@@ -192,7 +192,7 @@ twice by parametrisation) and 27 passed (`verified` by running, with the plugin 
   while §7 and `_taps` name vias only. That the model is wider than the contract for a pad on an interconnect
   centreline is `inferred` by reading, not run.
 - Q4 (text outside this unit's sections). `test_plan.md` §5 l.300 and `interfaces.md` §13 point 13 still say that U-M5f
-  adds cases 5e and 5f for the end-point reading. Both are dated notes, and the U-D24 notes supersede them. This unit
+  adds cases 5e and 5f for the end-point reading. Both are dated notes, and the U-D25 notes supersede them. This unit
   did not add a line to the revision list at the top of `test_plan.md`, because U-S16 edits that file in parallel and
   this unit's write scope there is the UT-DRC-04 row.
 - Q5 (release). D-078 c fixes this before the next release. The contract change alone changes no verdict on the five
@@ -201,15 +201,15 @@ twice by parametrisation) and 27 passed (`verified` by running, with the plugin 
 ## 7. The levers
 
 Run from a worktree root on main 14c8b7a with the dev venv, for example
-`PYTHONPATH=src:<dir of the scripts> python <dir>/u_d24_probe.py --gr19`. The scripts replace functions of
+`PYTHONPATH=src:<dir of the scripts> python <dir>/u_d25_probe.py --gr19`. The scripts replace functions of
 `embodic.drc.items` in memory only. They are a measurement for this ruling, not tests.
 
-`u_d24_probe.py`, the readings, the board sweep and the D08 mutant:
+`u_d25_probe.py`, the readings, the board sweep and the D08 mutant:
 
 ```python
-"""U-D24 probe: run_drc under narrowed rule 5 and rule 2 tap readings (scratch measurement, not a test).
+"""U-D25 probe: run_drc under narrowed rule 5 and rule 2 tap readings (scratch measurement, not a test).
 
-Usage, from a worktree root with the dev venv:  PYTHONPATH=src python u_d24_probe.py [--gr19]
+Usage, from a worktree root with the dev venv:  PYTHONPATH=src python u_d25_probe.py [--gr19]
 
 For each packaged example (and with --gr19 the three GR-19 Xcoil layouts in the product DRC reading) it reports, per
 reading, the violation count, the violations that are new against the contract reading of main 14c8b7a, and the pairs
@@ -408,12 +408,12 @@ if __name__ == "__main__":
     raise SystemExit(main())
 ```
 
-`u_d24_cases.py`, the hand-built cases of section 4 under four readings:
+`u_d25_cases.py`, the hand-built cases of section 4 under four readings:
 
 ```python
-"""U-D24: the proposed UT-DRC-04 cases under the contract of 14c8b7a and under the U-D24 reading (scratch check).
+"""U-D25: the proposed UT-DRC-04 cases under the contract of 14c8b7a and under the U-D25 reading (scratch check).
 
-Usage, from a worktree root:  PYTHONPATH=src python u_d24_cases.py
+Usage, from a worktree root:  PYTHONPATH=src python u_d25_cases.py
 """
 
 import math
@@ -426,7 +426,7 @@ sys.path.insert(0, "tests/unit/drc")
 sys.path.insert(0, str(Path(__file__).parent))
 
 from layouts import RULES, arc, layout, line, path, via  # noqa: E402
-from u_d24_probe import READINGS, _use  # noqa: E402
+from u_d25_probe import READINGS, _use  # noqa: E402
 
 from embodic.drc import run_drc  # noqa: E402
 from embodic.geometry.layout import ViaRole  # noqa: E402
@@ -515,12 +515,12 @@ for name, board in CASES.items():
 _use("contract 14c8b7a")
 ```
 
-`u_d24_reading.py`, a pytest plugin (`-p u_d24_reading`) that puts the U-D24 reading in place before collection:
+`u_d25_reading.py`, a pytest plugin (`-p u_d25_reading`) that puts the U-D25 reading in place before collection:
 
 ```python
-"""pytest plugin: replace rule 5 and the rule 2 tap with the U-D24 reading before any test runs (scratch only)."""
+"""pytest plugin: replace rule 5 and the rule 2 tap with the U-D25 reading before any test runs (scratch only)."""
 from embodic.drc import items
-from u_d24_probe import junctions_window, taps_per_primitive
+from u_d25_probe import junctions_window, taps_per_primitive
 
 items._junctions = junctions_window(1, False)
 items._taps = taps_per_primitive
