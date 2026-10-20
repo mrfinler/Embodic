@@ -1,0 +1,9 @@
+# Every text file is stored and checked out with LF on every platform (DEF-W-13). Git for Windows defaults to
+# core.autocrlf=true, which wrote CRLF into the checkout and broke the byte comparisons of the packaged examples.
+# tests/static/test_gitattributes_lf.py reads these rules back through `git check-attr`.
+* text=auto eol=lf
+
+# The binary types in the repository. text=auto would detect them, so this is explicit.
+*.png binary
+*.gz binary
+*.ttf binary
