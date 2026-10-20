@@ -1,0 +1,468 @@
+{
+ "d08_crossing_note": "ring A path 32 (L1, 1.0 mm) over leg 24 (L2, 0.6 mm) at (-11.01, 47.19), clear r 49.36",
+ "d08_crossing": {
+  "now | dark colour": {
+   "upper_px": "#c43b10",
+   "edge_band_px": [
+    "#c43b10",
+    "#c43b10",
+    "#c43b10",
+    "#c43b10"
+   ],
+   "edge_contrast": 1.0,
+   "lower_centre_px": "#c43b10",
+   "lower_extent_px": 14.75,
+   "lower_edge_ink_contrast": [
+    3.09,
+    3.09
+   ],
+   "lower_true_width_px": 14.4
+  },
+  "now | dark greyscale": {
+   "upper_px": "#e0e0e0",
+   "edge_band_px": [
+    "#e0e0e0",
+    "#e0e0e0",
+    "#e0e0e0",
+    "#e0e0e0"
+   ],
+   "edge_contrast": 1.0,
+   "lower_centre_px": "#e0e0e0",
+   "lower_extent_px": 15.5,
+   "lower_edge_ink_contrast": [
+    12.34,
+    12.34
+   ],
+   "lower_true_width_px": 14.4
+  },
+  "now | light greyscale": {
+   "upper_px": "#262626",
+   "edge_band_px": [
+    "#262626",
+    "#262626",
+    "#262626",
+    "#262626"
+   ],
+   "edge_contrast": 1.0,
+   "lower_centre_px": "#262626",
+   "lower_extent_px": 15.5,
+   "lower_edge_ink_contrast": [
+    14.13,
+    14.13
+   ],
+   "lower_true_width_px": 14.4
+  },
+  "opacity | dark colour": {
+   "upper_px": "#c13a10",
+   "edge_band_px": [
+    "#863116",
+    "#863116",
+    "#863116",
+    "#863116"
+   ],
+   "edge_contrast": 1.57,
+   "lower_centre_px": "#863116",
+   "lower_extent_px": 14.5,
+   "lower_edge_ink_contrast": [
+    1.91,
+    1.91
+   ],
+   "lower_true_width_px": 14.4
+  },
+  "opacity | dark greyscale": {
+   "upper_px": "#dddddd",
+   "edge_band_px": [
+    "#979797",
+    "#979797",
+    "#979797",
+    "#979797"
+   ],
+   "edge_contrast": 2.15,
+   "lower_centre_px": "#979797",
+   "lower_extent_px": 14.75,
+   "lower_edge_ink_contrast": [
+    5.58,
+    5.58
+   ],
+   "lower_true_width_px": 14.4
+  },
+  "opacity | light greyscale": {
+   "upper_px": "#2a2a2a",
+   "edge_band_px": [
+    "#767676",
+    "#767676",
+    "#767676",
+    "#767676"
+   ],
+   "edge_contrast": 3.16,
+   "lower_centre_px": "#767676",
+   "lower_extent_px": 14.75,
+   "lower_edge_ink_contrast": [
+    4.24,
+    4.24
+   ],
+   "lower_true_width_px": 14.4
+  },
+  "outline | dark colour": {
+   "upper_px": "#c43b10",
+   "edge_band_px": [
+    "#202020",
+    "#202020",
+    "#202020",
+    "#202020"
+   ],
+   "edge_contrast": 3.09,
+   "lower_centre_px": "#202020",
+   "lower_extent_px": 14.75,
+   "lower_edge_ink_contrast": [
+    2.55,
+    3.09
+   ],
+   "lower_true_width_px": 14.4
+  },
+  "outline | dark greyscale": {
+   "upper_px": "#e0e0e0",
+   "edge_band_px": [
+    "#202020",
+    "#202020",
+    "#202020",
+    "#202020"
+   ],
+   "edge_contrast": 12.34,
+   "lower_centre_px": "#202020",
+   "lower_extent_px": 15.5,
+   "lower_edge_ink_contrast": [
+    9.24,
+    12.34
+   ],
+   "lower_true_width_px": 14.4
+  },
+  "outline | light greyscale": {
+   "upper_px": "#262626",
+   "edge_band_px": [
+    "#f7f7f7",
+    "#f7f7f7",
+    "#f7f7f7",
+    "#f7f7f7"
+   ],
+   "edge_contrast": 14.13,
+   "lower_centre_px": "#f7f7f7",
+   "lower_extent_px": 15.5,
+   "lower_edge_ink_contrast": [
+    8.81,
+    14.13
+   ],
+   "lower_true_width_px": 14.4
+  },
+  "casing | dark colour": {
+   "upper_px": "#c43b10",
+   "edge_band_px": [
+    "#202020",
+    "#7b2f17",
+    "#c43b10",
+    "#c43b10"
+   ],
+   "edge_contrast": 3.09,
+   "lower_centre_px": "#c43b10",
+   "lower_extent_px": 14.75,
+   "lower_edge_ink_contrast": [
+    3.09,
+    3.09
+   ],
+   "lower_true_width_px": 14.4
+  },
+  "casing | dark greyscale": {
+   "upper_px": "#e0e0e0",
+   "edge_band_px": [
+    "#202020",
+    "#8b8b8b",
+    "#e0e0e0",
+    "#e0e0e0"
+   ],
+   "edge_contrast": 12.34,
+   "lower_centre_px": "#e0e0e0",
+   "lower_extent_px": 15.5,
+   "lower_edge_ink_contrast": [
+    12.34,
+    12.34
+   ],
+   "lower_true_width_px": 14.4
+  },
+  "casing | light greyscale": {
+   "upper_px": "#262626",
+   "edge_band_px": [
+    "#f7f7f7",
+    "#828282",
+    "#262626",
+    "#262626"
+   ],
+   "edge_contrast": 14.13,
+   "lower_centre_px": "#262626",
+   "lower_extent_px": 15.5,
+   "lower_edge_ink_contrast": [
+    14.13,
+    14.13
+   ],
+   "lower_true_width_px": 14.4
+  },
+  "hybrid | dark colour": {
+   "upper_px": "#c43b10",
+   "edge_band_px": [
+    "#202020",
+    "#202020",
+    "#202020",
+    "#202020"
+   ],
+   "edge_contrast": 3.09,
+   "lower_centre_px": "#202020",
+   "lower_extent_px": 14.75,
+   "lower_edge_ink_contrast": [
+    2.55,
+    3.09
+   ],
+   "lower_true_width_px": 14.4
+  },
+  "hybrid | dark greyscale": {
+   "upper_px": "#e0e0e0",
+   "edge_band_px": [
+    "#202020",
+    "#202020",
+    "#202020",
+    "#202020"
+   ],
+   "edge_contrast": 12.34,
+   "lower_centre_px": "#202020",
+   "lower_extent_px": 15.5,
+   "lower_edge_ink_contrast": [
+    9.24,
+    12.34
+   ],
+   "lower_true_width_px": 14.4
+  },
+  "hybrid | light greyscale": {
+   "upper_px": "#262626",
+   "edge_band_px": [
+    "#f7f7f7",
+    "#f7f7f7",
+    "#f7f7f7",
+    "#f7f7f7"
+   ],
+   "edge_contrast": 14.13,
+   "lower_centre_px": "#f7f7f7",
+   "lower_extent_px": 15.5,
+   "lower_edge_ink_contrast": [
+    8.81,
+    14.13
+   ],
+   "lower_true_width_px": 14.4
+  }
+ },
+ "union_seconds": {
+  "d08_region | outline | dark colour": 0.009,
+  "d08_region | outline | dark greyscale": 0.01,
+  "d08_region | outline | light greyscale": 0.01,
+  "d08_region | hybrid | dark colour": 0.01,
+  "d08_region | hybrid | dark greyscale": 0.012,
+  "d08_region | hybrid | light greyscale": 0.011,
+  "d08_crossing | outline | dark colour": 0.009,
+  "d08_crossing | outline | dark greyscale": 0.009,
+  "d08_crossing | outline | light greyscale": 0.009,
+  "d08_crossing | hybrid | dark colour": 0.009,
+  "d08_crossing | hybrid | dark greyscale": 0.014,
+  "d08_crossing | hybrid | light greyscale": 0.009,
+  "serpentine_fit | outline | dark colour": 0.62,
+  "serpentine_fit | outline | dark greyscale": 0.586,
+  "serpentine_fit | outline | light greyscale": 0.546,
+  "serpentine_fit | hybrid | dark colour": 0.698,
+  "serpentine_fit | hybrid | dark greyscale": 0.592,
+  "serpentine_fit | hybrid | light greyscale": 0.61,
+  "serpentine_4x | outline | dark colour": 0.556,
+  "serpentine_4x | outline | dark greyscale": 0.587,
+  "serpentine_4x | outline | light greyscale": 0.49,
+  "serpentine_4x | hybrid | dark colour": 0.562,
+  "serpentine_4x | hybrid | dark greyscale": 0.582,
+  "serpentine_4x | hybrid | light greyscale": 0.712
+ },
+ "band_violations": {
+  "d08_region | now | dark colour": [
+   845,
+   10565
+  ],
+  "d08_region | now | dark greyscale": [
+   864,
+   10565
+  ],
+  "d08_region | now | light greyscale": [
+   857,
+   10565
+  ],
+  "d08_region | opacity | dark colour": [
+   822,
+   10565
+  ],
+  "d08_region | opacity | dark greyscale": [
+   847,
+   10565
+  ],
+  "d08_region | opacity | light greyscale": [
+   836,
+   10565
+  ],
+  "d08_region | outline | dark colour": [
+   388,
+   10565
+  ],
+  "d08_region | outline | dark greyscale": [
+   412,
+   10565
+  ],
+  "d08_region | outline | light greyscale": [
+   402,
+   10565
+  ],
+  "d08_region | casing | dark colour": [
+   3,
+   10565
+  ],
+  "d08_region | casing | dark greyscale": [
+   3,
+   10565
+  ],
+  "d08_region | casing | light greyscale": [
+   3,
+   10565
+  ],
+  "d08_region | hybrid | dark colour": [
+   3,
+   10565
+  ],
+  "d08_region | hybrid | dark greyscale": [
+   3,
+   10565
+  ],
+  "d08_region | hybrid | light greyscale": [
+   3,
+   10565
+  ],
+  "serpentine_fit | now | dark colour": [
+   1736,
+   13877
+  ],
+  "serpentine_fit | now | dark greyscale": [
+   1746,
+   13877
+  ],
+  "serpentine_fit | now | light greyscale": [
+   1744,
+   13877
+  ],
+  "serpentine_fit | opacity | dark colour": [
+   1729,
+   13877
+  ],
+  "serpentine_fit | opacity | dark greyscale": [
+   1734,
+   13877
+  ],
+  "serpentine_fit | opacity | light greyscale": [
+   1727,
+   13877
+  ],
+  "serpentine_fit | outline | dark colour": [
+   1727,
+   13877
+  ],
+  "serpentine_fit | outline | dark greyscale": [
+   1737,
+   13877
+  ],
+  "serpentine_fit | outline | light greyscale": [
+   1733,
+   13877
+  ],
+  "serpentine_fit | casing | dark colour": [
+   6,
+   13877
+  ],
+  "serpentine_fit | casing | dark greyscale": [
+   6,
+   13877
+  ],
+  "serpentine_fit | casing | light greyscale": [
+   6,
+   13877
+  ],
+  "serpentine_fit | hybrid | dark colour": [
+   6,
+   13877
+  ],
+  "serpentine_fit | hybrid | dark greyscale": [
+   6,
+   13877
+  ],
+  "serpentine_fit | hybrid | light greyscale": [
+   6,
+   13877
+  ],
+  "serpentine_4x | now | dark colour": [
+   824,
+   15796
+  ],
+  "serpentine_4x | now | dark greyscale": [
+   820,
+   15796
+  ],
+  "serpentine_4x | now | light greyscale": [
+   820,
+   15796
+  ],
+  "serpentine_4x | opacity | dark colour": [
+   814,
+   15796
+  ],
+  "serpentine_4x | opacity | dark greyscale": [
+   818,
+   15796
+  ],
+  "serpentine_4x | opacity | light greyscale": [
+   816,
+   15796
+  ],
+  "serpentine_4x | outline | dark colour": [
+   608,
+   15796
+  ],
+  "serpentine_4x | outline | dark greyscale": [
+   639,
+   15796
+  ],
+  "serpentine_4x | outline | light greyscale": [
+   634,
+   15796
+  ],
+  "serpentine_4x | casing | dark colour": [
+   40,
+   15796
+  ],
+  "serpentine_4x | casing | dark greyscale": [
+   40,
+   15796
+  ],
+  "serpentine_4x | casing | light greyscale": [
+   40,
+   15796
+  ],
+  "serpentine_4x | hybrid | dark colour": [
+   47,
+   15796
+  ],
+  "serpentine_4x | hybrid | dark greyscale": [
+   49,
+   15796
+  ],
+  "serpentine_4x | hybrid | light greyscale": [
+   48,
+   15796
+  ]
+ }
+}

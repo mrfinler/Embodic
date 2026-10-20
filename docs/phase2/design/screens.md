@@ -240,7 +240,8 @@ does both.
 - Visibility. Shown only while the design has more than one board. It is hidden for spiral, wave and single-board
   serpentine designs, because it never applies there (P3). The items follow `/phases` before the first compute.
 - Default "All boards". The canvas draws every board's copper over one outline, each phase in its colour, line style
-  and coil-eye hatch (design_spec.md section 3.3). The picture matches the single-board view of the same winding, so
+  and coil-eye hatch (design_spec.md section 3.3), and the copper layers with the layer cue of design_spec.md section
+  3.3.1 (revision 2026-10-20, U-S16). The picture matches the single-board view of the same winding, so
   switching the stack mode does not change what the user sees first. "Board A" draws board A only.
 - Names. Boards carry the letter of the phase they hold, as the exports do (`_board` plus the phase letter,
   interfaces.md §5). The UI does not show Xcoil's `B1:` prefix, because "B1" reads as phase B.
