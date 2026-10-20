@@ -15401,7 +15401,7 @@
         {
           "kind": "trace_trace",
           "least_clearance_mm": 0.7999999999999576,
-          "pairs_checked": 662,
+          "pairs_checked": 674,
           "required_mm": 0.8
         },
         {
@@ -15808,7 +15808,7 @@
     }
   },
   "versions": {
-    "embodic": "0.0.2",
+    "embodic": "0.0.4",
     "numpy": "2.4.6",
     "python": "3.11.17",
     "registry": "v1+17193c112982.c01a66176ad6",

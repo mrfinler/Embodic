@@ -2,9 +2,45 @@ Prepared by: Agent 4 - Independent Verificator - model: claude-opus-5-5
 
 # PK-04 Linux reference
 
-## Release 0.0.2 (U-V15, 2026-10-19)
+## Release 0.0.4 (U-V18, 2026-10-20)
 
-`linux/` is the output of `pk04_reference.py` for release 0.0.2. Each line below was `verified` by running it.
+`linux/` is the output of `pk04_reference.py` for release 0.0.4 (tag v0.0.4, commit c25d8a9). Release 0.0.3 was not
+released (D-078f). 0.0.4 changes `src/` against 0.0.2 (`git diff --stat 0a74974 c25d8a9 -- src`: 11 files, 425
+insertions, 67 deletions), so the 0.0.2 reference no longer compares. Each line below was `verified` by running it.
+
+- The wheel is `/home/claude/release_0.0.4/embodic-0.0.4-py3-none-any.whl`, SHA-256
+  `9bca49d895aee779be71cda8b939b67f86414ef8f711d7090b9c01215a6de579` (`sha256sum`), the value D-081 records.
+- It went into a fresh venv `/home/claude/wheelvenv-0.0.4` (`/usr/bin/python3.11 -m venv`, CPython 3.11.17) by the two
+  commands of `requirements/README.md`: `pip install --require-hashes -r requirements/py311.txt`, then
+  `pip install --no-deps <wheel>`. `pip freeze` lists embodic 0.0.4 (the wheel, with its sha256), numpy 2.4.6,
+  PySide6_Essentials 6.11.2 and shiboken6 6.11.2, nothing else.
+- The installed sources hash to `c40e8ce744ba6840db25134bc66c8213b393b8ce174265461165e5b93b9cc63d`
+  (`package_source_sha256`). The wheel's evidence file `_resources/evidence/passed_tests.v1.json` is byte-identical to
+  `/home/claude/release_0.0.4/passed_tests.v1.json` (`cmp`) and names the same `source_sha256`, git commit c25d8a9,
+  `git_dirty` false, profile `release`, Python 3.11.17 and 58 passed test IDs. `src/embodic` of main 705c1cb hashes to
+  the same value, and `git diff c25d8a9 705c1cb -- src` is empty.
+- Command: `QT_QPA_PLATFORM=offscreen /home/claude/wheelvenv-0.0.4/bin/python -I
+  docs/phase3/verification/checks/pk04_reference.py --out <folder>`. `-I` keeps the worktree's `src/` off the path.
+  Four examples exit 0. The wave example exits 2 with 186 DRC violations, as D-034 expects. One run takes about 8 s.
+- Two runs into two scratch folders gave six byte-identical files each (`cmp`). The committed files are the first run.
+- `pk04_compare.py --self-test docs/phase3/verification/reference/linux` passes all 8 cases (exit 0). Comparing this
+  folder with the second run prints `PK-04 passed at rel 1e-09`, every file byte-identical (exit 0). Comparing the
+  0.0.2 reference with this one is refused (exit 2) on `embodic_source_sha256`, as designed.
+
+What changed against the 0.0.2 reference. I compared the two folders with `pk04_compare.diff`, file by file, past the
+manifest refusal. Each example differs in exactly two places: `/versions/embodic` (0.0.2 to 0.0.4) and one DRC
+`pairs_checked` count. `trace_trace` rises by 12 on the four spiral and serpentine examples (serpentine 3405 to 3417,
+D08 662 to 674, 12c14p 2894 to 2906, 12c16p 2902 to 2914), and `trace_via` rises by 3 on the wave (597 to 600). No
+violation, `least_clearance_mm`, status field, EMF value or design hash changed, and the five CLI stdout blocks and exit
+codes are equal. More pairs reach the clearance measurement because U-D25 narrows the rule 5 and rule 2 exemptions to
+one primitive (D-079b, D-080a); that link is `inferred` from the rulings, not traced pair by pair.
+
+Windows comparison for 0.0.4 has not run here. It is Fable's W5 step on the laptop, against this folder.
+
+## Release 0.0.2 (U-V15, 2026-10-19, history)
+
+`linux/` was the output of `pk04_reference.py` for release 0.0.2 (in git at a9f9bb7). Each line below was `verified` by
+running it.
 
 - The wheel is `embodic-0.0.2-py3-none-any.whl`, SHA-256 `60d3cd112479632ef0e95f6845bfc5abf66cbdd59b014c0a4bfeda47833d0f07`
   (`sha256sum`), the value D-070 records.
