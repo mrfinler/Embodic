@@ -1,8 +1,8 @@
-"""Fail when uat_walkthrough.md quotes UI text that neither the product source nor the 0.0.5 probe dump holds.
+"""Fail when uat_walkthrough.md quotes UI text that neither the product source nor the 0.0.6 probe dump holds.
 
 A quote is a "double-quoted" or **bold** span outside code. The source is every file under src/embodic (labels,
-the issue catalogue, the PDF writer); the dump is uat_probe_0.0.5.json, the text the 0.0.5 wheel showed offscreen,
-which holds the filled-in templates ("34 required fields left"). A double-quoted span may be part of a longer
+the issue catalogue, the PDF writer); the dump is uat_probe_0.0.6.json, the text the 0.0.6 candidate wheel showed
+offscreen, which holds the filled-in templates ("34 required fields left"). A double-quoted span may be part of a longer
 string, such as one line of a message. A bold span names a control, so it must equal one whole string. Run from the
 repository root:
 
@@ -17,7 +17,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 WALKTHROUGH = HERE.parent / "uat_walkthrough.md"
-DUMP = HERE / "uat_probe_0.0.5.json"
+DUMP = HERE / "uat_probe_0.0.6.json"
 SOURCE = HERE.parents[3] / "src" / "embodic"
 # Words the walkthrough defines for its own record boxes; they are not product text.
 OWN_WORDS = {"Judge", "Judge.", "P", "F", "N"}
