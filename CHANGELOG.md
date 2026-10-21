@@ -2,6 +2,36 @@
 
 All notable changes to embodic are listed here. Versions follow semantic versioning; dates are ISO 8601.
 
+## 0.0.6 - 2026-10-22
+
+This release fixes what the preparation of Phase 4 found on 0.0.5 (D-093, D-094). It changes no computed value: the
+outcome of each packaged example equals that of 0.0.5 except the version fields.
+
+### Fixed
+
+- Copper weight and Board thickness, in the Board tab group "Stack-up and manufacturing", showed their unit only as
+  placeholder text and gave a screen reader no unit. They now show the unit beside the value and announce it, as the
+  other inputs do (REQ-N-24). (DEF-US17-01, D-094a)
+- The guide listed five shortcuts that did nothing. Ctrl+Shift+S, Ctrl+Shift+Z, Ctrl+P and Ctrl+/ are now bound to the
+  actions the guide names. Ctrl+, is removed from the guide and from the design's keyboard map, because there is no
+  settings window. A test now fails if the guide lists a key that nothing binds. (DEF-US17-02, D-094b)
+- The torque-speed message pointed to "Board and rotor", a place that does not exist. It now reads "(Board tab, Drive
+  group)", and the guide's Alt+1..4 row names the Board tab. (DEF-US17-03, D-094)
+
+### Changed
+
+- The release trace gate (TR-01) lists every manual record that did not pass. Such a record fails the gate unless it
+  names the decision that accepts it, and an accepted record never counts as coverage. The PF-01 record of the laptop
+  is accepted by D-091. (DEF-UV21-01, D-093c)
+- Version 0.0.6. The five packaged examples change only in `app_version` and `engine_version`.
+
+### Known limits
+
+- The canvas keys L, G, C, M, T, A, B and Shift+C of the design's keyboard map do nothing; F and F5 work but are not
+  listed. The user decides at acceptance whether they are built or taken out of the map. (DEF-US18-01)
+- The known limits of 0.0.5 still apply: DEF-W-12, DEF-W-14, DEF-W-15 (REQ-N-01 on the reference laptop) and the three
+  licence items.
+
 ## 0.0.5 - 2026-10-21
 
 This release closes the Phase 3 gaps that the 0.0.4 audit and the Windows run of 0.0.4 found (D-082 to D-086). It
