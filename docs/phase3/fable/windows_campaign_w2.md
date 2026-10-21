@@ -47,9 +47,9 @@ otherwise. Decision rows hold the rulings.
 | PK-06 warm | 21.2 s to the first example, `embodic 0.0.5`, self-test 45 of 45 | pk06_run7.log | D-090 |
 | PK-04 | all five examples pass at rel 1e-9 against U-V21's reference | pk04_0.0.5_compare.log | D-090 |
 | DRC pairs probe | the same split tie as 0.0.4; no left-out pair violates | drc_pairs_windows_0.0.5.json | D-090 |
-| Commit profile (PK-01 cell) | stopped at 32 % when the Claude desktop app updated itself at 07:42; no result; rerun later (user) | w7_commit_gate_0.0.5.log | D-091 |
-| Release profile (W8, PK-05) | not started; rerun later (user) | - | D-091 |
-| Latency tests alone, five runs | not started; rerun later (user) | - | D-091 |
+| Commit profile (PK-01 cell) | first run stopped at 32 % by the desktop app update (D-091); rerun by the user: 5 of 6, pytest 3 failed (two colophon tests, DEF-UV27-01; tests/bundle on the leftover 0.0.4 bundle), 4159 passed | w7_commit_gate_0.0.5.log | D-095 |
+| Release profile (W8, PK-05) | 7 of 8; bundle built; pytest 5 failed (two colophon tests; three tests/bundle blocked, WinError 4551, DEF-W-14), 4327 passed; latency gate 8 of 8 | w8_release_gate_0.0.5.log | D-095 |
+| Latency tests alone, five runs | 3 of 5 pass; N02-10 arrival 125 ms, UI-05 139 ms (DEF-W-12) | w8_latency_0.0.5_run1-5.log | D-095 |
 | PK-06 cold | not run since D-084e; it waits for a normal network | - | - |
 | Narrator (AX-06) on 0.0.5 | the user runs it later | - | D-091 |
 
