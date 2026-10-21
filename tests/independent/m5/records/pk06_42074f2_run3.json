@@ -1,0 +1,210 @@
+{
+  "workdir": "/tmp/claude-0/-home-claude/f28a4cfe-cf25-5512-9052-c4c291ea667b/scratchpad/U-V21/pk06/run3",
+  "pip_cache_dir": "/tmp/claude-0/-home-claude/f28a4cfe-cf25-5512-9052-c4c291ea667b/scratchpad/U-V21/pk06/run3-pip-cache",
+  "started_load": "0.83 0.47 0.61 1/95 21094",
+  "steps": [
+    {
+      "step_id": "1",
+      "guide_ref": "INSTALL.md \u00a71",
+      "command": "python3.11 --version",
+      "exit_code": 0,
+      "wall_s": 0.004,
+      "stdout": "Python 3.11.17\n",
+      "stderr": "",
+      "expected": [
+        "Python 3.11."
+      ],
+      "missing_expected": [],
+      "load_before": "0.83 0.47 0.61 1/95 21094",
+      "load_after": "0.83 0.47 0.61 1/95 21095",
+      "in_criterion": true
+    },
+    {
+      "step_id": "2",
+      "guide_ref": "INSTALL.md \u00a72",
+      "command": "python3.11 -m venv .venv && . .venv/bin/activate && echo VIRTUAL_ENV=$VIRTUAL_ENV && command -v python",
+      "exit_code": 0,
+      "wall_s": 3.434,
+      "stdout": "VIRTUAL_ENV=/tmp/claude-0/-home-claude/f28a4cfe-cf25-5512-9052-c4c291ea667b/scratchpad/U-V21/pk06/run3/.venv\n/tmp/claude-0/-home-claude/f28a4cfe-cf25-5512-9052-c4c291ea667b/scratchpad/U-V21/pk06/run3/.venv/bin/python\n",
+      "stderr": "",
+      "expected": [],
+      "missing_expected": [],
+      "load_before": "0.83 0.47 0.61 1/95 21095",
+      "load_after": "0.85 0.48 0.61 1/93 21119",
+      "in_criterion": true
+    },
+    {
+      "step_id": "3a",
+      "guide_ref": "INSTALL.md \u00a73",
+      "command": "python -m pip install --require-hashes -r requirements/py311.txt",
+      "exit_code": 0,
+      "wall_s": 9.846,
+      "stdout": "Collecting numpy==2.4.6 (from -r requirements/py311.txt (line 3))\n  Downloading numpy-2.4.6-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.9 MB)\n     \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 16.9/16.9 MB 19.4 MB/s eta 0:00:00\nCollecting pyside6-essentials==6.11.2 (from -r requirements/py311.txt (line 77))\n  Downloading pyside6_essentials-6.11.2-cp310-abi3-manylinux_2_34_x86_64.whl (80.1 MB)\n     \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 80.1/80.1 MB 21.4 MB/s eta 0:00:00\nCollecting shiboken6==6.11.2 (from -r requirements/py311.txt (line 84))\n  Downloading shiboken6-6.11.2-cp310-abi3-manylinux_2_34_x86_64.whl (272 kB)\n     \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 272.4/272.4 kB 37.1 MB/s eta 0:00:00\nInstalling collected packages: shiboken6, numpy, pyside6-essentials\nSuccessfully installed numpy-2.4.6 pyside6-essentials-6.11.2 shiboken6-6.11.2\n",
+      "stderr": "\n[notice] A new release of pip is available: 24.0 -> 26.2.2\n[notice] To update, run: pip install --upgrade pip\n",
+      "expected": [],
+      "missing_expected": [],
+      "load_before": "0.85 0.48 0.61 1/93 21119",
+      "load_after": "0.80 0.48 0.61 1/93 21147",
+      "in_criterion": true
+    },
+    {
+      "step_id": "3b",
+      "guide_ref": "INSTALL.md \u00a73",
+      "command": "python -m pip install --no-deps embodic-0.0.5-py3-none-any.whl",
+      "exit_code": 0,
+      "wall_s": 0.76,
+      "stdout": "Processing ./embodic-0.0.5-py3-none-any.whl\nInstalling collected packages: embodic\nSuccessfully installed embodic-0.0.5\n",
+      "stderr": "\n[notice] A new release of pip is available: 24.0 -> 26.2.2\n[notice] To update, run: pip install --upgrade pip\n",
+      "expected": [],
+      "missing_expected": [],
+      "load_before": "0.80 0.48 0.61 1/93 21147",
+      "load_after": "0.80 0.48 0.61 1/93 21172",
+      "in_criterion": true
+    },
+    {
+      "step_id": "3c",
+      "guide_ref": "INSTALL.md \u00a73",
+      "command": "python -m pip list",
+      "exit_code": 0,
+      "wall_s": 0.409,
+      "stdout": "Package            Version\n------------------ -------\nembodic            0.0.5\nnumpy              2.4.6\npip                24.0\nPySide6_Essentials 6.11.2\nsetuptools         79.0.1\nshiboken6          6.11.2\n",
+      "stderr": "\n[notice] A new release of pip is available: 24.0 -> 26.2.2\n[notice] To update, run: pip install --upgrade pip\n",
+      "expected": [
+        "embodic",
+        "0.0.5",
+        "numpy",
+        "2.4.6",
+        "PySide6_Essentials",
+        "6.11.2",
+        "shiboken6"
+      ],
+      "missing_expected": [],
+      "load_before": "0.80 0.48 0.61 1/93 21172",
+      "load_after": "0.80 0.48 0.61 1/93 21193",
+      "in_criterion": true
+    },
+    {
+      "step_id": "4",
+      "guide_ref": "INSTALL.md \u00a74",
+      "command": "embodic",
+      "exit_code": -6,
+      "wall_s": 0.539,
+      "stdout": "",
+      "stderr": "qt.qpa.plugin: From 6.5.0, xcb-cursor0 or libxcb-cursor0 is needed to load the Qt xcb platform plugin.\nqt.qpa.plugin: Could not load the Qt platform plugin \"xcb\" in \"\" even though it was found.\nThis application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.\n\nAvailable platform plugins are: minimal, linuxfb, offscreen, xcb, wayland-brcm, wayland-egl, wayland, eglfs, vnc, vkkhrdisplay, minimalegl.\n\n",
+      "expected": [],
+      "missing_expected": [],
+      "load_before": "0.80 0.48 0.61 1/93 21193",
+      "load_after": "0.80 0.48 0.61 1/93 21195",
+      "in_criterion": true
+    },
+    {
+      "step_id": "4-offscreen",
+      "guide_ref": "INSTALL.md Troubleshooting on Linux (QT_QPA_PLATFORM=offscreen) + ui/app.py --smoke",
+      "command": "embodic --smoke",
+      "exit_code": 0,
+      "wall_s": 2.555,
+      "stdout": "",
+      "stderr": "",
+      "expected": [],
+      "missing_expected": [],
+      "load_before": "0.80 0.48 0.61 1/93 21195",
+      "load_after": "0.81 0.49 0.61 1/92 21198",
+      "in_criterion": false
+    },
+    {
+      "step_id": "5a",
+      "guide_ref": "INSTALL.md \u00a75",
+      "command": "python -c \"from embodic.paths import resource_root; print(resource_root() / 'examples')\"",
+      "exit_code": 0,
+      "wall_s": 0.042,
+      "stdout": "/tmp/claude-0/-home-claude/f28a4cfe-cf25-5512-9052-c4c291ea667b/scratchpad/U-V21/pk06/run3/.venv/lib/python3.11/site-packages/embodic/_resources/examples\n",
+      "stderr": "",
+      "expected": [
+        "embodic/_resources/examples"
+      ],
+      "missing_expected": [],
+      "load_before": "0.81 0.49 0.61 1/92 21198",
+      "load_after": "0.81 0.49 0.61 1/92 21199",
+      "in_criterion": true
+    },
+    {
+      "step_id": "5b",
+      "guide_ref": "INSTALL.md \u00a75",
+      "command": "embodic-cli compute /tmp/claude-0/-home-claude/f28a4cfe-cf25-5512-9052-c4c291ea667b/scratchpad/U-V21/pk06/run3/.venv/lib/python3.11/site-packages/embodic/_resources/examples/spiral_12c16p_default.embodic.json --json outcome.json --timings",
+      "exit_code": 0,
+      "wall_s": 1.709,
+      "stdout": "Design: Spiral, 12 coils, 16 poles\nDesign hash: sha256:ac4fab5db06f9e8f733dc495080deeddfe0bcf58faa31ebb7ec841c1b27d9c09\nTopology: spiral, boards: 1\nDesign rule check: passed\nTimings (s): validate 0.001, geometry 0.021, drc 0.306, physics 0.909\n",
+      "stderr": "",
+      "expected": [
+        "Design: Spiral, 12 coils, 16 poles",
+        "Design hash: sha256:ac4fab5db06f9e8f733dc495080deeddfe0bcf58faa31ebb7ec841c1b27d9c09",
+        "Topology: spiral, boards: 1",
+        "Design rule check: passed",
+        "Timings (s): validate"
+      ],
+      "missing_expected": [],
+      "load_before": "0.81 0.49 0.61 1/92 21199",
+      "load_after": "0.81 0.49 0.61 1/92 21201",
+      "in_criterion": true
+    },
+    {
+      "step_id": "5c",
+      "guide_ref": "INSTALL.md \u00a75",
+      "command": "embodic-cli validate /tmp/claude-0/-home-claude/f28a4cfe-cf25-5512-9052-c4c291ea667b/scratchpad/U-V21/pk06/run3/.venv/lib/python3.11/site-packages/embodic/_resources/examples/spiral_12c16p_default.embodic.json",
+      "exit_code": 0,
+      "wall_s": 0.338,
+      "stdout": "Valid: Spiral, 12 coils, 16 poles\n",
+      "stderr": "",
+      "expected": [
+        "Valid: Spiral, 12 coils, 16 poles"
+      ],
+      "missing_expected": [],
+      "load_before": "0.81 0.49 0.61 1/92 21201",
+      "load_after": "0.81 0.49 0.61 1/92 21203",
+      "in_criterion": false
+    },
+    {
+      "step_id": "5d",
+      "guide_ref": "INSTALL.md \u00a75",
+      "command": "embodic-cli export /tmp/claude-0/-home-claude/f28a4cfe-cf25-5512-9052-c4c291ea667b/scratchpad/U-V21/pk06/run3/.venv/lib/python3.11/site-packages/embodic/_resources/examples/spiral_12c16p_default.embodic.json --format svg -o board.svg",
+      "exit_code": 0,
+      "wall_s": 2.874,
+      "stdout": "Wrote board.svg\n",
+      "stderr": "",
+      "expected": [
+        "Wrote board.svg"
+      ],
+      "missing_expected": [],
+      "load_before": "0.81 0.49 0.61 1/92 21203",
+      "load_after": "0.83 0.49 0.62 1/93 21206",
+      "in_criterion": false
+    },
+    {
+      "step_id": "6",
+      "guide_ref": "INSTALL.md \u00a76 (guide: selftest not in this build); brief item 2 expects the summary",
+      "command": "embodic-cli selftest",
+      "exit_code": 0,
+      "wall_s": 8.018,
+      "stdout": "passed   ST-CF01                                  0.00 s\npassed   ST-CF04-R20                              0.00 s\npassed   ST-CF04-R60                              0.00 s\npassed   ST-CF04-ARC                              0.00 s\npassed   ST-CF04-VIA                              0.00 s\npassed   ST-CF06-KE                               0.00 s\npassed   ST-CF06-KT-STAR                          0.00 s\npassed   ST-CF06-KT-DELTA                         0.00 s\npassed   ST-CF06-RLL-STAR                         0.00 s\npassed   ST-CF06-RLL-DELTA                        0.00 s\npassed   ST-CF09-12-10-PATTERN                    0.00 s\npassed   ST-CF09-12-14-PATTERN                    0.00 s\npassed   ST-CF09-12-16-PATTERN                    0.00 s\npassed   ST-CF09-18-16-PATTERN                    0.00 s\npassed   ST-CF09-24-14-PATTERN                    0.00 s\npassed   ST-CF09-24-22-PATTERN                    0.00 s\npassed   ST-CF09-24-26-PATTERN                    0.00 s\npassed   ST-CF09-9-8-PATTERN                      0.00 s\npassed   ST-CF09-15-16-PATTERN                    0.00 s\npassed   ST-CF09-12-10-KD1                        0.00 s\npassed   ST-CF09-12-14-KD1                        0.00 s\npassed   ST-CF09-12-16-KD1                        0.00 s\npassed   ST-CF09-18-16-KD1                        0.00 s\npassed   ST-CF09-24-14-KD1                        0.00 s\npassed   ST-CF09-24-22-KD1                        0.00 s\npassed   ST-CF09-24-26-KD1                        0.00 s\npassed   ST-CF09-9-8-KD1                          0.00 s\npassed   ST-CF09-15-16-KD1                        0.00 s\npassed   ST-CF11-LENGTH                           1.25 s\npassed   ST-CF11-TURNS                            0.00 s\npassed   ST-CF10-LENGTH                           0.45 s\npassed   ST-EX-spiral_12c16p_default-HASH         0.00 s\npassed   ST-EX-spiral_12c14p-HASH                 1.16 s\npassed   ST-EX-spiral_12c10p_d08-HASH             0.00 s\npassed   ST-EX-serpentine_16p_example-HASH        0.89 s\npassed   ST-EX-wave_16p_example-HASH              1.05 s\npassed   ST-EX-spiral_12c16p_default-COMPUTES     0.00 s\npassed   ST-EX-spiral_12c14p-COMPUTES             0.00 s\npassed   ST-EX-spiral_12c10p_d08-COMPUTES         0.00 s\npassed   ST-EX-serpentine_16p_example-COMPUTES    0.00 s\npassed   ST-EX-wave_16p_example-COMPUTES          0.00 s\npassed   ST-DRC-DEFAULT-CLEAN                     0.00 s\npassed   ST-DRC-DEFAULT-TRACE                     0.00 s\npassed   ST-IO-ROUNDTRIP                          0.02 s\npassed   ST-EXP-BUNDLE                            2.83 s\n45 tests: 45 passed, 0 failed\n",
+      "stderr": "",
+      "expected": [
+        "45 tests: 45 passed, 0 failed"
+      ],
+      "missing_expected": [],
+      "load_before": "0.83 0.49 0.62 1/93 21206",
+      "load_after": "0.84 0.50 0.62 1/94 21209",
+      "in_criterion": false
+    }
+  ],
+  "total_to_first_computed_example_s": 16.743,
+  "criterion_steps": [
+    "1",
+    "2",
+    "3a",
+    "3b",
+    "3c",
+    "4",
+    "5a",
+    "5b"
+  ]
+}

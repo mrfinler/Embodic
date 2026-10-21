@@ -1,11 +1,12 @@
 """Requirement audit of one build: one status per row of requirements.md, from that build's own test records.
 
-    python3 docs/phase3/verification/checks/req_audit.py                    # release 0.0.4: writes req_audit.md
+    python3 docs/phase3/verification/checks/req_audit.py                    # release 0.0.5: writes req_audit.md
+    python3 docs/phase3/verification/checks/req_audit.py --target 0.0.4     # release 0.0.4: req_audit_0.0.4.md
     python3 docs/phase3/verification/checks/req_audit.py --target 0.0.5-pre # main 99d355d: req_audit_0.0.5_pre.md
     python3 docs/phase3/verification/checks/req_audit.py --target 0.0.1     # release 0.0.1: req_audit_0.0.1.md
     python3 docs/phase3/verification/checks/req_audit.py [--target T] --check    # exit 1 when the file is stale
     python3 docs/phase3/verification/checks/req_audit.py --target 0.0.1 --self-test
-    python3 docs/phase3/verification/checks/req_audit.py --self-test                # the D-061d control on 0.0.4
+    python3 docs/phase3/verification/checks/req_audit.py --self-test                # the D-061d control on 0.0.5
 
 Inputs (read only) of every target: requirements.md and the two test plans of this checkout, and the test sources of
 the audited commit (`git archive <commit> tests`, or the folder given with --tree).
@@ -27,10 +28,17 @@ the audited commit (`git archive <commit> tests`, or the folder given with --tre
   with the release marker expressions (main and latency) and the log of the static gates and the trace matrix that
   U-V20 ran one by one (tools/ci.py did not run, so TR-05 and PK-10 have no PASS line); the 0.0.4 overlays plus
   U-V20's re-pin of the renamed tests (v3_01_rulings_v20.py).
+- Target 0.0.5 (U-V21): release 0.0.5, tag v0.0.5 on 42074f2 (D-089). The two REQ reports and the log of Fable's
+  release gate (/home/claude/release_0.0.5), copied gzipped into inputs/; the 0.0.5-pre overlays plus U-V21's
+  re-rulings of REQ-F-05, REQ-F-13, REQ-T-05 and REQ-N-01 (v3_01_rulings_v21.py).
+- Every target except 0.0.1 reads the manual-record index of this checkout, so a committed audit file of an earlier
+  target is the snapshot of the index its writer had; `--check` on it compares with today's index.
 - The earlier target main (U-V14, c0f4894) is gone: its gate log `inputs/gate_commit_5099401.log` was never in git
   (`*.log` is ignored) and was lost with the container on 2026-10-19 (D-071a). Its output is in git at 72ba81c.
 
 For each planned test ID of a row, the evidence is the first that holds:
+  fail   a manual record of the index with result `failed` names the ID (U-V21: a failed run on the machine the
+         acceptance names outweighs any passing test of the ID)
   gate   a PASS line of the release gate log names the ID
   name   every record that carries the row's REQ marker and has the ID in its test name (ut_io_08, lg01) passed;
          when one of them failed the evidence is `fail`, when one was skipped or xfailed it is `skip`
@@ -42,8 +50,8 @@ For each planned test ID of a row, the evidence is the first that holds:
   none   nothing above
 NEEDS lists the IDs whose acceptance needs Windows, a real display or an FEA solver, with the line that says so.
 
-Row status: `verified` when every planned ID has gate, name, file, eqt or record evidence and none is in NEEDS;
-`partial` when some evidence exists but an ID lacks it or needs another machine; `not testable here` when no ID has
+Row status: `failed` when a planned ID has `fail` evidence; `verified` when every planned ID has gate, name, file, eqt
+or record evidence and none is in NEEDS; `partial` when some evidence exists but an ID lacks it or needs another machine; `not testable here` when no ID has
 evidence and every ID is in NEEDS; `not tested` otherwise. Withdrawn rows keep `withdrawn`. The script matches IDs to
 tests by text, so this is the text status. D-051e: a row whose text status is `verified` stays `verified` only with
 Agent 4's V3-01 `checks` ruling for that row, while the SHA-256 of every source the ruling cites equals its pin;
@@ -81,13 +89,14 @@ RULINGS_V14 = REPO / "tests/independent/m7/v3_01_rulings_v14.py"
 RULINGS_V18 = REPO / "tests/independent/m7/v3_01_rulings_v18.py"
 RULINGS_V19 = REPO / "tests/independent/m7/v3_01_rulings_v19.py"
 RULINGS_V20 = REPO / "tests/independent/m7/v3_01_rulings_v20.py"
+RULINGS_V21 = REPO / "tests/independent/m7/v3_01_rulings_v21.py"
 PINS_V13 = REPO / "tests/independent/m7/records/V3-01_pins_260191f.json"
 REQUIREMENTS = REPO / "docs/phase2/architecture/requirements.md"
 PLANS = (REPO / "docs/phase1/architecture/test_plan_draft.md", REPO / "docs/phase2/architecture/test_plan.md")
 VERIFICATION = HERE.parents[1]
 INDEX = VERIFICATION / "manual_records.json"
 # D-061d: a superseded record -> the record of the same check redone on a later build (U-V14 on c0f4894, U-V18 on
-# c25d8a9, U-V20 on 99d355d).
+# c25d8a9, U-V20 on 99d355d, U-V21 on the release wheel of 42074f2).
 _M4, _M5, _M6 = (f"tests/independent/m{n}/records/" for n in (4, 5, 6))
 REDONE = {
     f"{_M5}PK-06_walkthrough.md": f"{_M5}PK-06_walkthrough_c0f4894.md",
@@ -102,6 +111,8 @@ REDONE = {
     f"{_M4}AX-05_c25d8a9.md": f"{_M4}AX-05_99d355d.md",
     f"{_M6}OR-11_OR-12_c25d8a9.md": f"{_M6}OR-11_OR-12_99d355d.md",
     f"{_M4}LG-04_T-11_reviewer_c25d8a9.md": f"{_M4}LG-04_T-11_reviewer_99d355d.md",
+    f"{_M5}PK-06_walkthrough_99d355d.md": f"{_M5}PK-06_walkthrough_42074f2.md",
+    f"{_M6}OR-11_OR-12_99d355d.md": f"{_M6}OR-11_OR-12_42074f2.md",
 }
 
 
@@ -155,7 +166,7 @@ TARGETS = {
             VERIFICATION / "inputs/req_report_latency_c25d8a9.json.gz",
         ),
         VERIFICATION / "inputs/gate_release_c25d8a9.log.gz",
-        VERIFICATION / "req_audit.md",
+        VERIFICATION / "req_audit_0.0.4.md",
         (RULINGS_V14, RULINGS_V18, RULINGS_V19),
     ),
     "0.0.5-pre": Target(
@@ -169,6 +180,18 @@ TARGETS = {
         VERIFICATION / "inputs/gates_u_v20_99d355d.log.gz",
         VERIFICATION / "req_audit_0.0.5_pre.md",
         (RULINGS_V14, RULINGS_V18, RULINGS_V19, RULINGS_V20),
+    ),
+    "0.0.5": Target(
+        "0.0.5",
+        "release 0.0.5 (42074f2)",
+        "42074f2",
+        (
+            VERIFICATION / "inputs/req_report_42074f2.json.gz",
+            VERIFICATION / "inputs/req_report_latency_42074f2.json.gz",
+        ),
+        VERIFICATION / "inputs/gate_release_42074f2.log.gz",
+        VERIFICATION / "req_audit.md",
+        (RULINGS_V14, RULINGS_V18, RULINGS_V19, RULINGS_V20, RULINGS_V21),
     ),
 }
 
@@ -241,8 +264,10 @@ def gate_ids(log: str) -> set[str]:
     return {i for line in log.splitlines() if line.startswith("PASS") for i in TEST_ID.findall(line)}
 
 
-def evidence_kind(tid, carriers, gates, eqs, sources, records_by_id) -> str:
+def evidence_kind(tid, carriers, gates, eqs, sources, records_by_id, failed_by_id=None) -> str:
     """Return the evidence kind of one planned test ID, given the records that carry the row's REQ marker."""
+    if tid in (failed_by_id or {}) and (REPO / failed_by_id[tid]).exists():
+        return "fail"
     passing = [r for r in carriers if r["outcome"] == "passed"]
     name_pat = id_pattern(tid)
     named = [r for r in carriers if name_pat.search(r["nodeid"].split("::")[-1].lower())]
@@ -264,17 +289,21 @@ def evidence_kind(tid, carriers, gates, eqs, sources, records_by_id) -> str:
     return "none"
 
 
-def audit(rows, records, gates, eqs, sources, records_by_id):
+def audit(rows, records, gates, eqs, sources, records_by_id, failed_by_id=None):
     """Return one (row, status, carriers, passed, Agent 4 passed, evidence, blocked IDs) tuple per row."""
     results = []
     for row in rows:
         carriers = [r for r in records if row.req_id in r["req"]]
         passing = [r for r in carriers if r["outcome"] == "passed"]
-        evidence = {tid: evidence_kind(tid, carriers, gates, eqs, sources, records_by_id) for tid in row.tests}
+        evidence = {
+            tid: evidence_kind(tid, carriers, gates, eqs, sources, records_by_id, failed_by_id) for tid in row.tests
+        }
         found = [t for t, k in evidence.items() if k in PASSING_KINDS]
         blocked = [t for t in row.tests if t in NEEDS]
         if row.disposition == "withdrawn":
             status = "withdrawn"
+        elif "fail" in evidence.values():
+            status = "failed"
         elif found and len(found) == len(row.tests) and not blocked:
             status = "verified"
         elif found or passing:
@@ -428,9 +457,9 @@ def read_reports(paths: tuple[Path, ...]) -> list[dict]:
     return [runs.get(r["nodeid"], r) if r["outcome"] == "not run" else r for r in base]
 
 
-def counted_records(index: Path = INDEX) -> dict[str, str]:
-    """Return {test ID: record path} of the passed entries of the manual-record index (one record may hold two IDs)."""
-    return {e["test_id"]: e["record"] for e in json.loads(index.read_text(encoding="utf-8")) if e["result"] == "passed"}
+def counted_records(index: Path = INDEX, result: str = "passed") -> dict[str, str]:
+    """Return {test ID: record path} of the index entries with this result (one record may hold two IDs)."""
+    return {e["test_id"]: e["record"] for e in json.loads(index.read_text(encoding="utf-8")) if e["result"] == result}
 
 
 def run_audit(tree: Path, target: Target = TARGETS["0.0.1"], index: Path = INDEX):
@@ -444,7 +473,7 @@ def run_audit(tree: Path, target: Target = TARGETS["0.0.1"], index: Path = INDEX
     if target.name != "0.0.1":
         by_id = counted_records(index)
         counted = set(by_id.values())
-        text_results = audit(rows, records, gates, eqs, sources, by_id)
+        text_results = audit(rows, records, gates, eqs, sources, by_id, counted_records(index, "failed"))
         overlays = tuple(load_rulings(path) for path in target.overlays)
         rulings = {**load_rulings(RULINGS_V13).RULINGS, **{k: v for o in overlays for k, v in o.RULINGS.items()}}
         pins = {
@@ -503,32 +532,43 @@ def self_test(tree: Path) -> int:
     return 0 if ok else 1
 
 
-def self_test_main(tree: Path) -> int:
-    """Control for D-061d: REQ-N-14 cites the superseded AX-05 record; it stays verified only through the redone one."""
-    req, redone = "REQ-N-14", last_redo("tests/independent/m4/records/AX-05.md")
+def self_test_main(tree: Path, target: Target) -> int:
+    """Controls for D-061d and for a failed record.
+
+    REQ-N-14 cites the superseded AX-05 record; it stays verified only through the redone one. REQ-N-01 is `failed`
+    with the failed PF-01 record of the index and not `failed` without it (U-V21).
+    """
+    redone = last_redo("tests/independent/m4/records/AX-05.md")
     other = "tests/independent/m4/records/AX-06.md"
 
-    def row_of(index: Path) -> tuple[str, str]:
-        _, gated, notes = run_audit(tree, TARGETS["0.0.4"], index)
+    def row_of(index: Path, req: str) -> tuple[str, str]:
+        _, gated, notes = run_audit(tree, target, index)
         return next((status, note) for (row, status, *_), note in zip(gated, notes, strict=True) if row.req_id == req)
 
     ok = True
     entries = json.loads(INDEX.read_text(encoding="utf-8"))
+    failed = [e for e in entries if e["result"] == "failed"]
     with tempfile.TemporaryDirectory() as tmp:
-        cases = (
-            ("with the redone record", entries, "verified", "redone as"),
+        cases = [
+            ("REQ-N-14", "with the redone record", entries, "verified", "redone as"),
             (
+                "REQ-N-14",
                 "with another AX-05 record",
                 [{**e, "record": other} if e["record"] == redone else e for e in entries],
                 "partial",
                 "record superseded (D-061d)",
             ),
-            ("with no AX-05 record", [e for e in entries if e["record"] != redone], "partial", ""),
-        )
-        for n, (label, index_entries, want_status, want_note) in enumerate(cases):
+            ("REQ-N-14", "with no AX-05 record", [e for e in entries if e["record"] != redone], "partial", ""),
+        ]
+        if any(e["test_id"] == "PF-01" for e in failed):
+            cases += [
+                ("REQ-N-01", "with the failed PF-01 record", entries, "failed", ""),
+                ("REQ-N-01", "without it", [e for e in entries if e not in failed], "partial", ""),
+            ]
+        for n, (req, label, index_entries, want_status, want_note) in enumerate(cases):
             index = Path(tmp) / f"index{n}.json"
             index.write_text(json.dumps(index_entries), encoding="utf-8")
-            status, note = row_of(index)
+            status, note = row_of(index, req)
             good = status == want_status and want_note in note
             ok &= good
             print(f"self-test {'ok' if good else 'WRONG'}: {req} {label}: {status}; {note}")
@@ -544,7 +584,7 @@ def sha(path: Path) -> str:
 def main(argv: list[str] | None = None) -> int:
     """Write the audit file of a target and print the counts, or with --check report whether it is stale."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--target", choices=sorted(TARGETS), default="0.0.4", help="the build to audit")
+    parser.add_argument("--target", choices=sorted(TARGETS), default="0.0.5", help="the build to audit")
     parser.add_argument("--check", action="store_true", help="exit 1 when the audit file differs from a fresh run")
     parser.add_argument("--self-test", action="store_true", help="run the D-051e (0.0.1) or D-061d (main) control")
     parser.add_argument("--tree", type=Path, help="test sources to audit (default: git archive of the target commit)")
@@ -554,7 +594,7 @@ def main(argv: list[str] | None = None) -> int:
     with tempfile.TemporaryDirectory() as tmp:
         tree = args.tree.resolve() if args.tree else test_tree(target.commit, Path(tmp))
         if args.self_test:
-            return self_test(tree) if target.name == "0.0.1" else self_test_main(tree)
+            return self_test(tree) if target.name == "0.0.1" else self_test_main(tree, target)
         _, results, notes = run_audit(tree, target)
     main_inputs = (RULINGS_V13, PINS_V13, *target.overlays, INDEX)
     rulings = main_inputs if target.name != "0.0.1" else (RULINGS, RULINGS_F, RULINGS_NTL)

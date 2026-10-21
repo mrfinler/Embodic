@@ -2,43 +2,50 @@
  {
   "req": "REQ-N-07",
   "test_id": "PK-06",
-  "record": "tests/independent/m5/records/PK-06_walkthrough_99d355d.md",
-  "embodic_version": "0.0.5 (wheel 0dbac116 of candidate 99d355d, U-V20)",
+  "record": "tests/independent/m5/records/PK-06_walkthrough_42074f2.md",
+  "embodic_version": "0.0.5 (release wheel a56eaebb of 42074f2, tag v0.0.5, U-V21)",
   "result": "passed"
  },
  {
   "req": "REQ-N-14",
   "test_id": "AX-05",
   "record": "tests/independent/m4/records/AX-05_99d355d.md",
-  "embodic_version": "0.0.5 (candidate 99d355d, U-V20)",
+  "embodic_version": "0.0.5 (record of candidate 99d355d stands for release 42074f2 under D-061d, docs/phase3/verification/manual_records_0.0.5_release.md)",
   "result": "passed"
  },
  {
   "req": "REQ-F-11",
   "test_id": "OR-11",
-  "record": "tests/independent/m6/records/OR-11_OR-12_99d355d.md",
-  "embodic_version": "0.0.5 (wheel 0dbac116 of candidate 99d355d, U-V20)",
+  "record": "tests/independent/m6/records/OR-11_OR-12_42074f2.md",
+  "embodic_version": "0.0.5 (release wheel a56eaebb of 42074f2, tag v0.0.5, U-V21)",
   "result": "passed"
  },
  {
   "req": "REQ-F-11",
   "test_id": "OR-12",
-  "record": "tests/independent/m6/records/OR-11_OR-12_99d355d.md",
-  "embodic_version": "0.0.5 (wheel 0dbac116 of candidate 99d355d, U-V20)",
+  "record": "tests/independent/m6/records/OR-11_OR-12_42074f2.md",
+  "embodic_version": "0.0.5 (release wheel a56eaebb of 42074f2, tag v0.0.5, U-V21)",
   "result": "passed"
  },
  {
   "req": "REQ-L-01",
   "test_id": "LG-01",
   "record": "tests/independent/m4/records/LG-01_word_review_c25d8a9.md",
-  "embodic_version": "0.0.5 (LG-01 record of c25d8a9 stands, D-061d: corpus unchanged; U-V20 manual_records_0.0.5.md)",
+  "embodic_version": "0.0.5 (LG-01 record of c25d8a9 stands for release 42074f2 under D-061d: corpus unchanged; docs/phase3/verification/manual_records_0.0.5_release.md)",
   "result": "passed"
  },
  {
   "req": "REQ-T-11",
   "test_id": "LG-04",
   "record": "tests/independent/m4/records/LG-04_T-11_reviewer_99d355d.md",
-  "embodic_version": "0.0.5 (candidate 99d355d, U-V20)",
+  "embodic_version": "0.0.5 (record of candidate 99d355d stands for release 42074f2 under D-061d, docs/phase3/verification/manual_records_0.0.5_release.md)",
   "result": "passed"
+ },
+ {
+  "req": "REQ-N-01",
+  "test_id": "PF-01",
+  "record": "docs/phase3/fable/PF-01_windows_0.0.5.md",
+  "embodic_version": "0.0.5 (Fable on the reference laptop, checkout bbeed84, src equal to release 42074f2; D-087, docs/phase3/verification/manual_records_0.0.5_release.md)",
+  "result": "failed"
  }
 ]
