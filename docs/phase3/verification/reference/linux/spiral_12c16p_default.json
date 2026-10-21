@@ -16753,7 +16753,7 @@
     }
   },
   "versions": {
-    "embodic": "0.0.4",
+    "embodic": "0.0.5",
     "numpy": "2.4.6",
     "python": "3.11.17",
     "registry": "v1+17193c112982.c01a66176ad6",

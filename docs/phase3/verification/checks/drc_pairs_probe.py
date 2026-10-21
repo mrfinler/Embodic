@@ -14,7 +14,7 @@ least clearance of the pairs the broad phase leaves out. `split_edge` lists the 
 ceil(length / PIECE_MM) sits within 1e-12 of an integer, and for each one the pairs that the other rounding adds to or
 removes from the check (its row is moved across the integer by 1e-13 relative inside `_pieces` only).
 
-With `--against` (default: reference/drc_pairs_linux_0.0.4.json.gz beside this folder, when it names the same embodic
+With `--against` (default: reference/drc_pairs_linux_0.0.5.json.gz beside this folder, when it names the same embodic
 source and example), it names every pair whose verdict, presence or piece count differs from that file, and every
 split-edge item whose piece count differs. Exit 0 when the replay reproduces `pairs_checked` and no left-out pair
 violates its rule, 1 otherwise.
@@ -43,7 +43,7 @@ from embodic.results.registry import package_source_sha256
 
 NEAR_MM = 0.05
 TIE = 1e-12
-DEFAULT_AGAINST = Path(__file__).parents[1] / "reference" / "drc_pairs_linux_0.0.4.json.gz"
+DEFAULT_AGAINST = Path(__file__).parents[1] / "reference" / "drc_pairs_linux_0.0.5.json.gz"
 
 
 def read_json(path: Path) -> dict:

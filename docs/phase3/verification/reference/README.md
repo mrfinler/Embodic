@@ -2,6 +2,52 @@ Prepared by: Agent 4 - Independent Verificator - model: claude-opus-5-5
 
 # PK-04 Linux reference
 
+## Release 0.0.5 (U-V21, 2026-10-21)
+
+`linux/` is the output of `pk04_reference.py` for release 0.0.5 (tag v0.0.5, commit 42074f2, D-089). The 0.0.4
+reference no longer compares, because 0.0.5 changes `src/` (the version and two docstrings, D-084c) and the comparison
+refuses another source hash. Each line below was `verified` by running it.
+
+- The wheel is `/home/claude/release_0.0.5/embodic-0.0.5-py3-none-any.whl`, SHA-256
+  `a56eaebb9f3e2d7c62b87dda9f8baabd1980451157914c2a0431550f80946096` (`sha256sum`), the value D-089 records.
+- It went into a fresh venv `/home/claude/wheelvenv-0.0.5` (`/usr/bin/python3.11 -m venv`, CPython 3.11.17) by the two
+  commands of `requirements/README.md`. `pip freeze` lists embodic 0.0.5 (the wheel, with its sha256), numpy 2.4.6,
+  PySide6_Essentials 6.11.2 and shiboken6 6.11.2, nothing else.
+- The installed sources hash to `08d25a7863691cbe08ab769e556679b90d3478def7bab9d477bde1b5a67e83df`
+  (`package_source_sha256`). The installed evidence file is byte-identical to `/home/claude/release_0.0.5/passed_tests.v1.json`
+  (`cmp`) and names the same `source_sha256`, git commit 42074f2, `git_dirty` false, profile `release`, Python 3.11.17
+  and 58 passed test IDs. `src/embodic` of main 513e872 hashes to the same value, and `git diff 42074f2 513e872 -- src`
+  is empty.
+- Command: `QT_QPA_PLATFORM=offscreen /home/claude/wheelvenv-0.0.5/bin/python -I
+  docs/phase3/verification/checks/pk04_reference.py --out <folder>`. Four examples exit 0. The wave example exits 2 with
+  186 DRC violations, as D-034 expects. One run takes about 7 s.
+- Two runs into two scratch folders gave six byte-identical files each (`cmp`). The committed files are the first run.
+- `pk04_compare.py --self-test docs/phase3/verification/reference/linux` passes all 10 cases (exit 0). Comparing this
+  folder with the second run prints `PK-04 passed at rel 1e-09`, every file byte-identical (exit 0). Comparing the
+  0.0.4 reference with this one is refused (exit 2) on `embodic_source_sha256`, as designed.
+- The candidate wheel 0dbac116 (U-V20's build of 99d355d, whose evidence names another commit and build time) gives
+  six files byte-identical to this folder. The evidence fields that differ reach no outcome value.
+
+What changed against the 0.0.4 reference. Every JSON pointer was compared, none left out: each example differs only in
+`/versions/embodic` (0.0.4 to 0.0.5), and the manifest only in `embodic` and `embodic_source_sha256`. Every
+`pairs_checked`, violation, status field, EMF value, design hash, layout hash and CLI line is equal.
+
+The DRC pairs file. `drc_pairs_linux_0.0.5.json.gz` is the output of `checks/drc_pairs_probe.py` in the same venv; two
+runs gave identical bytes. Against `drc_pairs_linux_0.0.4.json.gz` only `embodic` and `embodic_source_sha256` differ:
+the same 4072 pairs near the cutoff, the same slacks, the same 12 split ties and the same left-out pairs, with no
+violation. The probe now compares with the 0.0.5 file by default. Run in this venv with that default, it prints `0
+pairs and 0 split ties differ; largest slack difference 0.0 mm over 4072 pairs` and `probe consistent`. The 0.0.4 file
+stays for the 0.0.4 comparison of D-086.
+
+Windows. The comparison on the laptop is Fable's and is `not tested` here. Once this folder and the probe are in the
+laptop's checkout, the W10 campaign's `pk04` step runs the reference and the comparison with the wheel venv of its PK-06
+run, and the probe runs with the same Python:
+
+```
+powershell -ExecutionPolicy Bypass -File _campaign\w10_campaign.ps1 -Version 0.0.5 -Run 7 -Steps pk04
+_campaign\pk06_run7\.venv\Scripts\python.exe -I docs\phase3\verification\checks\drc_pairs_probe.py --out _campaign\drc_pairs_windows_0.0.5.json
+```
+
 ## DEF-UV10-01 tested (U-V20, 2026-10-21)
 
 D-085 records the Windows run of the 0.0.4 wheel: four examples pass, and the wave fails on one value,
