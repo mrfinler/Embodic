@@ -1,0 +1,35 @@
+killed   sagitta dropped from the bound: FAILED tests/independent/m1/test_against_xcoil_kernels.py::test_drc_objects_on_concentric_arcs_is_within_its_discretisation_bound
+killed   second half of a split piece never visited: FAILED tests/independent/m1/test_brute_clearance.py::test_externally_tangent_arcs_touch
+killed   proper crossing not detected: FAILED tests/independent/m1/test_against_xcoil_kernels.py::test_segment_distance_agrees_with_xcoil_seg_seg_dist_on_200_pairs
+killed   infinite-line distance instead of segment: FAILED tests/independent/m1/test_against_xcoil_kernels.py::test_segment_distance_agrees_with_xcoil_seg_seg_dist_on_200_pairs
+killed   epsilon 0 in D-006: FAILED tests/independent/m1/test_brute_clearance.py::test_clearance_exactly_at_the_rule_is_clean[parallel_tracks]
+killed   Xcoil 0.004 mm slack in D-006: FAILED tests/independent/m1/test_brute_clearance.py::test_one_micron_intrusion_is_a_violation[parallel_tracks]
+killed   box cull ignores arc sagitta: FAILED tests/independent/m1/test_brute_clearance.py::test_brute_violations_box_cull_keeps_every_seeded_intrusion[turn_and_side]
+killed   clearance clamped at zero: FAILED tests/independent/m1/test_brute_clearance.py::test_crossing_segments_have_zero_distance_and_negative_clearance
+killed   continuity compares start to start: FAILED tests/independent/m1/test_board_dump_reader.py::test_minimal_dump_path_is_continuous_and_adjacency_is_consecutive_only
+killed   continuity tolerance 1e-5 instead of 1e-6: FAILED tests/independent/m1/test_continuity.py::test_reports_the_first_gap_with_its_index_and_distance
+killed   rule 1 back to abs(main) <= 1 for fillets: FAILED tests/independent/m1/test_exemption_model.py::test_rule_1_exempts_a_fillet_from_its_own_mains_only
+killed   leading fillet or taper also belongs to main 1 (DEF-UD25-01): FAILED tests/independent/m1/test_exemption_model.py::test_rule_1_a_leading_taper_belongs_to_the_first_main_only[leading-taper]
+killed   rule 2 tap dropped: FAILED tests/independent/m1/test_exemption_model.py::test_via_on_an_interconnect_centreline_is_exempt[tap]
+killed   rule 2 tap whole path (D-022c before D-078): FAILED tests/independent/m1/test_exemption_model.py::test_rule_2_tap_leaves_a_far_primitive_of_the_tapped_interconnect_checked[2f]
+killed   rule 2 tap and rule 2b over pads too (Q3): FAILED tests/independent/m1/test_drc_agreement.py::test_run_drc_violation_sets_equal_brute_sweep_on_random_boards
+killed   rule 2b whole path instead of per primitive (D-037a): FAILED tests/independent/m1/test_drc_agreement.py::test_run_drc_violation_sets_equal_brute_sweep_on_random_boards
+killed   rule 2b without the net test: FAILED tests/independent/m1/test_drc_agreement.py::test_run_drc_violation_sets_equal_brute_sweep_on_random_boards
+killed   rule 2b reach is the pad diameter: FAILED tests/independent/m1/test_drc_agreement.py::test_run_drc_violation_sets_equal_brute_sweep_on_random_boards
+killed   rule 5 dropped: FAILED tests/independent/m1/test_exemption_model.py::test_rule_5_t_junction_exempts_the_end_group_from_the_landing_primitive_only[5a-line]
+killed   rule 5 without the net test: FAILED tests/independent/m1/test_exemption_model.py::test_rule_3_ends_at_one_node[other-nets-at-via]
+killed   rule 5 exempts the whole stem path: FAILED tests/independent/m1/test_exemption_model.py::test_rule_5_t_junction_exempts_the_end_group_from_the_landing_primitive_only[5a-line]
+killed   rule 5 exempts the whole other path (DEF-UV16-01): FAILED tests/independent/m1/test_exemption_model.py::test_rule_5_t_junction_exempts_the_end_group_from_the_landing_primitive_only[5a-line]
+killed   rule 5 landing group is the hit primitive alone: FAILED tests/independent/m1/test_exemption_model.py::test_rule_5_a_t_beside_a_fillet_is_exempt_from_the_fillet
+killed   rule 5 landing group of a main reaches its rule 1 neighbours: FAILED tests/independent/m1/test_exemption_model.py::test_rule_5_t_junction_exempts_the_end_group_from_the_landing_primitive_only[5a-line]
+killed   arc sweep read as counter-clockwise always: FAILED tests/independent/m1/test_drc_agreement.py::test_run_drc_violation_sets_equal_brute_sweep_on_random_boards
+killed   continuity passes NaN: FAILED tests/independent/m1/test_continuity.py::test_nan_coordinate_is_a_gap
+killed   GR-19 ic objects mapped unsplit (DEF-M1V-03): FAILED tests/independent/m1/test_board_dump_reader.py::test_golden_layout_fixtures_map_and_parse
+killed   GR-19 ic objects cut at every primitive: FAILED tests/independent/m1/test_gr19_drc.py::test_interconnect_objects_are_cut_only_at_their_gaps
+killed   reader orders paths by file position: FAILED tests/independent/m1/test_board_dump_reader.py::test_paths_follow_seq_not_file_order
+killed   reader skips the end-point check: FAILED tests/independent/m1/test_board_dump_reader.py::test_stated_end_point_must_match_geometry
+killed   reader takes a2 as the sweep: FAILED tests/independent/m1/test_board_dump_reader.py::test_minimal_dump_parses_into_own_records
+killed   reader skips object membership: FAILED tests/independent/m1/test_board_dump_reader.py::test_every_primitive_belongs_to_exactly_one_object
+killed   reader keeps encoded non-finite numbers: FAILED tests/independent/m1/test_board_dump_reader.py::test_minimal_dump_parses_into_own_records
+33/33 mutants killed
+exit 0 seconds 424

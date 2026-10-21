@@ -23,7 +23,7 @@ python tests/independent/m1/mutants.py      # seeded defects; every one must be 
 | `continuity.py` | first joint of an ordered path whose end-to-start gap exceeds 1e-6 mm (IT-21; REQ-N-21 revision 2026-10-05, `COINCIDENCE_MM`); `chains` cuts a path into its continuous runs at the same bound | a generator or writer that breaks a path, reverses a primitive or emits NaN |
 | `board_dump_reader.py` | parses `embodic.board-dump` v1 into own records; reports every missing field, duplicate id, unknown layer, end point that disagrees with its geometry, and primitive not owned by exactly one object | a writer that drops or renames fields, rounds end points, or orders paths by file position |
 | `xcoil_oracle.py`, `xcoil_oracle.cjs` | third oracle: Xcoil `segSegDist`, `ptSegDist`, `drcObjects` under Node, read-only | a defect in the instrument itself |
-| `mutants.py` | applies 27 named defects to a copy of the instruments laid out like the repository, after the unmutated copy passes, and checks a test fails for each | a self-test that passes whatever the instrument does |
+| `mutants.py` | applies 33 named defects (27 until U-V17) to a copy of the instruments laid out like the repository, after the unmutated copy passes, and checks a test fails for each | a self-test that passes whatever the instrument does |
 | `drc_universe.py` | every copper item of a board (traces, vias, pads, edges, holes) on its layers; the section 7 exemptions as D-022 and D-022c amend them, each pair labelled with its rule; brute pair sweep | a DRC that checks the wrong layer pairs, exempts too much or too little, or picks the wrong kind |
 | `random_boards.py` | seeded boards: 1 to 3 layers, self-crossing line and arc paths, vias on and off path ends, pads, holes, edges | - |
 | `embodic_adapter.py` | the only instrument that imports embodic: builds a `Layout` from items through public constructors | - |
@@ -475,3 +475,19 @@ Prepared by: Agent 4 - Independent Verificator - model: claude-opus-5-5
 Results are in `m7/records/U-V17/U-V17.md` (`verified` by running): the brute sweep gives 0, 0, 0, 0 and 186 on the
 five examples; the model reports the D08 mutant pair at 0.700 mm; the model has no DEF-UD25-01 gap; against
 unit/U-M8w ad26575 the m1 agreement tests, PR-13 and the 15 hand cases agree.
+
+## U-V23: V3-02, V3-03, V3-05 and V3-06 on release 0.0.5 (main ed64fdf, src equal to 42074f2)
+
+Prepared by: Agent 4 - Independent Verificator - model: claude-opus-5-5
+
+| Script | Run in | What it does |
+|---|---|---|
+| `m7/v23_anchor_check.py V3-0x ...` | dev venv, `PYTHONPATH=src` | before a run: every mutant's original text occurs once (product tables in `src/embodic`, V3-06 in `m1`), and the named killers collect |
+| `m7/v23_named_alone.py V3-0x ID ...` | dev venv | each named killer of a mutant on its own, on the clean copy and on the mutant, so a `-x` stop does not hide which tests catch it |
+| `m7/v23_joint_gap_probe.py V3-0x ID` | dev venv | the worst copper joint gap of every spiral example, clean and with the mutant applied |
+| `m7/product_mutants.py ... --timeout-s N` | dev venv | new optional limit of one pytest call (default 900 s) |
+
+Verdicts on 2026-10-21 (records `m7/records/V3-0x_0.0.5.md`, each `verified` by running): V3-02 14 of 14 killed
+(DEF-UV18-01's mutant V3-02-07 killed by U-M8y's two-path case); V3-03 5 of 5 (V3-03-04 judged for the first time,
+killed by the 1e-9 mm joint check of UT-GEO-26); V3-05 4 of 4 (V3-05-01 killed by U-M8r's rounding-step test); V3-06
+`33/33 mutants killed` (424 s). No survivor, no new DEF row.

@@ -1,0 +1,122 @@
+{
+ "campaign": "V3-05",
+ "baseline": {
+  "imports": "/tmp/embodic-mut-v_ww2sah/checkout/src/embodic/__init__.py",
+  "killers": [
+   "tests/unit/embodic_io/exporters/test_n21_joint_continuity.py::test_n21_svg_writes_one_point_for_every_copper_joint",
+   "tests/unit/embodic_io/exporters/test_n21_joint_continuity.py::test_n21_svg_joint_ends_that_round_apart_are_written_once_from_the_shared_coordinate",
+   "tests/unit/embodic_io/exporters/test_dxf.py::test_ut_exp_02_outline_dxf_is_closed_outline_and_bore_only",
+   "tests/unit/embodic_io/exporters/test_report_readme_bundle.py::test_report_key_results_are_named_with_display_labels_not_ids",
+   "tests/independent/m4/test_exports_dxf_pdf_bundle.py",
+   "tests/unit/embodic_io/exporters/test_svg.py::test_ut_io_06_svg_metadata_holds_the_stamp"
+  ],
+  "seconds": 30.7,
+  "summary": "53 passed in 29.55s"
+ },
+ "mutants": [
+  {
+   "id": "V3-05-01",
+   "defect": "SVG joint point taken from the next primitive's own coordinate",
+   "file": "io/svg_writer.py",
+   "old": "if here is None or math.dist(here, start) > 1e-6:",
+   "new": "if True:",
+   "killers": [
+    "tests/unit/embodic_io/exporters/test_n21_joint_continuity.py::test_n21_svg_writes_one_point_for_every_copper_joint",
+    "tests/unit/embodic_io/exporters/test_n21_joint_continuity.py::test_n21_svg_joint_ends_that_round_apart_are_written_once_from_the_shared_coordinate"
+   ],
+   "predicts": "joint|point|==|!=|assert"
+  },
+  {
+   "id": "V3-05-02",
+   "defect": "DXF outline: the end point of the first outer piece moved",
+   "file": "io/dxf_writer.py",
+   "old": "    for q in board.outline.outer:\n        dxf.prim(f\"{prefix}BOARD_OUTLINE\", q)",
+   "new": "    for k, q in enumerate(board.outline.outer):\n        if k == 0:\n            q = __import__(\"dataclasses\").replace(q, sweep_rad=q.sweep_rad * (1 - 1e-4)) if hasattr(q, \"sweep_rad\") else __import__(\"dataclasses\").replace(q, x2_mm=q.x2_mm + 0.01)\n        dxf.prim(f\"{prefix}BOARD_OUTLINE\", q)",
+   "killers": [
+    "tests/unit/embodic_io/exporters/test_dxf.py::test_ut_exp_02_outline_dxf_is_closed_outline_and_bore_only"
+   ],
+   "predicts": "== 2|assert \\d+ == 2|sum\\("
+  },
+  {
+   "id": "V3-05-03",
+   "defect": "'Key results' heading removed from the PDF",
+   "file": "io/report.py",
+   "old": "flow.heading(\"Key results\")",
+   "new": "None",
+   "killers": [
+    "tests/unit/embodic_io/exporters/test_report_readme_bundle.py::test_report_key_results_are_named_with_display_labels_not_ids",
+    "tests/independent/m4/test_exports_dxf_pdf_bundle.py"
+   ],
+   "predicts": "Key results"
+  },
+  {
+   "id": "V3-05-04",
+   "defect": "design hash left out of the SVG metadata",
+   "file": "io/svg_writer.py",
+   "old": "stamp_attrs = \" \".join(f\"{name}={quoteattr(text)}\" for name, text in metadata_fields(metadata))",
+   "new": "stamp_attrs = \" \".join(f\"{name}={quoteattr(text)}\" for name, text in metadata_fields(metadata) if name != \"design_hash\")",
+   "killers": [
+    "tests/unit/embodic_io/exporters/test_svg.py::test_ut_io_06_svg_metadata_holds_the_stamp"
+   ],
+   "predicts": "design_hash|None ==|== 'sha256"
+  }
+ ],
+ "outcomes": [
+  {
+   "id": "V3-05-01",
+   "verdict": "killed",
+   "seconds": 3.7,
+   "exit_code": 1,
+   "failed": [
+    "FAILED tests/unit/embodic_io/exporters/test_n21_joint_continuity.py::test_n21_svg_joint_ends_that_round_apart_are_written_once_from_the_shared_coordinate[end rounds down]"
+   ],
+   "evidence": [
+    "E   AssertionError: assert ['board 1 L1 ...00001, 0.0)]'] == []",
+    "E",
+    "E     Left contains one more item: 'board 1 L1 joint at (1.0000005, 0.0): written [(1.0, 0.0), (1.000001, 0.0)]'",
+    "E     Use -v to get more diff"
+   ]
+  },
+  {
+   "id": "V3-05-02",
+   "verdict": "killed",
+   "seconds": 2.3,
+   "exit_code": 1,
+   "failed": [
+    "FAILED tests/unit/embodic_io/exporters/test_dxf.py::test_ut_exp_02_outline_dxf_is_closed_outline_and_bore_only[serpentine_16p_example]"
+   ],
+   "evidence": [
+    "E   AssertionError: (-55.919997240458635, 0.017567785829906347)",
+    "E   assert 1 == 2",
+    "E    +  where 1 = sum(<generator object test_ut_exp_02_outline_dxf_is_closed_outline_and_bore_only.<locals>.<genexpr> at 0x7fc8e4d45d50>)"
+   ]
+  },
+  {
+   "id": "V3-05-03",
+   "verdict": "killed-other",
+   "seconds": 2.9,
+   "exit_code": 1,
+   "failed": [
+    "FAILED tests/unit/embodic_io/exporters/test_report_readme_bundle.py::test_report_key_results_are_named_with_display_labels_not_ids[serpentine_16p_example]"
+   ],
+   "evidence": [
+    "E   IndexError: list index out of range"
+   ]
+  },
+  {
+   "id": "V3-05-04",
+   "verdict": "killed",
+   "seconds": 2.1,
+   "exit_code": 1,
+   "failed": [
+    "FAILED tests/unit/embodic_io/exporters/test_svg.py::test_ut_io_06_svg_metadata_holds_the_stamp[serpentine_16p_example-colour]"
+   ],
+   "evidence": [
+    "E   AssertionError: assert None == 'sha256:8ec4c23449a0be2bf4ee6ba337b72b2e93e5906e6b53ba8ba7c441d4872dd1ca'",
+    "E    +  where None = <built-in method get of xml.etree.ElementTree.Element object at 0x7f1dcf0cf560>('design_hash')",
+    "E    +    where <built-in method get of xml.etree.ElementTree.Element object at 0x7f1dcf0cf560> = <Element '{urn:embodic:export:1}export' at 0x7f1dcf0cf560>.get",
+    "E    +  and   'sha256:8ec4c23449a0be2bf4ee6ba337b72b2e93e5906e6b53ba8ba7c441d4872dd1ca' = ComputeOutcome(design=DesignParameters(schema_version=1, name='Serpentine, 16 poles', phases=3, rotor=RotorSpec(poles=...sions=VersionInfo(embodic='0.0.5', schema=2, registry='v1+17193c112982.c01a66176ad6', python='3.11.17', numpy='2.4.6')).design_hash"
+   ]
+  }
+ ]
+}
