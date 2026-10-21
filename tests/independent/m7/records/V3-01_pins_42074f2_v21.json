@@ -1,0 +1,31 @@
+{
+ "REQ-F-05": {
+  "tests/unit/generators/test_every_topology_refuses.py::test_f05_one_via_per_transition_is_analysed_on_every_topology": "2624788c03c2ea17c51452ed71bab724da3e977f03e2b51870ef2cf74a091e58",
+  "tests/unit/generators/test_every_topology_refuses.py::test_ut_gen_06_one_via_per_transition_still_builds_every_example": "0e53ede83b9a1f392eb336bea844f7edd1a010e6d336e30fa60f82cc1494d357",
+  "tests/unit/generators/test_every_topology_refuses.py::test_ut_gen_06_parallel_vias_per_transition_are_refused_by_every_topology": "bc5a8a523dd664ef7452ef5740054c37b5937d4047ba16d5deb2945f72f8cbca",
+  "tests/unit/generators/test_spiral_pairs.py::test_parallel_pairs_pass_drc": "c8cb9e8ee097433707b294fba05beaf4bb69a20eccf47206e6e3a45b742b1d39",
+  "tests/unit/generators/test_spiral_pairs.py::test_ut_geo_13_parallel_pairs_need_36_winding_vias": "872ed82dd9732adb96b581b609ef3cd5d5bb1899cf7c98122dbf7268ab473cb7",
+  "tests/unit/generators/test_spiral_series_fan.py::test_ut_geo_13_series_coil_has_2k_plus_1_winding_vias": "9265ab3b4df06bcef140cdd80f685061e7e256f8eccb8572e65669f562480da6",
+  "tests/unit/physics/test_kernels.py::test_cf04_and_ut_phy_11_via_barrel_resistance": "de87f76e1f6757843ba9429ee3306c84a83a0fb86465bc6ed2264dc61ea4ed7a",
+  "tests/unit/physics/test_via_barrels.py::test_ut_phy_11_every_phase_via_of_an_example_is_analysed_as_one_barrel": "6cb817668fe6cbb458a7deab9072dc241a3b08bdc0e04fd9046a5fa4c5a3d5c2",
+  "tests/unit/property/test_spiral_brute_sweep.py::test_pr_01_pr_13_spiral_boards_agree_with_the_brute_sweep_including_every_through_via": "c06f353e40dc2fee250bb03b47b27b2763627b2244338040bec49be44302a394"
+ },
+ "REQ-F-13": {
+  "tests/ui/qt_e2e/test_f13_view_reach.py::test_f13_1_every_view_is_visible_after_at_most_two_interactions": "3a1b315f03189e0e2df8bb81c744bf7ddf70e9c4765e218d3011386be4f89132",
+  "tests/ui/qt_e2e/test_f13_view_reach.py::test_f13_1_the_phase_and_layer_pages_are_hidden_until_their_tab_is_clicked": "a464c0d015d9aa8f37d5f7cd8229e259fa9618b4799f10be2203a56ae75a2ab1",
+  "tests/ui/qt_shell/test_layer_cue.py::test_ui03_lower_layer_copper_the_cue_paints_keeps_its_trace_width_at_200x": "30f3b225804b47e378488ff593d0d026b9468459261485dadd4df26370d2e7e6",
+  "tests/ui/qt_shell/test_layer_cue.py::test_ui03_the_cue_strokes_lower_copper_at_its_trace_width_at_0_1x_and_200x": "397c7e5e52b40b9036d89b21dbc0568708252f043d88f5061a0117a621cf9c9d",
+  "tests/ui/qt_shell/test_theme_and_geometry.py::test_ui03_zoom_stays_between_01x_and_200x_and_copper_width_stays_in_millimetres": "319f11262e1a98cf97c766c38dd1a0d25c979004da7e204dc842fb797ca27d00",
+  "tests/ui/qt_shell/test_zoom_range_literals.py::test_f13_2_zoom_range_is_01x_to_200x": "675a48334406e0c309c3e3d2cea5af240888aaf125adea3bde57db462e1f7e8a"
+ },
+ "REQ-T-05": {
+  "tests/unit/results/test_record_passed_tests.py::test_tr05_a_report_without_eqt_keys_is_refused_and_writes_nothing": "afee60bd91586f8d8236961e40615547f851491bf64345cc6d10b53b779ea307",
+  "tests/unit/results/test_record_passed_tests.py::test_tr05_record_main_refuses_and_writes_nothing": "a3fe7c90ab8d11d141e84114c6d742e3399b8b033574c5e185a917d83747dde0",
+  "tests/unit/results/test_record_passed_tests_gate.py::test_a_report_that_passes_every_linked_test_of_every_verified_equation_records_the_evidence": "27c20574d00097932f93af815f7a5c2d8910cd4e6e45ecea3c880d12eea58b48",
+  "tests/unit/results/test_record_passed_tests_gate.py::test_a_verified_equation_missing_one_of_several_linked_tests_stops_the_release": "14a2289b1e1d5c8bdb056345ab0c11c00919ab80750527572c51e698cbf8d756",
+  "tests/unit/results/test_record_passed_tests_gate.py::test_a_verified_equation_whose_only_linked_test_did_not_pass_stops_the_release": "7590cc3011602fce982922c1f4961bb3dd6249284c3803aa42398e5a959bd3b8",
+  "tests/unit/results/test_record_passed_tests_gate.py::test_stderr_alone_names_the_equation_and_the_registry_tests_of_it_that_passed": "e5b60f7056ef33519894b72a8abc08d5529fb9eee0f233ee095cb108f4332b86",
+  "tests/unit/results/test_record_passed_tests_gate.py::test_stderr_names_a_refused_equation_none_of_whose_linked_tests_passed": "bb3eb7bb7f49025871b95295efa29f965afac91c30ba17d73494008600a7d20b",
+  "tests/unit/results/test_record_passed_tests_gate.py::test_t05_stderr_names_every_refused_equation_with_its_passed_tests": "945c8289e91f486bb8cbc3441689df54aae8c0d23e4fce5059d289a3df19e41a"
+ }
+}
