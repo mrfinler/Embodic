@@ -1,8 +1,7 @@
-"""Items 1b to 1e: DXF (ezdxf as a parser), PDF (pypdf, pdftotext), bundle ZIP, DRC refusal."""
+"""Items 1b to 1e: DXF (ezdxf as a parser), PDF (pypdf), bundle ZIP, DRC refusal."""
 
 import math
 import re
-import subprocess
 import zipfile
 from collections import Counter, defaultdict
 from dataclasses import fields
@@ -211,13 +210,20 @@ def test_pdf_embeds_exactly_the_bundled_font_files(stem, export_dir):
     assert sorted(embedded_font_files(pdf_of(stem, export_dir))) == want
 
 
+def layout_text(path) -> str:
+    """Return the text of every page in order, each page read top to bottom by position, not by drawing order.
+
+    pypdf's layout mode replaces `pdftotext -layout`, which the Windows laptop lacks (DEF-UV27-01). Its plain mode
+    keeps drawing order, so it would pass a colophon drawn last but placed at the top of the last page.
+    """
+    return "\n".join(page.extract_text(extraction_mode="layout") for page in pypdf.PdfReader(path).pages)
+
+
 @pytest.mark.parametrize("stem", ["spiral_12c10p_d08", "wave_16p_example"])
 def test_colophon_is_the_last_line_of_the_report(stem, export_dir):
     """Catches a colophon that sits before other text or appears twice (ruling f)."""
-    text = subprocess.run(
-        ["pdftotext", "-layout", str(pdf_of(stem, export_dir)), "-"], capture_output=True, text=True, check=True
-    ).stdout
-    lines = [ln.strip() for ln in text.replace("\f", "\n").splitlines() if ln.strip()]
+    text = layout_text(pdf_of(stem, export_dir))
+    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
     assert lines[-1] == COLOPHON
     assert text.count(COLOPHON) == 1
 

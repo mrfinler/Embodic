@@ -1,0 +1,24 @@
+clean: the report as committed
+  test: exit 0; 2 passed in 3.68s
+  pypdf layout: pass: last line 'Set in Inter and JetBrains Mono, SIL Open Font License 1.1.', colophon count 1
+  pypdf plain: pass: last line 'Set in Inter and JetBrains Mono, SIL Open Font License 1.1.', colophon count 1
+  pdftotext -layout: pass: last line 'Set in Inter and JetBrains Mono, SIL Open Font License 1.1.', colophon count 1
+  clean passes
+top: drawn last, but placed at the top of the last page, above the drawing and the legend
+  test: exit 1; 2 failed in 3.45s; AssertionError: assert 'Phase C' == 'Set in Inter... License 1.1.'
+  pypdf layout: fail: last line 'Phase C', colophon count 1
+  pypdf plain: pass: last line 'Set in Inter and JetBrains Mono, SIL Open Font License 1.1.', colophon count 1
+  pdftotext -layout: fail: last line 'Phase C', colophon count 1
+  killed
+early: moved before the drawing pages, to the foot of the inputs page
+  test: exit 1; 2 failed in 3.73s; AssertionError: assert 'Phase C' == 'Set in Inter... License 1.1.'
+  pypdf layout: fail: last line 'Phase C', colophon count 1
+  pypdf plain: fail: last line 'Phase C', colophon count 1
+  pdftotext -layout: fail: last line 'Phase C', colophon count 1
+  killed
+twice: once at the foot of the inputs page and once at the end
+  test: exit 1; 2 failed in 3.48s; AssertionError: assert 2 == 1
+  pypdf layout: fail: last line 'Set in Inter and JetBrains Mono, SIL Open Font License 1.1.', colophon count 2
+  pypdf plain: fail: last line 'Set in Inter and JetBrains Mono, SIL Open Font License 1.1.', colophon count 2
+  pdftotext -layout: fail: last line 'Set in Inter and JetBrains Mono, SIL Open Font License 1.1.', colophon count 2
+  killed

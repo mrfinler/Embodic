@@ -426,3 +426,33 @@ says a stale record is listed "whatever its result"; the code lists only passed 
 `verified` by running and reading. The failure is visible in `req_audit.md` (`fail` evidence, row `failed`). Expected:
 Agent 6 states what TR-01 does with a failed record (print it with its path at the least; whether it fails the gate is
 Fable's call), and Agent 3 makes the code follow both sentences. Owner Agent 6 and Agent 3. Not fixed here.
+
+## DEF-UV27-01 (test portability, Agent 4's own M4 test; file markers REQ-F-09, F-16, F-29, F-33): the colophon test needs `pdftotext`
+
+Main 6d50d0b (0.0.6), D-094c. `tests/independent/m4/test_exports_dxf_pdf_bundle.py::test_colophon_is_the_last_line_of_the_report`
+read the report with `subprocess.run(["pdftotext", "-layout", ...])` (l.217 on 6d50d0b). Poppler is not a dependency
+of the project and the Windows laptop has no `pdftotext`, so both cases (D08, wave) failed in the Windows commit gate of
+0.0.5 with `FileNotFoundError: [WinError 2]` (Fable's log `w7_commit_gate_0.0.5.log`, as quoted in D-094c; I did not see
+the laptop). A missing program is not a product defect, and the test then checked nothing on Windows.
+
+Fix (unit U-V27). The test reads the text with pypdf 6.20.0, already pinned in `requirements/py311-dev.txt`,
+`py312-dev.txt` and `py313-dev.txt`, in layout mode (`page.extract_text(extraction_mode="layout")`), which orders each
+page top to bottom by position as `pdftotext -layout` does. The two assertions are unchanged: the last non-empty line is
+the colophon, and the colophon occurs once. Plain pypdf mode would not do: it keeps drawing order.
+
+Seeded faults, `python3 tests/independent/m7/v27_colophon_faults.py --commit 6d50d0b` (Linux, `verified` by running;
+each case edits `src/embodic/io/report.py` in a `git archive` copy and runs the test on disk against it):
+
+| Case | Fault | Test | pypdf layout | pypdf plain | `pdftotext -layout` |
+|---|---|---|---|---|---|
+| clean | none | 2 passed | pass | pass | pass |
+| top | drawn last, placed at the top of the last page | 2 failed, `assert 'Phase C' == 'Set in Inter... License 1.1.'` | fail | pass | fail |
+| early | moved before the drawing pages | 2 failed, same assertion | fail | fail | fail |
+| twice | at the foot of the inputs page and at the end | 2 failed, `assert 2 == 1` | fail | fail | fail |
+
+The new reading agrees with the old one in every case, and the `top` case shows why plain mode would weaken the test.
+On Windows the fixed test is `not tested`; it now calls no external program. No test or conftest file under
+`tests/independent` calls `subprocess` now; the helpers that the collected tests import and that do (`m1/xcoil_oracle.py`,
+`m3/cases.py`, node and the Xcoil engine) skip with a reason that names node when it is absent (`verified` by reading).
+Status: fixed on unit/U-V27, Linux `verified`, Windows `not tested`.
+Owner Agent 4.
