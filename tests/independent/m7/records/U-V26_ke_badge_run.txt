@@ -1,0 +1,44 @@
+embodic 0.0.5 from /tmp/claude-0/-home-claude/f28a4cfe-cf25-5512-9052-c4c291ea667b/scratchpad/wheel005/embodic
+wheel evidence == release-dir evidence: True
+evidence build 0.0.5+g42074f28cead.20261020T232950Z, 58 passed IDs
+load_registry: evidence_build_id 0.0.5+g42074f28cead.20261020T232950Z, 58 passed IDs
+
+D08 card ke_line_peak_v_s_per_rad: 0.030877 V*s/rad, off D08 measured by -0.40%
+  badge 'not tested', chain ('EQ-18', 'EQ-07', 'EQ-06', 'EQ-05')
+  reasons: EQ-18 inferred; EQ-07 inferred; EQ-06 inferred; EQ-06 tests not passed in this build; EQ-05 inferred; EQ-05 tests not passed in this build
+
+gate report: 4434 records, 0 failed
+
+EQ-18 status 'inferred', tests_passed True
+  EQT-18-GR: 17 records ['passed'], gate admits True, in evidence True
+
+EQ-07 status 'inferred', tests_passed True
+  EQT-07-GR: 33 records ['passed'], gate admits True, in evidence True
+  EQT-07-CF07: 1 records ['passed'], gate admits True, in evidence True
+
+EQ-06 status 'inferred', tests_passed False
+  EQT-06-GR: 70 records ['passed'], gate admits True, in evidence True
+  EQT-06-CF02: 1 records ['passed'], gate admits True, in evidence True
+  EQT-06-CF03: 1 records ['passed'], gate admits True, in evidence True
+  EQT-06-O1: 1 records ['passed'], gate admits True, in evidence True
+  EQT-06-O2: 2 records ['skipped'], gate admits False, in evidence False
+      skipped: tests/unit/physics/test_oracles_m5.py::test_or07_d09_phase_emf_within_the_registry_band[A]
+      skipped: tests/unit/physics/test_oracles_m5.py::test_or07_d09_phase_emf_within_the_registry_band[B]
+
+EQ-05 status 'inferred', tests_passed False
+  EQT-05-GR: 3 records ['passed'], gate admits True, in evidence True
+  EQT-05-CF01: 1 records ['passed'], gate admits True, in evidence True
+  EQT-05-CF03: 1 records ['passed'], gate admits True, in evidence True
+  EQT-05-EC: 17 records ['passed'], gate admits True, in evidence True
+  EQT-05-O1: 1 records ['passed'], gate admits True, in evidence True
+  EQT-05-O2: 3 records ['passed', 'skipped'], gate admits False, in evidence False
+      skipped: tests/unit/physics/test_oracles_m5.py::test_or07_d09_phase_emf_within_the_registry_band[A]
+      skipped: tests/unit/physics/test_oracles_m5.py::test_or07_d09_phase_emf_within_the_registry_band[B]
+      passed: tests/unit/physics/test_oracles_m5.py::test_or08_d09_synthesised_bz_peak_at_mid_radius_within_5_percent_of_the_figure_reading
+
+pytest -rxXs OR-07[A,B] and OR-08 on 358673d (src and tests/unit/physics/test_oracles_m5.py identical to 42074f2):
+xx.                                                                      [100%]
+=========================== short test summary info ============================
+XFAIL tests/unit/physics/test_oracles_m5.py::test_or07_d09_phase_emf_within_the_registry_band[A] - F-OR07: D09 phase EMF out of [-5 %, +5 % + e_edge] for both pre-registered builds (U-E9: A +18.7 %, B -7.4 %); cause unresolved: G2 turn geometry and edge leakage (oracle_tests_spec.md section OR-07)
+XFAIL tests/unit/physics/test_oracles_m5.py::test_or07_d09_phase_emf_within_the_registry_band[B] - F-OR07: D09 phase EMF out of [-5 %, +5 % + e_edge] for both pre-registered builds (U-E9: A +18.7 %, B -7.4 %); cause unresolved: G2 turn geometry and edge leakage (oracle_tests_spec.md section OR-07)
+1 passed, 2 xfailed in 2.83s
