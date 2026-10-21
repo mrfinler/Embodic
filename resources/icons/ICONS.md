@@ -53,7 +53,7 @@ Contact sheet: `_contact_sheet.png` (rendered with Qt's own QSvgRenderer at 24 p
 | `guide.svg` | Help | Design guide | Toolstrip Help > Guide (F1) |
 | `equations.svg` | Help | Equation register and references | Toolstrip Help > Equations |
 | `shortcuts.svg` | Help | Keyboard shortcuts | Toolstrip Help > Shortcuts (Ctrl+/) |
-| `settings.svg` | Help | Settings (theme, units, defaults) | Toolstrip Help > Settings (Ctrl+,) |
+| `settings.svg` | Help | Settings (theme, units, defaults) | Not used; no settings window is in scope (D-094b) |
 | `status-verified.svg` | Status | Badge glyph: verified | Result badges, Tests table |
 | `status-inferred.svg` | Status | Badge glyph: inferred | Result badges |
 | `status-assumption.svg` | Status | Badge glyph: assumption | Input chips, result badges |

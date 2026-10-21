@@ -7,23 +7,28 @@ repository root:
 
 It starts its own window with a scratch settings file and scratch folders, so it reads and writes nothing of the
 user's. It drives the window through its widgets and actions; it loads the five examples through the session, which
-is what the Examples gallery does on Load example.
+is what the Examples gallery does on Load example. To run it on a wheel, unpack the wheel with `python -m zipfile -e`
+and put that folder on PYTHONPATH instead of src, so the packaged evidence file applies as in an install.
 """
 
+import hashlib
 import json
 import sys
 import tempfile
 import time
 from pathlib import Path
 
-from PySide6.QtCore import QSettings, Qt
+from PySide6.QtCore import QBuffer, QIODevice, QSettings, Qt
 from PySide6.QtGui import QShortcut
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import (
     QAbstractButton,
     QAbstractItemView,
     QApplication,
+    QCheckBox,
     QComboBox,
+    QDialog,
+    QFileDialog,
     QLabel,
     QLineEdit,
     QListWidget,
@@ -191,6 +196,12 @@ def toolstrip(window: MainWindow) -> dict:
                     "visible": button.isVisible(),
                     "shortcut": row.shortcut,
                 }
+        strip = named(window, "toolstrip")
+        out.setdefault("visible_buttons", {})[tabs.tabText(index)] = [
+            {"name": b.objectName(), "text": b.text(), "tooltip": b.toolTip()}
+            for b in strip.findChildren(QAbstractButton)
+            if b.isVisible()
+        ]
     tabs.setCurrentIndex(0)
     return out
 
@@ -292,6 +303,7 @@ def run(out_path: Path) -> int:
             dump["d08_how"] = how_steps(window)
             dump["d08_charts"] = chart_steps(window)
             dump["d08_preview"] = preview_steps(window)
+            dump["d08_keys"] = key_steps(window)
             dump["d08_after_preview_rail"] = [r for r in snapshot(window) if r["name"].startswith(("sum-", "rail-"))]
             dump["export_d08"] = export_steps(window, scratch / "export_d08", "export_bundle")
             dump["guide"] = [r for r in snapshot(open_guide(window)) if r["name"].startswith("guide")]
@@ -358,6 +370,100 @@ def preview_steps(window: MainWindow) -> dict:
     wait_until(lambda: computed(window))
     settle(500)
     steps["after_undo"] = {"field": edit.text(), "chip": chip(), "r_phase": value()}
+    return steps
+
+
+def press(window: MainWindow, key: Qt.Key, modifier=Qt.KeyboardModifier.NoModifier) -> None:
+    window.activateWindow()
+    settle()
+    QTest.keyClick(QApplication.focusWidget() or window, key, modifier)
+    settle(200)
+
+
+def canvas_picture(window: MainWindow) -> str:
+    buffer = QBuffer()
+    buffer.open(QIODevice.OpenModeFlag.WriteOnly)
+    window.canvas.viewport().grab().save(buffer, "PNG")
+    return hashlib.sha256(bytes(buffer.data())).hexdigest()[:16]
+
+
+def key_steps(window: MainWindow) -> dict:
+    """Walkthrough step 3.8 after 3.5 (Ctrl+Z) and 3.6 (F5), then the canvas letters of design_spec.md section 10."""
+    ctrl, shift = Qt.KeyboardModifier.ControlModifier, Qt.KeyboardModifier.ShiftModifier
+    value = lambda: text_of(window, "res-r-phase-value")  # noqa: E731
+    edit = field(window, "param-r-inner")
+    named(window, "toolstrip-tabs").setFocus()
+    steps: dict = {}
+    for label, key, modifier in (
+        ("f5", Qt.Key.Key_F5, Qt.KeyboardModifier.NoModifier),
+        ("ctrl_shift_z", Qt.Key.Key_Z, ctrl | shift),
+        ("ctrl_z", Qt.Key.Key_Z, ctrl),
+    ):
+        press(window, key, modifier)
+        QTest.qWait(PREVIEW_WAIT_MS)
+        wait_until(lambda: computed(window))
+        settle(300)
+        steps[label] = {"field": edit.text(), "chip": text_of(window, "param-r-inner-prov"), "r_phase": value()}
+
+    press(window, Qt.Key.Key_Slash, ctrl)
+    guide = window.guide
+    steps["ctrl_slash"] = {
+        "visible": bool(guide and guide.isVisible()),
+        "title": guide.windowTitle() if guide else None,
+        "topic": guide.current_topic() if guide else None,
+        "body": named(guide, "guide-body").toPlainText() if guide else None,
+    }
+    if guide:
+        guide.close()
+
+    press(window, Qt.Key.Key_P, ctrl)
+    dialog = window.findChild(QDialog, "dlg-export")
+    steps["ctrl_p"] = {
+        "visible": bool(dialog and dialog.isVisible()),
+        "title": dialog.windowTitle() if dialog else None,
+        "checked": [b.text() for b in dialog.findChildren(QCheckBox) if b.isChecked()] if dialog else [],
+    }
+    if dialog:
+        dialog.close()
+        settle()
+
+    asked: list[str] = []
+
+    def cancelled(_parent, caption, *_args, **_kwargs):
+        asked.append(caption)
+        return "", ""
+
+    original = QFileDialog.getSaveFileName
+    QFileDialog.getSaveFileName = staticmethod(cancelled)
+    try:
+        press(window, Qt.Key.Key_S, ctrl | shift)
+    finally:
+        QFileDialog.getSaveFileName = original
+    steps["ctrl_shift_s"] = {"captions": asked}
+
+    window.canvas.fit_view()
+    window.canvas.setFocus()
+    settle(200)
+    greyscale = window.toolstrip.actions_by_id["act-greyscale"]
+    letters = []
+    for name, key, modifier in (
+        ("]", Qt.Key.Key_BracketRight, Qt.KeyboardModifier.NoModifier),
+        ("[", Qt.Key.Key_BracketLeft, Qt.KeyboardModifier.NoModifier),
+        ("L", Qt.Key.Key_L, Qt.KeyboardModifier.NoModifier),
+        ("G", Qt.Key.Key_G, Qt.KeyboardModifier.NoModifier),
+        ("C", Qt.Key.Key_C, Qt.KeyboardModifier.NoModifier),
+        ("M", Qt.Key.Key_M, Qt.KeyboardModifier.NoModifier),
+        ("T", Qt.Key.Key_T, Qt.KeyboardModifier.NoModifier),
+        ("A", Qt.Key.Key_A, Qt.KeyboardModifier.NoModifier),
+        ("B", Qt.Key.Key_B, Qt.KeyboardModifier.NoModifier),
+        ("Shift+C", Qt.Key.Key_C, shift),
+    ):
+        before = (canvas_picture(window), window.canvas._legend_texts(), greyscale.isChecked())
+        QTest.keyClick(window.canvas, key, modifier)
+        settle(200)
+        after = (canvas_picture(window), window.canvas._legend_texts(), greyscale.isChecked())
+        letters.append({"key": name, "changed": before != after, "focus": QApplication.focusWidget().objectName()})
+    steps["canvas_letters"] = letters
     return steps
 
 
