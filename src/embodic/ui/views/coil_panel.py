@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from functools import partial
 
 import shiboken6
-from PySide6.QtCore import QEvent, QObject, QPoint, Qt
+from PySide6.QtCore import QEvent, QObject, QPoint, QRegularExpression, Qt
 from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import (
     QButtonGroup,
@@ -106,6 +106,14 @@ def unit_text(spec: FieldSpec) -> str:
     return "" if spec.unit is None else STRINGS.get(f"design.unit.{spec.unit.value}", spec.unit.value)
 
 
+def unit_label(widget_id: str, unit: str) -> QLabel:
+    """Return the unit label beside an input: a `QLabel[class="unit"]` named `<id>-unit` (screens.md, conventions)."""
+    label = QLabel(unit)
+    label.setObjectName(f"{widget_id}-unit")
+    label.setProperty("class", "unit")
+    return label
+
+
 class _NoWheelWithoutFocus(QObject):
     """The wheel never changes a value the user is not editing (design_spec.md section 10)."""
 
@@ -174,9 +182,7 @@ class FieldEditor(QWidget):
         self.input = self._make_input(spec)
         self.input.setObjectName(widget_id)
         self.label.setBuddy(self.input)
-        self.unit = QLabel(unit_text(spec))
-        self.unit.setObjectName(f"{widget_id}-unit")
-        self.unit.setProperty("class", "unit")
+        self.unit = unit_label(widget_id, unit_text(spec))
         self.chip = QLabel()
         self.chip.setObjectName(f"{widget_id}-prov")
         self.chip.setProperty("class", "prov-chip")
@@ -432,11 +438,14 @@ class FieldPanel(QScrollArea):
         """Give every unit column of a section the width of its widest unit, so its input edges align (ruling g 2).
 
         A section is the group box or untitled widget that holds the rows. One tab-wide column made every row as wide as
-        `W/(m²·K)` and the Board form 327 px (fix_wave_f2.md (a) 2).
+        `W/(m²·K)` and the Board form 327 px (fix_wave_f2.md (a) 2). A unit label is a child of its row, a field row
+        or a helper row, and that row is a child of the section.
         """
         sections: dict[QWidget | None, list[QLabel]] = {}
-        for editor in self.findChildren(FieldEditor):
-            sections.setdefault(editor.parentWidget(), []).append(editor.unit)
+        for unit in self.findChildren(QLabel, QRegularExpression("-unit$")):
+            row = unit.parentWidget()
+            assert row is not None
+            sections.setdefault(row.parentWidget(), []).append(unit)
         for units in sections.values():
             widest = max((unit.sizeHint().width() for unit in units if unit.text()), default=0)
             for unit in units:
@@ -596,9 +605,12 @@ def announce(control: QWidget, label: str, details: str = "") -> None:
             button.setAccessibleDescription(labelled)
 
 
-def label_above(caption: str, control: QWidget) -> QWidget:
-    """Return a helper row with its label above the control, as every field row has it (ruling g 2, F17)."""
-    announce(control, caption)
+def label_above(caption: str, control: QWidget, unit: str = "") -> QWidget:
+    """Return a helper row with its label above the control, as every field row has it (ruling g 2, F17).
+
+    A ``unit`` sits beside the control and is part of its accessible description, as in a field row (REQ-N-24).
+    """
+    announce(control, caption, unit)
     row = QWidget()
     column = QVBoxLayout(row)
     column.setContentsMargins(0, 0, 0, 0)
@@ -606,7 +618,14 @@ def label_above(caption: str, control: QWidget) -> QWidget:
     label = QLabel(caption)
     label.setBuddy(control)
     column.addWidget(label)
-    column.addWidget(control)
+    if unit:
+        line = QHBoxLayout()
+        line.setContentsMargins(0, 0, 0, 0)
+        line.addWidget(control, 1)
+        line.addWidget(unit_label(control.objectName(), unit))
+        column.addLayout(line)
+    else:
+        column.addWidget(control)
     return row
 
 
