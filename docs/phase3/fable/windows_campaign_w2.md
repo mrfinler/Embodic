@@ -47,11 +47,11 @@ otherwise. Decision rows hold the rulings.
 | PK-06 warm | 21.2 s to the first example, `embodic 0.0.5`, self-test 45 of 45 | pk06_run7.log | D-090 |
 | PK-04 | all five examples pass at rel 1e-9 against U-V21's reference | pk04_0.0.5_compare.log | D-090 |
 | DRC pairs probe | the same split tie as 0.0.4; no left-out pair violates | drc_pairs_windows_0.0.5.json | D-090 |
-| Commit profile (PK-01 cell) | pending | w7_commit_gate_0.0.5.log | - |
-| Release profile (W8, PK-05) | pending | w8_release_gate_0.0.5.log | - |
-| Latency tests alone, five runs | pending | w8_latency_0.0.5_run1-5.log | - |
+| Commit profile (PK-01 cell) | stopped at 32 % when the Claude desktop app updated itself at 07:42; no result; rerun later (user) | w7_commit_gate_0.0.5.log | D-091 |
+| Release profile (W8, PK-05) | not started; rerun later (user) | - | D-091 |
+| Latency tests alone, five runs | not started; rerun later (user) | - | D-091 |
 | PK-06 cold | not run since D-084e; it waits for a normal network | - | - |
-| Narrator (AX-06) on 0.0.5 | pending: the user's run | - | - |
+| Narrator (AX-06) on 0.0.5 | the user runs it later | - | D-091 |
 
 ## What is not tested on Windows
 
