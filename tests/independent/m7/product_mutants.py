@@ -70,13 +70,15 @@ def _copy_checkout(dst: Path) -> Path:
     return dst / "checkout"
 
 
-def _pytest(work: Path, targets: tuple[str, ...]) -> tuple[subprocess.CompletedProcess[str] | None, float]:
+def _pytest(
+    work: Path, targets: tuple[str, ...], timeout_s: int = TIMEOUT_S
+) -> tuple[subprocess.CompletedProcess[str] | None, float]:
     env = {**os.environ, "PYTHONPATH": str(work / "src"), "QT_QPA_PLATFORM": "offscreen"}
     argv = [sys.executable, "-m", "pytest", "-p", "no:cacheprovider", "-q", "-x", "--tb=short", *targets]
     start = time.monotonic()
     try:
         done = subprocess.run(
-            argv, cwd=work, env=env, capture_output=True, text=True, timeout=TIMEOUT_S, preexec_fn=_limit_memory
+            argv, cwd=work, env=env, capture_output=True, text=True, timeout=timeout_s, preexec_fn=_limit_memory
         )
     except subprocess.TimeoutExpired:
         return None, time.monotonic() - start
@@ -108,7 +110,9 @@ def judge(mutant: Mutant, done: subprocess.CompletedProcess[str] | None, seconds
     return Outcome(mutant.id, verdict, round(seconds, 1), done.returncode, failed[:5], evidence)
 
 
-def run(mutants: list[Mutant], suite: tuple[str, ...]) -> tuple[list[Outcome], dict[str, object]]:
+def run(
+    mutants: list[Mutant], suite: tuple[str, ...], timeout_s: int = TIMEOUT_S
+) -> tuple[list[Outcome], dict[str, object]]:
     """Copy the checkout once, check the clean copy passes the named tests, then run every mutant on it."""
     with tempfile.TemporaryDirectory(prefix="embodic-mut-") as tmp:
         work = _copy_checkout(Path(tmp))
@@ -117,7 +121,7 @@ def run(mutants: list[Mutant], suite: tuple[str, ...]) -> tuple[list[Outcome], d
             raise SystemExit(f"the copy does not import its own src: {imported}")
         every = tuple(dict.fromkeys(k for m in mutants for k in m.killers))
         base, base_s = _pytest(work, every)
-        base_info = {"imports": imported, "killers": list(every), "seconds": round(base_s, 1)}
+        base_info = {"imports": imported, "killers": list(every), "seconds": round(base_s, 1), "timeout_s": timeout_s}
         if base is None or base.returncode != 0:
             tail = "timeout" if base is None else (base.stdout + base.stderr)[-1500:]
             raise SystemExit(f"unmutated copy fails its named tests, no mutant can be judged:\n{tail}")
@@ -135,14 +139,14 @@ def run(mutants: list[Mutant], suite: tuple[str, ...]) -> tuple[list[Outcome], d
                 if outcome.verdict == "survived":
                     if suite_ok is None:
                         target.write_text(source, encoding="utf-8")
-                        clean, clean_s = _pytest(work, suite)
+                        clean, clean_s = _pytest(work, suite, timeout_s)
                         suite_ok = clean is not None and clean.returncode == 0
                         base_info["suite"] = {"tests": list(suite), "seconds": round(clean_s, 1), "passed": suite_ok}
                         if clean is not None:
                             base_info["suite"]["summary"] = clean.stdout.strip().splitlines()[-1]
                         target.write_text(source.replace(mutant.old, mutant.new), encoding="utf-8")
                     if suite_ok:
-                        wide = judge(mutant, *_pytest(work, suite))
+                        wide = judge(mutant, *_pytest(work, suite, timeout_s))
                         wide.verdict = {"survived": "survived", "broken": "broken", "timeout": "timeout"}.get(
                             wide.verdict, "suite-killed"
                         )
@@ -167,9 +171,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("campaign", choices=sorted(CAMPAIGNS))
     parser.add_argument("--only", nargs="*", default=[])
     parser.add_argument("--json", type=Path)
+    parser.add_argument("--timeout-s", type=int, default=TIMEOUT_S, help="limit of one pytest call")
     args = parser.parse_args(argv)
     mutants = [m for m in CAMPAIGNS[args.campaign] if not args.only or m.id in args.only]
-    outcomes, base = run(mutants, SUITES[args.campaign])
+    outcomes, base = run(mutants, SUITES[args.campaign], args.timeout_s)
     killed = sum(o.verdict == "killed" for o in outcomes)
     print(f"{killed}/{len(outcomes)} mutants killed")
     if args.json:

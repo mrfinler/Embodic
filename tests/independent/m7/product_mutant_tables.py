@@ -60,7 +60,8 @@ V3_02 = [
         "V3-02-07", "rule 5 widened: T-junctions across nets", "drc/items.py",
         "for e in (e for e in ends if e.path.layer == layer and e.path.net == net):",
         "for e in (e for e in ends if e.path.layer == layer):",
-        (D + "test_ut_drc_04_path_end_on_a_path_of_another_net_is_reported",),
+        (D + "test_ut_drc_04_path_end_on_a_path_of_another_net_is_reported",
+         D + "test_ut_drc_04_path_end_on_a_path_of_another_net_is_reported_when_the_trunk_net_has_two_paths"),
         r"set\(\) == |Right contains|Extra items in the right set",
     ),
     Mutant(
@@ -215,7 +216,9 @@ V3_05 = [
     Mutant(
         "V3-05-01", "SVG joint point taken from the next primitive's own coordinate", "io/svg_writer.py",
         "if here is None or math.dist(here, start) > 1e-6:", "if True:",
-        (E + "test_n21_joint_continuity.py::test_n21_svg_writes_one_point_for_every_copper_joint",),
+        (E + "test_n21_joint_continuity.py::test_n21_svg_writes_one_point_for_every_copper_joint",
+         E + "test_n21_joint_continuity.py::"
+         "test_n21_svg_joint_ends_that_round_apart_are_written_once_from_the_shared_coordinate"),
         r"joint|point|==|!=|assert",
     ),
     Mutant(

@@ -1,0 +1,165 @@
+{
+ "campaign": "V3-03",
+ "baseline": {
+  "imports": "/tmp/embodic-mut-_qdv19ix/checkout/src/embodic/__init__.py",
+  "killers": [
+   "tests/unit/generators/test_spiral_generate.py::test_default_track_length_matches_cf11",
+   "tests/independent/m2/test_spiral.py::test_end_arc_radii_of_every_turn_match_own_construction",
+   "tests/unit/generators/test_spiral_generate.py::test_every_path_is_continuous",
+   "tests/independent/m2/test_spiral.py::test_layer_y_is_the_reversed_mirror_of_layer_x_about_the_coil_centre_line",
+   "tests/independent/m2/test_spiral.py::test_centre_vias_sit_on_each_coil_centre_line_at_own_radius",
+   "tests/unit/generators/test_spiral_generate.py::test_eq01_centre_vias_sit_one_coil_pitch_of_2pi_over_q_apart",
+   "tests/independent/m2/test_spiral.py::test_every_path_is_continuous_within_1e_6"
+  ],
+  "seconds": 1.3,
+  "timeout_s": 2400,
+  "summary": "11 passed in 0.47s",
+  "suite": {
+   "tests": [
+    "tests/unit/generators",
+    "tests/unit/geometry",
+    "tests/independent/m2/test_spiral.py"
+   ],
+   "seconds": 241.6,
+   "passed": true,
+   "summary": "481 passed, 1 xfailed in 240.78s (0:04:00)"
+  }
+ },
+ "mutants": [
+  {
+   "id": "V3-03-01",
+   "defect": "turn 0 off by one pitch (lies on turn 1)",
+   "file": "generators/spiral/turns.py",
+   "old": "return self.gap_mm / 2 + self.trace_width_mm / 2 + t * self.side_pitch_mm",
+   "new": "return self.gap_mm / 2 + self.trace_width_mm / 2 + (t + 1 if t == 0 else t) * self.side_pitch_mm",
+   "killers": [
+    "tests/unit/generators/test_spiral_generate.py::test_default_track_length_matches_cf11",
+    "tests/independent/m2/test_spiral.py::test_end_arc_radii_of_every_turn_match_own_construction"
+   ],
+   "predicts": "\u00b1|approx|assert .* == |!="
+  },
+  {
+   "id": "V3-03-02",
+   "defect": "reversed arc keeps its start angle (a mirrored arc swept the wrong way)",
+   "file": "geometry/transforms.py",
+   "old": "return replace(p, start_rad=p.start_rad + p.sweep_rad, sweep_rad=-p.sweep_rad)",
+   "new": "return replace(p, start_rad=p.start_rad, sweep_rad=-p.sweep_rad)",
+   "killers": [
+    "tests/unit/generators/test_spiral_generate.py::test_every_path_is_continuous",
+    "tests/independent/m2/test_spiral.py::test_layer_y_is_the_reversed_mirror_of_layer_x_about_the_coil_centre_line"
+   ],
+   "predicts": "continu|gap|dist|==|<=|assert"
+  },
+  {
+   "id": "V3-03-03",
+   "defect": "centre vias moved 1e-6 mm in x",
+   "file": "generators/spiral/generate.py",
+   "old": "                x_mm=x_mm,\n                y_mm=y_mm,\n                drill_mm=design.vias.drill_mm,",
+   "new": "                x_mm=x_mm + (1e-6 if role is ViaRole.CENTRE else 0.0),\n                y_mm=y_mm,\n                drill_mm=design.vias.drill_mm,",
+   "killers": [
+    "tests/independent/m2/test_spiral.py::test_centre_vias_sit_on_each_coil_centre_line_at_own_radius",
+    "tests/unit/generators/test_spiral_generate.py::test_eq01_centre_vias_sit_one_coil_pitch_of_2pi_over_q_apart"
+   ],
+   "predicts": "\u00b1|approx|assert .* == |!="
+  },
+  {
+   "id": "V3-03-04",
+   "defect": "joint gap of 2e-6 mm before the lead to the centre via",
+   "file": "generators/spiral/artwork.py",
+   "old": "prims.append(lead(closing.lead_point, closing.centre_via, w, PrimitiveRole.LEAD))",
+   "new": "prims.append(lead((closing.lead_point[0] + 2e-6, closing.lead_point[1]), closing.centre_via, w, PrimitiveRole.LEAD))",
+   "killers": [
+    "tests/unit/generators/test_spiral_generate.py::test_every_path_is_continuous",
+    "tests/independent/m2/test_spiral.py::test_every_path_is_continuous_within_1e_6"
+   ],
+   "predicts": "continu|gap|1e-06|<=|assert"
+  },
+  {
+   "id": "V3-03-05",
+   "defect": "joint gap of 2e-6 mm at the start of every side line (V3-03-04 respelled)",
+   "file": "generators/spiral/artwork.py",
+   "old": "prims.append(_line(start, end, w, PrimitiveRole.SIDE))",
+   "new": "prims.append(_line((start[0] + 2e-6, start[1]), end, w, PrimitiveRole.SIDE))",
+   "killers": [
+    "tests/unit/generators/test_spiral_generate.py::test_every_path_is_continuous",
+    "tests/independent/m2/test_spiral.py::test_every_path_is_continuous_within_1e_6"
+   ],
+   "predicts": "continu|gap|1e-06|<=|assert"
+  }
+ ],
+ "outcomes": [
+  {
+   "id": "V3-03-01",
+   "verdict": "killed",
+   "seconds": 0.9,
+   "exit_code": 1,
+   "failed": [
+    "FAILED tests/unit/generators/test_spiral_generate.py::test_default_track_length_matches_cf11"
+   ],
+   "evidence": [
+    "E   assert 411.9691585648237 == 415.4808 \u00b1 5.0e-05",
+    "E",
+    "E     comparison failed",
+    "E     Obtained: 411.9691585648237",
+    "E     Expected: 415.4808 \u00b1 5.0e-05"
+   ]
+  },
+  {
+   "id": "V3-03-02",
+   "verdict": "killed",
+   "seconds": 1.0,
+   "exit_code": 1,
+   "failed": [
+    "FAILED tests/unit/generators/test_spiral_generate.py::test_every_path_is_continuous"
+   ],
+   "evidence": [
+    "E   assert False",
+    "E    +  where False = all(<generator object test_every_path_is_continuous.<locals>.<genexpr> at 0x7f36e53b52a0>)"
+   ]
+  },
+  {
+   "id": "V3-03-03",
+   "verdict": "killed-other",
+   "seconds": 1.0,
+   "exit_code": 1,
+   "failed": [
+    "FAILED tests/independent/m2/test_spiral.py::test_centre_vias_sit_on_each_coil_centre_line_at_own_radius[spiral_12c16p_default]"
+   ],
+   "evidence": [
+    "E   assert 1e-06 <= 1e-09",
+    "E    +  where 1e-06 = min(<generator object test_centre_vias_sit_on_each_coil_centre_line_at_own_radius.<locals>.<genexpr> at 0x7f743268f840>)"
+   ]
+  },
+  {
+   "id": "V3-03-04",
+   "verdict": "suite-killed",
+   "seconds": 453.5,
+   "exit_code": 1,
+   "failed": [
+    "FAILED tests/unit/generators/test_spiral_pairs.py::test_ut_geo_26_each_group_runs_from_its_ring_via_to_its_centre_and_out_to_the_next"
+   ],
+   "evidence": [
+    "E   AssertionError: assert 8.688518069400654e-08 <= 1e-09",
+    "E    +  where 8.688518069400654e-08 = <built-in function dist>((30.671016894839063, 1.3336876082863967), (30.671016898613583, 1.3336875214832422))",
+    "E    +    where <built-in function dist> = math.dist",
+    "E    +    and   (30.671016894839063, 1.3336876082863967) = end_point()",
+    "E    +      where end_point = Line(x1_mm=26.999844761938327, y1_mm=0.35000000000000053, x2_mm=30.671016894839063, y2_mm=1.3336876082863967, width_mm=0.5, role=<PrimitiveRole.SIDE: 'side'>).end_point",
+    "E    +    and   (30.671016898613583, 1.3336875214832422) = start_point()",
+    "E    +      where start_point = Arc(cx_mm=0.0, cy_mm=0.0, r_mm=30.7, start_rad=0.04345626646161722, sweep_rad=-0.04345626646161722, width_mm=0.5, role=<PrimitiveRole.LEAD: 'lead'>).start_point"
+   ]
+  },
+  {
+   "id": "V3-03-05",
+   "verdict": "killed",
+   "seconds": 1.1,
+   "exit_code": 1,
+   "failed": [
+    "FAILED tests/unit/generators/test_spiral_generate.py::test_every_path_is_continuous"
+   ],
+   "evidence": [
+    "E   assert False",
+    "E    +  where False = all(<generator object test_every_path_is_continuous.<locals>.<genexpr> at 0x7f7f75d33d80>)"
+   ]
+  }
+ ]
+}
