@@ -5,7 +5,9 @@ Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5
 Date 2026-10-04, revised 2026-10-09 (U-S4d: sections 3.3, 3.4, 5 and 8 follow the rulings of `m4_review.md`),
 revised 2026-10-09 (U-S4e: sections 3.3, 4 and 5 follow rulings b, e, f and h of `m4_review_2.md`),
 revised 2026-10-12 (U-S4h: sections 3.1, 5 and 8 follow rulings m and n of `m4_review_2.md` section 8),
-revised 2026-10-20 (U-S16: section 3.3.1 adds the layer cue and the land shapes, DEF-UV16-02 and DEF-UV16-03).
+revised 2026-10-20 (U-S16: section 3.3.1 adds the layer cue and the land shapes, DEF-UV16-02 and DEF-UV16-03),
+revised 2026-10-22 (U-S18, D-094b: section 10 drops Ctrl+, and section 6 drops the Help button Settings, because no
+settings window is in scope and the ruling keeps keys that the app does not bind out of the keyboard map).
 Supersedes `docs/phase1/design/design_spec_draft.md` for everything Phase 2 builds. Companion files:
 
 - `screens.md` gives every screen with its widget table and state rules.
@@ -326,7 +328,6 @@ succeeded for the current input; "has reference" means a reference design is sto
 | Help | `btn-guide` | `guide` | Guide | large | F1 | Design guide and reference. | always |
 | Help | `btn-equations` | `equations` | Equations | small | none | Equation register with sources. | always |
 | Help | `btn-shortcuts` | `shortcuts` | Shortcuts | small | Ctrl+/ | Keyboard shortcuts. | always |
-| Help | `btn-settings` | `settings` | Settings | small | Ctrl+, | Theme, units and display. | always |
 
 Rules:
 
@@ -437,7 +438,7 @@ Qt `objectName` equals the Phase 1 id without `#`. `param-*` ids are kept unchan
 | Global | Alt+5, Alt+6 | Results, DRC |
 | Global | Ctrl+P, Ctrl+E | Report, Export all files |
 | Global | Ctrl+Shift+T | Switch theme |
-| Global | F1, Ctrl+/, Ctrl+, | Guide, Shortcuts, Settings |
+| Global | F1, Ctrl+/ | Guide, Shortcuts |
 | Global | F6, Shift+F6 | Next or previous region |
 | Global | Esc | Close dialog or menu; in a field, revert the uncommitted value |
 | Numeric field | Up, Down, Shift+Up, Shift+Down | Plus or minus one step, ten steps |
@@ -449,6 +450,9 @@ Qt `objectName` equals the Phase 1 id without `#`. `param-*` ids are kept unchan
 | Canvas | Page Up, Page Down | Previous or next item of `board-picker`, one board per phase only (`screens.md` section 4.1, assumption) |
 | Canvas | A, B, C (Shift), Esc | Highlight phase, clear. Shift+C highlights phase C because C alone toggles current arrows. |
 | Toolstrip, tabs, tables | Arrow keys, Home, End | Move inside the widget; Tab leaves it |
+
+D-094b rules that the guide and this map list only keys that the app binds. Ctrl+, (Settings) left the map under
+that ruling, because no settings window is in scope (revision 2026-10-22, U-S18).
 
 Single-letter keys work only while the canvas has focus (WCAG 2.1.4). The mouse wheel never changes a numeric field:
 Agent 3 sets `Qt.StrongFocus` and ignores wheel events on `QAbstractSpinBox` and `QComboBox` unless they have focus
