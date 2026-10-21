@@ -2,8 +2,8 @@
  {
   "req": "REQ-N-07",
   "test_id": "PK-06",
-  "record": "tests/independent/m5/records/PK-06_walkthrough_672297e.md",
-  "embodic_version": "0.0.6 (candidate wheel ad9e02c0 of main 672297e, U-V28; docs/phase3/verification/manual_records_0.0.6_672297e.md)",
+  "record": "tests/independent/m5/records/PK-06_walkthrough_2bfca49.md",
+  "embodic_version": "0.0.6 (release wheel fdb89189 of tag v0.0.6 on 2bfca49, D-096, U-V29; docs/phase3/verification/manual_records_0.0.6_release.md)",
   "result": "passed"
  },
  {
@@ -16,15 +16,15 @@
  {
   "req": "REQ-F-11",
   "test_id": "OR-11",
-  "record": "tests/independent/m6/records/OR-11_OR-12_672297e.md",
-  "embodic_version": "0.0.6 (candidate wheel ad9e02c0 of main 672297e, U-V28; docs/phase3/verification/manual_records_0.0.6_672297e.md)",
+  "record": "tests/independent/m6/records/OR-11_OR-12_2bfca49.md",
+  "embodic_version": "0.0.6 (release wheel fdb89189 of tag v0.0.6 on 2bfca49, D-096, U-V29; docs/phase3/verification/manual_records_0.0.6_release.md)",
   "result": "passed"
  },
  {
   "req": "REQ-F-11",
   "test_id": "OR-12",
-  "record": "tests/independent/m6/records/OR-11_OR-12_672297e.md",
-  "embodic_version": "0.0.6 (candidate wheel ad9e02c0 of main 672297e, U-V28; docs/phase3/verification/manual_records_0.0.6_672297e.md)",
+  "record": "tests/independent/m6/records/OR-11_OR-12_2bfca49.md",
+  "embodic_version": "0.0.6 (release wheel fdb89189 of tag v0.0.6 on 2bfca49, D-096, U-V29; docs/phase3/verification/manual_records_0.0.6_release.md)",
   "result": "passed"
  },
  {

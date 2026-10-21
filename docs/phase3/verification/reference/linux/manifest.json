@@ -1,6 +1,6 @@
 {
- "embodic": "0.0.5",
- "embodic_source_sha256": "08d25a7863691cbe08ab769e556679b90d3478def7bab9d477bde1b5a67e83df",
+ "embodic": "0.0.6",
+ "embodic_source_sha256": "db089e7198654e1b07156bd08d4d590ba0173bd3f55ef9ee1e83ae86b1b275cb",
  "numpy": "2.4.6",
  "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
  "python": "3.11.17",
