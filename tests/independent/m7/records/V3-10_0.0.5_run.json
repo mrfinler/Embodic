@@ -1,0 +1,177 @@
+[
+ {
+  "example": "serpentine_16p_example",
+  "topology": "serpentine",
+  "ke_own": 0.10938876169730907,
+  "ke_product": 0.10938805037664341,
+  "ke_rel": -6.502685053089152e-06,
+  "ke_pass": true,
+  "ke_own_continuous": 0.10939615004657534,
+  "ke_rel_continuous": -7.403980787690223e-05,
+  "drc": [
+   {
+    "board": 0,
+    "engine_total": 0,
+    "engine_listed": 0,
+    "engine_pairs": 0,
+    "engine_non_pair_kinds": [],
+    "brute_pairs": 0,
+    "undecided": 0,
+    "engine_only": [],
+    "brute_only": [],
+    "kinds_differ": [],
+    "sets_equal": true
+   }
+  ],
+  "winding": null
+ },
+ {
+  "example": "spiral_12c10p_d08",
+  "topology": "spiral",
+  "ke_own": 0.03087757445822378,
+  "ke_product": 0.030876813939944608,
+  "ke_rel": -2.4630117245849625e-05,
+  "ke_pass": true,
+  "ke_own_continuous": 0.030877996871710965,
+  "ke_rel_continuous": -3.830986094310873e-05,
+  "drc": [
+   {
+    "board": 0,
+    "engine_total": 0,
+    "engine_listed": 0,
+    "engine_pairs": 0,
+    "engine_non_pair_kinds": [],
+    "brute_pairs": 0,
+    "undecided": 0,
+    "engine_only": [],
+    "brute_only": [],
+    "kinds_differ": [],
+    "sets_equal": true
+   }
+  ],
+  "winding": {
+   "coils": 12,
+   "poles": 10,
+   "phases_equal": true,
+   "pattern": "AabBCcaABbcC",
+   "kw_1_own": 0.9330127018922194,
+   "kw_1_product": 0.9330127018922193,
+   "kw_harmonics": [
+    1,
+    3,
+    5,
+    7
+   ],
+   "kw_worst_abs": 4.579669976578771e-16,
+   "kw_pass": true
+  }
+ },
+ {
+  "example": "spiral_12c14p",
+  "topology": "spiral",
+  "ke_own": 0.0398980326372832,
+  "ke_product": 0.0398979361844729,
+  "ke_rel": -2.417482866334808e-06,
+  "ke_pass": true,
+  "ke_own_continuous": 0.03990410049071341,
+  "ke_rel_continuous": -0.00015447801515910964,
+  "drc": [
+   {
+    "board": 0,
+    "engine_total": 0,
+    "engine_listed": 0,
+    "engine_pairs": 0,
+    "engine_non_pair_kinds": [],
+    "brute_pairs": 0,
+    "undecided": 0,
+    "engine_only": [],
+    "brute_only": [],
+    "kinds_differ": [],
+    "sets_equal": true
+   }
+  ],
+  "winding": {
+   "coils": 12,
+   "poles": 14,
+   "phases_equal": true,
+   "pattern": "ACcbBAacCBba",
+   "kw_1_own": 0.9330127018922194,
+   "kw_1_product": 0.9330127018922194,
+   "kw_harmonics": [
+    1,
+    3,
+    5,
+    7
+   ],
+   "kw_worst_abs": 4.163336342344337e-16,
+   "kw_pass": true
+  }
+ },
+ {
+  "example": "spiral_12c16p_default",
+  "topology": "spiral",
+  "ke_own": 0.04590787277311809,
+  "ke_product": 0.045907323476548426,
+  "ke_rel": -1.1965193255192297e-05,
+  "ke_pass": true,
+  "ke_own_continuous": 0.04590787277311809,
+  "ke_rel_continuous": -1.1965193255192297e-05,
+  "drc": [
+   {
+    "board": 0,
+    "engine_total": 0,
+    "engine_listed": 0,
+    "engine_pairs": 0,
+    "engine_non_pair_kinds": [],
+    "brute_pairs": 0,
+    "undecided": 0,
+    "engine_only": [],
+    "brute_only": [],
+    "kinds_differ": [],
+    "sets_equal": true
+   }
+  ],
+  "winding": {
+   "coils": 12,
+   "poles": 16,
+   "phases_equal": true,
+   "pattern": "ACBACBACBACB",
+   "kw_1_own": 0.8660254037844387,
+   "kw_1_product": 0.8660254037844387,
+   "kw_harmonics": [
+    1,
+    3,
+    5,
+    7
+   ],
+   "kw_worst_abs": 8.881784197001252e-16,
+   "kw_pass": true
+  }
+ },
+ {
+  "example": "wave_16p_example",
+  "topology": "wave",
+  "ke_own": 0.05300659515335389,
+  "ke_product": 0.05300629480555373,
+  "ke_rel": -5.666234537238246e-06,
+  "ke_pass": true,
+  "ke_own_continuous": 0.05300743676445002,
+  "ke_rel_continuous": -2.1543371383270227e-05,
+  "drc": [
+   {
+    "board": 0,
+    "engine_total": 186,
+    "engine_listed": 186,
+    "engine_pairs": 186,
+    "engine_non_pair_kinds": [],
+    "brute_pairs": 186,
+    "undecided": 0,
+    "engine_only": [],
+    "brute_only": [],
+    "kinds_differ": [],
+    "sets_equal": true
+   }
+  ],
+  "winding": null
+ }
+]
