@@ -406,3 +406,23 @@ to Phase 5. So the 0.0.4 audit gives UT-GEO-19 `name` evidence from tests that d
 Status `verified` by reading. Expected: U-M8y renames the three tests and the series DRC test to UT-GEO-26 and edits
 the two docstrings (`U-V19_id_map.md`); Agent 6 restates UT-GEO-19 as the M4 refusal of REQ-F-03 (d) or moves it to
 Phase 5. Owner Agent 3 and Agent 6. Not fixed here.
+
+## DEF-UV21-01 (REQ-N-10 and REQ-T-09, must; TR-01 contract): TR-01 says nothing about a failed manual record
+
+Release 0.0.5 (42074f2), `docs/phase3/verification/manual_records_0.0.5_release.md`. `tools/trace_matrix.py` accepts a
+record with `result` `"failed"` as valid, does not count it, and does not print it: `counted_records` lists as stale
+only `passed` records. With Fable's failed PF-01 record (REQ-N-01, DEF-W-15) in the index, the release gate's TR-01 line
+is unchanged and exits 0, because 20 Linux tests that carry REQ-N-01 passed.
+
+```
+python3 -I tools/trace_matrix.py --report <release_0.0.5>/req_report.json <release_0.0.5>/req_report_latency.json \
+    --fail-untested-through M5 --manual-records <index with the failed PF-01 entry>
+# manual: 6; invalid manual records: 0; TR-02 unmarked tests: 0; unknown REQ IDs: 0; untested due: 0 (exit 0)
+```
+
+Two parts. (1) interfaces.md section 3.2 has no rule for a current failed record, so a must row whose acceptance
+failed on the named machine passes TR-01 unseen whenever another test carries its marker (spec gap). (2) Section 3.2
+says a stale record is listed "whatever its result"; the code lists only passed ones (code against spec). Status
+`verified` by running and reading. The failure is visible in `req_audit.md` (`fail` evidence, row `failed`). Expected:
+Agent 6 states what TR-01 does with a failed record (print it with its path at the least; whether it fails the gate is
+Fable's call), and Agent 3 makes the code follow both sentences. Owner Agent 6 and Agent 3. Not fixed here.
