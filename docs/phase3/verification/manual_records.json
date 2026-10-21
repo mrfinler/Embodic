@@ -2,43 +2,43 @@
  {
   "req": "REQ-N-07",
   "test_id": "PK-06",
-  "record": "tests/independent/m5/records/PK-06_walkthrough_6d50d0b.md",
-  "embodic_version": "0.0.6 (candidate wheel 5d891a26 of main 6d50d0b, U-V27; docs/phase3/verification/manual_records_0.0.6.md)",
+  "record": "tests/independent/m5/records/PK-06_walkthrough_672297e.md",
+  "embodic_version": "0.0.6 (candidate wheel ad9e02c0 of main 672297e, U-V28; docs/phase3/verification/manual_records_0.0.6_672297e.md)",
   "result": "passed"
  },
  {
   "req": "REQ-N-14",
   "test_id": "AX-05",
   "record": "tests/independent/m4/records/AX-05_6d50d0b.md",
-  "embodic_version": "0.0.6 (source tree of main 6d50d0b, U-V27; docs/phase3/verification/manual_records_0.0.6.md)",
+  "embodic_version": "0.0.6 (AX-05 record of 6d50d0b stands for candidate 672297e under D-061d: subject unchanged, U-V28; docs/phase3/verification/manual_records_0.0.6_672297e.md)",
   "result": "passed"
  },
  {
   "req": "REQ-F-11",
   "test_id": "OR-11",
-  "record": "tests/independent/m6/records/OR-11_OR-12_6d50d0b.md",
-  "embodic_version": "0.0.6 (candidate wheel 5d891a26 of main 6d50d0b, U-V27; docs/phase3/verification/manual_records_0.0.6.md)",
+  "record": "tests/independent/m6/records/OR-11_OR-12_672297e.md",
+  "embodic_version": "0.0.6 (candidate wheel ad9e02c0 of main 672297e, U-V28; docs/phase3/verification/manual_records_0.0.6_672297e.md)",
   "result": "passed"
  },
  {
   "req": "REQ-F-11",
   "test_id": "OR-12",
-  "record": "tests/independent/m6/records/OR-11_OR-12_6d50d0b.md",
-  "embodic_version": "0.0.6 (candidate wheel 5d891a26 of main 6d50d0b, U-V27; docs/phase3/verification/manual_records_0.0.6.md)",
+  "record": "tests/independent/m6/records/OR-11_OR-12_672297e.md",
+  "embodic_version": "0.0.6 (candidate wheel ad9e02c0 of main 672297e, U-V28; docs/phase3/verification/manual_records_0.0.6_672297e.md)",
   "result": "passed"
  },
  {
   "req": "REQ-L-01",
   "test_id": "LG-01",
-  "record": "tests/independent/m4/records/LG-01_word_review_6d50d0b.md",
-  "embodic_version": "0.0.6 (source tree of main 6d50d0b, U-V27; docs/phase3/verification/manual_records_0.0.6.md)",
+  "record": "tests/independent/m4/records/LG-01_word_review_672297e.md",
+  "embodic_version": "0.0.6 (source tree of main 672297e, corpus equal to wheel ad9e02c0, U-V28; docs/phase3/verification/manual_records_0.0.6_672297e.md)",
   "result": "passed"
  },
  {
   "req": "REQ-T-11",
   "test_id": "LG-04",
-  "record": "tests/independent/m4/records/LG-04_T-11_reviewer_6d50d0b.md",
-  "embodic_version": "0.0.6 (source tree of main 6d50d0b, U-V27; docs/phase3/verification/manual_records_0.0.6.md)",
+  "record": "tests/independent/m4/records/LG-04_T-11_reviewer_672297e.md",
+  "embodic_version": "0.0.6 (wheel ad9e02c0 and source tree of main 672297e, U-V28; docs/phase3/verification/manual_records_0.0.6_672297e.md)",
   "result": "passed"
  },
  {

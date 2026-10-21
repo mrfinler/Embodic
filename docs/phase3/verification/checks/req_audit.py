@@ -118,6 +118,10 @@ REDONE = {
     f"{_M6}OR-11_OR-12_42074f2.md": f"{_M6}OR-11_OR-12_6d50d0b.md",
     f"{_M4}LG-01_word_review_c25d8a9.md": f"{_M4}LG-01_word_review_6d50d0b.md",
     f"{_M4}LG-04_T-11_reviewer_99d355d.md": f"{_M4}LG-04_T-11_reviewer_6d50d0b.md",
+    f"{_M5}PK-06_walkthrough_6d50d0b.md": f"{_M5}PK-06_walkthrough_672297e.md",
+    f"{_M6}OR-11_OR-12_6d50d0b.md": f"{_M6}OR-11_OR-12_672297e.md",
+    f"{_M4}LG-01_word_review_6d50d0b.md": f"{_M4}LG-01_word_review_672297e.md",
+    f"{_M4}LG-04_T-11_reviewer_6d50d0b.md": f"{_M4}LG-04_T-11_reviewer_672297e.md",
 }
 
 

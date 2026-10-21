@@ -1,0 +1,758 @@
+Prepared by: Agent 4 - Independent Verificator - model: claude-opus-5-5 (unit U-V28, 2026-10-21 UTC). Outputs behind manual_records_0.0.6_672297e.md, run in worktree unit/U-V28 (main 672297e).
+
+=== 1. python -I tests/independent/m7/v14_record_currency.py --index <index of U-V27, 6d50d0b> --target 672297e --verbose
+[0] REQ-N-07 PK-06 tests/independent/m5/records/PK-06_walkthrough_6d50d0b.md (passed)
+    build: wheel 5d891a26 that Agent 4 built from 6d50d0b (record, Inputs); compare wheels with v21_wheel_diff.py
+    files: README.md, docs/install/INSTALL.md, requirements/py311.txt, pyproject.toml, src/embodic, resources
+    git diff --stat 6d50d0b..672297e: 1 file changed, 2 insertions(+), 2 deletions(-)
+    verdict: superseded; redone by Agent 4 (Linux walkthrough in the container)
+      file README.md
+      file docs/install/INSTALL.md
+      file requirements/py311.txt
+      file pyproject.toml
+      file src/embodic
+      file resources
+       src/embodic/ui/strings/results.py | 4 ++--
+       1 file changed, 2 insertions(+), 2 deletions(-)
+[1] REQ-N-14 AX-05 tests/independent/m4/records/AX-05_6d50d0b.md (passed)
+    build: worktree unit/U-V27, src and resources equal to 6d50d0b, source tree (record l.5-7)
+    files: resources/examples, resources/themes + 125 imported modules
+    git diff --stat 6d50d0b..672297e: no change
+    verdict: stands
+      file resources/examples
+      file resources/themes
+      file src/embodic/__init__.py
+      file src/embodic/api.py
+      file src/embodic/drc/__init__.py
+      file src/embodic/drc/engine.py
+      file src/embodic/drc/items.py
+      file src/embodic/drc/kernels.py
+      file src/embodic/drc/report.py
+      file src/embodic/drc/symmetry.py
+      file src/embodic/errors/__init__.py
+      file src/embodic/errors/catalogue/__init__.py
+      file src/embodic/errors/catalogue/base.py
+      file src/embodic/errors/catalogue/cli.py
+      file src/embodic/errors/catalogue/drc.py
+      file src/embodic/errors/catalogue/exporters.py
+      file src/embodic/errors/catalogue/generators.py
+      file src/embodic/errors/catalogue/model.py
+      file src/embodic/errors/catalogue/physics.py
+      file src/embodic/errors/catalogue/project.py
+      file src/embodic/errors/catalogue/results.py
+      file src/embodic/errors/catalogue/serpentine.py
+      file src/embodic/errors/catalogue/wave.py
+      file src/embodic/errors/catalogue/winding.py
+      file src/embodic/generators/__init__.py
+      file src/embodic/generators/base.py
+      file src/embodic/generators/fasteners.py
+      file src/embodic/generators/serpentine/__init__.py
+      file src/embodic/generators/serpentine/canonical.py
+      file src/embodic/generators/serpentine/corners.py
+      file src/embodic/generators/serpentine/derived.py
+      file src/embodic/generators/serpentine/fit.py
+      file src/embodic/generators/serpentine/frame.py
+      file src/embodic/generators/serpentine/generate.py
+      file src/embodic/generators/serpentine/interconnect.py
+      file src/embodic/generators/serpentine/plan.py
+      file src/embodic/generators/spiral/__init__.py
+      file src/embodic/generators/spiral/artwork.py
+      file src/embodic/generators/spiral/chain.py
+      file src/embodic/generators/spiral/derived.py
+      file src/embodic/generators/spiral/fillets.py
+      file src/embodic/generators/spiral/generate.py
+      file src/embodic/generators/spiral/interconnect.py
+      file src/embodic/generators/spiral/series.py
+      file src/embodic/generators/spiral/turns.py
+      file src/embodic/generators/wave/__init__.py
+      file src/embodic/generators/wave/assemble.py
+      file src/embodic/generators/wave/build.py
+      file src/embodic/generators/wave/derive.py
+      file src/embodic/generators/wave/fillet.py
+      file src/embodic/generators/wave/generate.py
+      file src/embodic/generators/wave/interconnect.py
+      file src/embodic/generators/wave/involute.py
+      file src/embodic/generators/wave/overlap.py
+      file src/embodic/generators/wave/track.py
+      file src/embodic/generators/wave/xprim.py
+      file src/embodic/geometry/__init__.py
+      file src/embodic/geometry/arrays.py
+      file src/embodic/geometry/circuit.py
+      file src/embodic/geometry/details.py
+      file src/embodic/geometry/discretise.py
+      file src/embodic/geometry/distance.py
+      file src/embodic/geometry/fasteners.py
+      file src/embodic/geometry/hashing.py
+      file src/embodic/geometry/labels.py
+      file src/embodic/geometry/layout.py
+      file src/embodic/geometry/marks.py
+      file src/embodic/geometry/outline.py
+      file src/embodic/geometry/paths.py
+      file src/embodic/geometry/primitives.py
+      file src/embodic/geometry/transforms.py
+      file src/embodic/io/__init__.py
+      file src/embodic/io/canonical.py
+      file src/embodic/io/examples.py
+      file src/embodic/io/exporters.py
+      file src/embodic/io/migrations.py
+      file src/embodic/io/pdf_writer.py
+      file src/embodic/io/project.py
+      file src/embodic/io/svg_writer.py
+      file src/embodic/model/__init__.py
+      file src/embodic/model/analysis_options.py
+      file src/embodic/model/connection.py
+      file src/embodic/model/design.py
+      file src/embodic/model/draft.py
+      file src/embodic/model/drc_rules.py
+      file src/embodic/model/fields.py
+      file src/embodic/model/layers.py
+      file src/embodic/model/materials.py
+      file src/embodic/model/operating.py
+      file src/embodic/model/outline.py
+      file src/embodic/model/provenance.py
+      file src/embodic/model/rotor.py
+      file src/embodic/model/schema.py
+      file src/embodic/model/stackup.py
+      file src/embodic/model/validate.py
+      file src/embodic/model/vias.py
+      file src/embodic/model/vocabulary.py
+      file src/embodic/model/winding_specs.py
+      file src/embodic/outcome.py
+      file src/embodic/paths.py
+      file src/embodic/physics/__init__.py
+      file src/embodic/physics/analyse.py
+      file src/embodic/physics/circuit.py
+      file src/embodic/physics/constants.py
+      file src/embodic/physics/drive.py
+      file src/embodic/physics/emf.py
+      file src/embodic/physics/estimates.py
+      file src/embodic/physics/field.py
+      file src/embodic/physics/interconnect.py
+      file src/embodic/physics/losses.py
+      file src/embodic/physics/magnets.py
+      file src/embodic/physics/resistance.py
+      file src/embodic/physics/thermal.py
+      file src/embodic/physics/waveform.py
+      file src/embodic/results/__init__.py
+      file src/embodic/results/analysis_result.py
+      file src/embodic/results/formatting.py
+      file src/embodic/results/labels.py
+      file src/embodic/results/registry.py
+      file src/embodic/results/status.py
+      file src/embodic/results/traceable.py
+      file src/embodic/units.py
+      file src/embodic/winding/__init__.py
+      file src/embodic/winding/feasibility.py
+      file src/embodic/winding/plan.py
+      file src/embodic/winding/star_of_slots.py
+      file src/embodic/winding/winding_factors.py
+[2] REQ-F-11 OR-11 tests/independent/m6/records/OR-11_OR-12_6d50d0b.md (passed)
+    build: wheel 5d891a26 of 6d50d0b in the PK-06 run 1 venv (record, What ran); compare wheels with v21_wheel_diff.py
+    files: resources/evidence/equations.v1.json, docs/phase2/engineering/oracle_cases.json + 120 imported modules
+    git diff --stat 6d50d0b..672297e: no change
+    verdict: stands
+      file resources/evidence/equations.v1.json
+      file docs/phase2/engineering/oracle_cases.json
+      file src/embodic/__init__.py
+      file src/embodic/api.py
+      file src/embodic/drc/__init__.py
+      file src/embodic/drc/engine.py
+      file src/embodic/drc/items.py
+      file src/embodic/drc/kernels.py
+      file src/embodic/drc/report.py
+      file src/embodic/drc/symmetry.py
+      file src/embodic/errors/__init__.py
+      file src/embodic/errors/catalogue/__init__.py
+      file src/embodic/errors/catalogue/base.py
+      file src/embodic/errors/catalogue/cli.py
+      file src/embodic/errors/catalogue/drc.py
+      file src/embodic/errors/catalogue/exporters.py
+      file src/embodic/errors/catalogue/generators.py
+      file src/embodic/errors/catalogue/model.py
+      file src/embodic/errors/catalogue/physics.py
+      file src/embodic/errors/catalogue/project.py
+      file src/embodic/errors/catalogue/results.py
+      file src/embodic/errors/catalogue/serpentine.py
+      file src/embodic/errors/catalogue/wave.py
+      file src/embodic/errors/catalogue/winding.py
+      file src/embodic/generators/__init__.py
+      file src/embodic/generators/base.py
+      file src/embodic/generators/fasteners.py
+      file src/embodic/generators/serpentine/__init__.py
+      file src/embodic/generators/serpentine/canonical.py
+      file src/embodic/generators/serpentine/corners.py
+      file src/embodic/generators/serpentine/derived.py
+      file src/embodic/generators/serpentine/fit.py
+      file src/embodic/generators/serpentine/frame.py
+      file src/embodic/generators/serpentine/generate.py
+      file src/embodic/generators/serpentine/interconnect.py
+      file src/embodic/generators/serpentine/plan.py
+      file src/embodic/generators/spiral/__init__.py
+      file src/embodic/generators/spiral/artwork.py
+      file src/embodic/generators/spiral/chain.py
+      file src/embodic/generators/spiral/derived.py
+      file src/embodic/generators/spiral/fillets.py
+      file src/embodic/generators/spiral/generate.py
+      file src/embodic/generators/spiral/interconnect.py
+      file src/embodic/generators/spiral/series.py
+      file src/embodic/generators/spiral/turns.py
+      file src/embodic/generators/wave/__init__.py
+      file src/embodic/generators/wave/assemble.py
+      file src/embodic/generators/wave/build.py
+      file src/embodic/generators/wave/derive.py
+      file src/embodic/generators/wave/fillet.py
+      file src/embodic/generators/wave/generate.py
+      file src/embodic/generators/wave/interconnect.py
+      file src/embodic/generators/wave/involute.py
+      file src/embodic/generators/wave/overlap.py
+      file src/embodic/generators/wave/track.py
+      file src/embodic/generators/wave/xprim.py
+      file src/embodic/geometry/__init__.py
+      file src/embodic/geometry/arrays.py
+      file src/embodic/geometry/circuit.py
+      file src/embodic/geometry/details.py
+      file src/embodic/geometry/discretise.py
+      file src/embodic/geometry/distance.py
+      file src/embodic/geometry/fasteners.py
+      file src/embodic/geometry/hashing.py
+      file src/embodic/geometry/layout.py
+      file src/embodic/geometry/outline.py
+      file src/embodic/geometry/paths.py
+      file src/embodic/geometry/primitives.py
+      file src/embodic/geometry/transforms.py
+      file src/embodic/io/__init__.py
+      file src/embodic/io/canonical.py
+      file src/embodic/io/examples.py
+      file src/embodic/io/migrations.py
+      file src/embodic/io/project.py
+      file src/embodic/model/__init__.py
+      file src/embodic/model/analysis_options.py
+      file src/embodic/model/connection.py
+      file src/embodic/model/design.py
+      file src/embodic/model/draft.py
+      file src/embodic/model/drc_rules.py
+      file src/embodic/model/fields.py
+      file src/embodic/model/layers.py
+      file src/embodic/model/materials.py
+      file src/embodic/model/operating.py
+      file src/embodic/model/outline.py
+      file src/embodic/model/provenance.py
+      file src/embodic/model/rotor.py
+      file src/embodic/model/schema.py
+      file src/embodic/model/stackup.py
+      file src/embodic/model/validate.py
+      file src/embodic/model/vias.py
+      file src/embodic/model/vocabulary.py
+      file src/embodic/model/winding_specs.py
+      file src/embodic/outcome.py
+      file src/embodic/paths.py
+      file src/embodic/physics/__init__.py
+      file src/embodic/physics/analyse.py
+      file src/embodic/physics/circuit.py
+      file src/embodic/physics/constants.py
+      file src/embodic/physics/drive.py
+      file src/embodic/physics/emf.py
+      file src/embodic/physics/estimates.py
+      file src/embodic/physics/field.py
+      file src/embodic/physics/interconnect.py
+      file src/embodic/physics/losses.py
+      file src/embodic/physics/magnets.py
+      file src/embodic/physics/resistance.py
+      file src/embodic/physics/thermal.py
+      file src/embodic/physics/waveform.py
+      file src/embodic/results/__init__.py
+      file src/embodic/results/analysis_result.py
+      file src/embodic/results/formatting.py
+      file src/embodic/results/labels.py
+      file src/embodic/results/registry.py
+      file src/embodic/results/status.py
+      file src/embodic/results/traceable.py
+      file src/embodic/units.py
+      file src/embodic/winding/__init__.py
+      file src/embodic/winding/feasibility.py
+      file src/embodic/winding/plan.py
+      file src/embodic/winding/star_of_slots.py
+      file src/embodic/winding/winding_factors.py
+[3] REQ-F-11 OR-12 tests/independent/m6/records/OR-11_OR-12_6d50d0b.md (passed)
+    build: wheel 5d891a26 of 6d50d0b in the PK-06 run 1 venv (record, What ran); compare wheels with v21_wheel_diff.py
+    files: resources/evidence/equations.v1.json, docs/phase2/engineering/oracle_cases.json + 120 imported modules
+    git diff --stat 6d50d0b..672297e: no change
+    verdict: stands
+      file resources/evidence/equations.v1.json
+      file docs/phase2/engineering/oracle_cases.json
+      file src/embodic/__init__.py
+      file src/embodic/api.py
+      file src/embodic/drc/__init__.py
+      file src/embodic/drc/engine.py
+      file src/embodic/drc/items.py
+      file src/embodic/drc/kernels.py
+      file src/embodic/drc/report.py
+      file src/embodic/drc/symmetry.py
+      file src/embodic/errors/__init__.py
+      file src/embodic/errors/catalogue/__init__.py
+      file src/embodic/errors/catalogue/base.py
+      file src/embodic/errors/catalogue/cli.py
+      file src/embodic/errors/catalogue/drc.py
+      file src/embodic/errors/catalogue/exporters.py
+      file src/embodic/errors/catalogue/generators.py
+      file src/embodic/errors/catalogue/model.py
+      file src/embodic/errors/catalogue/physics.py
+      file src/embodic/errors/catalogue/project.py
+      file src/embodic/errors/catalogue/results.py
+      file src/embodic/errors/catalogue/serpentine.py
+      file src/embodic/errors/catalogue/wave.py
+      file src/embodic/errors/catalogue/winding.py
+      file src/embodic/generators/__init__.py
+      file src/embodic/generators/base.py
+      file src/embodic/generators/fasteners.py
+      file src/embodic/generators/serpentine/__init__.py
+      file src/embodic/generators/serpentine/canonical.py
+      file src/embodic/generators/serpentine/corners.py
+      file src/embodic/generators/serpentine/derived.py
+      file src/embodic/generators/serpentine/fit.py
+      file src/embodic/generators/serpentine/frame.py
+      file src/embodic/generators/serpentine/generate.py
+      file src/embodic/generators/serpentine/interconnect.py
+      file src/embodic/generators/serpentine/plan.py
+      file src/embodic/generators/spiral/__init__.py
+      file src/embodic/generators/spiral/artwork.py
+      file src/embodic/generators/spiral/chain.py
+      file src/embodic/generators/spiral/derived.py
+      file src/embodic/generators/spiral/fillets.py
+      file src/embodic/generators/spiral/generate.py
+      file src/embodic/generators/spiral/interconnect.py
+      file src/embodic/generators/spiral/series.py
+      file src/embodic/generators/spiral/turns.py
+      file src/embodic/generators/wave/__init__.py
+      file src/embodic/generators/wave/assemble.py
+      file src/embodic/generators/wave/build.py
+      file src/embodic/generators/wave/derive.py
+      file src/embodic/generators/wave/fillet.py
+      file src/embodic/generators/wave/generate.py
+      file src/embodic/generators/wave/interconnect.py
+      file src/embodic/generators/wave/involute.py
+      file src/embodic/generators/wave/overlap.py
+      file src/embodic/generators/wave/track.py
+      file src/embodic/generators/wave/xprim.py
+      file src/embodic/geometry/__init__.py
+      file src/embodic/geometry/arrays.py
+      file src/embodic/geometry/circuit.py
+      file src/embodic/geometry/details.py
+      file src/embodic/geometry/discretise.py
+      file src/embodic/geometry/distance.py
+      file src/embodic/geometry/fasteners.py
+      file src/embodic/geometry/hashing.py
+      file src/embodic/geometry/layout.py
+      file src/embodic/geometry/outline.py
+      file src/embodic/geometry/paths.py
+      file src/embodic/geometry/primitives.py
+      file src/embodic/geometry/transforms.py
+      file src/embodic/io/__init__.py
+      file src/embodic/io/canonical.py
+      file src/embodic/io/examples.py
+      file src/embodic/io/migrations.py
+      file src/embodic/io/project.py
+      file src/embodic/model/__init__.py
+      file src/embodic/model/analysis_options.py
+      file src/embodic/model/connection.py
+      file src/embodic/model/design.py
+      file src/embodic/model/draft.py
+      file src/embodic/model/drc_rules.py
+      file src/embodic/model/fields.py
+      file src/embodic/model/layers.py
+      file src/embodic/model/materials.py
+      file src/embodic/model/operating.py
+      file src/embodic/model/outline.py
+      file src/embodic/model/provenance.py
+      file src/embodic/model/rotor.py
+      file src/embodic/model/schema.py
+      file src/embodic/model/stackup.py
+      file src/embodic/model/validate.py
+      file src/embodic/model/vias.py
+      file src/embodic/model/vocabulary.py
+      file src/embodic/model/winding_specs.py
+      file src/embodic/outcome.py
+      file src/embodic/paths.py
+      file src/embodic/physics/__init__.py
+      file src/embodic/physics/analyse.py
+      file src/embodic/physics/circuit.py
+      file src/embodic/physics/constants.py
+      file src/embodic/physics/drive.py
+      file src/embodic/physics/emf.py
+      file src/embodic/physics/estimates.py
+      file src/embodic/physics/field.py
+      file src/embodic/physics/interconnect.py
+      file src/embodic/physics/losses.py
+      file src/embodic/physics/magnets.py
+      file src/embodic/physics/resistance.py
+      file src/embodic/physics/thermal.py
+      file src/embodic/physics/waveform.py
+      file src/embodic/results/__init__.py
+      file src/embodic/results/analysis_result.py
+      file src/embodic/results/formatting.py
+      file src/embodic/results/labels.py
+      file src/embodic/results/registry.py
+      file src/embodic/results/status.py
+      file src/embodic/results/traceable.py
+      file src/embodic/units.py
+      file src/embodic/winding/__init__.py
+      file src/embodic/winding/feasibility.py
+      file src/embodic/winding/plan.py
+      file src/embodic/winding/star_of_slots.py
+      file src/embodic/winding/winding_factors.py
+[4] REQ-L-01 LG-01 tests/independent/m4/records/LG-01_word_review_6d50d0b.md (passed)
+    build: worktree unit/U-V27, src equal to 6d50d0b (record l.5-6)
+    files: src/embodic/ui/strings, src/embodic/errors/catalogue, src/embodic/io/report.py, src/embodic/io/readme_writer.py
+    git diff --stat 6d50d0b..672297e: 1 file changed, 2 insertions(+), 2 deletions(-)
+    verdict: superseded; redone by Agent 4 (word review)
+      file src/embodic/ui/strings
+      file src/embodic/errors/catalogue
+      file src/embodic/io/report.py
+      file src/embodic/io/readme_writer.py
+       src/embodic/ui/strings/results.py | 4 ++--
+       1 file changed, 2 insertions(+), 2 deletions(-)
+[5] REQ-T-11 LG-04 tests/independent/m4/records/LG-04_T-11_reviewer_6d50d0b.md (passed)
+    build: worktree unit/U-V27, src, resources and tests/static equal to 6d50d0b, source tree (record l.5-7)
+    files: tests/static/lg_allowlist.toml, resources/examples, resources/evidence + 135 imported modules
+    git diff --stat 6d50d0b..672297e: 1 file changed, 2 insertions(+), 2 deletions(-)
+    verdict: superseded; redone by Agent 4 (reviewer check)
+      file tests/static/lg_allowlist.toml
+      file resources/examples
+      file resources/evidence
+      file src/embodic/__init__.py
+      file src/embodic/api.py
+      file src/embodic/drc/__init__.py
+      file src/embodic/drc/engine.py
+      file src/embodic/drc/items.py
+      file src/embodic/drc/kernels.py
+      file src/embodic/drc/report.py
+      file src/embodic/drc/symmetry.py
+      file src/embodic/errors/__init__.py
+      file src/embodic/errors/catalogue/__init__.py
+      file src/embodic/errors/catalogue/base.py
+      file src/embodic/errors/catalogue/cli.py
+      file src/embodic/errors/catalogue/drc.py
+      file src/embodic/errors/catalogue/exporters.py
+      file src/embodic/errors/catalogue/generators.py
+      file src/embodic/errors/catalogue/model.py
+      file src/embodic/errors/catalogue/physics.py
+      file src/embodic/errors/catalogue/project.py
+      file src/embodic/errors/catalogue/results.py
+      file src/embodic/errors/catalogue/serpentine.py
+      file src/embodic/errors/catalogue/wave.py
+      file src/embodic/errors/catalogue/winding.py
+      file src/embodic/generators/__init__.py
+      file src/embodic/generators/base.py
+      file src/embodic/generators/fasteners.py
+      file src/embodic/generators/serpentine/__init__.py
+      file src/embodic/generators/serpentine/canonical.py
+      file src/embodic/generators/serpentine/corners.py
+      file src/embodic/generators/serpentine/derived.py
+      file src/embodic/generators/serpentine/fit.py
+      file src/embodic/generators/serpentine/frame.py
+      file src/embodic/generators/serpentine/generate.py
+      file src/embodic/generators/serpentine/interconnect.py
+      file src/embodic/generators/serpentine/plan.py
+      file src/embodic/generators/spiral/__init__.py
+      file src/embodic/generators/spiral/artwork.py
+      file src/embodic/generators/spiral/chain.py
+      file src/embodic/generators/spiral/derived.py
+      file src/embodic/generators/spiral/fillets.py
+      file src/embodic/generators/spiral/generate.py
+      file src/embodic/generators/spiral/interconnect.py
+      file src/embodic/generators/spiral/series.py
+      file src/embodic/generators/spiral/turns.py
+      file src/embodic/generators/wave/__init__.py
+      file src/embodic/generators/wave/assemble.py
+      file src/embodic/generators/wave/build.py
+      file src/embodic/generators/wave/derive.py
+      file src/embodic/generators/wave/fillet.py
+      file src/embodic/generators/wave/generate.py
+      file src/embodic/generators/wave/interconnect.py
+      file src/embodic/generators/wave/involute.py
+      file src/embodic/generators/wave/overlap.py
+      file src/embodic/generators/wave/track.py
+      file src/embodic/generators/wave/xprim.py
+      file src/embodic/geometry/__init__.py
+      file src/embodic/geometry/arrays.py
+      file src/embodic/geometry/circuit.py
+      file src/embodic/geometry/details.py
+      file src/embodic/geometry/discretise.py
+      file src/embodic/geometry/distance.py
+      file src/embodic/geometry/fasteners.py
+      file src/embodic/geometry/hashing.py
+      file src/embodic/geometry/labels.py
+      file src/embodic/geometry/layout.py
+      file src/embodic/geometry/marks.py
+      file src/embodic/geometry/outline.py
+      file src/embodic/geometry/paths.py
+      file src/embodic/geometry/primitives.py
+      file src/embodic/geometry/transforms.py
+      file src/embodic/io/__init__.py
+      file src/embodic/io/canonical.py
+      file src/embodic/io/examples.py
+      file src/embodic/io/exporters.py
+      file src/embodic/io/migrations.py
+      file src/embodic/io/pdf_writer.py
+      file src/embodic/io/project.py
+      file src/embodic/io/report.py
+      file src/embodic/model/__init__.py
+      file src/embodic/model/analysis_options.py
+      file src/embodic/model/connection.py
+      file src/embodic/model/design.py
+      file src/embodic/model/draft.py
+      file src/embodic/model/drc_rules.py
+      file src/embodic/model/fields.py
+      file src/embodic/model/layers.py
+      file src/embodic/model/materials.py
+      file src/embodic/model/operating.py
+      file src/embodic/model/outline.py
+      file src/embodic/model/provenance.py
+      file src/embodic/model/rotor.py
+      file src/embodic/model/schema.py
+      file src/embodic/model/stackup.py
+      file src/embodic/model/validate.py
+      file src/embodic/model/vias.py
+      file src/embodic/model/vocabulary.py
+      file src/embodic/model/winding_specs.py
+      file src/embodic/outcome.py
+      file src/embodic/paths.py
+      file src/embodic/physics/__init__.py
+      file src/embodic/physics/analyse.py
+      file src/embodic/physics/circuit.py
+      file src/embodic/physics/constants.py
+      file src/embodic/physics/drive.py
+      file src/embodic/physics/emf.py
+      file src/embodic/physics/estimates.py
+      file src/embodic/physics/field.py
+      file src/embodic/physics/interconnect.py
+      file src/embodic/physics/losses.py
+      file src/embodic/physics/magnets.py
+      file src/embodic/physics/resistance.py
+      file src/embodic/physics/thermal.py
+      file src/embodic/physics/waveform.py
+      file src/embodic/results/__init__.py
+      file src/embodic/results/analysis_result.py
+      file src/embodic/results/formatting.py
+      file src/embodic/results/labels.py
+      file src/embodic/results/registry.py
+      file src/embodic/results/status.py
+      file src/embodic/results/traceable.py
+      file src/embodic/ui/__init__.py
+      file src/embodic/ui/strings/__init__.py
+      file src/embodic/ui/strings/design.py
+      file src/embodic/ui/strings/export.py
+      file src/embodic/ui/strings/results.py
+      file src/embodic/ui/strings/selftest.py
+      file src/embodic/ui/strings/shell.py
+      file src/embodic/ui/viewmodels/__init__.py
+      file src/embodic/ui/viewmodels/observable.py
+      file src/embodic/ui/viewmodels/results.py
+      file src/embodic/units.py
+      file src/embodic/winding/__init__.py
+      file src/embodic/winding/feasibility.py
+      file src/embodic/winding/plan.py
+      file src/embodic/winding/star_of_slots.py
+      file src/embodic/winding/winding_factors.py
+       src/embodic/ui/strings/results.py | 4 ++--
+       1 file changed, 2 insertions(+), 2 deletions(-)
+[6] REQ-N-01 PF-01 docs/phase3/fable/PF-01_windows_0.0.5.md (failed)
+    build: editable install of the laptop checkout bbeed84, embodic 0.0.5 (record, Build)
+    files: pyproject.toml, resources/examples, tests/performance/test_pf_baseline.py, tests/performance/test_n01_pf01_budgets.py + 120 imported modules
+    git diff --stat bbeed84..672297e: 6 files changed, 11 insertions(+), 11 deletions(-)
+    verdict: superseded; redone by Fable (PF-01 on the reference laptop)
+      file pyproject.toml
+      file resources/examples
+      file tests/performance/test_pf_baseline.py
+      file tests/performance/test_n01_pf01_budgets.py
+      file src/embodic/__init__.py
+      file src/embodic/api.py
+      file src/embodic/drc/__init__.py
+      file src/embodic/drc/engine.py
+      file src/embodic/drc/items.py
+      file src/embodic/drc/kernels.py
+      file src/embodic/drc/report.py
+      file src/embodic/drc/symmetry.py
+      file src/embodic/errors/__init__.py
+      file src/embodic/errors/catalogue/__init__.py
+      file src/embodic/errors/catalogue/base.py
+      file src/embodic/errors/catalogue/cli.py
+      file src/embodic/errors/catalogue/drc.py
+      file src/embodic/errors/catalogue/exporters.py
+      file src/embodic/errors/catalogue/generators.py
+      file src/embodic/errors/catalogue/model.py
+      file src/embodic/errors/catalogue/physics.py
+      file src/embodic/errors/catalogue/project.py
+      file src/embodic/errors/catalogue/results.py
+      file src/embodic/errors/catalogue/serpentine.py
+      file src/embodic/errors/catalogue/wave.py
+      file src/embodic/errors/catalogue/winding.py
+      file src/embodic/generators/__init__.py
+      file src/embodic/generators/base.py
+      file src/embodic/generators/fasteners.py
+      file src/embodic/generators/serpentine/__init__.py
+      file src/embodic/generators/serpentine/canonical.py
+      file src/embodic/generators/serpentine/corners.py
+      file src/embodic/generators/serpentine/derived.py
+      file src/embodic/generators/serpentine/fit.py
+      file src/embodic/generators/serpentine/frame.py
+      file src/embodic/generators/serpentine/generate.py
+      file src/embodic/generators/serpentine/interconnect.py
+      file src/embodic/generators/serpentine/plan.py
+      file src/embodic/generators/spiral/__init__.py
+      file src/embodic/generators/spiral/artwork.py
+      file src/embodic/generators/spiral/chain.py
+      file src/embodic/generators/spiral/derived.py
+      file src/embodic/generators/spiral/fillets.py
+      file src/embodic/generators/spiral/generate.py
+      file src/embodic/generators/spiral/interconnect.py
+      file src/embodic/generators/spiral/series.py
+      file src/embodic/generators/spiral/turns.py
+      file src/embodic/generators/wave/__init__.py
+      file src/embodic/generators/wave/assemble.py
+      file src/embodic/generators/wave/build.py
+      file src/embodic/generators/wave/derive.py
+      file src/embodic/generators/wave/fillet.py
+      file src/embodic/generators/wave/generate.py
+      file src/embodic/generators/wave/interconnect.py
+      file src/embodic/generators/wave/involute.py
+      file src/embodic/generators/wave/overlap.py
+      file src/embodic/generators/wave/track.py
+      file src/embodic/generators/wave/xprim.py
+      file src/embodic/geometry/__init__.py
+      file src/embodic/geometry/arrays.py
+      file src/embodic/geometry/circuit.py
+      file src/embodic/geometry/details.py
+      file src/embodic/geometry/discretise.py
+      file src/embodic/geometry/distance.py
+      file src/embodic/geometry/fasteners.py
+      file src/embodic/geometry/hashing.py
+      file src/embodic/geometry/layout.py
+      file src/embodic/geometry/outline.py
+      file src/embodic/geometry/paths.py
+      file src/embodic/geometry/primitives.py
+      file src/embodic/geometry/transforms.py
+      file src/embodic/io/__init__.py
+      file src/embodic/io/canonical.py
+      file src/embodic/io/examples.py
+      file src/embodic/io/migrations.py
+      file src/embodic/io/project.py
+      file src/embodic/model/__init__.py
+      file src/embodic/model/analysis_options.py
+      file src/embodic/model/connection.py
+      file src/embodic/model/design.py
+      file src/embodic/model/draft.py
+      file src/embodic/model/drc_rules.py
+      file src/embodic/model/fields.py
+      file src/embodic/model/layers.py
+      file src/embodic/model/materials.py
+      file src/embodic/model/operating.py
+      file src/embodic/model/outline.py
+      file src/embodic/model/provenance.py
+      file src/embodic/model/rotor.py
+      file src/embodic/model/schema.py
+      file src/embodic/model/stackup.py
+      file src/embodic/model/validate.py
+      file src/embodic/model/vias.py
+      file src/embodic/model/vocabulary.py
+      file src/embodic/model/winding_specs.py
+      file src/embodic/outcome.py
+      file src/embodic/paths.py
+      file src/embodic/physics/__init__.py
+      file src/embodic/physics/analyse.py
+      file src/embodic/physics/circuit.py
+      file src/embodic/physics/constants.py
+      file src/embodic/physics/drive.py
+      file src/embodic/physics/emf.py
+      file src/embodic/physics/estimates.py
+      file src/embodic/physics/field.py
+      file src/embodic/physics/interconnect.py
+      file src/embodic/physics/losses.py
+      file src/embodic/physics/magnets.py
+      file src/embodic/physics/resistance.py
+      file src/embodic/physics/thermal.py
+      file src/embodic/physics/waveform.py
+      file src/embodic/results/__init__.py
+      file src/embodic/results/analysis_result.py
+      file src/embodic/results/formatting.py
+      file src/embodic/results/labels.py
+      file src/embodic/results/registry.py
+      file src/embodic/results/status.py
+      file src/embodic/results/traceable.py
+      file src/embodic/units.py
+      file src/embodic/winding/__init__.py
+      file src/embodic/winding/feasibility.py
+      file src/embodic/winding/plan.py
+      file src/embodic/winding/star_of_slots.py
+      file src/embodic/winding/winding_factors.py
+       resources/examples/serpentine_16p_example.embodic.json | 4 ++--
+       resources/examples/spiral_12c10p_d08.embodic.json      | 4 ++--
+       resources/examples/spiral_12c14p.embodic.json          | 4 ++--
+       resources/examples/spiral_12c16p_default.embodic.json  | 4 ++--
+       resources/examples/wave_16p_example.embodic.json       | 4 ++--
+       src/embodic/__init__.py                                | 2 +-
+       6 files changed, 11 insertions(+), 11 deletions(-)
+exit 0
+
+=== 2. python -I tests/independent/m7/v14_record_currency.py --target 672297e   (the new index of U-V28)
+[0] REQ-N-07 PK-06 tests/independent/m5/records/PK-06_walkthrough_672297e.md (passed)
+    build: wheel ad9e02c0 that Agent 4 built from 672297e (record, Inputs); compare wheels with v21_wheel_diff.py
+    files: README.md, docs/install/INSTALL.md, requirements/py311.txt, pyproject.toml, src/embodic, resources
+    git diff --stat 672297e..672297e: no change
+    verdict: stands
+[1] REQ-N-14 AX-05 tests/independent/m4/records/AX-05_6d50d0b.md (passed)
+    build: worktree unit/U-V27, src and resources equal to 6d50d0b, source tree (record l.5-7)
+    files: resources/examples, resources/themes + 125 imported modules
+    git diff --stat 6d50d0b..672297e: no change
+    verdict: stands
+[2] REQ-F-11 OR-11 tests/independent/m6/records/OR-11_OR-12_672297e.md (passed)
+    build: wheel ad9e02c0 of 672297e in the PK-06 run 1 venv (record, What ran); compare wheels with v21_wheel_diff.py
+    files: resources/evidence/equations.v1.json, docs/phase2/engineering/oracle_cases.json + 120 imported modules
+    git diff --stat 672297e..672297e: no change
+    verdict: stands
+[3] REQ-F-11 OR-12 tests/independent/m6/records/OR-11_OR-12_672297e.md (passed)
+    build: wheel ad9e02c0 of 672297e in the PK-06 run 1 venv (record, What ran); compare wheels with v21_wheel_diff.py
+    files: resources/evidence/equations.v1.json, docs/phase2/engineering/oracle_cases.json + 120 imported modules
+    git diff --stat 672297e..672297e: no change
+    verdict: stands
+[4] REQ-L-01 LG-01 tests/independent/m4/records/LG-01_word_review_672297e.md (passed)
+    build: worktree unit/U-V28, src equal to 672297e, corpus equal to wheel ad9e02c0 (record l.5-7)
+    files: src/embodic/ui/strings, src/embodic/errors/catalogue, src/embodic/io/report.py, src/embodic/io/readme_writer.py
+    git diff --stat 672297e..672297e: no change
+    verdict: stands
+[5] REQ-T-11 LG-04 tests/independent/m4/records/LG-04_T-11_reviewer_672297e.md (passed)
+    build: wheel ad9e02c0 of 672297e and the source tree of worktree unit/U-V28 (record l.5-8)
+    files: tests/static/lg_allowlist.toml, resources/examples, resources/evidence + 135 imported modules
+    git diff --stat 672297e..672297e: no change
+    verdict: stands
+[6] REQ-N-01 PF-01 docs/phase3/fable/PF-01_windows_0.0.5.md (failed)
+    build: editable install of the laptop checkout bbeed84, embodic 0.0.5 (record, Build)
+    files: pyproject.toml, resources/examples, tests/performance/test_pf_baseline.py, tests/performance/test_n01_pf01_budgets.py + 120 imported modules
+    git diff --stat bbeed84..672297e: 6 files changed, 11 insertions(+), 11 deletions(-)
+    verdict: superseded; redone by Fable (PF-01 on the reference laptop)
+exit 0
+
+=== 3. python -I tests/independent/m7/v21_wheel_diff.py <candidate wheel 5d891a26 of 6d50d0b, U-V27> <candidate wheel ad9e02c0 of 672297e, U-V28>
+5d891a268323fed9ce3414db3b042d27e51e5a27e33bba44df3cdc262d3ddec8  <scratch>/v27/dist/embodic-0.0.6-py3-none-any.whl
+ad9e02c073c45668938621ebeea8f8ca9b42cae9036c869a0871de3da2802aaa  <scratch>/v28/dist/embodic-0.0.6-py3-none-any.whl
+members: 274 and 274; only in one: none
+members with other bytes: 3 of 274
+  embodic-0.0.6.dist-info/RECORD
+  embodic/_resources/evidence/passed_tests.v1.json
+  embodic/ui/strings/results.py
+  evidence build_id: '0.0.6+g6d50d0b8d752.20261021T182258Z' -> '0.0.6+g672297ecd342.20261021T185448Z'
+  evidence generated_utc: '2026-10-21T18:22:58Z' -> '2026-10-21T18:54:48Z'
+  evidence git_commit: '6d50d0b8d752144e465b081d6862e0ec3bfeebc1' -> '672297ecd3425f27aade187d13531d6634701946'
+  evidence source_sha256: 'e04726755adcc1176ee00275bf7bde80beb785a85bc9d424318b1032e2e5e906' -> 'db089e7198654e1b07156bd08d4d590ba0173bd3f55ef9ee1e83ae86b1b275cb'
+  evidence keys equal: embodic_version, format, format_version, gate_profile, git_dirty, numpy, passed_tests, platform, python, realised_by, registry_version
+exit 0
+
+=== 4. evidence run of the candidate wheel: pytest -m "eqt and not manual and not latency" --ignore=tests/packaging/evidence on git archive 672297e
+518 passed, 3934 deselected, 2 xfailed in 141.37s (0:02:21)
+exit 0
+started 18:51:49 UTC, ended about 18:54:10 UTC
+
+=== 5. python -I tools/trace_matrix.py --report <release_0.0.5>/req_report.json <release_0.0.5>/req_report_latency.json --fail-untested-through=M5 --manual-records=<new index>   (version under test 0.0.6, read from this tree)
+trace matrix: 110 requirements, 4434 tests, 102 requirements with a passing test; manual: 6; invalid manual records: 0; TR-02 unmarked tests: 0; unknown REQ IDs: 0; untested due: 0; manual records not passed: 0 failing, 1 accepted
+  accepted manual record docs/phase3/fable/PF-01_windows_0.0.5.md (REQ-N-01 PF-01): result 'failed', accepted by D-091: listed, not counted
+exit 0

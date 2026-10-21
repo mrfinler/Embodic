@@ -1,0 +1,44 @@
+D08 open: outcome OutcomeReady, computes 1, canvas 570 x 331 px, canvas visible True, window active True
+control, no key: no change
+spec section 10 L: no change
+spec section 10 G: no change
+spec section 10 C: no change
+spec section 10 M: no change
+spec section 10 T: no change
+spec section 10 A: no change
+spec section 10 B: no change
+spec section 10 Shift+C: no change
+spec section 10 Esc: no change
+control +: canvas pixels: f3d29f579d6f89db -> 0f85e1451ebecf31; zoom: 2.477273 -> 3.096591; scene items: 409 -> 411
+control 0: canvas pixels: 0f85e1451ebecf31 -> bc95a72d03c9fba1; zoom: 3.096591 -> 2.477273; scene items: 411 -> 409
+control Right: canvas pixels: bc95a72d03c9fba1 -> d03571b84dfb5220; scroll: (-285, -166) -> (-228, -166)
+control ]: canvas pixels: d03571b84dfb5220 -> 8ca412f34a309787; scene items: 409 -> 246; layer_step: 0 -> 1
+control Page Down: board_step: 0 -> 1
+(canvas zoomed 2x before F, so a fit shows)
+bound, not in the map F: canvas pixels: b16aed48e824105a -> d271f0a603ad8a35; zoom: 4.954545 -> 2.477273; scroll: (-171, -167) -> (-285, -166); scene items: 248 -> 246
+bound, not in the map F5: computes: 1 -> 2
+toolstrip Greyscale button (what G names), clicked: canvas pixels: d271f0a603ad8a35 -> 48a22a552f2277f9; checked actions: ('',) -> ('', 'act-greyscale')
+toolstrip buttons:
+  tab 'Home': 'act-new' text='New' tooltip='New (Ctrl+N). Create a blank design.' name='New' enabled=True
+  tab 'Home': 'act-open' text='Open' tooltip='Open (Ctrl+O). Open a project file (.json).' name='Open' enabled=True
+  tab 'Home': 'act-save' text='Save' tooltip='Save (Ctrl+S). Save the project file.' name='Save' enabled=True
+  tab 'Home': 'act-examples' text='Examples' tooltip='Examples. Load a team example. Its values are marked "example".' name='Examples' enabled=True
+  tab 'Home': 'act-undo' text='Undo' tooltip='Undo (Ctrl+Z). Undo the last change.' name='Undo' enabled=False
+  tab 'Home': 'act-redo' text='Redo' tooltip='Redo (Ctrl+Y). Redo the last undone change.' name='Redo' enabled=False
+  tab 'Design': 'act-topo-spiral' text='Spiral' tooltip='Spiral. Concentrated planar spiral coils.' name='Spiral' enabled=True
+  tab 'Design': 'act-topo-serpentine' text='Serpentine' tooltip='Serpentine. One phase per layer pair, continuous ribbon.' name='Serpentine' enabled=True
+  tab 'Design': 'act-topo-wave' text='Wave' tooltip='Wave. All phases interleaved on every layer.' name='Wave' enabled=True
+  tab 'Design': 'act-conn-star' text='Star' tooltip='Star. Star with neutral; terminals U, V, W, N.' name='Star' enabled=True
+  tab 'Design': 'act-conn-delta' text='Delta' tooltip='Delta. Delta; terminals U, V, W.' name='Delta' enabled=True
+  tab 'Analysis': 'act-compute' text='Compute' tooltip='Compute (F5). Compute the geometry, checks and results again.' name='Compute' enabled=True
+  tab 'Analysis': 'act-drc' text='DRC' tooltip='DRC. Design rule checks and clearances.' name='DRC' enabled=True
+  tab 'Analysis': 'act-equations' text='Equations' tooltip='Equations. Equation register with sources.' name='Equations' enabled=True
+  tab 'Export': 'act-export-svg' text='SVG' tooltip='SVG. Vector drawing of every layer, in millimetres.' name='SVG' enabled=True
+  tab 'Export': 'act-export-dxf' text='DXF' tooltip='DXF. DXF: complete, outline only, or screws only.' name='DXF' enabled=True
+  tab 'Export': 'act-export-pdf' text='Report' tooltip='Report (Ctrl+P). PDF design report with figures, results and checks.' name='Report' enabled=True
+  tab 'Export': 'act-export-all' text='All files' tooltip='All files (Ctrl+E). SVG, DXF, JSON, PDF and README into one folder.' name='All files' enabled=True
+  tab 'View': 'act-theme' text='Theme' tooltip='Theme. Switch the colour theme: light, dark, then follow the system.' name='Theme' enabled=True
+  tab 'View': 'act-greyscale' text='Greyscale' tooltip='Greyscale. Greyscale with hatching for phases.' name='Greyscale' enabled=True
+  tab 'View': 'act-fit' text='Fit' tooltip='Fit (F). Fit the drawing to the view.' name='Fit' enabled=True
+  tab 'View': 'act-tests' text='Self-tests' tooltip='Self-tests. Check that this installation reproduces the numbers of its build.' name='Self-tests' enabled=True
+actions naming settings: none
