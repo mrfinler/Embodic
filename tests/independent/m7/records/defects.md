@@ -456,3 +456,39 @@ On Windows the fixed test is `not tested`; it now calls no external program. No 
 `m3/cases.py`, node and the Xcoil engine) skip with a reason that names node when it is absent (`verified` by reading).
 Status: fixed on unit/U-V27, Linux `verified`, Windows `not tested`.
 Owner Agent 4.
+
+## DEF-US18-01 (UX-AC-10 and REQ-N-12, must; spec against product): nine canvas keys of design_spec.md section 10 do nothing
+
+Main 672297e (0.0.6 candidate). Agent 1 inferred in U-S18, from a code search, that the canvas keys L, G, C, M, T, A, B
+and Shift+C of `docs/phase2/design/design_spec.md` section 10 have no handler, and that F5 and F are bound but not in
+the map. Confirmed by running (unit U-V28): `QT_QPA_PLATFORM=offscreen PYTHONPATH=src python
+tests/independent/m7/v28_canvas_keys.py`, output `tests/independent/m7/records/U-V28_canvas_keys.txt`. The script opens
+the D08 example (`spiral_12c10p_d08`) in an offscreen 1280 x 800 main window, gives the canvas (`GeometryView`, 570 x
+331 px) focus, sends each key with `QTest.keyClick` (which runs the window's shortcut map first, as a keyboard does),
+and compares a snapshot before and after: the SHA-256 of the canvas pixels, zoom, scroll, scene item count, compute
+count, the canvas's board and layer step signals, checked actions, focus, visible windows, tabs and outcome state.
+
+| Key (section 10 action) | What changed |
+|---|---|
+| L (labels), G (greyscale), C (current arrows), M (magnets), T (terminals) | nothing |
+| A, B, Shift+C (highlight phase A, B, C), Esc (clear) | nothing |
+| F (bound by the toolstrip action `act-fit`, not in the map) | fit: zoom 4.95 to 2.48 (the fitted value), scroll, pixels |
+| F5 (bound by `act-compute`, not in the map) | one more compute (count 1 to 2); the drawing is the same |
+
+Controls, in the same run: no key gives no change; +, 0, Right, ] and Page Down each change the snapshot (zoom, fit,
+scroll, layer solo, board step); the toolstrip's Greyscale button changes the canvas pixels and checks
+`act-greyscale`. So "nothing" is a measurement: the instrument sees a zoom, a pan, a layer solo and a greyscale
+switch. Two runs gave the same lines for every key, F and F5 included (`verified`, `diff`).
+
+Reading (`inferred` from `src/embodic/ui/views/geometry_view.py` `keyPressEvent` and a search of `src/embodic/ui`):
+the canvas handles only the arrows, +, =, -, 0, Page Up, Page Down, [ and ]. Greyscale exists behind the toolstrip
+button (`toggle_phase_render_mode`); no name in `src/embodic/ui` toggles labels, current arrows, magnets or terminals,
+or highlights a phase, so for C, M, T, A, B and Shift+C the feature itself is missing, not only the key. The guide's key table lists no
+canvas key, so the guide does not promise them; `docs/phase3/design/ux_verification_plan.md` K-09 expects L and G to
+work and would fail on them.
+
+Expected: section 10 and the product agree, under D-094b (the map lists only bound keys). Either the product binds the
+keys (and builds the four missing toggles and the phase highlight), or section 10 drops the rows it does not bind and
+lists F and F5. That choice is the user's (U-S19 writes it into the walkthrough as a judgement point). Status
+`verified` (Linux offscreen; a desktop session and Windows `not tested`). Owner Agent 1 (spec) or Agent 3 (code),
+after the user's choice. Not fixed here.

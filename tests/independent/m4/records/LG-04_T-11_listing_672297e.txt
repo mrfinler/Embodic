@@ -1,0 +1,221 @@
+lg_allowlist.toml sha256 7424606eac3ff6592cca0112361dc26e4596d741c9973ef8a1a86058264e0873
+
+## Equation guide
+EQ-05 [Validity checks] EC-05 radial edge leakage (graded): e_edge <= 0.10: no badge cap; one-sided tolerance add-on +e_edge (model high) on Ke, EMF, torque and EMF-derived results, limitation listed; e_edge > 0.10: badge capped at unresolved; threshold 0.1 (assumption)
+EQ-09 [title] EQ-09 EMF/torque constants and star/delta conversion
+EQ-09 [Name] EMF/torque constants and star/delta conversion
+EQ-20 [title] EQ-20 Torque-speed envelope (drive)
+EQ-20 [Name] Torque-speed envelope (drive)
+EQ-26 [title] EQ-26 Loss sum, efficiency and motor constant
+EQ-26 [Name] Loss sum, efficiency and motor constant
+
+## Results table: serpentine_16p_example
+card kt_n_m_per_a: title 'Torque constant per line current, rms Kt', value 136 mN·m/A, status not tested, 17 assumptions, EQ-09, EQ-06, EQ-07, EQ-05, estimate label None
+    Equation: EQ-09: EMF/torque constants and star/delta conversion. Ke_ph = |E1|/omega_m; star: Ke_LL = sqrt(3)*Ke_ph, I_ph = I_line; delta: Ke_LL = Ke_ph, I_ph = I_line/sqrt(3); T = (m/2)*Ke_ph*I_ph_peak = (m/sqrt(2))*Ke_ph*I_ph_rms; Kt_line = (m/sqrt(2))*Ke_ph (star), /sqrt(3) (delta); K_v = 1/Ke_LL; R_LL = 2*R_ph (star), 2*R_ph/3 (delta)
+    Inputs: /rotor/remanence_t = 1.30 T (example)
+    Inputs: /rotor/recoil_permeability = 1.05 (example)
+    Inputs: /rotor/air_gap_mm = 0.800 mm (example)
+    Inputs: /rotor/poles = 16.0 (example)
+    Inputs: /rotor/magnet/thickness_mm = 3.00 mm (example)
+    Inputs: /rotor/magnet/pole_arc_ratio = 0.850 (example)
+card torque_n_m: title 'Torque T', value 109 mN·m, status not tested, 18 assumptions, EQ-09, EQ-06, EQ-07, EQ-05, estimate label None
+    Equation: EQ-09: EMF/torque constants and star/delta conversion. Ke_ph = |E1|/omega_m; star: Ke_LL = sqrt(3)*Ke_ph, I_ph = I_line; delta: Ke_LL = Ke_ph, I_ph = I_line/sqrt(3); T = (m/2)*Ke_ph*I_ph_peak = (m/sqrt(2))*Ke_ph*I_ph_rms; Kt_line = (m/sqrt(2))*Ke_ph (star), /sqrt(3) (delta); K_v = 1/Ke_LL; R_LL = 2*R_ph (star), 2*R_ph/3 (delta)
+    Inputs: /rotor/remanence_t = 1.30 T (example)
+    Inputs: /rotor/recoil_permeability = 1.05 (example)
+    Inputs: /rotor/air_gap_mm = 0.800 mm (example)
+    Inputs: /rotor/poles = 16.0 (example)
+    Inputs: /rotor/magnet/thickness_mm = 3.00 mm (example)
+    Inputs: /rotor/magnet/pole_arc_ratio = 0.850 (example)
+    Inputs: /operating/line_current_rms_a = 800 mA (example)
+card efficiency: title 'Efficiency, electromagnetic only η', value 0.756 dimensionless, status not tested, 40 assumptions, EQ-26, EQ-09, EQ-06, EQ-07, EQ-05, EQ-10, EQ-11, EQ-12, EQ-19, EQ-23, estimate label None
+    Equation: EQ-26: Loss sum, efficiency and motor constant. P_loss = P_Cu + P_eddy + P_circ + P_delta,circ + P_ic; P_out = T omega_m; eta = P_out/(P_out + P_loss); K_m = T/sqrt(P_Cu)
+    Equation: EQ-09: EMF/torque constants and star/delta conversion. Ke_ph = |E1|/omega_m; star: Ke_LL = sqrt(3)*Ke_ph, I_ph = I_line; delta: Ke_LL = Ke_ph, I_ph = I_line/sqrt(3); T = (m/2)*Ke_ph*I_ph_peak = (m/sqrt(2))*Ke_ph*I_ph_rms; Kt_line = (m/sqrt(2))*Ke_ph (star), /sqrt(3) (delta); K_v = 1/Ke_LL; R_LL = 2*R_ph (star), 2*R_ph/3 (delta)
+    Inputs: /rotor/remanence_t = 1.30 T (example)
+    Inputs: /rotor/recoil_permeability = 1.05 (example)
+    Inputs: /rotor/air_gap_mm = 0.800 mm (example)
+    Inputs: /rotor/poles = 16.0 (example)
+    Inputs: /rotor/magnet/thickness_mm = 3.00 mm (example)
+    Inputs: /rotor/magnet/pole_arc_ratio = 0.850 (example)
+    Inputs: /stackup/layers/0/thickness_mm = 0.0696 mm (example)
+    Inputs: /stackup/layers/2/thickness_mm = 0.0696 mm (example)
+    Inputs: /stackup/layers/4/thickness_mm = 0.0696 mm (example)
+    Inputs: /stackup/layers/6/thickness_mm = 0.0696 mm (example)
+    Inputs: /stackup/layers/8/thickness_mm = 0.0696 mm (example)
+    Inputs: /stackup/layers/10/thickness_mm = 0.0696 mm (example)
+    Inputs: /operating/winding_temperature_degc = 60.0 °C (example)
+    Inputs: constant:copper_resistivity_20c_ohm_m = 0.0000000172 Ω·m (registry constant)
+    Inputs: constant:copper_temp_coeff_per_k = 0.00393 1/K (registry constant)
+    Inputs: /operating/line_current_rms_a = 800 mA (example)
+    Inputs: /operating/speed_rpm = 1500 rpm (example)
+chart chart-torque-speed: title 'Torque', y Torque N·m, status unresolved, 41 assumptions, EQ-20, EQ-09, EQ-06, EQ-07, EQ-05, EQ-14, EQ-27, EQ-23, EQ-10, EQ-11
+chart chart-power-speed: title 'Mechanical power', y Mechanical power W, status unresolved, 41 assumptions, EQ-20, EQ-09, EQ-06, EQ-07, EQ-05, EQ-14, EQ-27, EQ-23, EQ-10, EQ-11
+
+## Results table: spiral_12c10p_d08
+card kt_n_m_per_a: title 'Torque constant per line current, rms Kt', value 38.4 mN·m/A, status not tested, 17 assumptions, EQ-09, EQ-06, EQ-07, EQ-05, estimate label None
+    Equation: EQ-09: EMF/torque constants and star/delta conversion. Ke_ph = |E1|/omega_m; star: Ke_LL = sqrt(3)*Ke_ph, I_ph = I_line; delta: Ke_LL = Ke_ph, I_ph = I_line/sqrt(3); T = (m/2)*Ke_ph*I_ph_peak = (m/sqrt(2))*Ke_ph*I_ph_rms; Kt_line = (m/sqrt(2))*Ke_ph (star), /sqrt(3) (delta); K_v = 1/Ke_LL; R_LL = 2*R_ph (star), 2*R_ph/3 (delta)
+    Inputs: /rotor/remanence_t = 1.38 T (example)
+    Inputs: /rotor/recoil_permeability = 1.05 (example)
+    Inputs: /rotor/air_gap_mm = 1.10 mm (example)
+    Inputs: /rotor/poles = 10.0 (example)
+    Inputs: /rotor/magnet/thickness_mm = 5.00 mm (example)
+    Inputs: /rotor/magnet/pole_arc_ratio = 0.720 (example)
+card torque_n_m: title 'Torque T', value 38.4 mN·m, status not tested, 18 assumptions, EQ-09, EQ-06, EQ-07, EQ-05, estimate label None
+    Equation: EQ-09: EMF/torque constants and star/delta conversion. Ke_ph = |E1|/omega_m; star: Ke_LL = sqrt(3)*Ke_ph, I_ph = I_line; delta: Ke_LL = Ke_ph, I_ph = I_line/sqrt(3); T = (m/2)*Ke_ph*I_ph_peak = (m/sqrt(2))*Ke_ph*I_ph_rms; Kt_line = (m/sqrt(2))*Ke_ph (star), /sqrt(3) (delta); K_v = 1/Ke_LL; R_LL = 2*R_ph (star), 2*R_ph/3 (delta)
+    Inputs: /rotor/remanence_t = 1.38 T (example)
+    Inputs: /rotor/recoil_permeability = 1.05 (example)
+    Inputs: /rotor/air_gap_mm = 1.10 mm (example)
+    Inputs: /rotor/poles = 10.0 (example)
+    Inputs: /rotor/magnet/thickness_mm = 5.00 mm (example)
+    Inputs: /rotor/magnet/pole_arc_ratio = 0.720 (example)
+    Inputs: /operating/line_current_rms_a = 1.00 A (example)
+card efficiency: title 'Efficiency, electromagnetic only η', value 0.611 dimensionless, status not tested, 36 assumptions, EQ-26, EQ-09, EQ-06, EQ-07, EQ-05, EQ-10, EQ-11, EQ-12, EQ-19, EQ-23, estimate label None
+    Equation: EQ-26: Loss sum, efficiency and motor constant. P_loss = P_Cu + P_eddy + P_circ + P_delta,circ + P_ic; P_out = T omega_m; eta = P_out/(P_out + P_loss); K_m = T/sqrt(P_Cu)
+    Equation: EQ-09: EMF/torque constants and star/delta conversion. Ke_ph = |E1|/omega_m; star: Ke_LL = sqrt(3)*Ke_ph, I_ph = I_line; delta: Ke_LL = Ke_ph, I_ph = I_line/sqrt(3); T = (m/2)*Ke_ph*I_ph_peak = (m/sqrt(2))*Ke_ph*I_ph_rms; Kt_line = (m/sqrt(2))*Ke_ph (star), /sqrt(3) (delta); K_v = 1/Ke_LL; R_LL = 2*R_ph (star), 2*R_ph/3 (delta)
+    Inputs: /rotor/remanence_t = 1.38 T (example)
+    Inputs: /rotor/recoil_permeability = 1.05 (example)
+    Inputs: /rotor/air_gap_mm = 1.10 mm (example)
+    Inputs: /rotor/poles = 10.0 (example)
+    Inputs: /rotor/magnet/thickness_mm = 5.00 mm (example)
+    Inputs: /rotor/magnet/pole_arc_ratio = 0.720 (example)
+    Inputs: /stackup/layers/0/thickness_mm = 0.0348 mm (example)
+    Inputs: /stackup/layers/2/thickness_mm = 0.0348 mm (example)
+    Inputs: /operating/winding_temperature_degc = 60.0 °C (example)
+    Inputs: constant:copper_resistivity_20c_ohm_m = 0.0000000172 Ω·m (registry constant)
+    Inputs: constant:copper_temp_coeff_per_k = 0.00393 1/K (registry constant)
+    Inputs: /operating/line_current_rms_a = 1.00 A (example)
+    Inputs: /operating/speed_rpm = 1000 rpm (example)
+chart tab Torque-speed: no chart (the message chart.no-dc-link)
+
+## Results table: spiral_12c14p
+card kt_n_m_per_a: title 'Torque constant per line current, rms Kt', value 48.8 mN·m/A, status not tested, 19 assumptions, EQ-09, EQ-06, EQ-07, EQ-05, EQ-04, estimate label None
+    Equation: EQ-09: EMF/torque constants and star/delta conversion. Ke_ph = |E1|/omega_m; star: Ke_LL = sqrt(3)*Ke_ph, I_ph = I_line; delta: Ke_LL = Ke_ph, I_ph = I_line/sqrt(3); T = (m/2)*Ke_ph*I_ph_peak = (m/sqrt(2))*Ke_ph*I_ph_rms; Kt_line = (m/sqrt(2))*Ke_ph (star), /sqrt(3) (delta); K_v = 1/Ke_LL; R_LL = 2*R_ph (star), 2*R_ph/3 (delta)
+    Inputs: /rotor/remanence_t = 1.30 T (example)
+    Inputs: /rotor/recoil_permeability = 1.05 (example)
+    Inputs: /rotor/air_gap_mm = 1.00 mm (example)
+    Inputs: /rotor/poles = 14.0 (example)
+    Inputs: /rotor/magnet/thickness_mm = 2.00 mm (example)
+    Inputs: /rotor/magnet/width_mm = 6.00 mm (example)
+card torque_n_m: title 'Torque T', value 48.8 mN·m, status not tested, 20 assumptions, EQ-09, EQ-06, EQ-07, EQ-05, EQ-04, estimate label None
+    Equation: EQ-09: EMF/torque constants and star/delta conversion. Ke_ph = |E1|/omega_m; star: Ke_LL = sqrt(3)*Ke_ph, I_ph = I_line; delta: Ke_LL = Ke_ph, I_ph = I_line/sqrt(3); T = (m/2)*Ke_ph*I_ph_peak = (m/sqrt(2))*Ke_ph*I_ph_rms; Kt_line = (m/sqrt(2))*Ke_ph (star), /sqrt(3) (delta); K_v = 1/Ke_LL; R_LL = 2*R_ph (star), 2*R_ph/3 (delta)
+    Inputs: /rotor/remanence_t = 1.30 T (example)
+    Inputs: /rotor/recoil_permeability = 1.05 (example)
+    Inputs: /rotor/air_gap_mm = 1.00 mm (example)
+    Inputs: /rotor/poles = 14.0 (example)
+    Inputs: /rotor/magnet/thickness_mm = 2.00 mm (example)
+    Inputs: /rotor/magnet/width_mm = 6.00 mm (example)
+    Inputs: /operating/line_current_rms_a = 1.00 A (example)
+card efficiency: title 'Efficiency, electromagnetic only η', value 0.299 dimensionless, status not tested, 38 assumptions, EQ-26, EQ-09, EQ-06, EQ-07, EQ-05, EQ-04, EQ-10, EQ-11, EQ-12, EQ-19, EQ-23, estimate label None
+    Equation: EQ-26: Loss sum, efficiency and motor constant. P_loss = P_Cu + P_eddy + P_circ + P_delta,circ + P_ic; P_out = T omega_m; eta = P_out/(P_out + P_loss); K_m = T/sqrt(P_Cu)
+    Equation: EQ-09: EMF/torque constants and star/delta conversion. Ke_ph = |E1|/omega_m; star: Ke_LL = sqrt(3)*Ke_ph, I_ph = I_line; delta: Ke_LL = Ke_ph, I_ph = I_line/sqrt(3); T = (m/2)*Ke_ph*I_ph_peak = (m/sqrt(2))*Ke_ph*I_ph_rms; Kt_line = (m/sqrt(2))*Ke_ph (star), /sqrt(3) (delta); K_v = 1/Ke_LL; R_LL = 2*R_ph (star), 2*R_ph/3 (delta)
+    Inputs: /rotor/remanence_t = 1.30 T (example)
+    Inputs: /rotor/recoil_permeability = 1.05 (example)
+    Inputs: /rotor/air_gap_mm = 1.00 mm (example)
+    Inputs: /rotor/poles = 14.0 (example)
+    Inputs: /rotor/magnet/thickness_mm = 2.00 mm (example)
+    Inputs: /rotor/magnet/width_mm = 6.00 mm (example)
+    Inputs: /stackup/layers/0/thickness_mm = 0.0348 mm (example)
+    Inputs: /stackup/layers/2/thickness_mm = 0.0348 mm (example)
+    Inputs: /operating/winding_temperature_degc = 60.0 °C (example)
+    Inputs: constant:copper_resistivity_20c_ohm_m = 0.0000000172 Ω·m (registry constant)
+    Inputs: constant:copper_temp_coeff_per_k = 0.00393 1/K (registry constant)
+    Inputs: /operating/line_current_rms_a = 1.00 A (example)
+    Inputs: /operating/speed_rpm = 1000 rpm (example)
+chart tab Torque-speed: no chart (the message chart.no-dc-link)
+
+## Results table: spiral_12c16p_default
+card kt_n_m_per_a: title 'Torque constant per line current, rms Kt', value 55.9 mN·m/A, status not tested, 19 assumptions, EQ-09, EQ-06, EQ-07, EQ-05, EQ-04, estimate label None
+    Equation: EQ-09: EMF/torque constants and star/delta conversion. Ke_ph = |E1|/omega_m; star: Ke_LL = sqrt(3)*Ke_ph, I_ph = I_line; delta: Ke_LL = Ke_ph, I_ph = I_line/sqrt(3); T = (m/2)*Ke_ph*I_ph_peak = (m/sqrt(2))*Ke_ph*I_ph_rms; Kt_line = (m/sqrt(2))*Ke_ph (star), /sqrt(3) (delta); K_v = 1/Ke_LL; R_LL = 2*R_ph (star), 2*R_ph/3 (delta)
+    Inputs: /rotor/remanence_t = 1.30 T (example)
+    Inputs: /rotor/recoil_permeability = 1.05 (example)
+    Inputs: /rotor/air_gap_mm = 1.00 mm (example)
+    Inputs: /rotor/poles = 16.0 (example)
+    Inputs: /rotor/magnet/thickness_mm = 2.00 mm (example)
+    Inputs: /rotor/magnet/width_mm = 6.00 mm (example)
+card torque_n_m: title 'Torque T', value 55.9 mN·m, status not tested, 20 assumptions, EQ-09, EQ-06, EQ-07, EQ-05, EQ-04, estimate label None
+    Equation: EQ-09: EMF/torque constants and star/delta conversion. Ke_ph = |E1|/omega_m; star: Ke_LL = sqrt(3)*Ke_ph, I_ph = I_line; delta: Ke_LL = Ke_ph, I_ph = I_line/sqrt(3); T = (m/2)*Ke_ph*I_ph_peak = (m/sqrt(2))*Ke_ph*I_ph_rms; Kt_line = (m/sqrt(2))*Ke_ph (star), /sqrt(3) (delta); K_v = 1/Ke_LL; R_LL = 2*R_ph (star), 2*R_ph/3 (delta)
+    Inputs: /rotor/remanence_t = 1.30 T (example)
+    Inputs: /rotor/recoil_permeability = 1.05 (example)
+    Inputs: /rotor/air_gap_mm = 1.00 mm (example)
+    Inputs: /rotor/poles = 16.0 (example)
+    Inputs: /rotor/magnet/thickness_mm = 2.00 mm (example)
+    Inputs: /rotor/magnet/width_mm = 6.00 mm (example)
+    Inputs: /operating/line_current_rms_a = 1.00 A (example)
+card efficiency: title 'Efficiency, electromagnetic only η', value 0.330 dimensionless, status not tested, 38 assumptions, EQ-26, EQ-09, EQ-06, EQ-07, EQ-05, EQ-04, EQ-10, EQ-11, EQ-12, EQ-19, EQ-23, estimate label None
+    Equation: EQ-26: Loss sum, efficiency and motor constant. P_loss = P_Cu + P_eddy + P_circ + P_delta,circ + P_ic; P_out = T omega_m; eta = P_out/(P_out + P_loss); K_m = T/sqrt(P_Cu)
+    Equation: EQ-09: EMF/torque constants and star/delta conversion. Ke_ph = |E1|/omega_m; star: Ke_LL = sqrt(3)*Ke_ph, I_ph = I_line; delta: Ke_LL = Ke_ph, I_ph = I_line/sqrt(3); T = (m/2)*Ke_ph*I_ph_peak = (m/sqrt(2))*Ke_ph*I_ph_rms; Kt_line = (m/sqrt(2))*Ke_ph (star), /sqrt(3) (delta); K_v = 1/Ke_LL; R_LL = 2*R_ph (star), 2*R_ph/3 (delta)
+    Inputs: /rotor/remanence_t = 1.30 T (example)
+    Inputs: /rotor/recoil_permeability = 1.05 (example)
+    Inputs: /rotor/air_gap_mm = 1.00 mm (example)
+    Inputs: /rotor/poles = 16.0 (example)
+    Inputs: /rotor/magnet/thickness_mm = 2.00 mm (example)
+    Inputs: /rotor/magnet/width_mm = 6.00 mm (example)
+    Inputs: /stackup/layers/0/thickness_mm = 0.0348 mm (example)
+    Inputs: /stackup/layers/2/thickness_mm = 0.0348 mm (example)
+    Inputs: /operating/winding_temperature_degc = 60.0 °C (example)
+    Inputs: constant:copper_resistivity_20c_ohm_m = 0.0000000172 Ω·m (registry constant)
+    Inputs: constant:copper_temp_coeff_per_k = 0.00393 1/K (registry constant)
+    Inputs: /operating/line_current_rms_a = 1.00 A (example)
+    Inputs: /operating/speed_rpm = 1000 rpm (example)
+chart tab Torque-speed: no chart (the message chart.no-dc-link)
+
+## Results table: wave_16p_example
+card kt_n_m_per_a: title 'Torque constant per line current, rms Kt', value 65.5 mN·m/A, status not tested, 17 assumptions, EQ-09, EQ-06, EQ-07, EQ-05, estimate label None
+    Equation: EQ-09: EMF/torque constants and star/delta conversion. Ke_ph = |E1|/omega_m; star: Ke_LL = sqrt(3)*Ke_ph, I_ph = I_line; delta: Ke_LL = Ke_ph, I_ph = I_line/sqrt(3); T = (m/2)*Ke_ph*I_ph_peak = (m/sqrt(2))*Ke_ph*I_ph_rms; Kt_line = (m/sqrt(2))*Ke_ph (star), /sqrt(3) (delta); K_v = 1/Ke_LL; R_LL = 2*R_ph (star), 2*R_ph/3 (delta)
+    Inputs: /rotor/remanence_t = 1.30 T (example)
+    Inputs: /rotor/recoil_permeability = 1.05 (example)
+    Inputs: /rotor/air_gap_mm = 0.800 mm (example)
+    Inputs: /rotor/poles = 16.0 (example)
+    Inputs: /rotor/magnet/thickness_mm = 3.00 mm (example)
+    Inputs: /rotor/magnet/pole_arc_ratio = 0.850 (example)
+card torque_n_m: title 'Torque T', value 52.4 mN·m, status not tested, 18 assumptions, EQ-09, EQ-06, EQ-07, EQ-05, estimate label None
+    Equation: EQ-09: EMF/torque constants and star/delta conversion. Ke_ph = |E1|/omega_m; star: Ke_LL = sqrt(3)*Ke_ph, I_ph = I_line; delta: Ke_LL = Ke_ph, I_ph = I_line/sqrt(3); T = (m/2)*Ke_ph*I_ph_peak = (m/sqrt(2))*Ke_ph*I_ph_rms; Kt_line = (m/sqrt(2))*Ke_ph (star), /sqrt(3) (delta); K_v = 1/Ke_LL; R_LL = 2*R_ph (star), 2*R_ph/3 (delta)
+    Inputs: /rotor/remanence_t = 1.30 T (example)
+    Inputs: /rotor/recoil_permeability = 1.05 (example)
+    Inputs: /rotor/air_gap_mm = 0.800 mm (example)
+    Inputs: /rotor/poles = 16.0 (example)
+    Inputs: /rotor/magnet/thickness_mm = 3.00 mm (example)
+    Inputs: /rotor/magnet/pole_arc_ratio = 0.850 (example)
+    Inputs: /operating/line_current_rms_a = 800 mA (example)
+card efficiency: title 'Efficiency, electromagnetic only η', value 0.741 dimensionless, status not tested, 36 assumptions, EQ-26, EQ-09, EQ-06, EQ-07, EQ-05, EQ-10, EQ-11, EQ-12, EQ-19, EQ-23, estimate label None
+    Equation: EQ-26: Loss sum, efficiency and motor constant. P_loss = P_Cu + P_eddy + P_circ + P_delta,circ + P_ic; P_out = T omega_m; eta = P_out/(P_out + P_loss); K_m = T/sqrt(P_Cu)
+    Equation: EQ-09: EMF/torque constants and star/delta conversion. Ke_ph = |E1|/omega_m; star: Ke_LL = sqrt(3)*Ke_ph, I_ph = I_line; delta: Ke_LL = Ke_ph, I_ph = I_line/sqrt(3); T = (m/2)*Ke_ph*I_ph_peak = (m/sqrt(2))*Ke_ph*I_ph_rms; Kt_line = (m/sqrt(2))*Ke_ph (star), /sqrt(3) (delta); K_v = 1/Ke_LL; R_LL = 2*R_ph (star), 2*R_ph/3 (delta)
+    Inputs: /rotor/remanence_t = 1.30 T (example)
+    Inputs: /rotor/recoil_permeability = 1.05 (example)
+    Inputs: /rotor/air_gap_mm = 0.800 mm (example)
+    Inputs: /rotor/poles = 16.0 (example)
+    Inputs: /rotor/magnet/thickness_mm = 3.00 mm (example)
+    Inputs: /rotor/magnet/pole_arc_ratio = 0.850 (example)
+    Inputs: /stackup/layers/0/thickness_mm = 0.0696 mm (example)
+    Inputs: /stackup/layers/2/thickness_mm = 0.0696 mm (example)
+    Inputs: /operating/winding_temperature_degc = 60.0 °C (example)
+    Inputs: constant:copper_resistivity_20c_ohm_m = 0.0000000172 Ω·m (registry constant)
+    Inputs: constant:copper_temp_coeff_per_k = 0.00393 1/K (registry constant)
+    Inputs: /operating/line_current_rms_a = 800 mA (example)
+    Inputs: /operating/speed_rpm = 1500 rpm (example)
+chart chart-torque-speed: title 'Torque', y Torque N·m, status unresolved, 37 assumptions, EQ-20, EQ-09, EQ-06, EQ-07, EQ-05, EQ-14, EQ-27, EQ-23, EQ-10, EQ-11
+chart chart-power-speed: title 'Mechanical power', y Mechanical power W, status unresolved, 37 assumptions, EQ-20, EQ-09, EQ-06, EQ-07, EQ-05, EQ-14, EQ-27, EQ-23, EQ-10, EQ-11
+
+## PDF report: serpentine_16p_example
+Torque constant per line current, rms Kt 136 mN·m/A not tested
+Torque T 109 mN·m not tested
+Efficiency, electromagnetic only η 0.756 dimensionless not tested
+
+## PDF report: spiral_12c10p_d08
+Torque constant per line current, rms Kt 38.4 mN·m/A not tested
+Torque T 38.4 mN·m not tested
+Efficiency, electromagnetic only η 0.611 dimensionless not tested
+
+## PDF report: spiral_12c14p
+Torque constant per line current, rms Kt 48.8 mN·m/A not tested
+Torque T 48.8 mN·m not tested
+Efficiency, electromagnetic only η 0.299 dimensionless not tested
+
+## PDF report: spiral_12c16p_default
+Torque constant per line current, rms Kt 55.9 mN·m/A not tested
+Torque T 55.9 mN·m not tested
+Efficiency, electromagnetic only η 0.330 dimensionless not tested
+
+## PDF report: wave_16p_example
+Torque constant per line current, rms Kt 65.5 mN·m/A not tested
+Torque T 52.4 mN·m not tested
+Efficiency, electromagnetic only η 0.741 dimensionless not tested

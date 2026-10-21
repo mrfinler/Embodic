@@ -311,6 +311,47 @@ SUBJECTS = (
         ("embodic.api", "embodic.io.report", "embodic.results.registry", "embodic.ui.viewmodels.results"),
         "Agent 4 (reviewer check)",
     ),
+    Subject(
+        "tests/independent/m5/records/PK-06_walkthrough_672297e.md",
+        "passed",
+        "672297e",
+        "wheel ad9e02c0 that Agent 4 built from 672297e (record, Inputs); compare wheels with v21_wheel_diff.py",
+        INSTALL_GUIDE,
+        (),
+        "Agent 4 (Linux walkthrough in the container)",
+    ),
+    Subject(
+        "tests/independent/m6/records/OR-11_OR-12_672297e.md",
+        "passed",
+        "672297e",
+        "wheel ad9e02c0 of 672297e in the PK-06 run 1 venv (record, What ran); compare wheels with v21_wheel_diff.py",
+        ("resources/evidence/equations.v1.json", "docs/phase2/engineering/oracle_cases.json"),
+        ("embodic.api", "embodic.physics", "embodic.physics.emf", "embodic.geometry.primitives", "embodic.paths"),
+        "Agent 4 (FEA rerun in GetDP)",
+    ),
+    Subject(
+        "tests/independent/m4/records/LG-01_word_review_672297e.md",
+        "passed",
+        "672297e",
+        "worktree unit/U-V28, src equal to 672297e, corpus equal to wheel ad9e02c0 (record l.5-7)",
+        (
+            "src/embodic/ui/strings",
+            "src/embodic/errors/catalogue",
+            "src/embodic/io/report.py",
+            "src/embodic/io/readme_writer.py",
+        ),
+        (),
+        "Agent 4 (word review)",
+    ),
+    Subject(
+        "tests/independent/m4/records/LG-04_T-11_reviewer_672297e.md",
+        "passed",
+        "672297e",
+        "wheel ad9e02c0 of 672297e and the source tree of worktree unit/U-V28 (record l.5-8)",
+        ("tests/static/lg_allowlist.toml", "resources/examples", "resources/evidence"),
+        ("embodic.api", "embodic.io.report", "embodic.results.registry", "embodic.ui.viewmodels.results"),
+        "Agent 4 (reviewer check)",
+    ),
 )
 
 
