@@ -115,7 +115,7 @@ TOOLSTRIP: tuple[ToolstripAction, ...] = (
         id="act-export-pdf",
         tab=ToolstripTab.EXPORT,
         icon="export-pdf",
-        shortcut=None,
+        shortcut="Ctrl+P",
         command="export_pdf",
         group="report",
     ),

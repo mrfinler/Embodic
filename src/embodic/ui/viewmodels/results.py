@@ -734,6 +734,7 @@ class GuideGroup:
 
 
 START_TOPIC = "guide:start"
+KEYS_TOPIC = "guide:keys"
 
 
 def equation_topic(eq_id: str, registry: Registry) -> GuideTopic:
@@ -810,7 +811,7 @@ def guide_groups(registry: Registry, keyboard_map: Sequence[tuple[str, str, str]
         for s in Status
     )
     keys = GuideTopic(
-        topic_id="guide:keys",
+        topic_id=KEYS_TOPIC,
         title=text("guide.group.keys"),
         rows=tuple((f"{scope}: {keys}", action) for scope, keys, action in keyboard_map),
     )

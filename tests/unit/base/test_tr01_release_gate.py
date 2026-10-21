@@ -57,9 +57,11 @@ def manual_record(
     result: str = "passed",
     record: str = EXISTING_RECORD,
     version: str = CURRENT_VERSION,
+    accepted: str | None = None,
 ) -> dict[str, str]:
-    """Return one manual record with the five keys of interfaces.md section 3.2."""
-    return {"req": req, "test_id": "PK-06", "record": record, "embodic_version": version, "result": result}
+    """Return one manual record with the five keys of interfaces.md section 3.2, and `accepted` when it is given."""
+    entry = {"req": req, "test_id": "PK-06", "record": record, "embodic_version": version, "result": result}
+    return entry if accepted is None else {**entry, "accepted": accepted}
 
 
 def write_records(path: Path, records: object) -> Path:
@@ -169,6 +171,125 @@ def test_tr01_a_failed_manual_record_does_not_cover_the_row_and_is_not_counted(m
     assert code == 1
     assert MANUAL_ONLY_ROW in out
     assert "manual: 0" in out
+
+
+@pytest.fixture
+def covered_project(manual_only_project, tmp_path) -> dict[str, Path]:
+    """Return the project with a passing test for every must row, so that only a record can fail the run."""
+    covered = write_report(tmp_path / "covered.json", [("REQ-F-01", "passed"), (MANUAL_ONLY_ROW, "passed")])
+    return {**manual_only_project, "report": covered}
+
+
+@pytest.mark.req("REQ-T-09", "REQ-N-10")
+def test_tr01_a_failed_record_fails_the_run_and_is_listed_even_when_a_test_covers_its_row(
+    covered_project, tmp_path, capsys
+):
+    """D-093c (DEF-UV21-01). Catches a failed record that is dropped in silence while its row is covered elsewhere."""
+    failed = manual_record(result="failed", record="README.md")
+    records = write_records(tmp_path / "records.json", [manual_record("REQ-F-01"), failed])
+    code, out = run_trace_matrix(
+        covered_project, "--fail-untested-through=M5", f"--manual-records={records}", capsys=capsys
+    )
+    listed = [line for line in out.splitlines() if "README.md" in line]
+    assert code == 1, out
+    assert len(listed) == 1
+    assert "failed" in listed[0] and "accepted" not in listed[0]
+    assert "untested due: 0" in out
+
+
+@pytest.mark.req("REQ-T-09", "REQ-N-10")
+def test_tr01_every_record_that_did_not_pass_is_listed(covered_project, tmp_path, capsys):
+    """D-093c. Catches a list that stops at the first failed record."""
+    records = write_records(
+        tmp_path / "records.json",
+        [manual_record(result="failed", record="README.md"), manual_record(result="failed", record="pyproject.toml")],
+    )
+    _, out = run_trace_matrix(
+        covered_project, "--fail-untested-through=M5", f"--manual-records={records}", capsys=capsys
+    )
+    assert len([line for line in out.splitlines() if "README.md" in line]) == 1
+    assert len([line for line in out.splitlines() if "pyproject.toml" in line]) == 1
+
+
+@pytest.mark.req("REQ-T-09", "REQ-N-10")
+def test_tr01_a_failed_record_that_names_its_decision_is_listed_as_accepted_and_the_run_passes(
+    covered_project, tmp_path, capsys
+):
+    """D-093c. Catches an `accepted` field that is ignored, or an accepted record that is left out of the list."""
+    accepted = manual_record(result="failed", record="README.md", accepted="D-091")
+    records = write_records(tmp_path / "records.json", [accepted])
+    code, out = run_trace_matrix(
+        covered_project, "--fail-untested-through=M5", f"--manual-records={records}", capsys=capsys
+    )
+    listed = [line for line in out.splitlines() if "README.md" in line]
+    assert code == 0, out
+    assert len(listed) == 1
+    assert "accepted" in listed[0] and "D-091" in listed[0]
+
+
+@pytest.mark.req("REQ-T-09", "REQ-N-10")
+@pytest.mark.parametrize("accepted", [None, "D-091"], ids=["unaccepted", "accepted"])
+def test_tr01_a_failed_record_is_never_counted_as_coverage(manual_only_project, tmp_path, capsys, accepted):
+    """D-093c. Catches an accepted record that covers its row: acceptance excuses the failure, it is not a pass."""
+    records = write_records(tmp_path / "records.json", [manual_record(result="failed", accepted=accepted)])
+    code, out = run_trace_matrix(
+        manual_only_project, "--fail-untested-through=M5", f"--manual-records={records}", capsys=capsys
+    )
+    assert code == 1
+    assert "manual: 0" in out
+    assert "untested due: 1" in out
+    assert MANUAL_ONLY_ROW in out.split("untested due: 1", 1)[1]
+
+
+@pytest.mark.req("REQ-T-09")
+def test_tr01_without_the_flag_a_failed_record_is_not_listed(covered_project, tmp_path, capsys):
+    """D-093c. Catches the rule leaking into the profiles that do not enforce TR-01: it applies under the flag."""
+    records = write_records(tmp_path / "records.json", [manual_record(result="failed", record="README.md")])
+    code, out = run_trace_matrix(covered_project, f"--manual-records={records}", capsys=capsys)
+    assert code == 0, out
+    assert "README.md" not in out
+
+
+@pytest.mark.req("REQ-T-09")
+@pytest.mark.parametrize(
+    "accepted",
+    ["91", "decision D-091", "D-91", "D-999"],
+    ids=["number-only", "prose", "short-number", "no-such-row"],
+)
+def test_tr01_an_accepted_field_that_names_no_decision_row_is_an_invalid_record(
+    covered_project, tmp_path, capsys, accepted
+):
+    """D-093c. Catches an `accepted` that any text satisfies: it must name a D-nnn row of docs/decision_log.md."""
+    bad = manual_record(result="failed", accepted=accepted)
+    records = write_records(tmp_path / "records.json", [bad])
+    code, out = run_trace_matrix(
+        covered_project, "--fail-untested-through=M5", f"--manual-records={records}", capsys=capsys
+    )
+    assert code == 1
+    assert "invalid manual records: 1" in out
+    assert repr(accepted) in out or accepted in out
+
+
+@pytest.mark.req("REQ-T-09", "REQ-N-10")
+def test_tr01_the_committed_index_passes_the_release_rule_for_its_failed_record(tmp_path, capsys):
+    """D-093c. Catches a committed record that did not pass and names no decision: the release gate would fail on it.
+
+    The requirements are the rows the committed index names, each with a passing test, so only the records decide.
+    """
+    committed = json.loads(ci.MANUAL_RECORDS.read_text(encoding="utf-8"))
+    rows = sorted({entry["req"] for entry in committed})
+    project = {
+        "requirements": write_requirements(tmp_path / "requirements.md", [(r, "carried", "must", "M1") for r in rows]),
+        "report": write_report(tmp_path / "report.json", [(r, "passed") for r in rows]),
+        "out": tmp_path / "matrix.md",
+    }
+    code, out = run_trace_matrix(
+        project, "--fail-untested-through=M5", f"--manual-records={ci.MANUAL_RECORDS}", capsys=capsys
+    )
+    assert code == 0, out
+    listed = [line for line in out.splitlines() if "PF-01" in line]
+    assert len(listed) == 1
+    assert "accepted" in listed[0] and "D-091" in listed[0]
 
 
 @pytest.mark.req("REQ-T-09")

@@ -102,7 +102,7 @@ STRINGS: Mapping[str, str] = {
     "drc.rule-note": "A violation is reported when clearance < rule − 1e-6 mm (D-006).",
     "drc.empty": "The DRC result appears after the first compute.",
     "chart.empty": "Charts appear after the first compute.",
-    "chart.no-dc-link": "The torque-speed estimate needs a DC-link voltage (Board and rotor, operating point).",
+    "chart.no-dc-link": "The torque-speed estimate needs a DC-link voltage (Board tab, Drive group).",
     "chart.data-table": "Data table",
     "chart.illustrative": "Illustrative, not computed",
     "chart.legend.phase": "Phase {phase}",

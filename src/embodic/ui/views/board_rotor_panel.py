@@ -78,17 +78,17 @@ class BoardRotorPanel(FieldPanel):
             self.helpers["param-bore"] = bore
             self._pending_bore = label_above(text("param-bore.label"), bore)
         if group is FieldGroup.MANUFACTURING:
-            fields: tuple[tuple[str, StackupInput], ...] = (
-                ("param-copper-weight", "copper_oz"),
-                ("param-board-thickness", "board_thickness_mm"),
+            fields: tuple[tuple[str, StackupInput, str], ...] = (
+                ("param-copper-weight", "copper_oz", text("design.unit.oz")),
+                ("param-board-thickness", "board_thickness_mm", text("design.unit.mm")),
             )
-            for name, field in fields:
+            for name, field, unit in fields:
                 edit = QLineEdit()
                 edit.setObjectName(name)
-                edit.setPlaceholderText(text("design.unit.oz") if field == "copper_oz" else text("design.unit.mm"))
+                edit.setPlaceholderText(unit)
                 edit.editingFinished.connect(lambda e=edit, f=field: self._stackup_input(e, f))
                 StepKeys(edit, STACKUP_INPUT_RULES[name])
-                form.addRow(label_above(text(f"{name}.label"), edit))
+                form.addRow(label_above(text(f"{name}.label"), edit, unit))
                 self.helpers[name] = edit
             error = QLabel()
             error.setObjectName("param-board-thickness-error")

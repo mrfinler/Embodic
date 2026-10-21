@@ -74,7 +74,7 @@ status = "inferred"
 class = "claim"
 place = '^embodic/(?:results/__init__|results/labels|selftest/catalogue|ui/strings/results)\.py:'
 kind = "literal"
-text = '^(?:Torque|Torque-speed|Torque-speed envelope|Torque constant(?:, (?:star|delta)| per line current, rms)?|Efficiency, electromagnetic only|TorqueSpeedEstimate|The torque-speed estimate needs a DC-link voltage \(Board and rotor, operating point\)\.)$'
+text = '^(?:Torque|Torque-speed|Torque-speed envelope|Torque constant(?:, (?:star|delta)| per line current, rms)?|Efficiency, electromagnetic only|TorqueSpeedEstimate|The torque-speed estimate needs a DC-link voltage \(Board tab, Drive group\)\.)$'
 reason = "The name of a computed result. The UI shows each result with a unit, an EQ-ID and a status badge (REQ-T-01), so the value carries its own status."
 status = "inferred"
 

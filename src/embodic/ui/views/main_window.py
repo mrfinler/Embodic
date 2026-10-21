@@ -65,6 +65,7 @@ from embodic.ui.viewmodels.outcome import (
     stamp_text,
 )
 from embodic.ui.viewmodels.results import (
+    KEYS_TOPIC,
     CompareViewModel,
     DrcRow,
     DrcTable,
@@ -345,7 +346,10 @@ class MainWindow(QMainWindow):
             ("F6", partial(self.cycle_region, 1)),
             ("Shift+F6", partial(self.cycle_region, -1)),
             ("Ctrl+Shift+N", partial(self._after_commit, self.show_examples)),
+            ("Ctrl+Shift+S", partial(self._after_commit, self.save_project_dialog)),
             ("Ctrl+Shift+T", self.appearance.cycle_theme),
+            ("Ctrl+Shift+Z", partial(self._after_commit, self.session.redo)),
+            ("Ctrl+/", self.show_shortcuts),
             *inspector_keys,
             ("Alt+5", partial(self.show_results_tab, "tab-results")),
             ("Alt+6", partial(self.show_results_tab, "tab-drc")),
@@ -395,10 +399,7 @@ class MainWindow(QMainWindow):
 
     def show_equations(self, eq_id: str | None = None) -> None:
         """Open the equation register at an entry (an EQ chip) or at its first entry (the toolstrip)."""
-        guide = self.guide_window()
-        guide.show_topic(eq_id or next(iter(self.registry.equations)))
-        guide.show()
-        guide.raise_()
+        self._show_guide_at(eq_id or next(iter(self.registry.equations)))
 
     def show_tests(self) -> None:
         """Open the Tests dialog (D-045c), created on first use; its runs never touch the results or their badges."""
@@ -414,8 +415,15 @@ class MainWindow(QMainWindow):
         while widget is not None and not hint:
             hint = widget.whatsThis() or None
             widget = widget.parentWidget()
+        self._show_guide_at(topic_for(hint, self.registry))
+
+    def show_shortcuts(self) -> None:
+        """Ctrl+/: open the guide at its keyboard shortcuts (design_spec.md section 10)."""
+        self._show_guide_at(KEYS_TOPIC)
+
+    def _show_guide_at(self, topic_id: str) -> None:
         guide = self.guide_window()
-        guide.show_topic(topic_for(hint, self.registry))
+        guide.show_topic(topic_id)
         guide.show()
         guide.raise_()
 

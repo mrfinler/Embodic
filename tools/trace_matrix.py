@@ -10,7 +10,11 @@ earlier one.
 
 Exit code 1 when a test has no REQ marker, a marker names an unknown REQ ID, a manual record is invalid, or (with
 ``--fail-untested-through``) a live must-requirement of that milestone or earlier has neither a passing test nor a
-manual record that passed. ``--manual-records`` reads the checks that only a person can run (interfaces.md section 3.2).
+manual record that passed, or a manual record did not pass and carries no ``accepted`` field. ``--manual-records`` reads
+the checks that only a person can run (interfaces.md section 3.2).
+With ``--fail-untested-through`` every manual record whose ``result`` is not ``passed`` is listed (D-093c). It fails
+TR-01 unless its ``accepted`` field names the decision row (``D-nnn`` of docs/decision_log.md) that accepts it; then it
+is listed as accepted. A record that did not pass is never counted as coverage, accepted or not.
 With ``--fail-untested-through`` a manual record counts only when its ``embodic_version`` is the version under test
 alone or that version followed by white space and a note (D-083c, D-084a), so ``0.0.4`` does not match ``0.0.40`` or
 ``0.0.4rc1``. The version under test is the ``__version__`` in ``src/embodic/__init__.py`` of the tree that holds this
@@ -31,6 +35,8 @@ REPO = Path(__file__).resolve().parents[1]
 REQUIREMENTS = REPO / "docs" / "phase2" / "architecture" / "requirements.md"
 EMBODIC_INIT = REPO / "src" / "embodic" / "__init__.py"
 REQ_ID = re.compile(r"REQ-[FNKTL]-\d{2}")
+DECISION_ID = re.compile(r"D-\d{3}")
+DECISION_LOG = Path("docs") / "decision_log.md"
 MILESTONES = ("M1", "M2", "M3", "M4", "M5")
 MANUAL_KEYS = ("req", "test_id", "record", "embodic_version", "result")
 MANUAL_RESULTS = ("passed", "failed")
@@ -68,6 +74,7 @@ class ManualRecord:
     record: str
     embodic_version: str
     result: str
+    accepted: str | None = None  # the decision row that accepts a record that did not pass (D-093c)
 
 
 def parse_requirements(text: str) -> list[Requirement]:
@@ -105,6 +112,14 @@ def merge_reports(reports: Sequence[Sequence[CollectedTest]]) -> list[CollectedT
     return list(merged.values())
 
 
+def names_decision_row(accepted: object, repo: Path) -> bool:
+    """Return True when `accepted` is a `D-nnn` that opens a row of the repository's decision log."""
+    log = repo / DECISION_LOG
+    if not isinstance(accepted, str) or not DECISION_ID.fullmatch(accepted) or not log.is_file():
+        return False
+    return re.search(rf"^\| {accepted} \|", log.read_text(encoding="utf-8"), re.MULTILINE) is not None
+
+
 def parse_manual_records(text: str, known_reqs: set[str], repo: Path = REPO) -> tuple[list[ManualRecord], list[str]]:
     """Return (valid records, one problem line for each invalid record); a problem line holds the record it names."""
     try:
@@ -119,7 +134,7 @@ def parse_manual_records(text: str, known_reqs: set[str], repo: Path = REPO) -> 
         if not isinstance(entry, dict) or not all(isinstance(entry.get(key), str) for key in MANUAL_KEYS):
             problems.append(f"manual record {shown}: needs the five string keys {', '.join(MANUAL_KEYS)}")
             continue
-        record = ManualRecord(**{key: entry[key] for key in MANUAL_KEYS})
+        record = ManualRecord(**{key: entry[key] for key in MANUAL_KEYS}, accepted=entry.get("accepted"))
         reasons = []
         if record.result not in MANUAL_RESULTS:
             reasons.append(f"result {record.result!r} is neither 'passed' nor 'failed'")
@@ -127,6 +142,10 @@ def parse_manual_records(text: str, known_reqs: set[str], repo: Path = REPO) -> 
             reasons.append(f"{record.req} is not a row of the requirements file")
         if not (repo / record.record).is_file():
             reasons.append(f"record file {record.record} does not exist")
+        if record.accepted is not None and not names_decision_row(record.accepted, repo):
+            reasons.append(
+                f"accepted {record.accepted!r} does not name a decision row (D-nnn) of {DECISION_LOG.as_posix()}"
+            )
         if reasons:
             problems.append(f"manual record {shown}: {'; '.join(reasons)}")
         else:
@@ -153,6 +172,24 @@ def counted_records(records: Sequence[ManualRecord], version: str | None) -> tup
         if record not in current
     ]
     return current, stale
+
+
+def unpassed_records(records: Sequence[ManualRecord]) -> tuple[list[str], list[str]]:
+    """Return (one line for each record that did not pass and fails TR-01, one line for each accepted one) (D-093c).
+
+    A record that did not pass fails TR-01 unless its `accepted` field names a decision row. Neither is coverage:
+    `counted_records` keeps only the records that passed.
+    """
+    failing, accepted = [], []
+    for record in records:
+        if record.result == "passed":
+            continue
+        shown = f"manual record {record.record} ({record.req} {record.test_id}): result {record.result!r}"
+        if record.accepted is None:
+            failing.append(f"{shown}, no decision accepts it: fails TR-01, D-093c")
+        else:
+            accepted.append(f"accepted {shown}, accepted by {record.accepted}: listed, not counted")
+    return failing, accepted
 
 
 def render_matrix(requirements: list[Requirement], tests: list[CollectedTest]) -> str:
@@ -248,15 +285,17 @@ def main(argv: list[str] | None = None) -> int:
     through = args.fail_untested_through
     counted, stale = counted_records(records, read_version(EMBODIC_INIT) if through else None)
     untested = find_untested(requirements, tests, through, counted) if through else []
+    unaccepted, accepted = unpassed_records(records) if through else ([], [])
     covered = sum(1 for req in requirements if any(req.req_id in t.req_ids and t.outcome == "passed" for t in tests))
     print(
         f"trace matrix: {len(requirements)} requirements, {len(tests)} tests, {covered} requirements with a passing "
         f"test; manual: {len(counted)}; invalid manual records: {len(record_problems)}; "
-        f"TR-02 unmarked tests: {len(unmarked)}; unknown REQ IDs: {len(unknown)}; untested due: {len(untested)}"
+        f"TR-02 unmarked tests: {len(unmarked)}; unknown REQ IDs: {len(unknown)}; untested due: {len(untested)}; "
+        f"manual records not passed: {len(unaccepted)} failing, {len(accepted)} accepted"
     )
-    for problem in [*unmarked, *unknown, *record_problems, *stale, *untested]:
+    for problem in [*unmarked, *unknown, *record_problems, *stale, *unaccepted, *accepted, *untested]:
         print(f"  {problem}")
-    return 1 if unmarked or unknown or record_problems or untested else 0
+    return 1 if unmarked or unknown or record_problems or unaccepted or untested else 0
 
 
 if __name__ == "__main__":

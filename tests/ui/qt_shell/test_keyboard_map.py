@@ -7,7 +7,7 @@ name and a wrong role (WCAG 4.1.2).
 import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAccessible, QAccessibleActionInterface
-from PySide6.QtWidgets import QApplication, QWidget
+from PySide6.QtWidgets import QApplication, QCheckBox, QDialog, QFileDialog, QWidget
 
 from embodic.model.vocabulary import TopologyKind
 from embodic.ui.theme import ThemeName
@@ -79,6 +79,58 @@ def test_ctrl_shift_n_opens_the_examples_gallery(make_shell, qtbot):
     press(qtbot, KEY.Key_N, MOD.ControlModifier | MOD.ShiftModifier)
     qtbot.waitUntil(lambda: isinstance(QApplication.activeModalWidget(), ExamplesGallery))
     QApplication.activeModalWidget().close()
+
+
+@pytest.mark.req("REQ-N-12")
+def test_ctrl_shift_s_asks_for_a_file_name_and_saves_the_project(opened, qtbot, tmp_path, monkeypatch):
+    """Catches Ctrl+Shift+S doing nothing (DEF-US17-02): design_spec.md section 10 binds it to Save as."""
+    target = tmp_path / "saved.embodic.json"
+    asked = []
+
+    def choose(*args, **kwargs):
+        asked.append(args)
+        return str(target), ""
+
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", choose)
+    press(qtbot, KEY.Key_S, MOD.ControlModifier | MOD.ShiftModifier)
+    assert len(asked) == 1
+    assert target.is_file()
+
+
+@pytest.mark.req("REQ-N-12")
+def test_ctrl_shift_z_redoes_the_last_undone_edit(opened, qtbot):
+    """Catches Ctrl+Shift+Z doing nothing (DEF-US17-02): design_spec.md section 10 binds it to Redo beside Ctrl+Y."""
+    session, pointer = opened.session, "/connection/topology"
+    before = session.document.draft.values[pointer]
+    other = "delta" if before == "star" else "star"
+    session.edit(pointer, other)
+    session.undo()
+    assert session.document.draft.values[pointer] == before
+    assert session.can_redo.value
+    press(qtbot, KEY.Key_Z, MOD.ControlModifier | MOD.ShiftModifier)
+    assert session.document.draft.values[pointer] == other
+    assert not session.can_redo.value
+
+
+@pytest.mark.req("REQ-N-12")
+def test_ctrl_p_opens_the_export_dialog_with_the_report_checked(opened, qtbot):
+    """Catches Ctrl+P doing nothing (DEF-US17-02): design_spec.md section 10 binds it to Report, the PDF report."""
+    press(qtbot, KEY.Key_P, MOD.ControlModifier)
+    dialog = opened.findChild(QDialog, "dlg-export")
+    assert dialog is not None and dialog.isVisible()
+    checked = {box.objectName() for box in dialog.findChildren(QCheckBox) if box.isChecked()}
+    assert checked == {"export-format-pdf"}
+    dialog.close()
+
+
+@pytest.mark.req("REQ-N-12")
+def test_ctrl_slash_opens_the_guide_at_the_keyboard_shortcuts(opened, qtbot):
+    """Catches Ctrl+/ doing nothing (DEF-US17-02): design_spec.md section 10 binds it to Shortcuts."""
+    press(qtbot, KEY.Key_Slash, MOD.ControlModifier)
+    guide = opened.guide
+    assert guide is not None and guide.isVisible()
+    assert guide.current_topic() == "guide:keys"
+    guide.close()
 
 
 @pytest.mark.req("REQ-N-12")

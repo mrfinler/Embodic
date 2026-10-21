@@ -10,9 +10,10 @@ column carries the unit in its own description, and the second test below reads 
 import re
 
 import pytest
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QAbstractItemView, QLabel, QTableWidget
-from tests.ui.qt_design.conftest import find
+from PySide6.QtCore import QPoint, Qt
+from PySide6.QtGui import QAccessible
+from PySide6.QtWidgets import QAbstractItemView, QLabel, QLineEdit, QTableWidget
+from tests.ui.qt_design.conftest import enter, find
 
 from embodic.model.fields import FIELD_BY_KEY, field_specs
 from embodic.model.vocabulary import TopologyKind
@@ -128,3 +129,60 @@ def test_n24_the_layer_list_thickness_cells_are_in_micrometres_as_their_descript
     for row in range(table.rowCount()):
         millimetres = values[f"/stackup/layers/{row}/thickness_mm"]
         assert float(table.item(row, column).text()) == pytest.approx(millimetres * 1000, rel=1e-3)
+
+
+STACKUP_GENERATOR_INPUTS = {"param-copper-weight": ("1", "oz"), "param-board-thickness": ("1.6", "mm")}
+
+
+@pytest.mark.parametrize("name", list(STACKUP_GENERATOR_INPUTS))
+def test_n24_the_stackup_generator_inputs_show_their_unit_beside_a_value_and_announce_it(make_shell, qtbot, name):
+    """Catches DEF-US17-01: a unit that shows only as placeholder text, which a typed value hides, and is not announced.
+
+    The copper weight and the board thickness are helper inputs without a field-table row. They follow the same rule
+    as every field row (screens.md, table conventions): the unit sits in a `<id>-unit` label beside the input and is
+    part of the accessible description, which the assistive technology reads through `QAccessible`.
+    """
+    value, symbol = STACKUP_GENERATOR_INPUTS[name]
+    window = make_shell(compute_fn=no_compute).window
+    window.session.new_design(TopologyKind.SPIRAL)
+    window.inspector_tabs.setCurrentWidget(window.panels["tab-board"])
+    enter(qtbot, window, name, value)
+    edit = find(window, name)
+    assert isinstance(edit, QLineEdit)
+    assert edit.text() == value
+    unit = find(window, f"{name}-unit")
+    assert isinstance(unit, QLabel)
+    assert unit.text() == symbol
+    assert unit.isVisibleTo(window)
+    right_of_input = edit.mapToGlobal(QPoint(edit.width(), 0)).x()
+    assert unit.mapToGlobal(QPoint(0, 0)).x() >= right_of_input, "the unit is not beside the input"
+    assert (
+        edit.mapToGlobal(QPoint(0, 0)).y()
+        <= unit.mapToGlobal(QPoint(0, unit.height() // 2)).y()
+        <= (edit.mapToGlobal(QPoint(0, edit.height())).y())
+    ), "the unit is not on the input's line"
+    interface = QAccessible.queryAccessibleInterface(edit)
+    assert symbol in edit.accessibleDescription()
+    assert symbol in interface.text(QAccessible.Text.Description)
+
+
+def test_n24_the_stackup_generator_inputs_line_up_with_the_field_rows_of_their_group(make_shell, settle):
+    """Catches a unit label outside the section's unit column, which leaves its input wider than the rows' (ruling g 2).
+
+    The unit column of a section has the width of its widest unit, so the input edges of one group box align
+    (screens.md, layout of a field row). The widest unit is a stand-in so that the test does not depend on the width
+    of "oz" against "mm" in the font of the machine.
+    """
+    window = make_shell(compute_fn=no_compute).window
+    window.session.new_design(TopologyKind.SPIRAL)
+    panel = window.panels["tab-board"]
+    window.inspector_tabs.setCurrentWidget(panel)
+    group = find(window, "tab-board-group-manufacturing")
+    find(window, "param-copper-weight-unit").setText("W/(m²·K)")
+    panel.refresh()
+    settle()
+    labels = [label.objectName() for label in group.findChildren(QLabel)]
+    names = [name.removesuffix("-unit") for name in labels if name.endswith("-unit")]
+    assert {"param-copper-weight", "param-board-thickness", "param-min-trace"} <= set(names)
+    right_edges = {n: find(window, n).mapTo(group, QPoint(find(window, n).width(), 0)).x() for n in names}
+    assert len(set(right_edges.values())) == 1, right_edges

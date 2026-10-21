@@ -46,6 +46,7 @@
   "test_id": "PF-01",
   "record": "docs/phase3/fable/PF-01_windows_0.0.5.md",
   "embodic_version": "0.0.5 (Fable on the reference laptop, checkout bbeed84, src equal to release 42074f2; D-087, docs/phase3/verification/manual_records_0.0.5_release.md)",
-  "result": "failed"
+  "result": "failed",
+  "accepted": "D-091"
  }
 ]
