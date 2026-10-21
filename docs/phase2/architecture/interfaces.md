@@ -117,8 +117,9 @@ becomes per primitive, as rule 2b is. No type, field or signature changes.
 
 Revision 2026-10-22 (U-D29, claude-opus-5-5, D-093c; main 358673d read for every item). §3.2 adds the optional
 manual-record key `accepted` and the TR-01 rule for a record whose `result` is not `"passed"` (DEF-UV21-01). The PF-01
-record, `accepted: D-091`, is the example. A stale record that failed is listed by that rule and not as stale. Nothing
-under `src/embodic` changes.
+record, `accepted: D-091`, is the example. A stale record that failed is listed by that rule and not as stale. The
+currency rule now states the exact version token of D-084a, read from the tree under test, which `tools/trace_matrix.py`
+already applies and which the U-D26 text (`str.startswith`) did not. Nothing under `src/embodic` changes.
 
 ## 0. Rules for every public boundary
 
@@ -1897,12 +1898,14 @@ not decide whether a record counts, and left a record of an earlier build open (
 earlier build"). D-083c replaces that sentence and settles the row. TR-01 never checked currency, so at c25d8a9 it
 counted seven records of older builds (D-083c). Agent 3 builds the rule in `tools/trace_matrix.py` (U-M8y).
 
-- The version under test is `embodic.__version__`, the value that `tools/record_passed_tests.py` writes into the
-  evidence (l.88-89).
-- Under the release profile, a manual record counts only when its `embodic_version` begins with the version under test.
-  The comparison is `str.startswith` on the two strings as written. A counted record is also valid (the checks above)
-  and has `result` equal to `"passed"`.
-- A valid record whose `embodic_version` does not begin with the version under test is stale. TR-01 does not count it,
+- The version under test is the string assigned to `__version__` in `src/embodic/__init__.py` of the tree that holds
+  `tools/trace_matrix.py`. The script reads it as text and never imports it, because a worktree's venv can import the
+  `embodic` of another tree (`read_version`, l.202-213; D-084a).
+- Under the release profile, a manual record counts only when its `embodic_version` is the version under test, alone or
+  followed by white space and a note. `"0.0.4"` therefore does not match `"0.0.40"` or `"0.0.4rc1"` (D-084a;
+  `counted_records`, l.147-148; `verified` by running it). A counted record is also valid (the checks above) and has
+  `result` equal to `"passed"`.
+- A valid record whose `embodic_version` does not match the version under test is stale. TR-01 does not count it,
   whatever its `result`. TR-01 lists a stale record that passed with its `record` path and D-061d. The rule for a record
   that did not pass (below) lists a stale record that failed, so each record is listed once.
 - A stale record does not fail the run by itself. It covers no row, so a live must row that only a stale record covered
