@@ -2,6 +2,53 @@ Prepared by: Agent 4 - Independent Verificator - model: claude-opus-5-5
 
 # PK-04 Linux reference
 
+## Release 0.0.6 (U-V29, 2026-10-22)
+
+`linux/` is the output of `pk04_reference.py` for release 0.0.6 (tag v0.0.6, commit 2bfca49, D-096). The 0.0.5
+reference no longer compares, because 0.0.6 changes `src/` (wave F15, D-094) and the comparison refuses another source
+hash. Each line below was `verified` by running it.
+
+- The wheel is `/home/claude/release_0.0.6/embodic-0.0.6-py3-none-any.whl`, SHA-256
+  `fdb89189161d14b71433c4e35861d4e4d56fc6a7e64383f96ba13e27ba450101` (`sha256sum`), the value D-096 records.
+- It went into a fresh venv `/home/claude/wheelvenv-0.0.6` (`/usr/bin/python3.11 -m venv`, CPython 3.11.17) by the two
+  commands of `requirements/README.md`. `pip freeze --all` lists embodic 0.0.6 (the wheel, with its sha256), numpy
+  2.4.6, PySide6_Essentials 6.11.2 and shiboken6 6.11.2, and the venv's own pip 24.0 and setuptools 79.0.1.
+- The installed sources hash to `db089e7198654e1b07156bd08d4d590ba0173bd3f55ef9ee1e83ae86b1b275cb`
+  (`package_source_sha256`). The installed evidence file is byte-identical to
+  `/home/claude/release_0.0.6/passed_tests.v1.json` (`cmp`) and names the same `source_sha256`, git commit 2bfca49,
+  `git_dirty` false, profile `release`, Python 3.11.17 and 58 passed test IDs. `src/embodic` of main 079d471 hashes to
+  the same value, and `git diff 2bfca49 079d471 -- src resources` is empty.
+- Command: `QT_QPA_PLATFORM=offscreen /home/claude/wheelvenv-0.0.6/bin/python -I
+  docs/phase3/verification/checks/pk04_reference.py --out <folder>`. Four examples exit 0. The wave example exits 2 with
+  186 DRC violations, as D-034 expects. The two runs took 7.2 s and 7.6 s.
+- Two runs into two scratch folders gave six byte-identical files each (`cmp`). The committed files are the first run.
+- `pk04_compare.py --self-test docs/phase3/verification/reference/linux` passes all 10 cases (exit 0), with the system
+  Python and with the wheel venv's Python. Comparing this folder with the second run prints `PK-04 passed at rel
+  1e-09`, every file byte-identical (exit 0). Comparing the 0.0.5 reference with this one is refused (exit 2) on
+  `embodic_source_sha256`, as designed.
+- The candidate wheel ad9e02c0 (U-V28's build of 672297e, in its PK-06 run 1 venv) gives six files byte-identical to
+  this folder.
+
+What changed against the 0.0.5 reference. Every JSON pointer was compared, none left out (a plain recursive walk, no
+skipped keys): each example differs only in `/versions/embodic` (0.0.5 to 0.0.6), and the manifest only in `embodic`
+and `embodic_source_sha256`. Every `pairs_checked`, violation, status field, EMF value, design hash, layout hash and CLI
+line is equal. This matches D-094a, which says the five examples' outcomes equal those of 0.0.5 except the version
+fields.
+
+The DRC pairs file. `drc_pairs_linux_0.0.6.json.gz` is the output of `checks/drc_pairs_probe.py` in the same venv; two
+runs gave identical bytes (`cmp`), 15 s each. Against `drc_pairs_linux_0.0.5.json.gz` only `embodic` and
+`embodic_source_sha256` differ: the same 4072 pairs near the cutoff, the same 12 split ties, the same left-out pairs
+(trace_trace 1,060,944, least clearance 0.448812 mm) and no violation. The probe now compares with the 0.0.6 file by
+default. Run in this venv with that default, it prints `0 pairs and 0 split ties differ; largest slack difference 0.0
+mm over 4072 pairs` and `probe consistent` (exit 0). Run in the 0.0.5 wheel venv, it prints `not compared with
+.../drc_pairs_linux_0.0.6.json.gz: other embodic source or example`, so the default is the 0.0.6 file. The 0.0.4 and
+0.0.5 files stay for their own comparisons.
+
+Windows. The comparison on the laptop is Fable's and is `not tested` here. Once this folder and the probe are in the
+laptop's checkout, the campaign's `pk04` step runs the reference and the comparison with the wheel venv of its PK-06
+run, and the probe runs with the same Python. The 0.0.5 lines below give the form; the version, run number and venv
+path are those of the 0.0.6 run (`run_0.0.6_gates.cmd`, D-096).
+
 ## Release 0.0.5 (U-V21, 2026-10-21)
 
 `linux/` is the output of `pk04_reference.py` for release 0.0.5 (tag v0.0.5, commit 42074f2, D-089). The 0.0.4
