@@ -115,6 +115,11 @@ Revision 2026-10-20 (U-D25, claude-opus-5-5, D-078; main 14c8b7a read for every 
 landing group of the primitive an end point lies on and withdraws its end-point reading (DEF-UV16-01). The rule 2 tap
 becomes per primitive, as rule 2b is. No type, field or signature changes.
 
+Revision 2026-10-22 (U-D29, claude-opus-5-5, D-093c; main 358673d read for every item). §3.2 adds the optional
+manual-record key `accepted` and the TR-01 rule for a record whose `result` is not `"passed"` (DEF-UV21-01). The PF-01
+record, `accepted: D-091`, is the example. A stale record that failed is listed by that rule and not as stale. Nothing
+under `src/embodic` changes.
+
 ## 0. Rules for every public boundary
 
 - Lengths are millimetres (`_mm`), angles radians (`_rad`) inside the core, temperature °C (`_degc`), current A (`_a`),
@@ -1860,7 +1865,8 @@ exits 1 when a live must row of milestone M5 or earlier has no passing test and 
   there. REQ-N-05 is such a row (v3_contract_rulings.md §2 point 2).
 
 Manual records (proposed; Fable confirms the location and the format). `tools/trace_matrix.py` gains `--manual-records
-PATH`. The file is one JSON list with one object per record.
+PATH`. The file is one JSON list with one object per record. Each object has the five required keys and may have the
+key `accepted` (D-093c, below).
 
 | Key | Type | Value |
 |---|---|---|
@@ -1869,6 +1875,7 @@ PATH`. The file is one JSON list with one object per record.
 | `record` | string | the repository-relative POSIX path of the record file; the file exists |
 | `embodic_version` | string | the version of the build that the person tested |
 | `result` | string | `"passed"` or `"failed"` |
+| `accepted` | string, optional | the decision row that accepts a record whose `result` is not `"passed"`, as `D-` and three digits, for example `"D-091"` |
 
 - TR-01 counts a record with `result` equal to `"passed"` as a test for its `req`, when the record is current (currency,
   below). The Phase 1 text of TR-01 already allows "a manual test record"
@@ -1896,7 +1903,8 @@ counted seven records of older builds (D-083c). Agent 3 builds the rule in `tool
   The comparison is `str.startswith` on the two strings as written. A counted record is also valid (the checks above)
   and has `result` equal to `"passed"`.
 - A valid record whose `embodic_version` does not begin with the version under test is stale. TR-01 does not count it,
-  whatever its `result`, and lists it with its `record` path and D-061d.
+  whatever its `result`. TR-01 lists a stale record that passed with its `record` path and D-061d. The rule for a record
+  that did not pass (below) lists a stale record that failed, so each record is listed once.
 - A stale record does not fail the run by itself. It covers no row, so a live must row that only a stale record covered
   is listed as untested and fails the run, as any untested row does. An invalid record still fails the run.
 - "manual: N" in the summary line counts only the counted records.
@@ -1912,6 +1920,46 @@ On main fcd050b all six entries of `docs/phase3/verification/manual_records.json
 (release c25d8a9)"`, and `embodic.__version__` is `"0.0.4"` (`src/embodic/__init__.py` l.3). Under this rule the six
 count for 0.0.4 (`verified` by reading). When the version changes, each is stale until Agent 4 restamps it under D-061d
 or a person repeats the check.
+
+A manual record that did not pass (revision 2026-10-22, U-D29; D-093c, DEF-UV21-01). On main 358673d, TR-01 neither
+counts nor lists a valid record whose `result` is `"failed"`, current or stale (`counted_records`,
+`tools/trace_matrix.py` l.137-155; `verified` by running it on three records). A must row whose acceptance failed on the
+named machine then passes TR-01 unseen when another test carries its marker (DEF-UV21-01). D-093c adds the rule below,
+and Agent 3 builds it in `tools/trace_matrix.py` (U-M9d).
+
+- Under the release profile, TR-01 lists every valid manual record whose `result` is not `"passed"`. A valid record of
+  that kind has `result` `"failed"`, because any other value makes the record invalid (above). TR-01 lists the record
+  whatever its `embodic_version`, with its `record` path, `req`, `test_id` and `embodic_version`.
+- A record that did not pass fails the run unless it carries `accepted` with the decision row that accepts it. The
+  value is `D-` followed by three digits. A missing `accepted`, or a value of another form, fails the run.
+- TR-01 lists a record that carries `accepted` as accepted, with that decision row. An accepted record does not fail the
+  run, and it never counts as coverage. It covers no row, so a live must row that only an accepted record names is
+  listed as untested and fails the run, as any untested row does.
+- TR-01 reads `accepted` only on a record whose `result` is not `"passed"`. A passed record counts or is stale by the
+  currency rule above, with or without the key.
+- "manual: N" in the summary line counts no record that did not pass.
+- TR-01 checks the form of `accepted` and does not read `docs/decision_log.md`. Whether the named row accepts the
+  record is for Agent 4 and Fable to check.
+- The rule applies with `--fail-untested-through`, which only the release profile passes. The commit and nightly
+  profiles read no record.
+
+The PF-01 record is the example. D-091a keeps REQ-N-01 failed in the Phase 3 audit as a known limit of 0.0.5 and moves
+DEF-W-15 to Phase 5. On main 358673d the entry has no `accepted` key (`verified` by reading), and U-M9d adds it:
+
+```json
+{
+ "req": "REQ-N-01",
+ "test_id": "PF-01",
+ "record": "docs/phase3/fable/PF-01_windows_0.0.5.md",
+ "embodic_version": "0.0.5 (Fable on the reference laptop, checkout bbeed84, src equal to release 42074f2; D-087, docs/phase3/verification/manual_records_0.0.5_release.md)",
+ "result": "failed",
+ "accepted": "D-091"
+}
+```
+
+With the key, TR-01 lists PF-01 as accepted under D-091 and does not fail on it. Without the key, the record fails the
+run. Either way the record covers nothing. REQ-N-01 passes TR-01 through the 20 Linux tests that carry its marker
+(DEF-UV21-01, `verified` by Agent 4 on the 0.0.5 release reports), and `req_audit.py` still reads the row `failed`.
 
 D-051e puts a coverage step in Phase 5, so this contract adds no coverage gate.
 
