@@ -1,6 +1,6 @@
 """Carry-over table for Phase 4: which Phase 3 evidence stands for the named build, row by row (D-061d).
 
-    python3 docs/phase4/verification/checks/carry_over.py            # writes carry_over_0.0.5.md beside checks/
+    python3 docs/phase4/verification/checks/carry_over.py            # writes carry_over_<BUILD>.md beside checks/
     python3 docs/phase4/verification/checks/carry_over.py --check    # exit 1 when that file differs from a fresh run
     python3 docs/phase4/verification/checks/carry_over.py --self-test
 
@@ -12,8 +12,10 @@ Inputs, read only:
 - HANDLING below: the Phase 4 handling of every live must or should row that is not `verified`, with its source.
 
 The run fails when a non-verified row has no HANDLING entry, when an entry names a row that is now `verified`, or when
-a manual record does not stand for the build. A new build therefore cannot reuse this table by accident: its audit
-target (req_audit.py TARGETS), its currency run and these entries are redone first.
+a passed manual record does not stand for the build. A failed record never counts as coverage (D-093c), so one that
+does not stand is listed in its row with its verdict and does not fail the run (U-V30: PF-01 of 0.0.5 against 0.0.6).
+A new build therefore cannot reuse this table by accident: its audit target (req_audit.py TARGETS), its currency run
+and these entries are redone first.
 """
 
 import argparse
@@ -28,8 +30,8 @@ ROOT = Path(__file__).resolve().parents[4]
 AUDIT = ROOT / "docs/phase3/verification/req_audit.md"
 INDEX = ROOT / "docs/phase3/verification/manual_records.json"
 CURRENCY = ROOT / "tests/independent/m7/v14_record_currency.py"
-BUILD = "0.0.5"
-COMMIT = "42074f2"
+BUILD = "0.0.6"
+COMMIT = "2bfca49"
 OUT = ROOT / f"docs/phase4/verification/carry_over_{BUILD}.md"
 LIVE_PRIOS = ("must", "should")
 UNRULED = "text-verified; no V3-01 ruling"
@@ -41,21 +43,22 @@ MAY_STAY = "May stay `not tested` (verification_plan.md section 4 point 3). Carr
 
 HANDLING = {
     "REQ-N-01": "Known limit DEF-W-15, for the user to accept by name (decision K-2). The user moved its fix to "
-    "Phase 5 (D-091a). The failed PF-01 record stands for the build. No UAT rerun.",
-    "REQ-F-11": "OR-11 and OR-12 records stand. OR-11c (3-D) is `not tested`, and EQT-14-O2 needs a board (K-4). "
-    "Check E-05 shows the EMF chain to the user.",
-    "REQ-N-02": "UI-36 to UI-45 are named by no test (text rule). On Windows DEF-W-12 is a known limit (K-1, D-076d). "
-    "Check E-08 lets the user judge the lag.",
-    "REQ-N-04": "PK-04 on the 0.0.5 wheel passed on the laptop on all five examples (D-090d). The record is not in "
-    "manual_records.json yet. Fable indexes it before Phase 3 closes.",
-    "REQ-N-05": "The PK-01 Windows cell on 0.0.5 has no result (stopped by an app update, D-091b). It runs in the "
-    "pending Windows chain. The 3.12 and 3.13 cells may stay `not tested` (D-048d).",
-    "REQ-N-06": "PK-05 is blocked by the laptop's Application Control policy (DEF-W-14, D-086c) and stays `not tested` "
-    "there. Code signing is decision S-1.",
-    "REQ-N-07": "The Linux PK-06 record stands. Windows warm run 7 passed on the 0.0.5 wheel (D-090d). The cold run "
-    "waits for a normal network (optional record R-3).",
-    "REQ-N-16": "AX-06 (Narrator) on 0.0.5 is a step of the UAT walkthrough. Its record closes the row (R-1).",
-    "REQ-N-24": "The same AX-06 record as REQ-N-16 (R-1).",
+    "Phase 5 (D-091a), and D-100b keeps the row `failed`. The PF-01 record ran on the 0.0.5 source. Against 2bfca49 "
+    "its files differ only in the version strings (src/embodic/__init__.py and the app_version and engine_version of "
+    "the five examples), so D-061d supersedes it and the failure carries as `inferred`. No UAT rerun.",
+    "REQ-N-02": "The W8 latency gate and runs 2, 3 and 4 of the five latency runs failed on the laptop (N02-10, "
+    "DEF-W-12), and their records are accepted (D-076d, D-100b, D-101). A failed run on the named machine outweighs "
+    "the passing tests, as for REQ-N-01. D-100b names the row a point-1 exception, known limit K-1. Check E-08 lets "
+    "the user judge the lag.",
+    "REQ-N-05": "The W7 record (PK-01) and the W8 record (PK-02) failed and are accepted by name (D-100c). D-100b "
+    "closes the row by name: PK-02 by runs 11 and 12, PK-01 by W7, and the exit rests on that ruling (D-101). The 3.12 "
+    "and 3.13 Windows cells of PK-01 may stay `not tested` (D-048d).",
+    "REQ-N-06": "The W8 record (PK-11) failed on the launcher block (DEF-W-16) and is accepted by name (D-100c). "
+    "D-100b closes the row by name: PK-05 (D-099a), PK-11 by run 11, and the exit rests on that ruling (D-101). The fix "
+    "of DEF-W-16 is decision S-1.",
+    "REQ-N-16": "AX-06 (Narrator) on 0.0.6 is a step of the UAT walkthrough. Its record closes the row (R-1). Phase 4 "
+    "starts with the row `partial`, and verdict A-1 waits for AX-06 or the user's decline (D-100b).",
+    "REQ-N-24": "The same AX-06 record as REQ-N-16 (R-1, D-100b).",
     "REQ-F-29": "The audit finds no test named UT-EXP-05. Carries as `partial`. The user sees the bundle export in the "
     "walkthrough.",
     "REQ-N-20": MAY_STAY,
@@ -124,7 +127,7 @@ def classify(rows: list[Row], records: list[Record], handling: dict[str, str]) -
     problems = []
     lines = []
     for record in records:
-        if record.verdict != "stands":
+        if record.verdict != "stands" and record.result == "passed":
             problems.append(
                 f"{record.req} {record.test_id}: {record.path} does not stand for {COMMIT} ({record.verdict})"
             )
@@ -159,7 +162,7 @@ def render(rows: list[Row], lines: list[str], records: list[Record]) -> str:
     stand = sum(r.verdict == "stands" for r in records)
     return "\n".join(
         [
-            "Prepared by: Agent 4 - Independent Verificator - model: claude-opus-5-5 (unit U-V25)",
+            "Prepared by: Agent 4 - Independent Verificator - model: claude-opus-5-5 (units U-V25 and U-V30)",
             "",
             f"# Carry-over of Phase 3 evidence to the acceptance of release {BUILD} ({COMMIT}) (generated)",
             "",
@@ -188,19 +191,27 @@ def self_test(rows: list[Row], records: list[Record]) -> int:
     _, problems = classify(rows, records, dropped)
     if not any("REQ-N-16" in p and "no HANDLING" in p for p in problems):
         failures.append("a non-verified row without an entry was not reported")
-    flipped = [Row(r.req, r.prio, "verified", r.ruling, r.records) if r.req == "REQ-N-04" else r for r in rows]
+    flipped = [Row(r.req, r.prio, "verified", r.ruling, r.records) if r.req == "REQ-N-16" else r for r in rows]
     _, problems = classify(flipped, records, HANDLING)
-    if not any("REQ-N-04 is verified" in p for p in problems):
+    if not any("REQ-N-16 is verified" in p for p in problems):
         failures.append("a stale entry for a verified row was not reported")
+    first_passed = next(i for i, r in enumerate(records) if r.result == "passed")
     stale = [
-        Record(r.req, r.test_id, r.path, r.result, "does not stand") if i == 0 else r for i, r in enumerate(records)
+        Record(r.req, r.test_id, r.path, r.result, "does not stand") if i == first_passed else r
+        for i, r in enumerate(records)
     ]
     _, problems = classify(rows, stale, HANDLING)
     if not any("does not stand" in p for p in problems):
-        failures.append("a record that does not stand was not reported")
+        failures.append("a passed record that does not stand was not reported")
+    failed_stale = [
+        Record(r.req, r.test_id, r.path, r.result, "does not stand") if r.result == "failed" else r for r in records
+    ]
+    lines, problems = classify(rows, failed_stale, HANDLING)
+    if problems or not any("(failed, does not stand)" in line for line in lines):
+        failures.append("a failed record that does not stand failed the run or was left out of its row")
     for failure in failures:
         print(f"self-test FAIL: {failure}")
-    print(f"self-test: {4 - len(failures)} of 4 controls pass")
+    print(f"self-test: {5 - len(failures)} of 5 controls pass")
     return 1 if failures else 0
 
 

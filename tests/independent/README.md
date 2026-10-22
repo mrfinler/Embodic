@@ -491,3 +491,28 @@ Verdicts on 2026-10-21 (records `m7/records/V3-0x_0.0.5.md`, each `verified` by 
 (DEF-UV18-01's mutant V3-02-07 killed by U-M8y's two-path case); V3-03 5 of 5 (V3-03-04 judged for the first time,
 killed by the 1e-9 mm joint check of UT-GEO-26); V3-05 4 of 4 (V3-05-01 killed by U-M8r's rounding-step test); V3-06
 `33/33 mutants killed` (424 s). No survivor, no new DEF row.
+
+## U-V30: V3-14 on release 0.0.6, the Windows index and two V3-01 re-rulings (main 2174f1b)
+
+Prepared by: Agent 4 - Independent Verificator - model: claude-opus-5-5
+
+| Script | Run in | What it does |
+|---|---|---|
+| `m7/v3_14_scan.py --src src --work DIR --wheel WHL --record m7/records/V3-14_0.0.6.md --brand-dir "/mnt/user-data/uploads/Desktop/Fantastic Creature/pitchdeck/resources"` | a fresh venv: the 0.0.6 release wheel `fdb89189…0101` with `--no-deps`, then numpy 2.4.6 and pypdf 6.20.0 from the lock files with `--require-hashes` | V3-14 as `m7/records/V3-14.md` describes it, on 0.0.6. A control now counts a plant only when the allow-list does not admit it |
+| `m7/v30_index.py [--write]` | system `python3` | writes `docs/phase3/verification/manual_records.json` from U-V29's index (8e4159d): the platform of each NEEDS record and the Windows records of 0.0.6 |
+| `m7/v30_rerule.py [--write]` | system `python3` | checks that every cite of `m7/v3_01_rulings_v30.py` (REQ-N-04, REQ-N-07) passed with the row's marker in the 0.0.6 release run or is a passed index entry, and pins them |
+
+V3-14 on 0.0.6 (`verified` by running, 2026-10-22): controls 82 of 83 rows find their plant. The miss is the raw-stream
+PDF row, which expects 0, as on 0.0.1. 0 findings outside the allow-list, 37 export files, exit 0. A run with an
+over-broad rule that admits the plant exits 2, so the stricter control can fail (`verified`). Before five allow-list
+rules were added, the scan found 21 hits, none in an export. Each rule names its reason: the two `INVALID_MEASURED_*`
+issue codes (U-S9 ruled them no finding), test node IDs in the evidence file and in the self-test's `source_test`
+(read nowhere in src), a D09 paper value in a reference case, and the U-E15 registry note that says embodic measures
+nothing. All but the U-E15 note were already in the 0.0.1 findings.
+
+Brand originals. U-V30 first ran without the user's brand folder and hashed the four copies under
+`docs/phase1/design/mockups/brand/` plus the fifth hash of `tests/static/brand_assets.sha256`. Fable then staged the
+folder of the 0.0.1 run again from the laptop (D-101), and the record was regenerated with `--brand-dir` set to it, as
+`m7/records/V3-14.md` did. It holds 13 files with 11 distinct SHA-256 values, because two pairs are byte-identical
+(`verified`, `sha256sum`). The 0.0.1 run counted 8 distinct values, and its record names no file and no hash, so which
+three values are new is `unresolved`. The five hashes of the table are among the 11 (`verified`). No image is in git.

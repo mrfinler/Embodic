@@ -1,6 +1,7 @@
 """V3-14: independent wording, name and brand scans for the cause-C must rows REQ-T-10, REQ-T-11, REQ-L-03, REQ-L-05.
 
-    .venv/bin/python -I tests/independent/m7/v3_14_scan.py [--src src] [--work DIR]
+    .venv/bin/python -I tests/independent/m7/v3_14_scan.py [--src src] [--work DIR] [--wheel WHL] [--record MD]
+        [--brand-dir DIR] [--brand-sha256 FILE]
 
 The venv holds only the release wheel and its numpy pin, plus pypdf from the dev lock. Corpora: (1) every string
 literal of the installed embodic package (bare string statements count as docstrings, which users never see) and
@@ -10,10 +11,14 @@ examples in every format (svg, dxf, dxf-outline, dxf-screws, pdf, readme, bundle
 the string operands of every zlib-inflated stream. --work keeps the exports in DIR and reuses them on a rerun.
 
 Controls run first. Each class must find a planted hit in a synthetic file of every artefact kind and in a planted
-copy of each real export of the default example; the real PDF must yield its own 'Key results' heading through both
-extractors; the brand check must find a planted copy and a planted changed file. A control miss exits 2. A hit outside
-the allow-list exits 1. Personal-data tokens (git author e-mails, Windows account names written in the docs) are read
-at run time and never written: the record prints only their count.
+copy of each real export of the default example, and the allow-list must not admit it (U-V30); the real PDF must
+yield its own 'Key results' heading through both extractors; the brand check must find a planted copy and a planted
+changed file. A control miss exits 2. A hit outside the allow-list exits 1. Personal-data tokens (git author e-mails,
+Windows account names written in the docs) are read at run time and never written: the record prints only their count.
+
+--wheel names the installed wheel in the record with its SHA-256. --record writes another file than records/V3-14.md.
+--brand-dir hashes the brand originals of another folder, and --brand-sha256 adds the hashes of a `sha256sum` file for
+originals that have no copy there (U-V30: the user's folder is not in the container).
 """
 
 import argparse
@@ -121,8 +126,32 @@ ALLOW = (
         "REQ-T-10",
         r"equations\.v1\.json#/equations/\[\]/reference_case/",
         r"json-key",
-        r"^measured_ohm$",
-        "a reference case's paper value (the D08 measured resistance); reference cases are not shown (`inferred`)",
+        r"^(?:measured_ohm|D\d{2}_measured_\w+)$",
+        "a reference case's paper value (the D08 measured resistance, a D09 measured inductance); reference cases "
+        "are not shown (`inferred`)",
+    ),
+    Rule(
+        "REQ-T-10",
+        r"equations\.v1\.json#/notes/\[\]$",
+        r"json-value",
+        r"measures nothing",
+        "a registry change note that says embodic measures nothing (U-E15); the guide does not show the notes "
+        "(`inferred`, as for the REQ-L-03 rule of these fields)",
+    ),
+    Rule(
+        "REQ-T-10",
+        r"passed_tests\.v1\.json",
+        r"json-value",
+        r"^tests/",
+        "a test node id in the evidence file, not shown (see the REQ-L-03 rule for the same file)",
+    ),
+    Rule(
+        "REQ-T-10",
+        r"\.py:\d+$",
+        r"literal",
+        r"^INVALID_MEASURED_(?:SOURCE_EMPTY|DESIGN_FIELD)$",
+        "issue codes that refuse a `measured` input provenance (D-007, REQ-T-06); U-S9 ruled them no finding "
+        "(docs/phase3/design/v3_14_copy.md section 6)",
     ),
     Rule(
         "REQ-T-11",
@@ -130,6 +159,14 @@ ALLOW = (
         r"json-value",
         r"^tests/",
         "a test node id in the evidence file, not shown (see the REQ-L-03 rule for the same file)",
+    ),
+    Rule(
+        "REQ-T-11",
+        r"embodic/selftest/catalogue\.py:\d+$",
+        r"literal",
+        r"^tests/\S+\.py::test_\w+$",
+        "the pytest node id of a self-test's `source_test`, which no output shows (`verified`: src reads the field "
+        "nowhere, grep)",
     ),
     Rule(
         "REQ-T-11",
@@ -471,13 +508,15 @@ def planted_copies(tmp: Path, real: Path) -> list[tuple[str, list[Text]]]:
     return kinds
 
 
-def run_controls(tmp: Path, exports: Path, tokens: set[str], brand: dict[str, str]) -> tuple[list, bool]:
+def run_controls(
+    tmp: Path, exports: Path, tokens: set[str], brand: dict[str, str], originals: Path
+) -> tuple[list, bool]:
     """Return the control rows (class, planted artefact, hits on the plant) and whether a required one missed."""
     rows, failed = [], False
     controls = planted_copies(tmp / "control", exports / "spiral_12c16p_default")
     for cls, pattern in CLASSES.items():
         for kind, texts in controls:
-            n = sum(1 for t, _ in hits(texts, pattern) if "Planted control" in t.text)
+            n = sum(1 for t, _ in hits(texts, pattern) if "Planted control" in t.text and not admitted(cls, t))
             rows.append((cls, kind, n))
             failed |= n == 0
     for kind, texts in controls:
@@ -489,7 +528,7 @@ def run_controls(tmp: Path, exports: Path, tokens: set[str], brand: dict[str, st
         for form, code in (("after `_`", f"PLANTED_{word.upper()}_CODE"), ("camelCase", f"planted{word}Code")):
             doc = {**outcome, "issues": [*outcome["issues"], {"code": code}]}
             texts = list(json_texts(json.dumps(doc).encode(), "outcome.json", "control"))
-            n = sum(1 for t, _ in hits(texts, CLASSES[cls]) if t.text == code)
+            n = sum(1 for t, _ in hits(texts, CLASSES[cls]) if t.text == code and not admitted(cls, t))
             rows.append((cls, f"identifier word {form}: issue code {code} in a copy of the real outcome.json", n))
             failed |= n == 0
     pdf = list(pdf_texts((exports / "spiral_12c16p_default" / "report.pdf").read_bytes(), "report.pdf", "control"))
@@ -505,9 +544,9 @@ def run_controls(tmp: Path, exports: Path, tokens: set[str], brand: dict[str, st
         failed |= n == 0
     brand_dir = tmp / "brand_control"
     brand_dir.mkdir()
-    first = sorted(p for p in BRAND_DIR.iterdir() if p.is_file())[0]
+    first = sorted(p for p in originals.iterdir() if p.is_file())[0]
     shutil.copy(first, brand_dir / first.name)
-    (brand_dir / "embodic_logo.png").write_bytes(b"x" + (BRAND_DIR / "embodic_logo.png").read_bytes())
+    (brand_dir / "embodic_logo.png").write_bytes(b"x" + (originals / "embodic_logo.png").read_bytes())
     exact, changed = brand_check(sorted(brand_dir.iterdir()), brand)
     rows += [("REQ-L-05 brand", "planted exact copy", len(exact))]
     rows += [("REQ-L-05 brand", "planted changed brand-named file", len(changed))]
@@ -605,20 +644,32 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--src", type=Path, help="also scan this source tree (main's src) for string literals")
     parser.add_argument("--work", type=Path, help="keep exports here and reuse them on a rerun")
+    parser.add_argument("--wheel", type=Path, help="the wheel installed in this venv, named in the record")
+    parser.add_argument("--record", type=Path, default=RECORD, help="the record to write")
+    parser.add_argument("--brand-dir", type=Path, default=BRAND_DIR, help="folder of brand originals to hash")
+    parser.add_argument("--brand-sha256", type=Path, help="sha256sum lines of originals without a copy in the folder")
     args = parser.parse_args(argv)
+
+    from importlib.metadata import version
 
     import embodic
 
     package = Path(embodic.__file__).parent
     venv_bin = Path(sys.executable).parent
     tokens = personal_tokens()
-    brand = {hashlib.sha256(p.read_bytes()).hexdigest(): p.name for p in BRAND_DIR.iterdir() if p.is_file()}
+    originals = sorted(p for p in args.brand_dir.iterdir() if p.is_file())
+    brand = {hashlib.sha256(p.read_bytes()).hexdigest(): p.name for p in originals}
+    hashed_dir = len(brand)
+    if args.brand_sha256:
+        for line in args.brand_sha256.read_text(encoding="utf-8").splitlines():
+            if m := re.fullmatch(r"([0-9a-f]{64})  (\S+)", line):
+                brand.setdefault(m.group(1), m.group(2))
 
     with tempfile.TemporaryDirectory() as tmp_name:
         tmp = Path(tmp_name)
         exports = (args.work.resolve() if args.work else tmp / "work") / "exports"
         notes = export_examples(venv_bin, package / "_resources" / "examples", exports)
-        control_rows, failed = run_controls(tmp, exports, tokens, brand)
+        control_rows, failed = run_controls(tmp, exports, tokens, brand, args.brand_dir)
         corpora = {
             "installed package": list(package_corpus(package, "installed package")),
             "exports": list(tree_corpus(exports, "exports")),
@@ -629,34 +680,40 @@ def main(argv=None) -> int:
         real_exact, real_changed = brand_check(files, brand)
         export_files = sum(1 for p in exports.rglob("*") if p.is_file() and p.name != "exit_codes.txt")
 
+    if args.wheel:
+        digest = hashlib.sha256(args.wheel.read_bytes()).hexdigest()
+        built = f"the wheel `{args.wheel}` (SHA-256 `{digest[:8]}…{digest[-4:]}`)"
+    else:
+        built = "no named wheel"
+    command = " ".join(["tests/independent/m7/v3_14_scan.py", *(argv if argv is not None else sys.argv[1:])])
     header = [
         "Prepared by: Agent 4 - Independent Verificator - model: claude-opus-5-5",
         "",
         "# V3-14: wording, name and brand scans (generated)",
         "",
-        "Generated by `.venv/bin/python -I tests/independent/m7/v3_14_scan.py"
-        + (" --src src" if args.src else "")
-        + "`. The venv holds the release wheel `/home/claude/release_0.0.1/embodic-0.0.1-py3-none-any.whl` (SHA-256 "
-        "`f114a6e7…dcd0`), numpy 2.4.6 and pypdf 6.20.0 from the lock files. Do not edit by hand.",
+        f"Generated by `.venv/bin/python -I {command}`."
+        + f" The venv holds embodic {version('embodic')} from {built}, numpy {version('numpy')} and pypdf "
+        f"{version('pypdf')} from the lock files. Do not edit by hand.",
         f"Personal-data tokens read at run time: {len(tokens)} (not printed). Export files scanned: {export_files}. "
         "Every count is `verified` by running this script; the classification of each hit is my reading, and an "
         "`inferred` reason says so.",
         "",
     ]
+    extra = f", and {len(brand) - hashed_dir} more from `{args.brand_sha256}`" if args.brand_sha256 else ""
     brand_line = (
-        f"{len(brand)} brand originals hashed in `{BRAND_DIR}`. Exact copies in the package or the exports: "
-        f"{len(real_exact)}. Brand-named image files with another hash: {len(real_changed)}"
-        + (": " + ", ".join(p.name for p in real_changed) if real_changed else "")
-        + "."
+        f"{hashed_dir} brand originals hashed in `{args.brand_dir}` (distinct SHA-256 of {len(originals)} files)"
+        f"{extra}. Exact copies in the package or the exports: {len(real_exact)}. Brand-named image files with another "
+        f"hash: {len(real_changed)}" + (": " + ", ".join(p.name for p in real_changed) if real_changed else "") + "."
     )
     classified = classify(corpora, tokens)
     text, by_class = render(header, control_rows, corpora, notes, brand_line, classified)
-    RECORD.parent.mkdir(parents=True, exist_ok=True)
-    RECORD.write_text(text, encoding="utf-8")
+    record = args.record.resolve()
+    record.parent.mkdir(parents=True, exist_ok=True)
+    record.write_text(text, encoding="utf-8")
     found = sum(1 for *_, n in control_rows if n)
     print(f"controls {'FAILED' if failed else 'passed'}: {found} of {len(control_rows)} rows found their plant")
     print(f"findings {sum(by_class.values())} {by_class}; allow-listed {sum(classified[1].values())}")
-    print(f"wrote {RECORD.relative_to(REPO)}")
+    print(f"wrote {record}")
     return 2 if failed else (1 if by_class else 0)
 
 

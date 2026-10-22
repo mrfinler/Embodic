@@ -33,7 +33,11 @@ the audited commit (`git archive <commit> tests`, or the folder given with --tre
   release gate (/home/claude/release_0.0.5), copied gzipped into inputs/; the 0.0.5-pre overlays plus U-V21's
   re-rulings of REQ-F-05, REQ-F-13, REQ-T-05 and REQ-N-01 (v3_01_rulings_v21.py).
 - Target 0.0.6 (U-V22): release 0.0.6, tag v0.0.6 on 2bfca49 (D-096). The two REQ reports and the log of Fable's
-  release gate (/home/claude/release_0.0.6), copied gzipped into inputs/; the 0.0.5 overlays, no new re-ruling.
+  release gate (/home/claude/release_0.0.6), copied gzipped into inputs/; the 0.0.5 overlays plus U-V30's re-rulings
+  of REQ-N-04 and REQ-N-07 (v3_01_rulings_v30.py). U-V30's naming ruling: the text of
+  tests/ui/qt_shell/test_n02_typing_preview.py at 4aa1629, which names UI-36 to UI-45, counts for the `file` evidence
+  of 0.0.6, because its code equals the 2bfca49 code once the docstrings are removed (`same_code`; the run stops when
+  it does not).
 - Every target except 0.0.1 reads the manual-record index of this checkout, so a committed audit file of an earlier
   target is the snapshot of the index its writer had; `--check` on it compares with today's index.
 - The earlier target main (U-V14, c0f4894) is gone: its gate log `inputs/gate_commit_5099401.log` was never in git
@@ -51,12 +55,17 @@ For each planned test ID of a row, the evidence is the first that holds:
   record an Agent 4 record under tests/independent names the ID (a manual or scripted run outside pytest)
   skip   only skipped or xfailed records name the ID
   none   nothing above
-NEEDS lists the IDs whose acceptance needs Windows, a real display or an FEA solver, with the line that says so.
+NEEDS lists the IDs whose acceptance needs Windows, a real display or an FEA solver, with the line that says so. D-100b:
+a NEEDS ID counts when the index holds a current passed record of the ID from the machine NEEDS names; otherwise it
+is blocked. Current: the record's `embodic_version` is the version of the audited commit (`__version__` of its
+src/embodic/__init__.py, read as text), alone or followed by white space and a note, as TR-01 reads it (D-083c,
+D-084a). Machine: the platform is the first item of that note, before the first comma or semicolon (`platform_of`),
+and MACHINES gives the pattern it must match. The 0.0.1 target reads no index, so every NEEDS ID stays blocked there.
 
 Row status: `failed` when a planned ID has `fail` evidence; `verified` when every planned ID has gate, name, file, eqt
-or record evidence and none is in NEEDS; `partial` when some evidence exists but an ID lacks it or needs another machine; `not testable here` when no ID has
-evidence and every ID is in NEEDS; `not tested` otherwise. Withdrawn rows keep `withdrawn`. The script matches IDs to
-tests by text, so this is the text status. D-051e: a row whose text status is `verified` stays `verified` only with
+or record evidence and none is blocked; `partial` when some evidence exists but an ID lacks it or is blocked;
+`not testable here` when no ID has evidence and every ID is blocked; `not tested` otherwise. Withdrawn rows keep
+`withdrawn`. The script matches IDs to tests by text, so this is the text status. D-051e: a row whose text status is `verified` stays `verified` only with
 Agent 4's V3-01 `checks` ruling for that row, while the SHA-256 of every source the ruling cites equals its pin;
 otherwise it drops to `partial` until Agent 4 re-rules it. The Ruling column says which case applies. On main a pin
 covers the cited function's source segment only, so a change to a fixture or a helper does not make a ruling stale
@@ -93,6 +102,7 @@ RULINGS_V18 = REPO / "tests/independent/m7/v3_01_rulings_v18.py"
 RULINGS_V19 = REPO / "tests/independent/m7/v3_01_rulings_v19.py"
 RULINGS_V20 = REPO / "tests/independent/m7/v3_01_rulings_v20.py"
 RULINGS_V21 = REPO / "tests/independent/m7/v3_01_rulings_v21.py"
+RULINGS_V30 = REPO / "tests/independent/m7/v3_01_rulings_v30.py"
 PINS_V13 = REPO / "tests/independent/m7/records/V3-01_pins_260191f.json"
 REQUIREMENTS = REPO / "docs/phase2/architecture/requirements.md"
 PLANS = (REPO / "docs/phase1/architecture/test_plan_draft.md", REPO / "docs/phase2/architecture/test_plan.md")
@@ -160,6 +170,7 @@ class Target:
     gate_log: Path
     out: Path
     overlays: tuple[Path, ...] = ()  # rulings applied on top of v13, in order; each one's PINS replace a row's pins
+    naming: tuple[tuple[str, str], ...] = ()  # (test file, later commit) whose later text the `file` rule reads
 
 
 TARGETS = {
@@ -217,7 +228,8 @@ TARGETS = {
         ),
         VERIFICATION / "inputs/gate_release_2bfca49.log.gz",
         VERIFICATION / "req_audit.md",
-        (RULINGS_V14, RULINGS_V18, RULINGS_V19, RULINGS_V20, RULINGS_V21),
+        (RULINGS_V14, RULINGS_V18, RULINGS_V19, RULINGS_V20, RULINGS_V21, RULINGS_V30),
+        (("tests/ui/qt_shell/test_n02_typing_preview.py", "4aa1629"),),
     ),
 }
 
@@ -232,6 +244,11 @@ NEEDS = {
     "AX-06": ("Windows display", "requirements.md REQ-N-16 acceptance: Narrator check"),
     "OR-11": ("FEA", "test_plan.md §5.6 and §7 M2 (D-045b): a Phase 3 FEA case"),
     "OR-12": ("FEA", "test_plan.md §5.6 and §7 M2 (D-045b): a Phase 3 FEA case"),
+}
+MACHINES = {
+    "Windows": re.compile(r"\bWindows\b"),
+    "Windows display": re.compile(r"\bWindows\b.*\breal display\b"),
+    "FEA": re.compile(r"\bFEA\b"),
 }
 RECORDS = {
     "PK-06": "tests/independent/m5/records/PK-06_walkthrough.md",
@@ -315,7 +332,48 @@ def evidence_kind(tid, carriers, gates, eqs, sources, records_by_id, failed_by_i
     return "none"
 
 
-def audit(rows, records, gates, eqs, sources, records_by_id, failed_by_id=None):
+def platform_of(embodic_version: str) -> str:
+    """Return the first item of the note after the version: `Windows laptop` in `0.0.6 (Windows laptop, run 11)`."""
+    note = embodic_version.partition(" ")[2].strip().removeprefix("(")
+    return re.split(r"[,;)]", note, maxsplit=1)[0].strip()
+
+
+def commit_version(commit: str) -> str:
+    """Return the `__version__` string of src/embodic/__init__.py at a commit, read as text and never imported."""
+    show = ["git", "-C", str(REPO), "show", f"{commit}:src/embodic/__init__.py"]
+    text = subprocess.run(show, capture_output=True, text=True, check=True).stdout
+    return re.search(r"^__version__ = \"([^\"]+)\"$", text, re.MULTILINE).group(1)
+
+
+def cleared_needs(entries: list[dict], version: str) -> set[str]:
+    """D-100b: the NEEDS IDs with a current passed record from the machine NEEDS names."""
+    current = re.compile(rf"{re.escape(version)}(?:\s.*)?", re.DOTALL)
+    return {
+        e["test_id"]
+        for e in entries
+        if e["result"] == "passed"
+        and e["test_id"] in NEEDS
+        and current.fullmatch(e["embodic_version"])
+        and MACHINES[NEEDS[e["test_id"]][0]].search(platform_of(e["embodic_version"]))
+    }
+
+
+def strip_docstrings(text: str) -> str:
+    """Return the AST dump of a module with every module, class and function docstring removed."""
+    tree = ast.parse(text)
+    for node in ast.walk(tree):
+        documented = isinstance(node, ast.Module | ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef)
+        if documented and ast.get_docstring(node, clean=False) is not None:
+            node.body = node.body[1:] or [ast.Pass()]
+    return ast.dump(tree)
+
+
+def same_code(earlier: str, later: str) -> bool:
+    """Return True when two versions of a module differ in docstrings only."""
+    return strip_docstrings(earlier) == strip_docstrings(later)
+
+
+def audit(rows, records, gates, eqs, sources, records_by_id, failed_by_id=None, cleared=frozenset()):
     """Return one (row, status, carriers, passed, Agent 4 passed, evidence, blocked IDs) tuple per row."""
     results = []
     for row in rows:
@@ -325,7 +383,7 @@ def audit(rows, records, gates, eqs, sources, records_by_id, failed_by_id=None):
             tid: evidence_kind(tid, carriers, gates, eqs, sources, records_by_id, failed_by_id) for tid in row.tests
         }
         found = [t for t, k in evidence.items() if k in PASSING_KINDS]
-        blocked = [t for t in row.tests if t in NEEDS]
+        blocked = [t for t in row.tests if t in NEEDS and t not in cleared]
         if row.disposition == "withdrawn":
             status = "withdrawn"
         elif "fail" in evidence.values():
@@ -496,10 +554,19 @@ def run_audit(tree: Path, target: Target = TARGETS["0.0.1"], index: Path = INDEX
     eqs = eq_map([p.read_text(encoding="utf-8") for p in PLANS])
     files = {r["nodeid"].split("::")[0] for r in records}
     sources = {f: (tree / f).read_text(encoding="utf-8", errors="replace") for f in files}
+    for path, commit in target.naming:
+        later = subprocess.run(
+            ["git", "-C", str(REPO), "show", f"{commit}:{path}"], capture_output=True, text=True, check=True
+        ).stdout
+        if not same_code(sources[path], later):
+            raise SystemExit(f"naming ruling: {path} at {commit} changes code, not only docstrings")
+        sources[path] = later
     if target.name != "0.0.1":
+        entries = json.loads(index.read_text(encoding="utf-8"))
         by_id = counted_records(index)
-        counted = set(by_id.values())
-        text_results = audit(rows, records, gates, eqs, sources, by_id, counted_records(index, "failed"))
+        counted = {e["record"] for e in entries if e["result"] == "passed"}
+        cleared = cleared_needs(entries, commit_version(target.commit))
+        text_results = audit(rows, records, gates, eqs, sources, by_id, counted_records(index, "failed"), cleared)
         overlays = tuple(load_rulings(path) for path in target.overlays)
         rulings = {**load_rulings(RULINGS_V13).RULINGS, **{k: v for o in overlays for k, v in o.RULINGS.items()}}
         pins = {
@@ -559,45 +626,113 @@ def self_test(tree: Path) -> int:
 
 
 def self_test_main(tree: Path, target: Target) -> int:
-    """Controls for D-061d and for a failed record.
+    """Run the controls for D-061d, for a failed record and for the NEEDS rule of D-100b.
 
     REQ-N-14 cites the superseded AX-05 record; it stays verified only through the redone one. REQ-N-01 is `failed`
-    with the failed PF-01 record of the index and not `failed` without it (U-V21).
+    with the failed PF-01 record of the index and not `failed` without it (U-V21). A NEEDS ID counts only with a
+    current passed record from its machine: the same record with another platform, or of another version, leaves the
+    ID blocked, and so does the Linux PK-06 record alone. A later test text that changes code fails `same_code`.
     """
     redone = last_redo("tests/independent/m4/records/AX-05.md")
     other = "tests/independent/m4/records/AX-06.md"
 
-    def row_of(index: Path, req: str) -> tuple[str, str]:
+    def row_of(index: Path, req: str) -> tuple[str, str, list[str]]:
         _, gated, notes = run_audit(tree, target, index)
-        return next((status, note) for (row, status, *_), note in zip(gated, notes, strict=True) if row.req_id == req)
+        return next(
+            (status, note, blocked)
+            for (row, status, *_, blocked), note in zip(gated, notes, strict=True)
+            if row.req_id == req
+        )
+
+    def moved(entries: list[dict], test_id: str, platform: str, version: str = "0.0.6") -> list[dict]:
+        """Return the index with the machine records of test_id moved to another platform or version."""
+        machine = MACHINES[NEEDS[test_id][0]]
+        out = []
+        for e in entries:
+            if e["test_id"] == test_id and machine.search(platform_of(e["embodic_version"])):
+                rest = re.split(r"[,;]", e["embodic_version"], maxsplit=1)[1]
+                e = {**e, "embodic_version": f"{version} ({platform},{rest}"}
+            out.append(e)
+        return out
 
     ok = True
     entries = json.loads(INDEX.read_text(encoding="utf-8"))
     failed = [e for e in entries if e["result"] == "failed"]
+    windows_pk06 = [e for e in entries if e["test_id"] == "PK-06" and "Windows" in platform_of(e["embodic_version"])]
     with tempfile.TemporaryDirectory() as tmp:
         cases = [
-            ("REQ-N-14", "with the redone record", entries, "verified", "redone as"),
+            ("REQ-N-14", "with the redone record", entries, "verified", "redone as", None),
             (
                 "REQ-N-14",
                 "with another AX-05 record",
                 [{**e, "record": other} if e["record"] == redone else e for e in entries],
                 "partial",
                 "record superseded (D-061d)",
+                None,
             ),
-            ("REQ-N-14", "with no AX-05 record", [e for e in entries if e["record"] != redone], "partial", ""),
+            ("REQ-N-14", "with no AX-05 record", [e for e in entries if e["record"] != redone], "partial", "", None),
+            ("REQ-F-11", "with the OR-11 and OR-12 records from the FEA", entries, "verified", "", []),
+            (
+                "REQ-F-11",
+                "with those records from the wrong machine (Linux container, no FEA)",
+                moved(moved(entries, "OR-11", "Linux container"), "OR-12", "Linux container"),
+                "partial",
+                "",
+                ["OR-11", "OR-12"],
+            ),
+            ("REQ-N-04", "with the Windows PK-04 record", entries, "verified", "", []),
+            (
+                "REQ-N-04",
+                "with that record from the wrong machine (Linux container)",
+                moved(entries, "PK-04", "Linux container"),
+                "partial",
+                "",
+                ["PK-04"],
+            ),
+            (
+                "REQ-N-04",
+                "with that record stamped 0.0.5 (not current)",
+                moved(entries, "PK-04", "Windows laptop", "0.0.5"),
+                "partial",
+                "",
+                ["PK-04"],
+            ),
+            (
+                "REQ-N-07",
+                "with the Linux PK-06 record only (the wrong machine)",
+                [e for e in entries if e not in windows_pk06],
+                "partial",
+                "",
+                ["PK-06"],
+            ),
         ]
         if any(e["test_id"] == "PF-01" for e in failed):
             cases += [
-                ("REQ-N-01", "with the failed PF-01 record", entries, "failed", ""),
-                ("REQ-N-01", "without it", [e for e in entries if e not in failed], "partial", ""),
+                ("REQ-N-01", "with the failed PF-01 record", entries, "failed", "", None),
+                ("REQ-N-01", "without it", [e for e in entries if e["test_id"] != "PF-01"], "partial", "", None),
             ]
-        for n, (req, label, index_entries, want_status, want_note) in enumerate(cases):
+        for n, (req, label, index_entries, want_status, want_note, want_blocked) in enumerate(cases):
+            planted = index_entries is not entries and index_entries == entries
             index = Path(tmp) / f"index{n}.json"
             index.write_text(json.dumps(index_entries), encoding="utf-8")
-            status, note = row_of(index, req)
-            good = status == want_status and want_note in note
+            status, note, blocked = row_of(index, req)
+            good = (
+                not planted
+                and status == want_status
+                and want_note in note
+                and (want_blocked is None or blocked == want_blocked)
+            )
             ok &= good
-            print(f"self-test {'ok' if good else 'WRONG'}: {req} {label}: {status}; {note}")
+            shown = "the plant did not apply; " if planted else ""
+            print(f"self-test {'ok' if good else 'WRONG'}: {req} {label}: {shown}{status}; {note}; blocked {blocked}")
+    code_edit = same_code("def f():\n    '''a'''\n    return 1\n", "def f():\n    '''b'''\n    return 2\n")
+    doc_edit = same_code("def f():\n    '''a'''\n    return 1\n", "def f():\n    '''b'''\n    return 1\n")
+    good = doc_edit and not code_edit
+    ok &= good
+    print(
+        f"self-test {'ok' if good else 'WRONG'}: same_code admits a docstring edit ({doc_edit}), not a code edit "
+        f"({code_edit})"
+    )
     print("self-test " + ("passed" if ok else "FAILED"))
     return 0 if ok else 1
 

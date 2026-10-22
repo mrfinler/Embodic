@@ -1,0 +1,13 @@
+{
+ "REQ-N-04": {
+  "record:docs/phase3/fable/windows_campaign_w2.md": "cc8b77b54f4e8d1ea7709b8ae266f5b1671bfbc4b904ce89874f043d9ee5d3c7",
+  "tests/static/test_mt06_numerics.py::test_mt06_flags_float_sum_and_round_but_not_counting": "175c1840633ae28e8f7fc3cdcaa6ec9fad280faa6f724eb77aeb24de65124183",
+  "tests/static/test_mt06_numerics.py::test_mt06_real_package_is_clean": "96a31b1c3b89989e6d22a0372959cb98a43f4225c1ae10cc23ca8e44811f7fd1",
+  "tests/unit/api/test_compute.py::test_pr_09_same_design_gives_byte_identical_json": "4770a2c14473e739e608cd678f8ffa3c18b13569e1b5c5c0a33865da4ecb8a83",
+  "tests/unit/property/test_pipeline_properties.py::test_pr_09_results_json_is_byte_identical_across_runs": "e440fae258ba038d4f71266cba9237d2e18eb10a9fe8efdfbf7321be66fa116a"
+ },
+ "REQ-N-07": {
+  "record:docs/phase3/fable/PK-06_windows_0.0.6.md": "f948f9721b26fc4d56f01a127db32fe6114d0dfbb62aec3070fab3b3507d0c6f",
+  "record:tests/independent/m5/records/PK-06_walkthrough_2bfca49.md": "f42186cd66620378843a278cba84a1676da3cb3fe347df4d4ab1713b48c51e51"
+ }
+}

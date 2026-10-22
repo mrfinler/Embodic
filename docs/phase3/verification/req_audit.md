@@ -18,11 +18,12 @@ The status rule and the evidence kinds are in the script's docstring. Inputs and
 - `tests/independent/m7/v3_01_rulings_v19.py` `f06e81683e547cc7`
 - `tests/independent/m7/v3_01_rulings_v20.py` `75b4d8961bdbb382`
 - `tests/independent/m7/v3_01_rulings_v21.py` `3c289fae8a63d93c`
-- `docs/phase3/verification/manual_records.json` `6b9997b96bbf95b1`
+- `tests/independent/m7/v3_01_rulings_v30.py` `d018f6dd05139d3b`
+- `docs/phase3/verification/manual_records.json` `c845b534bef6a409`
 
-Counts by status (all rows): failed 1, not tested 7, partial 22, verified 64, withdrawn 16.
+Counts by status (all rows): failed 4, not tested 7, partial 16, verified 67, withdrawn 16.
 
-Counts by status (must rows): failed 1, partial 8, verified 64.
+Counts by status (must rows): failed 4, partial 2, verified 67.
 
 | REQ | Prio | M | Status | Ruling | Marked records (passed, of them Agent 4) | Planned tests and evidence | Needs |
 |---|---|---|---|---|---|---|---|
@@ -36,7 +37,7 @@ Counts by status (must rows): failed 1, partial 8, verified 64.
 | REQ-F-08 | must | M2 | verified | `checks`, sources match | 4 (4, 0) | UT-PHY-09 eqt, UT-WND-07 name | - |
 | REQ-F-09 | should | M2 | partial | text-verified; no V3-01 ruling | 120 (120, 28) | UT-GEO-14 name, UT-DRC-06 name, UT-EXP-02 name | - |
 | REQ-F-10 | must | M1 | verified | `checks`, sources match | 353 (353, 37) | UT-DRC-01 name, UT-DRC-02 name, UT-DRC-03 name, UT-DRC-04 name, UT-DRC-05 name, UT-DRC-08 name, PR-01 name, PR-02 name, PR-13 name, GR-18 name | - |
-| REQ-F-11 | must | M2 | partial | - | 273 (268, 26) | UT-PHY-05 eqt, UT-PHY-06 file, UT-PHY-10 eqt, UT-PHY-12 eqt, UT-PHY-15 name, UT-PHY-16 name, UT-PHY-17 name, UT-PHY-18 eqt, UT-PHY-19 name, GR-02 eqt, GR-03 eqt, GR-04 eqt, GR-09 eqt, GR-11 eqt, GR-13 eqt, OR-01 name, OR-11 record, OR-12 record, UT-PHY-22 eqt, UI-07 name | OR-11: FEA (test_plan.md §5.6 and §7 M2 (D-045b): a Phase 3 FEA case); OR-12: FEA (test_plan.md §5.6 and §7 M2 (D-045b): a Phase 3 FEA case) |
+| REQ-F-11 | must | M2 | verified | `checks`, sources match | 273 (268, 26) | UT-PHY-05 eqt, UT-PHY-06 file, UT-PHY-10 eqt, UT-PHY-12 eqt, UT-PHY-15 name, UT-PHY-16 name, UT-PHY-17 name, UT-PHY-18 eqt, UT-PHY-19 name, GR-02 eqt, GR-03 eqt, GR-04 eqt, GR-09 eqt, GR-11 eqt, GR-13 eqt, OR-01 name, OR-11 record, OR-12 record, UT-PHY-22 eqt, UI-07 name | - |
 | REQ-F-12 | must | M2 | verified | `checks`, sources match | 4 (4, 0) | UT-PHY-08 eqt, UT-PHY-20 name, GR-05 eqt | - |
 | REQ-F-13 | must | M4 | verified | `checks`, sources match | 82 (82, 22) | UI-02 file, UI-03 name, UI-04 name, UI-06 name, UI-58 name, UI-59 name, UI-60 name, UI-61 name | - |
 | REQ-F-14 | must | M2 | verified | `checks`, sources match | 196 (196, 0) | PR-05 name, BV-01 name, BV-02 name, BV-03 name, BV-05 name, BV-06 name, BV-21 name, UT-DRC-09 name, UI-14 name | - |
@@ -67,12 +68,12 @@ Counts by status (must rows): failed 1, partial 8, verified 64.
 | REQ-F-39 | must | M4 | verified | `checks`, sources match | 11 (11, 0) | UI-25 name, AX-09 name | - |
 | REQ-F-40 | must | M1 | verified | `checks`, sources match | 191 (191, 148) | GR-19 name | - |
 | REQ-N-01 | must | M5 | failed | - | 21 (20, 0) | PF-01 fail, PF-04 file | - |
-| REQ-N-02 | must | M4 | partial | - | 101 (101, 0) | UI-05 name, UI-02 name, UI-36 none, UI-37 none, UI-38 none, UI-39 none, UI-40 none, UI-41 none, UI-42 none, UI-43 none, UI-44 none, UI-45 none | - |
+| REQ-N-02 | must | M4 | failed | - | 101 (101, 0) | UI-05 name, UI-02 name, UI-36 file, UI-37 file, UI-38 file, UI-39 file, UI-40 file, UI-41 file, UI-42 file, UI-43 file, UI-44 file, UI-45 fail | - |
 | REQ-N-03 | should | M5 | partial | text-verified; no V3-01 ruling | 1 (1, 0) | PF-02 name | - |
-| REQ-N-04 | must | M2 | partial | - | 41 (41, 0) | PR-09 name, PK-04 none, MT-06 name | PK-04: Windows (test_plan.md §5.7 PK-04 row: compares Windows JSON with Linux JSON; not tested here) |
-| REQ-N-05 | must | M5 | partial | - | 2 (2, 0) | PK-01 none, PK-02 name | PK-01: Windows (test_plan.md §5.7 PK-01 row: the Windows cells; §7 M5: counts only from a Windows run) |
-| REQ-N-06 | must | M5 | partial | - | 37 (37, 0) | PK-03 name, PK-05 file, PK-10 gate, PK-11 name | PK-05: Windows (test_plan.md §5.7 PK-05 row: needs the Windows folder) |
-| REQ-N-07 | must | M5 | partial | - | 0 (0, 0) | PK-06 record | PK-06: Windows (test_plan.md §5.7 PK-06 row: the timed walkthrough on a clean Windows machine) |
+| REQ-N-04 | must | M2 | verified | `checks`, sources match | 41 (41, 0) | PR-09 name, PK-04 record, MT-06 name | - |
+| REQ-N-05 | must | M5 | failed | - | 2 (2, 0) | PK-01 fail, PK-02 fail | PK-01: Windows (test_plan.md §5.7 PK-01 row: the Windows cells; §7 M5: counts only from a Windows run) |
+| REQ-N-06 | must | M5 | failed | - | 37 (37, 0) | PK-03 name, PK-05 file, PK-10 gate, PK-11 fail | - |
+| REQ-N-07 | must | M5 | verified | `checks`, sources match | 0 (0, 0) | PK-06 record | - |
 | REQ-N-08 | must | M1 | verified | `checks`, sources match | 10 (10, 0) | MT-01 gate, MT-02 gate, MT-03 gate | - |
 | REQ-N-09 | must | M2 | verified | `checks`, sources match | 77 (77, 0) | MT-04 name | - |
 | REQ-N-10 | must | M2 | verified | `checks`, sources match | 32 (32, 0) | TR-01 gate | - |

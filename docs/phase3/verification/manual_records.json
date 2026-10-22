@@ -3,7 +3,7 @@
   "req": "REQ-N-07",
   "test_id": "PK-06",
   "record": "tests/independent/m5/records/PK-06_walkthrough_2bfca49.md",
-  "embodic_version": "0.0.6 (release wheel fdb89189 of tag v0.0.6 on 2bfca49, D-096, U-V29; docs/phase3/verification/manual_records_0.0.6_release.md)",
+  "embodic_version": "0.0.6 (Linux container, release wheel fdb89189 of tag v0.0.6 on 2bfca49, D-096, U-V29; docs/phase3/verification/manual_records_0.0.6_release.md)",
   "result": "passed"
  },
  {
@@ -17,14 +17,14 @@
   "req": "REQ-F-11",
   "test_id": "OR-11",
   "record": "tests/independent/m6/records/OR-11_OR-12_2bfca49.md",
-  "embodic_version": "0.0.6 (release wheel fdb89189 of tag v0.0.6 on 2bfca49, D-096, U-V29; docs/phase3/verification/manual_records_0.0.6_release.md)",
+  "embodic_version": "0.0.6 (GetDP FEA of c25d8a9 on the Linux container against the release wheel fdb89189 of tag v0.0.6 on 2bfca49, D-096, U-V29; docs/phase3/verification/manual_records_0.0.6_release.md)",
   "result": "passed"
  },
  {
   "req": "REQ-F-11",
   "test_id": "OR-12",
   "record": "tests/independent/m6/records/OR-11_OR-12_2bfca49.md",
-  "embodic_version": "0.0.6 (release wheel fdb89189 of tag v0.0.6 on 2bfca49, D-096, U-V29; docs/phase3/verification/manual_records_0.0.6_release.md)",
+  "embodic_version": "0.0.6 (GetDP FEA of c25d8a9 on the Linux container against the release wheel fdb89189 of tag v0.0.6 on 2bfca49, D-096, U-V29; docs/phase3/verification/manual_records_0.0.6_release.md)",
   "result": "passed"
  },
  {
@@ -48,5 +48,110 @@
   "embodic_version": "0.0.5 (Fable on the reference laptop, checkout bbeed84, src equal to release 42074f2; D-087, docs/phase3/verification/manual_records_0.0.5_release.md)",
   "result": "failed",
   "accepted": "D-091"
+ },
+ {
+  "req": "REQ-N-04",
+  "test_id": "PK-04",
+  "record": "docs/phase3/fable/windows_campaign_w2.md",
+  "embodic_version": "0.0.6 (Windows laptop, release wheel fdb89189 of tag v0.0.6 on 2bfca49 against U-V29's Linux reference, Fable; D-098a, docs/phase3/verification/manual_records_0.0.6_windows.md)",
+  "result": "passed"
+ },
+ {
+  "req": "REQ-N-06",
+  "test_id": "PK-05",
+  "record": "docs/phase3/fable/windows_campaign_w2.md",
+  "embodic_version": "0.0.6 (Windows laptop, bundle built from checkout 6ac95ac in the release run, Fable; D-099a, docs/phase3/verification/manual_records_0.0.6_windows.md)",
+  "result": "passed"
+ },
+ {
+  "req": "REQ-N-07",
+  "test_id": "PK-06",
+  "record": "docs/phase3/fable/PK-06_windows_0.0.6.md",
+  "embodic_version": "0.0.6 (Windows laptop, release wheel fdb89189 of tag v0.0.6 on 2bfca49, runs 11 and 12, Fable; D-100a, docs/phase3/verification/manual_records_0.0.6_windows.md)",
+  "result": "passed"
+ },
+ {
+  "req": "REQ-N-05",
+  "test_id": "PK-02",
+  "record": "docs/phase3/fable/PK-06_windows_0.0.6.md",
+  "embodic_version": "0.0.6 (Windows laptop, release wheel fdb89189 of tag v0.0.6 on 2bfca49 in a clean venv, runs 11 and 12, Fable; D-100a, docs/phase3/verification/manual_records_0.0.6_windows.md)",
+  "result": "passed"
+ },
+ {
+  "req": "REQ-N-06",
+  "test_id": "PK-11",
+  "record": "docs/phase3/fable/PK-06_windows_0.0.6.md",
+  "embodic_version": "0.0.6 (Windows laptop, release wheel fdb89189 of tag v0.0.6 on 2bfca49 in a clean venv, run 11, Fable; D-100a, docs/phase3/verification/manual_records_0.0.6_windows.md)",
+  "result": "passed"
+ },
+ {
+  "req": "REQ-N-05",
+  "test_id": "PK-01",
+  "record": "docs/phase3/fable/windows_campaign_w2.md",
+  "embodic_version": "0.0.6 (Windows laptop, commit profile on checkout 6ac95ac, W7, 5 of 6, Fable; D-098c, D-100c, docs/phase3/verification/manual_records_0.0.6_windows.md)",
+  "result": "failed",
+  "accepted": "D-100"
+ },
+ {
+  "req": "REQ-N-05",
+  "test_id": "PK-02",
+  "record": "docs/phase3/fable/windows_campaign_w2.md",
+  "embodic_version": "0.0.6 (Windows laptop, release profile on checkout 6ac95ac, W8, 6 of 8, Fable; D-099a, D-100c, docs/phase3/verification/manual_records_0.0.6_windows.md)",
+  "result": "failed",
+  "accepted": "D-100"
+ },
+ {
+  "req": "REQ-N-06",
+  "test_id": "PK-11",
+  "record": "docs/phase3/fable/windows_campaign_w2.md",
+  "embodic_version": "0.0.6 (Windows laptop, release profile on checkout 6ac95ac, W8, 6 of 8, Fable; D-099a, D-100c, docs/phase3/verification/manual_records_0.0.6_windows.md)",
+  "result": "failed",
+  "accepted": "D-100"
+ },
+ {
+  "req": "REQ-N-02",
+  "test_id": "UI-45",
+  "record": "docs/phase3/fable/windows_campaign_w2.md",
+  "embodic_version": "0.0.6 (Windows laptop, release profile on checkout 6ac95ac, W8, latency gate, N02-10 cancel case 153 ms, Fable; D-099a, D-076d, D-100b, D-101, docs/phase3/verification/manual_records_0.0.6_windows.md)",
+  "result": "failed",
+  "accepted": "D-100"
+ },
+ {
+  "req": "REQ-N-02",
+  "test_id": "UI-45",
+  "record": "docs/phase3/fable/windows_campaign_w2.md",
+  "embodic_version": "0.0.6 (Windows laptop, latency tests alone on checkout 6ac95ac, run 2 of 5, N02-10 arrival over 100 ms, Fable; D-099b, D-076d, D-100b, D-101, docs/phase3/verification/manual_records_0.0.6_windows.md)",
+  "result": "failed",
+  "accepted": "D-100"
+ },
+ {
+  "req": "REQ-N-02",
+  "test_id": "UI-45",
+  "record": "docs/phase3/fable/windows_campaign_w2.md",
+  "embodic_version": "0.0.6 (Windows laptop, latency tests alone on checkout 6ac95ac, run 3 of 5, N02-10 arrival over 100 ms, Fable; D-099b, D-076d, D-100b, D-101, docs/phase3/verification/manual_records_0.0.6_windows.md)",
+  "result": "failed",
+  "accepted": "D-100"
+ },
+ {
+  "req": "REQ-N-02",
+  "test_id": "UI-45",
+  "record": "docs/phase3/fable/windows_campaign_w2.md",
+  "embodic_version": "0.0.6 (Windows laptop, latency tests alone on checkout 6ac95ac, run 4 of 5, N02-10 arrival over 100 ms, Fable; D-099b, D-076d, D-100b, D-101, docs/phase3/verification/manual_records_0.0.6_windows.md)",
+  "result": "failed",
+  "accepted": "D-100"
+ },
+ {
+  "req": "REQ-N-02",
+  "test_id": "UI-45",
+  "record": "docs/phase3/fable/windows_campaign_w2.md",
+  "embodic_version": "0.0.6 (Windows laptop, latency tests alone on checkout 6ac95ac, run 1 of 5, passed, Fable; D-099b, D-101, docs/phase3/verification/manual_records_0.0.6_windows.md)",
+  "result": "passed"
+ },
+ {
+  "req": "REQ-N-02",
+  "test_id": "UI-45",
+  "record": "docs/phase3/fable/windows_campaign_w2.md",
+  "embodic_version": "0.0.6 (Windows laptop, latency tests alone on checkout 6ac95ac, run 5 of 5, passed, Fable; D-099b, D-101, docs/phase3/verification/manual_records_0.0.6_windows.md)",
+  "result": "passed"
  }
 ]
