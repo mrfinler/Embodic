@@ -1,16 +1,23 @@
-Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5 (units U-S17 and U-S19)
+Prepared by: Agent 1 (UX/UI Expert Designer) - model: claude-opus-5-5 (units U-S17, U-S19 and U-S20)
 
 # Acceptance walkthrough of embodic 0.0.6 on your Windows laptop
 
-This walkthrough takes you through release 0.0.6 (D-093d, D-094) on your own laptop, alone, in about 60 minutes. You
+This walkthrough takes you through release 0.0.6 (D-093d, D-094) on your own laptop, alone, in about 70 minutes. You
 install the release wheel, start a blank design, open the five packaged examples, try typing and the keyboard, read the
 results, write every export, switch the themes and run the Narrator check AX-06 that 0.0.6 still needs (D-091c,
-D-083c). The acceptance plan of Agent 4 (`docs/phase4/verification/acceptance_plan.md`) refers to the step numbers here.
+D-083c). On the way you take about 20 screenshots for the real-display check W6 (D-100c). Part 8 is optional and adds
+about 10 minutes. The acceptance plan of Agent 4 (`docs/phase4/verification/acceptance_plan.md`) refers to the step
+numbers here.
 
-The build under test is release 0.0.6 from main `672297e`, wheel `embodic-0.0.6-py3-none-any.whl`. When this file was
-written, that release wheel was not yet built: the repository has no tag `v0.0.6` (`verified`), and the one 0.0.6 wheel
-is Agent 4's candidate from `6d50d0b`, which is not the release (U-V27). Fable writes the release wheel's SHA-256 into
-step 0.1 before you start.
+Before part 0, Fable starts a launcher that takes the in-window screenshots of W6 on your display (appendix A). It
+takes about 5 minutes (`assumption`: it has not run on the laptop). Leave the laptop alone while it runs.
+
+The build under test is release 0.0.6, tag `v0.0.6` on `2bfca49`, wheel `embodic-0.0.6-py3-none-any.whl` with the
+SHA-256 of step 0.1 (D-096). Your checkout is at `6ac95ac`, which holds that tag (D-098a). `git diff --stat 2bfca49
+6ac95ac -- src resources pyproject.toml requirements` prints nothing (`verified`). U-S17 and U-S19 checked this file
+against main `672297e`. Those checks carry to `2bfca49`, because `git diff --stat 672297e 2bfca49 -- src` prints
+nothing and the one change under `resources` is the row of `settings.svg` in `resources/icons/ICONS.md` (D-094b), a file that no
+code under `src` reads (`verified` by `git diff` and `grep`).
 
 What 0.0.6 changes for you. **Copper weight** and **Board thickness** show and announce their unit (steps 1.9 and 7.5).
 The torque-speed message names the tab and the group of its field (steps 4.7 and 4.12). The keys Ctrl+Shift+S,
@@ -27,8 +34,21 @@ column.
 - Write N, and a note, when you want to say something without a verdict.
 - A row marked **Judge** asks for your opinion as a motor designer. No answer is wrong there. Write what you think.
 
+How to take a W6 screenshot. Some rows name a shot in code font, such as `S11_light`. Take the shot while the row's
+state is on screen.
+
+1. Press Windows+Shift+S. In the bar at the top, choose the window mode and click the embodic window or its dialog. A
+   row that asks for a rectangle needs the rectangle mode, so that a tooltip or a menu is in the shot too.
+2. Click the notification that appears, and press Ctrl+S in Snipping Tool.
+3. Save the file in `%USERPROFILE%\Desktop\embodic-uat-0.0.6\report\w6` under the row's name with `.png`. Write
+   `light` or `dark` for the theme the window shows.
+4. If the shot shows your user name, for example in the path of a Windows file dialog, crop it out first.
+
+The names of the Snipping Tool parts are those of Windows 11 (`assumption`, not checked on the laptop). If a shot does
+not work, write N with a note and carry on. Appendix A lists every W6 row and the step that takes it.
+
 Where the expected text comes from. Every quoted string and every bold control name comes from the product, either
-from the source under `src/embodic` at `672297e` or from the window of a 0.0.6 wheel. The script
+from the source under `src/embodic` at `672297e` (the same as at `2bfca49`) or from the window of a 0.0.6 wheel. The script
 `docs/phase4/design/checks/uat_probe.py` drove the window of Agent 4's candidate wheel (built from `6d50d0b`, SHA-256
 `5d891a268323fed9ce3414db3b042d27e51e5a27e33bba44df3cdc262d3ddec8`) offscreen on Linux and wrote what it showed to
 `docs/phase4/design/checks/uat_probe_0.0.6.json`. The script `docs/phase4/design/checks/uat_quote_check.py` fails when
@@ -39,21 +59,26 @@ The 0.0.5 record of U-S17 stays beside it as `uat_probe_0.0.5.json`.
 
 The numbers are those of the Linux run (`verified` there). The 0.0.6 dump holds the same numbers as the 0.0.5 one
 (`verified` by comparing them). PK-04 found the 0.0.5 numbers on this laptop equal to the Linux ones within 1e-9
-(D-090d), so the three digits shown here should match (`inferred`). Nothing in this file ran on Windows (standing order
-8), and that is why you run it.
+(D-090d), so the three digits shown here should match (`inferred`). Agent 1 ran nothing in this file on Windows
+(standing order 8). The Windows results it quotes come from Fable's records, `docs/phase3/fable/windows_campaign_w2.md`
+and `docs/phase3/fable/PK-06_windows_0.0.6.md`. Nobody has looked at the window of 0.0.4, 0.0.5 or 0.0.6 on Windows
+(`windows_campaign_w2.md`), and that is why you run it.
 
-Allow about 4 minutes for part 0, 6 for part 1, 10 for part 2, 8 for part 3, 8 for part 4, 9 for part 5, 5 for part 6
-and 8 for part 7.
+Allow about 5 minutes for part 0, 7 for part 1, 10 for part 2, 13 for part 3, 8 for part 4, 11 for part 5, 8 for part 6
+and 8 for part 7. That is 70 minutes in all. The optional part 8 adds about 10 (`assumption`: U-S17's estimate per part plus
+about 30 s per screenshot).
 
 ## Part 0. Install the release wheel
 
 You can test the wheel in a new folder (option A) or the editable install of your checkout (option B). Use option A.
-Option B has no test evidence file, because a source tree holds none (`resources/evidence` at `672297e` has no
-`passed_tests.v1.json`) and the release profile has not run in your checkout (D-091b found this for 0.0.5). So in option
-B every badge reads "not tested", or "unresolved" where that weaker status applies, because `load_registry` in
-`src/embodic/results/registry.py` leaves the passed tests empty when the file is missing. That is `verified` by reading
-the code and by an offscreen run of the `672297e` source tree on Linux, where the 160 result badges read only those two
-words. It is `inferred` for your checkout.
+Option B has no test evidence file, because a source tree holds none (`resources/evidence` at `2bfca49` has no
+`passed_tests.v1.json`, `verified` by `git ls-tree`). The release profile writes one only after every gate passes
+(`evidence_gates` in `tools/ci.py`), and on your checkout it passed 6 of 8 (D-099a), so your checkout holds none
+(`inferred`; D-091b found the same for 0.0.5). So in option B every badge reads "not tested", or "unresolved" where
+that weaker status applies, because `load_registry` in `src/embodic/results/registry.py` leaves the passed tests empty
+when the file is missing. That is `verified` by reading the code and by an offscreen run of the `672297e` source tree on
+Linux, where the 160 result badges read only those two words. The run carries to `2bfca49`, whose `src` is the same. It
+is `inferred` for your checkout.
 
 Option A. Open PowerShell and run these commands. Replace `<wheel>` with the full path of
 `embodic-0.0.6-py3-none-any.whl` on the laptop. Every command calls the programs in `.venv\Scripts` by path. The
@@ -71,23 +96,41 @@ Set-Location $uat
 .\.venv\Scripts\embodic-cli.exe selftest
 ```
 
-Option B. Run `cd $env:USERPROFILE\Desktop\embodic`, then `git diff --stat 672297e -- src resources pyproject.toml
+If PowerShell answers `Program 'embodic-cli.exe' failed to run: An Application Control policy has blocked this file`,
+a Windows policy such as Smart App Control blocks the launchers that pip writes into `.venv\Scripts` (DEF-W-16). Write
+F in step 0.3 with that line. Then start embodic through Python instead, for the rest of the walkthrough.
+
+- Where a step says `.\.venv\Scripts\embodic-cli.exe`, run `.\.venv\Scripts\python.exe -m embodic.cli`. It takes the
+  same commands, for example `.\.venv\Scripts\python.exe -m embodic.cli selftest`.
+- Where a step says `.\.venv\Scripts\embodic.exe`, run `.\.venv\Scripts\python.exe -m embodic.ui.app`. It opens the
+  window.
+
+On this laptop the policy blocked `embodic-cli.exe` in some runs and not in others on 2026-10-22. In PK-06 run 12,
+`python -m embodic.cli` passed with the self-test 45 of 45 (D-098b, D-100a, `verified` by the record).
+`python -m embodic.ui.app` has never been opened on Windows, so this would be its first run (`not tested`). The
+commands above keep the launchers as `docs/install/INSTALL.md` writes them. The Windows troubleshooting section of
+INSTALL.md gives the same fallback.
+
+Option B. Run `cd $env:USERPROFILE\Desktop\embodic`, then `git diff --stat 2bfca49 -- src resources pyproject.toml
 requirements`. When it prints nothing, your checkout holds the source under test. Then use
-`.\.venv\Scripts\embodic.exe` to start the app.
+`.\.venv\Scripts\embodic.exe` to start the app. If PowerShell answers `Program 'embodic.exe' failed to run: An
+Application Control policy has blocked this file`, write F in step 0.4 with that line, and use
+`.\.venv\Scripts\python.exe -m embodic.ui.app` instead for the rest of the walkthrough. That command has never been
+opened on Windows (`not tested`).
 
 | # | Do this | You should see | P / F / note |
 |---|---|---|---|
-| 0.1 | Read the hash that `Get-FileHash` prints. | The SHA-256 of the 0.0.6 release wheel, which Fable writes here: `<release SHA-256>`. PowerShell prints it in capitals. | [ ] |
+| 0.1 | Read the hash that `Get-FileHash` prints. | `FDB89189161D14B71433C4E35861D4E4D56FC6A7E64383F96BA13E27BA450101`, the SHA-256 of the 0.0.6 release wheel (D-096), in the capitals that PowerShell prints. | [ ] |
 | 0.2 | Read the output of `pip list`. | `embodic 0.0.6`, `numpy 2.4.6`, `PySide6_Essentials 6.11.2` and `shiboken6 6.11.2`, besides `pip` and `setuptools`. The lock files did not change from 0.0.5 (U-V27). | [ ] |
-| 0.3 | Read the last line of `embodic-cli selftest`. | `45 tests: 45 passed, 0 failed`. Agent 4's run of the 0.0.6 candidate on Linux gave the same (PK-06, U-V27). On this laptop 0.0.5 gave it (D-090d). 0.0.6 has not run here. | [ ] |
-| 0.4 | Run `.\.venv\Scripts\embodic.exe`. If the window offers "Recover unsaved design", click **Discard** and write N with a note. | The window opens. | [ ] |
+| 0.3 | Read the last line of `embodic-cli selftest`. If PowerShell printed the Application Control line instead, write F with it and follow the paragraph after option A. | `45 tests: 45 passed, 0 failed`. Agent 4's runs of the release wheel on Linux gave the same (PK-06, U-V29, D-097a). On this laptop 0.0.6 gave 45 of 45 in PK-06 runs 11 and 12, through `embodic-cli` and through `python -m embodic.cli` (D-100a, `verified` by the record). | [ ] |
+| 0.4 | Run `.\.venv\Scripts\embodic.exe`. If PowerShell answers `Program 'embodic.exe' failed to run: An Application Control policy has blocked this file`, write F with that line and run `.\.venv\Scripts\python.exe -m embodic.ui.app` instead, which has never been opened on Windows (`not tested`). Use that command for the rest of the walkthrough wherever it starts embodic. If the window offers "Recover unsaved design", click **Discard** and write N with a note. | The window opens. | [ ] |
 
 ## Part 1. Start a blank design and use the stack-up helper (D-014, D-024)
 
 | # | Do this | You should see | P / F / note |
 |---|---|---|---|
-| 1.1 | Look at the window before you click anything. | Title bar "embodic". The toolstrip tabs **Home**, **Design**, **Analysis**, **Export** and **View**. In the centre "No design open" and "Create a new design and enter its values, or start from a team example.", with the buttons **New design** and **Examples**. The inspector reads "Create a new design or load an example to edit its values.". The status bar reads "Ready", "DRC: not run" and "mm". | [ ] |
-| 1.2 | Click **New design**. | The dialog "New design" with "Name the design and choose its topology. You enter every value in the inspector next.". **Create design** is disabled. Under the topology buttons, "Choose a topology.". **Start from** shows "No example (blank)". | [ ] |
+| 1.1 | Look at the window before you click anything. Shot `S01_<theme>` of the whole window, title bar included. | Title bar "embodic". The toolstrip tabs **Home**, **Design**, **Analysis**, **Export** and **View**. In the centre "No design open" and "Create a new design and enter its values, or start from a team example.", with the buttons **New design** and **Examples**. The inspector reads "Create a new design or load an example to edit its values.". The status bar reads "Ready", "DRC: not run" and "mm". | [ ] |
+| 1.2 | Click **New design**. Shot `S11_<theme>` of the dialog, title bar included. | The dialog "New design" with "Name the design and choose its topology. You enter every value in the inspector next.". **Create design** is disabled. Under the topology buttons, "Choose a topology.". **Start from** shows "No example (blank)". | [ ] |
 | 1.3 | Type `UAT blank spiral` in **Design name**, click **Spiral**, then click **Create design**. | **Create design** turns enabled after both. The title bar reads "UAT blank spiral - embodic". The inspector header reads "34 required fields left". The drawing reads "The drawing appears when every required field is valid." and the **Results** tab reads "Results appear when every required field is valid.". Nothing computes. | [ ] |
 | 1.4 | Look at the **Coil** tab. | Required fields are empty, with the unit as grey text ("mm") and the hint "Required". Optional fields hold a value and the chip "default", for example **First coil angle** at 90 ° and **Turns per coil** empty with "Empty means the maximum that fits.". The rail card **Inputs** reads "34 required fields left", and **Input issues** starts with "Coils: required, no value yet.". | [ ] |
 | 1.5 | Click **Go to first missing field**. | The cursor moves to **Coils** on the **Coil** tab. | [ ] |
@@ -104,7 +147,7 @@ You do not need to fill the other 33 fields. If you want to, do it after the wal
 | # | Do this | You should see | P / F / note |
 |---|---|---|---|
 | 2.1 | Press Ctrl+Shift+N. If embodic asks "Replace the open design", accept it. | The dialog "Examples" lists "Serpentine, 16 poles", "Spiral, 12 coils, 10 poles (D08)", "Spiral, 12 coils, 14 poles", "Spiral, 12 coils, 16 poles" and "Wave, 16 poles, involute", each with a note, such as "D08 thesis configuration. The 66 mm circle board and 10 mm bore are an assumption.". | [ ] |
-| 2.2 | Load each example in turn: select it, click **Load example**, wait for "Ready" in the status bar, then compare with the table below. Press Ctrl+Shift+N for the next one. | Each row of the table below holds. Every phase coil carries its letter label, and the legend at the top left reads "Phase A", "Phase B", "Phase C", "L1 on top" and "Layers below". The fields carry the chip "example". | [ ] |
+| 2.2 | Load each example in turn: select it, click **Load example**, wait for "Ready" in the status bar, then compare with the table below. Press Ctrl+Shift+N for the next one. For the D08 example use only the keys: Ctrl+Shift+N, Down arrow until it is selected, then Enter (AX-02 K-01). | Each row of the table below holds. Every phase coil carries its letter label, and the legend at the top left reads "Phase A", "Phase B", "Phase C", "L1 on top" and "Layers below". The fields carry the chip "example". | [ ] |
 
 | Example | Title bar | Status bar | Key results rail |
 |---|---|---|---|
@@ -144,7 +187,7 @@ because it changes no compute code (`verified` by `git diff`; the time on this l
 | 3.4 | Press Enter. | The chip turns "user". R_ph reads 484 mΩ. **Undo** on the **Home** tab is enabled. | [ ] |
 | 3.5 | Press Ctrl+Z. | The field reads 11.47, the chip "example", R_ph 502 mΩ. | [ ] |
 | 3.6 | Press Alt+1, Alt+2, Alt+3, Alt+4, Alt+5, Alt+6 in turn. Then press F5. | Alt+1 to Alt+4 open the inspector tabs **Coil**, **Phases**, **Layers** and **Board**. Alt+5 opens **Results** and Alt+6 opens **DRC**. F5 runs **Compute** (its tooltip reads "Compute (F5). Compute the geometry, checks and results again."). | [ ] |
-| 3.7 | Press F6 several times, then Shift+F6 several times. | Each F6 moves the keyboard focus to the next region, in this order: toolstrip, inspector, inspector tabs, drawing, results tabs, key results rail, status bar, then round again. A region with nothing to focus is skipped. Shift+F6 goes the other way. A 2 px focus ring shows where the focus is, and on the drawing it runs inside the edge of the view. | [ ] |
+| 3.7 | Press F6 several times, then Shift+F6 several times. Shot `W5_<theme>_drawing` while the ring is on the drawing. | Each F6 moves the keyboard focus to the next region, in this order: toolstrip, inspector, inspector tabs, drawing, results tabs, key results rail, status bar, then round again. A region with nothing to focus is skipped. Shift+F6 goes the other way. A 2 px focus ring shows where the focus is, and on the drawing it runs inside the edge of the view. | [ ] |
 | 3.8 | Press F6 until the focus ring is on the toolstrip. Press Ctrl+/ and read the guide, then close it. Press Ctrl+Shift+Z, then Ctrl+Z. Press Ctrl+P, then click **Close**. Press Ctrl+Shift+S, then cancel the Windows dialog. | Ctrl+/ opens the window "Guide and reference" at "Keyboard shortcuts". Its rows include "Ctrl+N, Ctrl+O, Ctrl+S, Ctrl+Shift+S", "Ctrl+Z, Ctrl+Shift+Z or Ctrl+Y", "Ctrl+P, Ctrl+E" and "F1, Ctrl+/", and no row names Ctrl+, (D-094b). Ctrl+Shift+Z redoes what 3.5 undid: **Inner radius** reads 16.97, the chip "user", R_ph 484 mΩ. Ctrl+Z brings back 11.47, "example" and 502 mΩ. Ctrl+P opens the dialog "Export" with only **PDF design report** ticked. Ctrl+Shift+S opens the Windows dialog "Save project". | [ ] |
 | 3.9 | **Judge.** Typing. | Does the preview while you type feel right, or does it get in the way? Is Esc to drop a typed value natural to you? | [ ] |
 | 3.10 | **Judge.** Canvas keys (DEF-US18-01). Click the drawing, then press L, G, C, M, T, A, B and Shift+C. | Nothing changes, and that is the state of 0.0.6. The keyboard map of the design (design_spec.md section 10) gives L, G, C, M and T to labels, greyscale, current, magnets and terminals, and A, B and Shift+C, with Esc to clear, to a phase highlight. 0.0.6 has no handler for any of them (`verified` offscreen, where none of the eight keys changed the drawing and `]` and `[` did; Agent 4 confirms it in U-V28). The guide does not list them. Read options (a) and (b) below the table, and write (a), (b) or your own answer in the box. | [ ] |
@@ -153,13 +196,25 @@ The two options for 3.10.
 
 - (a) Implement the keys. 0.0.6 always draws the phase letters and has **Greyscale** on the **View** tab. It has no
   labels toggle, no current-direction arrows, no magnets in the drawing, no terminal view and no phase highlight
-  (`verified` by reading `src/embodic/ui/views` at `672297e`). So G alone is a new key for a control that exists. L, C,
+  (`verified` by reading `src/embodic/ui/views` at `672297e`, which `2bfca49` leaves unchanged). So G alone is a new key for a control that exists. L, C,
   M, T and the phase highlight are new drawing features, each with its design, code and tests, in a release after 0.0.6
   (`inferred`). The single letters work only while the drawing has focus (WCAG 2.1.4).
 - (b) Take them out of the map. design_spec.md section 10 drops the rows for L, G, C, M, T and for A, B, Shift+C and
   Esc, and `resources/icons/ICONS.md` drops the canvas keys L and G from its rows. The app does not change, because it
   neither binds nor lists these keys. **Greyscale** stays on the **View** tab, and the drawing stays as you see it. You
   can ask for any of the features later.
+
+Now the keys-only run AX-02 (REQ-N-12), in the steps below. Keep the D08 example open and put the mouse aside until
+step 4.1. Use it only for the shots. The checks are those of section 3 of
+`docs/phase3/design/ux_verification_plan.md`, and none of them has run on Windows (`not tested`). Steps 2.2, 2.5, 2.6,
+3.6, 3.7 and 5.7 hold the other AX-02 checks (appendix A).
+
+| # | Do this | You should see | P / F / note |
+|---|---|---|---|
+| 3.11 | Press F6 until the focus ring is on the toolstrip. Press Tab until the ring is on the tab **Home**. Press Right to show **Design**, **Analysis**, **Export** and **View** in turn. On each tab, press Tab through its buttons, then Shift+Tab back to the tab. Shot `W5_<theme>_toolstrip` while the ring is on a button (AX-02 K-03). | Every button of every tab takes the focus, and the ring shows on each. | [ ] |
+| 3.12 | Press Alt+4 (**Board**). Press Tab until the ring is on **Speed**, press Ctrl+A, type `1234` and press Enter. Do the same with `1.7` in **Line current (rms)** and `65` in **Winding temperature**. Shot `W5_<theme>_field` while the ring is on **Winding temperature**. Then go back to **Speed** with Shift+Tab, type `]` and press Esc (AX-02 K-05, K-06). | Each value commits, and its chip reads "user". The ring shows on each field. `]` does not change the drawing, because the canvas keys act only while the drawing has the focus, and Esc brings back 1234. | [ ] |
+| 3.13 | Press Alt+5. Press Tab until the ring is on **How was this computed** of the R_ph card, and press Space. Press Tab until the ring is on the chip "EQ-10". Shot `W5_<theme>_results`. Press Enter, then Esc. Then press Ctrl+Shift+T three times (AX-02 K-08, K-10). | The card's trace opens. Enter opens "Guide and reference" at EQ-10, and Esc closes it and gives the focus back to the main window. Each Ctrl+Shift+T moves the theme one step in the order light, dark, system, as in step 6.1, so after the third press the window is back in the theme it had. | [ ] |
+| 3.14 | Press Ctrl+E. Press Tab through the format boxes and press Space on every ticked box except **SVG drawing of every layer**. Press Tab until the ring is in the folder box and type `exports-keys`. Press Tab until the ring is on **Export**, take the shot `W5_<theme>_export`, and press Space. Close the dialog with Esc (AX-02 K-11). | "Written to" and one file, `Spiral_12_coils_10_poles_D08.svg`, in the folder `exports-keys` inside the folder you started embodic from. In option A that is `%USERPROFILE%\Desktop\embodic-uat-0.0.6\exports-keys` (`inferred`: the folder box takes a relative name from the app's working folder, `src/embodic/ui/views/export_view.py` l.168, and creates the folder, `src/embodic/ui/viewmodels/export.py` l.219). | [ ] |
 
 ## Part 4. Read the results cards, badges, equation register and charts
 
@@ -204,13 +259,13 @@ offscreen export of D08 on Linux (`verified` there). The file `_screws.dxf` endi
 
 | # | Do this | You should see | P / F / note |
 |---|---|---|---|
-| 5.1 | Load D08 fresh. Press Ctrl+E. | The dialog "Export". Under "Files": **SVG drawing of every layer**, **DXF, complete**, **DXF, board outline only**, **DXF, screw holes only** (unavailable, because D08 has no screw holes), **Project file (JSON)**, **PDF design report**, **README.txt describing the files** and **ZIP archive of the selected files**. Under "Before you export": "Stamp: embodic 0.0.6, registry v1+17193c112982.c01a66176ad6, design 327919a0eef5", "DRC passed", "Results match the current design." and "55 assumptions behind the results; the report lists them.". **Export** is disabled, with "Choose a folder.". | [ ] |
+| 5.1 | Load D08 fresh. Press Ctrl+E. Shot `S29_<theme>` of the dialog, title bar included. | The dialog "Export". Under "Files": **SVG drawing of every layer**, **DXF, complete**, **DXF, board outline only**, **DXF, screw holes only** (unavailable, because D08 has no screw holes), **Project file (JSON)**, **PDF design report**, **README.txt describing the files** and **ZIP archive of the selected files**. Under "Before you export": "Stamp: embodic 0.0.6, registry v1+17193c112982.c01a66176ad6, design 327919a0eef5", "DRC passed", "Results match the current design." and "55 assumptions behind the results; the report lists them.". **Export** is disabled, with "Choose a folder.". | [ ] |
 | 5.2 | Click **Browse**, choose the `exports` folder, then click **Export**. | "Written to" the folder, then seven files: `Spiral_12_coils_10_poles_D08.svg`, `Spiral_12_coils_10_poles_D08.dxf`, `Spiral_12_coils_10_poles_D08_outline.dxf`, `Spiral_12_coils_10_poles_D08.embodic.json`, `Spiral_12_coils_10_poles_D08_report.pdf`, `README.txt` and `Spiral_12_coils_10_poles_D08.zip`. | [ ] |
 | 5.3 | Click **Open folder**. Open the SVG in your browser, both DXF files in your CAD tool, `README.txt` in Notepad, and the ZIP. | The SVG draws every layer in millimetres with the phase letters and the legend. The DXF files open at the board's size in mm, the outline file with the outline only. `README.txt` describes the files. The ZIP holds the selected files and `README.txt`. | [ ] |
 | 5.4 | Load "Serpentine, 16 poles". On the **Export** tab click **DXF**. Tick **DXF, screw holes only**, then click **Export**. | Two DXF files, one whose name ends in `_screws.dxf` with the screw holes only. | [ ] |
-| 5.5 | Load "Wave, 16 poles, involute". On the **Export** tab click **SVG**, then click **Export**. | Under "Before you export": "DRC: 186 failures. Export asks you to confirm.". Then the dialog "Export with DRC failures", which starts "The design fails 186 design rule checks." and lists the failures. The focus starts on **Cancel**. | [ ] |
+| 5.5 | Load "Wave, 16 poles, involute". On the **Export** tab click **SVG**, then click **Export**. Shot `S30_<theme>` of the dialog "Export with DRC failures" while the ring is on **Cancel**. | Under "Before you export": "DRC: 186 failures. Export asks you to confirm.". Then the dialog "Export with DRC failures", which starts "The design fails 186 design rule checks." and lists the failures. The focus starts on **Cancel**. | [ ] |
 | 5.6 | Click **Cancel**. Then click **Export** again and click **Export anyway**. | **Cancel** writes nothing. **Export anyway** writes the SVG, marked as failing DRC. | [ ] |
-| 5.7 | Load D08 fresh. Press Ctrl+S, save it in the UAT folder as `uat_d08`. Press Ctrl+N and create any blank design. Press Ctrl+O and open `uat_d08.embodic.json`. | The Windows dialogs "Save project" and "Open project". After the open, the title bar names the design, the fields read as saved and the rail reads 30.9 mV·s/rad and 502 mΩ. | [ ] |
+| 5.7 | Load D08 fresh. Press Ctrl+S, save it in the UAT folder as `uat_d08`. Press Ctrl+N and create any blank design. Press Ctrl+O and open `uat_d08.embodic.json`. In both Windows dialogs use only the keys: type the name in the file name box, or the whole path such as `%USERPROFILE%\Desktop\embodic-uat-0.0.6\uat_d08`, and press Enter (AX-02 K-12; that the dialog expands `%USERPROFILE%` is an `assumption`). If a dialog does not take it, use the mouse and write N. Shot `W2_<theme>` while "Save project" is open and `W1_<theme>` while "Open project" is open. | The Windows dialogs "Save project" and "Open project". After the save, the title bar shows the new name. After the open, the title bar names the design, the fields read as saved, the rail reads 30.9 mV·s/rad and 502 mΩ, and the keyboard focus is back in the main window. | [ ] |
 | 5.8 | **Judge.** The PDF report (D-056g, the U-S11 question 2 left for this review). Open `Spiral_12_coils_10_poles_D08_report.pdf`. | It holds "embodic design report" with the stamp, "Key results" (Quantity, Value, Status), "DRC summary" per board, "Inputs" by model path with their provenance, a drawing of each board, and on its last page "Set in Inter and JetBrains Mono, SIL Open Font License 1.1.". A status prints with its label in brackets after it, as the inductance row shows. The "Key results" rows carry no limitations, such as the EC-05 edge note. Is this report right for your use? Would you hand it to a colleague or a board house as it is? What is missing, and what would you take out? | [ ] |
 
 ## Part 6. Switch the themes, greyscale and high contrast
@@ -220,10 +275,10 @@ under their Thai names.
 
 | # | Do this | You should see | P / F / note |
 |---|---|---|---|
-| 6.1 | On the **View** tab, point at **Theme**, then click it three times, looking at the window after each click. | The tooltip reads "Theme. Switch the colour theme: light, dark, then follow the system.". Each click moves to the next choice in the order light, dark, system. The chrome, the icons, the drawing and the charts restyle at once, without a restart. Text stays readable, and phases stay red, blue and green. | [ ] |
-| 6.2 | Leave the theme on system. In Windows Settings, open Personalization, then Colors, and switch between the light and the dark mode. | embodic follows the Windows mode without a restart (REQ-N-27). | [ ] |
+| 6.1 | On the **View** tab, point at **Theme**, then click it three times, looking at the window after each click. Shot `S09_<theme>` with a rectangle around the window and the tooltip while the tooltip shows, before the first click. After the click that brings light and the one that brings dark, take `W3_light` and `W3_dark` of the whole window, title bar included, and write in the note whether the title bar is light or dark. Point at **Theme** once more while the window is dark, or light if S09 was dark, and take the other `S09`. If the tooltip goes before the snip, write N. | The tooltip reads "Theme. Switch the colour theme: light, dark, then follow the system.". Each click moves to the next choice in the order light, dark, system. The chrome, the icons, the drawing and the charts restyle at once, without a restart. Text stays readable, and phases stay red, blue and green. | [ ] |
+| 6.2 | Leave the theme on system. In Windows Settings, open Personalization, then Colors, and switch between the light and the dark mode. After each switch, take `W6_light` and `W6_dark` of the embodic window (row W6 of the plan). | embodic follows the Windows mode without a restart (REQ-N-27). | [ ] |
 | 6.3 | Click **Greyscale**. Click it again. | The phases turn to a grey ladder, A darkest, with hatching in the coil eyes. The phase letters and the layer cue stay. The second click brings the colours back. | [ ] |
-| 6.4 | In Windows Settings, open Accessibility, then Contrast themes, choose Night sky and apply it. Look at the D08 example. | The chrome takes the Windows contrast colours. The drawing turns greyscale with hatching. **Greyscale** is checked and unavailable, and its tooltip ends "On while Windows high contrast is on.". The layer cue of 2.3 still shows. This is its first run on Windows (D-083b). The contrast theme names are those of Windows 11 (`assumption`). | [ ] |
+| 6.4 | In Windows Settings, open Accessibility, then Contrast themes, choose Night sky and apply it. Look at the D08 example. Take `W4_night-sky_drawing`, then press Alt+5 and take `W4_night-sky_results`. Choose Desert, apply it, and take `W4_desert_drawing` and `W4_desert_results` the same way. | The chrome takes the Windows contrast colours. The drawing turns greyscale with hatching. **Greyscale** is checked and unavailable, and its tooltip ends "On while Windows high contrast is on.". The layer cue of 2.3 still shows. This is its first run on Windows (D-083b). The contrast theme names are those of Windows 11 (`assumption`). Under Desert the chrome takes Desert's light system colours and the rest is the same (`inferred`: the chrome follows the system colours of whichever contrast theme is on, `src/embodic/ui/views/high_contrast.py`). | [ ] |
 | 6.5 | Turn the contrast theme off. | embodic returns to your theme and to the greyscale choice you had. | [ ] |
 | 6.6 | **Judge.** Themes. | Is any text invisible, clipped or hard to read in any theme? Which theme would you work in? | [ ] |
 
@@ -260,6 +315,28 @@ what you heard instead, and say so in the log. Keep the default verbosity.
 | 7.9 | Press Narrator+Alt+X. Copy the whole history into a new file `narrator_recap.txt`. Press Windows+Ctrl+Enter. | The history window opens. Narrator stops. | [ ] |
 | 7.10 | Give the verdict. | AX-06 on 0.0.6 passes when 7.2 to 7.7 each announced all their parts. Write P or F here, with the date and the Windows build (`winver`). | [ ] |
 
+## Part 8 (optional). Take the shots again at 100 % and 150 % display scale
+
+Your display runs at its own scale, 125 % on a 1920 x 1200 panel when Fable read it on 2026-10-17
+(`docs/phase3/fable/windows_campaign_w1.md`). The W6 plan also asks for every shot at 100 %, and for S03 and S22 at
+150 % and 200 %. It changes the scale only with your OK (section 0 of `docs/phase3/design/ux_verification_plan.md`).
+This part is your choice. If you decline, those shots stay `not tested`, with your choice as the reason.
+
+At 200 % the screen is 960 x 600 logical px, too small for a 960 x 540 window with its title bar and the taskbar, so
+200 % stays `not tested (screen too small)` (`inferred` from the panel size). At 150 % the screen is 1280 x 800 logical
+px, so only the 960 x 540 shots of S03 and S22 fit (`inferred`).
+
+| # | Do this | You should see | P / F / note |
+|---|---|---|---|
+| 8.1 | Decide whether you want this part. | Write yes or no. On no, skip the rest of this part. | [ ] |
+| 8.2 | Close embodic. In Windows Settings, open System, then Display, and set Scale to 100 %. Start the launcher that Fable prepares for 100 % (appendix A) and leave the laptop alone until it ends. | The launcher ends, and `%USERPROFILE%\Desktop\embodic-uat-0.0.6\w6\lever-100` holds the shots. | [ ] |
+| 8.3 | Start embodic as in step 0.4 and load D08. Repeat the shots of step 3.7 as `W5_<theme>_drawing_100` and of step 6.1 as `S09_<theme>_100`, in one theme. | The focus ring and the tooltip, sharp and not clipped. | [ ] |
+| 8.4 | Close embodic. Set Scale to 150 %. Start the launcher that Fable prepares for 150 % and wait until it ends. | `w6\lever-150` holds the S03 and S22 shots. | [ ] |
+| 8.5 | Set Scale back to your own value, 125 % if you had not changed it. | The display looks as it did before this part. | [ ] |
+
+The other OS shots at 100 % stay `not tested`, because they would repeat parts 1, 5 and 6 for about 15 more minutes
+(`assumption`).
+
 ## If something looks wrong
 
 Write it down and carry on. Do not fix, rerun or reinstall anything first, because the state you found is the
@@ -282,13 +359,17 @@ evidence.
    `src/embodic/ui/app.py`, `verified` by reading).
 5. If the fault is in a design, press Ctrl+S and save the project file into the `report` folder.
 6. If the fault is in the numbers, run `.\.venv\Scripts\embodic-cli.exe selftest > report\selftest.txt` from the UAT
-   folder.
+   folder. If PowerShell answers `Program 'embodic-cli.exe' failed to run: An Application Control policy has blocked
+   this file`, write F with that line in the row's box, and run
+   `.\.venv\Scripts\python.exe -m embodic.cli selftest > report\selftest.txt` instead. Use `python -m embodic.cli` for
+   `embodic-cli.exe` and `python -m embodic.ui.app` for `embodic.exe` for the rest of the walkthrough, as the paragraph
+   after option A says. `python -m embodic.ui.app` has never been opened on Windows (`not tested`).
 7. For Part 7, keep `narrator_log.txt` and `narrator_recap.txt` with the others.
 8. Tell Fable in the Claude desktop app that the `report` folder is ready. Fable reads it from the laptop and writes
    the Thai summary.
 
-If embodic closes by itself, start it again. When it offers "Recover unsaved design", click **Recover** and write
-that down too.
+If embodic closes by itself, start it again with the command of step 0.4. When it offers "Recover unsaved design",
+click **Recover** and write that down too.
 
 ## Your judgement points
 
@@ -305,3 +386,105 @@ These are the rows where your opinion is the result. Agent 4's acceptance plan r
 | 4.12 | Whether the units and wording read naturally. |
 | 5.8 | Whether the PDF report is right for your use (D-056g). |
 | 6.6 | Whether any theme hides or clips text. |
+
+## Appendix A. What takes each W6 check
+
+D-100c splits W6, the check of the app on the real display. Its scripted part runs from a launcher that Fable prepares
+and starts at the start of the session, before part 0. Its human part is in this walkthrough. Agent 1 then reviews the
+shots against `docs/phase2/design/screenshot_checklist.md` and the real-display cell of each row in section 1 of
+`docs/phase3/design/ux_verification_plan.md`. The rows below are those of sections 1, 3 and 4 of that plan.
+
+### A.1 The lever launcher, for Fable
+
+The commands need the checkout `%USERPROFILE%\Desktop\embodic` at `6ac95ac` and its own `.venv`, which holds
+`requirements\py311-dev.txt` and the editable install of the checkout (INSTALL.md step 7). The Windows commit gate of
+0.0.6 ran from that venv (D-098c), so it is in place (`inferred`). Run the commands from the checkout's root, because
+`python -m tests.ui.qt_shell.capture_acceptance` imports `tests` from the current folder. The UAT venv of option A cannot
+run them: the release wheel holds no `tests` (`verified`: none of its 274 members starts with `tests`). Leave
+`QT_QPA_PLATFORM` unset, so that Qt uses the Windows platform, the display's own scale and the Windows fonts. The
+commands are for `cmd.exe`, as in a `.cmd` launcher. Nothing else may run on the laptop meanwhile, because the
+first-paint probe discards a run whose idle gap is 30 ms or more.
+
+```
+cd /d "%USERPROFILE%\Desktop\embodic"
+set QT_QPA_PLATFORM=
+set OUT=%USERPROFILE%\Desktop\embodic-uat-0.0.6\w6\lever
+mkdir "%OUT%"
+.venv\Scripts\python.exe docs\phase3\design\checks\first_paint_probe.py spiral_12c10p_d08 >> "%OUT%\first_paint.jsonl"
+.venv\Scripts\python.exe docs\phase3\design\checks\first_paint_probe.py spiral_12c10p_d08 >> "%OUT%\first_paint.jsonl"
+.venv\Scripts\python.exe docs\phase3\design\checks\first_paint_probe.py spiral_12c10p_d08 >> "%OUT%\first_paint.jsonl"
+.venv\Scripts\python.exe docs\phase3\design\checks\first_paint_probe.py wave_16p_example >> "%OUT%\first_paint.jsonl"
+.venv\Scripts\python.exe docs\phase3\design\checks\first_paint_probe.py wave_16p_example >> "%OUT%\first_paint.jsonl"
+.venv\Scripts\python.exe docs\phase3\design\checks\first_paint_probe.py wave_16p_example >> "%OUT%\first_paint.jsonl"
+.venv\Scripts\python.exe -m tests.ui.qt_shell.capture_acceptance "%OUT%" S01 S03 S04 S05 S07 S09 S11 S14 S17 S20 S22 S23 S29 S30 S36 S38 S39 S41 > "%OUT%\rows.jsonl" 2> "%OUT%\rows_stderr.txt"
+.venv\Scripts\python.exe -m embodic.ui.app --smoke --screenshot-dir "%OUT%\smoke" > "%OUT%\smoke.txt" 2>&1
+echo smoke exit code %ERRORLEVEL% >> "%OUT%\smoke.txt"
+```
+
+For part 8, run the same `capture_acceptance` line with `OUT` set to `...\w6\lever-100` at 100 %, and with `OUT` set to
+`...\w6\lever-150` and only the rows `S03 S22` at 150 %. Run neither probe line again, because the plan times the first
+paint at the native scale only.
+
+What the lines do:
+
+- `first_paint_probe.py` is P-01 of section 4. It runs three times per example and writes one JSON line each time.
+- `capture_acceptance` writes `<row>_<theme>_<width>x<height>[_<part>].png` and one JSON line per row in `rows.jsonl`. A
+  row with an error writes a note and lets the others run. The sizes in the names are logical px. At 125 % the files
+  hold 1.25 times as many device px (`inferred` from `QWidget.grab()`).
+- S01, S09, S11, S29 and S30 are OS rows. The lever takes their client area in both themes, and the walkthrough takes
+  their title bar and the compositor's image. Their functions open no blocking dialog. The export dialog opens with
+  `open()` (`show_export` in `src/embodic/ui/views/main_window.py`) and the confirmation with `open()`
+  (`run_clicked` in `src/embodic/ui/views/export_view.py`), `verified` by reading.
+- The smoke line is step 2 of W6 in `docs/phase3/verification/verification_plan.md`. It opens the window through
+  `python -m embodic.ui.app`, the DEF-W-16 fallback that has never been opened on Windows. So it also shows whether the
+  fallback opens the window from the editable install. For the wheel in the UAT venv that stays `not tested`.
+
+The launcher time of about 5 minutes is an `assumption`. W1 measured 6.83 s for one smoke run on this laptop
+(`windows_campaign_w1.md`). The capture opens 18 rows, most with one or two example loads.
+
+### A.2 Every row and what takes it
+
+Native scale is your own, 125 % at the last reading. The lever is A.1. A step number is a step of this walkthrough, and
+its shot goes to `report\w6\`.
+
+| Plan row | Takes it | Where and what | Not covered, and why |
+|---|---|---|---|
+| S01 | Walkthrough | 1.1, `S01_<theme>`. The lever adds both themes at both sizes. | The title bar in the other theme. W3 shows that title bar with a design open. |
+| S03 | Lever | `S03_light_960x540_<tab>` | 150 % in part 8 if you choose it. 200 % `not tested (screen too small)`. |
+| S04 | Lever | `S04_<theme>_1280x800` | - |
+| S05 | Lever | `S05_<theme>_1280x800` | - |
+| S07 | Lever | `S07_<theme>_1280x800_fit`, `_zoom3x` | - |
+| S09 | Walkthrough | 6.1, `S09_light` and `S09_dark`. The lever adds the in-window tooltip. | - |
+| S11 | Walkthrough | 1.2, `S11_<theme>`. The lever adds both themes. | The title bar in the other theme, because the dialog opens once, before part 6. |
+| S14 | Lever | `S14_<theme>_1280x800` | - |
+| S17, S36 | Lever | `S17_<theme>_1280x800`, `S36_light_960x540` | The lever does not print `horizontalScrollBar().maximum()`. Agent 1 judges the scroll bar from the shot. |
+| S20 | Lever | `S20_<theme>_1280x800` | - |
+| S22 | Lever | `S22_<theme>_1280x800`, `S22_<theme>_960x540` | 150 % in part 8 at 960 x 540 only. 200 % `not tested (screen too small)`. |
+| S23 | Lever | `S23_light_1280x800` | - |
+| S29 | Walkthrough | 5.1, `S29_<theme>`. The lever adds both themes. | The title bar in the other theme. |
+| S30 | Walkthrough | 5.5, `S30_<theme>`. The lever adds the light theme. | - |
+| S38 | Lever | `S38_<theme>_960x540` | - |
+| S39 | Lever | `S39_<theme>_dialog` | - |
+| S41 | Lever | `S41_light_960x700` | - |
+| W1 | Walkthrough | 5.7, `W1_<theme>` | - |
+| W2 | Walkthrough | 5.7, `W2_<theme>` | - |
+| W3 | Walkthrough | 6.1, `W3_light`, `W3_dark` | - |
+| W4 | Walkthrough | 6.4, Night sky and Desert, the drawing and the results | The S01 state under a contrast theme, because a design is open by then. |
+| W5 | Walkthrough | 3.7 drawing, 3.11 toolstrip, 3.12 field, 3.13 results, 3.14 export | The plan's Focus cells are `param-r-inner` and `res-r-phase-how`. The walkthrough rings **Winding temperature** and the chip "EQ-10" instead, the same kinds of widget (`inferred`). |
+| W6 | Walkthrough | 6.2, `W6_light`, `W6_dark` | - |
+| Every row at 100 % | Optional part 8 | `w6\lever-100`, and the OS shots of 8.3 | The other OS shots at 100 %, and all of them when you decline part 8. |
+| K-01 | Walkthrough | 2.2, the gallery with the keys | The start screen's Tab route, because a design is open by step 2.2. |
+| K-02 | Walkthrough | 3.7 | - |
+| K-03 | Walkthrough | 3.11 | - |
+| K-04, K-07 | Walkthrough | 3.6 | - |
+| K-05, K-06 | Walkthrough | 3.12 | K-06 types `]`, not L, because 0.0.6 binds no L (DEF-US18-01). |
+| K-08, K-10 | Walkthrough | 3.13 | - |
+| K-09 | Walkthrough | 2.5 and 2.6 (`]`, `[`, `+`, `0`, arrows), 3.10 (L and G) | `-` is not pressed. L and G have no handler in 0.0.6 (DEF-US18-01). |
+| K-11 | Walkthrough | 3.14 | - |
+| K-12 | Walkthrough | 5.7 | - |
+| P-01 | Lever | `first_paint.jsonl` | - |
+
+Of the 24 rows of section 1, the lever takes 13 and the walkthrough 11 at the native scale. The 12 rows of
+section 3 are walkthrough steps, and P-01 of section 4 is a lever line. AX-02 asks for one keys-only run with the mouse
+out of reach. Each step above is keys-only, but between them the walkthrough uses the mouse, so AX-02 as one unbroken
+run is `not tested`.
