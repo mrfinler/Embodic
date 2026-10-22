@@ -7,10 +7,12 @@ compares that file with the hashes of the tree under test. No bundle is built he
 folder stand in for them.
 """
 
+import ast
 import hashlib
 import json
 import shutil
 import subprocess
+import sys
 import types
 from collections.abc import Callable
 from pathlib import Path
@@ -134,11 +136,33 @@ def test_the_refusal_names_both_stamps_and_the_rebuild_command(monkeypatch, repo
 
 
 def test_the_stamp_holds_the_package_hash_and_the_resources_hash(repo):
-    """Catches a stamp whose package part is not the registry's hash, which is what the running app reports."""
+    """Catches a package part that selects other files than package_source_sha256: caches and non-Python files."""
+    (repo / "src" / "embodic" / "__pycache__").mkdir()
+    (repo / "src" / "embodic" / "__pycache__" / "stale.py").write_text("STALE = 1\n", encoding="utf-8")
+    (repo / "src" / "embodic" / "notes.txt").write_text("not Python\n", encoding="utf-8")
     stamp = bundle_gate.build_tool().source_stamp(repo)
 
     assert stamp["package_source_sha256"] == package_source_sha256(repo / "src" / "embodic")
     assert set(stamp) == {"package_source_sha256", "resources_sha256"}
+
+
+def test_the_package_hash_of_the_real_source_equals_the_registrys():
+    """Catches the build script's copy of the scheme drifting from package_source_sha256, which the app reports."""
+    stamp = bundle_gate.build_tool().source_stamp(bundle_gate.REPO)
+
+    assert stamp["package_source_sha256"] == package_source_sha256(bundle_gate.REPO / "src" / "embodic")
+
+
+def test_the_build_script_imports_nothing_but_the_standard_library():
+    """Catches an import of embodic or NumPy: INSTALL.md section 9 runs the script with a bare Python."""
+    imported: set[str] = set()
+    for node in ast.walk(ast.parse(bundle_gate.BUILD_TOOL.read_text(encoding="utf-8"))):
+        if isinstance(node, ast.Import):
+            imported.update(alias.name.split(".")[0] for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            imported.add((node.module or "").split(".")[0])
+
+    assert imported - set(sys.stdlib_module_names) == set()
 
 
 def test_the_resources_hash_covers_every_file_by_relative_posix_path_and_bytes(tmp_path):
@@ -182,6 +206,36 @@ def test_the_resources_hash_follows_every_change_to_the_resources(repo, change):
     CHANGES[change](repo)
 
     assert tool.source_stamp(repo)["resources_sha256"] != before
+
+
+GENERATED = ["resources/evidence/passed_tests.v1.json", "resources/evidence/passed_tests.v1.json.partial"]
+KEPT = [
+    "resources/evidence/equations.v1.json",
+    "resources/theme/passed_tests.v1.json",
+    "resources/evidence/x.partial.json",
+]
+
+
+@pytest.mark.parametrize("generated", GENERATED)
+def test_the_stamp_ignores_the_evidence_a_release_run_writes_after_the_build(repo, generated):
+    """Catches a release run that makes its own bundle look stale: the evidence file comes after the build."""
+    tool = bundle_gate.build_tool()
+    before = tool.source_stamp(repo)
+    (repo / generated).parent.mkdir(parents=True, exist_ok=True)
+    (repo / generated).write_text('{"passed": true}\n', encoding="utf-8")
+
+    assert tool.source_stamp(repo) == before
+
+
+@pytest.mark.parametrize("kept", KEPT)
+def test_the_stamp_still_covers_the_other_files_beside_the_generated_ones(repo, kept):
+    """Catches an exclusion that is wider than the two gitignored names: the packaged registries are resources."""
+    tool = bundle_gate.build_tool()
+    before = tool.source_stamp(repo)
+    (repo / kept).parent.mkdir(parents=True, exist_ok=True)
+    (repo / kept).write_text("{}\n", encoding="utf-8")
+
+    assert tool.source_stamp(repo)["resources_sha256"] != before["resources_sha256"]
 
 
 def test_the_stamp_does_not_depend_on_where_the_tree_lies(tmp_path, repo):
