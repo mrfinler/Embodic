@@ -296,5 +296,12 @@ python -m pytest tests/bundle
   และไม่เปลี่ยน policy ของบัญชีผู้ใช้ ได้รันจริงเมื่อ 2026-10-18 บน Windows 11 Home กับ PowerShell 5.1 ที่ policy เป็น
   `Restricted`: activate ไม่ได้ก่อนรันคำสั่งนี้ และ activate ได้หลังรัน ส่วน policy ระดับ `CurrentUser` ยังเป็น `Undefined`
   (D-051g, DEF-W-04)
+- `Program 'embodic-cli.exe' failed to run: An Application Control policy has blocked this file` (อาจเกิดกับ
+  `embodic.exe` ด้วย): policy ของ Windows เช่น Smart App Control บล็อกตัวเปิดโปรแกรมที่ pip สร้างไว้ใน `.venv\Scripts`
+  ให้เปิด embodic ผ่าน Python แทน: `python -m embodic.cli` ใช้คำสั่งเดียวกับ `embodic-cli` (เช่น
+  `python -m embodic.cli selftest`) และ `python -m embodic.ui.app` เปิดหน้าต่างโปรแกรม บนเครื่องทดสอบ (Windows 11 Home)
+  เมื่อ 2026-10-22 policy บล็อก `embodic-cli.exe` ในบางรอบและไม่บล็อกในบางรอบ และในหนึ่งรอบ `python -m embodic.cli`
+  ผ่านขั้นที่ 5 และ 6 โดย self-test ผ่าน 45 จาก 45 (D-098, D-100, DEF-W-16) ส่วน `python -m embodic.ui.app` ยังไม่ได้เปิดบน
+  Windows
 - ไม่พบ `py`: ตัวติดตั้งของ python.org เป็นผู้เพิ่ม launcher `py` ให้รันตัวติดตั้งอีกครั้งแล้วเลือกตัวเลือกนั้น
 - path ที่มีช่องว่าง: ใส่ path ในเครื่องหมายคำพูดคู่ เช่น `embodic-cli compute "$env:USERPROFILE\My designs\a.embodic.json"`

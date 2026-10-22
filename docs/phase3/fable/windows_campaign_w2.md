@@ -63,12 +63,16 @@ otherwise. Decision rows hold the rulings.
 | Commit profile (PK-01 cell) | 5 of 6; pytest 1 failed (tests/bundle against the 0.0.5 bundle), 4181 passed; colophon tests pass | w7_commit_gate_0.0.6.log | D-098 |
 | Release profile (W8, PK-05) | 6 of 8; pytest 3 failed (PK-02, PK-11: launcher blocked, DEF-W-16), 4349 passed; tests/bundle 6 of 6; latency gate 1 failed | w8_release_gate_0.0.6.log | D-099 |
 | Latency tests alone, five runs | 2 of 5 pass; N02-10 arrival 114, 199, 258 ms (DEF-W-12) | w8_latency_0.0.6_run1-5.log | D-099 |
-| PK-06 rerun, both ways | pending (run_0.0.6_pk06.cmd) | pk06_run9.log, pk06_run10.log | - |
+| PK-06 rerun, runs 9 and 10 | not valid: the script's helper `Cli` was shadowed by the built-in PowerShell alias `cli` (Clear-Item), so no embodic command ran; the example's sha256 was unchanged afterwards | pk06_run9.log, pk06_run10.log | D-100 |
+| PK-06 warm, `embodic-cli` as INSTALL.md writes it (run 11) | passed: first example 22.3 s, design rule check passed, SVG written, self-test 45 of 45 | pk06_run11.log | D-100 |
+| PK-06 warm, `python -m embodic.cli` (run 12) | passed: first example 19.3 s, design rule check passed, SVG written, self-test 45 of 45; outcome.json byte-identical to run 11, board.svg differs only in `generated_utc` | pk06_run12.log | D-100 |
+| PK-06 cold | not run since D-084e; it waits for a normal network | - | - |
 
 ## What is not tested on Windows
 
 - The real display (W6): the user saw the 0.0.3 view of D08 and reported the layer misreading of D-078. Nobody has
-  looked at the 0.0.4 and 0.0.5 views on Windows yet.
+  looked at the 0.0.4, 0.0.5 and 0.0.6 views on Windows yet. The UAT walkthrough does that
+  (docs/phase4/design/uat_walkthrough.md).
 - Windows high contrast with the layer cue: tested offscreen on Linux only (D-083b).
 - The PyInstaller bundle could not run on this laptop in the 0.0.4 and 0.0.5 runs (DEF-W-14); in the 0.0.6 release run it ran
   and passed (D-099).

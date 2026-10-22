@@ -2,6 +2,14 @@
 
 All notable changes to embodic are listed here. Versions follow semantic versioning; dates are ISO 8601.
 
+## Unreleased
+
+### Documentation
+
+- The install guide and its Thai version say what to do when Windows reports "An Application Control policy has
+  blocked this file" for `embodic-cli.exe` or `embodic.exe`: start embodic with `python -m embodic.cli` or
+  `python -m embodic.ui.app` (DEF-W-16, D-098, D-100). The release files are unchanged.
+
 ## 0.0.6 - 2026-10-22
 
 This release fixes what the preparation of Phase 4 found on 0.0.5 (D-093, D-094). It changes no computed value: the

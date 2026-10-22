@@ -296,5 +296,12 @@ except the first one.
   when the window closes and leaves the policy of your user account unchanged. Run on 2026-10-18 on Windows 11 Home
   with PowerShell 5.1 and a `Restricted` policy: activation failed before the command and worked after it, and the
   `CurrentUser` policy stayed `Undefined` (D-051g, DEF-W-04).
+- `Program 'embodic-cli.exe' failed to run: An Application Control policy has blocked this file` (the same can happen
+  to `embodic.exe`): a Windows policy such as Smart App Control blocks the launchers that pip writes into
+  `.venv\Scripts`. Start embodic through Python instead: `python -m embodic.cli` takes the same commands as
+  `embodic-cli` (for example `python -m embodic.cli selftest`), and `python -m embodic.ui.app` opens the window. On
+  the test laptop (Windows 11 Home) the policy blocked `embodic-cli.exe` in some runs and not in others on
+  2026-10-22. In one run `python -m embodic.cli` passed steps 5 and 6, with the self-test 45 of 45 (D-098, D-100, DEF-W-16).
+  `python -m embodic.ui.app` was not opened on Windows.
 - `py` is not found: the python.org installer adds the `py` launcher. Run the installer again and select it.
 - Paths with spaces: put the path in double quotes, for example `embodic-cli compute "$env:USERPROFILE\My designs\a.embodic.json"`.
