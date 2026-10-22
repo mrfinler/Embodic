@@ -23,6 +23,17 @@ REPO = Path(__file__).resolve().parents[3]
 INDEX = REPO / "docs/phase3/verification/manual_records.json"
 WHEEL_INPUTS = ("pyproject.toml", "src/embodic", "resources")
 INSTALL_GUIDE = ("README.md", "docs/install/INSTALL.md", "requirements/py311.txt", *WHEEL_INPUTS)
+# A gate run on a checkout depends on the whole tree that pytest and tools/ci.py read. No test reads the records or the
+# FEA results under tests/independent (`inferred` from grep of every test_*.py and conftest.py there, U-V30).
+GATE_TREE = (
+    *WHEEL_INPUTS,
+    "requirements",
+    "tools",
+    "packaging",
+    "tests",
+    ":(exclude,glob)tests/independent/*/records/**",
+    ":(exclude)tests/independent/m6/fea/results",
+)
 
 
 @dataclass(frozen=True)
@@ -351,6 +362,52 @@ SUBJECTS = (
         ("tests/static/lg_allowlist.toml", "resources/examples", "resources/evidence"),
         ("embodic.api", "embodic.io.report", "embodic.results.registry", "embodic.ui.viewmodels.results"),
         "Agent 4 (reviewer check)",
+    ),
+    Subject(
+        "tests/independent/m5/records/PK-06_walkthrough_2bfca49.md",
+        "passed",
+        "2bfca49",
+        "release wheel fdb89189 of 2bfca49, tag v0.0.6 (record, title and Times per step)",
+        INSTALL_GUIDE,
+        (),
+        "Agent 4 (Linux walkthrough in the container)",
+    ),
+    Subject(
+        "tests/independent/m6/records/OR-11_OR-12_2bfca49.md",
+        "passed",
+        "2bfca49",
+        "release wheel fdb89189 of 2bfca49 in /home/claude/wheelvenv-0.0.6 (record, What ran)",
+        ("resources/evidence/equations.v1.json", "docs/phase2/engineering/oracle_cases.json"),
+        ("embodic.api", "embodic.physics", "embodic.physics.emf", "embodic.geometry.primitives", "embodic.paths"),
+        "Agent 4 (FEA rerun in GetDP)",
+    ),
+    Subject(
+        "docs/phase3/fable/PK-06_windows_0.0.6.md",
+        "passed",
+        "2bfca49",
+        "release wheel fdb89189 of 2bfca49 in a clean venv on the laptop, runs 11 and 12 (record, Build and Results)",
+        INSTALL_GUIDE,
+        (),
+        "the user and Fable (timed walkthrough on the Windows laptop)",
+    ),
+    Subject(
+        "docs/phase3/fable/windows_campaign_w2.md",
+        "passed",
+        "6ac95ac",
+        "PK-04 on the release wheel fdb89189 and PK-05 on the bundle that the release run built, laptop checkout "
+        "6ac95ac (record, Release 0.0.6)",
+        (*WHEEL_INPUTS, "tools/build_bundle.py", "packaging"),
+        (),
+        "Fable (Windows laptop)",
+    ),
+    Subject(
+        "docs/phase3/fable/windows_campaign_w2.md",
+        "failed",
+        "6ac95ac",
+        "W7 commit profile and W8 release profile on the laptop checkout 6ac95ac (record, Release 0.0.6)",
+        GATE_TREE,
+        (),
+        "Fable (Windows gates on the laptop)",
     ),
 )
 
