@@ -63,9 +63,9 @@ D-084a). Machine: the platform is the first item of that note, before the first 
 and MACHINES gives the pattern it must match. The 0.0.1 target reads no index, so every NEEDS ID stays blocked there.
 
 Row status: `failed` when a planned ID has `fail` evidence; `verified` when every planned ID has gate, name, file, eqt
-or record evidence and none is blocked; `partial` when some evidence exists but an ID lacks it or is blocked; `not
-testable here` when no ID has evidence and every ID is blocked; `not tested` otherwise. Withdrawn rows keep `withdrawn`. The script matches IDs to
-tests by text, so this is the text status. D-051e: a row whose text status is `verified` stays `verified` only with
+or record evidence and none is blocked; `partial` when some evidence exists but an ID lacks it or is blocked;
+`not testable here` when no ID has evidence and every ID is blocked; `not tested` otherwise. Withdrawn rows keep
+`withdrawn`. The script matches IDs to tests by text, so this is the text status. D-051e: a row whose text status is `verified` stays `verified` only with
 Agent 4's V3-01 `checks` ruling for that row, while the SHA-256 of every source the ruling cites equals its pin;
 otherwise it drops to `partial` until Agent 4 re-rules it. The Ruling column says which case applies. On main a pin
 covers the cited function's source segment only, so a change to a fixture or a helper does not make a ruling stale
@@ -333,16 +333,15 @@ def evidence_kind(tid, carriers, gates, eqs, sources, records_by_id, failed_by_i
 
 
 def platform_of(embodic_version: str) -> str:
-    """Return the first item of the note after the version, `Windows laptop` in `0.0.6 (Windows laptop, run 11; ...)`."""
+    """Return the first item of the note after the version: `Windows laptop` in `0.0.6 (Windows laptop, run 11)`."""
     note = embodic_version.partition(" ")[2].strip().removeprefix("(")
     return re.split(r"[,;)]", note, maxsplit=1)[0].strip()
 
 
 def commit_version(commit: str) -> str:
     """Return the `__version__` string of src/embodic/__init__.py at a commit, read as text and never imported."""
-    text = subprocess.run(
-        ["git", "-C", str(REPO), "show", f"{commit}:src/embodic/__init__.py"], capture_output=True, text=True, check=True
-    ).stdout
+    show = ["git", "-C", str(REPO), "show", f"{commit}:src/embodic/__init__.py"]
+    text = subprocess.run(show, capture_output=True, text=True, check=True).stdout
     return re.search(r"^__version__ = \"([^\"]+)\"$", text, re.MULTILINE).group(1)
 
 
@@ -627,7 +626,7 @@ def self_test(tree: Path) -> int:
 
 
 def self_test_main(tree: Path, target: Target) -> int:
-    """Controls for D-061d, for a failed record and for the NEEDS rule of D-100b.
+    """Run the controls for D-061d, for a failed record and for the NEEDS rule of D-100b.
 
     REQ-N-14 cites the superseded AX-05 record; it stays verified only through the redone one. REQ-N-01 is `failed`
     with the failed PF-01 record of the index and not `failed` without it (U-V21). A NEEDS ID counts only with a
@@ -730,8 +729,10 @@ def self_test_main(tree: Path, target: Target) -> int:
     doc_edit = same_code("def f():\n    '''a'''\n    return 1\n", "def f():\n    '''b'''\n    return 1\n")
     good = doc_edit and not code_edit
     ok &= good
-    print(f"self-test {'ok' if good else 'WRONG'}: same_code admits a docstring edit ({doc_edit}), not a code edit "
-          f"({code_edit})")
+    print(
+        f"self-test {'ok' if good else 'WRONG'}: same_code admits a docstring edit ({doc_edit}), not a code edit "
+        f"({code_edit})"
+    )
     print("self-test " + ("passed" if ok else "FAILED"))
     return 0 if ok else 1
 

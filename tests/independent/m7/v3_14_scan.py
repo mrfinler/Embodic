@@ -11,10 +11,10 @@ examples in every format (svg, dxf, dxf-outline, dxf-screws, pdf, readme, bundle
 the string operands of every zlib-inflated stream. --work keeps the exports in DIR and reuses them on a rerun.
 
 Controls run first. Each class must find a planted hit in a synthetic file of every artefact kind and in a planted
-copy of each real export of the default example, and the allow-list must not admit it (U-V30); the real PDF must yield its own 'Key results' heading through both
-extractors; the brand check must find a planted copy and a planted changed file. A control miss exits 2. A hit outside
-the allow-list exits 1. Personal-data tokens (git author e-mails, Windows account names written in the docs) are read
-at run time and never written: the record prints only their count.
+copy of each real export of the default example, and the allow-list must not admit it (U-V30); the real PDF must
+yield its own 'Key results' heading through both extractors; the brand check must find a planted copy and a planted
+changed file. A control miss exits 2. A hit outside the allow-list exits 1. Personal-data tokens (git author e-mails,
+Windows account names written in the docs) are read at run time and never written: the record prints only their count.
 
 --wheel names the installed wheel in the record with its SHA-256. --record writes another file than records/V3-14.md.
 --brand-dir hashes the brand originals of another folder, and --brand-sha256 adds the hashes of a `sha256sum` file for
@@ -700,8 +700,8 @@ def main(argv=None) -> int:
     ]
     extra = f", and {len(brand) - hashed_dir} more from `{args.brand_sha256}`" if args.brand_sha256 else ""
     brand_line = (
-        f"{hashed_dir} brand originals hashed in `{args.brand_dir}`{extra}. Exact copies in the package or the exports: "
-        f"{len(real_exact)}. Brand-named image files with another hash: {len(real_changed)}"
+        f"{hashed_dir} brand originals hashed in `{args.brand_dir}`{extra}. Exact copies in the package or the "
+        f"exports: {len(real_exact)}. Brand-named image files with another hash: {len(real_changed)}"
         + (": " + ", ".join(p.name for p in real_changed) if real_changed else "")
         + "."
     )

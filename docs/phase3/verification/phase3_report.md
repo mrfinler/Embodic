@@ -340,7 +340,7 @@ Counts: 93 rows. 82 closed (2 of them on Linux only, DEF-US11-05 and DEF-US17-01
 DEF-U-M6a-01, DEF-U-M8a-02, DEF-M6b-01 and DEF-U-M8o-01, and 2 by the user, DEF-W-12 and DEF-W-15), 1 closed by
 Fable as not a product defect (DEF-W-14), 2 accepted by name by Fable (DEF-W-16 and DEF-US18-01), 0 open, 2
 `unresolved` (DEF-W-10 and DEF-W-11). DEF-W-10 and DEF-W-11 are on the list because the DEF-W numbers run from 01 to
-16 and D-100d retires these two. Only D-100d names them, so they stay gaps in the numbering of the record.
+16 and D-100d retires these two. Among the decision rows only D-100d names them.
 
 These IDs appear in the Phase 3 record but were opened before 2026-10-16, so they are not on the list: DEF-M1c3-01,
 DEF-M3a-01, DEF-M3b-03, DEF-U-M5h-01 and DEF-UV5-04. Each is named in a decision row before D-048 (`verified` by
@@ -417,7 +417,8 @@ DEF-US18-01.
 - `python3 docs/phase3/verification/checks/phase3_report_check.py` checks this file against `req_audit.md` (counts and
   every row list), checks that every DEF ID of the Phase 3 record has a row in section 4 or a place in the
   pre-Phase-3 list, and checks every decision row, REQ ID and path with `docs/phase4/verification/checks/plan_refs.py`.
-  An `unresolved` row must be a gap in the DEF-W numbers once the decision clauses that retire IDs are left out.
+  An `unresolved` row must be a gap in the DEF-W numbers, or an ID that a decision clause retires and no other
+  decision row names.
   `--self-test` plants faults and expects each to fail.
 - `python3 tools/trace_matrix.py` with the two release reports, `--fail-untested-through M5` and the index prints
   `manual: 11` and `0 failing, 4 accepted`, and exits 0 (`docs/phase3/verification/manual_records_0.0.6_windows.md`).

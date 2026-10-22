@@ -7,8 +7,10 @@ Three checks, each a list of problems:
 - Audit: the count tables and every row list of section 1 equal `req_audit.md`.
 - DEF list: every DEF ID that the Phase 3 record names has one row in section 4, unless a decision row before D-048
   names it, and then it is in the pre-Phase-3 list. No row names an ID that the record lacks, except an `unresolved`
-  row for a gap in the DEF-W numbers. A gap stays a gap when a decision clause that says "retired" names it (D-100d
-  retires DEF-W-10 and DEF-W-11): the check reads the record without such clauses. The counts sentence
+  row for a gap in the DEF-W numbers. An ID also counts as a gap when a decision clause retires it in the form
+  `<IDs>: ... retired` and no other decision row from D-048 on names it (D-100d retires DEF-W-10 and DEF-W-11), whatever
+  else names it later.
+  The counts sentence
   equals the State column. The record is the decision log rows D-048 on, `tests/independent/m7/records/defects.md`,
   every Markdown file under docs/phase3 and docs/phase4 except this report, CHANGELOG.md, and the commit messages
   that name a DEF-W ID.
@@ -64,13 +66,21 @@ def log_rows() -> dict[int, str]:
     return rows
 
 
-def retiring_clauses() -> list[str]:
-    """Return the lettered clauses of the decision rows from D-048 on that say an ID is retired."""
-    clauses = []
-    for n, text in log_rows().items():
-        if n >= 48:
-            clauses += [c for c in re.split(r"(?=\([a-z]\) )", text) if re.search(r"\bretired\b", c)]
-    return clauses
+RETIRED = re.compile(r"(DEF-[A-Za-z0-9-]+\d{2}(?:(?:,\s*|\s+and\s+)DEF-[A-Za-z0-9-]+\d{2})*):[^:]*\bretired\b")
+
+
+def retired_ids(rows: dict[int, str]) -> set[str]:
+    """Return the DEF IDs that a decision clause from D-048 on retires, as `<IDs>: ... retired` (D-100d).
+
+    An ID that another decision row names outside such a clause is not retired.
+    """
+    texts = [text for n, text in rows.items() if n >= 48]
+    clauses = [c for text in texts for c in re.split(r"(?=\([a-z]\) )", text) if RETIRED.search(c)]
+    others = "".join(texts)
+    for clause in clauses:
+        others = others.replace(clause, "")
+    named = {i for clause in clauses for m in RETIRED.finditer(clause) for i in def_ids(m.group(1))}
+    return named - def_ids(others)
 
 
 def record_text() -> str:
@@ -156,12 +166,10 @@ def coverage_problems(body: str, rows: list[tuple[str, str]], record: str) -> li
         for i in sorted(set(table) - in_record - gaps)
     ]
     used = {int(i[-2:]) for i in in_record if i.startswith("DEF-W-")}
-    unretired = record
-    for clause in retiring_clauses():
-        unretired = unretired.replace(clause, "")
-    named = def_ids(unretired)
+    retired = retired_ids(log_rows())
     for ident in sorted(gaps):
-        if not ident.startswith("DEF-W-") or ident in named or not 0 < int(ident[-2:]) < max(used):
+        gap = ident not in in_record or ident in retired
+        if not ident.startswith("DEF-W-") or not gap or not 0 < int(ident[-2:]) < max(used):
             problems.append(f"{ident} is `unresolved` but is no gap in the DEF-W numbers of the record")
     problems += [f"{i} has a row but a decision row before D-048 names it" for i in sorted(set(table) & early)]
     start = body.index("These IDs appear in the Phase 3 record but were opened before")
@@ -234,6 +242,10 @@ def self_test(text: str, record: str) -> int:
             re.sub(r"^(\| DEF-W-16 \| [^|]* \| )[^|]*( \|)", r"\1`unresolved`\2", text, count=1, flags=re.M),
             "DEF-W-16 is `unresolved` but is no gap",
         ),
+        "an `unresolved` row for an ID that the retiring clause names but does not retire": (
+            re.sub(r"^(\| DEF-W-09 \| [^|]* \| )[^|]*( \|)", r"\1`unresolved`\2", text, count=1, flags=re.M),
+            "DEF-W-09 is `unresolved` but is no gap",
+        ),
         "a row total off in section 6": (
             text.replace("Section 4 lists 93 rows", "Section 4 lists 95 rows", 1),
             "lists",
@@ -248,9 +260,12 @@ def self_test(text: str, record: str) -> int:
             continue
         if not any(expect in p for p in problems_of(planted, record)):
             missed.append(name)
+    reopened = {**log_rows(), 999: "| D-999 | x | (a) DEF-W-10 is a real defect. | x | x |\n"}
+    if "DEF-W-10" not in retired_ids(log_rows()) or "DEF-W-10" in retired_ids(reopened):
+        missed.append("a retired ID that a later decision row names again")
     clean = problems_of(text, record)
-    found = len(plants) - len(missed)
-    print(f"self-test: {found} of {len(plants)} plants found; the report itself: {len(clean)} problems")
+    found = len(plants) + 1 - len(missed)
+    print(f"self-test: {found} of {len(plants) + 1} plants found; the report itself: {len(clean)} problems")
     for m in missed:
         print(f"  missed: {m}")
     return 1 if missed or clean else 0

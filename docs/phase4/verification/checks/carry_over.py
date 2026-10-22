@@ -201,8 +201,9 @@ def self_test(rows: list[Row], records: list[Record]) -> int:
     _, problems = classify(rows, stale, HANDLING)
     if not any("does not stand" in p for p in problems):
         failures.append("a passed record that does not stand was not reported")
-    failed_stale = [Record(r.req, r.test_id, r.path, r.result, "does not stand") if r.result == "failed" else r
-                    for r in records]
+    failed_stale = [
+        Record(r.req, r.test_id, r.path, r.result, "does not stand") if r.result == "failed" else r for r in records
+    ]
     lines, problems = classify(rows, failed_stale, HANDLING)
     if problems or not any("(failed, does not stand)" in line for line in lines):
         failures.append("a failed record that does not stand failed the run or was left out of its row")

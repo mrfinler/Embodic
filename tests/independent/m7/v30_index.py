@@ -39,13 +39,41 @@ def windows(what: str, rows: str) -> str:
 
 ADDED = [
     ("REQ-N-04", "PK-04", W2, windows(f"{WHEEL} against U-V29's Linux reference", "D-098a"), "passed", None),
-    ("REQ-N-06", "PK-05", W2, windows("bundle built from checkout 6ac95ac in the release run", "D-099a"), "passed", None),
+    (
+        "REQ-N-06",
+        "PK-05",
+        W2,
+        windows("bundle built from checkout 6ac95ac in the release run", "D-099a"),
+        "passed",
+        None,
+    ),
     ("REQ-N-07", "PK-06", PK06, windows(f"{WHEEL}, runs 11 and 12", "D-100a"), "passed", None),
     ("REQ-N-05", "PK-02", PK06, windows(f"{WHEEL} in a clean venv, runs 11 and 12", "D-100a"), "passed", None),
     ("REQ-N-06", "PK-11", PK06, windows(f"{WHEEL} in a clean venv, run 11", "D-100a"), "passed", None),
-    ("REQ-N-05", "PK-01", W2, windows("commit profile on checkout 6ac95ac, W7, 5 of 6", "D-098c, D-100c"), "failed", "D-100"),
-    ("REQ-N-05", "PK-02", W2, windows("release profile on checkout 6ac95ac, W8, 6 of 8", "D-099a, D-100c"), "failed", "D-100"),
-    ("REQ-N-06", "PK-11", W2, windows("release profile on checkout 6ac95ac, W8, 6 of 8", "D-099a, D-100c"), "failed", "D-100"),
+    (
+        "REQ-N-05",
+        "PK-01",
+        W2,
+        windows("commit profile on checkout 6ac95ac, W7, 5 of 6", "D-098c, D-100c"),
+        "failed",
+        "D-100",
+    ),
+    (
+        "REQ-N-05",
+        "PK-02",
+        W2,
+        windows("release profile on checkout 6ac95ac, W8, 6 of 8", "D-099a, D-100c"),
+        "failed",
+        "D-100",
+    ),
+    (
+        "REQ-N-06",
+        "PK-11",
+        W2,
+        windows("release profile on checkout 6ac95ac, W8, 6 of 8", "D-099a, D-100c"),
+        "failed",
+        "D-100",
+    ),
 ]
 
 

@@ -55,7 +55,9 @@ def main(argv: list[str] | None = None) -> int:
                     unmarked = [r["nodeid"] for r in runs if req not in r["req"]]
                     outcomes = sorted({r["outcome"] for r in runs})
                     ok = bool(runs) and not unmarked and outcomes == ["passed"] and digest != "missing"
-                    print(f"  {'ok' if ok else 'BAD'} {len(runs)} run(s) {outcomes} {digest[:12]} {cite.split('::')[-1]}")
+                    print(
+                        f"  {'ok' if ok else 'BAD'} {len(runs)} run(s) {outcomes} {digest[:12]} {cite.split('::')[-1]}"
+                    )
                 bad += not ok
     if args.write and not bad:
         V30.PIN_FILE.write_text(json.dumps(pins, indent=1, sort_keys=True) + "\n", encoding="utf-8")
