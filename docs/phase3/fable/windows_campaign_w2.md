@@ -53,9 +53,22 @@ otherwise. Decision rows hold the rulings.
 | PK-06 cold | not run since D-084e; it waits for a normal network | - | - |
 | Narrator (AX-06) on 0.0.5 | the user runs it later | - | D-091 |
 
+## Release 0.0.6 (wheel fdb89189…0101, checkout 6ac95ac)
+
+| Check | Result | Log | Row |
+|---|---|---|---|
+| Sync from the bundle | head 6ac95ac, tag v0.0.6 on 2bfca49, bundle and wheel sha256 match, 0 CRLF files | w11_status_0.0.6.txt | D-098 |
+| PK-06 warm (run 8) | not passed: `embodic-cli.exe` blocked by Application Control at every call (DEF-W-16); the old script logged exit 0 | pk06_run8.log | D-098 |
+| PK-04 | all five examples pass at rel 1e-9 against U-V29's reference | pk04_0.0.6_compare.log | D-098 |
+| Commit profile (PK-01 cell) | 5 of 6; pytest 1 failed (tests/bundle against the 0.0.5 bundle), 4181 passed; colophon tests pass | w7_commit_gate_0.0.6.log | D-098 |
+| Release profile (W8, PK-05) | 6 of 8; pytest 3 failed (PK-02, PK-11: launcher blocked, DEF-W-16), 4349 passed; tests/bundle 6 of 6; latency gate 1 failed | w8_release_gate_0.0.6.log | D-099 |
+| Latency tests alone, five runs | 2 of 5 pass; N02-10 arrival 114, 199, 258 ms (DEF-W-12) | w8_latency_0.0.6_run1-5.log | D-099 |
+| PK-06 rerun, both ways | pending (run_0.0.6_pk06.cmd) | pk06_run9.log, pk06_run10.log | - |
+
 ## What is not tested on Windows
 
 - The real display (W6): the user saw the 0.0.3 view of D08 and reported the layer misreading of D-078. Nobody has
   looked at the 0.0.4 and 0.0.5 views on Windows yet.
 - Windows high contrast with the layer cue: tested offscreen on Linux only (D-083b).
-- The PyInstaller bundle could not run on this laptop (DEF-W-14).
+- The PyInstaller bundle could not run on this laptop in the 0.0.4 and 0.0.5 runs (DEF-W-14); in the 0.0.6 release run it ran
+  and passed (D-099).
