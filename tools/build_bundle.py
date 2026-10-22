@@ -9,6 +9,10 @@ file, embodic in editable mode, PyInstaller and hatchling), run PyInstaller on `
 add the licence files and embodic's source distribution, then check the real folder. The check prints the licence
 checklist and the Qt library listing of dependency_licences.md R10 and exits 1 when a shipped row is missing or a Qt
 library is not a separate file. `build/bundle-work` is removed afterwards; `build/bundle` stays.
+
+A good build also writes `build/bundle/bundle_source.json`, the hashes of the source it was built from (D-100c).
+tests/bundle refuses a folder whose stamp is missing or differs from the stamp of the tree under test. The stamp of
+the build before is removed first, so that none outlives the folder it described.
 """
 
 import hashlib
@@ -17,8 +21,9 @@ import shutil
 import subprocess
 import sys
 import tarfile
+from collections.abc import Iterable
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parents[1]
 VENV = ROOT / ".venv-bundle"
@@ -30,6 +35,10 @@ BUILD_TOOLS = (f"pyinstaller=={PYINSTALLER_VERSION}", "hatchling==1.32.4")
 SPEC = ROOT / "packaging" / "pyinstaller" / "embodic.spec"
 FETCHED_DIR = ROOT / "packaging" / "pyinstaller" / "licenses"
 DIST = ROOT / "build" / "bundle"
+STAMP_FILE = "bundle_source.json"  # in DIST, beside the folder: the hashes of the source it was built from (D-100c)
+# Left out of the resources hash, relative to resources/: gitignored build products (.gitignore) that a release run
+# writes after it built the bundle (tools/ci.py EVIDENCE), so they say nothing about the source the bundle came from.
+GENERATED_RESOURCES = ("evidence/passed_tests.v1.json", "evidence/*.partial")
 WORK = ROOT / "build" / "bundle-work"
 FOLDER = DIST / "embodic"
 RESOURCES = "_internal/embodic/_resources"
@@ -175,6 +184,37 @@ def sha256_of(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def tree_sha256(folder: Path, paths: Iterable[Path]) -> str:
+    """Hash files as package_source_sha256 does: sorted POSIX path below folder, a NUL byte, SHA-256 of the bytes."""
+    digest = hashlib.sha256()
+    for relative, path in sorted((each.relative_to(folder).as_posix(), each) for each in paths):
+        digest.update(relative.encode("utf-8") + b"\0" + hashlib.sha256(path.read_bytes()).digest())
+    return digest.hexdigest()
+
+
+def is_generated_resource(relative: PurePosixPath) -> bool:
+    """Return True for a path below resources/ that GENERATED_RESOURCES names."""
+    return any(len(relative.parts) == len(PurePosixPath(p).parts) and relative.match(p) for p in GENERATED_RESOURCES)
+
+
+def source_stamp(root: Path) -> dict[str, str]:
+    """Return the hashes that say which source a bundle was built from: src/embodic and the files of resources.
+
+    The package part is package_source_sha256 of embodic.results.registry, without importing embodic: every *.py below
+    src/embodic outside __pycache__. The resources part is every file below resources except GENERATED_RESOURCES.
+    """
+    package, resources = root / "src" / "embodic", root / "resources"
+    sources = [p for p in package.rglob("*.py") if "__pycache__" not in p.relative_to(package).parts]
+    if not sources:
+        raise ValueError(f"no Python source below {package}")
+    kept = [
+        p
+        for p in resources.rglob("*")
+        if p.is_file() and not is_generated_resource(PurePosixPath(p.relative_to(resources).as_posix()))
+    ]
+    return {"package_source_sha256": tree_sha256(package, sources), "resources_sha256": tree_sha256(resources, kept)}
+
+
 def copy_into_folder(source: Path, relative: str) -> None:
     """Copy one file to a path relative to the bundle folder."""
     target = FOLDER / relative
@@ -254,7 +294,11 @@ def summarise() -> None:
 
 
 def main() -> int:
-    """Build the folder and check it; return 0 when every shipped row and every Qt library is present."""
+    """Build the folder and check it; return 0 when every shipped row and every Qt library is present.
+
+    The stamp of the source is written last and only when the build returns 0; the stamp of the build before goes first.
+    """
+    (DIST / STAMP_FILE).unlink(missing_ok=True)
     ensure_build_venv()
     venv = probe_build_venv()
     print(f"build venv: Python {venv.python}, {venv.versions}")
@@ -269,7 +313,10 @@ def main() -> int:
     qt = qt_libraries_ok()
     summarise()
     print(f"python licence SHA-256: {sha256_of(FOLDER / 'licenses' / 'PYTHON-LICENSE.txt')}")
-    return 0 if rows and sdist and qt else 1
+    if not (rows and sdist and qt):
+        return 1
+    (DIST / STAMP_FILE).write_text(json.dumps(source_stamp(ROOT), indent=2) + "\n", encoding="utf-8", newline="\n")
+    return 0
 
 
 if __name__ == "__main__":
