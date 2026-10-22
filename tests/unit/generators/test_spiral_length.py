@@ -8,7 +8,8 @@ closing). The criteria now are:
     1e-6 relative, for CF-11 (full closing, 10 turns) and CF-10/D08 (half closing, 3 turns) at via pads 0.6 and 1.2 mm.
 (ii) Fillets on: the change from the sharp length equals the sum of the exact per-corner closed forms
     (test_spiral_fillet_length.py). The Phase 1 "within 1 % of the reference" is not applied: the G9 concentric radii
-    remove 12.72 % on CF-11 at rho 0.5 mm (DEF-M2d3-02), so that bound waits for Agent 2's U-E5 ruling.
+    remove 12.72 % on CF-11 at rho 0.5 mm (DEF-M2d3-02). D-033a ruled that the spec's "±1 % with fillets" line was the
+    defect and replaced it by the per-corner tolerance 1e-6 mm (U-E5).
 (iii) The EQ-03 loop formula as an upper bound is `not tested` here.
 """
 
