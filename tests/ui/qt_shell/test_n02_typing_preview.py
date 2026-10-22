@@ -36,7 +36,7 @@ SERPENTINE = "serpentine_16p_example"  # the packaged example that shows the che
 @pytest.mark.latency
 @pytest.mark.req("REQ-N-02")
 def test_n02_1_and_2_typing_previews_once_after_300_ms_and_return_commits_without_a_second_compute(open_example, qtbot):
-    """N02-1, N02-2. Catches a compute per keystroke, or a commit after a preview that computes it again.
+    """N02-1, N02-2 (UI-36, UI-37). Catches a compute per keystroke, or a commit after a preview that computes it again.
 
     The timer must preview: no undo entry, chip or autosave change before the commit. The 300 ms run from the last
     textEdited of the field, which starts the wait. A clock read after type_keys returns lags that signal by one key
@@ -75,7 +75,7 @@ def test_n02_1_and_2_typing_previews_once_after_300_ms_and_return_commits_withou
 
 @pytest.mark.req("REQ-N-02")
 def test_n02_3_return_before_the_timer_computes_at_once_and_only_once(open_example, qtbot):
-    """N02-3. Catches Enter that waits for the timer, or a timer left running that computes a second time.
+    """N02-3 (UI-38). Catches Enter that waits for the timer, or a timer left running that computes a second time.
 
     The preview timer is held, so a compute can only come from the commit and no wall-clock margin decides the test
     (U-M8c: 10 to 25 ms to spare at load 4). The wait that ends after the commit is simulated, not waited for.
@@ -96,7 +96,10 @@ def test_n02_3_return_before_the_timer_computes_at_once_and_only_once(open_examp
 
 @pytest.mark.req("REQ-N-02", "REQ-F-37")
 def test_n02_4_text_that_is_no_number_never_computes_and_shows_its_message_only_at_commit(open_example, qtbot):
-    """N02-4. Catches a preview of an unparsable value, or a field error shown while the user is still typing."""
+    """N02-4. Catches a preview of an unparsable value, or a field error shown while the user is still typing.
+
+    Row UI-39.
+    """
     timed = TimedCompute()
     _, window = open_example(timed=timed)
     field = focus_field(qtbot, window)
@@ -114,7 +117,7 @@ def test_n02_4_text_that_is_no_number_never_computes_and_shows_its_message_only_
 
 @pytest.mark.req("REQ-N-02")
 def test_n02_5_esc_before_the_timer_puts_the_committed_text_back_and_keeps_focus(open_example, qtbot):
-    """N02-5. Catches Esc that leaves the typed text, lets the timer compute it, or moves focus away."""
+    """N02-5 (UI-40). Catches Esc that leaves the typed text, lets the timer compute it, or moves focus away."""
     timed = TimedCompute()
     _, window = open_example(timed=timed)
     field = focus_field(qtbot, window)
@@ -130,7 +133,7 @@ def test_n02_5_esc_before_the_timer_puts_the_committed_text_back_and_keeps_focus
 
 @pytest.mark.req("REQ-N-02")
 def test_n02_6_esc_after_a_preview_brings_the_committed_results_back(open_example, qtbot):
-    """N02-6. Catches a preview left on screen after Esc, or an Esc that writes an undo entry."""
+    """N02-6 (UI-41). Catches a preview left on screen after Esc, or an Esc that writes an undo entry."""
     timed = TimedCompute()
     _, window = open_example(timed=timed)
     session = window.session
@@ -150,7 +153,7 @@ def test_n02_6_esc_after_a_preview_brings_the_committed_results_back(open_exampl
 @pytest.mark.latency
 @pytest.mark.req("REQ-N-02")
 def test_n02_7_a_keystroke_cancels_the_preview_in_flight_at_once(open_example, qtbot):
-    """N02-7. Catches a preview compute that runs on after a newer keystroke until the next timer expiry."""
+    """N02-7 (UI-42). Catches a preview compute that runs on after a newer keystroke until the next timer expiry."""
     timed = TimedCompute(block=lambda design: design.winding.coil.r_inner_mm != 11.47)
     _, window = open_example(timed=timed)
     field = focus_field(qtbot, window)
@@ -179,7 +182,7 @@ def test_n02_7_a_keystroke_cancels_the_preview_in_flight_at_once(open_example, q
 def test_n02_8_a_choice_control_commits_and_computes_at_once_without_a_timer(
     open_example, qtbot, example_id, tab, name, key
 ):
-    """N02-8. Catches a combo box or check box that waits for the typing timer before it computes.
+    """N02-8 (UI-43). Catches a combo box or check box that waits for the typing timer before it computes.
 
     The preview timer is held, so a compute that starts at all did not wait for it, whatever the load.
     """
@@ -201,7 +204,10 @@ def test_n02_8_a_choice_control_commits_and_computes_at_once_without_a_timer(
 def test_n02_9_toolstrip_save_while_a_field_holds_typed_text_saves_the_typed_value(
     open_example, qtbot, tmp_path, monkeypatch
 ):
-    """N02-9, DEF-US11-03. Catches Save that writes the committed design while the field still holds typed text."""
+    """N02-9, DEF-US11-03. Catches Save that writes the committed design while the field still holds typed text.
+
+    Row UI-44.
+    """
     _, window = open_example()
     path = tmp_path / "saved.embodic.json"
     monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *args, **kwargs: (str(path), ""))
@@ -217,7 +223,10 @@ def test_n02_9_toolstrip_save_while_a_field_holds_typed_text_saves_the_typed_val
 
 @pytest.mark.req("REQ-N-02")
 def test_n02_9_compute_and_undo_from_the_toolstrip_commit_the_typed_text_first(open_example, qtbot):
-    """DEF-US11-03. Catches Undo that skips the typed edit, and Compute that computes the committed design."""
+    """DEF-US11-03. Catches Undo that skips the typed edit, and Compute that computes the committed design.
+
+    Row UI-44, the second test of N02-9.
+    """
     timed = TimedCompute()
     _, window = open_example(timed=timed)
     session = window.session
@@ -236,6 +245,8 @@ def test_n02_9_compute_and_undo_from_the_toolstrip_commit_the_typed_text_first(o
 @pytest.mark.req("REQ-N-02")
 def test_n02_10_keystroke_echo_while_a_preview_result_arrives(open_example, qtbot):
     """N02-10. Measures the largest gap between 10 ms GUI ticks while typing over a preview result (nightly only).
+
+    Row UI-45.
 
     The compute of the 11.6 preview returns after 200 ms with a result computed beforehand, so the result lands
     about when the next keys are typed. The 100 ms bound is REQ-N-02's input-echo threshold (assumption). A fail
