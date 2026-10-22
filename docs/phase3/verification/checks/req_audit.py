@@ -1,12 +1,13 @@
 """Requirement audit of one build: one status per row of requirements.md, from that build's own test records.
 
-    python3 docs/phase3/verification/checks/req_audit.py                    # release 0.0.5: writes req_audit.md
+    python3 docs/phase3/verification/checks/req_audit.py                    # release 0.0.6: writes req_audit.md
+    python3 docs/phase3/verification/checks/req_audit.py --target 0.0.5     # release 0.0.5: req_audit_0.0.5.md
     python3 docs/phase3/verification/checks/req_audit.py --target 0.0.4     # release 0.0.4: req_audit_0.0.4.md
     python3 docs/phase3/verification/checks/req_audit.py --target 0.0.5-pre # main 99d355d: req_audit_0.0.5_pre.md
     python3 docs/phase3/verification/checks/req_audit.py --target 0.0.1     # release 0.0.1: req_audit_0.0.1.md
     python3 docs/phase3/verification/checks/req_audit.py [--target T] --check    # exit 1 when the file is stale
     python3 docs/phase3/verification/checks/req_audit.py --target 0.0.1 --self-test
-    python3 docs/phase3/verification/checks/req_audit.py --self-test                # the D-061d control on 0.0.5
+    python3 docs/phase3/verification/checks/req_audit.py --self-test                # the D-061d control on 0.0.6
 
 Inputs (read only) of every target: requirements.md and the two test plans of this checkout, and the test sources of
 the audited commit (`git archive <commit> tests`, or the folder given with --tree).
@@ -31,6 +32,8 @@ the audited commit (`git archive <commit> tests`, or the folder given with --tre
 - Target 0.0.5 (U-V21): release 0.0.5, tag v0.0.5 on 42074f2 (D-089). The two REQ reports and the log of Fable's
   release gate (/home/claude/release_0.0.5), copied gzipped into inputs/; the 0.0.5-pre overlays plus U-V21's
   re-rulings of REQ-F-05, REQ-F-13, REQ-T-05 and REQ-N-01 (v3_01_rulings_v21.py).
+- Target 0.0.6 (U-V22): release 0.0.6, tag v0.0.6 on 2bfca49 (D-096). The two REQ reports and the log of Fable's
+  release gate (/home/claude/release_0.0.6), copied gzipped into inputs/; the 0.0.5 overlays, no new re-ruling.
 - Every target except 0.0.1 reads the manual-record index of this checkout, so a committed audit file of an earlier
   target is the snapshot of the index its writer had; `--check` on it compares with today's index.
 - The earlier target main (U-V14, c0f4894) is gone: its gate log `inputs/gate_commit_5099401.log` was never in git
@@ -201,6 +204,18 @@ TARGETS = {
             VERIFICATION / "inputs/req_report_latency_42074f2.json.gz",
         ),
         VERIFICATION / "inputs/gate_release_42074f2.log.gz",
+        VERIFICATION / "req_audit_0.0.5.md",
+        (RULINGS_V14, RULINGS_V18, RULINGS_V19, RULINGS_V20, RULINGS_V21),
+    ),
+    "0.0.6": Target(
+        "0.0.6",
+        "release 0.0.6 (2bfca49)",
+        "2bfca49",
+        (
+            VERIFICATION / "inputs/req_report_2bfca49.json.gz",
+            VERIFICATION / "inputs/req_report_latency_2bfca49.json.gz",
+        ),
+        VERIFICATION / "inputs/gate_release_2bfca49.log.gz",
         VERIFICATION / "req_audit.md",
         (RULINGS_V14, RULINGS_V18, RULINGS_V19, RULINGS_V20, RULINGS_V21),
     ),
@@ -595,7 +610,7 @@ def sha(path: Path) -> str:
 def main(argv: list[str] | None = None) -> int:
     """Write the audit file of a target and print the counts, or with --check report whether it is stale."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--target", choices=sorted(TARGETS), default="0.0.5", help="the build to audit")
+    parser.add_argument("--target", choices=sorted(TARGETS), default="0.0.6", help="the build to audit")
     parser.add_argument("--check", action="store_true", help="exit 1 when the audit file differs from a fresh run")
     parser.add_argument("--self-test", action="store_true", help="run the D-051e (0.0.1) or D-061d (main) control")
     parser.add_argument("--tree", type=Path, help="test sources to audit (default: git archive of the target commit)")
