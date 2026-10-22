@@ -5,6 +5,7 @@ bundle, so tests/bundle skips there; the release profile builds it and sets EMBO
 """
 
 import importlib.util
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -88,8 +89,11 @@ def test_a_built_bundle_is_tested_whether_or_not_the_run_requires_it(monkeypatch
         monkeypatch.delenv(bundle_gate.REQUIRE_BUNDLE, raising=False)
     else:
         monkeypatch.setenv(bundle_gate.REQUIRE_BUNDLE, required)
-    frozen_cli = tmp_path / "embodic-cli"
+    frozen_cli = tmp_path / "embodic" / "embodic-cli"
+    frozen_cli.parent.mkdir()
     frozen_cli.write_bytes(b"")
+    stamp = bundle_gate.build_tool().source_stamp(bundle_gate.REPO)  # a bundle built from this source (D-100c)
+    (tmp_path / "bundle_source.json").write_text(json.dumps(stamp), encoding="utf-8")
 
     assert bundle_gate.require_bundle(frozen_cli) is None
 

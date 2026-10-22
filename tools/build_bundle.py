@@ -9,6 +9,11 @@ file, embodic in editable mode, PyInstaller and hatchling), run PyInstaller on `
 add the licence files and embodic's source distribution, then check the real folder. The check prints the licence
 checklist and the Qt library listing of dependency_licences.md R10 and exits 1 when a shipped row is missing or a Qt
 library is not a separate file. `build/bundle-work` is removed afterwards; `build/bundle` stays.
+
+A good build also writes `build/bundle/bundle_source.json`, the hashes of the source it was built from (D-100c).
+tests/bundle refuses a folder whose stamp is missing or differs from the stamp of the tree under test. The stamp of
+the build before is removed first, so that none outlives the folder it described. The script imports embodic for
+package_source_sha256, so the Python that runs it must have the project installed.
 """
 
 import hashlib
@@ -20,6 +25,8 @@ import tarfile
 from dataclasses import dataclass
 from pathlib import Path
 
+from embodic.results.registry import package_source_sha256
+
 ROOT = Path(__file__).resolve().parents[1]
 VENV = ROOT / ".venv-bundle"
 VENV_PYTHON = VENV / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
@@ -30,6 +37,7 @@ BUILD_TOOLS = (f"pyinstaller=={PYINSTALLER_VERSION}", "hatchling==1.32.4")
 SPEC = ROOT / "packaging" / "pyinstaller" / "embodic.spec"
 FETCHED_DIR = ROOT / "packaging" / "pyinstaller" / "licenses"
 DIST = ROOT / "build" / "bundle"
+STAMP_FILE = "bundle_source.json"  # in DIST, beside the folder: the hashes of the source it was built from (D-100c)
 WORK = ROOT / "build" / "bundle-work"
 FOLDER = DIST / "embodic"
 RESOURCES = "_internal/embodic/_resources"
@@ -175,6 +183,23 @@ def sha256_of(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def resources_sha256(folder: Path) -> str:
+    """Hash every file below folder as package_source_sha256 hashes sources: sorted POSIX path, NUL, SHA-256."""
+    files = sorted((path.relative_to(folder).as_posix(), path) for path in folder.rglob("*") if path.is_file())
+    digest = hashlib.sha256()
+    for relative, path in files:
+        digest.update(relative.encode("utf-8") + b"\0" + hashlib.sha256(path.read_bytes()).digest())
+    return digest.hexdigest()
+
+
+def source_stamp(root: Path) -> dict[str, str]:
+    """Return the hashes that say which source a bundle was built from: src/embodic and every file of resources."""
+    package = package_source_sha256(root / "src" / "embodic")
+    if package is None:
+        raise ValueError(f"no Python source below {root / 'src' / 'embodic'}")
+    return {"package_source_sha256": package, "resources_sha256": resources_sha256(root / "resources")}
+
+
 def copy_into_folder(source: Path, relative: str) -> None:
     """Copy one file to a path relative to the bundle folder."""
     target = FOLDER / relative
@@ -254,7 +279,11 @@ def summarise() -> None:
 
 
 def main() -> int:
-    """Build the folder and check it; return 0 when every shipped row and every Qt library is present."""
+    """Build the folder and check it; return 0 when every shipped row and every Qt library is present.
+
+    The stamp of the source is written last and only when the build returns 0; the stamp of the build before goes first.
+    """
+    (DIST / STAMP_FILE).unlink(missing_ok=True)
     ensure_build_venv()
     venv = probe_build_venv()
     print(f"build venv: Python {venv.python}, {venv.versions}")
@@ -269,7 +298,10 @@ def main() -> int:
     qt = qt_libraries_ok()
     summarise()
     print(f"python licence SHA-256: {sha256_of(FOLDER / 'licenses' / 'PYTHON-LICENSE.txt')}")
-    return 0 if rows and sdist and qt else 1
+    if not (rows and sdist and qt):
+        return 1
+    (DIST / STAMP_FILE).write_text(json.dumps(source_stamp(ROOT), indent=2) + "\n", encoding="utf-8", newline="\n")
+    return 0
 
 
 if __name__ == "__main__":
