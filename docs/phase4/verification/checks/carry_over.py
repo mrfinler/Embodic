@@ -46,14 +46,16 @@ HANDLING = {
     "Phase 5 (D-091a), and D-100b keeps the row `failed`. The PF-01 record ran on the 0.0.5 source. Against 2bfca49 "
     "its files differ only in the version strings (src/embodic/__init__.py and the app_version and engine_version of "
     "the five examples), so D-061d supersedes it and the failure carries as `inferred`. No UAT rerun.",
-    "REQ-N-02": "UI-36 to UI-45 have `file` evidence through the 4aa1629 docstrings (U-V30 ruling). On Windows "
-    "DEF-W-12 is a known limit (K-1, D-076d), and D-100b keeps the row `partial`. Check E-08 lets the user judge the "
-    "lag.",
+    "REQ-N-02": "The W8 latency gate and runs 2, 3 and 4 of the five latency runs failed on the laptop (N02-10, "
+    "DEF-W-12), and their records are accepted (D-076d, D-100b, D-101). A failed run on the named machine outweighs "
+    "the passing tests, as for REQ-N-01. D-100b names the row a point-1 exception, known limit K-1. Check E-08 lets "
+    "the user judge the lag.",
     "REQ-N-05": "The W7 record (PK-01) and the W8 record (PK-02) failed and are accepted by name (D-100c). D-100b "
-    "closes the row by name: PK-02 by runs 11 and 12, PK-01 by W7. The 3.12 and 3.13 Windows cells of PK-01 may stay "
-    "`not tested` (D-048d).",
+    "closes the row by name: PK-02 by runs 11 and 12, PK-01 by W7, and the exit rests on that ruling (D-101). The 3.12 "
+    "and 3.13 Windows cells of PK-01 may stay `not tested` (D-048d).",
     "REQ-N-06": "The W8 record (PK-11) failed on the launcher block (DEF-W-16) and is accepted by name (D-100c). "
-    "D-100b closes the row by name: PK-05 (D-099a), PK-11 by run 11. The fix of DEF-W-16 is decision S-1.",
+    "D-100b closes the row by name: PK-05 (D-099a), PK-11 by run 11, and the exit rests on that ruling (D-101). The fix "
+    "of DEF-W-16 is decision S-1.",
     "REQ-N-16": "AX-06 (Narrator) on 0.0.6 is a step of the UAT walkthrough. Its record closes the row (R-1). Phase 4 "
     "starts with the row `partial`, and verdict A-1 waits for AX-06 or the user's decline (D-100b).",
     "REQ-N-24": "The same AX-06 record as REQ-N-16 (R-1, D-100b).",

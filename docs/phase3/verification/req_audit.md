@@ -19,11 +19,11 @@ The status rule and the evidence kinds are in the script's docstring. Inputs and
 - `tests/independent/m7/v3_01_rulings_v20.py` `75b4d8961bdbb382`
 - `tests/independent/m7/v3_01_rulings_v21.py` `3c289fae8a63d93c`
 - `tests/independent/m7/v3_01_rulings_v30.py` `d018f6dd05139d3b`
-- `docs/phase3/verification/manual_records.json` `82cc910b38485ffb`
+- `docs/phase3/verification/manual_records.json` `c845b534bef6a409`
 
-Counts by status (all rows): failed 3, not tested 7, partial 17, verified 67, withdrawn 16.
+Counts by status (all rows): failed 4, not tested 7, partial 16, verified 67, withdrawn 16.
 
-Counts by status (must rows): failed 3, partial 3, verified 67.
+Counts by status (must rows): failed 4, partial 2, verified 67.
 
 | REQ | Prio | M | Status | Ruling | Marked records (passed, of them Agent 4) | Planned tests and evidence | Needs |
 |---|---|---|---|---|---|---|---|
@@ -68,7 +68,7 @@ Counts by status (must rows): failed 3, partial 3, verified 67.
 | REQ-F-39 | must | M4 | verified | `checks`, sources match | 11 (11, 0) | UI-25 name, AX-09 name | - |
 | REQ-F-40 | must | M1 | verified | `checks`, sources match | 191 (191, 148) | GR-19 name | - |
 | REQ-N-01 | must | M5 | failed | - | 21 (20, 0) | PF-01 fail, PF-04 file | - |
-| REQ-N-02 | must | M4 | partial | text-verified; ruled `partial` | 101 (101, 0) | UI-05 name, UI-02 name, UI-36 file, UI-37 file, UI-38 file, UI-39 file, UI-40 file, UI-41 file, UI-42 file, UI-43 file, UI-44 file, UI-45 file | - |
+| REQ-N-02 | must | M4 | failed | - | 101 (101, 0) | UI-05 name, UI-02 name, UI-36 file, UI-37 file, UI-38 file, UI-39 file, UI-40 file, UI-41 file, UI-42 file, UI-43 file, UI-44 file, UI-45 fail | - |
 | REQ-N-03 | should | M5 | partial | text-verified; no V3-01 ruling | 1 (1, 0) | PF-02 name | - |
 | REQ-N-04 | must | M2 | verified | `checks`, sources match | 41 (41, 0) | PR-09 name, PK-04 record, MT-06 name | - |
 | REQ-N-05 | must | M5 | failed | - | 2 (2, 0) | PK-01 fail, PK-02 fail | PK-01: Windows (test_plan.md §5.7 PK-01 row: the Windows cells; §7 M5: counts only from a Windows run) |

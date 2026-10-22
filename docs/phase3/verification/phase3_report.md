@@ -7,6 +7,7 @@ This is the English Phase 3 report that `verification_plan.md` section 4 asks fo
 of it. The named build is release 0.0.6. Releases 0.0.4 and 0.0.5 came before it, and this report replaces their
 records where they differ. U-V30 applied D-100, Fable's ruling of the list that U-V22 gave: the Windows records of
 0.0.6 are in the manual-record index, the audit applies the `NEEDS` rule of D-100b, and V3-14 ran on the release wheel.
+Fable answered U-V30's own list in D-101, and this report applies those answers.
 
 Every claim carries one status: `verified`, `inferred`, `assumption`, `unresolved` or `not tested`. A claim that cites a
 decision row or a record and carries no label is `verified` by reading that row or record. I ran my own checks on Linux
@@ -18,7 +19,7 @@ ran nothing on Windows (order 8).
 
 | Point of section 4 | Holds on 0.0.6 | Why, in one line |
 |---|---|---|
-| 1. Every live must row `verified`, except the rows of point 3 | not yet: REQ-N-16 and REQ-N-24 wait for AX-06 | The audit gives 67 of 73. D-100b names REQ-N-01 and REQ-N-02 as exceptions and closes REQ-N-05 and REQ-N-06 by name, which the audit keeps `failed` through the W7 and W8 records |
+| 1. Every live must row `verified`, except the rows of point 3 | not yet: REQ-N-16 and REQ-N-24 wait for AX-06 | The audit gives 67 of 73. D-100b names REQ-N-01 and REQ-N-02 as exceptions and closes REQ-N-05 and REQ-N-06 by name. The audit keeps all four `failed` through their failed Windows records, and the exit rests on the name rulings (D-101) |
 | 2. The Windows campaign and the campaigns verified by a run with a record | not yet: W6 waits for the UAT session | W4 and W5 hold, D-100c accepts W7 and W8 by name, and V3-14 passes on the 0.0.6 wheel |
 | 3. Items that may stay `not tested`, each with its reason | yes, except AX-06 | OR-11c joins the list (D-100b). AX-06 may stay `not tested` only if the user declines it |
 | 4. Every Phase 3 DEF row closed, accepted by name, or moved to Phase 5 | yes, by D-100d | DEF-W-16 and DEF-US18-01 are accepted by name, DEF-UE16-02 is fixed, and DEF-W-10 and DEF-W-11 are retired IDs with no record |
@@ -33,17 +34,9 @@ every row of section 4). In the cloud the release gate passed 11 of 11. On Windo
 
 Decisions that Phase 4 needs, by owner:
 
-- Fable:
-  1. REQ-N-05 and REQ-N-06 are `failed` in the audit. The W7 record (PK-01) and the W8 records (PK-02 and PK-11)
-     failed, and the audit gives `fail` evidence to every ID that a failed record names, accepted or not. That rule
-     also keeps REQ-N-01 `failed` (D-091a). D-100b closes both rows by name, and D-100 names no audit exception for an
-     accepted record, so I applied none. Confirm that the exit rests on the name ruling, or rule an audit rule.
-  2. The latency failure of W8 (the N02-10 cancel case, DEF-W-12) has no index entry. An entry would make REQ-N-02
-     `failed`, and D-100b keeps the row at its status. This is my reading of the brief (`inferred`). Confirm it, or add
-     the entry.
-  3. W6. Prepare the launcher for the scripted part at the start of the UAT session (D-100c).
-  4. V3-14 hashed 5 of the 8 brand originals of the 0.0.1 run, because the user's brand folder is not in the container
-     (section 3). Copy the folder into the container for a full rerun, or accept the 5.
+- Fable: nothing from U-V30's list stays open. D-101 confirms that the exit rests on the name rulings of D-100b and
+  D-100c and that the audit gets no exception for an accepted record. It has the Windows latency runs indexed, and it
+  staged the brand folder again for V3-14. The W6 launcher is Fable's (D-100c).
 - The user:
   1. Run AX-06 (Narrator) on 0.0.6, or decline it. It is a step of the walkthrough (D-097c).
   2. Decide S-1 for DEF-W-16: code signing, or `python -m` as the documented Windows route (D-100d). Signing also
@@ -76,10 +69,11 @@ archive 2bfca49 tests`, the V3-01 rulings v13 to v21 and v30, and the manual-rec
 U-V30. The two reports hold 4454 records: 4447 passed, 6 skipped, and 1 not run in either process, the manual PF-01
 test (`verified`).
 
-The index holds 15 entries (`docs/phase3/verification/manual_records_0.0.6_windows.md`). Eleven passed and name 0.0.6:
-PK-06 Linux, AX-05, OR-11, OR-12, LG-01, LG-04, and the Windows records PK-04, PK-05, PK-06, PK-02 and PK-11. Four
-failed and carry `accepted`: PF-01 (D-091, 0.0.5), and PK-01 (W7), PK-02 (W8) and PK-11 (W8) (D-100). The note of
-each `embodic_version` now names the platform first.
+The index holds 21 entries (`docs/phase3/verification/manual_records_0.0.6_windows.md`). Thirteen passed and name
+0.0.6: PK-06 Linux, AX-05, OR-11, OR-12, LG-01, LG-04, and the Windows records PK-04, PK-05, PK-06, PK-02, PK-11 and
+UI-45 (latency runs 1 and 5). Eight failed and carry `accepted`: PF-01 (D-091, 0.0.5), PK-01 (W7), PK-02 (W8), PK-11
+(W8), and UI-45 for the W8 latency gate and latency runs 2, 3 and 4 (D-100, D-101). UI-45 is N02-10 (4aa1629). The
+note of each `embodic_version` now names the platform first.
 
 The `NEEDS` rule of D-100b. A `NEEDS` ID counts when the index holds a current passed record of it from the machine
 that `NEEDS` names. Current means that the version is that of the audited commit, as TR-01 reads it (D-083c, D-084a).
@@ -94,21 +88,21 @@ changes 20 lines and removes 9, and every changed line is inside a docstring (`v
 The audit removes every docstring from both versions and compares the two syntax trees (`same_code`). They are equal,
 so the code that ran in the 0.0.6 gate is the code that now names the IDs. My ruling is that the text counts for 0.0.6
 as `file` evidence. The audit reads that file at 4aa1629 and stops if `same_code` ever fails. UI-36 to UI-45 now have
-`file` evidence, and REQ-N-02 stays `partial` through its V3-01 ruling (DEF-W-12 on Windows), as D-100b keeps it.
+`file` evidence. REQ-N-02 is `failed` all the same, through its failed Windows latency records (D-101).
 
 Counts (`verified` by running, with CPython 3.13.16 to write and CPython 3.11.17 for `--check`, byte-identical):
 
 | Rows | verified | partial | failed | not tested | withdrawn |
 |---|---|---|---|---|---|
-| all 110 | 67 | 17 | 3 | 7 | 16 |
-| must 73 | 67 | 3 | 3 | 0 | 0 |
+| all 110 | 67 | 16 | 4 | 7 | 16 |
+| must 73 | 67 | 2 | 4 | 0 | 0 |
 
-Planned-test evidence: eqt 17, fail 4, file 42, gate 9, name 198, none 10, record 7.
+Planned-test evidence: eqt 17, fail 5, file 41, gate 9, name 198, none 10, record 7.
 
 Against U-V22's audit of 0.0.6, six rows changed status (`verified` by a row-by-row diff). REQ-F-11, REQ-N-04 and
 REQ-N-07 became `verified`: the `NEEDS` rule clears OR-11, OR-12, PK-04 and PK-06, and V3-01 v30 re-rules REQ-N-04 and
-REQ-N-07 on their Windows records. REQ-N-05 and REQ-N-06 became `failed` through the W7 and W8 records. REQ-N-02 kept
-`partial` with new `file` evidence. No other row changed. No `verified` row lost its ruling. `req_audit.py
+REQ-N-07 on their Windows records. REQ-N-05 and REQ-N-06 became `failed` through the W7 and W8 records, and REQ-N-02
+through its latency records (D-101). No other row changed. No `verified` row lost its ruling. `req_audit.py
 --self-test` passes 12 of 12 on the 0.0.6 target.
 
 The rows by status:
@@ -120,8 +114,8 @@ The rows by status:
   REQ-N-23, REQ-N-25, REQ-N-27, REQ-N-28, REQ-T-01, REQ-T-02, REQ-T-03, REQ-T-04, REQ-T-05, REQ-T-06, REQ-T-07,
   REQ-T-08, REQ-T-09, REQ-T-10, REQ-T-11, REQ-T-13, REQ-T-14, REQ-T-15, REQ-T-16, REQ-L-01, REQ-L-03, REQ-L-04,
   REQ-L-05, REQ-L-07, REQ-L-08.
-- Must, `partial` (3): REQ-N-02, REQ-N-16, REQ-N-24.
-- Must, `failed` (3): REQ-N-01, REQ-N-05, REQ-N-06.
+- Must, `partial` (2): REQ-N-16, REQ-N-24.
+- Must, `failed` (4): REQ-N-01, REQ-N-02, REQ-N-05, REQ-N-06.
 - Should, `partial` (11): REQ-F-09, REQ-F-22, REQ-F-24, REQ-F-25, REQ-F-26, REQ-F-27, REQ-F-28, REQ-F-29, REQ-F-31,
   REQ-N-03, REQ-N-26.
 - Should, `not tested` (6): REQ-N-20, REQ-N-29, REQ-T-12, REQ-L-02, REQ-L-06, REQ-L-09.
@@ -134,7 +128,7 @@ The must rows that are not `verified`:
 | Row | Status | Evidence on 0.0.6 | What keeps it from `verified` | Point 1 after D-100b |
 |---|---|---|---|---|
 | REQ-N-01 | failed | PF-01 `fail` (Fable's laptop record, 0.0.5 source), PF-04 `file` | PF-01 on the laptop failed: physics p95 0.617 to 0.663 s against 0.3 s (D-087). DEF-W-15, moved to Phase 5 by the user (D-091a). The compute code is unchanged since 0.0.5, so the failure carries to 0.0.6 (`inferred`) | named exception, known limit K-2 |
-| REQ-N-02 | partial | UI-05 and UI-02 `name`, UI-36 to UI-45 `file` | The V3-01 ruling (v18) finds every clause asserted on Linux. On Windows DEF-W-12 fails intermittently (D-099b) and is in Phase 5 (D-076d) | named exception, known limit K-1 |
+| REQ-N-02 | failed | UI-05 and UI-02 `name`, UI-36 to UI-44 `file`, UI-45 `fail` (Windows latency records) | On the laptop the W8 latency gate failed the N02-10 cancel case at 153 ms (D-099a), and three of five latency runs failed N02-10 at 114, 199 and 258 ms (D-099b). DEF-W-12 is in Phase 5 (D-076d). The V3-01 ruling (v18) finds every clause asserted on Linux | named exception, known limit K-1 |
 | REQ-N-05 | failed | PK-01 `fail` (W7), PK-02 `fail` (W8) | W7 ended 5 of 6: `tests/bundle` compared the 0.0.5 bundle with the 0.0.6 source (D-098c). In W8 the PK-02 tests could not start the launcher (DEF-W-16, D-099a). PK-02 passed in runs 11 and 12 (D-100a) | closed by name: PK-02 by runs 11 and 12, PK-01 by W7 (D-100c) |
 | REQ-N-06 | failed | PK-03 `name`, PK-05 `file`, PK-10 `gate`, PK-11 `fail` (W8) | In W8 the PK-11 test could not start the launcher (DEF-W-16). PK-11 passed in run 11, and PK-05 passed on Windows (D-099a) | closed by name: PK-05, PK-11 by run 11 |
 | REQ-N-16 | partial | AX-06 `file` | AX-06 (Narrator) has no run on 0.0.6. The 0.0.3 record does not stand (D-082b) | waits for AX-06 |
@@ -197,7 +191,8 @@ so its decisions are not uniform (cause `inferred`, D-100a).
 0.0.6 changes `src`, so its Windows checks run again on the 0.0.6 wheel (D-095d). These rows count for 0.0.6:
 
 - The sync, PK-04 (passed), W7 (5 of 6, accepted by name), W8 (6 of 8, accepted by name, PK-05 passed), the five
-  latency runs (2 of 5), and PK-06 runs 11 and 12 (passed). D-100a rules that runs 11 and 12 also meet the Windows
+  latency runs (runs 1 and 5 passed, runs 2 to 4 failed, D-101), and PK-06 runs 11 and 12 (passed). All of them are
+  in the index. D-100a rules that runs 11 and 12 also meet the Windows
   cells of PK-02 and PK-11.
 - PK-06 run 8 counts as a result that did not pass. Runs 9 and 10 count as nothing.
 - PF-01 counts as failed. It ran on the 0.0.5 source, its compute code is unchanged in 0.0.6 (`verified` by the diff),
@@ -224,14 +219,16 @@ the PK-06 cold run (none since 0.0.2), `python -m embodic.ui.app`, and Windows h
 | V3-11 | OR-11, EQ-05 field against GetDP 2-D: within band (−0.07 % b1, −0.18 % peak, D-050d) | passed on the 0.0.6 wheel, embodic values bit-identical (U-V29). The FEA side is carried (`inferred`). OR-11c (3-D) `not tested`, allowed by point 3 (D-100b) | `tests/independent/m6/records/OR-11_OR-12_2bfca49.md` |
 | V3-12 | OR-12, EQ-12 eddy loss against FEA: within band | passed on the 0.0.6 wheel, same record and limits as V3-11 | same record |
 | V3-13 | Release evidence applies to main | holds: `db089e71…75cb` on the wheel, its evidence and main 0abe719 (U-V22), and no `src` change from 0abe719 to 2174f1b (`verified`, `git diff`) | this report |
-| V3-14 | Wording, name and brand scans on the 0.0.6 release wheel: controls 82 of 83 rows find their plant, 0 findings outside the allow-list, 37 export files | passed (`verified` by running). A control counts a plant only when the allow-list does not admit it, and a run with an over-broad rule exits 2. Five allow-list rules with their reasons classify the 21 hits of the first run, none in an export. Deviation: 5 of the 8 brand originals were hashed, because the user's folder is not in the container (the other 3 `not tested` by hash) | `tests/independent/m7/records/V3-14_0.0.6.md` |
-| V3-15 | The audit on 0.0.6: must rows 67 `verified`, 3 `partial`, 3 `failed` | point 1 not met by the audit alone | section 1 |
+| V3-14 | Wording, name and brand scans on the 0.0.6 release wheel: controls 82 of 83 rows find their plant, 0 findings outside the allow-list, 37 export files | passed (`verified` by running). A control counts a plant only when the allow-list does not admit it, and a run with an over-broad rule exits 2. Five allow-list rules with their reasons classify the 21 hits of the first run, none in an export. The brand check hashed the staged folder of the 0.0.1 run: 11 distinct originals from 13 files, against 8 on 0.0.1 | `tests/independent/m7/records/V3-14_0.0.6.md` |
+| V3-15 | The audit on 0.0.6: must rows 67 `verified`, 2 `partial`, 4 `failed` | point 1 not met by the audit alone | section 1 |
 
 V3-14 ran as `tests/independent/m7/records/V3-14.md` describes, in a fresh venv: the release wheel with `--no-deps`,
 then numpy 2.4.6 and pypdf 6.20.0 from the lock files with `--require-hashes`. The miss of the 83 control rows is the
-raw-stream PDF row, which expects 0, as on 0.0.1. The scan hashed the four copies under
-`docs/phase1/design/mockups/brand/`, which test_plan.md 5.8.5 records as byte-identical to the originals, and the
-fifth hash of `tests/static/brand_assets.sha256` (`tests/independent/README.md`, section U-V30).
+raw-stream PDF row, which expects 0, as on 0.0.1. The brand folder of the 0.0.1 run, `Fantastic
+Creature/pitchdeck/resources`, was staged again from the laptop (D-101). It holds 13 files with 11 distinct SHA-256
+values: two pairs are byte-identical (`verified`, `sha256sum`). The 0.0.1 run counted 8 distinct values, and its
+record names no file and no hash, so which three values are new is `unresolved`. The five hashes of
+`tests/static/brand_assets.sha256` are among the 11 (`verified`). No image went into git.
 
 ## 4. The DEF list
 
@@ -329,7 +326,7 @@ no record. Where the state rests on a later run, the evidence names it.
 | DEF-UV18-01 | no two-path cross-net test | closed | D-092 |
 | DEF-UV19-01 | no T-05 test of a partial refusal | closed | D-084b. REQ-T-05 `verified` on 0.0.6 |
 | DEF-UV19-02 | UT-GEO-19 tests checked UT-GEO-26 | closed | D-084a, D-084b. UT-GEO-26 `name` evidence on 0.0.6 |
-| DEF-UV21-01 | TR-01 silent on a failed manual record | closed | D-093c, D-094a. TR-01 on the U-V30 index prints "0 failing, 4 accepted" (`verified`, run on the release reports) |
+| DEF-UV21-01 | TR-01 silent on a failed manual record | closed | D-093c, D-094a. TR-01 on the U-V30 index prints "0 failing, 8 accepted" (`verified`, run on the release reports) |
 | DEF-US17-01 | two inputs gave no unit to a screen reader | closed on Linux | D-094a. How Narrator speaks it is `not tested` |
 | DEF-US17-02 | the guide listed five unbound keys | closed | D-094a, D-094b. U-M9e is in `v0.0.6` (`verified`, `git merge-base`) |
 | DEF-US17-03 | the torque-speed message named a missing place | closed | D-094a, D-094b |
@@ -361,7 +358,6 @@ DEF-U-M5h-01 continues as DEF-U-M6a-01 (D-050a).
 | Windows high contrast with the layer cue | tested offscreen on Linux only (D-083b) | no, but no row plans it on Windows |
 | PK-06 cold on Windows after 0.0.2 | the network gave 8.5 kB/s in the 0.0.4 try (D-084e). The cold results that exist are 4154.5 s on 0.0.1 (failed, 99.6 % download at 0.03 MB/s) and 471 s on 0.0.2 (passed) | warm runs cover REQ-N-07, and the cold result is reported (D-053c) |
 | `python -m embodic.ui.app` on Windows | not opened on Windows (PK-06 record). `python -m embodic.cli` passed in run 12 | no row plans it. The window opens in the W6 human part |
-| The 3 brand originals of the 0.0.1 V3-14 run that have no copy or hash here | the user's brand folder is not in the container | not named in point 3. The name rule still flags a brand-named image |
 | REQ-F-30 (could), REQ-N-20, REQ-T-12, REQ-L-02, REQ-L-06 and REQ-L-09 (should) | no test exists for UI-20, UT-LOG-01, UI-13, LG-02 and LG-07, and no V3-01 ruling or Fable assignment found one | yes |
 | REQ-N-29 (should, TR-06) | the coverage step moved to Phase 5 (D-053b) | not named, but it is a should row, so point 1 does not need it |
 | Serpentine and wave star and k_w by my own model | accepted by name (D-071c), GR-22 compares their EMF with Xcoil | yes, by D-071c |
@@ -376,9 +372,9 @@ The audit gives 67 of 73 must rows `verified` (section 1). D-100b rules the 6 ot
 | Row | Audit | D-100b | What is still missing |
 |---|---|---|---|
 | REQ-N-01 | failed | named exception: the user moved the fix to Phase 5 (D-091a). Known limit K-2 | the user accepts K-2 by name, or rejects it |
-| REQ-N-02 | partial | named exception: DEF-W-12 is in Phase 5 (D-076d). Known limit K-1 | the user accepts K-1 by name, or rejects it |
-| REQ-N-05 | failed | closed: PK-02 by runs 11 and 12, PK-01 by W7, which D-100c accepts by name | nothing for the exit. The audit keeps `failed` through the W7 and W8 records (Fable item 1) |
-| REQ-N-06 | failed | closed: PK-05 (D-099a), PK-11 by run 11 | nothing for the exit. The audit keeps `failed` through the W8 record (Fable item 1) |
+| REQ-N-02 | failed | named exception: DEF-W-12 is in Phase 5 (D-076d). Known limit K-1. The latency records keep it `failed` (D-101) | the user accepts K-1 by name, or rejects it |
+| REQ-N-05 | failed | closed: PK-02 by runs 11 and 12, PK-01 by W7, which D-100c accepts by name | nothing for the exit. The audit keeps `failed` through the W7 and W8 records, and the exit rests on the name ruling (D-101) |
+| REQ-N-06 | failed | closed: PK-05 (D-099a), PK-11 by run 11 | nothing for the exit. The audit keeps `failed` through the W8 record, and the exit rests on the name ruling (D-101) |
 | REQ-N-16 | partial | waits for AX-06. Phase 4 starts with it `partial` | the user's Narrator run on 0.0.6, or the user declines it (then `not tested` by point 3) |
 | REQ-N-24 | partial | the same AX-06 run | as REQ-N-16 |
 
@@ -421,7 +417,7 @@ DEF-US18-01.
   decision row names.
   `--self-test` plants faults and expects each to fail.
 - `python3 tools/trace_matrix.py` with the two release reports, `--fail-untested-through M5` and the index prints
-  `manual: 11` and `0 failing, 4 accepted`, and exits 0 (`docs/phase3/verification/manual_records_0.0.6_windows.md`).
+  `manual: 13` and `0 failing, 8 accepted`, and exits 0 (`docs/phase3/verification/manual_records_0.0.6_windows.md`).
 - `python3 docs/phase3/verification/checks/pk04_compare.py --self-test` passes 10 of 10.
 - `python3 docs/phase4/verification/checks/carry_over.py --check` exits 0 for 0.0.6
   (`docs/phase4/verification/carry_over_0.0.6.md`).

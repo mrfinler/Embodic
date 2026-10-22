@@ -6,8 +6,9 @@
 The platform is the first item of the note in `embodic_version`, before the first comma or semicolon, as
 `req_audit.py` reads it (`platform_of`). The script is idempotent: it starts from the seven entries of U-V29's index
 (8e4159d), restamps the platform of the Linux PK-06 and the OR-11 and OR-12 entries, and appends the Windows entries of
-D-098a, D-099a, D-100a and D-100c. Each Windows entry is `verified` by reading the Fable record it names and the
-decision row in its note; none of them rests on a laptop log (order 6).
+D-098a, D-099a, D-100a and D-100c, and the Windows latency runs of D-099a and D-099b that D-101 orders indexed. Each
+Windows entry is `verified` by reading the Fable record it names and the decision row in its note; none of them rests
+on a laptop log (order 6). Which runs of the five passed (1 and 5) is Fable's statement in D-101.
 """
 
 import argparse
@@ -23,6 +24,7 @@ NOTE = "docs/phase3/verification/manual_records_0.0.6_windows.md"
 W2 = "docs/phase3/fable/windows_campaign_w2.md"
 PK06 = "docs/phase3/fable/PK-06_windows_0.0.6.md"
 WHEEL = "release wheel fdb89189 of tag v0.0.6 on 2bfca49"
+LATENCY_ROWS = "D-076d, D-100b, D-101"
 RESTAMP = {
     ("PK-06", "tests/independent/m5/records/PK-06_walkthrough_2bfca49.md"): "0.0.6 (Linux container, ",
     ("OR-11", "tests/independent/m6/records/OR-11_OR-12_2bfca49.md"): "0.0.6 (GetDP FEA of c25d8a9 on the Linux "
@@ -73,6 +75,42 @@ ADDED = [
         windows("release profile on checkout 6ac95ac, W8, 6 of 8", "D-099a, D-100c"),
         "failed",
         "D-100",
+    ),
+    (
+        "REQ-N-02",
+        "UI-45",
+        W2,
+        windows(
+            "release profile on checkout 6ac95ac, W8, latency gate, N02-10 cancel case 153 ms",
+            f"D-099a, {LATENCY_ROWS}",
+        ),
+        "failed",
+        "D-100",
+    ),
+    *(
+        (
+            "REQ-N-02",
+            "UI-45",
+            W2,
+            windows(
+                f"latency tests alone on checkout 6ac95ac, run {n} of 5, N02-10 arrival over 100 ms",
+                f"D-099b, {LATENCY_ROWS}",
+            ),
+            "failed",
+            "D-100",
+        )
+        for n in (2, 3, 4)
+    ),
+    *(
+        (
+            "REQ-N-02",
+            "UI-45",
+            W2,
+            windows(f"latency tests alone on checkout 6ac95ac, run {n} of 5, passed", "D-099b, D-101"),
+            "passed",
+            None,
+        )
+        for n in (1, 5)
     ),
 ]
 

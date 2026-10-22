@@ -67,7 +67,6 @@ does not hold. D-100 rules points 1 to 4 on 0.0.6 (`docs/phase3/verification/pha
 |---|---|---|---|
 | AX-06 Narrator on 0.0.6 | not run. Phase 4 starts with REQ-N-16 and REQ-N-24 `partial`, and A-1 waits for AX-06 or the user's decline | the user, inside the walkthrough | D-097c, D-100b |
 | W6 scripted part on the real display | not run. Fable prepares the launcher for the start of the UAT session, and Agent 1 reviews the shots | Fable, Agent 1 | D-100c |
-| REQ-N-05 and REQ-N-06 `failed` in the audit through the accepted W7 and W8 records, closed by name in D-100b | Fable confirms that the exit rests on the name ruling | Fable | D-100b, D-100c |
 | The Thai summary of the Phase 3 report | Fable writes it | Fable | D-100e |
 | The push of main, `v0.0.4`, `v0.0.5` and `v0.0.6` | planned at the Phase 3 close and approved by the user. If the repository is public, the push publishes everything G-1 lists, so I recommend that Fable asks G-1 first | Fable, from the laptop | D-065b, D-091d, D-097c |
 
@@ -101,11 +100,13 @@ Out of scope, so the user does not test it:
 
 The requirement set is `docs/phase2/architecture/requirements.md`: 110 rows, of which 73 live must rows, 17 live should
 rows, 4 live could rows and 16 withdrawn KiCad rows (`verified` by parsing the table). On 0.0.6 the must rows are 67
-`verified`, 3 `partial` and 3 `failed` (V3-15 on 0.0.6, `docs/phase3/verification/req_audit.md`, U-V30). The failed
-rows are REQ-N-01 (DEF-W-15), and REQ-N-05 and REQ-N-06, whose accepted W7 and W8 records failed and which D-100b
-closes by name. No should row is `verified`, because V3-01 rules must rows only (`verified`, `verification_plan.md`
-section 3). The seven campaigns of D-092 (mutation, property and own-model checks) ran on sources whose tested modules
-0.0.6 does not change, and found no survivor and no new defect. V3-14 passed on the 0.0.6 wheel (U-V30).
+`verified`, 2 `partial` and 4 `failed` (V3-15 on 0.0.6, `docs/phase3/verification/req_audit.md`, U-V30). The failed
+rows are REQ-N-01 (DEF-W-15) and REQ-N-02 (DEF-W-12), each through its failed run on the laptop, and REQ-N-05 and
+REQ-N-06 through their accepted W7 and W8 records. D-100b names the first two as exceptions and closes the other two by
+name, and the exit rests on those rulings (D-101). No should row is `verified`, because V3-01 rules must rows only
+(`verified`, `verification_plan.md` section 3). The seven campaigns of D-092 (mutation, property and own-model checks)
+ran on sources whose tested modules 0.0.6 does not change, and found no survivor and no new defect. V3-14 passed on the
+0.0.6 wheel (U-V30).
 
 ## 2. What carries over without a rerun
 
@@ -124,7 +125,7 @@ What carries over, in short:
 | Evidence | Carries over for 0.0.6 | Status |
 |---|---|---|
 | The release gate on 2bfca49: pytest 4439 passed, latency gate 8 of 8, bundle built, TR-01 and TR-02 passed | yes, it ran on the build | `verified` (D-096) |
-| 14 of the 15 manual records of the index: PK-06 Linux, AX-05, OR-11, OR-12, LG-01, LG-04, and the Windows records PK-04, PK-05, PK-06, PK-02, PK-11, W7 (PK-01) and W8 (PK-02, PK-11) | yes, they stand against 2bfca49 | `verified` (currency run in U-V30) |
+| 20 of the 21 manual records of the index: PK-06 Linux, AX-05, OR-11, OR-12, LG-01, LG-04, and the Windows records PK-04, PK-05, PK-06, PK-02, PK-11, W7 (PK-01), W8 (PK-02, PK-11, UI-45) and the five latency runs (UI-45) | yes, they stand against 2bfca49 | `verified` (currency run in U-V30) |
 | PF-01 on the laptop at checkout bbeed84 (failed, DEF-W-15) | no by D-061d: its files differ from 2bfca49 in the version strings only. D-100b keeps REQ-N-01 `failed`, so the failure carries as `inferred` | `verified` (currency run), `inferred` |
 | Campaigns V3-02 to V3-07 and V3-10 on base ed64fdf | yes, 0.0.6 changes no module they test | `verified` (`phase3_report.md` section 3) |
 | V3-14 on the 0.0.6 release wheel | yes, it ran on the build | `verified` (`tests/independent/m7/records/V3-14_0.0.6.md`) |
@@ -136,9 +137,9 @@ The rows that need an action in Phase 4 are the 6 must rows that are not `verifi
 | Row | Status on 0.0.6 | Phase 4 handling |
 |---|---|---|
 | REQ-N-01 | failed | Known limit DEF-W-15, for the user to accept by name (K-2) |
-| REQ-N-02 | partial | UI-36 to UI-45 have `file` evidence. DEF-W-12 on Windows (K-1). Check E-08 |
-| REQ-N-05 | failed | Closed by name in D-100b: PK-02 by PK-06 runs 11 and 12, PK-01 by W7 (accepted by name, D-100c) |
-| REQ-N-06 | failed | Closed by name in D-100b: PK-05 (D-099a), PK-11 by run 11. W8's PK-11 failure is DEF-W-16 (S-1) |
+| REQ-N-02 | failed | The W8 latency gate and three of five latency runs failed on the laptop (DEF-W-12, D-101). Known limit K-1. Check E-08 |
+| REQ-N-05 | failed | Closed by name in D-100b: PK-02 by PK-06 runs 11 and 12, PK-01 by W7 (accepted by name, D-100c). The exit rests on that ruling (D-101) |
+| REQ-N-06 | failed | Closed by name in D-100b: PK-05 (D-099a), PK-11 by run 11. W8's PK-11 failure is DEF-W-16 (S-1). The exit rests on that ruling (D-101) |
 | REQ-N-16, REQ-N-24 | partial | The AX-06 record from the walkthrough closes both rows (R-1) |
 | 11 should rows `partial` (REQ-F-09, F-22, F-24 to F-29, F-31, N-03, N-26) | partial | Tests pass. The user sees the behaviour in the walkthrough |
 | 6 should rows `not tested` (REQ-N-20, N-29, T-12, L-02, L-06, L-09) | not tested | Allowed by `verification_plan.md` section 4 point 3. REQ-N-29 is Phase 5 (D-053b) |
@@ -171,7 +172,7 @@ values, U-V29 found that the 0.0.6 outcome files differ from those of 0.0.5 only
 | E-05 | Open the D08 example. Read "Line back-EMF constant, peak" and its badge, and compare it with the UGent thesis (D08). | 30.9 mV·s/rad, against the thesis's measured 0.031 V·s/rad. The OR-01 band is −8 % to +8 % + e_edge (`tests/unit/physics/test_oracles.py` l.93). The badge reads `not tested`. So do the other results built on the field and the EMF, such as Ke, Kt, K_v, torque, eddy loss and efficiency. In the registry of 0.0.5 and 0.0.6 EQ-05 and EQ-06 lack only one passed test each, EQT-05-O2 and EQT-06-O2, which is the D09 oracle OR-07 (F-OR07, D-047, decision K-3). R_ph reads `inferred`. J, δ and the interconnect loss read `verified`. The inductance reads `unresolved (estimate)` (decision K-4). | `verified` on Linux from the 0.0.5 release wheel: the PDF report and `load_registry()`. The value and its badge read the same in the D08 PDF of the 0.0.6 wheel (U-V30). That every field and EMF result inherits the badge is `inferred` from REQ-T-03 | [ ] pass [ ] fail [ ] accept with note |
 | E-06 | Export the PDF report of D08 and of "Spiral, 12 coils, 16 poles". Read it as the user would use it (D-056g Q2). | Four pages. A header with `embodic_version 0.0.6`, `engine_version`, `registry_version`, `design_hash`, `generated_utc` and `drc_passed`. A "Key results" table with quantity, value and status. A "DRC summary" with the least clearance and the rule per check. An "Inputs" table with each field's provenance. A board drawing in mm. The report holds no EC-05 limitation text and no equation IDs (U-S11 Q2). The user judges whether that content is enough (decision P-1). | `verified` on Linux from the release wheel | [ ] pass [ ] fail [ ] accept with note |
 | E-07 | Open "Wave, 16 poles, involute" and try to export its DXF, then its PDF. Open the same preset in Xcoil v3. | The DRC reports 186 violations. The PDF's "DRC summary" gives a least clearance of 0.199965 mm against the 0.200000 mm rule, for trace to trace and for trace to via. Xcoil shows the preset clean, because its DRC allows a 4 µm slack that embodic's rule D-006 removes (`engineering_verification_plan.md` l.285, D-034). The DXF export asks for a confirmation that lists the failures, with the focus on Cancel (REQ-F-33). The PDF and the README are written without it. The README prints `DRC: FAILED, 186 violations`, and the PDF prints `Board 1: FAILED, 186 violations` (D-045e). U-V25 wrote "Design rule check" here, which neither file prints. | `verified` on Linux from the release wheel (CLI exit 2 with `DRC_EXPORT_NOT_CONFIRMED` and the clearance value, then the PDF line). The dialog is `verified` by offscreen UI tests only. Xcoil's clean result is from the record, `not tested` by me | [ ] pass [ ] fail [ ] accept with note |
-| E-08 | Feel the two known speed limits. Open the serpentine example, type in a field while it computes, and change a value of the default spiral several times. | The app may lag. On this laptop the team measured GUI gaps up to 255 ms against the 100 ms bound, in some runs and not in others (DEF-W-12, D-086d). A full recompute of the default spiral takes 0.91 to 1.00 s p95 against 1.0 s, and its physics stage 0.62 to 0.66 s against 0.3 s (DEF-W-15, D-087). The user judges whether 0.0.6 is usable with these limits until Phase 5 (decisions K-1, K-2). | `verified` on the laptop (records named) | [ ] pass [ ] fail [ ] accept with note |
+| E-08 | Feel the two known speed limits. Open the serpentine example, type in a field while it computes, and change a value of the default spiral several times. | The app may lag. On this laptop the team measured GUI gaps up to 255 ms on 0.0.4 and up to 258 ms on 0.0.6 against the 100 ms bound, in some runs and not in others (DEF-W-12, D-086d, D-099b). A full recompute of the default spiral takes 0.91 to 1.00 s p95 against 1.0 s, and its physics stage 0.62 to 0.66 s against 0.3 s (DEF-W-15, D-087). The user judges whether 0.0.6 is usable with these limits until Phase 5 (decisions K-1, K-2). | `verified` on the laptop (records named) | [ ] pass [ ] fail [ ] accept with note |
 | E-09 | Pick one example. Find the design hash in the app, in the saved project file, in the SVG and DXF exports (open them in a text editor), in the PDF header and in the README. | The same `sha256:…` value everywhere. For "Spiral, 12 coils, 16 poles" it is `sha256:ac4fab5d…9c09`. This ties every output to one design (REQ-T-07, REQ-T-14). | `verified` on Linux from the release wheel's bundle export and `embodic-cli compute` | [ ] pass [ ] fail [ ] accept with note |
 
 ### 3.3 The records that the UAT produces
@@ -213,7 +214,7 @@ marked `unresolved` was not measured or researched in any record I read.
 
 | ID | Limit | What the user sees in 0.0.6 | Options | What each option costs | Decision row |
 |---|---|---|---|---|---|
-| K-1 | DEF-W-12: Windows GUI latency, intermittent | REQ-N-02 is `partial` on Windows. Gaps up to 255 ms against the 100 ms bound in some runs (D-086d), `inferred` cause: the worker and the GUI thread share the GIL (D-076c). Check E-08 | (a) Accept by name. The fix stays in Phase 5 as the user decided (D-076d). (b) Fix it before acceptance: a compute process separate from the GUI (D-076d, D-084d). | (a) The user lives with the lag until Phase 5. (b) A design unit, an implementation unit, a new release and the Windows reruns (`unresolved` size). Phase 4 restarts on the new build. | D-076d |
+| K-1 | DEF-W-12: Windows GUI latency, intermittent | REQ-N-02 is `failed` through the Windows latency runs of 0.0.6 (D-099b, D-101). Gaps up to 258 ms against the 100 ms bound in some runs (D-086d, D-099b), `inferred` cause: the worker and the GUI thread share the GIL (D-076c). Check E-08 | (a) Accept by name. The fix stays in Phase 5 as the user decided (D-076d). (b) Fix it before acceptance: a compute process separate from the GUI (D-076d, D-084d). | (a) The user lives with the lag until Phase 5. (b) A design unit, an implementation unit, a new release and the Windows reruns (`unresolved` size). Phase 4 restarts on the new build. | D-076d |
 | K-2 | DEF-W-15: REQ-N-01 not met on the laptop | Physics p95 0.62 to 0.66 s against 0.3 s, and the full recompute at its 1.0 s bound (D-087). REQ-N-01 stays `failed` | (a) Accept by name. Phase 5's first unit ports the physics kernels (U-D27 option B), as the user decided (D-091a). (b) Fix it before acceptance. | (a) The user lives with about 1 s per recompute. (b) The same unit as (a), done now, then a new release, PF-01 again on the laptop, and a restart of Phase 4. | D-087, D-091a |
 | K-3 | OR-07 and gap G2: the D09 phase EMF oracle is out of band | OR-07 is +18.7 % on variant A and stays a strict expected failure. Variant C read from the D09 figure gave −4.79 to −5.09 %, recorded as evidence and not as a pass (D-045a, D-050c). G2 (D09's Table 1 length against its drawing) has no source (D-049b). Every back-EMF result shows `not tested` (check E-05) | (a) Accept by name. (b) The user supplies a source that closes G2. (c) A measured board (see K-4). | (a) The back-EMF badges stay `not tested`. (b) An evidence unit and an oracle unit, then a registry change, so a new release (`inferred`). (c) As K-4. | D-045a, D-049b, D-050c |
 | K-4 | EQT-14-O2: no built board | The inductance shows `unresolved (estimate)`. The F-OR07 closure that needs a measurement stays `not tested` (D-048f) | (a) Accept by name. (b) Build a board and measure it with the plan of `docs/phase3/engineering/engineering_verification_plan.md` section 3 (rows M1 to M5). | (a) Nothing. (b) A board, the instruments that plan lists, and the evidence and oracle units after the measurement (`unresolved` cost). | D-048f |

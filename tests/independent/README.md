@@ -498,7 +498,7 @@ Prepared by: Agent 4 - Independent Verificator - model: claude-opus-5-5
 
 | Script | Run in | What it does |
 |---|---|---|
-| `m7/v3_14_scan.py --src src --work DIR --wheel WHL --record m7/records/V3-14_0.0.6.md --brand-dir docs/phase1/design/mockups/brand --brand-sha256 tests/static/brand_assets.sha256` | a fresh venv: the 0.0.6 release wheel `fdb89189…0101` with `--no-deps`, then numpy 2.4.6 and pypdf 6.20.0 from the lock files with `--require-hashes` | V3-14 as `m7/records/V3-14.md` describes it, on 0.0.6. A control now counts a plant only when the allow-list does not admit it |
+| `m7/v3_14_scan.py --src src --work DIR --wheel WHL --record m7/records/V3-14_0.0.6.md --brand-dir "/mnt/user-data/uploads/Desktop/Fantastic Creature/pitchdeck/resources"` | a fresh venv: the 0.0.6 release wheel `fdb89189…0101` with `--no-deps`, then numpy 2.4.6 and pypdf 6.20.0 from the lock files with `--require-hashes` | V3-14 as `m7/records/V3-14.md` describes it, on 0.0.6. A control now counts a plant only when the allow-list does not admit it |
 | `m7/v30_index.py [--write]` | system `python3` | writes `docs/phase3/verification/manual_records.json` from U-V29's index (8e4159d): the platform of each NEEDS record and the Windows records of 0.0.6 |
 | `m7/v30_rerule.py [--write]` | system `python3` | checks that every cite of `m7/v3_01_rulings_v30.py` (REQ-N-04, REQ-N-07) passed with the row's marker in the 0.0.6 release run or is a passed index entry, and pins them |
 
@@ -510,9 +510,9 @@ issue codes (U-S9 ruled them no finding), test node IDs in the evidence file and
 (read nowhere in src), a D09 paper value in a reference case, and the U-E15 registry note that says embodic measures
 nothing. All but the U-E15 note were already in the 0.0.1 findings.
 
-Deviation. The brand originals of `m7/records/V3-14.md` (8 files in the user's `Fantastic Creature/pitchdeck/resources`)
-are not in the container. The run hashes the four copies under `docs/phase1/design/mockups/brand/`, which test_plan.md
-5.8.5 records as byte-identical to the originals, and adds the fifth hash of `tests/static/brand_assets.sha256`
-(embodic-logo-white.png, from Fable's `sha256sum`). The four copies hash to the table's values (`verified`,
-`sha256sum`). The three other originals of the 0.0.1 run are `not tested` by hash. The name rule still flags any
-brand-named image.
+Brand originals. U-V30 first ran without the user's brand folder and hashed the four copies under
+`docs/phase1/design/mockups/brand/` plus the fifth hash of `tests/static/brand_assets.sha256`. Fable then staged the
+folder of the 0.0.1 run again from the laptop (D-101), and the record was regenerated with `--brand-dir` set to it, as
+`m7/records/V3-14.md` did. It holds 13 files with 11 distinct SHA-256 values, because two pairs are byte-identical
+(`verified`, `sha256sum`). The 0.0.1 run counted 8 distinct values, and its record names no file and no hash, so which
+three values are new is `unresolved`. The five hashes of the table are among the 11 (`verified`). No image is in git.

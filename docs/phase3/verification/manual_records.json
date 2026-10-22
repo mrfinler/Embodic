@@ -107,5 +107,51 @@
   "embodic_version": "0.0.6 (Windows laptop, release profile on checkout 6ac95ac, W8, 6 of 8, Fable; D-099a, D-100c, docs/phase3/verification/manual_records_0.0.6_windows.md)",
   "result": "failed",
   "accepted": "D-100"
+ },
+ {
+  "req": "REQ-N-02",
+  "test_id": "UI-45",
+  "record": "docs/phase3/fable/windows_campaign_w2.md",
+  "embodic_version": "0.0.6 (Windows laptop, release profile on checkout 6ac95ac, W8, latency gate, N02-10 cancel case 153 ms, Fable; D-099a, D-076d, D-100b, D-101, docs/phase3/verification/manual_records_0.0.6_windows.md)",
+  "result": "failed",
+  "accepted": "D-100"
+ },
+ {
+  "req": "REQ-N-02",
+  "test_id": "UI-45",
+  "record": "docs/phase3/fable/windows_campaign_w2.md",
+  "embodic_version": "0.0.6 (Windows laptop, latency tests alone on checkout 6ac95ac, run 2 of 5, N02-10 arrival over 100 ms, Fable; D-099b, D-076d, D-100b, D-101, docs/phase3/verification/manual_records_0.0.6_windows.md)",
+  "result": "failed",
+  "accepted": "D-100"
+ },
+ {
+  "req": "REQ-N-02",
+  "test_id": "UI-45",
+  "record": "docs/phase3/fable/windows_campaign_w2.md",
+  "embodic_version": "0.0.6 (Windows laptop, latency tests alone on checkout 6ac95ac, run 3 of 5, N02-10 arrival over 100 ms, Fable; D-099b, D-076d, D-100b, D-101, docs/phase3/verification/manual_records_0.0.6_windows.md)",
+  "result": "failed",
+  "accepted": "D-100"
+ },
+ {
+  "req": "REQ-N-02",
+  "test_id": "UI-45",
+  "record": "docs/phase3/fable/windows_campaign_w2.md",
+  "embodic_version": "0.0.6 (Windows laptop, latency tests alone on checkout 6ac95ac, run 4 of 5, N02-10 arrival over 100 ms, Fable; D-099b, D-076d, D-100b, D-101, docs/phase3/verification/manual_records_0.0.6_windows.md)",
+  "result": "failed",
+  "accepted": "D-100"
+ },
+ {
+  "req": "REQ-N-02",
+  "test_id": "UI-45",
+  "record": "docs/phase3/fable/windows_campaign_w2.md",
+  "embodic_version": "0.0.6 (Windows laptop, latency tests alone on checkout 6ac95ac, run 1 of 5, passed, Fable; D-099b, D-101, docs/phase3/verification/manual_records_0.0.6_windows.md)",
+  "result": "passed"
+ },
+ {
+  "req": "REQ-N-02",
+  "test_id": "UI-45",
+  "record": "docs/phase3/fable/windows_campaign_w2.md",
+  "embodic_version": "0.0.6 (Windows laptop, latency tests alone on checkout 6ac95ac, run 5 of 5, passed, Fable; D-099b, D-101, docs/phase3/verification/manual_records_0.0.6_windows.md)",
+  "result": "passed"
  }
 ]

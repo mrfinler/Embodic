@@ -394,9 +394,9 @@ SUBJECTS = (
         "docs/phase3/fable/windows_campaign_w2.md",
         "passed",
         "6ac95ac",
-        "PK-04 on the release wheel fdb89189 and PK-05 on the bundle that the release run built, laptop checkout "
-        "6ac95ac (record, Release 0.0.6)",
-        (*WHEEL_INPUTS, "tools/build_bundle.py", "packaging"),
+        "PK-04 on the release wheel fdb89189, PK-05 on the bundle that the release run built, and the latency runs "
+        "that passed, laptop checkout 6ac95ac (record, Release 0.0.6)",
+        GATE_TREE,
         (),
         "Fable (Windows laptop)",
     ),
@@ -404,7 +404,8 @@ SUBJECTS = (
         "docs/phase3/fable/windows_campaign_w2.md",
         "failed",
         "6ac95ac",
-        "W7 commit profile and W8 release profile on the laptop checkout 6ac95ac (record, Release 0.0.6)",
+        "W7 commit profile, W8 release profile and three latency runs on the laptop checkout 6ac95ac (record, "
+        "Release 0.0.6)",
         GATE_TREE,
         (),
         "Fable (Windows gates on the laptop)",

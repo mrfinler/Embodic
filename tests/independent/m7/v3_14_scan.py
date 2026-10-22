@@ -657,7 +657,8 @@ def main(argv=None) -> int:
     package = Path(embodic.__file__).parent
     venv_bin = Path(sys.executable).parent
     tokens = personal_tokens()
-    brand = {hashlib.sha256(p.read_bytes()).hexdigest(): p.name for p in args.brand_dir.iterdir() if p.is_file()}
+    originals = sorted(p for p in args.brand_dir.iterdir() if p.is_file())
+    brand = {hashlib.sha256(p.read_bytes()).hexdigest(): p.name for p in originals}
     hashed_dir = len(brand)
     if args.brand_sha256:
         for line in args.brand_sha256.read_text(encoding="utf-8").splitlines():
@@ -700,10 +701,9 @@ def main(argv=None) -> int:
     ]
     extra = f", and {len(brand) - hashed_dir} more from `{args.brand_sha256}`" if args.brand_sha256 else ""
     brand_line = (
-        f"{hashed_dir} brand originals hashed in `{args.brand_dir}`{extra}. Exact copies in the package or the "
-        f"exports: {len(real_exact)}. Brand-named image files with another hash: {len(real_changed)}"
-        + (": " + ", ".join(p.name for p in real_changed) if real_changed else "")
-        + "."
+        f"{hashed_dir} brand originals hashed in `{args.brand_dir}` (distinct SHA-256 of {len(originals)} files)"
+        f"{extra}. Exact copies in the package or the exports: {len(real_exact)}. Brand-named image files with another "
+        f"hash: {len(real_changed)}" + (": " + ", ".join(p.name for p in real_changed) if real_changed else "") + "."
     )
     classified = classify(corpora, tokens)
     text, by_class = render(header, control_rows, corpora, notes, brand_line, classified)
