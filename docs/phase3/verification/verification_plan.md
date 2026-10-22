@@ -334,6 +334,7 @@ Phase 4 starts when all of the following hold on one named build:
      is (D-045a), and Fable rules on it before Phase 4.
 3. These items may stay `not tested`, each with its reason in the final report:
    - EQT-14-O2 and the F-OR07 closure that needs a measurement, because no board exists (D-048f).
+   - OR-11c, EQ-05 in 3-D, because only the 2-D GetDP case exists (D-050d). D-100b adds this item.
    - The 3.12 and 3.13 Windows cells of PK-01, because D-048d names Python 3.11 only.
    - PK-05 and W9, if the build or the bundle test fails for a cause in the stretch goal (D-015), with the failure
      recorded.
