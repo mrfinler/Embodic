@@ -817,6 +817,7 @@ class MainWindow(QMainWindow):
     def _sync_layer_boxes(self, layers: tuple[str, ...]) -> None:
         if tuple(self.layer_boxes) != layers:
             for box in self.layer_boxes.values():
+                box.hide()
                 box.deleteLater()
             self.layer_boxes = {}
             for index, layer in enumerate(layers):
