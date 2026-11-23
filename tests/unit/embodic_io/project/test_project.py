@@ -209,6 +209,22 @@ def test_ut_io_07_measured_entry_without_source_is_invalid_provenance(tmp_path: 
     ]
 
 
+@pytest.mark.req("REQ-F-15", "REQ-T-06")
+@pytest.mark.parametrize("kind", [[], {}], ids=["array", "object"])
+def test_load_reports_a_nonstring_provenance_kind(tmp_path: Path, kind: object) -> None:
+    """Report a malformed entry and keep the complete design available to the desktop editor."""
+    path = tmp_path / "project.embodic.json"
+    save_project(path, _cf11_project())
+    document = json.loads(path.read_text(encoding="utf-8"))
+    document["provenance"][BR] = {"provenance": kind}
+    path.write_text(json.dumps(document), encoding="utf-8")
+
+    loaded, issues = load_project(path)
+
+    assert isinstance(loaded, ProjectFile)
+    assert [(issue.code, issue.pointers) for issue in issues] == [("INVALID_PROVENANCE", (f"/provenance{BR}",))]
+
+
 @pytest.mark.req("REQ-T-06")
 def test_def_u_d6_01_origin_that_is_not_packaged_gives_measured_and_user_only(tmp_path: Path) -> None:
     """Catches DEF-U-D6-01: a design with a non-blank origin that is not packaged got 30 `default` entries.

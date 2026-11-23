@@ -230,7 +230,7 @@ def _stored_provenance(
     for pointer_in_file, entry in sorted(raw.items()):
         pointer = model_pointer(pointer_in_file)
         kind = entry.get("provenance") if isinstance(entry, dict) else None
-        if kind not in known:
+        if not isinstance(kind, str) or kind not in known:
             issues.append(_issue("INVALID_PROVENANCE", (f"/provenance{pointer_in_file}",)))
             continue
         if kind == Provenance.EXAMPLE and not isinstance(entry.get("example_id"), str):

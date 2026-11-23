@@ -115,10 +115,10 @@ def _unwritable(path: Path) -> ValidationIssue | None:
 
 
 def _load(path: Path) -> ProjectFile | tuple[ValidationIssue, ...]:
-    """Load a project whose design is complete, or return the issues that say why there is none."""
+    """Load a complete project with no load errors, or return its issues."""
     project, issues = load_project(path)
     if isinstance(project, ProjectFile):
-        return project
+        return project if exit_code_of_issues(issues) is ExitCode.OK else issues
     if project is None:
         return issues
     # compute_project builds the issue of an incomplete draft and computes nothing for it.

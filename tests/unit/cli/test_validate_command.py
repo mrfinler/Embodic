@@ -1,6 +1,7 @@
 """``embodic-cli validate`` (REQ-F-18, UT-CLI-01): the design is checked against its rules and nothing is built."""
 
 import dataclasses
+import json
 from pathlib import Path
 
 import pytest
@@ -53,3 +54,22 @@ def test_validate_of_an_unreadable_file_exits_1(run, tmp_path: Path) -> None:
     code, _, err = run("validate", tmp_path / "absent.embodic.json")
     assert code == 1
     assert "error INVALID_PROJECT_NOT_FOUND:" in err
+
+
+@pytest.mark.req("REQ-F-18", "REQ-T-06")
+@pytest.mark.parametrize("kind", ["unknown", []], ids=["unknown-string", "array"])
+def test_validate_refuses_a_project_with_invalid_provenance(run, tmp_path: Path, kind: object) -> None:
+    """A valid design cannot hide its project file's provenance error."""
+    ref, design = load_example(CF11)
+    path = tmp_path / "project.embodic.json"
+    save_project(path, ProjectFile(design=design, origin=ref))
+    document = json.loads(path.read_text(encoding="utf-8"))
+    document["provenance"]["/rotor/poles"]["provenance"] = kind
+    path.write_text(json.dumps(document), encoding="utf-8")
+
+    code, out, err = run("validate", path)
+
+    assert code == 1
+    assert out == ""
+    assert err.startswith("error INVALID_PROVENANCE:")
+    assert "  at /provenance/rotor/poles" in err.splitlines()
