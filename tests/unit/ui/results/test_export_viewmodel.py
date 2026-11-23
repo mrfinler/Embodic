@@ -1,11 +1,16 @@
 """Export view-model: preflight, checklist, the DRC gate and a run whose file list equals the disk (UI-29). Qt-free."""
 
+import dataclasses
 import zipfile
 
 import pytest
 
 import embodic
+from embodic.api import ComputeOutcome, compute
+from embodic.io.examples import load_example
 from embodic.io.exporters import ExportKind, ExportRefused
+from embodic.io.project import ProjectFile, parse_project, project_provenance
+from embodic.model.provenance import ExampleValue, MeasuredValue, UserValue, mark_measured
 from embodic.ui.viewmodels.export import (
     BUNDLE,
     PRESETS,
@@ -47,6 +52,41 @@ def test_d08_run_writes_svg_dxf_json_pdf_readme_and_zip_and_lists_exactly_the_fi
         assert "README.txt" in archive.namelist() and f"{stem}.svg" in archive.namelist()
     readme = (folder / "README.txt").read_text(encoding="utf-8")
     assert f"{stem}.svg" in readme and f"{stem}_report.pdf" in readme
+
+
+@pytest.mark.req("REQ-F-16", "REQ-T-15")
+@pytest.mark.parametrize("bundled", [False, True], ids=["standalone", "bundle"])
+def test_edited_example_export_round_trips_provenance(tmp_path, bundled):
+    """Reopen an exported example after editing and marking a property as measured."""
+    ref, example = load_example("spiral_12c10p_d08")
+    design = dataclasses.replace(example, name="Edited stator")
+    pointer, source = "/rotor/remanence_t", "Magnet datasheet"
+    measurements = mark_measured(design, (), pointer, source)
+    assert isinstance(measurements, tuple)
+    project = ProjectFile(design=design, origin=ref, measurements=measurements)
+    provenance = project_provenance(project)
+    outcome = compute(design, provenance)
+    assert isinstance(outcome, ComputeOutcome)
+    formats = frozenset({ExportKind.PROJECT_JSON, BUNDLE} if bundled else {ExportKind.PROJECT_JSON})
+
+    result = vm_for(outcome).run(formats, tmp_path, confirmed_drc_errors=False)
+
+    assert isinstance(result, ExportWritten)
+    filename = "Edited_stator.embodic.json"
+    if bundled:
+        with zipfile.ZipFile(tmp_path / "Edited_stator.zip") as archive:
+            document = archive.read(filename).decode("utf-8")
+    else:
+        document = (tmp_path / filename).read_text(encoding="utf-8")
+    reopened, issues = parse_project(document)
+    assert isinstance(reopened, ProjectFile)
+    assert issues == ()
+    assert reopened.origin == ref
+    assert reopened.measurements == measurements
+    assert project_provenance(reopened) == provenance
+    assert provenance["/name"] == UserValue()
+    assert provenance["/rotor/poles"] == ExampleValue(example_id=ref.example_id)
+    assert provenance[pointer] == MeasuredValue(source=source)
 
 
 @pytest.mark.req("REQ-F-33")

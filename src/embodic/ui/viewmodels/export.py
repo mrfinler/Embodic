@@ -11,19 +11,15 @@ from pathlib import Path
 from typing import Literal, TypeAlias
 
 from embodic.drc import DrcViolation
-from embodic.io.bundle import SUFFIX, write_bundle
-from embodic.io.canonical import design_hash
+from embodic.io.bundle import SUFFIX, write_bundle, write_project_export
 from embodic.io.dxf_writer import write_dxf
-from embodic.io.examples import list_examples, load_example
 from embodic.io.exporters import (
     ExportKind,
     ExportRefused,
     ExportSummary,
     drc_passed,
-    export_metadata,
     exportable_boards,
 )
-from embodic.io.project import ProjectFile, encode_project, project_document
 from embodic.io.readme_writer import write_readme
 from embodic.io.report import write_report_pdf
 from embodic.io.svg_writer import write_svg
@@ -245,28 +241,6 @@ def _write(outcome: ComputeOutcome, kind: ExportKind, path: Path, allow: bool) -
         case ExportKind.PDF_REPORT:
             return write_report_pdf(outcome, path)
         case ExportKind.PROJECT_JSON:
-            return _write_project(outcome, path)
+            return write_project_export(outcome, path)
         case ExportKind.README:
             raise ValueError("README.txt is written last, from the other summaries")
-
-
-def _write_project(outcome: ComputeOutcome, path: Path) -> ExportSummary:
-    """Write the project file; a design identical to a packaged example keeps that example as its origin."""
-    origin = next(
-        (
-            ref
-            for ref, design in map(load_example, (i.example_id for i in list_examples()))
-            if design_hash(design) == outcome.design_hash
-        ),
-        None,
-    )
-    document = project_document(
-        ProjectFile(design=outcome.design, origin=origin),
-        outcome.provenance,
-        saved_utc=export_metadata(outcome).generated_utc,
-        registry_version=outcome.versions.registry,
-    )
-    path.write_text(encode_project(document), encoding="utf-8", newline="\n")
-    return ExportSummary(
-        kind=ExportKind.PROJECT_JSON, path=path, lines=0, arcs=0, circles=0, vias=0, pads=0, holes=0, pages=0
-    )

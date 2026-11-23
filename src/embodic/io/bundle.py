@@ -9,7 +9,6 @@ import zipfile
 from collections.abc import Sequence
 from pathlib import Path
 
-from embodic.io.canonical import design_hash
 from embodic.io.dxf_writer import write_dxf
 from embodic.io.examples import list_examples, load_example
 from embodic.io.exporters import ExportKind, ExportRefused, ExportSummary, export_metadata, exportable_boards
@@ -17,7 +16,7 @@ from embodic.io.project import ProjectFile, encode_project, project_document
 from embodic.io.readme_writer import write_readme
 from embodic.io.report import write_report_pdf
 from embodic.io.svg_writer import write_svg
-from embodic.model.provenance import ExampleRef
+from embodic.model.provenance import ExampleRef, ExampleValue, MeasuredValue, Measurement, derive_provenance
 from embodic.outcome import ComputeOutcome
 
 SUFFIX: dict[ExportKind, str] = {
@@ -31,18 +30,33 @@ SUFFIX: dict[ExportKind, str] = {
 
 
 def _packaged_origin(outcome: ComputeOutcome) -> ExampleRef | None:
-    """Return the packaged example the design is identical to, so the project file keeps its origin."""
-    for info in list_examples():
-        ref, design = load_example(info.example_id)
-        if design_hash(design) == outcome.design_hash:
-            return ref
-    return None
+    """Return an origin that reproduces recorded example provenance, or an exact packaged match."""
+    example_ids = {value.example_id for value in outcome.provenance.values() if isinstance(value, ExampleValue)}
+    if not example_ids:
+        refs = (load_example(info.example_id)[0] for info in list_examples())
+        return next((ref for ref in refs if ref.example_sha256 == outcome.design_hash), None)
+    if len(example_ids) != 1:
+        return None
+    try:
+        example = load_example(next(iter(example_ids)))
+    except KeyError:
+        return None
+    measurements = tuple(
+        Measurement(pointer=pointer, source=value.source)
+        for pointer, value in outcome.provenance.items()
+        if isinstance(value, MeasuredValue)
+    )
+    return example[0] if derive_provenance(outcome.design, example, measurements) == outcome.provenance else None
 
 
-def _write_project(outcome: ComputeOutcome, path: Path, generated_utc: str) -> ExportSummary:
+def write_project_export(outcome: ComputeOutcome, path: Path) -> ExportSummary:
+    """Write the computed design and its provenance as a project file."""
     project = ProjectFile(design=outcome.design, origin=_packaged_origin(outcome))
     document = project_document(
-        project, outcome.provenance, saved_utc=generated_utc, registry_version=outcome.versions.registry
+        project,
+        outcome.provenance,
+        saved_utc=export_metadata(outcome).generated_utc,
+        registry_version=outcome.versions.registry,
     )
     path.write_text(encode_project(document), encoding="utf-8", newline="\n")
     return ExportSummary(
@@ -63,7 +77,7 @@ def _write(outcome: ComputeOutcome, kind: ExportKind, path: Path, allow: bool) -
         case ExportKind.PDF_REPORT:
             return write_report_pdf(outcome, path)
         case ExportKind.PROJECT_JSON:
-            return _write_project(outcome, path, export_metadata(outcome).generated_utc)
+            return write_project_export(outcome, path)
         case ExportKind.README:
             raise ValueError("README.txt is always added; it is not a selectable member")
 
