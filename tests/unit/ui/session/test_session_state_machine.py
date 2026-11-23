@@ -34,10 +34,15 @@ class RecordingSubmitter:
 
     def __init__(self):
         self.requests = []
+        self.cancellations = 0
 
     def submit(self, request):
         """Record a request."""
         self.requests.append(request)
+
+    def cancel(self):
+        """Record a cancellation."""
+        self.cancellations += 1
 
 
 @pytest.fixture
@@ -323,3 +328,39 @@ def test_a_new_design_does_not_show_the_previous_design_as_its_outdated_drawing(
     assert session.drawn(outcome.state.value) == (None, False)
     session.undo()
     assert isinstance(session.state.value, SessionComputed)
+
+
+@pytest.mark.req("REQ-F-27", "REQ-N-02")
+def test_a_result_arriving_after_replacement_does_not_fill_a_new_draft(rig, d08_ready):
+    """A worker can finish the previous design after the new draft is open."""
+    session, outcome, submitter = rig
+    session.load_example(D08)
+    previous = submitter.requests[-1]
+    session.new_design(TopologyKind.WAVE)
+    outcome.on_finished(previous.request_id, d08_ready)
+
+    assert session.drawn(outcome.state.value) == (None, False)
+    assert outcome.project is None
+    assert submitter.cancellations == 1
+
+    session.undo()
+    restored = submitter.requests[-1]
+    assert restored.request_id != previous.request_id
+    outcome.on_finished(restored.request_id, d08_ready)
+    assert session.drawn(outcome.state.value) == (d08_ready, False)
+
+    session.redo()
+    assert isinstance(session.state.value, SessionDrafting)
+    assert session.drawn(outcome.state.value) == (None, False)
+
+
+@pytest.mark.req("REQ-F-27")
+def test_a_replacement_example_has_no_previous_drawing_while_it_computes(rig, d08_ready):
+    """An example owns its own drawing from the moment it opens."""
+    session, outcome, submitter = rig
+    session.load_example(D08)
+    outcome.on_finished(submitter.requests[-1].request_id, d08_ready)
+
+    session.load_example("wave_16p_example")
+
+    assert session.drawn(outcome.state.value) == (None, False)

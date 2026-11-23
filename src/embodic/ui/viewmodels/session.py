@@ -104,6 +104,7 @@ class SessionDocument:
     draft: DesignDraft
     origin: ExampleRef | None
     measurements: tuple[Measurement, ...] = ()
+    identity: object = dataclasses.field(default_factory=object, compare=False, repr=False)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1130,7 +1131,6 @@ class DesignSession:
 
     def _replace(self, document: SessionDocument) -> None:
         """Open another design: the drawing of the one before is not an outdated view of it."""
-        self._drawn = None
         self._commit(document)
         self.opened.set(self.opened.value + 1)
 
@@ -1140,6 +1140,13 @@ class DesignSession:
         self._debounce.stop()
         self._typed = None
         preview = self._take_preview()
+        old_identity = None if self.document is None else self.document.identity
+        new_identity = None if document is None else document.identity
+        replaced = old_identity is not new_identity
+        if replaced:
+            preview = None
+            self._drawn = None
+            self._outcome.clear_project()
         if record:
             self._undo = [*self._undo, self.document][-UNDO_LIMIT:]
             self._redo = []
@@ -1151,10 +1158,10 @@ class DesignSession:
         self.pairs_notice.set(pairs_notice)
         self.can_undo.set(bool(self._undo))
         self.can_redo.set(bool(self._redo))
-        self._refresh(preview)
+        self._refresh(preview, replaced=replaced)
         self._autosave()
 
-    def _refresh(self, preview: Preview | None = None) -> None:
+    def _refresh(self, preview: Preview | None, *, replaced: bool) -> None:
         document = self.document
         if document is None:
             self.issues.set(())
@@ -1169,7 +1176,7 @@ class DesignSession:
         provenance = self._provenance(project)
         key = (parsed, provenance)
         current = self.state.value
-        if isinstance(current, SessionComputed) and (current.design, current.provenance) == key:
+        if not replaced and isinstance(current, SessionComputed) and (current.design, current.provenance) == key:
             self._bring_back(preview)
             return
         kept = self._drawn.outcome if self._drawn is not None else None

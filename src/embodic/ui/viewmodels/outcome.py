@@ -163,6 +163,14 @@ class OutcomeViewModel:
         self._submitter.cancel()
         self.state.set(state.previous or OutcomeEmpty())
 
+    def clear_project(self) -> None:
+        """Discard the open project and its outcomes, including any result still in flight."""
+        self._latest_id += 1
+        if isinstance(self.state.value, OutcomeComputing):
+            self._submitter.cancel()
+        self.project = None
+        self.state.set(OutcomeEmpty())
+
     def save_project(self, path: Path) -> str:
         """Write the open project; return its design hash."""
         if self.project is None:
