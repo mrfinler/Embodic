@@ -4,6 +4,17 @@ All notable changes to embodic are listed here. Versions follow semantic version
 
 ## Unreleased
 
+### Fixed
+
+- Opening another design clears the previous drawing and discards any result still in flight for it.
+- An export uses the design shown in the export checklist and design rule confirmation, even when a new result
+  arrives while the dialog is open.
+- Standalone and bundled project exports retain example provenance for edited designs when the packaged example still
+  matches the recorded source.
+- The CLI and compute API report malformed project provenance as a validation issue. The compute API also reports
+  non-finite design inputs and represents them in result JSON.
+- Cached analysis uses the current test evidence when determining result badges.
+
 ### Documentation
 
 - The install guide and its Thai version say what to do when Windows reports "An Application Control policy has
