@@ -5,8 +5,10 @@ like a brand asset. Personal data. The tokens come from the run environment and 
 (standing order 7). The exports half of the scan is in `tests/unit/embodic_io/exporters/test_lg_exports.py`.
 """
 
+import getpass
 import hashlib
 import re
+import subprocess
 
 import pytest
 from tests.static.lg_plants import ARTEFACTS, plant
@@ -17,6 +19,7 @@ from tests.static.lg_scan import (
     Kind,
     Text,
     brand_check,
+    environment_tokens,
     line_texts,
     load_allowlist,
     load_brand_table,
@@ -103,6 +106,32 @@ def test_lg06_tokens_come_from_names_and_addresses_without_placeholders_or_short
     """Catches a token set that holds a placeholder, a system account or a 2-character string, which hit everywhere."""
     identity = ["Ada Lovelace", "ada" + "@" + "example.org", "root", "me", "ab", "Runner", "Ada Lovelace"]
     assert tokens_from(identity) == ["Ada Lovelace", "ada" + "@" + "example.org", "ada"]
+
+
+@pytest.mark.req("REQ-L-05")
+@pytest.mark.parametrize(
+    ("codex_ci", "account", "committer", "expected_account_token"),
+    [
+        ("1", "agent", PLANTED_TOKEN, False),
+        ("0", "agent", PLANTED_TOKEN, True),
+        ("1", "developer", PLANTED_TOKEN, True),
+        ("1", "agent", "agent", True),
+    ],
+)
+def test_lg06_ignores_only_the_codex_service_account(monkeypatch, codex_ci, account, committer, expected_account_token):
+    """Exclude only the Codex service account from the collected OS identity."""
+    monkeypatch.setenv("CODEX_CI", codex_ci)
+    monkeypatch.setattr(getpass, "getuser", lambda: account)
+    git_identity = {"user.name": committer, "user.email": PLANTED_ADDRESS}
+
+    def read_git_identity(args, **kwargs):
+        return subprocess.CompletedProcess(args, 0, stdout=git_identity[args[-1]] + "\n")
+
+    monkeypatch.setattr(subprocess, "run", read_git_identity)
+    tokens = environment_tokens()
+    assert committer in tokens
+    assert PLANTED_ADDRESS in tokens
+    assert (account in tokens) == expected_account_token
 
 
 @pytest.mark.req("REQ-L-05")

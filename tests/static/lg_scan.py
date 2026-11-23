@@ -8,6 +8,7 @@ Agent 4's scanner under `tests/independent`: the instruments stay independent (s
 import ast
 import io
 import json
+import os
 import re
 import sys
 import tomllib
@@ -344,7 +345,10 @@ def environment_tokens(repo: Path = REPO) -> list[str]:
         except OSError:
             continue
         identity.append(done.stdout.strip())
-    identity.append(getpass.getuser())
+    account = getpass.getuser()
+    # Codex runs CI under a generic account whose name also appears in engineering references.
+    if not (account == "agent" and os.environ.get("CODEX_CI") == "1"):
+        identity.append(account)
     return tokens_from(identity)
 
 
@@ -354,8 +358,6 @@ def personal_tokens() -> list[str]:
     The commit, nightly and release profiles cannot be told apart in a test (tools/ci.py sets the same Hypothesis
     profile for the last two), so the release run sets EMBODIC_REQUIRE_PERSONAL_TOKENS=1 to make the skip a failure.
     """
-    import os
-
     import pytest
 
     tokens = environment_tokens()
