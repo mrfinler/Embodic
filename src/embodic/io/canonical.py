@@ -6,6 +6,7 @@ The model stores radians under `_rad` names; the file stores degrees under `_deg
 
 import hashlib
 import json
+import math
 from collections.abc import Mapping
 from typing import Any
 
@@ -97,14 +98,11 @@ def canonical_json(design: DesignParameters) -> bytes:
 
 
 def has_file_form(design: DesignParameters) -> bool:
-    """Return False when an angle is beyond `ANGLE_RAD_MAX`: its degrees are infinite, which canonical JSON refuses.
-
-    Validation refuses such an angle on every field (`SUPPORTED_RANGES`), so a validated design always has a file form.
-    """
+    """Return whether all numeric inputs can be represented in canonical JSON, including angles in degrees."""
     return all(
-        abs(value) <= ANGLE_RAD_MAX
+        (not isinstance(value, float) or math.isfinite(value))
+        and (not _is_angle(pointer) or not isinstance(value, int | float) or abs(value) <= ANGLE_RAD_MAX)
         for pointer, value in design_values(design).items()
-        if _is_angle(pointer) and isinstance(value, float | int)
     )
 
 

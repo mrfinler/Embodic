@@ -2,6 +2,7 @@
 
 import dataclasses
 import json
+import math
 from pathlib import Path
 
 import pytest
@@ -16,6 +17,8 @@ from embodic.model.design import DesignParameters
 from embodic.model.draft import draft_from_design
 from embodic.model.outline import PolygonOutline
 from embodic.model.provenance import ProvenanceMap
+from embodic.results import load_registry
+from embodic.results.status import Status
 
 CF11 = "spiral_12c16p_default"
 
@@ -65,6 +68,25 @@ def test_cache_reuses_stage_products_for_the_same_inputs() -> None:
     assert other.boards is not first.boards and other.boards == first.boards
 
 
+@pytest.mark.req("REQ-T-05")
+def test_cached_analysis_uses_current_test_evidence() -> None:
+    """A shared cache must not show a tested badge after its supporting evidence is removed."""
+    ref, design = load_example("spiral_12c10p_d08")
+    provenance = project_provenance(ProjectFile(design=design, origin=ref))
+    registry = load_registry()
+    check_ids = frozenset(test for eq_id in ("EQ-10", "EQ-11", "EQ-07") for test in registry.equation(eq_id).tests)
+    with_tests = dataclasses.replace(registry, passed_tests=check_ids)
+    without_tests = dataclasses.replace(registry, passed_tests=frozenset())
+    cache = StageCache()
+
+    checked = _computed(design, provenance, cache=cache, registry=with_tests)
+    unchecked = _computed(design, provenance, cache=cache, registry=without_tests)
+
+    assert checked.analysis is not None and unchecked.analysis is not None
+    assert checked.analysis.resistance_phase_20c_ohm.status is Status.INFERRED
+    assert unchecked.analysis.resistance_phase_20c_ohm.status is Status.NOT_TESTED
+
+
 @pytest.mark.req("REQ-N-04")
 def test_stage_cache_keeps_the_eight_most_recently_used() -> None:
     """Catches an unbounded cache or FIFO eviction: a read refreshes an entry, the ninth put drops the oldest."""
@@ -86,7 +108,24 @@ def test_invalid_design_stops_before_geometry() -> None:
     outcome = _computed(odd, provenance)
     assert "INVALID_POLE_COUNT_ODD" in [i.code for i in outcome.issues]
     assert (outcome.boards, outcome.drc, outcome.analysis) == (None, None, None)
+    assert outcome.design_hash.startswith("sha256:")
     assert not outcome.ok
+
+
+@pytest.mark.req("REQ-F-14")
+@pytest.mark.parametrize(("value", "encoded"), [(math.nan, "nan"), (math.inf, "inf"), (-math.inf, "-inf")])
+def test_compute_reports_non_finite_design_values(value: float, encoded: str) -> None:
+    """A typed design with a non-finite input is validated and its outcome has a JSON form."""
+    design, provenance = _cf11()
+    invalid = dataclasses.replace(design, rotor=dataclasses.replace(design.rotor, air_gap_mm=value))
+
+    outcome = _computed(invalid, provenance)
+
+    assert [(issue.code, issue.pointers) for issue in outcome.issues] == [("INVALID_TYPE", ("/rotor/air_gap_mm",))]
+    assert outcome.design_hash == ""
+    assert (outcome.boards, outcome.drc, outcome.analysis) == (None, None, None)
+    document = json.loads(json.dumps(outcome_to_json(outcome), allow_nan=False))
+    assert document["design"]["rotor"]["air_gap_mm"] == {"$f": encoded}
 
 
 @pytest.mark.req("REQ-F-14")
@@ -165,6 +204,22 @@ def test_compute_project_of_an_example_project(tmp_path: Path) -> None:
     assert isinstance(outcome, api.ComputeOutcome)
     assert outcome.ok
     assert outcome.provenance["/rotor/poles"].provenance == "example"
+
+
+@pytest.mark.req("REQ-F-15", "REQ-F-18")
+def test_compute_project_returns_errors_from_a_complete_project(tmp_path: Path) -> None:
+    """Invalid stored provenance is reported before computing a complete project."""
+    ref, design = load_example(CF11)
+    path = tmp_path / "p.embodic.json"
+    save_project(path, ProjectFile(design=design, origin=ref))
+    document = json.loads(path.read_text(encoding="utf-8"))
+    document["provenance"]["/rotor/poles"]["provenance"] = "unknown"
+    path.write_text(json.dumps(document), encoding="utf-8")
+
+    result = compute_project(path)
+
+    assert isinstance(result, tuple)
+    assert [(issue.code, issue.pointers) for issue in result] == [("INVALID_PROVENANCE", ("/provenance/rotor/poles",))]
 
 
 @pytest.mark.req("REQ-F-15")

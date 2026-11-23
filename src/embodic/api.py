@@ -53,7 +53,7 @@ __all__ = [
 
 CachedStage = Literal["geometry", "drc", "physics"]
 STAGE_CACHE_ENTRIES = 8
-NO_DESIGN_HASH = ""  # validation refuses a design with no file form (an angle with infinite degrees); it has no hash
+NO_DESIGN_HASH = ""  # Designs without a canonical JSON representation have no hash.
 DEFAULT_OPTIONS = ComputeOptions()
 T = TypeVar("T")
 
@@ -294,7 +294,13 @@ def compute(
     if isinstance(drc, _Cancelled) or stopped():
         return None
 
-    physics_key = _key(hash_, boards.stack_hash, dumps_canonical(provenance_document(provenance)), registry.version)
+    physics_key = _key(
+        hash_,
+        boards.stack_hash,
+        dumps_canonical(provenance_document(provenance)),
+        registry.version,
+        dumps_canonical([*sorted(registry.passed_tests)]),
+    )
     analysis = run.stage(
         Stage.PHYSICS,
         lambda: _cached(
@@ -308,7 +314,7 @@ def compute(
 
 
 def compute_project(path: Path) -> ComputeOutcome | tuple[ValidationIssue, ...]:
-    """Load + compute. Returns the issues when the file is missing, unreadable or holds an incomplete draft."""
+    """Load and compute a complete project. Return issues for load errors or an incomplete draft."""
     project, issues = load_project(path)
     if project is None:
         return issues
@@ -324,6 +330,8 @@ def compute_project(path: Path) -> ComputeOutcome | tuple[ValidationIssue, ...]:
             pointers=tuple(file_pointer(p) for p in missing),
         )
         return (*issues, incomplete)
+    if any(issue.severity is Severity.ERROR for issue in issues):
+        return issues
     computed = compute(project.design, project_provenance(project))
     assert computed is not None, "compute without a cancel token never returns None"
     return computed
@@ -343,7 +351,7 @@ def outcome_to_json(outcome: ComputeOutcome) -> dict[str, JsonValue]:
     return {
         "format": "embodic.outcome",
         "format_version": 2,
-        "design": design_document(outcome.design),
+        "design": to_json(design_document(outcome.design)),
         "design_hash": outcome.design_hash,
         "provenance": provenance_document(outcome.provenance),
         "issues": to_json(list(outcome.issues)),
