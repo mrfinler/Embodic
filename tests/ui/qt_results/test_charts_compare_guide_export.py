@@ -1,6 +1,7 @@
 """Charts, Compare, the guide and the Export dialog in the window (UI-10, UI-17, UI-29, UI-30, UI-32, UI-34)."""
 
 import dataclasses
+from threading import Event
 
 import pytest
 from PySide6.QtCore import QPoint, QRect, Qt
@@ -8,6 +9,7 @@ from PySide6.QtGui import qGray
 from PySide6.QtWidgets import QApplication, QCheckBox, QMessageBox, QPushButton, QTableWidget, QWidget
 from tests.ui.qt_results.conftest import find
 
+from embodic.api import compute
 from embodic.io.exporters import ExportKind, ExportRefused
 from embodic.results.status import Status
 from embodic.ui.viewmodels.export import BUNDLE
@@ -195,6 +197,44 @@ def test_ui29_export_with_drc_failures_lists_them_with_focus_on_cancel(make_wind
 
 
 @pytest.mark.req("REQ-F-33")
+def test_export_confirmation_stays_with_its_design_when_a_new_result_arrives(make_window, load, qtbot, tmp_path):
+    """The checklist, confirmation and exported drawing must describe the same design."""
+    release_update = Event()
+
+    def compute_with_pending_update(design, provenance, **options):
+        if design.operating.speed_rpm == 3000:
+            assert release_update.wait(timeout=60), "test never released the update"
+        return compute(design, provenance, **options)
+
+    window = load(make_window(compute_with_pending_update), WAVE)
+    original_hash = window.session.current_outcome().design_hash
+    try:
+        window.session.edit("/operating/speed_rpm", 3000)
+        window.toolstrip.actions_by_id["act-export-svg"].trigger()
+        dialog = window.export_dialog
+        assert original_hash.split(":")[1][:12] in dialog.checklist.item(0).text()
+        dialog.folder.setText(str(tmp_path))
+        qtbot.mouseClick(dialog.run, Qt.MouseButton.LeftButton)
+        confirm = dialog.confirm
+        assert confirm.isVisible()
+    finally:
+        release_update.set()
+
+    def update_arrived():
+        outcome = window.session.current_outcome()
+        return outcome is not None and outcome.design_hash != original_hash
+
+    qtbot.waitUntil(update_arrived, timeout=60_000)
+    updated_hash = window.session.current_outcome().design_hash
+    qtbot.mouseClick(confirm.proceed, Qt.MouseButton.LeftButton)
+
+    (svg,) = tmp_path.glob("*.svg")
+    contents = svg.read_text(encoding="utf-8")
+    assert original_hash in contents
+    assert updated_hash not in contents
+
+
+@pytest.mark.req("REQ-F-33")
 def test_export_dialog_on_a_failed_drc_writes_the_report_and_readme_and_refuses_the_drawings(
     make_window, load, qtbot, tmp_path
 ):
@@ -219,7 +259,7 @@ def test_export_dialog_on_a_failed_drc_writes_the_report_and_readme_and_refuses_
     assert dialog.confirm is not None and dialog.confirm.isVisible()
     qtbot.mouseClick(dialog.confirm.cancel, Qt.MouseButton.LeftButton)
     assert not (tmp_path / "drawings").exists()
-    refused = window.export_vm.run(
+    refused = dialog.vm.run(
         frozenset({ExportKind.SVG, ExportKind.DXF_COMPLETE, BUNDLE}), tmp_path / "drawings", confirmed_drc_errors=False
     )
     assert isinstance(refused, ExportRefused) and refused.reason == "drc_errors_not_confirmed"

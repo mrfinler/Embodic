@@ -151,7 +151,6 @@ class MainWindow(QMainWindow):
         self.registry, self.selftests = registry, selftests
         self.results = ResultsViewModel(registry)
         self.compare = CompareViewModel()
-        self.export_vm = ExportViewModel(self._export_source)
         self.guide: GuideWindow | None = None
         self.export_dialog: ExportDialog | None = None
         self.tests_dialog: TestsDialog | None = None
@@ -433,7 +432,9 @@ class MainWindow(QMainWindow):
 
     def show_export(self, command: str) -> None:
         """Open the Export dialog with the format of a toolstrip command checked."""
-        dialog = ExportDialog(self.export_vm, PRESETS[command], self.tokens, self)
+        # The checklist and DRC confirmation must describe the design this dialog writes.
+        source = self._export_source()
+        dialog = ExportDialog(ExportViewModel(lambda: source), PRESETS[command], self.tokens, self)
         dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         self.export_dialog = dialog
         dialog.open()
